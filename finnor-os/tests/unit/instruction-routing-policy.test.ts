@@ -31,6 +31,20 @@ describe("objective-first instruction-routing policy", () => {
     });
   });
 
+  it("keeps an unsupported non-business question off the heavy objective planner", () => {
+    expect(classifyInstructionRoute({ instruction: "What time is it?", fastReadDecision: { route: "planner", reason: "unsupported" } })).toMatchObject({
+      route: "CONVERSATION",
+      reasonCodes: ["lightweight_informational_question"],
+    });
+  });
+
+  it("does not promote an unsupported read question into an objective", () => {
+    expect(classifyInstructionRoute({
+      instruction: "Tell me about technician availability",
+      fastReadDecision: { route: "planner", reason: "unsupported" },
+    }).route).toBe("CONVERSATION");
+  });
+
   it("reserves the atomic route for an exact one-effect candidate", () => {
     const preliminary = classifyInstructionRoute({
       instruction: "Send this exact message to casey@example.test",

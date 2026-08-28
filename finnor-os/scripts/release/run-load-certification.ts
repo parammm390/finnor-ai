@@ -5,6 +5,7 @@
 // reconciliation artifact.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { Client } from "pg";
 import { evaluateStagingGuards, formatStagingGuardReport, type StagingGuardReport } from "./staging-guards";
@@ -14,6 +15,7 @@ const FINNOR_OS_ROOT = resolve(SCRIPT_DIR, "../..");
 const REPO_ROOT = resolve(FINNOR_OS_ROOT, "..");
 const REPORT_PATH = resolve(REPO_ROOT, "docs/release/generated/p3-load-results.json");
 const EVIDENCE_DIR = resolve(REPO_ROOT, "docs/release/evidence/P3");
+const LOAD_RUN_ID = process.env.P3_LOAD_RUN_ID?.trim() || randomUUID();
 
 const CERTIFICATION_TENANTS = {
   alpha: "00000000-0000-4000-8000-0000000000a1",
@@ -82,10 +84,15 @@ function baseUrl(): string {
 async function request(kind: RequestKind, token: string, userIndex: number, iteration: number): Promise<Sample> {
   const base = baseUrl();
   const started = Date.now();
-  const headers = { accept: "application/json", authorization: `Bearer ${token}` };
+  // Each virtual user represents a distinct authenticated client. Supplying a
+  // stable TEST-NET address per user keeps the IP rate-limit bucket faithful to
+  // that model; otherwise every user is seen as `unknown` and contends on one
+  // Postgres counter row, measuring harness serialization instead of API load.
+  const clientIp = `198.51.100.${userIndex + 1}`;
+  const headers = { accept: "application/json", authorization: `Bearer ${token}`, "x-forwarded-for": clientIp };
   let response: Response;
   if (kind === "duplicate") {
-    const idempotencyKey = `p3-load-duplicate-${userIndex}-${iteration}`;
+    const idempotencyKey = `p3-load-${LOAD_RUN_ID}-duplicate-${userIndex}-${iteration}`;
     const body = JSON.stringify({ instruction: process.env.P3_LOAD_INSTRUCTION, channel: "text", idempotencyKey });
     const first = await fetch(new URL("/api/actions", base), {
       method: "POST",
@@ -113,7 +120,7 @@ async function request(kind: RequestKind, token: string, userIndex: number, iter
     };
   }
   if (kind === "draft") {
-    const idempotencyKey = `p3-load-${userIndex}-${iteration}`;
+    const idempotencyKey = `p3-load-${LOAD_RUN_ID}-${userIndex}-${iteration}`;
     response = await fetch(new URL("/api/actions", base), {
       method: "POST",
       headers: { ...headers, "content-type": "application/json", "x-correlation-id": idempotencyKey },
@@ -192,7 +199,7 @@ async function writeReport(report: Record<string, unknown>): Promise<void> {
 
 /**
  * Reconcile the exact load submission namespace after the timed scenarios. The
- * load runner owns the `p3-load-*` namespace, so the intake unique key is a
+ * load runner owns the `p3-load-*` namespace, so the canonical Work input key is a
  * direct database proof that the concurrent duplicate class did not create a
  * second planner claim. Marker visibility and fixed certification IDs provide
  * the tenant-boundary/data-integrity checks without printing payloads.
@@ -203,16 +210,16 @@ async function reconcileStagingLoad(): Promise<Record<string, unknown>> {
   const parsed = new URL(connectionString);
   parsed.searchParams.delete("sslmode");
   const client = new Client({ connectionString: parsed.toString(), ssl: { rejectUnauthorized: false } });
-  const perTenant: Record<string, { intakeRows: number; duplicateKeys: number; bravoMarkerVisible: number; ownMarkerVisible: number; fixedHouseholds: number }> = {};
+  const perTenant: Record<string, { workInputRows: number; duplicateKeys: number; bravoMarkerVisible: number; ownMarkerVisible: number; fixedHouseholds: number }> = {};
   try {
     await client.connect();
     for (const [alias, tenantId] of Object.entries(CERTIFICATION_TENANTS)) {
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
-      const intake = await client.query<{ idempotency_key: string }>(
-        "SELECT idempotency_key FROM finnor_os.intake_idempotency WHERE idempotency_key LIKE 'p3-load-%'",
+      const inputs = await client.query<{ idempotency_key: string }>(
+        "SELECT idempotency_key FROM finnor_os.work_inputs WHERE idempotency_key LIKE 'p3-load-%'",
       );
-      const keys = intake.rows.map((row) => row.idempotency_key);
+      const keys = inputs.rows.map((row) => row.idempotency_key);
       const uniqueKeys = new Set(keys);
       const markers = await client.query<{ bravo: string; own: string }>(
         "SELECT count(*) FILTER (WHERE water_profile::text LIKE '%BRAVO-ISOLATION-SENTINEL%')::int AS bravo, count(*) FILTER (WHERE water_profile::text LIKE $1)::int AS own FROM finnor_os.households",
@@ -223,7 +230,7 @@ async function reconcileStagingLoad(): Promise<Record<string, unknown>> {
         [`${alias === "alpha" ? "a1000000" : alias === "bravo" ? "b1000000" : "c1000000"}%`],
       );
       perTenant[alias] = {
-        intakeRows: keys.length,
+        workInputRows: keys.length,
         duplicateKeys: keys.length - uniqueKeys.size,
         bravoMarkerVisible: Number(markers.rows[0]?.bravo ?? 0),
         ownMarkerVisible: Number(markers.rows[0]?.own ?? 0),
@@ -295,7 +302,14 @@ export async function runLoadCertification(): Promise<Record<string, unknown>> {
     evidence: "docs/release/generated/p3-load-results.json",
   };
   await writeReport(report);
-  if (!report.pass) throw new Error("P3 load gates failed; inspect p3-load-results.json and reconciliation evidence");
+  // Keep the measured scenarios in the durable report when a threshold fails.
+  // The CLI wrapper below still returns exit code 1, so a failed gate cannot be
+  // mistaken for success, while the evidence remains diagnostic instead of
+  // being overwritten by the generic top-level catch.
+  if (!report.pass) {
+    console.error("P3_LOAD_FAIL", JSON.stringify({ scenarios, reconciliation: report.reconciliation }));
+    return report;
+  }
   console.log("P3_LOAD_PASS scenarios=2/2");
   return report;
 }

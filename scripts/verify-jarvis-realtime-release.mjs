@@ -30,6 +30,10 @@ const streamRoute = file("finnor-os/apps/api/app/api/stream/route.ts")
 const proxyRoute = file("src/app/api/jarvis/[...path]/route.ts")
 const relayRoute = file("src/app/api/jarvis/stream/route.ts")
 const openapiSource = file("finnor-os/openapi.json")
+const deltaMigration = file("finnor-os/packages/db/migrations/0092_phase2_live_business_world.sql")
+const tenantGateway = file("finnor-os/apps/worker/src/sse/gateway.ts")
+const tenantRelay = file("src/app/api/jarvis/operational-stream/route.ts")
+const tenantReducer = file("src/components/jarvis/lib/operational-delta.ts")
 
 includes("0062_instruction_lifecycle.sql", migration, "CREATE TABLE IF NOT EXISTS finnor_os.instruction_sessions")
 includes("0062_instruction_lifecycle.sql", migration, "CREATE TABLE IF NOT EXISTS finnor_os.instruction_events")
@@ -41,12 +45,24 @@ includes("instructions/[id]/events/route.ts", eventsRoute, "Instruction not foun
 includes("stream/route.ts", streamRoute, "text/event-stream")
 includes("stream/route.ts", streamRoute, "instructionId")
 includes("jarvis/[...path]/route.ts", proxyRoute, 'a === "instructions"')
+includes("jarvis/[...path]/route.ts", proxyRoute, 'a === "events"')
+includes("jarvis/[...path]/route.ts", proxyRoute, 'a === "business-world" || a === "operational-deltas"')
 includes("jarvis/stream/route.ts", relayRoute, "upstream.body")
 includes("jarvis/stream/route.ts", relayRoute, "text/event-stream")
+includes("0092_phase2_live_business_world.sql", deltaMigration, "CREATE TABLE IF NOT EXISTS finnor_os.operational_deltas")
+includes("0092_phase2_live_business_world.sql", deltaMigration, "FORCE ROW LEVEL SECURITY")
+includes("0092_phase2_live_business_world.sql", deltaMigration, "purge_operational_deltas")
+includes("worker/sse/gateway.ts", tenantGateway, "readOperationalDeltas")
+includes("worker/sse/gateway.ts", tenantGateway, "last-event-id")
+includes("jarvis/operational-stream/route.ts", tenantRelay, "upstream.body")
+includes("operational-delta.ts", tenantReducer, "reduceOperationalDelta")
 
 try {
   const openapi = JSON.parse(openapiSource)
   for (const path of ["/api/instructions/{id}", "/api/instructions/{id}/events", "/api/stream"]) {
+    if (!openapi.paths?.[path]?.get) failures.push(`openapi.json is missing GET ${path}`)
+  }
+  for (const path of ["/api/business-world", "/api/operational-deltas"]) {
     if (!openapi.paths?.[path]?.get) failures.push(`openapi.json is missing GET ${path}`)
   }
 } catch {

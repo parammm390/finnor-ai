@@ -103,7 +103,7 @@ describe.skipIf(!available).sequential("Phase 5 bounded client certification gat
     const journeyEvidence = {
       canonicalCoreSha: core.canonicalCoreSha,
       deploymentEvidenceHash: sha256(deploymentEvidenceProjection(deployment)),
-      journeys: actionTypes.map((actionType, index) => ({ journey: actionType, actionTypes: [actionType], receiptIds: [receiptIds[index]!] })),
+      journeys: actionTypes.map((actionType, index) => ({ journey: actionType, actionTypes: [actionType], receiptIds: [receiptIds[index]!], outcomeVerified: true })),
     };
     const coreDiff = {
       canonicalCoreSha: core.canonicalCoreSha,

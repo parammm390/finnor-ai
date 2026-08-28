@@ -155,7 +155,9 @@ test.describe("P4 — the golden consequence graph, driven for real", () => {
       // B-5's own conditional go-ahead: only start_invoice_to_cash_workflow may
       // be approved. Anything else (no cockpit at all, a mixed plan, or the
       // planner's known non-determinism routing to e.g. call_overdue_invoices)
-      // is a real, honest no-go for THIS run — reject everything, never guess.
+      // is a failed certification run, not a successful run that simply skipped
+      // the consequence graph. Reject any visible cards before failing so the
+      // test leaves the tenant in a safe state.
       if (hasCockpit) {
         const count = await rejectButtons.count()
         for (let i = 0; i < count; i++) await rejectButtons.first().click({ timeout: 5_000 }).catch(() => undefined)
@@ -165,7 +167,7 @@ test.describe("P4 — the golden consequence graph, driven for real", () => {
         description: `Planned action types were [${businessActions.map((a) => a.actionType).join(", ")}], not all ${SAFE_ACTION_TYPE} — rejected per the plan owner's own conditional go-ahead. Consequence-graph checklist NOT exercised this run.`,
       })
       expect(errors, `unexpected console errors: ${errors.join(" | ")}`).toEqual([])
-      return
+      expect(hasCockpit && allSafe, "Consequence-graph certification requires a visible approval cockpit containing only the safe workflow action").toBe(true)
     }
 
     // Real go: approve every real card individually (never the batch/typed-

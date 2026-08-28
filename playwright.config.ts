@@ -46,7 +46,7 @@ export default defineConfig({
         // deliberately fail-closed unless this build-time public flag is present.
         // Supply it only to Playwright's local server so every fixture test exercises
         // the labeled harness rather than receiving the intended 404.
-        env: { ...process.env, NEXT_PUBLIC_JARVIS_NEXT: "1" },
+        env: { ...process.env, NEXT_PUBLIC_JARVIS_NEXT: "1", NEXT_PUBLIC_JARVIS_TEST_MODE: "1" },
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },

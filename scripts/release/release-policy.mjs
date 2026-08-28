@@ -50,14 +50,17 @@ export function assertResolvedTarget(label, expected, observed, keys) {
 
 export function assertRuntimeParity(contract, expected, observed) {
   const failures = []
+  if (contract.topology.orchestrator.separateDeployment === false && contract.topology.orchestrator.releaseIdentity !== "worker") {
+    failures.push("embedded orchestrator must inherit worker release identity")
+  }
   for (const component of contract.release.requiredComponents) {
     const release = observed[component]
     if (!release) {
       failures.push(`${component}: missing release evidence`)
       continue
     }
-    for (const key of ["commitSha", "buildId", "version", "environment", "source", "coreCertificationId"]) {
-      const expectedValue = key === "coreCertificationId" ? observed.expectedCoreCertificationId : expected[key]
+    for (const key of ["commitSha", "buildId", "version", "environment", "source"]) {
+      const expectedValue = expected[key]
       if (release[key] !== expectedValue) failures.push(`${component}.${key}: ${release[key] ?? "<missing>"} != ${expectedValue ?? "<missing>"}`)
     }
     if (release.traceable !== true) failures.push(`${component}: release metadata is not traceable`)

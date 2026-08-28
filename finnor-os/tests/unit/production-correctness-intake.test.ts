@@ -100,6 +100,7 @@ vi.mock("../../apps/api/lib/auth", () => ({
   errorResponse: mocks.errorResponse,
 }));
 vi.mock("../../apps/api/lib/backpressure", () => ({ enforceBatchBackpressure: mocks.enforceBatchBackpressure }));
+vi.mock("../../apps/api/lib/worker-readiness", () => ({ requireWorkerFleetReady: vi.fn(async () => undefined) }));
 vi.mock("../../apps/api/lib/orchestrator", () => ({ getOrchestrator: mocks.getOrchestrator }));
 vi.mock("@finnor/db", () => ({
   receiveWork: mocks.receiveWork,

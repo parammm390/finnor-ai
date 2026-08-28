@@ -1,4 +1,9 @@
 export type CertificationResult = "pass" | "blocked-by-deployment" | "scoped-skip"
+export type CertificationOutcomeEvidence = {
+  kind: "catalog-only"
+  provesRequestedOutcome: false
+  reason: string
+}
 
 export type JarvisCertificationRow = {
   id: string
@@ -11,15 +16,17 @@ export type JarvisCertificationRow = {
   failureJourney: string
   refreshJourney: string
   result: CertificationResult
+  outcomeEvidence: CertificationOutcomeEvidence
 }
 
 /**
  * One executable inventory for the user-facing P1–P6 contract. Each row names
- * the durable seam and points at the Playwright journey that proves the three
- * required modes. The authenticated rows are intentionally read-only; a write
- * certification needs a deployed API/worker revision that matches this HEAD.
+ * the durable seam and points at the Playwright journey that must prove the
+ * three required modes. This catalog is not itself live outcome evidence: its
+ * rows are deliberately downgraded below, so fixture/structural coverage can
+ * never certify a useless product.
  */
-export const JARVIS_P1_P6_CERTIFICATION_MATRIX: readonly JarvisCertificationRow[] = [
+const JARVIS_P1_P6_CERTIFICATION_CATALOG = [
   {
     id: "command-loop",
     feature: "Command rail and adaptive Home",
@@ -153,3 +160,16 @@ export const JARVIS_P1_P6_CERTIFICATION_MATRIX: readonly JarvisCertificationRow[
     result: "pass",
   },
 ] as const
+
+export const JARVIS_P1_P6_CERTIFICATION_MATRIX: readonly JarvisCertificationRow[] = JARVIS_P1_P6_CERTIFICATION_CATALOG.map((row) => ({
+  ...row,
+  // A static journey pointer is not a completed Work/outcome assertion. A
+  // future runner must replace this with a live receipt-bound result before a
+  // row may become PASS.
+  result: row.result === "pass" ? "scoped-skip" : row.result,
+  outcomeEvidence: {
+    kind: "catalog-only",
+    provesRequestedOutcome: false,
+    reason: "journey catalog only; no live Work terminal outcome is bound",
+  },
+}))

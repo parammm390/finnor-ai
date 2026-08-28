@@ -171,7 +171,7 @@ export interface FastReadOnlyRouterDeps {
   now?: () => Date;
 }
 
-const QUESTION_PREFIX = /^(?:how|what|which|where|when|who|is|are|do|does|did|can|could|tell me|show|find|give me|list|list out|get|summarize|explain)\b/i;
+const QUESTION_PREFIX = /^(?:(?:please\s+)?(?:how|what|which|where|when|who|is|are|do|does|did|can|could|would)\b|(?:please\s+)?(?:tell me|show(?:\s+me)?|pull\s+up|find|get|give me|list(?:\s+out)?|summarize|explain)\b)/i;
 const MUTATION_VERB = String.raw`(?:create|send|update|change|delete|remove|approve|reject|book|cancel|call|text|email|pay|charge|reorder|restock|flag|mark|start|launch|assign|execute|run|prepare|draft|write|edit|improve|make|reschedule)`;
 const MUTATION_OR_ADVICE = new RegExp(String.raw`\b(?:${MUTATION_VERB}|recommend|recommendation|advice|should|schedule\s+(?:an?|the)?\s*(?:appointment|visit|service|water\s*test|job))\b`, "i");
 const GUARDED_MUTATION_VERB = String.raw`(?:${MUTATION_VERB}|schedule)`;
@@ -255,7 +255,7 @@ function parseOperationalQuery(instruction: string): DraftOperationalQueryReques
   const normalized = normalizedInstruction(instruction);
   if (!normalized || normalized.length > 500) return null;
 
-  const scheduleMention = /\b(?:schedule|calendar|appointment|appointments|service\s+visit|service\s+visits|work\s+order|work\s+orders|technician\s+availability|everything)\b/i.test(normalized);
+  const scheduleMention = /\b(?:schedule|calendar|appointment|appointments|service\s+visit|service\s+visits|work\s+order|work\s+orders|technician\s+availability|(?:available|free)\s+technicians?|technicians?\s+(?:who|that)\s+(?:are\s+)?(?:available|free)|who(?:'s|\s+is)\s+free|everything)\b/i.test(normalized);
   if (scheduleMention) {
     const dates = parseDateTokens(normalized);
     if (dates) return { intent: "schedule_range", localDateRange: { startDate: dates[0]!, ...(dates[1] ? { endDate: dates[1] } : {}) } };

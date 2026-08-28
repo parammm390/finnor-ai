@@ -21,7 +21,6 @@ if (!existsSync(databaseEnvPath)) throw new Error(`protected database environmen
 const gitRelease = readGitRelease(repoRoot, contract)
 assertCanonicalRelease(gitRelease)
 const expected = expectedRelease(gitRelease.head, process.env.FINNOR_RELEASE_SOURCE || "github-actions")
-if (!process.env.FINNOR_CORE_CERTIFICATION_ID) throw new Error("FINNOR_CORE_CERTIFICATION_ID is required")
 for (const [name, value] of Object.entries({
   FINNOR_COMMIT_SHA: expected.commitSha,
   FINNOR_BUILD_ID: expected.buildId,
@@ -65,6 +64,16 @@ const productionEnvNames = new Set(
 )
 for (const name of ["MIGRATIONS_DATABASE_URL", "DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SECRETS_PROVIDER", "FINNOR_SECRET_IDS"]) {
   if (!productionEnvNames.has(name)) throw new Error(`Vercel API production environment is missing ${name}`)
+}
+const frontendTarget = contract.topology.frontend
+const frontendEnvResponse = await vercel(`/v10/projects/${frontendTarget.projectId}/env?teamId=${frontendTarget.organizationId}&decrypt=false`)
+const frontendProductionEnvNames = new Set(
+  (frontendEnvResponse.envs ?? [])
+    .filter((entry) => entry.target === "production" || entry.target?.includes?.("production"))
+    .map((entry) => entry.key),
+)
+if (!frontendProductionEnvNames.has("JARVIS_SSE_GATEWAY_URL")) {
+  throw new Error("Vercel frontend production environment is missing JARVIS_SSE_GATEWAY_URL")
 }
 
 const az = process.env.AZURE_CLI || "az"

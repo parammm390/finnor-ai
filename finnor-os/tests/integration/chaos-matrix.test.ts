@@ -274,16 +274,10 @@ describe.skipIf(!available)("chaos matrix (§2.8)", () => {
         idempotencyKey: `chaos-duplicate-${stepId}`,
       });
       const results = await Promise.all(Array.from({ length: 5 }, () => executeCapability(SEED_TENANT_ID, stepId, holdAppointmentContract, emulatorSchedulingBinding, input)));
-      // executeCapability's concurrent-loser path checks the claim row's CURRENT
-      // snapshot rather than polling to a final settled state (unlike
-      // ScopedToolRegistry's — see the AMC flow below): depending on real timing, a
-      // racer sees either the winner's already-committed success (ok:true, cached) or
-      // the winner still mid-flight ("operation already in flight", ok:false) — both
-      // are legitimate, non-deterministic outcomes of the SAME real call underneath.
-      // The invariant this cell actually proves is that regardless of which of those
-      // two a given racer observes, there is only ever ONE integration_operations row
-      // — one real external call, never duplicated.
-      expect(results.every((r) => r.ok || r.error === "operation already in flight")).toBe(true);
+      // A racer sees either the winner's cached success or an explicit unknown
+      // outcome requiring reconciliation. It must never be allowed to replay the
+      // provider call from a stale running/failed snapshot.
+      expect(results.every((r) => r.ok || r.unknownOutcome === true)).toBe(true);
       const ops = await withTenant(SEED_TENANT_ID, (db) => db.select().from(integrationOperations).where(eq(integrationOperations.workflowStepId, stepId)));
       expect(ops).toHaveLength(1); // one operationKey, one row, regardless of 5 delivery attempts
 
@@ -443,10 +437,10 @@ describe.skipIf(!available)("chaos matrix (§2.8)", () => {
       const results = await Promise.all(
         Array.from({ length: 5 }, () => executeCapability(SEED_TENANT_ID, step2!, sendConfirmationContract, emulatorCommunicationsBinding, confirmInput)),
       );
-      // Same real property as flow 1's same-event-x5 cell — see its comment: a racer
-      // either observes the winner's cached success or "already in flight", never a
-      // fabricated failure, and only ONE real external call ever happens.
-      expect(results.every((r) => r.ok || r.error === "operation already in flight")).toBe(true);
+      // Same real property as flow 1's same-event-x5 cell: a racer either observes
+      // the winner's cached success or an explicit unknown outcome, and only ONE
+      // real external call ever happens.
+      expect(results.every((r) => r.ok || r.unknownOutcome === true)).toBe(true);
       const ops = await withTenant(SEED_TENANT_ID, (db) => db.select().from(integrationOperations).where(eq(integrationOperations.workflowStepId, step2!)));
       expect(ops).toHaveLength(1);
 

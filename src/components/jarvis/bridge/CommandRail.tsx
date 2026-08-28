@@ -269,7 +269,12 @@ export function CommandRail({
   const continuableWorkId = canContinueWork(kernel.thread) ? kernel.thread?.workId ?? null : null
   const continuingWork = Boolean(continuableWorkId) && !startNewWork
   const busy = railBusy(threadState)
-  const inputDisabled = busy.disabled || committing
+  // A Work lifecycle state is not a global command lock. A stalled objective
+  // must remain cancellable, but it must not freeze the rail or make the next
+  // ordinary instruction inherit that Work. `continuingWork` is only true for
+  // terminal Work, so an input submitted while this Work is active starts a
+  // fresh Work through the normal `submit` path.
+  const inputDisabled = committing
   const voiceActive = voice.voiceState === "connecting" || voice.voiceState === "live" || voice.voiceState === "speaking"
   const waveformOpen = voice.voiceState === "live" || voice.voiceState === "speaking"
   const voiceEnergy = liveframe.voiceEnergy
@@ -533,7 +538,7 @@ export function CommandRail({
             value={showingPartial ? voice.partialTranscript ?? "" : value}
             onChange={(e) => setValue(e.target.value)}
             disabled={inputDisabled || showingPartial}
-            placeholder={busy.placeholder ?? "Tell JARVIS what you need"}
+            placeholder={committing ? "Sending instruction…" : busy.disabled ? "Start another Work…" : busy.placeholder ?? "Tell JARVIS what you need"}
             className={`j-fs-base min-w-0 w-full bg-transparent text-[color:var(--j-text)] outline-none placeholder:text-[color:var(--j-text-faint)] disabled:opacity-60 ${
               showingPartial ? "italic text-[color:var(--j-text-dim)]" : ""
             } ${transcriptInk ? "text-transparent caret-transparent" : ""}`}

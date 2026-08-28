@@ -24,6 +24,8 @@ export interface ProjectionDefinition<T> {
   owner: string
   staleMs: number
   pollMs?: number
+  /** Poll interval used for selected active projections while realtime is down. */
+  fallbackPollMs?: number
   tags: readonly ProjectionTag[]
   load: () => Promise<T>
 }
@@ -101,6 +103,7 @@ export class BusinessProjectionCache {
   private generation = 0
   private visible = true
   private online = true
+  private realtimeMode: "live" | "polling" = "live"
   private metrics: ProjectionMetrics = { ...EMPTY_METRICS }
   private metricsListeners = new Set<() => void>()
   private onMetrics?: (metrics: ProjectionMetrics) => void
@@ -163,7 +166,11 @@ export class BusinessProjectionCache {
       this.notify(entry)
     }
     if (!force && entry.snapshot.data !== null && !entry.snapshot.stale && !staleByAge) return entry.snapshot.data
-    if (!this.visible || !this.online) return entry.snapshot.data
+    // navigator.onLine is only a connectivity hint. Browsers can report false
+    // while same-origin requests still work; suppressing the request here leaves
+    // every empty projection permanently stuck in its loading state. Always let
+    // the bounded API request determine whether the source is reachable.
+    if (!this.visible) return entry.snapshot.data
     if (entry.inFlight) {
       this.bumpMetric("requestsDeduped")
       return entry.inFlight
@@ -296,6 +303,20 @@ export class BusinessProjectionCache {
     }
   }
 
+  setRealtimeMode(mode: "live" | "polling"): void {
+    if (this.realtimeMode === mode) return
+    this.realtimeMode = mode
+    for (const entry of this.entries.values()) {
+      this.clearTimer(entry)
+      if (!this.visible || !this.online || entry.listeners.size === 0) continue
+      if (mode === "polling" && entry.definition.fallbackPollMs) {
+        void this.ensure(entry.id, true).catch(() => undefined)
+      } else {
+        this.schedule(entry)
+      }
+    }
+  }
+
   reset(): void {
     this.generation += 1
     for (const entry of this.entries.values()) this.clearTimer(entry)
@@ -306,9 +327,12 @@ export class BusinessProjectionCache {
 
   private schedule(entry: Entry): void {
     this.clearTimer(entry)
-    if (!this.visible || !this.online || entry.listeners.size === 0 || !entry.definition.pollMs) return
-    const elapsed = entry.snapshot.updatedAt === null ? entry.definition.pollMs : Date.now() - entry.snapshot.updatedAt
-    const delay = Math.max(0, entry.definition.pollMs - elapsed)
+    const pollMs = this.realtimeMode === "polling"
+      ? entry.definition.fallbackPollMs ?? entry.definition.pollMs
+      : entry.definition.pollMs
+    if (!this.visible || !this.online || entry.listeners.size === 0 || !pollMs) return
+    const elapsed = entry.snapshot.updatedAt === null ? pollMs : Date.now() - entry.snapshot.updatedAt
+    const delay = Math.max(0, pollMs - elapsed)
     entry.timer = setTimeout(() => {
       entry.timer = null
       void this.ensure(entry.id, true).catch(() => undefined)

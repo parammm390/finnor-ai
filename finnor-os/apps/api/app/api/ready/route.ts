@@ -1,6 +1,7 @@
-import { CURRENT_MIGRATION_HEAD, getPool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD } from "@finnor/db";
 import { ensureSecretsLoaded, secretProviderStatus } from "@finnor/security";
 import { getReleaseMetadata } from "../../../lib/release";
+import { readWorkerFleetReadiness } from "../../../lib/worker-readiness";
 
 /** Dependency readiness, deliberately separate from /api/health liveness. Optional
  * provider connections are tenant-level degradation and never make the whole API
@@ -9,23 +10,10 @@ import { getReleaseMetadata } from "../../../lib/release";
 export async function GET(): Promise<Response> {
   const checks: Record<string, { ok: boolean; detail?: string | number }> = {};
   try {
-    const result = await getPool().query<{
-      migration_head: string | null;
-      healthy_workers: number;
-    }>(
-      `SELECT
-         (SELECT max(name) FROM finnor_os._migrations) AS migration_head,
-         (SELECT count(*)::int FROM finnor_os.service_release_heartbeats
-           WHERE service='worker'
-             AND migration_head=$1
-             AND ($2::text IS NULL OR release_sha=$2)
-             AND last_beat_at>now()-interval '90 seconds') AS healthy_workers`,
-      [CURRENT_MIGRATION_HEAD, process.env.FINNOR_COMMIT_SHA?.trim() || null],
-    );
-    const row = result.rows[0];
+    const readiness = await readWorkerFleetReadiness();
     checks.database = { ok: true };
-    checks.migrations = { ok: row?.migration_head === CURRENT_MIGRATION_HEAD, detail: row?.migration_head ?? "none" };
-    checks.workerFleet = { ok: Number(row?.healthy_workers ?? 0) > 0, detail: Number(row?.healthy_workers ?? 0) };
+    checks.migrations = { ok: readiness.migrationHead === CURRENT_MIGRATION_HEAD, detail: readiness.migrationHead ?? "none" };
+    checks.workerFleet = { ok: readiness.healthyWorkers > 0, detail: readiness.healthyWorkers };
   } catch {
     checks.database = { ok: false, detail: "unavailable" };
     checks.migrations = { ok: false, detail: "unknown" };

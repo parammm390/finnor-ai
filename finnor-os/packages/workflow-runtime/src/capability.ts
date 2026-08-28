@@ -143,7 +143,59 @@ export async function executeCapability<TIn, TOut>(
       awaitingObservation: existing.verificationStatus === "awaiting_observation",
       integrationOperationId: existing.id,
     };
-    if (existing.status === "running") return { ok: false, error: "operation already in flight" };
+    if (existing.status === "running") {
+      // A second worker cannot know whether the first worker has already crossed
+      // the provider boundary. Convert the local in-flight marker to an explicit
+      // unknown outcome and require reconciliation; never report a harmless
+      // "already in flight" state that lets a later retry blindly replay it.
+      const [unknown] = await withTenant(tenantId, async (db) => {
+        const [updated] = await db
+          .update(integrationOperations)
+          .set({
+            status: "unknown",
+            response: { error: "Concurrent retry observed a running provider operation; external outcome is unknown" },
+            verificationStatus: "unknown",
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(integrationOperations.tenantId, tenantId),
+            eq(integrationOperations.id, existing.id),
+            eq(integrationOperations.status, "running"),
+          ))
+          .returning();
+        if (updated) {
+          const [openCase] = await db.select({ id: reconciliationCases.id }).from(reconciliationCases).where(and(
+            eq(reconciliationCases.tenantId, tenantId),
+            eq(reconciliationCases.relatedStepId, workflowStepId),
+            eq(reconciliationCases.status, "open"),
+          )).limit(1);
+          if (!openCase) await db.insert(reconciliationCases).values({
+            tenantId,
+            caseType: "unknown_delivery",
+            relatedStepId: workflowStepId,
+            businessEffectId: step?.businessEffectId ?? null,
+            integrationId: integration?.id ?? null,
+            classification: "provider_outcome_unknown",
+            authoritativeSide: "external",
+            details: { provider: binding.name, capability: contract.capability, operationKey },
+          });
+        }
+        return [updated] as const;
+      });
+      if (unknown) return { ok: false, error: "provider outcome is unknown; reconcile before retrying", unknownOutcome: true };
+      // The original worker settled between our read and the guarded update.
+      const [latest] = await withTenant(tenantId, (db) => db.select().from(integrationOperations).where(and(
+        eq(integrationOperations.tenantId, tenantId),
+        eq(integrationOperations.id, existing.id),
+      )).limit(1));
+      if (latest?.status === "succeeded") return {
+        ok: true,
+        output: latest.response as TOut,
+        awaitingObservation: latest.verificationStatus === "awaiting_observation",
+        integrationOperationId: latest.id,
+      };
+      return { ok: false, error: "provider outcome is unknown; reconcile before retrying", unknownOutcome: true };
+    }
     // Unknown means the provider may already have accepted the mutation. Only an
     // explicit reconciliation transition may turn it into succeeded/failed; never
     // convert uncertainty into a blind provider retry here.
@@ -151,12 +203,23 @@ export async function executeCapability<TIn, TOut>(
       return { ok: false, error: "provider outcome is unknown; reconcile before retrying", unknownOutcome: true };
     }
     // A known failed attempt delivered no effect and is safe to retry.
-    await withTenant(tenantId, (db) =>
+    const [reclaimed] = await withTenant(tenantId, (db) =>
       db
         .update(integrationOperations)
-        .set({ status: "running", provider: binding.name, requestHash, updatedAt: new Date() })
-        .where(and(eq(integrationOperations.workflowStepId, workflowStepId), eq(integrationOperations.operationKey, operationKey))),
+        .set({ status: "running", provider: binding.name, requestHash, response: null, updatedAt: new Date() })
+        .where(and(
+          eq(integrationOperations.tenantId, tenantId),
+          eq(integrationOperations.id, existing.id),
+          eq(integrationOperations.status, "failed"),
+        ))
+        .returning(),
     );
+    if (!reclaimed) {
+      // Another retry won the only legal failed -> running transition. Do not
+      // proceed to the provider from this loser, even if our earlier read saw
+      // `failed`.
+      return { ok: false, error: "retry claim was lost; no provider call was made" };
+    }
   }
 
   let output: TOut;

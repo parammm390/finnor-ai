@@ -57,6 +57,35 @@ describe("BusinessProjectionCache", () => {
     expect(load).toHaveBeenCalledTimes(1)
   })
 
+  it("does not let an offline browser hint suppress a bounded canonical read", async () => {
+    const load = vi.fn().mockResolvedValue({ version: 1 })
+    const cache = new BusinessProjectionCache()
+    const id = cache.register(definition(load))
+    cache.setOnline(false)
+    await expect(cache.ensure(id)).resolves.toEqual({ version: 1 })
+    expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it("uses the active Work fallback cadence when realtime is unavailable", async () => {
+    vi.useFakeTimers()
+    try {
+      const load = vi.fn().mockResolvedValue({ version: 1 })
+      const cache = new BusinessProjectionCache()
+      const id = cache.register({ ...definition(load), fallbackPollMs: 2_000 })
+      cache.subscribe(id, () => undefined)
+      await cache.ensure(id)
+      cache.setRealtimeMode("polling")
+      await vi.advanceTimersByTimeAsync(0)
+      expect(load).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(1_999)
+      expect(load).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(load).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("clears every tenant-scoped entry on a session boundary reset", async () => {
     const cache = new BusinessProjectionCache()
     const id = cache.register(definition(async () => ({ version: 1 })))

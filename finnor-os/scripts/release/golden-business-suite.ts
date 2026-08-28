@@ -247,6 +247,9 @@ export interface GoldenSuiteResult {
 export interface GoldenSuiteOptions {
   /** Test references are accepted only when the caller has actually run them. */
   verifiedEvidence?: ReadonlySet<string>;
+  /** A contract/database proof is not an observed business result. The final
+   * certification must bind each job to the outcome that was actually observed. */
+  observedOutcomes?: ReadonlyMap<string, GoldenOutcome>;
   liveProviderEvidence?: ReadonlySet<string>;
   deploymentEvidence?: ReadonlySet<string>;
   databaseEvidence?: ReadonlySet<string>;
@@ -283,24 +286,29 @@ export function evaluateGoldenBusinessSuite(options: GoldenSuiteOptions = {}): G
     });
     const resolvePlanCorrect = missing.length === 0 && rows.length === job.actionTypes.length && expectedOutcomeCompatible(job, rows);
     const verified = proofVerified(job, options);
-    const endToEndCorrect = resolvePlanCorrect && verified;
+    const observedOutcome = options.observedOutcomes?.get(job.id) ?? options.observedOutcomes?.get(job.evidenceRef);
+    const hasObservedOutcome = observedOutcome !== undefined;
+    const outcomeVerified = hasObservedOutcome && observedOutcome === job.expectedOutcome;
+    const endToEndCorrect = resolvePlanCorrect && verified && outcomeVerified;
     const status: CertificationStatus = !resolvePlanCorrect
       ? "FAIL"
-      : !verified
+      : !verified || !hasObservedOutcome
         ? "BLOCKED_CONFIG"
-        : endToEndCorrect
-          ? "PASS"
-          : "FAIL";
+        : !outcomeVerified ? "FAIL" : "PASS";
     const detail = !resolvePlanCorrect
       ? `plan contract mismatch; missing=${missing.join(",") || "none"}`
       : !verified
         ? `no executed evidence bound for ${job.proofKind} proof ${job.evidenceRef}`
-        : `observed ${job.expectedOutcome} under bound evidence ${job.evidenceRef}`;
+        : !hasObservedOutcome
+          ? `no observed outcome bound for ${job.id}; contract evidence alone cannot certify the requested result`
+          : !outcomeVerified
+            ? `observed ${observedOutcome} but expected ${job.expectedOutcome}`
+            : `observed ${job.expectedOutcome} under bound evidence ${job.evidenceRef}`;
     return {
       id: job.id,
       category: job.category,
       expectedOutcome: job.expectedOutcome,
-      observedOutcome: endToEndCorrect ? job.expectedOutcome : null,
+      observedOutcome: hasObservedOutcome ? observedOutcome : null,
       resolvePlanCorrect,
       endToEndCorrect,
       status,

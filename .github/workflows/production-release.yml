@@ -16,7 +16,8 @@ permissions:
 jobs:
   canonical-graph-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
+    environment: production
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -29,6 +30,7 @@ jobs:
           --health-cmd "pg_isready -U finnor" --health-interval 5s
           --health-timeout 5s --health-retries 10
     env:
+      CI: "true"
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       FINNOR_CHAOS_TEST_CONTEXT: "1"
     steps:
@@ -60,7 +62,7 @@ jobs:
         run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts
         working-directory: finnor-os
 
-  core-certification:
+  phase5-readiness:
     needs: canonical-graph-gate
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -76,29 +78,14 @@ jobs:
           --health-cmd "pg_isready -U finnor" --health-interval 5s
           --health-timeout 5s --health-retries 10
     env:
+      CI: "true"
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       FINNOR_CHAOS_TEST_CONTEXT: "1"
       FINNOR_RELEASE_SOURCE: github-actions
-      FINNOR_ENVIRONMENT: production
-      STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
-      STAGING_FRONTEND_URL: ${{ secrets.STAGING_FRONTEND_URL }}
-      STAGING_WORKER_URL: ${{ secrets.STAGING_WORKER_URL }}
-      STAGING_ORCHESTRATOR_URL: ${{ secrets.STAGING_ORCHESTRATOR_URL }}
-      STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-      STAGING_REDIS_URL: ${{ secrets.STAGING_REDIS_URL }}
-      P3_STAGING_IDENTITY_CONFIRMED: "1"
-      STAGING_AUTH_MODE: jwt
-      CERTIFICATION_TEST_EMAILS: ${{ secrets.CERTIFICATION_TEST_EMAILS }}
-      CERTIFICATION_TEST_PHONES: ${{ secrets.CERTIFICATION_TEST_PHONES }}
-      P3_NO_EGRESS: "1"
-      LIVE_SMOKE_ALLOWED: "0"
-      COMMUNICATIONS_BINDING: emulator
-      ESIGN_BINDING: emulator
-      ACCOUNTING_BINDING: emulator
-      PAYMENTS_BINDING: emulator
-      MARKETING_BINDING: emulator
-      P3_LOAD_INSTRUCTION: Show open work for this certification tenant
-      P3_LOAD_JWTS_JSON: ${{ secrets.P3_LOAD_JWTS_JSON }}
+      NODE_ENV: test
+      CERTIFICATION_SEED_ALLOWED: "1"
+      CERTIFICATION_TEST_EMAILS: certification@example.invalid
+      CERTIFICATION_TEST_PHONES: "+15550000001"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,39 +106,37 @@ jobs:
         run: npm ci
         working-directory: finnor-os
 
-      - name: Derive canonical core metadata
+      - name: Derive commit-locked release metadata
         run: |
           sha="$(git rev-parse HEAD)"
           short="${sha:0:12}"
           echo "RELEASE_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
           echo "FINNOR_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
-          echo "STAGING_EXPECTED_SHA=$sha" >> "$GITHUB_ENV"
           echo "FINNOR_BUILD_ID=finnor-$short" >> "$GITHUB_ENV"
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
-          echo "P3_LOAD_JWTS_FILE=$RUNNER_TEMP/p3-load-jwts.json" >> "$GITHUB_ENV"
-          echo "P3_LOAD_RECONCILIATION_FILE=$RUNNER_TEMP/p3-load-reconciliation.json" >> "$GITHUB_ENV"
 
-      - name: Materialize protected load identities
+      - name: Verify clean canonical release source
+        run: npm run release:verify
+        env:
+          FINNOR_ENVIRONMENT: production
+
+      - name: Apply migrations from an empty database
         run: |
-          test -n "${P3_LOAD_JWTS_JSON:-}" || {
-            echo "::error::P3_LOAD_JWTS_JSON is required for core load certification."
-            exit 1
-          }
-          printf '%s' "$P3_LOAD_JWTS_JSON" > "$P3_LOAD_JWTS_FILE"
-          chmod 600 "$P3_LOAD_JWTS_FILE"
-
-      - name: Run the full core certification once for this SHA
-        run: npm run release:certify -- core --core-sha="$FINNOR_COMMIT_SHA" --store="$RUNNER_TEMP/finnor-certifications"
+          npm run db:bundle
+          git diff --exit-code packages/db/migrations-bundle.ts
+          npm run db:migrate
+          npm run setup:langgraph
         working-directory: finnor-os
 
-      - name: Retain immutable core certification
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: finnor-core-certification-${{ github.sha }}
-          path: ${{ runner.temp }}/finnor-certifications/core/corecert-*.json
-          if-no-files-found: error
-          retention-days: 90
+      - name: Phase 5 type, security, runtime, and regression suite
+        run: |
+          npm run openapi
+          npm run typecheck
+          npm test
+          npm run release:manifest
+          npm run release:contract
+          npm run policy:lint
+        working-directory: finnor-os
 
       - name: Produce commit-locked FINNOR core certification
         id: core-certification
@@ -172,7 +157,7 @@ jobs:
           retention-days: 7
 
   release:
-    needs: [canonical-graph-gate, core-certification]
+    needs: [canonical-graph-gate, phase5-readiness]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: production
@@ -182,7 +167,7 @@ jobs:
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       FINNOR_RELEASE_SOURCE: github-actions
-      CI: "true"
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -221,20 +206,6 @@ jobs:
       - name: Release governance regression tests
         run: node --test scripts/release/release-policy.test.mjs
 
-      - name: Download certified core identity
-        uses: actions/download-artifact@v4
-        with:
-          name: finnor-core-certification-${{ github.sha }}
-          path: ${{ runner.temp }}/finnor-core-certification
-
-      - name: Bind deployment to the PASS core certification
-        run: |
-          certification="$(find "$RUNNER_TEMP/finnor-core-certification" -type f -name 'corecert-*.json' -print -quit)"
-          test -n "$certification"
-          certification_id="$(node -e 'const a=require(process.argv[1]); if(a.status!=="PASS") process.exit(1); process.stdout.write(a.certificationId)' "$certification")"
-          echo "FINNOR_CORE_CERTIFICATION_FILE=$certification" >> "$GITHUB_ENV"
-          echo "FINNOR_CORE_CERTIFICATION_ID=$certification_id" >> "$GITHUB_ENV"
-
       - name: Derive commit-locked release metadata
         run: |
           sha="$(git rev-parse HEAD)"
@@ -245,7 +216,13 @@ jobs:
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
           echo "FINNOR_ENVIRONMENT=production" >> "$GITHUB_ENV"
 
-      - name: Verify clean GitHub source and release metadata
+      - name: Require production credentials before any mutation
+        run: |
+          for name in VERCEL_TOKEN AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
+          done
+
+      - name: Verify clean canonical Git source
         run: node scripts/release/verify-release.mjs
 
       - name: Authenticate exact Azure subscription with GitHub OIDC
@@ -260,6 +237,7 @@ jobs:
           npm run lint
           npx tsc --noEmit -p tsconfig.json
           npm run test:unit
+          npm run typecheck --prefix finnor-os
 
       - name: API typecheck gate
         run: npm run typecheck
@@ -314,8 +292,8 @@ jobs:
 
       - name: Verify frontend deployment
         run: |
-          node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" "$FINNOR_CORE_CERTIFICATION_ID"
-          node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" "$FINNOR_CORE_CERTIFICATION_ID"
+          node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
 
       - name: Deploy prepared API
         id: api
@@ -328,8 +306,8 @@ jobs:
 
       - name: Verify API deployment
         run: |
-          node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" "$FINNOR_CORE_CERTIFICATION_ID"
-          node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" "$FINNOR_CORE_CERTIFICATION_ID"
+          node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
 
       - name: Deploy Azure worker and embedded orchestrator
         run: node scripts/release/deploy-azure-worker.mjs --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE"

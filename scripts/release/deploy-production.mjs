@@ -57,7 +57,7 @@ function loadCoreCertification(path, expectedSha) {
   const gates = [...artifact.gates].sort((a, b) => String(a.gate).localeCompare(String(b.gate)))
   if (new Set(gates.map((gate) => gate.gate)).size !== CORE_GATE_KEYS.length || CORE_GATE_KEYS.some((key) => !gates.some((gate) => gate.gate === key && gate.status === "PASS"))) throw new Error("Core certification contains a non-PASS or missing gate")
   for (const gate of gates) if (gate.evidenceHash !== sha256(gate.evidence)) throw new Error(`Core certification gate evidence was modified: ${gate.gate}`)
-  const suiteHash = sha256({ version: "phase5-core-v1", gates: CORE_GATE_KEYS })
+  const suiteHash = sha256({ version: "phase6-core-v1", gates: CORE_GATE_KEYS })
   const evidenceHash = sha256(gates.map(({ gate, status, evidenceHash }) => ({ gate, status, evidenceHash })))
   const identityHash = sha256({ canonicalCoreSha: expectedSha, coreSourceTreeHash: artifact.coreSourceTreeHash, suiteHash, evidenceHash })
   if (artifact.suiteHash !== suiteHash || artifact.evidenceHash !== evidenceHash || artifact.certificationId !== `corecert-${identityHash}`) throw new Error("Core certification identity/integrity verification failed")

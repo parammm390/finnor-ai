@@ -260,8 +260,23 @@ async function beginEffectCommit(loaded: LoadedExecution): Promise<CommitClaim> 
           .where(and(eq(domainActions.tenantId, loaded.action.tenantId), eq(domainActions.id, loaded.action.id)));
         return { kind: "reconcile", reason: "A prior worker crossed the effect commit point without recording a result" };
       }
-      await db.update(integrationOperations).set({ status: "running", response: null, updatedAt: new Date() })
-        .where(and(eq(integrationOperations.workflowStepId, loaded.step.id), eq(integrationOperations.operationKey, operationKey), eq(integrationOperations.status, "failed")));
+      const [reclaimed] = await db.update(integrationOperations).set({ status: "running", response: null, updatedAt: new Date() })
+        .where(and(
+          eq(integrationOperations.tenantId, loaded.action.tenantId),
+          eq(integrationOperations.id, existing.id),
+          eq(integrationOperations.status, "failed"),
+        )).returning({ id: integrationOperations.id });
+      if (!reclaimed) {
+        // A concurrent retry won the only legal failed -> running transition.
+        // This worker must not cross the provider boundary from a stale read.
+        await db.update(workflowSteps).set({ executionState: "reconciling", leaseExpiresAt: null, updatedAt: new Date() })
+          .where(and(eq(workflowSteps.tenantId, loaded.action.tenantId), eq(workflowSteps.id, loaded.step.id)));
+        await db.update(businessEffects).set({ status: "reconciliation_required" })
+          .where(and(eq(businessEffects.tenantId, loaded.action.tenantId), eq(businessEffects.id, loaded.effect.id)));
+        await db.update(domainActions).set({ status: "needs_human_review", executionStartedAt: null })
+          .where(and(eq(domainActions.tenantId, loaded.action.tenantId), eq(domainActions.id, loaded.action.id)));
+        return { kind: "reconcile", reason: "Another worker won the failed operation retry; external outcome is unknown" };
+      }
     }
 
     const [effectClaim] = await db.update(businessEffects).set({ status: "executing", executionStartedAt: new Date() })

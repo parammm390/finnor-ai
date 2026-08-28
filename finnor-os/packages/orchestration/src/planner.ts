@@ -64,9 +64,45 @@ export interface PlannerOptions {
   operatingContext?: OperatingContext;
 }
 
+const MAX_PLANNER_CONTEXT_CHARS = 24_000;
+
+function boundedArray<T>(value: T[], limit: number): T[] {
+  return value.slice(0, limit);
+}
+
+function boundPromptValue(value: unknown, maxChars: number): unknown {
+  const serialized = JSON.stringify(value);
+  if (serialized !== undefined && serialized.length <= maxChars) return value;
+  if (maxChars < 16 || value === null || value === undefined) return null;
+  if (typeof value === "string") return value.slice(0, Math.max(0, maxChars - 2));
+  if (typeof value !== "object") return value;
+  if (Array.isArray(value)) {
+    const result: unknown[] = [];
+    for (const item of value) {
+      const remaining = maxChars - JSON.stringify(result).length - 2;
+      if (remaining < 16) break;
+      const bounded = boundPromptValue(item, remaining);
+      const candidate = [...result, bounded];
+      if (JSON.stringify(candidate).length > maxChars) break;
+      result.push(bounded);
+    }
+    return result;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    const remaining = maxChars - JSON.stringify(result).length - key.length - 6;
+    if (remaining < 16) break;
+    const bounded = boundPromptValue(item, remaining);
+    const candidate = { ...result, [key]: bounded };
+    if (JSON.stringify(candidate).length > maxChars) break;
+    result[key] = bounded;
+  }
+  return result;
+}
+
 function plannerOperatingContext(context: OperatingContext | undefined): Record<string, unknown> | null {
   if (!context) return null;
-  return redactStructured({
+  const projection = {
     version: context.version,
     assembledAt: context.assembledAt,
     truthPrecedence: context.truthPrecedence,
@@ -86,7 +122,48 @@ function plannerOperatingContext(context: OperatingContext | undefined): Record<
     authority: context.authority,
     sources: context.sources.map(({ kind, source, asOf, role }) => ({ kind, source, asOf, role })),
     health: { status: context.health.status, missing: context.health.missing },
+  };
+  const safe = redactStructured(projection) as Record<string, unknown>;
+  if (JSON.stringify(safe).length <= MAX_PLANNER_CONTEXT_CHARS) return safe;
+
+  // Keep the planner's high-value identity/authority facts while bounding the
+  // lower-priority directory, memory, and projection arrays. A giant context
+  // must not consume the same eight-second LLM budget intended for reasoning.
+  const compact = redactStructured({
+    version: context.version,
+    truthPrecedence: context.truthPrecedence,
+    interactionPrecedence: context.interactionPrecedence,
+    interactionContext: context.interactionContext,
+    tenant: context.tenant,
+    employee: context.employee,
+    activeWork: context.activeWork,
+    conversationContext: context.conversationContext,
+    referencedEntities: boundedArray(context.referencedEntities, 12),
+    canonicalSummaries: boundedArray(context.canonicalSummaries, 8),
+    integrationHealth: context.integrationHealth,
+    authority: context.authority,
+    sources: boundedArray(context.sources, 12).map(({ kind, source, asOf, role }) => ({ kind, source, asOf, role })),
+    health: { status: context.health.status, missing: context.health.missing },
+    contextBounded: true,
   }) as Record<string, unknown>;
+  if (JSON.stringify(compact).length <= MAX_PLANNER_CONTEXT_CHARS) return compact;
+
+  // A final minimal projection handles pathological tenant records without
+  // slicing JSON mid-value or silently changing the requested instruction.
+  return boundPromptValue(redactStructured({
+    version: context.version,
+    interactionContext: context.interactionContext,
+    tenant: context.tenant,
+    employee: context.employee,
+    activeWork: context.activeWork,
+    conversationContext: context.conversationContext,
+    referencedEntities: boundedArray(context.referencedEntities, 4),
+    canonicalSummaries: boundedArray(context.canonicalSummaries, 3),
+    authority: context.authority,
+    sources: boundedArray(context.sources, 4).map(({ kind, source, asOf, role }) => ({ kind, source, asOf, role })),
+    health: { status: context.health.status, missing: context.health.missing },
+    contextBounded: true,
+  }), MAX_PLANNER_CONTEXT_CHARS) as Record<string, unknown>;
 }
 
 export class LLMPlanner implements Planner {
@@ -114,7 +191,6 @@ export class LLMPlanner implements Planner {
   private systemPrompt(): string {
     const day = new Date().toISOString().slice(0, 10);
     if (this.systemPromptCache?.day === day) return this.systemPromptCache.prompt;
-    const actionTypes = this.plugins.actionTypes();
     const prompt = [
       "You are the planning core of Finnor, an AI operating system for water treatment dealers.",
       "Translate the dealer instruction into zero or more domain actions.",
@@ -123,7 +199,6 @@ export class LLMPlanner implements Planner {
       "When operatingContext.conversationContext is present, use its resolvedReferences and senderIdentityRef as the deterministic resolution. Preserve originalInstruction verbatim as evidence. If its status is clarification_required, emit only clarification_request and no consequential action or guessed target.",
       "For a bounded direct selection, act on exactly selectedEntities after excludedEntities. For a referenced cohort, use only its durable cohort/query bounds and exclusions; never enumerate, invent, or widen its population. Selection does not grant authority or approval.",
       "Resolve me/my against operatingContext.employee and us/our/the company against operatingContext.tenant before choosing an action. Missing profile facts remain missing; never infer identity, age, industry, geography, revenue, ARR, or company performance from semantic memory.",
-      `The ONLY valid action_type values are: ${actionTypes.join(", ")}.`,
       "Each action_type has a REQUIRED payload JSON schema. Follow it exactly — field names matter:",
       this.plugins.payloadSpecJson(),
       `Today is ${day}. Resolve relative dates to ISO 8601 datetimes.`,
@@ -713,7 +788,6 @@ export class LLMPlanner implements Planner {
     const system = [
       "This is a HIGH-STAKES action — a multi-step workflow or a large dollar amount — worth a second, independent look before a human reviews it.",
       "You are given the dealer instruction and a candidate action another pass already drafted.",
-      `The ONLY valid action_type values are: ${allowedActionTypes.join(", ")}.`,
       `Required payload fields per action_type: ${this.plugins.payloadSpecJson()}`,
       "Either confirm the candidate exactly as-is, or propose a meaningfully different alternative if you believe it better matches the instruction.",
       'Respond with ONLY this JSON: {"action_type":"...","payload":{...}}. If confirming, action_type/payload must equal the candidate exactly.',

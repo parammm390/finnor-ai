@@ -14,6 +14,8 @@ test.describe("JARVIS P1–P6 executable certification matrix", () => {
       expect(row.failureJourney).toMatch(/\.(spec|test)\./)
       expect(row.refreshJourney).toMatch(/\.(spec|test)\./)
       expect(["pass", "blocked-by-deployment", "scoped-skip"]).toContain(row.result)
+      expect(row.outcomeEvidence.provesRequestedOutcome).toBe(row.result === "pass")
+      expect(row.outcomeEvidence.kind).not.toBe("fixture")
     }
     expect(new Set(JARVIS_P1_P6_CERTIFICATION_MATRIX.map((row) => row.id)).size).toBe(JARVIS_P1_P6_CERTIFICATION_MATRIX.length)
   })

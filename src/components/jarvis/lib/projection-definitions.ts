@@ -87,7 +87,7 @@ export const businessProjections = {
   reliability: (): ProjectionDefinition<ReliabilityMetrics> => ({ key: ["read-model", "reliability"], owner: "data-core.slow", staleMs: PROJECTION_FRESHNESS.slow, pollMs: 90_000, tags: ["system", "workflows"], load: async () => (await jarvisClient.readModel("reliability")).data }),
   setupStatus: (): ProjectionDefinition<SetupStatus> => ({ key: ["system", "setup"], owner: "data-core.sanity", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.setupStatus }),
   integrationsStatus: (): ProjectionDefinition<IntegrationsStatus> => ({ key: ["system", "integrations"], owner: "agents", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.integrationsStatus }),
-  workCases: (): ProjectionDefinition<WorkCaseProjection[]> => ({ key: ["read-model", "work-cases"], owner: "work", staleMs: PROJECTION_FRESHNESS.active, pollMs: 15_000, tags: ["work", "actions", "approvals", "workflows", "receipts", "customers", "schedule", "money", "agents", "queries"], load: async () => (await jarvisClient.workCases()).data }),
+  workCases: (): ProjectionDefinition<WorkCaseProjection[]> => ({ key: ["read-model", "work-cases"], owner: "work", staleMs: PROJECTION_FRESHNESS.active, pollMs: 15_000, fallbackPollMs: 2_000, tags: ["work", "actions", "approvals", "workflows", "receipts", "customers", "schedule", "money", "agents", "queries"], load: async () => (await jarvisClient.workCases()).data }),
   workExecution: (workId: string): ProjectionDefinition<ExecutionProjection> => ({
     key: ["work-execution", workId],
     owner: "work.execution",
@@ -95,6 +95,7 @@ export const businessProjections = {
     // Phase 2 realtime invalidation is primary; this is one selected-Work sanity
     // refresh, not a polling loop per action/computer step.
     pollMs: PROJECTION_FRESHNESS.sanity,
+    fallbackPollMs: 2_000,
     tags: ["work", "actions", "approvals", "workflows", "receipts", "computer", "activity"],
     load: async () => (await jarvisClient.workExecution(workId)).execution,
   }),
@@ -103,6 +104,7 @@ export const businessProjections = {
     owner: "work.replay",
     staleMs: PROJECTION_FRESHNESS.detail,
     pollMs: PROJECTION_FRESHNESS.sanity,
+    fallbackPollMs: 2_000,
     tags: ["work", "actions", "approvals", "workflows", "receipts", "computer", "activity"],
     load: async () => (await jarvisClient.workReplay(workId)).replay,
   }),

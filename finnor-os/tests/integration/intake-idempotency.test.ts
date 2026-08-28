@@ -1,17 +1,13 @@
-// A4.T6 acceptance: claimOrGetCachedIntake()/completeIntakeClaim() (apps/api/lib/
-// intake-idempotency.ts) — the mechanism POST /api/actions uses to make an opt-in
-// idempotencyKey actually prevent a duplicate submission from double-creating
-// DomainActions. Tested directly against the mechanism (not through the HTTP route,
-// which would require a real or mocked LLM planner call to exercise end-to-end —
-// out of scope here, same category of honest gap as this project's other "needs a
-// real X" limitations).
+// A4.T6 acceptance: the canonical Work intake primitives used by POST /api/actions
+// make an idempotencyKey a durable, tenant-scoped claim before orchestration begins.
+// These tests exercise receiveWork()/recordWorkResponse() directly so the invariant
+// remains provable without requiring a real or mocked LLM planner call.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants } from "@finnor/db";
-import { claimOrGetCachedIntake, completeIntakeClaim } from "../../apps/api/lib/intake-idempotency";
+import { closePool, receiveWork, recordWorkResponse, tenants, withTenant } from "@finnor/db";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000f2";
@@ -38,51 +34,66 @@ describe.skipIf(!available)("intake idempotency (A4.T6)", () => {
     await closePool();
   });
 
-  it("a fresh key claims successfully", async () => {
+  it("a fresh key creates exactly one canonical Work and input", async () => {
     const key = `test-${randomUUID()}`;
-    const result = await claimOrGetCachedIntake(TENANT_ID, key);
-    expect(result.status).toBe("claimed");
+    const result = await receiveWork({
+      tenantId: TENANT_ID,
+      instruction: "test fresh canonical Work intake",
+      channel: "text",
+      instructionId: randomUUID(),
+      idempotencyKey: key,
+    });
+    expect(result.created).toBe(true);
+    expect(result.duplicate).toBe(false);
+    expect(result.status).toBe("received");
+    expect(result.workId).toBeTruthy();
+    expect(result.workInputId).toBeTruthy();
   });
 
-  it("a second claim on the SAME key before completion reports in_progress — never a second claim, never silently dropped", async () => {
+  it("concurrent submissions with the SAME key resolve to one canonical Work", async () => {
     const key = `test-${randomUUID()}`;
-    const first = await claimOrGetCachedIntake(TENANT_ID, key);
-    expect(first.status).toBe("claimed");
-    const second = await claimOrGetCachedIntake(TENANT_ID, key);
-    expect(second.status).toBe("in_progress");
+    const [first, second] = await Promise.all([
+      receiveWork({ tenantId: TENANT_ID, instruction: "concurrent intake A", channel: "text", instructionId: randomUUID(), idempotencyKey: key }),
+      receiveWork({ tenantId: TENANT_ID, instruction: "concurrent intake B", channel: "text", instructionId: randomUUID(), idempotencyKey: key }),
+    ]);
+    expect([first.created, second.created].filter(Boolean)).toHaveLength(1);
+    expect(first.workId).toBe(second.workId);
+    expect(first.duplicate || second.duplicate).toBe(true);
   });
 
-  it("after completion, a repeat submission with the SAME key returns the cached response — no double-execution", async () => {
+  it("after response recording, a repeat with the SAME key replays the exact response", async () => {
     const key = `test-${randomUUID()}`;
-    const claim = await claimOrGetCachedIntake(TENANT_ID, key);
-    if (claim.status !== "claimed") throw new Error("expected a fresh claim");
+    const instructionId = randomUUID();
+    const claim = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
     const realResponse = { planned: [{ actionType: "schedule_water_test", payload: {} }] };
-    await completeIntakeClaim(TENANT_ID, claim.id, realResponse);
+    await recordWorkResponse(TENANT_ID, claim.workId, realResponse);
 
-    const repeat = await claimOrGetCachedIntake(TENANT_ID, key);
-    expect(repeat.status).toBe("cached");
-    if (repeat.status === "cached") expect(repeat.response).toEqual(realResponse);
+    const repeat = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
+    expect(repeat.duplicate).toBe(true);
+    expect(repeat.workId).toBe(claim.workId);
+    expect((repeat.finalOutcome as { response?: unknown })?.response).toEqual(realResponse);
 
-    // A third attempt with the same key is STILL cached, not a fresh claim — proves
-    // this isn't a one-shot marker that resets.
-    const third = await claimOrGetCachedIntake(TENANT_ID, key);
-    expect(third.status).toBe("cached");
+    const third = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
+    expect(third.duplicate).toBe(true);
+    expect(third.workId).toBe(claim.workId);
   });
 
-  it("different idempotency keys for the same tenant claim independently", async () => {
-    const a = await claimOrGetCachedIntake(TENANT_ID, `test-a-${randomUUID()}`);
-    const b = await claimOrGetCachedIntake(TENANT_ID, `test-b-${randomUUID()}`);
-    expect(a.status).toBe("claimed");
-    expect(b.status).toBe("claimed");
+  it("different idempotency keys for the same tenant create independently", async () => {
+    const a = await receiveWork({ tenantId: TENANT_ID, instruction: "independent A", channel: "text", instructionId: randomUUID(), idempotencyKey: `test-a-${randomUUID()}` });
+    const b = await receiveWork({ tenantId: TENANT_ID, instruction: "independent B", channel: "text", instructionId: randomUUID(), idempotencyKey: `test-b-${randomUUID()}` });
+    expect(a.created).toBe(true);
+    expect(b.created).toBe(true);
+    expect(a.workId).not.toBe(b.workId);
   });
 
-  it("the SAME idempotency key for a DIFFERENT tenant claims independently (no cross-tenant collision)", async () => {
+  it("the SAME idempotency key for a DIFFERENT tenant creates independently", async () => {
     const otherTenantId = randomUUID();
     await withTenant(otherTenantId, (db) => db.insert(tenants).values({ id: otherTenantId, name: "Other Tenant" }).onConflictDoNothing());
     const key = `shared-key-${randomUUID()}`;
-    const first = await claimOrGetCachedIntake(TENANT_ID, key);
-    const second = await claimOrGetCachedIntake(otherTenantId, key);
-    expect(first.status).toBe("claimed");
-    expect(second.status).toBe("claimed"); // not "in_progress" — different tenant, same key string
+    const first = await receiveWork({ tenantId: TENANT_ID, instruction: "tenant A shared key", channel: "text", instructionId: randomUUID(), idempotencyKey: key });
+    const second = await receiveWork({ tenantId: otherTenantId, instruction: "tenant B shared key", channel: "text", instructionId: randomUUID(), idempotencyKey: key });
+    expect(first.created).toBe(true);
+    expect(second.created).toBe(true); // tenant is part of the canonical claim scope
+    expect(first.workId).not.toBe(second.workId);
   });
 });

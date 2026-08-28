@@ -6,6 +6,19 @@ function git(args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim()
 }
 
+// `git status --untracked-files=all` recursively walks large evidence/database
+// trees before it reports the source changes that make a release ineligible. Use
+// Git's tracked diff plus directory-level untracked entries: this preserves the
+// clean-worktree invariant while keeping the release gate bounded in evidence-heavy
+// worktrees.
+function worktreeStatus() {
+  return [
+    git(["diff-files", "--name-only", "-z", "--"]),
+    git(["diff", "--cached", "--name-only", "-z", "--"]),
+    git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
+  ].filter(Boolean).join("\n")
+}
+
 function fail(message) {
   console.error(`Release provenance check failed: ${message}`)
   process.exit(1)
@@ -13,7 +26,7 @@ function fail(message) {
 
 const actualSha = git(["rev-parse", "HEAD"]).toLowerCase()
 const expectedSha = (process.env.RELEASE_COMMIT_SHA || process.env.GITHUB_SHA || actualSha).toLowerCase()
-const dirty = git(["status", "--porcelain=v1", "--untracked-files=all"])
+const dirty = worktreeStatus()
 const buildId = process.env.FINNOR_BUILD_ID || ""
 const version = process.env.FINNOR_VERSION || ""
 const environment = process.env.FINNOR_ENVIRONMENT || ""
@@ -44,4 +57,3 @@ console.log(JSON.stringify({
   remoteMain,
   dirty: false,
 }, null, 2))
-

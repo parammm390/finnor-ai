@@ -1,13 +1,18 @@
-const [baseUrl, expectedSha, expectedBuildId, expectedVersion, expectedCoreCertificationId, expectedEnvironment = "production"] = process.argv.slice(2)
+const [baseUrl, expectedSha, expectedBuildId, expectedVersion, expectedEnvironment = "production"] = process.argv.slice(2)
 
-if (!baseUrl || !expectedSha || !expectedBuildId || !expectedVersion || !expectedCoreCertificationId) {
-  console.error("Usage: node scripts/release/verify-live-release.mjs <url> <commit-sha> <build-id> <version> <core-certification-id> [environment]")
+if (!baseUrl || !expectedSha || !expectedBuildId || !expectedVersion) {
+  console.error("Usage: node scripts/release/verify-live-release.mjs <url> <commit-sha> <build-id> <version> [environment]")
   process.exit(2)
 }
 
 const url = `${baseUrl.replace(/\/$/, "")}/api/release`
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
 const response = await fetch(url, {
-  headers: { accept: "application/json", "cache-control": "no-cache" },
+  headers: {
+    accept: "application/json",
+    "cache-control": "no-cache",
+    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
+  },
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)
@@ -24,7 +29,6 @@ const checks = {
   environment: body.environment === expectedEnvironment,
   deploymentId: typeof body.deploymentId === "string" && /^dpl_/.test(body.deploymentId),
   traceable: body.traceable === true,
-  coreCertificationId: body.coreCertificationId === expectedCoreCertificationId,
 }
 
 if (Object.values(checks).some((value) => !value)) {

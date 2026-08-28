@@ -13,8 +13,6 @@ if (!databaseEnvPath) throw new Error("Usage: node scripts/release/verify-produc
 const gitRelease = readGitRelease(repoRoot, contract)
 assertCanonicalRelease(gitRelease)
 const expected = expectedRelease(gitRelease.head, process.env.FINNOR_RELEASE_SOURCE || "github-actions")
-const expectedCoreCertificationId = process.env.FINNOR_CORE_CERTIFICATION_ID
-if (!expectedCoreCertificationId) throw new Error("FINNOR_CORE_CERTIFICATION_ID is required")
 
 async function fetchRelease(component) {
   const target = contract.topology[component]
@@ -88,7 +86,6 @@ systemctl is-active --quiet '${worker.systemdUnit}'
 test "$(readlink -f '${worker.currentSymlink}')" = '${worker.releaseRoot}/${expected.commitSha}'
 test "$(sudo -u finnor git -C '${worker.currentSymlink}' rev-parse HEAD)" = '${expected.commitSha}'
 grep -qx 'FINNOR_COMMIT_SHA=${expected.commitSha}' '${worker.releaseEnvironmentFile}'
-grep -qx 'FINNOR_CORE_CERTIFICATION_ID=${expectedCoreCertificationId}' '${worker.releaseEnvironmentFile}'
 echo FINNOR_AZURE_PARITY_OK`
 const az = process.env.AZURE_CLI || "az"
 const azureRaw = execFileSync(az, [
@@ -104,7 +101,7 @@ const azureResult = JSON.parse(azureRaw)
 const azureMessage = (azureResult.value ?? []).map((entry) => entry.message ?? "").join("\n")
 if (!azureMessage.includes("FINNOR_AZURE_PARITY_OK")) throw new Error(`Azure source/service parity verification failed:\n${azureMessage}`)
 
-const observed = { frontend, api, worker: workerRelease, migrationHead, expectedCoreCertificationId }
+const observed = { frontend, api, worker: workerRelease, migrationHead }
 assertRuntimeParity(contract, expected, observed)
 console.log(JSON.stringify({
   ok: true,

@@ -154,6 +154,7 @@ export function BusinessProjectionProvider({ children }: { children: React.React
 
   useEffect(() => {
     if (!session || !online || !visible) {
+      cache.setRealtimeMode("polling")
       publishRealtimeStatus("paused", null)
       return
     }
@@ -243,6 +244,7 @@ export function BusinessProjectionProvider({ children }: { children: React.React
           })
           if (!response.ok) throw new Error(`Realtime gateway returned ${response.status}`)
           retry = 0
+          cache.setRealtimeMode("live")
           publishRealtimeStatus("live", state?.cursor ?? null)
           await consumeSse(response, controller.signal, (event, data, id) => {
             if (event === "resync") {
@@ -257,6 +259,7 @@ export function BusinessProjectionProvider({ children }: { children: React.React
           if (!cancelled) throw new Error("Realtime gateway disconnected")
         } catch (error) {
           if (cancelled || controller?.signal.aborted) break
+          cache.setRealtimeMode("polling")
           publishRealtimeStatus("polling", state?.cursor ?? null, error instanceof Error ? error.message : String(error))
           retry += 1
           const delay = Math.min(15_000, 1_000 * 2 ** Math.min(retry, 4))
@@ -269,7 +272,7 @@ export function BusinessProjectionProvider({ children }: { children: React.React
       controller?.abort()
       realtimeInvalidations.cancel()
     }
-  }, [online, session, visible])
+  }, [cache, online, session, visible])
 
   const client = useMemo<ProjectionClient>(() => ({
     fetch: async <T,>(definition: ProjectionDefinition<T>, force = false) => {

@@ -31,6 +31,8 @@ import {
   evaluateGoldenBusinessSuite,
   evaluateGoldenSafety,
   GOLDEN_BUSINESS_JOBS,
+  GOLDEN_OUTCOMES,
+  type GoldenOutcome,
   type GoldenSuiteResult,
 } from "./golden-business-suite";
 
@@ -348,6 +350,24 @@ function stagingGate(gate: string, report: StagingGuardReport): CertificationGat
   });
 }
 
+async function readObservedGoldenOutcomes(options: CliOptions): Promise<ReadonlyMap<string, GoldenOutcome>> {
+  const path = stringOption(options, "golden-outcomes");
+  if (!path) return new Map();
+  const parsed = JSON.parse(await readFile(resolve(path), "utf8")) as unknown;
+  const source = parsed && typeof parsed === "object" && !Array.isArray(parsed) && "outcomes" in parsed
+    ? (parsed as { outcomes?: unknown }).outcomes
+    : parsed;
+  if (!source || typeof source !== "object" || Array.isArray(source)) throw new Error("--golden-outcomes must be a JSON object of job id to observed outcome");
+  const allowed = new Set<string>(GOLDEN_OUTCOMES);
+  const outcomes = new Map<string, GoldenOutcome>();
+  for (const [jobId, outcome] of Object.entries(source as Record<string, unknown>)) {
+    if (!GOLDEN_BUSINESS_JOBS.some((job) => job.id === jobId || job.evidenceRef === jobId)) throw new Error(`Unknown golden job in --golden-outcomes: ${jobId}`);
+    if (typeof outcome !== "string" || !allowed.has(outcome)) throw new Error(`Invalid observed outcome for golden job ${jobId}`);
+    outcomes.set(jobId, outcome as GoldenOutcome);
+  }
+  return outcomes;
+}
+
 export async function runFinalCertificationCommand(options: CliOptions, store: CertificationArtifactStore): Promise<void> {
   const dryRun = options["dry-run"] === true;
   const canonicalGitSha = (stringOption(options, "core-sha") ?? gitSha()).toLowerCase();
@@ -357,6 +377,7 @@ export async function runFinalCertificationCommand(options: CliOptions, store: C
   const database = dryRun
     ? { status: "BLOCKED_CONFIG" as const, migrationHead: null, schemaHash: null, finalTable: false, errorCode: "DRY_RUN" }
     : await inspectDatabase(migration.head);
+  const observedGoldenOutcomes = await readObservedGoldenOutcomes(options);
   const contractText = await readFile(CONTRACT_PATH, "utf8");
   const contract = JSON.parse(contractText) as Record<string, any>;
   const deploymentEvidencePath = stringOption(options, "deployment-evidence");
@@ -443,7 +464,7 @@ export async function runFinalCertificationCommand(options: CliOptions, store: C
   const databaseEvidence = new Set<string>();
   if (regression.status === "PASS") for (const ref of ["phase0-company-world", "p1-identity-access-fabric", "p2-universal-action-fabric", "p3-computer-execution-fabric", "p4-event-driven-objective-runtime", "p5-connection-lifecycle"]) databaseEvidence.add(ref);
   if (security.status === "PASS") databaseEvidence.add("p0-p5-security-batch");
-  const suite = evaluateGoldenBusinessSuite({ verifiedEvidence, databaseEvidence });
+  const suite = evaluateGoldenBusinessSuite({ verifiedEvidence, databaseEvidence, observedOutcomes: observedGoldenOutcomes });
   const safetyTests = dryRun
     ? { label: "secret/privacy safety tests", command: "not run (dry run)", cwd: "finnor-os", exitCode: 2, status: "BLOCKED_CONFIG" as const, timedOut: false }
     : runCommand("secret/privacy safety tests", "npm", ["test", "--", "--run", "tests/unit/secrets.test.ts", "tests/unit/logger-pii-redaction.test.ts", "tests/unit/tool-registry-pii.test.ts", "tests/unit/release-certification.test.ts"], FINNOR_OS_ROOT);
@@ -461,6 +482,9 @@ export async function runFinalCertificationCommand(options: CliOptions, store: C
     endToEndRate: suite.endToEndRate,
     resolvePlanThreshold: 0.98,
     endToEndThreshold: 0.95,
+    outcomeEvidenceRequired: true,
+    observedOutcomeCount: suite.jobs.filter((job) => job.observedOutcome !== null).length,
+    observedOutcomeEvidenceProvided: observedGoldenOutcomes.size > 0,
     actionManifest: actionManifest.evidence,
     actionContract: { status: actionContract.status, exitCode: actionContract.exitCode },
     jobs: suite.jobs,
@@ -632,7 +656,7 @@ async function main(): Promise<void> {
   const storeRoot = resolve(stringOption(options, "store") ?? resolve(FINNOR_OS_ROOT, ".certifications"));
   const store = new CertificationArtifactStore(storeRoot);
   if (command === "final") return runFinalCertificationCommand(options, store);
-  console.error("Usage: npm run release:certify -- final [--core-sha=<40-char-sha>] [--deployment-evidence=<json>] [--store=<dir>] [--skip-core] [--dry-run]");
+  console.error("Usage: npm run release:certify -- final [--core-sha=<40-char-sha>] [--deployment-evidence=<json>] [--golden-outcomes=<json>] [--store=<dir>] [--skip-core] [--dry-run]");
   process.exitCode = 2;
 }
 

@@ -26,6 +26,24 @@ describe("Phase 6 final certification", () => {
     expect(suite.status).toBe("BLOCKED_CONFIG");
   });
 
+  it("does not treat contract evidence as a requested-outcome assertion", () => {
+    const job = GOLDEN_BUSINESS_JOBS[0]!;
+    const suite = evaluateGoldenBusinessSuite({
+      databaseEvidence: new Set([job.evidenceRef]),
+    });
+    const result = suite.jobs.find((candidate) => candidate.id === job.id)!;
+    expect(result.resolvePlanCorrect).toBe(true);
+    expect(result.endToEndCorrect).toBe(false);
+    expect(result.status).toBe("BLOCKED_CONFIG");
+
+    const wrong = evaluateGoldenBusinessSuite({
+      databaseEvidence: new Set([job.evidenceRef]),
+      observedOutcomes: new Map([[job.id, "DENIED" as const]]),
+    }).jobs.find((candidate) => candidate.id === job.id)!;
+    expect(wrong.status).toBe("FAIL");
+    expect(wrong.observedOutcome).toBe("DENIED");
+  });
+
   it("binds final identity to the current suite and rejects stale reuse", () => {
     const score = {
       totalJobs: 100,

@@ -16,6 +16,7 @@ vi.mock("@finnor/db", async (importOriginal) => {
     transitionWork: vi.fn(async () => undefined),
     beginWorkPlannerAttempt: vi.fn(async () => ({ id: "00000000-0000-4000-8000-0000000000a4", attempt: 1, claimed: true, status: "planning" })),
     finishWorkPlannerAttempt: vi.fn(async () => undefined),
+    isInstructionCancelled: vi.fn(async () => false),
   };
 });
 
@@ -25,6 +26,7 @@ vi.mock("../../packages/orchestration/src/instruction-trace", async (importOrigi
     ...actual,
     ensureInstructionSession: vi.fn(async () => undefined),
     emitInstructionEvent: vi.fn(async () => undefined),
+    isInstructionCancelled: vi.fn(async () => false),
   };
 });
 

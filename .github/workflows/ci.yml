@@ -1,17 +1,44 @@
-# CI (§29): lint/typecheck + vitest on every PR. No deploy step yet — manual deploy
-# until there's a reason to automate it.
+# CI (§29): lint/typecheck + vitest on every PR. Production deployment is owned by
+# production-release.yml and its commit-locked Phase 5 readiness/release job graph.
 # NOTE: this repo lives at finnor-os/ inside the FINNOR repository, so paths are scoped.
 name: finnor-os-ci
 on:
   pull_request:
-    paths: ["finnor-os/**"]
+    paths:
+      - "finnor-os/**"
+      - ".github/workflows/**"
+      - "infra/deployment/**"
+      - "scripts/release/**"
+      - "package.json"
+      - "package-lock.json"
+      - "JARVIS-CREDENTIALS-LEDGER.md"
   push:
     branches: [main]
-    paths: ["finnor-os/**"]
+    paths:
+      - "finnor-os/**"
+      - ".github/workflows/**"
+      - "infra/deployment/**"
+      - "scripts/release/**"
+      - "package.json"
+      - "package-lock.json"
+      - "JARVIS-CREDENTIALS-LEDGER.md"
 defaults:
   run:
     working-directory: finnor-os
 jobs:
+  deployment-truth:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run release:truth
+      - run: npm run test:release
+
   test:
     runs-on: ubuntu-latest
     services:
@@ -36,7 +63,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
@@ -44,6 +71,7 @@ jobs:
       # whenever a route is added or its visible guard pattern changes without the
       # generated review document being refreshed in the same change.
       - run: npm run authz:matrix:check
+      - run: npm run openapi
       - run: npm run typecheck
       - run: npm run test:planner-evals
       - run: npm run db:migrate

@@ -1,6 +1,7 @@
 import { StartObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
+import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
 import { receiveWork, recordWorkResponse, transitionWork, workAggregate } from "@finnor/db";
 import { ensureObjectiveIterationDelivery, linkEmployeeConversationTurnToWork, OperatingInteractionContextError, parseObjectiveSuccessCondition, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
@@ -160,6 +161,11 @@ export async function POST(req: Request): Promise<Response> {
         ? (aggregate.work as { status: string }).status
         : received.status;
       return duplicateWithoutObjectiveReplay(received, aggregateStatus);
+    }
+    try {
+      await requireWorkerFleetReady();
+    } catch (error) {
+      return await recoverableWorkError(error, ctx.tenantId, received, 503, { code: "worker_fleet_unavailable" });
     }
     let activeContext = parsed.data.activeContext;
     try {

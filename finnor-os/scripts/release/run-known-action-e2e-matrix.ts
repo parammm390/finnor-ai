@@ -3,9 +3,9 @@
 // This is intentionally separate from the planner smoke runner. Every row starts
 // at FinnorOrchestrator.draftKnownAction(), after a real Supabase JWT/tenant
 // verification, and therefore cannot turn a slow or unavailable LLM planner into
-// a false certification failure. The existing intake idempotency claim, approval
-// decision, executor/runtime bridge, worker queue, and DecisionReceipt tables are
-// still exercised and reported independently.
+// a false certification failure. The canonical Work input claim, approval decision,
+// executor/runtime bridge, worker queue, and DecisionReceipt tables are still
+// exercised and reported independently.
 
 import { randomUUID } from "node:crypto";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
@@ -17,6 +17,8 @@ import {
   decisionReceipts,
   domainActions,
   getPool,
+  receiveWork,
+  recordWorkResponse,
   withTenant,
 } from "@finnor/db";
 import { resolveTenantFromBearerToken } from "@finnor/security";
@@ -29,7 +31,6 @@ import {
 import { buildActionFixture } from "./run-action-contract-matrix";
 import { CERTIFICATION_TENANTS, type CertificationTenantKey } from "./seed-certification-tenants";
 import { evaluateStagingGuards, formatStagingGuardReport, type StagingGuardReport } from "./staging-guards";
-import { claimOrGetCachedIntake, completeIntakeClaim } from "../../apps/api/lib/intake-idempotency";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const FINNOR_OS_ROOT = resolve(SCRIPT_DIR, "../..");
@@ -120,7 +121,7 @@ interface MatrixRow {
   error?: string;
 }
 
-interface SafeStoredResponse {
+interface SafeStoredResponse extends Record<string, unknown> {
   actionId: string | null;
   actionType: string;
   actionStatus: string | null;
@@ -369,6 +370,7 @@ async function runRow(
   const idempotencyKey = `p3-known-${row.actionType}-${randomUUID()}`;
   const expectedApproval = spec.approvalFloor !== "NONE";
   let claimId: string | null = null;
+  let received: Awaited<ReturnType<typeof receiveWork>> | null = null;
   let actionId: string | null = null;
   let action: ActionSnapshot | null = null;
   let receipt: ReceiptSnapshot = { id: null, finalized: false, policyApplied: false, actualResult: false, failure: false };
@@ -383,16 +385,30 @@ async function runRow(
   let stored: SafeStoredResponse = safeResponse(null, row.actionType, null, null);
 
   try {
-    const claim = await claimOrGetCachedIntake(auth.tenantId, idempotencyKey);
-    if (claim.status !== "claimed") throw new Error(`fresh idempotency key was ${claim.status}`);
-    claimId = claim.id;
+    received = await receiveWork({
+      tenantId: auth.tenantId,
+      instruction: `P3 known action: ${row.actionType}`,
+      channel: "text",
+      instructionId: randomUUID(),
+      userId: auth.userId,
+      idempotencyKey,
+      authorityContext: { principal: auth.userId, roles: [auth.role] },
+    });
+    if (!received.created || received.duplicate) throw new Error("fresh canonical Work input was not created");
+    claimId = received.workId;
     idempotencyClaimed = true;
 
     const drafted = await orchestrator.draftKnownAction(
       row.actionType,
       payloadFor(row.actionType),
       auth.tenantId,
-      { source: "p3_t5_known_action_certification" },
+      {
+        source: "p3_t5_known_action_certification",
+        workId: received.workId,
+        instructionId: received.instructionId,
+        initiatedBy: auth.userId,
+        authorityContext: { principal: auth.userId, roles: [auth.role] },
+      },
     );
     actionId = drafted.action.id;
     firstResult = drafted.result;
@@ -421,9 +437,19 @@ async function runRow(
     receipt = await receiptSnapshot(auth.tenantId, actionId);
     const finalResult = observedGate ? approvalResult : firstResult;
     stored = safeResponse(actionId, row.actionType, action, finalResult);
-    await completeIntakeClaim(auth.tenantId, claimId, stored);
-    const duplicate = await claimOrGetCachedIntake(auth.tenantId, idempotencyKey);
-    idempotencyDuplicateSafe = duplicate.status === "cached" && cachedResponseMatches(duplicate.response, stored);
+    await recordWorkResponse(auth.tenantId, claimId, stored);
+    const duplicate = await receiveWork({
+      tenantId: auth.tenantId,
+      instruction: `P3 known action: ${row.actionType}`,
+      channel: "text",
+      instructionId: received.instructionId,
+      userId: auth.userId,
+      idempotencyKey,
+      authorityContext: { principal: auth.userId, roles: [auth.role] },
+    });
+    idempotencyDuplicateSafe = duplicate.duplicate
+      && duplicate.workId === claimId
+      && cachedResponseMatches(jsonRecord(duplicate.finalOutcome).response, stored);
   } catch (caught) {
     error = safeError(caught);
     if (claimId) {
@@ -431,9 +457,19 @@ async function runRow(
         action = actionId ? await actionSnapshot(auth.tenantId, actionId) : null;
         receipt = actionId ? await receiptSnapshot(auth.tenantId, actionId) : receipt;
         stored = safeResponse(actionId, row.actionType, action, observedGate ? approvalResult : firstResult);
-        await completeIntakeClaim(auth.tenantId, claimId, stored);
-        const duplicate = await claimOrGetCachedIntake(auth.tenantId, idempotencyKey);
-        idempotencyDuplicateSafe = duplicate.status === "cached" && cachedResponseMatches(duplicate.response, stored);
+        await recordWorkResponse(auth.tenantId, claimId, stored);
+        const duplicate = await receiveWork({
+          tenantId: auth.tenantId,
+          instruction: `P3 known action: ${row.actionType}`,
+          channel: "text",
+          instructionId: received?.instructionId ?? randomUUID(),
+          userId: auth.userId,
+          idempotencyKey,
+          authorityContext: { principal: auth.userId, roles: [auth.role] },
+        });
+        idempotencyDuplicateSafe = duplicate.duplicate
+          && duplicate.workId === claimId
+          && cachedResponseMatches(jsonRecord(duplicate.finalOutcome).response, stored);
       } catch (completionError) {
         error = `${error}; idempotency completion ${safeError(completionError)}`.slice(0, 500);
       }

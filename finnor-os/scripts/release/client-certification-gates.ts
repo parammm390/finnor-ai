@@ -20,7 +20,7 @@ import type { CoreDiffResult } from "./core-diff-guard";
 export interface ClientJourneyEvidence {
   canonicalCoreSha: string;
   deploymentEvidenceHash: string;
-  journeys: Array<{ journey: string; actionTypes: string[]; receiptIds: string[] }>;
+  journeys: Array<{ journey: string; actionTypes: string[]; receiptIds: string[]; outcomeVerified: boolean }>;
 }
 
 export interface ClientGateMatrixResult {
@@ -189,6 +189,11 @@ async function receiptGates(
     const missing = { missingActions, receiptCount: receiptIds.length };
     return [gateResult("water_treatment_journeys", "BLOCKED_CONFIG", missing), gateResult("evidence_receipts", "BLOCKED_CONFIG", missing)];
   }
+  const unverifiedJourneys = journeyEvidence.journeys.filter((journey) => journey.outcomeVerified !== true).map((journey) => journey.journey);
+  if (unverifiedJourneys.length > 0) {
+    const missingOutcomeEvidence = { unverifiedJourneys, rule: "every journey must bind to a verified requested outcome; identity/routing/UI evidence is insufficient" };
+    return [gateResult("water_treatment_journeys", "BLOCKED_CONFIG", missingOutcomeEvidence), gateResult("evidence_receipts", "BLOCKED_CONFIG", missingOutcomeEvidence)];
+  }
   const receipts = await pool.query<{
     id: string; action_type: string | null; finalized: boolean; failed: boolean;
     has_evidence: boolean; has_policy: boolean; has_outcome: boolean;
@@ -196,7 +201,7 @@ async function receiptGates(
     `SELECT r.id,coalesce(a.action_type,r.proposed_action->>'actionType') action_type,r.finalized_at IS NOT NULL finalized,r.failure IS NOT NULL failed,
        jsonb_array_length(CASE WHEN jsonb_typeof(r.evidence)='array' THEN r.evidence ELSE '[]'::jsonb END)>0 has_evidence,
        r.policy_applied IS NOT NULL has_policy,
-       (r.actual_result IS NOT NULL OR r.expected_result IS NOT NULL) has_outcome
+       r.actual_result IS NOT NULL has_outcome
      FROM finnor_os.decision_receipts r
      LEFT JOIN finnor_os.domain_actions a ON a.id=r.domain_action_id
      WHERE r.tenant_id=$1 AND r.id=ANY($2::uuid[])`,
