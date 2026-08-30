@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "fixedClock": "2026-08-31T00:00:00.000Z",
+  "fixedSeed": 31082026,
+  "cases": [
+    { "id": "canonical_fact_already_known", "category": "truth", "expected": "KNOWN" },
+    { "id": "missing_canonical_fact", "category": "uncertainty", "expected": "MISSING" },
+    { "id": "stale_memory", "category": "freshness", "expected": "STALE" },
+    { "id": "conflicting_memory_canonical_data", "category": "precedence", "expected": "CANONICAL_WINS" },
+    { "id": "ambiguous_entity", "category": "uncertainty", "expected": "AMBIGUOUS" },
+    { "id": "cross_tenant_candidate", "category": "tenant_boundary", "expected": "REJECTED" },
+    { "id": "missing_field_classification", "category": "uncertainty", "expected": "MISSING" },
+    { "id": "external_outcome_unknown", "category": "uncertainty", "expected": "EXTERNAL_UNKNOWN" },
+    { "id": "provider_state_stale", "category": "freshness", "expected": "STALE" },
+    { "id": "computer_inspection_required", "category": "selection", "expected": "INSPECT" },
+    { "id": "document_retrieval", "category": "selection", "expected": "RETRIEVE" },
+    { "id": "external_research", "category": "selection", "expected": "RESEARCH" },
+    { "id": "user_clarification", "category": "selection", "expected": "ASK" },
+    { "id": "unnecessary_clarification_avoidance", "category": "clarification", "expected": "READ" },
+    { "id": "unnecessary_retrieval_avoidance", "category": "stop", "expected": "NO_ACQUISITION" },
+    { "id": "low_value_research_rejected", "category": "value", "expected": "REJECTED" },
+    { "id": "privacy_sensitive_acquisition_rejected", "category": "privacy", "expected": "REJECTED" },
+    { "id": "conflicting_sources", "category": "conflict", "expected": "CONFLICTING" },
+    { "id": "unresolved_high_risk_proposition", "category": "safety", "expected": "BLOCKED" },
+    { "id": "acquisition_budget_exhaustion", "category": "budget", "expected": "BUDGET_EXHAUSTED" },
+    { "id": "wait_for_event", "category": "selection", "expected": "WAIT" },
+    { "id": "p2_unresolved_resolved_admissible", "category": "p2_handoff", "expected": "P2_RESOLVED_TO_ADMISSIBLE" },
+    { "id": "p2_unresolved_still_unresolved", "category": "p2_handoff", "expected": "P2_STILL_UNRESOLVED" },
+    { "id": "p2_rejected_remains_rejected", "category": "p2_handoff", "expected": "P2_REJECTED" }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "p3BaselineSha": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
+  "p2LocalCertifiedShaAtStart": "856c0cc370adc35490b18f9dc1d7244bcf46266f",
+  "p2ClosureStatusAtStart": "RUNNING_NO_P2_CLOSURE_PASS",
+  "responsibilityBoundary": {
+    "owns": ["epistemic state", "uncertainty classification", "read-only information-action contracts", "deterministic selection", "belief recomputation", "structured redacted trace", "semantic differential"],
+    "doesNotOwn": ["OperatingContext", "canonical truth", "memory", "operational query execution", "provider source truth", "BusinessEffect", "Authority", "Work", "Objective", "computer mutation", "CausalReplay persistence"],
+    "productionMode": "SHADOW_ONLY",
+    "consequentialMutations": 0,
+    "plannerCallsAdded": 0
+  },
+  "epistemicState": {
+    "version": 1,
+    "fields": ["propositions", "canonicalTruth", "evidence", "conflicts", "unknowns", "freshness", "provenance", "dependencies", "transitions"],
+    "propositionStatuses": ["KNOWN", "UNKNOWN", "STALE", "CONFLICTING", "UNCERTAIN"],
+    "propositionFields": ["subject", "predicate", "value", "source", "sourceAuthority", "observedAt", "validAt", "freshness", "confidence", "evidenceRefs", "dependencyRefs", "contradictingEvidenceRefs"],
+    "canonicalTruthSeparateFromBelief": true
+  },
+  "evidence": {
+    "taxonomy": ["CANONICAL_DB", "ACTIVE_WORK", "EXPLICIT_USER_INPUT", "PROFILE", "SESSION", "MEMORY", "DOCUMENT", "PROVIDER_OBSERVATION", "COMPUTER_OBSERVATION", "WEB_RESEARCH", "DERIVED"],
+    "appendOnly": true,
+    "derivedEvidenceRequiresParentEvidence": true,
+    "consequentialBeliefRequiresAnswerEvidenceProvenance": true,
+    "contextOnlyCannotSatisfyConsequentialPrecondition": true
+  },
+  "truthPrecedence": {
+    "exactExistingOrder": ["CANONICAL", "WORK", "PROFILE", "SESSION", "MEMORY", "WEB"],
+    "lowerSourceCanOverrideCanonical": false,
+    "conflictingEvidencePreserved": true,
+    "providerObservationBecomesCanonicalInsideP3": false,
+    "userInputOwnsOnlyUserIntent": true
+  },
+  "uncertainty": {
+    "taxonomy": ["MISSING", "AMBIGUOUS", "STALE", "CONFLICTING", "LOW_CONFIDENCE", "UNOBSERVABLE", "EXTERNAL_UNKNOWN", "PERMISSION_BLOCKED"],
+    "fields": ["requiredPropositionId", "whyUnresolved", "decisionDependency", "possibleAcquisitionActions", "consequenceOfActingWithoutResolution"]
+  },
+  "informationActions": {
+    "kinds": ["READ", "RETRIEVE", "ASK", "INSPECT", "RESEARCH", "WAIT"],
+    "fields": ["requiredInput", "expectedInformation", "sourceAuthority", "cost", "latency", "userInterruption", "privacyExposure", "failureModes", "freshnessGain", "decisionDependency"],
+    "mutability": "READ_ONLY",
+    "adapters": ["CANONICAL_OPERATIONAL_QUERY", "OPERATING_CONTEXT_READ", "HYBRID_RETRIEVAL", "EVIDENCE_CORPUS_RETRIEVAL", "CLARIFICATION_REQUEST", "SOURCE_TRUTH_OBSERVATION", "COMPUTER_READ_ONLY_OBSERVATION", "WEB_RESEARCH", "WORK_EVENT_WAIT"],
+    "vendorAgnosticSemantics": true
+  },
+  "decisionValue": {
+    "heuristicVersion": "p3-information-value-v1",
+    "calibratedProbabilityClaim": false,
+    "ordering": ["safety_legality", "decision_relevance", "expected_uncertainty_reduction", "user_interruption", "latency", "cost", "privacy_failure"],
+    "netUtility": "decisionQualityImprovement + uncertaintyReduction - interruption - latency - monetary/tool cost - privacy exposure - failure risk",
+    "netUtilityUse": "stop threshold and final tie-breaker only; never outranks lexicographic safety order"
+  },
+  "stopAndBudget": {
+    "stopWhen": ["all mandatory decision-critical propositions resolve and no candidate exceeds the utility threshold", "no legal action exists", "deadline reached", "budget exhausted"],
+    "budgets": ["maxActions", "maxUserInterruptions", "maxLatencyMs", "maxCostUnits", "deadline"],
+    "duplicateAcquisitionFingerprintRejected": true,
+    "structuralLoopBound": "maxActions"
+  },
+  "beliefUpdate": {
+    "algorithm": "append immutable evidence then deterministically recompute every proposition from the complete history",
+    "transitions": ["UNKNOWN->KNOWN", "UNKNOWN->UNCERTAIN", "STALE->KNOWN", "CONFLICTING->KNOWN", "KNOWN->STALE", "KNOWN->CONFLICTING", "EXTERNAL_UNKNOWN->KNOWN"],
+    "replayable": true,
+    "historicalEvidenceMutated": false
+  },
+  "p2Handoff": {
+    "ADMISSIBLE": "continue existing governed path without acquisition",
+    "REJECTED": "return rejection without acquisition or rerun",
+    "UNRESOLVED": "derive mandatory propositions, select legal information action, append observation, rerun P2",
+    "rejectedOverridePossible": false
+  },
+  "clarificationPolicy": {
+    "machineReadableSourceBeforeAsk": true,
+    "askFor": ["user intent ambiguity", "user-owned authorization", "user-owned choice", "no sufficiently authoritative machine-readable source", "machine acquisition risk/cost exceeds interruption"],
+    "minimalDecisionSpecificFields": true
+  },
+  "conflictResolution": {
+    "order": ["source ownership/precedence", "freshness within equal authority", "preserve every evidence record", "inspect/read/ask only when decision-relevant"],
+    "confidenceAveraging": false,
+    "unresolvedHighRiskBehavior": "BLOCK"
+  },
+  "trace": {
+    "version": 1,
+    "redaction": "STRUCTURED_DECISIONS_ONLY",
+    "records": ["initial proposition statuses", "uncertainties", "candidate action scores/reason codes", "selected action outcomes", "belief transitions", "stop decisions", "final proposition statuses", "P2 statuses", "semantic diff"],
+    "excludes": ["proposition values", "prompts", "credentials", "raw provider payloads", "chain-of-thought"],
+    "causalReplayAdapter": "epistemicTraceToCausalReplayNodes"
+  },
+  "semanticDifferential": {
+    "fields": ["required facts", "facts available", "missing facts", "source precedence", "clarification necessity", "selected source", "freshness", "conflicts", "decision-critical uncertainty", "stop condition"],
+    "classifications": ["EQUIVALENT", "STRICTER_SAFE", "BETTER_INFORMATION", "REGRESSION", "UNSUPPORTED", "FIXTURE_INVALID"],
+    "lowerAuthorityOverCanonical": "REGRESSION",
+    "consequentialDecisionWithMandatoryUncertainty": "REGRESSION"
+  },
+  "p4Deferrals": [
+    "authoritative epistemic routing or consequential execution cutover",
+    "probability calibration learned from production outcomes",
+    "new retrieval, memory, canonical truth, authority, or telemetry stores",
+    "automatic external research for sensitive tenant data",
+    "planner-generated desired-state program coverage beyond certified P1/P2 seams"
+  ]
+}

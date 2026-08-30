@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "fixedClock": "2026-08-31T00:00:00.000Z",
+  "fixedSeed": 31082026,
+  "extensionCases": 24,
+  "fixture": "packages/epistemic-runtime/fixtures/locked-cases.json",
+  "fixtureSha256": "ce3632ddf4c3a004347d365361ae307d04257c22ba31672c5fea178ec70c42fc",
+  "liveExternalDependencies": 0,
+  "extends": ["P0", "P1", "P2"]
+}

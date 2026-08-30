@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "auditKind": "P3_PRE_CHANGE_CURRENT_HEAD_AUDIT",
+  "workspaceHeadAtAudit": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
+  "p3BaselineSha": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
+  "p2ClosureStatusAtAudit": "RUNNING_NO_P2_CLOSURE_PASS",
+  "p2ClosureRefAtAudit": "1a31904b35fff39aa1cab1c404f1d7467d723989",
+  "p2LocalCertifiedShaAtAudit": "856c0cc370adc35490b18f9dc1d7244bcf46266f",
+  "scope": "Tracked non-binary files below finnor-os/apps and finnor-os/packages at the stated baseline, plus the locally certified P2 worktree for P1/P2 contracts.",
+  "referenceCounting": {
+    "tool": "git grep -I -E -o and git grep -I -E -l against the exact audited SHAs",
+    "definition": "references is exact non-overlapping regex matches; files is exact tracked files with at least one match",
+    "baselinePatterns": [
+      { "concept": "operating context", "pattern": "OperatingContext|assembleOperatingContext", "references": 32, "files": 5 },
+      { "concept": "truth precedence/source roles", "pattern": "OPERATING_TRUTH_PRECEDENCE|OperatingSourceRef", "references": 10, "files": 2 },
+      { "concept": "canonical operational queries", "pattern": "OperationalQueryRequest|OperationalQueryResult|executeOperationalQuery", "references": 113, "files": 10 },
+      { "concept": "memory retrieval", "pattern": "hybridRetrieve|retrieveMemoryForPlanner|retrieveForPlanner", "references": 13, "files": 7 },
+      { "concept": "corrections", "pattern": "correction|Correction", "references": 115, "files": 13 },
+      { "concept": "provenance/evidence", "pattern": "provenance|EvidenceRef|evidence", "references": 1292, "files": 140 },
+      { "concept": "web research", "pattern": "web_research|WebResearch|search_web|researchContext", "references": 28, "files": 7 },
+      { "concept": "computer observations", "pattern": "StructuredPageObservation|ComputerObservation|computer observation", "references": 10, "files": 3 },
+      { "concept": "entity resolution", "pattern": "resolveEntity|entity resolution|canonical_entity", "references": 72, "files": 16 },
+      { "concept": "clarification", "pattern": "clarification_request|Clarification|clarification", "references": 112, "files": 18 },
+      { "concept": "Work/objective inspection", "pattern": "ActiveWork|activeWork|Objective|objective", "references": 1885, "files": 86 },
+      { "concept": "provider/source observations", "pattern": "SourceTruth|source_truth|ProviderObservation|external observation", "references": 42, "files": 8 },
+      { "concept": "CausalReplay/decision context", "pattern": "CausalReplay|causal replay|DecisionContextSnapshot", "references": 39, "files": 3 }
+    ],
+    "p2PatternsAtLocalCertifiedSha": [
+      { "concept": "P1 Operational IR", "pattern": "OperationalProgram|OperationalNode|OperationalQuery", "references": 625, "files": 42 },
+      { "concept": "P1 validation/lowering", "pattern": "lowerOperationalProgram|validateOperationalProgram", "references": 37, "files": 10 },
+      { "concept": "P2 static admissibility", "pattern": "StaticAdmissibilityResult|ADMISSIBLE|REJECTED|UNRESOLVED", "references": 181, "files": 14 },
+      { "concept": "P2 resolution", "pattern": "checkOperationalProgramAdmissibility|resolutionReasonCode", "references": 41, "files": 4 },
+      { "concept": "P2 shadow", "pattern": "runP2EffectShadow|observeOperationalQueryP2EffectShadow", "references": 15, "files": 5 }
+    ]
+  },
+  "exactOwners": [
+    { "capability": "operating context assembly", "types": ["OperatingContext", "OperatingSourceRef"], "functions": ["assembleOperatingContext"], "paths": ["packages/shared-types/src/operating-context.ts", "packages/orchestration/src/operating-context.ts"] },
+    { "capability": "truth precedence", "types": ["OperatingEvidenceKind"], "constants": ["OPERATING_TRUTH_PRECEDENCE"], "path": "packages/shared-types/src/operating-context.ts", "exactOrder": ["CANONICAL", "WORK", "PROFILE", "SESSION", "MEMORY", "WEB"] },
+    { "capability": "canonical operational queries", "types": ["OperationalQueryRequest", "OperationalQueryResult", "OperationalQuerySource"], "functions": ["executeOperationalQuery"], "paths": ["packages/shared-types/src/operational-queries.ts", "packages/read-models/src/operational-queries.ts"], "sourceKind": "canonical_postgres" },
+    { "capability": "memory retrieval", "types": ["HybridRetrieveParams", "HybridRetrievalResult"], "functions": ["hybridRetrieve", "plannerMemoryContext"], "paths": ["packages/memory/src/retrieval.ts", "packages/orchestration/src/planner-memory.ts"] },
+    { "capability": "corrections", "types": ["RecordCorrectionParams", "CorrectionMatch"], "functions": ["recordCorrection", "findMatchingCorrection"], "path": "packages/memory/src/corrections.ts", "boundary": "corrections outrank semantic retrieval but do not rewrite canonical database truth" },
+    { "capability": "durable evidence", "functions": ["createEvidenceSource", "appendEvidenceVersion", "searchEvidence", "fuseEvidenceCandidates"], "path": "packages/memory/src/evidence.ts" },
+    { "capability": "source truth/provider observations", "types": ["CanonicalSourceRecord", "SourceOwnershipPolicy", "ExternalEffectObservation"], "functions": ["materializeSourceRecord", "freshnessState", "observeExternalEffect", "settleExternalEffectObservation"], "paths": ["packages/shared-types/src/source-truth.ts", "packages/data-platform/src/source-truth.ts", "packages/orchestration/src/external-observation.ts"], "boundary": "provider acknowledgement is not observation; provider data becomes canonical only through the existing source-truth materializer" },
+    { "capability": "computer observation", "types": ["StructuredPageObservation", "ComputerPrimitiveResult", "ComputerRunnerDecision"], "path": "packages/computer/src/contracts.ts" },
+    { "capability": "web research", "types": ["ResolvedResearchContext", "ResearchResolution"], "functions": ["resolveCompetitorResearch"], "actions": ["search_web", "scan_competitors", "check_business_reviews"], "paths": ["packages/orchestration/src/research-context.ts", "packages/domain-plugins/web-research/index.ts"] },
+    { "capability": "entity/reference resolution", "types": ["EmployeeConversationContext", "OperatingInteractionContext", "CanonicalEntityRef"], "functions": ["prepareEmployeeConversationTurn", "resolveOperatingInteractionContext", "effectiveInteractionTargets"], "paths": ["packages/orchestration/src/conversation-kernel.ts", "packages/orchestration/src/interaction-context.ts", "packages/shared-types/src/company-graph.ts"] },
+    { "capability": "clarification", "types": ["ClarificationRequestSchema"], "owner": "clarificationPlugin", "path": "packages/domain-plugins/clarification/index.ts", "boundary": "first-class non-business-effect clarification card" },
+    { "capability": "Work/objective/current provider state", "owners": ["works", "work_entity_links", "delegations", "acknowledgement_requests", "internal_events", "tenant_integrations", "external_refs"], "paths": ["packages/orchestration/src/operating-context.ts", "packages/data-platform/src/source-truth.ts"] },
+    { "capability": "CausalReplay", "types": ["DecisionContextSnapshot", "CausalReplayEvidenceRef", "CausalReplayNode", "CausalReplayProjection"], "functions": ["causalReplayProjection"], "paths": ["packages/shared-types/src/causal-replay.ts", "packages/read-models/src/causal-replay.ts"] },
+    { "capability": "P1 Operational IR", "owner": "@finnor/operational-ir", "types": ["OperationalProgram"], "functions": ["validateOperationalProgram", "lowerOperationalProgram"], "path": "packages/operational-ir" },
+    { "capability": "P2 static admissibility", "owner": "@finnor/operational-ir", "types": ["StaticAdmissibilityResult", "StaticAdmissibilityIssue"], "functions": ["checkOperationalProgramAdmissibility"], "statuses": ["ADMISSIBLE", "REJECTED", "UNRESOLVED"], "paths": ["packages/operational-ir/src/admissibility.ts", "packages/operational-ir/src/resolution.ts", "packages/operational-ir/src/static-lowerer.ts"] }
+  ],
+  "reuseDecision": {
+    "newContextDatabase": false,
+    "newMemorySystem": false,
+    "newCanonicalTruthOwner": false,
+    "newAuthoritySystem": false,
+    "newBusinessEffectIdentity": false,
+    "p3Role": "pure reasoning and read-only adapter layer over the exact audited owners"
+  }
+}

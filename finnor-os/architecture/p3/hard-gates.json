@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "p3BaselineSha": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
+  "gates": [
+    { "id": "canonical_truth_overridden_by_lower_source", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/belief-update.test.ts", "title": "always selects canonical truth over contradictory lower-authority evidence" }] },
+    { "id": "belief_without_provenance_used_consequentially", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/belief-update.test.ts", "title": "requires complete answer evidence provenance for a consequential precondition" }] },
+    { "id": "P2_rejected_overridden", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/p2-handoff.test.ts", "title": "never converts or overrides a P2 rejection" }] },
+    { "id": "mandatory_uncertainty_ignored", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/shadow-trace-semantic.test.ts", "title": "classifies lower-authority selection and unresolved consequential action as regressions" }] },
+    { "id": "unsafe_guessing", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/fixtures/locked-corpus.ts", "title": "unresolved_high_risk_proposition" }] },
+    { "id": "cross_tenant_information_acquisition", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/belief-update.test.ts", "title": "rejects cross-tenant observations, invalid derived evidence, and immutable id collisions" }] },
+    { "id": "unauthorized_sensitive_retrieval", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/information-actions.test.ts", "title": "represents every acquisition as read-only and rejects privacy boundary violations" }] },
+    { "id": "unnecessary_user_interrupt_regressions", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/information-actions.test.ts", "title": "chooses a legal machine read before interrupting the user" }] },
+    { "id": "infinite_acquisition_loops", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/controller.test.ts", "title": "cannot repeat an identical acquisition or overrun any configured budget" }] },
+    { "id": "epistemic_budget_overruns", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/controller.test.ts", "title": "cannot repeat an identical acquisition or overrun any configured budget" }] },
+    { "id": "shadow_consequential_mutations", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/shadow-trace-semantic.test.ts", "title": "returns the exact planner result and records no value, prompt, or chain of thought" }] },
+    { "id": "new_context_sources_of_truth", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/context-adapter.test.ts", "title": "preserves exact P0 precedence and the answer-evidence/context-only boundary" }] },
+    { "id": "new_memory_systems", "expected": 0, "evidence": [{ "file": "architecture/p3/pre-change-reference-inventory.json", "title": "\"newMemorySystem\": false" }] },
+    { "id": "new_authority_systems", "expected": 0, "evidence": [{ "file": "architecture/p3/pre-change-reference-inventory.json", "title": "\"newAuthoritySystem\": false" }] },
+    { "id": "BusinessEffect_identity_changes", "expected": 0, "evidence": [{ "file": "architecture/p3/pre-change-reference-inventory.json", "title": "\"newBusinessEffectIdentity\": false" }] },
+    { "id": "P0_invariant_regressions", "expected": 0, "evidence": [{ "file": "tests/unit/p0-architecture-contract.test.ts", "title": "certifies exact owners, runtime lifecycle enums, invariants, inventories, and a cycle-free minimal-churn diff" }] },
+    { "id": "P1_invariant_regressions", "expected": 0, "evidence": [{ "file": "tests/unit/p1-architecture-contract.test.ts", "title": "locks the audited adapter matrix, lowerer non-authority guarantees, and no-cutover shadow scope" }] },
+    { "id": "P2_invariant_regressions", "expected": 0, "evidence": [{ "file": "tests/unit/p2-architecture-contract.test.ts", "title": "locks the effect taxonomy, information lattice, reversibility, and authority separation" }] },
+    { "id": "unexplained_semantic_diff_regressions", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/shadow-trace-semantic.test.ts", "title": "classifies lower-authority selection and unresolved consequential action as regressions" }] },
+    { "id": "new_package_cycles", "expected": 0, "evidence": [{ "file": "packages/epistemic-runtime/src/import-boundary.test.ts", "title": "keeps epistemic runtime below orchestration with no reverse or transitive package cycle" }] }
+  ]
+}
