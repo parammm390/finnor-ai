@@ -136,6 +136,12 @@ export function decideAcquisitionStop(
     .map((requirement) => requirement.propositionId)
     .sort();
   const best = [...scores].sort(compareInformationActionScores).find((score) => score.eligible);
+  const budgetReasonCodes = [...new Set(scores.flatMap((score) => score.reasonCodes).filter((code) =>
+    code === "MAX_ACTIONS_EXCEEDED"
+    || code === "MAX_USER_INTERRUPTION_EXCEEDED"
+    || code === "MAX_LATENCY_EXCEEDED"
+    || code === "MAX_COST_EXCEEDED",
+  ))];
   if (unresolvedMandatory.length === 0 && (!best || best.netUtility <= utilityThreshold)) {
     return {
       stop: true,
@@ -148,10 +154,22 @@ export function decideAcquisitionStop(
   if (Date.parse(now) >= Date.parse(budget.deadline)) {
     return { stop: true, reason: "DEADLINE_REACHED", unresolvedMandatory, reasonCodes: ["ACQUISITION_DEADLINE_REACHED"] };
   }
-  if (usage.actions >= budget.maxActions || usage.userInterruptions >= budget.maxUserInterruptions || usage.latencyMs >= budget.maxLatencyMs || usage.costUnits >= budget.maxCostUnits) {
-    return { stop: true, reason: "BUDGET_EXHAUSTED", unresolvedMandatory, reasonCodes: ["ACQUISITION_BUDGET_EXHAUSTED"] };
+  // Every acquisition consumes one action, so this dimension can be evaluated
+  // independently of the candidate set. Interruption, latency, and cost cannot:
+  // a zero allowance in one of those dimensions must still permit a candidate
+  // that consumes zero units of that dimension.
+  if (usage.actions >= budget.maxActions) {
+    return { stop: true, reason: "BUDGET_EXHAUSTED", unresolvedMandatory, reasonCodes: ["ACQUISITION_BUDGET_EXHAUSTED", "MAX_ACTIONS_EXCEEDED"] };
   }
   if (!best || !actions.some((action) => action.id === best.actionId)) {
+    if (budgetReasonCodes.length > 0) {
+      return {
+        stop: true,
+        reason: "BUDGET_EXHAUSTED",
+        unresolvedMandatory,
+        reasonCodes: ["ACQUISITION_BUDGET_EXHAUSTED", ...budgetReasonCodes],
+      };
+    }
     return { stop: true, reason: "NO_LEGAL_ACTION", unresolvedMandatory, reasonCodes: ["NO_ELIGIBLE_INFORMATION_ACTION"] };
   }
   if (best.netUtility <= utilityThreshold) {

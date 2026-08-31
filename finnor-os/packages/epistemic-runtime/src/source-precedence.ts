@@ -116,12 +116,20 @@ export function equalJson(left: JsonValue, right: JsonValue): boolean {
 
 export function evidenceFingerprint(evidence: EvidenceRecord): string {
   return epistemicHash({
+    id: evidence.id,
     propositionId: evidence.propositionId,
     tenantId: evidence.tenantId,
     source: evidence.source,
     observedAt: evidence.observedAt,
     validAt: evidence.validAt ?? null,
+    ingestedAt: evidence.ingestedAt,
     value: evidence.value,
+    confidence: evidence.confidence,
+    freshness: evidence.freshness,
+    sensitivity: evidence.sensitivity,
     provenance: evidence.provenance,
+    canonical: evidence.canonical,
+    supersedesEvidenceRefs: evidence.supersedesEvidenceRefs ?? [],
+    immutable: evidence.immutable,
   });
 }

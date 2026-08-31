@@ -89,6 +89,10 @@ describe("deterministic belief updates", () => {
     expect(propositionById(contextOnly, "invoice.balance")?.status).toBe("KNOWN");
     expect(consequentialProvenanceSatisfied(contextOnly, "invoice.balance")).toBe(false);
     expect(requirementResolved(contextOnly, testRequirement())).toBe(false);
+    expect(requirementResolved(contextOnly, testRequirement("invoice.balance", [], {
+      criticality: "INFORMATIONAL",
+      consequenceIfUnresolved: "The informational answer remains incomplete",
+    }))).toBe(true);
   });
 
   it("rejects cross-tenant observations, invalid derived evidence, and immutable id collisions", () => {
@@ -116,6 +120,10 @@ describe("deterministic belief updates", () => {
     expect(() => appendEvidenceAndRecompute(once, [
       testEvidence({ state: initial, id: "memory:immutable", value: "b" }),
     ], TEST_NOW)).toThrow(/Immutable evidence id collision/);
+    expect(() => appendEvidenceAndRecompute(once, [{
+      ...testEvidence({ state: initial, id: "memory:immutable", value: "a" }),
+      sensitivity: "PII",
+    }], TEST_NOW)).toThrow(/Immutable evidence id collision/);
   });
 
   it("supports external UNKNOWN to KNOWN through a governed observation", () => {

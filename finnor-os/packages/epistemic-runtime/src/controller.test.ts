@@ -56,4 +56,31 @@ describe("bounded epistemic controller", () => {
     expect(run.finalStop.reason).toBe("BUDGET_EXHAUSTED");
     expect(run.usage.actions).toBe(0);
   });
+
+  it("allows a non-interrupting machine read when the user-interruption budget is zero", async () => {
+    const execute = vi.fn(async (action: InformationAction): Promise<InformationObservation> => ({
+      actionId: action.id,
+      adapterId: action.adapterId,
+      tenantId: action.scope.tenantId,
+      observedAt: TEST_NOW,
+      evidence: [],
+      propositionIds: action.expectedInformation.propositionIds,
+      outcome: "NO_RESULT",
+    }));
+    const run = await runEpistemicController({
+      state: testState(),
+      requirements: [testRequirement()],
+      budget: {
+        maxActions: 1,
+        maxUserInterruptions: 0,
+        maxLatencyMs: 10_000,
+        maxCostUnits: 10,
+        deadline: "2026-09-01T00:00:00.000Z",
+      },
+      executor: { execute },
+      clock: { now: () => TEST_NOW },
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(run.usage.userInterruptions).toBe(0);
+  });
 });

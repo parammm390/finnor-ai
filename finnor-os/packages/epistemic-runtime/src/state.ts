@@ -86,7 +86,13 @@ export function addPropositionDefinitions(
   definitions: readonly PropositionDefinition[],
 ): EpistemicState {
   const existing = new Set(state.propositions.map((proposition) => proposition.id));
-  const additions = definitions.filter((definition) => !existing.has(definition.id)).map(unknownProposition);
+  const additions: Proposition[] = [];
+  for (const definition of definitions) {
+    if (!definition.id.trim()) throw new Error("Proposition id cannot be empty");
+    if (existing.has(definition.id)) continue;
+    existing.add(definition.id);
+    additions.push(unknownProposition(definition));
+  }
   if (additions.length === 0) return state;
   return {
     ...state,
@@ -124,6 +130,10 @@ export function requirementResolved(
   if (requirement.maximumAgeMs !== undefined && proposition.freshness.ageMs !== undefined && proposition.freshness.ageMs > requirement.maximumAgeMs) return false;
   if (requirement.minimumAuthority && (!proposition.sourceAuthority || !requirement.minimumAuthority.includes(proposition.sourceAuthority))) return false;
   if (requirement.minimumConfidence && !confidenceAtLeast(proposition.confidence.level, requirement.minimumConfidence)) return false;
+  if (requirement.criticality === "INFORMATIONAL") {
+    const provenance = state.provenance.find((entry) => entry.propositionId === proposition.id);
+    return provenance?.complete === true && provenance.selectedEvidenceRefs.length > 0;
+  }
   return consequentialProvenanceSatisfied(state, proposition.id);
 }
 
