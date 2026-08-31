@@ -4,7 +4,7 @@ import type { EpistemicBehaviorSummary } from "./contracts";
 import { EXISTING_TRUTH_PRECEDENCE } from "./source-precedence";
 import { compareEpistemicBehavior } from "./semantic-diff";
 import { runEpistemicShadow } from "./shadow";
-import { epistemicTraceToCausalReplayNodes } from "./trace";
+import { epistemicTraceToCausalReplayNodes, isRedactedEpistemicTrace } from "./trace";
 import { TEST_NOW, testEvidence, testRequirement, testState } from "./test-support";
 
 const BUDGET = {
@@ -58,9 +58,17 @@ describe("shadow controller, replay trace, and semantic differential", () => {
     expect(result.trace.redaction).toBe("STRUCTURED_DECISIONS_ONLY");
     expect(JSON.stringify(result.trace)).not.toContain("SHOULD_NOT_APPEAR");
     expect(JSON.stringify(result.trace).toLowerCase()).not.toContain("chain-of-thought");
+    expect(isRedactedEpistemicTrace(result.trace)).toBe(true);
+    expect(isRedactedEpistemicTrace({ ...result.trace, redaction: "RAW" })).toBe(false);
     const nodes = epistemicTraceToCausalReplayNodes(result.trace);
     expect(nodes.map((node) => node.stage)).toEqual(["context", "evidence", "planning"]);
     expect(nodes.every((node) => node.evidence.length === 1)).toBe(true);
+    const persisted = epistemicTraceToCausalReplayNodes(result.trace, {
+      source: "instruction_events.payload.epistemicTrace",
+      ref: "instruction-event-1",
+      recordedAt: TEST_NOW,
+    });
+    expect(persisted.every((node) => node.evidence[0]?.source === "instruction_events.payload.epistemicTrace")).toBe(true);
   });
 
   it("classifies lower-authority selection and unresolved consequential action as regressions", () => {

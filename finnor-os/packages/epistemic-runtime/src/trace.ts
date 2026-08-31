@@ -1,10 +1,12 @@
 import type { CausalReplayNode } from "@finnor/shared-types";
 import type {
+  EpistemicState,
   EpistemicSemanticDiff,
   RedactedEpistemicTrace,
   StaticAdmissibilityResultLike,
 } from "./contracts";
 import type { EpistemicControllerRun } from "./controller";
+import type { P2P3HandoffResult } from "./p2-handoff";
 import { epistemicHash } from "./source-precedence";
 
 function redactedReasonCode(reasonCode: string): string {
@@ -64,15 +66,117 @@ export function redactEpistemicTrace(
   };
 }
 
+function terminalP2Stop(handoff: P2P3HandoffResult): RedactedEpistemicTrace["stopDecisions"][number] {
+  if (handoff.finalP2.status === "ADMISSIBLE") {
+    return { stop: true, reason: "P2_ADMISSIBLE", unresolvedMandatory: [], reasonCodes: ["P2_TERMINAL_ADMISSIBLE"] };
+  }
+  if (handoff.finalP2.status === "REJECTED") {
+    return {
+      stop: true,
+      reason: "P2_REJECTED",
+      unresolvedMandatory: handoff.requirements.map((requirement) => requirement.propositionId).sort(),
+      reasonCodes: ["P2_TERMINAL_REJECTED_NO_OVERRIDE"],
+    };
+  }
+  return {
+    stop: true,
+    reason: handoff.usage.actions > 0 ? "BUDGET_EXHAUSTED" : "NO_LEGAL_ACTION",
+    unresolvedMandatory: handoff.requirements.map((requirement) => requirement.propositionId).sort(),
+    reasonCodes: ["P2_TERMINAL_UNRESOLVED"],
+  };
+}
+
+/** Redacts the P2 -> P3 -> P2 loop into the same trace contract used by the
+ * generic controller. It records only classifications, identifiers, scores,
+ * outcomes, and status transitions. */
+export function redactP2HandoffTrace(
+  handoff: P2P3HandoffResult,
+  initialState: EpistemicState,
+  options: { startedAt: string; completedAt: string; semanticDiff?: EpistemicSemanticDiff },
+): RedactedEpistemicTrace {
+  const body = {
+    decisionId: handoff.state.scope.decisionId,
+    startedAt: options.startedAt,
+    completedAt: options.completedAt,
+    initial: initialState.propositions.map((proposition) => ({ id: proposition.id, status: proposition.status, evidenceCount: proposition.evidenceRefs.length })),
+    final: handoff.state.propositions.map((proposition) => ({ id: proposition.id, status: proposition.status, evidenceCount: proposition.evidenceRefs.length })),
+    p2Statuses: handoff.p2History,
+    actions: handoff.rounds.flatMap((round) => round.selectedAction ? [round.selectedAction.id] : []),
+  };
+  const stopDecisions = handoff.rounds.length > 0
+    ? handoff.rounds.map((round) => ({ ...round.stopDecision, reasonCodes: round.stopDecision.reasonCodes.map(redactedReasonCode) }))
+    : [terminalP2Stop(handoff)];
+  return {
+    version: 1,
+    traceId: `epistemic:${epistemicHash(body).slice(0, 24)}`,
+    decisionId: body.decisionId,
+    startedAt: body.startedAt,
+    completedAt: body.completedAt,
+    initialPropositions: body.initial,
+    uncertainties: handoff.rounds.flatMap((round) => round.uncertainties.map((uncertainty) => ({
+      propositionId: uncertainty.requiredPropositionId,
+      category: uncertainty.category,
+      reasonCodes: uncertainty.reasonCodes.map(redactedReasonCode),
+    }))),
+    candidates: handoff.rounds.flatMap((round) => round.candidates.map((action) => ({
+      actionId: action.id,
+      kind: action.kind,
+      adapterId: action.adapterId,
+      score: {
+        ...round.scores.find((score) => score.actionId === action.id)!,
+        reasonCodes: (round.scores.find((score) => score.actionId === action.id)?.reasonCodes ?? []).map(redactedReasonCode),
+      },
+    }))),
+    selectedActions: handoff.rounds.flatMap((round) => round.selectedAction && round.observation ? [{
+      actionId: round.selectedAction.id,
+      kind: round.selectedAction.kind,
+      adapterId: round.selectedAction.adapterId,
+      outcome: round.observation.outcome,
+    }] : []),
+    beliefUpdates: handoff.state.transitions.slice(initialState.transitions.length),
+    stopDecisions,
+    finalPropositions: body.final,
+    p2Statuses: [...body.p2Statuses],
+    ...(options.semanticDiff ? { semanticDiff: options.semanticDiff } : {}),
+    redaction: "STRUCTURED_DECISIONS_ONLY",
+  };
+}
+
+export function isRedactedEpistemicTrace(value: unknown): value is RedactedEpistemicTrace {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const trace = value as Partial<RedactedEpistemicTrace>;
+  return trace.version === 1
+    && trace.redaction === "STRUCTURED_DECISIONS_ONLY"
+    && typeof trace.traceId === "string"
+    && typeof trace.decisionId === "string"
+    && typeof trace.startedAt === "string"
+    && Number.isFinite(Date.parse(trace.startedAt))
+    && typeof trace.completedAt === "string"
+    && Number.isFinite(Date.parse(trace.completedAt))
+    && Array.isArray(trace.initialPropositions)
+    && Array.isArray(trace.uncertainties)
+    && Array.isArray(trace.candidates)
+    && Array.isArray(trace.selectedActions)
+    && Array.isArray(trace.beliefUpdates)
+    && Array.isArray(trace.stopDecisions)
+    && Array.isArray(trace.finalPropositions)
+    && Array.isArray(trace.p2Statuses);
+}
+
 /** Reuses existing CausalReplay node/evidence shapes. Persistence remains the
  * existing Work/planner-attempt decision-context snapshot; this adapter creates no
  * unrelated telemetry schema. */
-export function epistemicTraceToCausalReplayNodes(trace: RedactedEpistemicTrace): CausalReplayNode[] {
-  const source = `decision_context_snapshot.epistemic.${trace.traceId}`;
+export function epistemicTraceToCausalReplayNodes(
+  trace: RedactedEpistemicTrace,
+  provenance: { source?: string; ref?: string; recordedAt?: string } = {},
+): CausalReplayNode[] {
+  const source = provenance.source ?? `decision_context_snapshot.epistemic.${trace.traceId}`;
+  const ref = provenance.ref ?? trace.traceId;
+  const recordedAt = provenance.recordedAt ?? trace.completedAt;
   const baseEvidence = [{
     source,
-    ref: trace.traceId,
-    recordedAt: trace.completedAt,
+    ref,
+    recordedAt,
     availability: "available" as const,
     integrityHash: epistemicHash(trace),
   }];

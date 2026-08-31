@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { StaticAdmissibilityResultLike } from "./contracts";
 import { requirementsFromP2Unresolved } from "./uncertainty";
 import { resolveP2WithInformation } from "./p2-handoff";
+import { isRedactedEpistemicTrace, redactP2HandoffTrace } from "./trace";
 import { TEST_NOW, testState } from "./test-support";
 
 const BUDGET = {
@@ -55,6 +56,10 @@ describe("P2 to P3 handoff", () => {
     expect(handoff.rejectedOverrideAttempts).toBe(0);
     expect(execute).not.toHaveBeenCalled();
     expect(rerunP2).not.toHaveBeenCalled();
+    const trace = redactP2HandoffTrace(handoff, testState([]), { startedAt: TEST_NOW, completedAt: TEST_NOW });
+    expect(isRedactedEpistemicTrace(trace)).toBe(true);
+    expect(trace.p2Statuses).toEqual(["REJECTED"]);
+    expect(trace.selectedActions).toEqual([]);
   });
 
   it("maps actual P2 resolution reason codes to typed mandatory propositions", () => {
