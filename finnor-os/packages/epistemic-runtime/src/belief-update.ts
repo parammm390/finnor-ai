@@ -344,8 +344,17 @@ export function appendEvidenceAndRecompute(
 
 export function applyInformationObservation(state: EpistemicState, observation: InformationObservation): EpistemicState {
   if (observation.tenantId !== state.scope.tenantId) throw new Error("Cross-tenant information observation rejected");
+  if (!Number.isFinite(Date.parse(observation.observedAt))) throw new Error("Information observation timestamp is invalid");
+  if (observation.outcome === "OBSERVED" && observation.evidence.length === 0) throw new Error("Observed information requires evidence");
+  if (observation.outcome !== "OBSERVED" && observation.evidence.length > 0) throw new Error("Non-observed information outcome cannot carry evidence");
+  if (["FAILED", "PERMISSION_BLOCKED"].includes(observation.outcome) && !observation.failureCode) {
+    throw new Error("Failed or permission-blocked information observation requires a failure code");
+  }
   if (!state.propositions.every((proposition) => proposition.id) || observation.propositionIds.some((id) => !state.propositions.some((proposition) => proposition.id === id))) {
     throw new Error("Information observation references an unknown proposition");
+  }
+  if (observation.evidence.some((record) => !observation.propositionIds.includes(record.propositionId))) {
+    throw new Error("Information evidence is outside the observation proposition set");
   }
   return appendEvidenceAndRecompute(state, observation.evidence, observation.observedAt);
 }

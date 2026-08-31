@@ -12,6 +12,7 @@ import type {
 } from "./contracts";
 import { applyInformationObservation } from "./belief-update";
 import {
+  assertAcquisitionBudget,
   consumeActionBudget,
   createInformationAction,
   type InformationActionExecutor,
@@ -105,6 +106,7 @@ function mergeRequirements(existing: DecisionRequirement[], additions: readonly 
 }
 
 export async function resolveP2WithInformation(input: ResolveP2WithInformationInput): Promise<P2P3HandoffResult> {
+  assertAcquisitionBudget(input.budget);
   const immediate = terminal(input);
   if (immediate) return immediate;
   const now = input.now ?? (() => new Date().toISOString());
@@ -115,7 +117,10 @@ export async function resolveP2WithInformation(input: ResolveP2WithInformationIn
   const rounds: P2P3HandoffRound[] = [];
   const p2History: StaticAdmissibilityResultLike["status"][] = [currentP2.status];
 
-  for (let index = 0; index < input.budget.maxActions; index += 1) {
+  // Evaluate one terminal round after the last permitted acquisition. This makes
+  // maxActions=0 and exhausted budgets replay-visible instead of silently falling
+  // out of the loop without requirements or a stop decision.
+  for (let index = 0; index <= input.budget.maxActions; index += 1) {
     // currentP2 is guaranteed UNRESOLVED here; REJECTED/ADMISSIBLE return below.
     const derived = requirementsFromP2Unresolved(currentP2, state.scope.decisionId);
     state = addPropositionDefinitions(state, derived.propositions);

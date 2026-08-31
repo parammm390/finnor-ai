@@ -49,6 +49,13 @@ function categoryFor(
       return { category: "UNOBSERVABLE", why: "No legal acquisition option is declared for this proposition.", reasonCodes: ["NO_ACQUISITION_OPTION"] };
     }
     const external = proposition.subject.kind === "external" || proposition.subject.kind === "provider";
+    if (requirement.unresolvedCategoryHint) {
+      return {
+        category: requirement.unresolvedCategoryHint,
+        why: `The upstream decision contract classified this proposition as ${requirement.unresolvedCategoryHint.toLowerCase()}.`,
+        reasonCodes: [...new Set(requirement.unresolvedReasonCodes ?? [`UPSTREAM_${requirement.unresolvedCategoryHint}`])],
+      };
+    }
     if (external && policy.externalObservationPossible === false) {
       return { category: "EXTERNAL_UNKNOWN", why: "The external outcome is not currently observable through a configured read-only boundary.", reasonCodes: ["EXTERNAL_OBSERVATION_UNAVAILABLE"] };
     }
@@ -159,6 +166,8 @@ export function requirementsFromP2Unresolved(
       minimumConfidence: "HIGH",
       consequenceIfUnresolved: `P2 remains UNRESOLVED at ${issue.nodeId}; consequential lowering cannot continue.`,
       acquisitionOptions: options,
+      unresolvedCategoryHint: p2IssueUncertaintyCategory(issue),
+      unresolvedReasonCodes: [detailCode, issue.reasonCode],
     });
   }
   return { propositions, requirements };

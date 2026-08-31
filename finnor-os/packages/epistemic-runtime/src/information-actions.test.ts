@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { analyzeUncertainty } from "./uncertainty";
 import {
+  assertAcquisitionBudget,
+  assertInformationObservationForAction,
   budgetAllowsAction,
   createInformationAction,
   informationActionFingerprint,
@@ -104,5 +106,28 @@ describe("information-action contracts and deterministic scoring", () => {
     ] }, action, TEST_NOW).reasonCodes).toContain("DUPLICATE_ACQUISITION_LOOP");
     expect(budgetAllowsAction(BUDGET, initialAcquisitionUsage(), action, "2026-09-01T00:00:00.000Z").reasonCodes)
       .toContain("DEADLINE_REACHED");
+  });
+
+  it("rejects adapter-kind mismatches, malformed budgets, and provenance-smuggling observations", () => {
+    const state = testState();
+    const requirement = testRequirement();
+    const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
+    expect(() => createInformationAction(
+      state.scope,
+      uncertainty,
+      testOption("ASK", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER"),
+    )).toThrow(/cannot execute ASK/);
+    expect(() => assertAcquisitionBudget({ ...BUDGET, maxActions: -1 })).toThrow(/maxActions/);
+
+    const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!);
+    expect(() => assertInformationObservationForAction(action, {
+      actionId: action.id,
+      adapterId: action.adapterId,
+      tenantId: action.scope.tenantId,
+      observedAt: TEST_NOW,
+      evidence: [],
+      propositionIds: action.expectedInformation.propositionIds,
+      outcome: "OBSERVED",
+    })).toThrow(/requires evidence/);
   });
 });

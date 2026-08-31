@@ -263,6 +263,11 @@ export interface DecisionRequirement {
   minimumConfidence?: Exclude<ConfidenceLevel, "UNSUPPORTED">;
   consequenceIfUnresolved: string;
   acquisitionOptions: AcquisitionOption[];
+  /** Preserves an exact upstream unresolved classification (for example a P2
+   * entity ambiguity) while the proposition is still UNKNOWN. It is a reason
+   * hint only and cannot make the requirement resolved. */
+  unresolvedCategoryHint?: UncertaintyCategory;
+  unresolvedReasonCodes?: string[];
 }
 
 export interface Uncertainty {

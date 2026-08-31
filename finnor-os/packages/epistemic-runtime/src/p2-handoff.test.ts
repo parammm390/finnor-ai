@@ -71,6 +71,37 @@ describe("P2 to P3 handoff", () => {
     expect(result.requirements[0]?.acquisitionOptions[0]).toMatchObject({ kind: "READ", adapterId: "CANONICAL_OPERATIONAL_QUERY" });
   });
 
+  it("preserves the exact upstream uncertainty category and traces a zero-action budget stop", async () => {
+    const ambiguous: StaticAdmissibilityResultLike = {
+      status: "UNRESOLVED",
+      reasonCodes: ["ENTITY_RESOLUTION_UNRESOLVED"],
+      issues: [{
+        status: "UNRESOLVED",
+        reasonCode: "ENTITY_RESOLUTION_UNRESOLVED",
+        nodeId: "entity:customer",
+        path: "resolution.entity:customer",
+        message: "Customer identity is ambiguous",
+        detail: { resolutionReasonCode: "ENTITY_REFERENCE_AMBIGUOUS" },
+      }],
+    };
+    const execute = vi.fn();
+    const handoff = await resolveP2WithInformation({
+      initialP2: ambiguous,
+      state: testState([]),
+      budget: { ...BUDGET, maxActions: 0, maxUserInterruptions: 0, maxLatencyMs: 0, maxCostUnits: 0 },
+      executor: { execute },
+      rerunP2: vi.fn(),
+      now: () => TEST_NOW,
+    });
+    expect(execute).not.toHaveBeenCalled();
+    expect(handoff.rounds).toHaveLength(1);
+    expect(handoff.rounds[0]?.uncertainties[0]).toMatchObject({
+      category: "AMBIGUOUS",
+      reasonCodes: expect.arrayContaining(["ENTITY_REFERENCE_AMBIGUOUS"]),
+    });
+    expect(handoff.rounds[0]?.stopDecision.reason).toBe("BUDGET_EXHAUSTED");
+  });
+
   it("does not acquire or rerun P2 when P2 is already admissible", async () => {
     const execute = vi.fn();
     const rerunP2 = vi.fn();

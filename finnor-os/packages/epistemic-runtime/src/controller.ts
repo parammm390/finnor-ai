@@ -11,6 +11,7 @@ import type {
 } from "./contracts";
 import { applyInformationObservation } from "./belief-update";
 import {
+  assertAcquisitionBudget,
   consumeActionBudget,
   createInformationAction,
   type InformationActionExecutor,
@@ -86,6 +87,7 @@ function stateDecisionHash(state: EpistemicState): string {
 }
 
 export async function runEpistemicController(input: RunEpistemicControllerInput): Promise<EpistemicControllerRun> {
+  assertAcquisitionBudget(input.budget);
   const clock = input.clock ?? defaultClock();
   const startedAt = clock.now();
   let state = input.state;

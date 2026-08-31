@@ -26,6 +26,18 @@ interface ActionHeuristic {
   freshness: InformationAction["freshnessGain"];
 }
 
+const ADAPTER_ACTION_KIND: Readonly<Record<InformationAdapterId, InformationActionKind>> = {
+  CANONICAL_OPERATIONAL_QUERY: "READ",
+  OPERATING_CONTEXT_READ: "READ",
+  HYBRID_RETRIEVAL: "RETRIEVE",
+  EVIDENCE_CORPUS_RETRIEVAL: "RETRIEVE",
+  CLARIFICATION_REQUEST: "ASK",
+  SOURCE_TRUTH_OBSERVATION: "INSPECT",
+  COMPUTER_READ_ONLY_OBSERVATION: "INSPECT",
+  WEB_RESEARCH: "RESEARCH",
+  WORK_EVENT_WAIT: "WAIT",
+};
+
 /** Explicit bounded seed heuristics. These are ordering estimates, not measured
  * probabilities, prices, or service-level promises. */
 const ACTION_HEURISTICS: Readonly<Record<InformationActionKind, ActionHeuristic>> = {
@@ -126,6 +138,9 @@ export function createInformationAction(
   option: AcquisitionOption,
   overrides: InformationActionOverrides = {},
 ): InformationAction {
+  if (ADAPTER_ACTION_KIND[option.adapterId] !== option.kind) {
+    throw new Error(`Information adapter ${option.adapterId} cannot execute ${option.kind}`);
+  }
   const seed = ACTION_HEURISTICS[option.kind];
   const sensitivity = [...new Set(overrides.sensitivity ?? ["TENANT_INTERNAL"])] as InformationSensitivity[];
   const idSeed = {
@@ -276,8 +291,7 @@ export class ReadOnlyInformationActionExecutor implements InformationActionExecu
       };
     }
     const observation = await adapter.execute(action);
-    if (observation.actionId !== action.id || observation.adapterId !== action.adapterId) throw new Error("Information adapter returned mismatched action identity");
-    if (observation.tenantId !== action.scope.tenantId) throw new Error("Cross-tenant information adapter result rejected");
+    assertInformationObservationForAction(action, observation);
     return observation;
   }
 }
@@ -287,9 +301,55 @@ export function assertInformationAction(action: InformationAction): void {
   if (action.scope.tenantId !== action.requiredInput.tenantId) throw new Error("Information action tenant mismatch");
   if (action.scope.principalId !== action.requiredInput.principalId) throw new Error("Information action principal mismatch");
   if (!action.requiredInput.propositionIds.length) throw new Error("Information action requires at least one proposition");
-  if (action.cost.monetaryUnits < 0 || action.cost.toolUnits < 0 || action.latency.expectedMs < 0 || action.latency.maximumMs < action.latency.expectedMs) {
+  if (ADAPTER_ACTION_KIND[action.adapterId] !== action.kind) throw new Error("Information action kind does not match its adapter contract");
+  const numericBounds = [
+    action.cost.monetaryUnits,
+    action.cost.toolUnits,
+    action.latency.expectedMs,
+    action.latency.maximumMs,
+    action.userInterruption.units,
+    action.privacyExposure.units,
+  ];
+  if (numericBounds.some((value) => !Number.isFinite(value) || value < 0) || action.latency.maximumMs < action.latency.expectedMs) {
     throw new Error("Information action cost/latency bounds are invalid");
   }
+}
+
+export function assertInformationObservationForAction(
+  action: InformationAction,
+  observation: InformationObservation,
+): void {
+  if (observation.actionId !== action.id || observation.adapterId !== action.adapterId) throw new Error("Information adapter returned mismatched action identity");
+  if (observation.tenantId !== action.scope.tenantId) throw new Error("Cross-tenant information adapter result rejected");
+  if (!Number.isFinite(Date.parse(observation.observedAt))) throw new Error("Information adapter returned an invalid observation timestamp");
+  const expected = new Set(action.expectedInformation.propositionIds);
+  if (observation.propositionIds.some((id) => !expected.has(id))) throw new Error("Information adapter returned an unexpected proposition");
+  for (const record of observation.evidence) {
+    if (record.tenantId !== action.scope.tenantId) throw new Error("Cross-tenant information evidence rejected");
+    if (!expected.has(record.propositionId) || !observation.propositionIds.includes(record.propositionId)) {
+      throw new Error("Information evidence does not match the action proposition contract");
+    }
+    if (record.source.kind !== action.expectedInformation.evidenceKind) throw new Error("Information evidence kind does not match the adapter contract");
+    if (record.immutable !== true || record.provenance.sourceRef !== record.source.ref) throw new Error("Information evidence is not immutable and provenance-backed");
+  }
+  if (observation.outcome === "OBSERVED" && observation.evidence.length === 0) throw new Error("OBSERVED information action requires evidence");
+  if (observation.outcome !== "OBSERVED" && observation.evidence.length > 0) throw new Error("Non-observed information outcome cannot smuggle evidence");
+  if (["FAILED", "PERMISSION_BLOCKED"].includes(observation.outcome) && !observation.failureCode) {
+    throw new Error("Failed or permission-blocked information outcome requires a failure code");
+  }
+}
+
+export function assertAcquisitionBudget(budget: AcquisitionBudget): void {
+  const boundedIntegers: Array<[number, string]> = [
+    [budget.maxActions, "maxActions"],
+    [budget.maxUserInterruptions, "maxUserInterruptions"],
+    [budget.maxLatencyMs, "maxLatencyMs"],
+    [budget.maxCostUnits, "maxCostUnits"],
+  ];
+  for (const [value, name] of boundedIntegers) {
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error(`Acquisition budget ${name} must be a non-negative safe integer`);
+  }
+  if (!Number.isFinite(Date.parse(budget.deadline))) throw new Error("Acquisition budget deadline must be an ISO-compatible timestamp");
 }
 
 export function informationActionPrivacyErrors(action: InformationAction): string[] {
@@ -318,6 +378,7 @@ export function budgetAllowsAction(
   action: InformationAction,
   now: string,
 ): { allowed: boolean; reasonCodes: string[] } {
+  assertAcquisitionBudget(budget);
   const reasons: string[] = [];
   if (Date.parse(now) >= Date.parse(budget.deadline)) reasons.push("DEADLINE_REACHED");
   if (usage.actions + 1 > budget.maxActions) reasons.push("MAX_ACTIONS_EXCEEDED");
