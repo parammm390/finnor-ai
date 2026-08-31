@@ -191,6 +191,11 @@ export function validateEvidenceRecord(record: EvidenceRecord, state: EpistemicS
   if (record.canonical !== (record.source.kind === "CANONICAL_DB")) errors.push("CANONICAL_FLAG_SOURCE_MISMATCH");
   if (record.provenance.sourceRef !== record.source.ref) errors.push("PROVENANCE_SOURCE_REF_MISMATCH");
   if (record.source.kind === "DERIVED" && record.provenance.parentEvidenceRefs.length === 0) errors.push("DERIVED_EVIDENCE_REQUIRES_PARENTS");
+  if (record.confidence.level === "VERIFIED" && record.source.kind !== "CANONICAL_DB") errors.push("VERIFIED_CONFIDENCE_REQUIRES_CANONICAL_SOURCE");
+  if (record.confidence.level === "VERIFIED" && record.confidence.basis !== "DETERMINISTIC_SOURCE") errors.push("VERIFIED_CONFIDENCE_REQUIRES_DETERMINISTIC_BASIS");
+  if (record.confidence.level === "UNSUPPORTED" && record.confidence.basis !== "NO_SUPPORT") errors.push("UNSUPPORTED_CONFIDENCE_REQUIRES_NO_SUPPORT_BASIS");
+  if (record.freshness.maxAgeMs !== undefined && (!Number.isFinite(record.freshness.maxAgeMs) || record.freshness.maxAgeMs < 0)) errors.push("INVALID_FRESHNESS_MAX_AGE");
+  if (record.freshness.ageMs !== undefined && (!Number.isFinite(record.freshness.ageMs) || record.freshness.ageMs < 0)) errors.push("INVALID_FRESHNESS_AGE");
   for (const field of [[record.observedAt, "observedAt"], [record.ingestedAt, "ingestedAt"], [record.validAt, "validAt"]] as const) {
     if (field[0] !== undefined && !Number.isFinite(Date.parse(field[0]))) errors.push(`INVALID_${field[1].toUpperCase()}`);
   }

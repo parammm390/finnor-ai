@@ -126,6 +126,28 @@ describe("deterministic belief updates", () => {
     }], TEST_NOW)).toThrow(/Immutable evidence id collision/);
   });
 
+  it("enforces source authority and deep evidence immutability", () => {
+    const initial = testState();
+    const payload = { status: "paid", details: { amount: 100 } };
+    const record = testEvidence({ state: initial, id: "memory:deep", value: payload });
+    const next = appendEvidenceAndRecompute(initial, [record], TEST_NOW);
+    payload.details.amount = 999;
+    expect(next.evidence[0]?.value).toEqual({ status: "paid", details: { amount: 100 } });
+    expect(Object.isFrozen(next.evidence[0])).toBe(true);
+    expect(Object.isFrozen(next.evidence[0]?.value)).toBe(true);
+
+    expect(() => appendEvidenceAndRecompute(initial, [{
+      ...testEvidence({ state: initial, id: "memory:elevated", value: true }),
+      source: {
+        ...testEvidence({ state: initial, id: "memory:elevated", value: true }).source,
+        authority: "WORK_LEDGER",
+      },
+    }], TEST_NOW)).toThrow(/SOURCE_AUTHORITY_MISMATCH/);
+    expect(() => appendEvidenceAndRecompute(initial, [
+      testEvidence({ state: initial, id: "memory:false-verified", value: true, confidence: "VERIFIED" }),
+    ], TEST_NOW)).toThrow(/VERIFIED_CONFIDENCE_REQUIRES_CANONICAL_SOURCE/);
+  });
+
   it("supports external UNKNOWN to KNOWN through a governed observation", () => {
     const initial = testState([testDefinition("provider.delivery", { kind: "external", type: "delivery", id: "delivery-1" })]);
     const next = appendEvidenceAndRecompute(initial, [

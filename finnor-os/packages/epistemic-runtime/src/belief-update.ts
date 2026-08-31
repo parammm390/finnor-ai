@@ -22,10 +22,25 @@ import {
 } from "./source-precedence";
 import { assertEvidenceRecord, assertIso, transition } from "./state";
 
+function cloneJson<T extends JsonValue>(value: T): T {
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((item) => cloneJson(item)) as T;
+  return Object.fromEntries(Object.entries(value).map(([key, nested]) => [key, cloneJson(nested)])) as T;
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    for (const nested of Object.values(value as Record<string, unknown>)) deepFreeze(nested);
+    Object.freeze(value);
+  }
+  return value;
+}
+
 function cloneEvidence(record: EvidenceRecord): EvidenceRecord {
-  return {
+  return deepFreeze({
     ...record,
     source: { ...record.source },
+    value: cloneJson(record.value),
     confidence: { ...record.confidence, reasonCodes: [...record.confidence.reasonCodes] },
     freshness: { ...record.freshness },
     provenance: {
@@ -35,7 +50,7 @@ function cloneEvidence(record: EvidenceRecord): EvidenceRecord {
       ...(record.provenance.derivation ? { derivation: { ...record.provenance.derivation } } : {}),
     },
     ...(record.supersedesEvidenceRefs ? { supersedesEvidenceRefs: [...record.supersedesEvidenceRefs] } : {}),
-  };
+  });
 }
 
 function evidenceTime(record: EvidenceRecord): number {
@@ -176,7 +191,7 @@ function evaluateProposition(
       proposition: {
         ...base,
         status: "CONFLICTING",
-        value: { kind: "ALTERNATIVES", alternatives: selectedTier.map((record) => ({ value: record.value, evidenceRefs: [record.id] })) },
+        value: { kind: "ALTERNATIVES", alternatives: selectedTier.map((record) => ({ value: cloneJson(record.value), evidenceRefs: [record.id] })) },
         source: { ...winner.source },
         sourceAuthority: winner.source.authority,
         observedAt: winner.observedAt,
@@ -216,7 +231,7 @@ function evaluateProposition(
     proposition: {
       ...base,
       status,
-      value: { kind: "DETERMINISTIC", value: selectedValue },
+      value: { kind: "DETERMINISTIC", value: cloneJson(selectedValue) },
       source: { ...selectedTier[0]!.source },
       sourceAuthority: selectedTier[0]!.source.authority,
       observedAt: selectedTier[0]!.observedAt,
@@ -303,7 +318,7 @@ export function appendEvidenceAndRecompute(
       evidenceRef: record.id,
       owner: record.source.owner,
       sourceRef: record.source.ref,
-      value: record.value,
+      value: cloneJson(record.value),
       observedAt: record.observedAt,
       ...(record.validAt ? { validAt: record.validAt } : {}),
     }))

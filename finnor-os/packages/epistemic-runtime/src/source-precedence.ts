@@ -36,6 +36,20 @@ export const EVIDENCE_KIND_TRUTH_CLASS: Readonly<Record<EvidenceKind, ExistingTr
   DERIVED: "MEMORY",
 };
 
+export const EVIDENCE_KIND_AUTHORITY: Readonly<Record<EvidenceKind, SourceAuthority>> = {
+  CANONICAL_DB: "CANONICAL_OWNER",
+  ACTIVE_WORK: "WORK_LEDGER",
+  EXPLICIT_USER_INPUT: "USER_INTENT_OWNER",
+  PROFILE: "CONFIGURED_PROFILE",
+  SESSION: "CURRENT_SESSION",
+  MEMORY: "SEMANTIC_MEMORY",
+  DOCUMENT: "DURABLE_EVIDENCE",
+  PROVIDER_OBSERVATION: "GOVERNED_OBSERVATION",
+  COMPUTER_OBSERVATION: "GOVERNED_OBSERVATION",
+  WEB_RESEARCH: "PUBLIC_RESEARCH",
+  DERIVED: "DERIVED_ONLY",
+};
+
 const AUTHORITY_RANK: Readonly<Record<SourceAuthority, number>> = {
   CANONICAL_OWNER: 0,
   WORK_LEDGER: 1,
@@ -62,14 +76,11 @@ export function validateEvidenceSource(source: EvidenceSource): string[] {
   if (EVIDENCE_KIND_TRUTH_CLASS[source.kind] !== source.truthClass) {
     errors.push(`SOURCE_TRUTH_CLASS_MISMATCH:${source.kind}:${source.truthClass}`);
   }
+  if (EVIDENCE_KIND_AUTHORITY[source.kind] !== source.authority) {
+    errors.push(`SOURCE_AUTHORITY_MISMATCH:${source.kind}:${source.authority}`);
+  }
   if (!source.owner.trim()) errors.push("SOURCE_OWNER_REQUIRED");
   if (!source.ref.trim()) errors.push("SOURCE_REF_REQUIRED");
-  if (source.kind === "CANONICAL_DB" && source.authority !== "CANONICAL_OWNER") {
-    errors.push("CANONICAL_SOURCE_AUTHORITY_REQUIRED");
-  }
-  if (source.kind !== "CANONICAL_DB" && source.authority === "CANONICAL_OWNER") {
-    errors.push("NON_CANONICAL_SOURCE_CANNOT_CLAIM_CANONICAL_AUTHORITY");
-  }
   return errors;
 }
 
