@@ -38,6 +38,18 @@ const ADAPTER_ACTION_KIND: Readonly<Record<InformationAdapterId, InformationActi
   WORK_EVENT_WAIT: "WAIT",
 };
 
+const ADAPTER_SOURCE_AUTHORITY: Readonly<Record<InformationAdapterId, SourceAuthority>> = {
+  CANONICAL_OPERATIONAL_QUERY: "CANONICAL_OWNER",
+  OPERATING_CONTEXT_READ: "CANONICAL_OWNER",
+  HYBRID_RETRIEVAL: "SEMANTIC_MEMORY",
+  EVIDENCE_CORPUS_RETRIEVAL: "DURABLE_EVIDENCE",
+  CLARIFICATION_REQUEST: "USER_INTENT_OWNER",
+  SOURCE_TRUTH_OBSERVATION: "GOVERNED_OBSERVATION",
+  COMPUTER_READ_ONLY_OBSERVATION: "GOVERNED_OBSERVATION",
+  WEB_RESEARCH: "PUBLIC_RESEARCH",
+  WORK_EVENT_WAIT: "WORK_LEDGER",
+};
+
 /** Explicit bounded seed heuristics. These are ordering estimates, not measured
  * probabilities, prices, or service-level promises. */
 const ACTION_HEURISTICS: Readonly<Record<InformationActionKind, ActionHeuristic>> = {
@@ -140,6 +152,9 @@ export function createInformationAction(
 ): InformationAction {
   if (ADAPTER_ACTION_KIND[option.adapterId] !== option.kind) {
     throw new Error(`Information adapter ${option.adapterId} cannot execute ${option.kind}`);
+  }
+  if (ADAPTER_SOURCE_AUTHORITY[option.adapterId] !== option.expectedAuthority) {
+    throw new Error(`Information adapter ${option.adapterId} cannot claim ${option.expectedAuthority}`);
   }
   const seed = ACTION_HEURISTICS[option.kind];
   const sensitivity = [...new Set(overrides.sensitivity ?? ["TENANT_INTERNAL"])] as InformationSensitivity[];
@@ -290,9 +305,22 @@ export class ReadOnlyInformationActionExecutor implements InformationActionExecu
         failureCode: "ADAPTER_UNAVAILABLE",
       };
     }
-    const observation = await adapter.execute(action);
-    assertInformationObservationForAction(action, observation);
-    return observation;
+    try {
+      const observation = await adapter.execute(action);
+      assertInformationObservationForAction(action, observation);
+      return observation;
+    } catch {
+      return {
+        actionId: action.id,
+        adapterId: action.adapterId,
+        tenantId: action.scope.tenantId,
+        observedAt: this.now(),
+        evidence: [],
+        propositionIds: action.expectedInformation.propositionIds,
+        outcome: "FAILED",
+        failureCode: "ADAPTER_EXECUTION_OR_CONTRACT_FAILURE",
+      };
+    }
   }
 }
 
@@ -302,6 +330,7 @@ export function assertInformationAction(action: InformationAction): void {
   if (action.scope.principalId !== action.requiredInput.principalId) throw new Error("Information action principal mismatch");
   if (!action.requiredInput.propositionIds.length) throw new Error("Information action requires at least one proposition");
   if (ADAPTER_ACTION_KIND[action.adapterId] !== action.kind) throw new Error("Information action kind does not match its adapter contract");
+  if (ADAPTER_SOURCE_AUTHORITY[action.adapterId] !== action.sourceAuthority) throw new Error("Information action source authority does not match its adapter contract");
   const numericBounds = [
     action.cost.monetaryUnits,
     action.cost.toolUnits,
@@ -330,6 +359,7 @@ export function assertInformationObservationForAction(
       throw new Error("Information evidence does not match the action proposition contract");
     }
     if (record.source.kind !== action.expectedInformation.evidenceKind) throw new Error("Information evidence kind does not match the adapter contract");
+    if (record.source.authority !== action.sourceAuthority) throw new Error("Information evidence authority does not match the adapter contract");
     if (record.immutable !== true || record.provenance.sourceRef !== record.source.ref) throw new Error("Information evidence is not immutable and provenance-backed");
   }
   if (observation.outcome === "OBSERVED" && observation.evidence.length === 0) throw new Error("OBSERVED information action requires evidence");
@@ -368,6 +398,11 @@ export function informationActionPrivacyErrors(action: InformationAction): strin
   if (external && ["CUSTOMER_DATA", "PII", "FINANCIAL"].some((sensitivity) => sensitivities.has(sensitivity as InformationSensitivity))
     && action.privacyExposure.authorizationEvidenceRefs.length === 0) {
     errors.push("SENSITIVE_EXTERNAL_ACQUISITION_REQUIRES_AUTHORIZATION_EVIDENCE");
+  }
+  if (action.privacyExposure.boundary === "TENANT_INTERNAL"
+    && ["SECRET", "CREDENTIAL_BOUND"].some((sensitivity) => sensitivities.has(sensitivity as InformationSensitivity))
+    && action.privacyExposure.authorizationEvidenceRefs.length === 0) {
+    errors.push("SENSITIVE_INTERNAL_ACQUISITION_REQUIRES_AUTHORIZATION_EVIDENCE");
   }
   return errors;
 }

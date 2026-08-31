@@ -39,6 +39,13 @@ function lowAuthorityPenalty(action: InformationAction, state: EpistemicState): 
   return reasons;
 }
 
+function authorizationEvidenceErrors(action: InformationAction, state: EpistemicState): string[] {
+  const available = new Set(state.evidence.map((record) => record.id));
+  return action.privacyExposure.authorizationEvidenceRefs.some((ref) => !available.has(ref))
+    ? ["ACQUISITION_AUTHORIZATION_EVIDENCE_NOT_FOUND"]
+    : [];
+}
+
 function acquisitionBurden(action: InformationAction, budget: AcquisitionBudget): number {
   const latency = bounded((action.latency.expectedMs / Math.max(1, budget.maxLatencyMs)) * 100);
   const cost = bounded(((action.cost.monetaryUnits + action.cost.toolUnits) / Math.max(1, budget.maxCostUnits)) * 100);
@@ -83,8 +90,9 @@ export function scoreInformationAction(
   const privacyErrors = informationActionPrivacyErrors(action);
   const budget = budgetAllowsAction(context.budget, context.usage, action, context.now);
   const precedenceErrors = lowAuthorityPenalty(action, context.state);
+  const authorizationErrors = authorizationEvidenceErrors(action, context.state);
   const clarificationErrors = clarificationReasonCodes(action, allActions, context.state, context);
-  const reasonCodes = [...new Set([...privacyErrors, ...budget.reasonCodes, ...precedenceErrors, ...clarificationErrors, ...action.estimate.reasonCodes])];
+  const reasonCodes = [...new Set([...privacyErrors, ...budget.reasonCodes, ...precedenceErrors, ...authorizationErrors, ...clarificationErrors, ...action.estimate.reasonCodes])];
   const latencyPenalty = bounded((action.latency.expectedMs / Math.max(1, context.budget.maxLatencyMs)) * 100);
   const costPenalty = bounded(((action.cost.monetaryUnits + action.cost.toolUnits) / Math.max(1, context.budget.maxCostUnits)) * 100);
   const userPenalty = bounded(action.userInterruption.units);
@@ -97,7 +105,7 @@ export function scoreInformationAction(
   const netUtility = improvement + reduction - userPenalty - latencyPenalty - costPenalty - privacyPenalty - failurePenalty;
   return {
     actionId: action.id,
-    eligible: privacyErrors.length === 0 && budget.allowed && precedenceErrors.length === 0 && clarificationErrors.length === 0 && reduction > 0,
+    eligible: privacyErrors.length === 0 && budget.allowed && precedenceErrors.length === 0 && authorizationErrors.length === 0 && clarificationErrors.length === 0 && reduction > 0,
     safetyLegality: safety,
     decisionRelevance: relevance,
     uncertaintyReduction: reduction,

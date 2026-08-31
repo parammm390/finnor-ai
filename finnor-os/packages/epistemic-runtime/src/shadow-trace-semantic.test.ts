@@ -124,4 +124,28 @@ describe("shadow controller, replay trace, and semantic differential", () => {
     expect(diff.classification).toBe("BETTER_INFORMATION");
     expect(diff.reasonCodes).not.toContain("P3_HIDES_DECISION_CRITICAL_UNCERTAINTY");
   });
+
+  it("contains a permitted read-only adapter failure without changing the planner result", async () => {
+    const plannerResult = { planId: "plan-adapter-failure" };
+    const result = await runEpistemicShadow({
+      authoritativePlannerResult: plannerResult,
+      state: testState(),
+      requirements: [testRequirement()],
+      budget: BUDGET,
+      existingBehavior: behavior({
+        factsAvailable: [],
+        missingFacts: ["invoice.balance"],
+        decisionCriticalUncertainty: ["invoice.balance"],
+        consequentialDecisionAllowed: false,
+        freshness: "UNKNOWN",
+        stopCondition: "NO_LEGAL_ACTION",
+      }),
+      allowedAdapters: ["CANONICAL_OPERATIONAL_QUERY"],
+      executor: { execute: async () => { throw new Error("adapter unavailable"); } },
+      clock: { now: () => TEST_NOW },
+    });
+    expect(result.authoritativePlannerResult).toBe(plannerResult);
+    expect(result.run.rounds[0]?.observation).toMatchObject({ outcome: "FAILED", failureCode: "SHADOW_ADAPTER_FAILURE" });
+    expect(result.consequentialMutations).toBe(0);
+  });
 });

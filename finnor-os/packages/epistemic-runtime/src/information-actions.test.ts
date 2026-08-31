@@ -9,13 +9,14 @@ import {
   informationActionKindsAreNonMutating,
   informationActionPrivacyErrors,
   initialAcquisitionUsage,
+  ReadOnlyInformationActionExecutor,
 } from "./index";
 import {
   compareInformationActionScores,
   scoreInformationAction,
   selectInformationAction,
 } from "./scoring";
-import { TEST_NOW, testDefinition, testOption, testRequirement, testState } from "./test-support";
+import { TEST_NOW, testDefinition, testEvidence, testOption, testRequirement, testState } from "./test-support";
 
 const BUDGET = {
   maxActions: 3,
@@ -34,6 +35,26 @@ describe("information-action contracts and deterministic scoring", () => {
     const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!, { sensitivity: ["PII"] });
     expect(action.mutability).toBe("READ_ONLY");
     expect(informationActionPrivacyErrors(action)).toContain("PRIVATE_DATA_TO_PUBLIC_RESEARCH_FORBIDDEN");
+  });
+
+  it("rejects fabricated authorization references for sensitive acquisition", () => {
+    const state = testState([testDefinition("external.customer", { kind: "external", type: "customer" })]);
+    const requirement = testRequirement("external.customer", [testOption("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
+    const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
+    const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!, {
+      sensitivity: ["PII"],
+      privacy: { declassified: true, authorizationEvidenceRefs: ["fabricated:authorization"] },
+    });
+    const scored = scoreInformationAction(action, [action], {
+      state,
+      uncertainties: [uncertainty],
+      requirements: [requirement],
+      budget: BUDGET,
+      usage: initialAcquisitionUsage(),
+      now: TEST_NOW,
+    });
+    expect(scored.eligible).toBe(false);
+    expect(scored.reasonCodes).toContain("ACQUISITION_AUTHORIZATION_EVIDENCE_NOT_FOUND");
   });
 
   it("chooses a legal machine read before interrupting the user", () => {
@@ -145,6 +166,11 @@ describe("information-action contracts and deterministic scoring", () => {
       uncertainty,
       testOption("ASK", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER"),
     )).toThrow(/cannot execute ASK/);
+    expect(() => createInformationAction(
+      state.scope,
+      uncertainty,
+      testOption("READ", "CANONICAL_OPERATIONAL_QUERY", "SEMANTIC_MEMORY"),
+    )).toThrow(/cannot claim/);
     expect(() => assertAcquisitionBudget({ ...BUDGET, maxActions: -1 })).toThrow(/maxActions/);
 
     const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!);
@@ -157,5 +183,37 @@ describe("information-action contracts and deterministic scoring", () => {
       propositionIds: action.expectedInformation.propositionIds,
       outcome: "OBSERVED",
     })).toThrow(/requires evidence/);
+
+    expect(() => assertInformationObservationForAction(action, {
+      actionId: action.id,
+      adapterId: action.adapterId,
+      tenantId: action.scope.tenantId,
+      observedAt: TEST_NOW,
+      evidence: [{
+        ...testEvidence({ state, id: "canonical:wrong-authority", value: true, kind: "CANONICAL_DB" }),
+        source: {
+          ...testEvidence({ state, id: "canonical:wrong-authority", value: true, kind: "CANONICAL_DB" }).source,
+          authority: "CURRENT_SESSION",
+        },
+      }],
+      propositionIds: action.expectedInformation.propositionIds,
+      outcome: "OBSERVED",
+    })).toThrow(/authority/);
+  });
+
+  it("contains adapter exceptions as provenance-free failed observations", async () => {
+    const state = testState();
+    const requirement = testRequirement();
+    const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
+    const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!);
+    const executor = new ReadOnlyInformationActionExecutor([{
+      id: "CANONICAL_OPERATIONAL_QUERY",
+      execute: async () => { throw new Error("raw adapter failure must not escape"); },
+    }], () => TEST_NOW);
+    await expect(executor.execute(action)).resolves.toMatchObject({
+      outcome: "FAILED",
+      failureCode: "ADAPTER_EXECUTION_OR_CONTRACT_FAILURE",
+      evidence: [],
+    });
   });
 });

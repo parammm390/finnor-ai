@@ -59,7 +59,20 @@ export class ShadowInformationExecutor implements InformationActionExecutor {
         failureCode: "SHADOW_SIMULATION_NOT_CONFIGURED",
       };
     }
-    return this.inner.execute(action);
+    try {
+      return await this.inner.execute(action);
+    } catch {
+      return {
+        actionId: action.id,
+        adapterId: action.adapterId,
+        tenantId: action.scope.tenantId,
+        observedAt: this.now(),
+        evidence: [],
+        propositionIds: action.expectedInformation.propositionIds,
+        outcome: "FAILED",
+        failureCode: "SHADOW_ADAPTER_FAILURE",
+      };
+    }
   }
 }
 
