@@ -14,6 +14,7 @@ import {
 } from "./information-actions";
 import { requirementResolved } from "./state";
 import type { DecisionRequirement } from "./contracts";
+import { sourceAuthorityRank } from "./source-precedence";
 
 export interface ScoreContext {
   state: EpistemicState;
@@ -38,19 +39,38 @@ function lowAuthorityPenalty(action: InformationAction, state: EpistemicState): 
   return reasons;
 }
 
-function clarificationReasonCodes(action: InformationAction, actions: readonly InformationAction[], state: EpistemicState): string[] {
+function acquisitionBurden(action: InformationAction, budget: AcquisitionBudget): number {
+  const latency = bounded((action.latency.expectedMs / Math.max(1, budget.maxLatencyMs)) * 100);
+  const cost = bounded(((action.cost.monetaryUnits + action.cost.toolUnits) / Math.max(1, budget.maxCostUnits)) * 100);
+  return bounded(action.userInterruption.units)
+    + latency
+    + cost
+    + bounded(action.privacyExposure.units)
+    + bounded(action.estimate.failureRisk);
+}
+
+function clarificationReasonCodes(
+  action: InformationAction,
+  actions: readonly InformationAction[],
+  state: EpistemicState,
+  context: ScoreContext,
+): string[] {
   if (action.kind !== "ASK") return [];
   const propositionId = action.requiredInput.propositionIds[0];
   if (!propositionId) return ["ASK_REQUIRES_DECISION_PROPOSITION"];
   const proposition = state.propositions.find((candidate) => candidate.id === propositionId);
   const userOwned = proposition?.subject.kind === "user_intent";
   if (userOwned || action.estimate.reasonCodes.some((code) => code === "USER_CHOICE_REQUIRED" || code === "USER_AUTHORIZATION_REQUIRED")) return [];
+  const interruptionBurden = acquisitionBurden(action, context.budget);
   const machineAlternative = actions.some((candidate) =>
     candidate.id !== action.id
     && candidate.kind !== "ASK"
     && candidate.requiredInput.propositionIds.includes(propositionId)
     && informationActionPrivacyErrors(candidate).length === 0
-    && candidate.estimate.expectedUncertaintyReduction > 0,
+    && budgetAllowsAction(context.budget, context.usage, candidate, context.now).allowed
+    && sourceAuthorityRank(candidate.sourceAuthority) <= sourceAuthorityRank("USER_INTENT_OWNER")
+    && candidate.estimate.expectedUncertaintyReduction > 0
+    && acquisitionBurden(candidate, context.budget) <= interruptionBurden
   );
   return machineAlternative ? ["MACHINE_SOURCE_PRECEDES_CLARIFICATION"] : [];
 }
@@ -63,7 +83,7 @@ export function scoreInformationAction(
   const privacyErrors = informationActionPrivacyErrors(action);
   const budget = budgetAllowsAction(context.budget, context.usage, action, context.now);
   const precedenceErrors = lowAuthorityPenalty(action, context.state);
-  const clarificationErrors = clarificationReasonCodes(action, allActions, context.state);
+  const clarificationErrors = clarificationReasonCodes(action, allActions, context.state, context);
   const reasonCodes = [...new Set([...privacyErrors, ...budget.reasonCodes, ...precedenceErrors, ...clarificationErrors, ...action.estimate.reasonCodes])];
   const latencyPenalty = bounded((action.latency.expectedMs / Math.max(1, context.budget.maxLatencyMs)) * 100);
   const costPenalty = bounded(((action.cost.monetaryUnits + action.cost.toolUnits) / Math.max(1, context.budget.maxCostUnits)) * 100);

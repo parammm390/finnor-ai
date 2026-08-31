@@ -74,6 +74,34 @@ describe("information-action contracts and deterministic scoring", () => {
     expect(action.userInterruption.promptFields).toEqual(["intent.choice"]);
   });
 
+  it("allows minimal clarification when an authoritative machine read is riskier than interruption", () => {
+    const state = testState([testDefinition("entity.choice")]);
+    const requirement = testRequirement("entity.choice", [
+      testOption("READ", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER"),
+      testOption("ASK", "CLARIFICATION_REQUEST", "USER_INTENT_OWNER"),
+    ], {
+      unresolvedCategoryHint: "AMBIGUOUS",
+      unresolvedReasonCodes: ["ENTITY_REFERENCE_AMBIGUOUS"],
+    });
+    const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
+    const read = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!, {
+      cost: { toolUnits: 100 },
+      estimate: { failureRisk: 100 },
+    });
+    const ask = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[1]!);
+    const selected = selectInformationAction([read, ask], {
+      state,
+      uncertainties: [uncertainty],
+      requirements: [requirement],
+      budget: { ...BUDGET, maxCostUnits: 100 },
+      usage: initialAcquisitionUsage(),
+      now: TEST_NOW,
+    });
+    expect(selected.action?.kind).toBe("ASK");
+    expect(selected.scores.find((score) => score.actionId === ask.id)?.reasonCodes)
+      .not.toContain("MACHINE_SOURCE_PRECEDES_CLARIFICATION");
+  });
+
   it("keeps safety and legality lexicographically above convenience and cost", () => {
     const state = testState();
     const requirement = testRequirement();
