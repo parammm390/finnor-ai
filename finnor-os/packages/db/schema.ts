@@ -107,6 +107,45 @@ export const tenantSettings = pgTable("tenant_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Core ↔ vertical runtime boundary.  Core owns identity/resolution and the
+// canonical truth catalogue; individual vertical packages own their rows and
+// mutation semantics.  `vertical_key = null` in the truth registry means a Core
+// entity is available to every active vertical, including `none`.
+export const verticalDefinitions = pgTable("vertical_definitions", {
+  key: text("key").primaryKey(),
+  displayName: text("display_name").notNull(),
+  implementationOwner: text("implementation_owner").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tenantVerticalAssignments = pgTable("tenant_vertical_assignments", {
+  tenantId: uuid("tenant_id").primaryKey().references(() => tenants.id, { onDelete: "cascade" }),
+  verticalKey: text("vertical_key").notNull().references(() => verticalDefinitions.key),
+  version: integer("version").notNull().default(1),
+  effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull().defaultNow(),
+  sourceSystem: text("source_system").notNull().default("finnor"),
+  sourceRef: text("source_ref"),
+  createdBy: text("created_by").notNull().default("system:legacy-water-default"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const canonicalTruthRegistry = pgTable("canonical_truth_registry", {
+  entityType: text("entity_type").primaryKey(),
+  verticalKey: text("vertical_key").references(() => verticalDefinitions.key),
+  sourceSchema: text("source_schema").notNull().default("finnor_os"),
+  sourceTable: text("source_table").notNull(),
+  idColumn: text("id_column").notNull().default("id"),
+  tenantColumn: text("tenant_column").notNull().default("tenant_id"),
+  writableOwner: text("writable_owner").notNull(),
+  mutationBoundary: text("mutation_boundary").notNull(),
+  workAttachable: boolean("work_attachable").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Manifest-owned business locations. This is intentionally not a second workspace
 // configuration source and not an alias for inventory warehouses: it only provides
 // stable client/location identities for onboarding and later import mapping.

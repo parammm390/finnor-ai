@@ -20,6 +20,7 @@ export * from "./business-effects";
 export * from "./objectives";
 export * from "./source-truth";
 export * from "./outcome-packs";
+export * from "./vertical-runtime";
 
 export type Role = "owner" | "dispatcher" | "technician";
 

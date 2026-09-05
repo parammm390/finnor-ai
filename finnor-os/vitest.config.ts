@@ -43,6 +43,7 @@ export default defineConfig({
       "@finnor/orchestration": r("./packages/orchestration/src/index.ts"),
       "@finnor/voice-os": r("./packages/voice-os/src/index.ts"),
       "@finnor/read-models": r("./packages/read-models/src/index.ts"),
+      "@finnor/private-equity": r("./packages/private-equity/src/index.ts"),
       "@finnor/plugins-shared": r("./packages/domain-plugins/shared/plugin-interface.ts"),
     },
   },

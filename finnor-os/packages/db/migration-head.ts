@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0102_workflow_step_redrive_generation.sql";
+export const CURRENT_MIGRATION_HEAD = "0105_private_equity_execution_graph.sql";

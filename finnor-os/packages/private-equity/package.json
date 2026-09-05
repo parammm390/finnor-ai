@@ -1,0 +1,16 @@
+{
+  "name": "@finnor/private-equity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@finnor/authority": "*",
+    "@finnor/db": "*",
+    "@finnor/read-models": "*",
+    "@finnor/shared-types": "*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.13.1"
+  }
+}

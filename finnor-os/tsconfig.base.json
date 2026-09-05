@@ -30,6 +30,7 @@
       "@finnor/orchestration": ["./packages/orchestration/src/index.ts"],
       "@finnor/voice-os": ["./packages/voice-os/src/index.ts"],
       "@finnor/read-models": ["./packages/read-models/src/index.ts"],
+      "@finnor/private-equity": ["./packages/private-equity/src/index.ts"],
       "@finnor/plugins-shared": ["./packages/domain-plugins/shared/plugin-interface.ts"],
       "@finnor/plugin-water-test": ["./packages/domain-plugins/water-test/index.ts"],
       "@finnor/plugin-maintenance-agreement": ["./packages/domain-plugins/maintenance-agreement/index.ts"]

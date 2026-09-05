@@ -24,6 +24,8 @@ export const CANONICAL_ENTITY_TYPES = [
   "message",
   "communication",
   "document",
+  "evidence_source",
+  "evidence_source_version",
   "task",
   "work",
   "domain_action",
@@ -55,8 +57,8 @@ export const CANONICAL_ENTITY_TYPES = [
 
 export type CanonicalEntityType = (typeof CANONICAL_ENTITY_TYPES)[number];
 
-export interface CanonicalEntityRef {
-  entityType: CanonicalEntityType;
+export interface CanonicalEntityRef<TType extends string = CanonicalEntityType> {
+  entityType: TType;
   entityId: string;
 }
 
@@ -184,7 +186,12 @@ export interface CompanyContext {
   asOf: string;
 }
 
-export interface AttachWorkEntityInput extends CanonicalEntityRef {
+/**
+ * Work attachment is the runtime-extension seam.  Core's built-in entity union
+ * remains useful for its own callers, while a registered vertical supplies its
+ * own string-literal union and the database registry validates it fail-closed.
+ */
+export interface AttachWorkEntityInput<TType extends string = string> extends CanonicalEntityRef<TType> {
   relationship?: "about" | "target" | "result";
   source?: string;
 }

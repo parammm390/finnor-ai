@@ -8,7 +8,7 @@ import pg from "pg";
 import * as schema from "./schema";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
-import { CANONICAL_ENTITY_TYPES, type AttachWorkEntityInput, type CanonicalEntityRef, type DecisionContextSnapshot, type EmployeeConversationChannel, type EmployeeConversationMessage, type EmployeeConversationThreadSummary, type EmployeePersonalMemory } from "@finnor/shared-types";
+import { CANONICAL_ENTITY_TYPES, type AttachWorkEntityInput, type CanonicalEntityRef, type CanonicalTruthRegistration, type DecisionContextSnapshot, type EmployeeConversationChannel, type EmployeeConversationMessage, type EmployeeConversationThreadSummary, type EmployeePersonalMemory, type TenantVerticalIdentity } from "@finnor/shared-types";
 
 export * from "./schema";
 export * from "./migration-head";
@@ -144,6 +144,49 @@ export function adminDb(): Db {
   return drizzle(getPool(), { schema });
 }
 
+export type TenantTransactionIsolation = "read committed" | "repeatable read" | "serializable";
+
+export interface TenantTransactionOptions {
+  userId?: string;
+  isolation?: TenantTransactionIsolation;
+  readOnly?: boolean;
+}
+
+/**
+ * The reusable authenticated transaction boundary for vertical-owned canonical
+ * mutations.  It exposes the already-scoped pg client only so a vertical can use
+ * its package-local schema without making Core import that implementation.
+ */
+export async function withTenantTransaction<T>(
+  tenantId: string,
+  options: TenantTransactionOptions,
+  fn: (db: Db, client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  const isolation = options.isolation ?? "read committed";
+  const begin = `BEGIN ISOLATION LEVEL ${isolation.toUpperCase()}${options.readOnly ? " READ ONLY" : ""}`;
+  try {
+    await client.query(begin);
+    await client.query("SET LOCAL search_path = finnor_os, public");
+    await client.query("SET LOCAL statement_timeout = 10000");
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
+    if (options.userId) await client.query("SELECT set_config('app.user_id', $1, true)", [options.userId]);
+    const context = await client.query<{ tenant_id: string | null }>("SELECT current_setting('app.tenant_id', true) AS tenant_id");
+    if (context.rows[0]?.tenant_id !== tenantId) {
+      throw new Error("Tenant RLS context was not established on the query connection");
+    }
+    const db = drizzle(client, { schema });
+    const result = await fn(db, client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 /**
  * Run `fn` inside a transaction with the tenant RLS context set.
  * RLS policies (migrations/0000_init.sql) scope every tenant table to
@@ -155,30 +198,7 @@ export async function withTenant<T>(
   fn: (db: Db) => Promise<T>,
   userId?: string,
 ): Promise<T> {
-  const client = await getPool().connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SET LOCAL search_path = finnor_os, public");
-    await client.query("SET LOCAL statement_timeout = 10000");
-    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
-    // D6.T1: only user-scoped tables opt into this second RLS dimension. It stays
-    // transaction-local alongside tenant_id, so it cannot leak through a pooled
-    // connection into a later request.
-    if (userId) await client.query("SELECT set_config('app.user_id', $1, true)", [userId]);
-    const context = await client.query<{ tenant_id: string | null }>("SELECT current_setting('app.tenant_id', true) AS tenant_id");
-    if (context.rows[0]?.tenant_id !== tenantId) {
-      throw new Error("Tenant RLS context was not established on the query connection");
-    }
-    const db = drizzle(client, { schema });
-    const result = await fn(db);
-    await client.query("COMMIT");
-    return result;
-  } catch (err) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw err;
-  } finally {
-    client.release();
-  }
+  return withTenantTransaction(tenantId, { userId }, (db) => fn(db));
 }
 
 export async function closePool(): Promise<void> {
@@ -187,6 +207,102 @@ export async function closePool(): Promise<void> {
     pool = null;
     poolConnectionString = null;
   }
+}
+
+/** Resolve the authenticated tenant's one active business vertical. */
+export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
+  return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    const result = await client.query<{
+      tenant_id: string;
+      vertical_key: string;
+      version: number;
+      effective_from: Date;
+      source_system: string;
+      source_ref: string | null;
+    }>(
+      `SELECT tenant_id,vertical_key,version,effective_from,source_system,source_ref
+         FROM finnor_os.tenant_vertical_assignments
+        WHERE tenant_id=$1`,
+      [tenantId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("Tenant vertical identity is missing");
+    return {
+      tenantId: row.tenant_id,
+      verticalKey: row.vertical_key,
+      version: row.version,
+      effectiveFrom: row.effective_from.toISOString(),
+      sourceSystem: row.source_system,
+      sourceRef: row.source_ref,
+    };
+  });
+}
+
+/**
+ * Explicit vertical reassignment boundary.  The database refuses a switch while
+ * canonical rows owned by the current vertical exist, so changing a label can
+ * never reinterpret Water truth as PE truth (or vice versa).
+ */
+export async function configureTenantVertical(params: {
+  tenantId: string;
+  verticalKey: string;
+  expectedVersion: number;
+  createdBy: string;
+  sourceSystem?: string;
+  sourceRef?: string;
+}): Promise<TenantVerticalIdentity> {
+  return withTenantTransaction(params.tenantId, { isolation: "serializable" }, async (_db, client) => {
+    const result = await client.query<{
+      tenant_id: string;
+      vertical_key: string;
+      version: number;
+      effective_from: Date;
+      source_system: string;
+      source_ref: string | null;
+    }>(
+      `SELECT * FROM finnor_os.configure_tenant_vertical($1,$2,$3,$4,$5,$6)`,
+      [params.tenantId, params.verticalKey, params.expectedVersion, params.createdBy, params.sourceSystem ?? "finnor", params.sourceRef ?? null],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("Tenant vertical update returned no canonical identity");
+    return {
+      tenantId: row.tenant_id,
+      verticalKey: row.vertical_key,
+      version: row.version,
+      effectiveFrom: row.effective_from.toISOString(),
+      sourceSystem: row.source_system,
+      sourceRef: row.source_ref,
+    };
+  });
+}
+
+export async function listCanonicalTruthRegistrations(tenantId: string): Promise<CanonicalTruthRegistration[]> {
+  return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    const result = await client.query<{
+      entity_type: string;
+      vertical_key: string | null;
+      source_schema: "finnor_os";
+      source_table: string;
+      writable_owner: string;
+      mutation_boundary: string;
+      work_attachable: boolean;
+    }>(
+      `SELECT entity_type,vertical_key,source_schema,source_table,writable_owner,mutation_boundary,work_attachable
+         FROM finnor_os.canonical_truth_registry
+        WHERE vertical_key IS NULL OR vertical_key=finnor_os.active_tenant_vertical($1)
+        ORDER BY entity_type`,
+      [tenantId],
+    );
+    return result.rows.map((row) => ({
+      entityType: row.entity_type,
+      verticalKey: row.vertical_key,
+      sourceSchema: row.source_schema,
+      sourceTable: row.source_table,
+      writableOwner: row.writable_owner,
+      mutationBoundary: row.mutation_boundary,
+      workAttachable: row.work_attachable,
+    }));
+  });
 }
 
 /** Idempotent job enqueue — safe to call twice with the same key (§16). `correlationId`
@@ -650,9 +766,13 @@ export async function attachWorkEntityTx(
   db: Db,
   params: { tenantId: string; workId: string; entity: AttachWorkEntityInput },
 ): Promise<void> {
-  if (!canonicalEntityTypes.has(params.entity.entityType) || !isUuid(params.entity.entityId)) {
+  if (!/^[a-z][a-z0-9_]{1,62}$/.test(params.entity.entityType) || !isUuid(params.entity.entityId)) {
     throw new Error("Invalid canonical entity reference");
   }
+  const available = await db.execute<{ available: boolean }>(sql`
+    SELECT finnor_os.canonical_entity_work_attachable(${params.tenantId}::uuid, ${params.entity.entityType}) AS available
+  `);
+  if (!available.rows[0]?.available) throw new Error("Canonical entity type is not registered for the tenant's active vertical");
   await db.insert(schema.workEntityLinks).values({
     tenantId: params.tenantId,
     workId: params.workId,
