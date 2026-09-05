@@ -151,7 +151,24 @@ function communicationTools(calls: Array<{ tool: string; input: Record<string, u
 }
 
 describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () => {
+  const priorCredentials = {
+    GOHIGHLEVEL_API_KEY: process.env.GOHIGHLEVEL_API_KEY,
+    VAPI_API_KEY: process.env.VAPI_API_KEY,
+    VAPI_PHONE_NUMBER_ID: process.env.VAPI_PHONE_NUMBER_ID,
+    VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
+    GMAIL_USER: process.env.GMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    FINNOR_LEGACY_CREDENTIAL_TENANT_IDS: process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS,
+  };
+
   beforeAll(async () => {
+    process.env.GOHIGHLEVEL_API_KEY = "pe4-test-ghl-key";
+    process.env.VAPI_API_KEY = "pe4-test-vapi-key";
+    process.env.VAPI_PHONE_NUMBER_ID = "pe4-test-phone-number";
+    process.env.VAPI_ASSISTANT_ID = "pe4-test-assistant";
+    process.env.GMAIL_USER = "owner@example.test";
+    process.env.GMAIL_APP_PASSWORD = "pe4-test-app-password";
+    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = TENANT_A;
     process.env.DATABASE_URL = SUPER_URL;
     await migrate(SUPER_URL);
     const admin = new pg.Client({ connectionString: SUPER_URL });
@@ -211,12 +228,12 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
       );
       await admin.query(
         `INSERT INTO finnor_os.communication_identities
-          (id,tenant_id,identity_key,provider,channel,address,status,capabilities)
+          (id,tenant_id,identity_key,provider,channel,address,status,capabilities,credential_provider,credential_ref)
          VALUES
-          ($1,$5,'owner-email','gmail','email','owner@example.test','active','["send"]'),
-          ($2,$5,'owner-sms','ghl','sms','+15551110000','active','["send"]'),
-          ($3,$5,'owner-voice','vapi','voice','+15551110002','active','["call"]'),
-          ($4,$5,'sarah-sms','ghl','sms','+15551110001','active','["send"]')`,
+          ($1,$5,'owner-email','gmail','email','owner@example.test','active','["send"]','legacy-env','legacy-env:gmail'),
+          ($2,$5,'owner-sms','ghl','sms','+15551110000','active','["send"]','legacy-env','legacy-env:ghl'),
+          ($3,$5,'owner-voice','vapi','voice','+15551110002','active','["call"]','legacy-env','legacy-env:vapi'),
+          ($4,$5,'sarah-sms','ghl','sms','+15551110001','active','["send"]','legacy-env','legacy-env:ghl')`,
         [EMAIL_IDENTITY, SMS_IDENTITY, VOICE_IDENTITY, UNAUTHORIZED_IDENTITY, TENANT_A],
       );
       await admin.query(
@@ -263,6 +280,10 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
   afterAll(async () => {
     await closePool();
     process.env.DATABASE_URL = SUPER_URL;
+    for (const [name, value] of Object.entries(priorCredentials)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
   });
 
   it("resolves ambiguity before execution and sends one canonical SMS with a durable receipt", async () => {

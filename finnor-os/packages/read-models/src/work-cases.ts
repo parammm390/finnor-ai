@@ -760,24 +760,29 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
     const rootScope: WorkCasesPage["page"]["rootScope"] = cursor?.scope ?? (canonicalWork ? "canonical_work" : "legacy_instruction");
     const cursorDate = cursor?.updatedAt ? new Date(cursor.updatedAt) : null;
     const activityBucket = sql<number>`CASE WHEN ${works.status} IN ('completed','failed','cancelled') THEN 1 ELSE 0 END`;
+    // JavaScript Date serializes milliseconds while PostgreSQL timestamps retain
+    // microseconds. Use the same millisecond key for filtering and ordering so a
+    // cursor round-trip cannot skip roots created within one statement.
+    const workUpdatedAt = sql<Date>`date_trunc('milliseconds', ${works.updatedAt})`;
+    const legacyUpdatedAt = sql<Date>`date_trunc('milliseconds', ${instructionSessions.updatedAt})`;
     const workCursor = cursorDate
       ? or(
           gt(activityBucket, cursor!.activityBucket!),
           and(eq(activityBucket, cursor!.activityBucket!), or(
-            lt(works.updatedAt, cursorDate),
-            and(eq(works.updatedAt, cursorDate), lt(works.id, cursor!.id!)),
+            lt(workUpdatedAt, cursorDate),
+            and(eq(workUpdatedAt, cursorDate), lt(works.id, cursor!.id!)),
           )),
         )
       : undefined;
     const legacyCursor = cursorDate
-      ? or(lt(instructionSessions.updatedAt, cursorDate), and(eq(instructionSessions.updatedAt, cursorDate), lt(instructionSessions.id, cursor!.id!)))
+      ? or(lt(legacyUpdatedAt, cursorDate), and(eq(legacyUpdatedAt, cursorDate), lt(instructionSessions.id, cursor!.id!)))
       : undefined;
 
     const fetchedWorkRows = rootScope === "canonical_work"
-      ? await db.select().from(works).where(and(eq(works.tenantId, tenantId), workCursor)).orderBy(asc(activityBucket), desc(works.updatedAt), desc(works.id)).limit(limit + 1)
+      ? await db.select().from(works).where(and(eq(works.tenantId, tenantId), workCursor)).orderBy(asc(activityBucket), desc(workUpdatedAt), desc(works.id)).limit(limit + 1)
       : [];
     const fetchedLegacyInstructions = rootScope === "legacy_instruction"
-      ? await db.select().from(instructionSessions).where(and(eq(instructionSessions.tenantId, tenantId), isNull(instructionSessions.workId), legacyCursor)).orderBy(desc(instructionSessions.updatedAt), desc(instructionSessions.id)).limit(limit + 1)
+      ? await db.select().from(instructionSessions).where(and(eq(instructionSessions.tenantId, tenantId), isNull(instructionSessions.workId), legacyCursor)).orderBy(desc(legacyUpdatedAt), desc(instructionSessions.id)).limit(limit + 1)
       : [];
     const scopeHasMore = (rootScope === "canonical_work" ? fetchedWorkRows : fetchedLegacyInstructions).length > limit;
     const workRows = fetchedWorkRows.slice(0, limit);

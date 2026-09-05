@@ -91,6 +91,24 @@ const COMPUTER_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile
   ["computer-task", "computer_task", "EXTERNAL_SIDE_EFFECT", "POLICY", "computer/application/identity", true],
 ];
 
+const PRIVATE_EQUITY_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile, ApprovalFloor, string, boolean]> = [
+  ["private-equity", "open_workstream", "INTERNAL_WRITE", "POLICY", "private-equity/work", false],
+  ["private-equity", "create_deal_request", "INTERNAL_WRITE", "POLICY", "private-equity/work", false],
+  ["private-equity", "submit_deliverable", "OPERATIONAL_CHANGE", "POLICY", "private-equity/documents", false],
+  ["private-equity", "record_finding", "INTERNAL_WRITE", "POLICY", "private-equity/evidence", false],
+  ["private-equity", "resolve_finding", "OPERATIONAL_CHANGE", "POLICY", "private-equity/evidence", false],
+  ["private-equity", "raise_deal_risk", "INTERNAL_WRITE", "POLICY", "private-equity/risk", false],
+  ["private-equity", "resolve_deal_risk", "OPERATIONAL_CHANGE", "POLICY", "private-equity/risk", false],
+  ["private-equity", "link_deal_dependency", "OPERATIONAL_CHANGE", "POLICY", "private-equity/dependency", false],
+  ["private-equity", "mark_dependency_resolved", "OPERATIONAL_CHANGE", "POLICY", "private-equity/dependency", false],
+  ["private-equity", "create_closing_condition", "INTERNAL_WRITE", "POLICY", "private-equity/closing", false],
+  ["private-equity", "submit_condition_evidence", "INTERNAL_WRITE", "POLICY", "private-equity/evidence", false],
+  ["private-equity", "satisfy_closing_condition", "OPERATIONAL_CHANGE", "POLICY", "private-equity/closing", false],
+  ["private-equity", "waive_closing_condition", "OPERATIONAL_CHANGE", "REQUIRED", "private-equity/closing", false],
+  ["private-equity", "verify_closing_item", "OPERATIONAL_CHANGE", "POLICY", "private-equity/closing", false],
+  ["private-equity", "declare_deal_closed", "OPERATIONAL_CHANGE", "TYPED_REQUIRED", "private-equity/closing", false],
+];
+
 const mapRows = (rows: ReadonlyArray<readonly [string, string, ActionProfile, ApprovalFloor, string, boolean]>): readonly ActionHardeningSpecRow[] => rows.map(([plugin, actionType, profile, approvalFloor, capabilityFamily, external]) => ({
   plugin,
   actionType,
@@ -104,11 +122,28 @@ const mapRows = (rows: ReadonlyArray<readonly [string, string, ActionProfile, Ap
 export const LEGACY_ACTION_HARDENING_SPEC = mapRows(LEGACY_FIXED_ROWS);
 export const UNIVERSAL_ACTION_HARDENING_SPEC = mapRows(UNIVERSAL_FIXED_ROWS);
 export const COMPUTER_ACTION_HARDENING_SPEC = mapRows(COMPUTER_FIXED_ROWS);
-export const ACTION_HARDENING_SPEC: readonly ActionHardeningSpecRow[] = [...LEGACY_ACTION_HARDENING_SPEC, ...UNIVERSAL_ACTION_HARDENING_SPEC, ...COMPUTER_ACTION_HARDENING_SPEC];
+export const PRIVATE_EQUITY_ACTION_HARDENING_SPEC = mapRows(PRIVATE_EQUITY_FIXED_ROWS);
+export const ACTION_HARDENING_SPEC: readonly ActionHardeningSpecRow[] = [...LEGACY_ACTION_HARDENING_SPEC, ...UNIVERSAL_ACTION_HARDENING_SPEC, ...COMPUTER_ACTION_HARDENING_SPEC, ...PRIVATE_EQUITY_ACTION_HARDENING_SPEC];
 export const LEGACY_ACTION_COUNT = 44;
 export const UNIVERSAL_ACTION_COUNT = 14;
 export const COMPUTER_ACTION_COUNT = 1;
-export const TOTAL_ACTION_COUNT = LEGACY_ACTION_COUNT + UNIVERSAL_ACTION_COUNT + COMPUTER_ACTION_COUNT;
+export const PRIVATE_EQUITY_ACTION_COUNT = 15;
+/** Compatibility count for the global replay registry. Runtime and release
+ * manifests must use actionHardeningSpecForVertical instead. */
+export const TOTAL_ACTION_COUNT = ACTION_HARDENING_SPEC.length;
+
+const PRIVATE_EQUITY_SHARED_ACTIONS = new Set([
+  "clarification_request", "search_web", "computer_task",
+  ...UNIVERSAL_ACTION_HARDENING_SPEC.map((row) => row.actionType),
+]);
+
+export function actionHardeningSpecForVertical(verticalKey: string): readonly ActionHardeningSpecRow[] {
+  if (verticalKey === "private_equity") {
+    return ACTION_HARDENING_SPEC.filter((row) => PRIVATE_EQUITY_SHARED_ACTIONS.has(row.actionType) || row.plugin === "private-equity");
+  }
+  if (verticalKey === "water") return ACTION_HARDENING_SPEC.filter((row) => row.plugin !== "private-equity");
+  return ACTION_HARDENING_SPEC.filter((row) => PRIVATE_EQUITY_SHARED_ACTIONS.has(row.actionType));
+}
 
 export const ACTION_HARDENING_SPEC_BY_ACTION = new Map(ACTION_HARDENING_SPEC.map((row) => [row.actionType, row]));
 
@@ -144,7 +179,7 @@ export function requiresTypedConfirmation(actionType: string): boolean {
 if (LEGACY_ACTION_HARDENING_SPEC.length !== LEGACY_ACTION_COUNT
   || UNIVERSAL_ACTION_HARDENING_SPEC.length !== UNIVERSAL_ACTION_COUNT
   || COMPUTER_ACTION_HARDENING_SPEC.length !== COMPUTER_ACTION_COUNT
-  || ACTION_HARDENING_SPEC.length !== TOTAL_ACTION_COUNT
+  || PRIVATE_EQUITY_ACTION_HARDENING_SPEC.length !== PRIVATE_EQUITY_ACTION_COUNT
   || new Set(ACTION_HARDENING_SPEC.map((row) => row.actionType)).size !== TOTAL_ACTION_COUNT) {
-  throw new Error(`The release action hardening spec must contain exactly ${LEGACY_ACTION_COUNT} legacy + ${UNIVERSAL_ACTION_COUNT} universal + ${COMPUTER_ACTION_COUNT} computer action types.`);
+  throw new Error("Each registered action must have exactly one hardening row; vertical manifests are composed at runtime.");
 }

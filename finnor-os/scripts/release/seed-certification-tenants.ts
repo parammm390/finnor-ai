@@ -4,7 +4,9 @@
 
 import pg from "pg";
 import { pgConnectionConfig } from "../../packages/db/index";
-import { ACTION_HARDENING_SPEC } from "./action-hardening-spec";
+import { actionHardeningSpecForVertical } from "./action-hardening-spec";
+
+const WATER_ACTION_HARDENING_SPEC = actionHardeningSpecForVertical("water");
 
 export type CertificationTenantKey = "alpha" | "bravo" | "charlie";
 
@@ -279,9 +281,9 @@ async function insertTenant(client: pg.Client, tenant: CertificationTenantKey, t
     );
   }
 
-  for (const spec of ACTION_HARDENING_SPEC) {
-    const policyId = certificationId(tenant, "policy", ACTION_HARDENING_SPEC.indexOf(spec) + 1);
-    const revisionId = certificationId(tenant, "revision", ACTION_HARDENING_SPEC.indexOf(spec) + 1);
+  for (const spec of WATER_ACTION_HARDENING_SPEC) {
+    const policyId = certificationId(tenant, "policy", WATER_ACTION_HARDENING_SPEC.indexOf(spec) + 1);
+    const revisionId = certificationId(tenant, "revision", WATER_ACTION_HARDENING_SPEC.indexOf(spec) + 1);
     const policy = certificationPolicyForAction(spec.actionType, spec.capabilityFamily, spec.approvalFloor);
     const requiresConfirmation = spec.approvalFloor !== "NONE";
     const template = requiresConfirmation ? `Certification approval for ${spec.actionType}.` : null;
@@ -301,14 +303,14 @@ async function insertTenant(client: pg.Client, tenant: CertificationTenantKey, t
       `INSERT INTO role_permissions (id, tenant_id, role, action_type, can_approve)
        VALUES ($1, $2, 'owner', $3, $4), ($5, $2, 'dispatcher', $3, false)
        ON CONFLICT (id) DO UPDATE SET can_approve = EXCLUDED.can_approve`,
-      [certificationId(tenant, "permission", ACTION_HARDENING_SPEC.indexOf(spec) * 2 + 1), config.id, spec.actionType, requiresConfirmation, certificationId(tenant, "permission", ACTION_HARDENING_SPEC.indexOf(spec) * 2 + 2)],
+      [certificationId(tenant, "permission", WATER_ACTION_HARDENING_SPEC.indexOf(spec) * 2 + 1), config.id, spec.actionType, requiresConfirmation, certificationId(tenant, "permission", WATER_ACTION_HARDENING_SPEC.indexOf(spec) * 2 + 2)],
     );
   }
 
   // P2 contract fixtures use real canonical rows in every certification tenant so
   // the cross-tenant gate distinguishes an existing foreign ref from a missing ref.
-  const delegationPolicyIndex = ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === "delegate_objective") + 1;
-  const schedulingPolicyIndex = ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === "schedule_internal_event") + 1;
+  const delegationPolicyIndex = WATER_ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === "delegate_objective") + 1;
+  const schedulingPolicyIndex = WATER_ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === "schedule_internal_event") + 1;
   const workId = certificationId(tenant, "work", 1);
   const taskId = certificationId(tenant, "task", 1);
   const delegationActionId = certificationId(tenant, "action", 100);
@@ -354,7 +356,7 @@ async function insertTenant(client: pg.Client, tenant: CertificationTenantKey, t
 
   for (let i = 1; i <= 3; i += 1) {
     const actionType = ["get_business_overview", "create_lead", "log_interaction"][i - 1]!;
-    const policyIndex = ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === actionType) + 1;
+    const policyIndex = WATER_ACTION_HARDENING_SPEC.findIndex((row) => row.actionType === actionType) + 1;
     const actionId = certificationId(tenant, "action", i);
     await client.query(
       `INSERT INTO domain_actions (id, tenant_id, action_type, payload, policy_id, policy_version, status, summary)

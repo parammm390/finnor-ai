@@ -53,6 +53,7 @@
     "release:live-smoke": "tsx scripts/release/run-live-binding-smoke.ts",
     "release:load": "tsx scripts/release/run-load-certification.ts",
     "release:query-latency": "tsx scripts/release/certify-operational-query-latency.ts",
+    "release:pe4": "tsx scripts/release/run-private-equity-phase4-certification.ts",
     "release:upgrade10": "tsx scripts/release/run-upgrade10-certification.ts",
     "release:migrate:production": "tsx scripts/release/migrate-production.ts",
     "recovery:preflight": "tsx scripts/recovery-preflight.ts",

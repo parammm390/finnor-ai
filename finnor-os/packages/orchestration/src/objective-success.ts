@@ -26,6 +26,7 @@ import {
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
+import { evaluateDealCloseEligibility, loadDealExecutionGraph, type PeMutationContext } from "@finnor/private-equity";
 
 const PathSchema = z.array(z.union([z.string().min(1).max(120), z.number().int().nonnegative()])).max(24);
 const AssertionSchema = z.object({
@@ -45,6 +46,17 @@ const CriterionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("no_open_execution") }).strict(),
   z.object({ kind: z.literal("all_objective_effects_verified"), minimumCount: z.number().int().min(0).max(25) }).strict(),
   QueryEvidenceSchema,
+  z.object({
+    kind: z.literal("private_equity_truth"),
+    dealId: z.string().uuid(),
+    entityType: z.enum(["pe_deal", "pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"]),
+    entityId: z.string().uuid(),
+    requirement: z.discriminatedUnion("kind", [
+      z.object({ kind: z.literal("state_in"), states: z.array(z.string().min(1).max(80)).min(1).max(10) }).strict(),
+      z.object({ kind: z.literal("close_eligible") }).strict(),
+      z.object({ kind: z.literal("deal_closed") }).strict(),
+    ]),
+  }).strict(),
   z.object({ kind: z.literal("matched_wait"), minimumCount: z.number().int().min(1).max(25), eventType: z.string().min(1).max(200).optional() }).strict(),
   z.object({ kind: z.literal("delegation_state"), minimumCount: z.number().int().min(1).max(25), requiredStatus: z.enum(["acknowledged", "accepted", "completed"]) }).strict(),
   z.object({ kind: z.literal("computer_run_state"), minimumCount: z.number().int().min(1).max(25), requiredStatus: z.literal("succeeded"), evidenceRequired: z.boolean() }).strict(),
@@ -131,6 +143,46 @@ export function defaultObjectiveSuccessCondition(objective: string): ObjectiveSu
     accepted,
   });
   return { version: 1, statement: objective.trim(), mode: "all", source: "objective_first_policy", criteria };
+}
+
+/** Canonical PE completion contract. Mutation success alone never satisfies this:
+ * the verifier re-reads the PE2 graph/eligibility and, for close, requires the
+ * canonical close timestamp, close event, and finalized receipt. */
+export function privateEquityObjectiveSuccessCondition(params: {
+  objective: string;
+  dealId: string;
+  subject?: { entityType: "pe_request" | "pe_finding" | "pe_deal_risk" | "pe_closing_condition" | "pe_closing_item"; entityId: string };
+}): ObjectiveSuccessCondition {
+  const normalized = params.objective.toLocaleLowerCase();
+  let criterion: ObjectiveSuccessCriterion | null = null;
+  if (/\bready\s+to\s+close\b|\bclose[- ]ready\b/.test(normalized)) {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, entityType: "pe_deal", entityId: params.dealId, requirement: { kind: "close_eligible" } };
+  } else if (/\bclose(?:d|ing)?\b/.test(normalized) && !params.subject) {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, entityType: "pe_deal", entityId: params.dealId, requirement: { kind: "deal_closed" } };
+  } else if (params.subject?.entityType === "pe_request") {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, ...params.subject, requirement: { kind: "state_in", states: ["fulfilled"] } };
+  } else if (params.subject?.entityType === "pe_finding") {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, ...params.subject, requirement: { kind: "state_in", states: /\baccept/.test(normalized) ? ["accepted"] : ["resolved"] } };
+  } else if (params.subject?.entityType === "pe_deal_risk") {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, ...params.subject, requirement: { kind: "state_in", states: /\baccept/.test(normalized) ? ["accepted"] : ["resolved"] } };
+  } else if (params.subject?.entityType === "pe_closing_condition") {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, ...params.subject, requirement: { kind: "state_in", states: /\bwaiv/.test(normalized) ? ["waived"] : ["satisfied", "waived"] } };
+  } else if (params.subject?.entityType === "pe_closing_item") {
+    criterion = { kind: "private_equity_truth", dealId: params.dealId, ...params.subject, requirement: { kind: "state_in", states: ["verified"] } };
+  }
+  if (!criterion) return defaultObjectiveSuccessCondition(params.objective);
+  return {
+    version: 1,
+    statement: params.objective.trim(),
+    mode: "all",
+    source: "objective_first_policy",
+    criteria: [
+      { kind: "no_open_execution" },
+      { kind: "all_objective_effects_verified", minimumCount: 0 },
+      criterion,
+      { kind: "decision_evidence", minimumCount: 1, accepted: ["canonical_query", "business_effect", "matched_event"] },
+    ],
+  };
 }
 
 type EffectInspection = {
@@ -317,6 +369,57 @@ async function queryCriterion(params: {
   };
 }
 
+async function privateEquityTruthCriterion(params: {
+  tenantId: string;
+  criterion: Extract<ObjectiveSuccessCriterion, { kind: "private_equity_truth" }>;
+}): Promise<Omit<ObjectiveSuccessCriterionResult, "index" | "kind">> {
+  const ctx: PeMutationContext = { auth: { tenantId: params.tenantId, userId: "system:objective-success", role: "owner" } };
+  const graph = await loadDealExecutionGraph(ctx, params.criterion.dealId);
+  const eligibility = await evaluateDealCloseEligibility(ctx, params.criterion.dealId);
+  const collections: Partial<Record<typeof params.criterion.entityType, Array<Record<string, unknown>>>> = {
+    pe_request: graph.requests,
+    pe_finding: graph.findings,
+    pe_deal_risk: graph.dealRisks,
+    pe_closing_condition: graph.closingConditions,
+    pe_closing_item: graph.closingItems,
+  };
+  const row = params.criterion.entityType === "pe_deal"
+    ? (String(graph.deal.id) === params.criterion.entityId ? graph.deal : null)
+    : collections[params.criterion.entityType]?.find((candidate) => String(candidate.id) === params.criterion.entityId) ?? null;
+  let satisfied = false;
+  let observed: Record<string, unknown> = { entityType: params.criterion.entityType, entityId: params.criterion.entityId, missing: !row };
+  if (row && params.criterion.requirement.kind === "state_in") {
+    const state = String(row.state ?? row.status ?? "");
+    const invalidWaiver = params.criterion.entityType === "pe_closing_condition" && state === "waived"
+      && eligibility.invalidWaivers.some((waiver) => waiver.id === params.criterion.entityId);
+    satisfied = params.criterion.requirement.states.includes(state) && !invalidWaiver;
+    observed = { state, acceptedStates: params.criterion.requirement.states, invalidWaiver };
+  } else if (row && params.criterion.requirement.kind === "close_eligible") {
+    satisfied = eligibility.eligible;
+    observed = { eligibility };
+  } else if (row && params.criterion.requirement.kind === "deal_closed") {
+    const closeEvent = graph.businessEvents.find((event) => event.eventType === "pe_deal_closed" && String(event.entityId) === params.criterion.entityId);
+    const receipt = graph.decisionReceipts.find((candidate) => candidate.id === row.closeDecisionReceiptId);
+    const finalized = Boolean(receipt?.finalizedAt) && !receipt?.failure;
+    satisfied = row.status === "closed" && Boolean(row.actualCloseAt) && Boolean(closeEvent) && finalized;
+    observed = {
+      state: row.status,
+      actualCloseAt: row.actualCloseAt ?? null,
+      closeEventId: closeEvent?.id ?? null,
+      decisionReceiptId: receipt?.id ?? null,
+      receiptFinalized: finalized,
+    };
+  }
+  return {
+    satisfied,
+    basis: satisfied
+      ? "Current PE2 canonical truth satisfies the persisted objective contract."
+      : "Current PE2 canonical truth does not yet satisfy the persisted objective contract.",
+    evidenceRefs: row ? [{ type: params.criterion.entityType, id: params.criterion.entityId }] : [],
+    observed,
+  };
+}
+
 export async function evaluateObjectiveSuccessCondition(params: {
   tenantId: string;
   workId: string;
@@ -372,6 +475,8 @@ export async function evaluateObjectiveSuccessCondition(params: {
       const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: criterion.request, assertion: criterion.assertion, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:criterion:${index}` });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       add(index, criterion, result);
+    } else if (criterion.kind === "private_equity_truth") {
+      add(index, criterion, await privateEquityTruthCriterion({ tenantId: params.tenantId, criterion }));
     } else if (criterion.kind === "matched_wait") {
       const waits = params.inspection.eventWaits.filter((row) => row.status === "satisfied" && row.matchedEventId && (!criterion.eventType || row.expectedEventType === criterion.eventType));
       add(index, criterion, { satisfied: waits.length >= criterion.minimumCount, basis: `${waits.length} exact objective waits satisfy the required event outcome; minimum ${criterion.minimumCount}.`, evidenceRefs: waits.flatMap((row) => [{ type: "work_event_wait", id: row.id }, ...(row.matchedEventId ? [{ type: "integration_event", id: row.matchedEventId }] : [])]) });

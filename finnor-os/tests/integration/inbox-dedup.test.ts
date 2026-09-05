@@ -5,9 +5,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, workflowSteps, workflowRuns, commands, inboxEvents, reconciliationCases } from "@finnor/db";
+import { withTenant, closePool, tenants, workflowSteps, workflowRuns, commands, inboxEvents, reconciliationCases, decisionReceipts } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
-import { submitCommand, completeStep, receiveInboxEvent } from "@finnor/workflow-runtime";
+import { submitCommand, claimStep, completeStep, receiveInboxEvent } from "@finnor/workflow-runtime";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000d3";
@@ -47,6 +47,7 @@ describe.skipIf(!available)("inbox event dedup + matching", () => {
     await withTenant(TENANT_ID, async (db) => {
       await db.delete(reconciliationCases).where(eq(reconciliationCases.tenantId, TENANT_ID));
       await db.delete(inboxEvents).where(eq(inboxEvents.tenantId, TENANT_ID));
+      await db.delete(decisionReceipts).where(eq(decisionReceipts.tenantId, TENANT_ID));
       await db.delete(workflowSteps).where(eq(workflowSteps.tenantId, TENANT_ID));
       await db.delete(workflowRuns).where(eq(workflowRuns.tenantId, TENANT_ID));
       await db.delete(commands).where(eq(commands.tenantId, TENANT_ID));
@@ -56,6 +57,9 @@ describe.skipIf(!available)("inbox event dedup + matching", () => {
 
   it("sending the same (provider, event_id) twice applies the business effect once and marks the replay duplicate", async () => {
     const { stepId } = await newStep();
+    // An inbound provider event settles an open execution, so the durable step
+    // must be leased before the event can finalize it.
+    expect(await claimStep(TENANT_ID, stepId)).toBeTruthy();
     let appliedCount = 0;
 
     async function deliver() {

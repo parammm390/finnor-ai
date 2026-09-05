@@ -36,6 +36,11 @@ async function dbUp(): Promise<boolean> {
 const available = await dbUp();
 
 describe.skipIf(!available)("Phase 6 authenticated-employee conversation context kernel", () => {
+  const priorCredentials = {
+    GMAIL_USER: process.env.GMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    FINNOR_LEGACY_CREDENTIAL_TENANT_IDS: process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS,
+  };
   const tenantA = randomUUID();
   const tenantB = randomUUID();
   const sarah = randomUUID();
@@ -51,6 +56,9 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
 
   beforeAll(async () => {
     delete process.env.ZEP_API_KEY;
+    process.env.GMAIL_USER = "sales@example.test";
+    process.env.GMAIL_APP_PASSWORD = "phase6-test-app-password";
+    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = tenantA;
     await migrate(SUPER_URL);
     const admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
@@ -63,7 +71,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await admin.query("INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,external_organization_id,name) VALUES ($1,$2,'john-smith-phase6',$3,'John Smith')", [johnSmith, tenantA, pentair]);
     await admin.query("INSERT INTO finnor_os.households(id,tenant_id,address,contact_info) VALUES ($1,$2,'10 Peterson Way',$3::jsonb)", [petersonHousehold, tenantA, JSON.stringify({ name: "Peterson Family" })]);
     await admin.query("INSERT INTO finnor_os.appointments(id,tenant_id,subject_type,subject_id,status,scheduled_at) VALUES ($1,$2,'household',$3,'confirmed',now()+interval '3 days')", [petersonAppointment, tenantA, petersonHousehold]);
-    await admin.query("INSERT INTO finnor_os.communication_identities(id,tenant_id,identity_key,provider,channel,address,status,capabilities) VALUES ($1,$2,'sales_email_phase6','gmail','email','sales@example.test','active','[]')", [salesIdentity, tenantA]);
+    await admin.query("INSERT INTO finnor_os.communication_identities(id,tenant_id,identity_key,provider,channel,address,status,capabilities,credential_provider,credential_ref) VALUES ($1,$2,'sales_email_phase6','gmail','email','sales@example.test','active','[]','legacy-env','legacy-env:gmail')", [salesIdentity, tenantA]);
     await admin.query("INSERT INTO finnor_os.communication_identity_bindings(tenant_id,communication_identity_id,principal_type,principal_id,purpose,priority,status) VALUES ($1,$2,'employee',$3,'sales',100,'active')", [tenantA, salesIdentity, sarah]);
     await admin.end();
     process.env.DATABASE_URL = APP_URL;
@@ -73,6 +81,10 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
   afterAll(async () => {
     await closePool();
     process.env.DATABASE_URL = SUPER_URL;
+    for (const [name, value] of Object.entries(priorCredentials)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
   });
 
   it("uses the active users.id as the canonical human and rejects service principals", async () => {

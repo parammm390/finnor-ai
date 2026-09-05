@@ -15,7 +15,7 @@
 //    signal fires EARLIER (half that timeout) and only nudges — never changes status —
 //    so it can't race or duplicate that scan's own transition.
 
-import { withTenant, workflowRuns, workflowSteps, decisionReceipts, domainActions, domainPolicyRevisions, enqueueJob, getPool } from "@finnor/db";
+import { withTenant, workflowRuns, workflowSteps, decisionReceipts, domainActions, domainPolicies, domainPolicyRevisions, enqueueJob, getPool } from "@finnor/db";
 import { and, eq, lt, isNull, sql } from "drizzle-orm";
 import { enqueueStep, isRunPastWatchdogDeadline, stuckRunDeadlineHours, workflowStepJobKey } from "@finnor/workflow-runtime";
 import { appendEpisode, readEpisodes } from "@finnor/memory";
@@ -127,19 +127,21 @@ async function detectAndNudgeAgingApprovals(tenantId: string): Promise<WatchdogF
         createdAt: domainActions.createdAt,
         summary: domainActions.summary,
         confirmationTimeoutHours: domainPolicyRevisions.confirmationTimeoutHours,
+        legacyConfirmationTimeoutHours: domainPolicies.confirmationTimeoutHours,
       })
       .from(domainActions)
       .leftJoin(domainPolicyRevisions, and(
         eq(domainActions.policyId, domainPolicyRevisions.policyId),
         eq(domainActions.policyVersion, domainPolicyRevisions.version),
       ))
+      .leftJoin(domainPolicies, eq(domainActions.policyId, domainPolicies.id))
       .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.status, "pending"))),
   );
   if (pending.length === 0) return [];
 
   const findings: WatchdogFinding[] = [];
   for (const row of pending) {
-    const timeoutHours = row.confirmationTimeoutHours ?? 24;
+    const timeoutHours = row.confirmationTimeoutHours ?? row.legacyConfirmationTimeoutHours ?? 24;
     const nudgeAtHours = timeoutHours * AGING_APPROVAL_NUDGE_FRACTION;
     if (hoursSince(row.createdAt) < nudgeAtHours) continue;
 

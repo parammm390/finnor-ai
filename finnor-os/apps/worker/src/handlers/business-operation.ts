@@ -232,7 +232,11 @@ async function claimTargetTx(db: Db, tenantId: string, operationId: string, targ
 /** Hold the parent operation row lock across the provider mutation. Cancellation
  * updates the same row, so either cancellation commits first and this returns
  * inactive without dispatching, or the already-started provider call finishes
- * before cancellation can truthfully commit. */
+ * before cancellation can truthfully commit. Do not also lock the parent Work
+ * here: the provider adapters claim their external-operation row in a nested
+ * tenant transaction, and the operational-delta FK must take a KEY SHARE lock
+ * on Work while that transaction is open. Holding Work FOR UPDATE in this outer
+ * transaction would self-deadlock that durable claim. */
 async function withActiveOperationEffectFence<T>(
   tenantId: string,
   operationId: string,
@@ -246,7 +250,6 @@ async function withActiveOperationEffectFence<T>(
       .limit(1);
     if (!operation || !["queued", "running"].includes(operation.status)) return { active: false as const };
     if (operation.workId) {
-      await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${tenantId} AND ${works.id}=${operation.workId} FOR UPDATE`);
       const [work] = await db.select({ status: works.status }).from(works).where(and(
         eq(works.tenantId, tenantId),
         eq(works.id, operation.workId),

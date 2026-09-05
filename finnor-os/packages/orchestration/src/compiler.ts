@@ -51,6 +51,9 @@ import {
   decisionReceipts,
   reconciliationCases,
   tenantIntegrations,
+  tenantVerticalAssignments,
+  evidenceSources,
+  evidenceSourceVersions,
   externalOperations,
   type Db,
 } from "@finnor/db";
@@ -168,9 +171,34 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
       const [row] = await db.select({ id: communicationIdentities.id }).from(communicationIdentities).where(tenantFor(eq(communicationIdentities.id, value), communicationIdentities.tenantId)).limit(1);
       return row ? "verified" : "not_found";
     }
+    case "evidenceSourceId": {
+      const [row] = await db.select({ id: evidenceSources.id }).from(evidenceSources).where(and(
+        eq(evidenceSources.id, value),
+        eq(evidenceSources.scope, "tenant"),
+        ...(tenantId ? [eq(evidenceSources.tenantId, tenantId)] : []),
+      )).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "evidenceVersionId": {
+      const [row] = await db.select({ id: evidenceSourceVersions.id }).from(evidenceSourceVersions).where(and(
+        eq(evidenceSourceVersions.id, value),
+        eq(evidenceSourceVersions.scope, "tenant"),
+        ...(tenantId ? [eq(evidenceSourceVersions.tenantId, tenantId)] : []),
+      )).limit(1);
+      return row ? "verified" : "not_found";
+    }
     default:
-      return "unverifiable";
+      break;
   }
+  const privateEquityTypeByField: Record<string, string> = {
+    dealId: "pe_deal", dealPartyId: "pe_deal_party", requestedFromDealPartyId: "pe_deal_party",
+    responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
+    deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
+    dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
+    closingItemId: "pe_closing_item",
+  };
+  const entityType = privateEquityTypeByField[field];
+  return entityType ? lookUpTypedRef(db, tenantId, "entity", entityType, value) : "unverifiable";
 }
 
 async function lookUpTypedRef(
@@ -316,6 +344,12 @@ const EFFECT_RESOURCE_KEYS: Record<string, string> = {
   objectiveLoopId: "objective_loop", communicationIdentityId: "communication_identity",
   applicationAccountId: "application_account", authProfileId: "auth_profile",
   agreementId: "maintenance_agreement", maintenanceAgreementId: "maintenance_agreement",
+  dealId: "pe_deal", dealPartyId: "pe_deal_party", requestedFromDealPartyId: "pe_deal_party",
+  responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
+  deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
+  dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
+  closingItemId: "pe_closing_item", evidenceSourceId: "evidence_source", evidenceVersionId: "evidence_source_version",
+  verifierEmployeeId: "employee",
 };
 
 const EFFECT_RECIPIENT_KEYS: Record<string, string> = {
@@ -419,7 +453,55 @@ function iso(value: Date | null | undefined): string | null {
   return value ? value.toISOString() : null;
 }
 
+const PE_STATE_TABLES: Partial<Record<string, string>> = {
+  pe_workstream: "pe_workstreams",
+  pe_request: "pe_requests",
+  pe_deliverable: "pe_deliverables",
+  pe_finding: "pe_findings",
+  pe_deal_risk: "pe_deal_risks",
+  pe_milestone: "pe_milestones",
+  pe_closing_condition: "pe_closing_conditions",
+  pe_closing_item: "pe_closing_items",
+};
+
+async function safePrivateEquityState(db: Db, tenantId: string, type: string, id: string): Promise<Record<string, unknown> | null> {
+  if (type === "pe_deal") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,status,version,graph_version "graphVersion",actual_close_at "actualCloseAt",updated_at "updatedAt"
+      FROM finnor_os.pe_deals WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_dependency") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,deal_id::text "dealId",version,removed_at "removedAt",
+             blocker_type "blockerType",blocker_id::text "blockerId",blocked_type "blockedType",blocked_id::text "blockedId",updated_at "updatedAt"
+      FROM finnor_os.pe_dependencies WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "evidence_source") {
+    const [row] = await db.select({ id: evidenceSources.id, sourceKey: evidenceSources.sourceKey, sourceType: evidenceSources.sourceType, updatedAt: evidenceSources.updatedAt })
+      .from(evidenceSources).where(and(eq(evidenceSources.id, id), eq(evidenceSources.scope, "tenant"), eq(evidenceSources.tenantId, tenantId))).limit(1);
+    return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+  }
+  if (type === "evidence_source_version") {
+    const [row] = await db.select({ id: evidenceSourceVersions.id, sourceId: evidenceSourceVersions.sourceId, contentHash: evidenceSourceVersions.contentHash, asOf: evidenceSourceVersions.asOf })
+      .from(evidenceSourceVersions).where(and(eq(evidenceSourceVersions.id, id), eq(evidenceSourceVersions.scope, "tenant"), eq(evidenceSourceVersions.tenantId, tenantId))).limit(1);
+    return row ? { ...row, asOf: iso(row.asOf) } : null;
+  }
+  const table = PE_STATE_TABLES[type];
+  if (!table) return null;
+  const result = await db.execute<Record<string, unknown>>(sql`
+    SELECT id::text id,deal_id::text "dealId",state,version,updated_at "updatedAt"
+    FROM ${sql.raw(`finnor_os.${table}`)} WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+  `);
+  return result.rows[0] ?? null;
+}
+
 async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTarget, "kind" | "type" | "id">): Promise<Record<string, unknown> | null> {
+  const peState = await safePrivateEquityState(db, tenantId, target.type, target.id);
+  if (peState) return peState;
   switch (target.type) {
     case "household": {
       const [row] = await db.select({ id: households.id, createdAt: households.createdAt }).from(households).where(and(eq(households.tenantId, tenantId), eq(households.id, target.id))).limit(1);
@@ -577,7 +659,8 @@ function amountExposure(payload: Record<string, unknown>): { amount: number; cur
 }
 
 function expectedState(actionType: string, payload: Record<string, unknown>, before: BusinessEffectStateSnapshot[]): Record<string, unknown> | null {
-  if (["create_invoice", "create_lead", "generate_quote", "create_task", "schedule_internal_event", "delegate_objective", "generate_compliance_summary"].includes(actionType)) return { exists: true };
+  if (["create_invoice", "create_lead", "generate_quote", "create_task", "schedule_internal_event", "delegate_objective", "generate_compliance_summary",
+    "open_workstream", "create_deal_request", "record_finding", "raise_deal_risk", "link_deal_dependency", "create_closing_condition", "submit_condition_evidence"].includes(actionType)) return { exists: true };
   if (actionType === "reschedule_visit" && typeof payload.newTime === "string") return { scheduledAt: new Date(payload.newTime).toISOString() };
   if (actionType === "assign_technician_to_visit" && typeof payload.technicianId === "string") return { technicianId: payload.technicianId };
   if (actionType === "record_payment") return { status: "paid" };
@@ -590,12 +673,33 @@ function expectedState(actionType: string, payload: Record<string, unknown>, bef
   if (actionType === "cancel_delegation") return { status: "cancelled" };
   if (actionType === "reschedule_internal_event") return { startsAt: payload.startsAt, endsAt: payload.endsAt, status: "rescheduled" };
   if (actionType === "computer_task" && payload.authorizedEffect && typeof payload.authorizedEffect === "object") return { ...(payload.authorizedEffect as Record<string, unknown>).changes as Record<string, unknown> };
+  if (actionType === "submit_deliverable") return { state: "received" };
+  if (actionType === "resolve_finding") return { state: "resolved" };
+  if (actionType === "resolve_deal_risk") return { state: "resolved" };
+  if (actionType === "mark_dependency_resolved") return { removedAt: { exists: true } };
+  if (actionType === "satisfy_closing_condition") return { state: "satisfied" };
+  if (actionType === "waive_closing_condition") return { state: "waived" };
+  if (actionType === "verify_closing_item") return { state: "verified" };
+  if (actionType === "declare_deal_closed") return { status: "closed", actualCloseAt: { exists: true } };
   if (actionType === "log_stock_used_on_visit") {
     const inventory = before.find((snapshot) => snapshot.target.type === "inventory_item");
     const quantity = Number(payload.quantity);
     if (inventory && typeof inventory.values.quantity === "number" && Number.isFinite(quantity)) return { quantity: inventory.values.quantity - quantity };
   }
   return null;
+}
+
+function isCreateResultTarget(actionType: string, payload: Record<string, unknown>, target: BusinessEffectTarget): boolean {
+  const resultFields: Record<string, readonly [string, string]> = {
+    open_workstream: ["workstreamId", "pe_workstream"],
+    create_deal_request: ["requestId", "pe_request"],
+    record_finding: ["findingId", "pe_finding"],
+    raise_deal_risk: ["dealRiskId", "pe_deal_risk"],
+    link_deal_dependency: ["dependencyId", "pe_dependency"],
+    create_closing_condition: ["closingConditionId", "pe_closing_condition"],
+  };
+  const pair = resultFields[actionType];
+  return Boolean(pair && target.type === pair[1] && target.id === payload[pair[0]]);
 }
 
 function approvalSummary(actionType: string, payload: Record<string, unknown>, targets: BusinessEffectTarget[], before: BusinessEffectStateSnapshot[], exposure: { amount: number; currency: string } | null, draftSummary: string): string {
@@ -665,7 +769,17 @@ async function compileBusinessEffectWithDb(params: {
   const forbidden = secretPath(params.draft.payload);
   if (forbidden) throw new BusinessEffectBoundaryError("effect_missing", `${forbidden} contains secret-shaped execution data; use a governed identity or authentication profile reference`);
   const payload = semanticValue(params.draft.payload) as Record<string, unknown>;
-  const initialTargets = collectEffectTargets(payload, params.action.id);
+  // The action's own Work is the durable causal owner, already frozen in
+  // effect.source.workId and guarded by the composite tenant boundary. Except for
+  // handoff_work, it is not the business mutation target. Including it as a state
+  // precondition would let the runtime's own executing/approval/wait transitions
+  // invalidate the exact action they coordinate. A reference to any other Work
+  // remains a normal frozen target.
+  const initialTargets = collectEffectTargets(payload, params.action.id).filter((target) => !(
+    target.type === "work"
+    && target.id === params.action.workId
+    && params.action.actionType !== "handoff_work"
+  ));
   if (params.action.actionType === "log_stock_used_on_visit" && typeof payload.sku === "string") initialTargets.push({ kind: "entity", type: "inventory_item", id: payload.sku, sourcePath: "sku" });
   const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external));
   if (resolved.bindings.some((binding) => binding.selection === "fixed" && binding.authProfileRef && !binding.authProfileId)) {
@@ -691,7 +805,7 @@ async function compileBusinessEffectWithDb(params: {
     // state reader knows the entity type.
     if (target.kind === "party" || (target.kind === "entity" && !values)) {
       const grounded = await lookUpTypedRef(params.db, params.action.tenantId, target.kind, target.type, target.id).catch(() => "not_found" as const);
-      if (grounded !== "verified") {
+      if (grounded !== "verified" && !isCreateResultTarget(params.action.actionType, payload, target)) {
         throw new BusinessEffectBoundaryError("effect_missing", `${target.type} target does not exist in this tenant`);
       }
     } else if (["communication_identity", "auth_profile", "application_account"].includes(target.type) && !values) {
@@ -789,6 +903,38 @@ export async function ensureBusinessEffect(params: {
 export async function verifyBusinessEffectPreconditions(tenantId: string, effect: BusinessEffectSet): Promise<void> {
   await withTenant(tenantId, async (db) => {
     if (effect.operation.external) {
+      const [vertical] = await db.select({ verticalKey: tenantVerticalAssignments.verticalKey })
+        .from(tenantVerticalAssignments)
+        .where(eq(tenantVerticalAssignments.tenantId, tenantId))
+        .limit(1);
+      if (vertical?.verticalKey === "private_equity") {
+        const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId);
+        const capabilityByAction: Record<string, Array<typeof tenantIntegrations.$inferSelect["capability"]>> = {
+          send_message: ["communications"], place_call: ["communications"], notify_group: ["communications"],
+          share_document: ["documents", "communications"], computer_task: ["communications", "documents", "crm"],
+        };
+        const capabilities = capabilityByAction[effect.operation.name] ?? [];
+        const candidates = await db.select({
+          id: tenantIntegrations.id,
+          mode: tenantIntegrations.mode,
+          binding: tenantIntegrations.binding,
+          capability: tenantIntegrations.capability,
+          applicationAccountId: tenantIntegrations.applicationAccountId,
+        }).from(tenantIntegrations).where(and(
+          eq(tenantIntegrations.tenantId, tenantId),
+          ...(binding?.provider ? [eq(tenantIntegrations.binding, binding.provider)] : []),
+          ...(binding?.applicationAccountId ? [eq(tenantIntegrations.applicationAccountId, binding.applicationAccountId)] : []),
+        ));
+        const relevant = binding?.provider || binding?.applicationAccountId
+          ? candidates
+          : candidates.filter((row) => capabilities.includes(row.capability));
+        if (relevant.length === 0 || relevant.some((row) => row.mode === "real")) {
+          throw new BusinessEffectBoundaryError(
+            "stale_precondition",
+            "Private Equity shadow execution requires one explicit sandbox or emulator provider binding; real or unbound egress is blocked",
+          );
+        }
+      }
       const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId);
       if (binding?.provider) {
         const rows = await db.select().from(tenantIntegrations).where(and(

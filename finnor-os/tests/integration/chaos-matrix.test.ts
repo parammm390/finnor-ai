@@ -32,6 +32,7 @@ import {
   externalOperations,
   compensationCases,
   decisionReceipts,
+  reconciliationCases,
   households,
   maintenanceAgreements,
   domainActions,
@@ -143,7 +144,9 @@ const probeContract: CapabilityContract<ProbeInput, ProbeOutput> = {
   retryPolicy: { attempts: 3, baseDelayMs: 20, timeoutMs: 2_000 },
   requiredPermission: "communications:chaos_probe",
   piiAllowlist: [],
-  retryOnUnknown: false,
+  // This probe deliberately models a retryable provider failure. The hard-fail
+  // probe below sets retryable=false and covers the non-retryable branch.
+  retryOnUnknown: true,
 };
 function makeFlakyBinding(failTimes: number): { binding: CapabilityBinding<ProbeInput, ProbeOutput>; callCount: () => number } {
   let calls = 0;
@@ -183,10 +186,11 @@ async function newRun(steps: Array<{ stepType: string; payload: Record<string, u
 }
 
 async function cleanupRun(runId: string, commandId: string, stepIds: string[]): Promise<void> {
-  await withTenant(SEED_TENANT_ID, async (db) => {
-    await db.delete(compensationCases).where(eq(compensationCases.workflowStepId, stepIds[0]!));
-    for (const id of stepIds) {
-      await db.delete(integrationOperations).where(eq(integrationOperations.workflowStepId, id));
+    await withTenant(SEED_TENANT_ID, async (db) => {
+      await db.delete(compensationCases).where(eq(compensationCases.workflowStepId, stepIds[0]!));
+      for (const id of stepIds) {
+        await db.delete(reconciliationCases).where(eq(reconciliationCases.relatedStepId, id));
+        await db.delete(integrationOperations).where(eq(integrationOperations.workflowStepId, id));
       await db.delete(decisionReceipts).where(eq(decisionReceipts.workflowStepId, id));
     }
     // A run-level receipt may intentionally have no workflow_step_id. Remove those

@@ -151,6 +151,43 @@ export interface PrivateEquityObservationReceipt {
   contentHash: string | null;
 }
 
+interface AssertionSourceRow {
+  source_id: string;
+  version_id: string;
+  source_type: string;
+  as_of: Date;
+  retrieved_at: Date;
+  snapshot: Record<string, unknown>;
+}
+
+function assertionsFromRows(rows: AssertionSourceRow[], limit: number, dealId: string): PrivateEquityAssertion[] {
+  const assertions: PrivateEquityAssertion[] = [];
+  for (const row of rows) {
+    if (row.snapshot?.dealId !== dealId) continue;
+    const claims = Array.isArray(row.snapshot?.claims) ? row.snapshot.claims : [];
+    for (const claim of claims) {
+      if (!claim || typeof claim !== "object") continue;
+      const value = claim as Record<string, unknown>;
+      if (typeof value.propositionId !== "string" || typeof value.predicate !== "string" || !PREDICATES.has(value.predicate)) continue;
+      assertions.push({
+        propositionId: value.propositionId,
+        kind: row.source_type === "pe_provider_observation" ? "provider_observation" : "document_claim",
+        value: value.value as never,
+        ref: `evidence-source:${row.source_id}:version:${row.version_id}`,
+        observedAt: row.as_of.toISOString(),
+        ingestedAt: row.retrieved_at.toISOString(),
+        ...(typeof value.maximumAgeMs === "number" ? { maximumAgeMs: value.maximumAgeMs } : {}),
+        ...(typeof value.freshnessPolicyRef === "string" ? { freshnessPolicyRef: value.freshnessPolicyRef } : {}),
+        ...(Array.isArray(value.supersedesEvidenceRefs) && value.supersedesEvidenceRefs.every((ref) => typeof ref === "string")
+          ? { supersedesEvidenceRefs: value.supersedesEvidenceRefs as string[] }
+          : {}),
+      });
+      if (assertions.length >= limit) return assertions.slice(0, limit);
+    }
+  }
+  return assertions;
+}
+
 export async function recordPrivateEquitySourceObservation(
   ctx: PeMutationContext,
   input: Omit<MapPrivateEquitySourceObservationInput, "tenantId">,
@@ -271,14 +308,7 @@ export async function loadPrivateEquityAssertions(
     readOnly: true,
     isolation: "repeatable read",
   }, async (_db, client) => {
-    const rows = await client.query<{
-      source_id: string;
-      version_id: string;
-      source_type: string;
-      as_of: Date;
-      retrieved_at: Date;
-      snapshot: Record<string, unknown>;
-    }>(
+    const rows = await client.query<AssertionSourceRow>(
       `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot
          FROM finnor_os.pe_evidence_links l
          JOIN finnor_os.evidence_sources s ON s.tenant_id=l.tenant_id AND s.id=l.evidence_source_id
@@ -289,30 +319,37 @@ export async function loadPrivateEquityAssertions(
         ORDER BY v.as_of,v.id LIMIT $4`,
       [ctx.auth.tenantId, dealId, asOf, boundedLimit],
     );
-    const assertions: PrivateEquityAssertion[] = [];
-    for (const row of rows.rows) {
-      const claims = Array.isArray(row.snapshot?.claims) ? row.snapshot.claims : [];
-      for (const claim of claims) {
-        if (!claim || typeof claim !== "object") continue;
-        const value = claim as Record<string, unknown>;
-        if (typeof value.propositionId !== "string" || typeof value.predicate !== "string" || !PREDICATES.has(value.predicate)) continue;
-        assertions.push({
-          propositionId: value.propositionId,
-          kind: row.source_type === "pe_provider_observation" ? "provider_observation" : "document_claim",
-          value: value.value as never,
-          ref: `evidence-source:${row.source_id}:version:${row.version_id}`,
-          observedAt: row.as_of.toISOString(),
-          ingestedAt: row.retrieved_at.toISOString(),
-          ...(typeof value.maximumAgeMs === "number" ? { maximumAgeMs: value.maximumAgeMs } : {}),
-          ...(typeof value.freshnessPolicyRef === "string" ? { freshnessPolicyRef: value.freshnessPolicyRef } : {}),
-          ...(Array.isArray(value.supersedesEvidenceRefs) && value.supersedesEvidenceRefs.every((ref) => typeof ref === "string")
-            ? { supersedesEvidenceRefs: value.supersedesEvidenceRefs as string[] }
-            : {}),
-        });
-        if (assertions.length >= boundedLimit) return assertions.slice(0, boundedLimit);
-      }
-    }
-    return assertions;
+    return assertionsFromRows(rows.rows, boundedLimit, dealId);
+  });
+}
+
+/** Loads one exact, tenant-owned evidence snapshot for a proposed mutation. This
+ * does not attach or promote it; the normal Epistemic Runtime still determines
+ * whether its claims are known, stale, or conflicting. */
+export async function loadPrivateEquityAssertionsForEvidence(
+  ctx: PeMutationContext,
+  dealId: string,
+  evidenceSourceId: string,
+  evidenceVersionId?: string,
+  asOf = new Date(),
+): Promise<PrivateEquityAssertion[]> {
+  return withTenantTransaction(ctx.auth.tenantId, {
+    userId: ctx.auth.userId,
+    readOnly: true,
+    isolation: "repeatable read",
+  }, async (_db, client) => {
+    const rows = await client.query<AssertionSourceRow>(
+      `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot
+         FROM finnor_os.evidence_sources s
+         JOIN finnor_os.evidence_source_versions v
+           ON v.tenant_id=s.tenant_id AND v.source_id=s.id
+        WHERE s.tenant_id=$1 AND s.scope='tenant' AND s.id=$2::uuid
+          AND s.source_type IN ('pe_provider_observation','pe_document_claim')
+          AND ($3::uuid IS NULL OR v.id=$3::uuid) AND v.as_of <= $4
+        ORDER BY v.version_number DESC,v.id DESC LIMIT 1`,
+      [ctx.auth.tenantId, evidenceSourceId, evidenceVersionId ?? null, asOf],
+    );
+    return assertionsFromRows(rows.rows, 100, dealId);
   });
 }
 

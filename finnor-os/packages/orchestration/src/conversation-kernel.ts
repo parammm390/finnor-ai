@@ -119,7 +119,7 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
     const clean = name?.replace(/\s+/g, " ").trim().replace(/[.,!?]+$/, "").replace(/^the\s+/i, "");
     if (!clean || clean.length < 2) return;
     if (/^(?:the|this|that|my|our|him|her|them|it)$/i.test(clean)) return;
-    if (/^(?:email|call|text|contact|message|notify|move|moving|reschedule|schedule|book|send)\b/i.test(clean)) return;
+    if (/^(?:email|call|text|contact|message|notify|move|moving|reschedule|schedule|book|send|when|while|before|after|with|from|the)\b/i.test(clean)) return;
     const cleanOrganization = organization?.trim().replace(/[.,!?]+$/, "");
     const existing = found.find((item) => normalized(item.name) === normalized(clean) && normalized(item.organization ?? "") === normalized(cleanOrganization ?? ""));
     if (existing) {
@@ -131,14 +131,21 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
     }
     found.push({ name: clean, cue, index, ...(cleanOrganization ? { organization: cleanOrganization } : {}) });
   };
-  for (const match of instruction.matchAll(/\b([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+){0,2})\s+from\s+([\p{L}][\p{L}\d&.' -]{1,80}?)(?=[,.!?]|\s+(?:and|use|then)\b|$)/giu)) add(match[1], match[2], "party", match.index ?? 0);
-  for (const match of instruction.matchAll(/\b(?:email|call|text|contact|message|notify)\s+([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+){0,2})\b/giu)) add(match[1], undefined, "party", match.index ?? 0);
-  for (const match of instruction.matchAll(/\b(?:move|moving|reschedule|schedule|book)\s+(?:the\s+)?([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+){0,1}?)(?=\s+(?:appointment|booking)\b|[,.!?]|$)/giu)) add(match[1], undefined, "appointment", match.index ?? 0);
+  const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
+  const boundary = "(?=\\s+(?:the|an?|this|that|from|we|to|on|about|regarding|and|use|then|during|when|while|before|after)\\b|[,.!?]|$)";
+  const organizationBoundary = "(?=[,.!?]|\\s+(?:the|an?|this|that|we|to|and|use|then|during|when|while|before|after)\\b|$)";
+  // Keep introductory prose ("I spoke with ...", "we discussed ...") out of
+  // the captured party name, and retain the organization as a disambiguator.
+  for (const match of instruction.matchAll(new RegExp(`\\b(?:spoke\\s+with|talked\\s+(?:to|with)|met\\s+with|heard\\s+from)\\s+${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${organizationBoundary}`, "giu"))) add(match[1], match[2], "party", match.index ?? 0);
+  for (const match of instruction.matchAll(new RegExp(`\\bdiscussed\\s+${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${organizationBoundary}`, "giu"))) add(match[1], match[2], "history", match.index ?? 0);
+  for (const match of instruction.matchAll(new RegExp(`\\b(?:email|call|text|contact|message|notify)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${organizationBoundary}`, "giu"))) add(match[1], match[2], "party", match.index ?? 0);
+  for (const match of instruction.matchAll(new RegExp(`\\b(?:email|call|text|contact|message|notify)\\s+(?:the\\s+)?${name}(?!\\s+from\\b)${boundary}`, "giu"))) add(match[1], undefined, "party", match.index ?? 0);
+  for (const match of instruction.matchAll(/\b(?:move|moving|reschedule|schedule|book)\s+(?:the\s+)?([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+){0,1}?)(?=\s+(?:appointment|booking|to|on|for)\b|[,.!?]|$)/giu)) add(match[1], undefined, "appointment", match.index ?? 0);
   for (const match of instruction.matchAll(/\b(?:the\s+)?([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+)?)\s+(appointment|invoice|quote|proposal|account)\b/giu)) {
     const noun = match[2]?.toLocaleLowerCase();
     add(match[1], undefined, noun === "account" ? "party" : noun as NamedExpressionCue, match.index ?? 0);
   }
-  for (const match of instruction.matchAll(/\b([\p{L}][\p{L}'-]+(?:\s+[\p{L}][\p{L}'-]+){0,2})\s+(?:we\s+discussed|we\s+talked\s+about)\b/giu)) add(match[1], undefined, "history", match.index ?? 0);
+  for (const match of instruction.matchAll(new RegExp(`\\b(?:email|call|text|contact|message|notify)\\s+(?:the\\s+)?${name}\\s+(?:we\\s+discussed|we\\s+talked\\s+about)\\b`, "giu"))) add(match[1], undefined, "history", match.index ?? 0);
   return found.sort((left, right) => left.index - right.index).slice(0, 5);
 }
 

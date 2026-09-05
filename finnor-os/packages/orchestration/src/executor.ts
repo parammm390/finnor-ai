@@ -22,6 +22,7 @@ import {
   recordBusinessEffectOutcome,
 } from "./compiler";
 import { evaluateEffectAutonomy, recordShadowEffect } from "./autonomy";
+import { ActionGroundingError } from "@finnor/plugins-shared";
 
 export interface Executor {
   execute(action: DomainAction, policy: DomainPolicy): Promise<ExecutionResult>;
@@ -56,6 +57,38 @@ export class GatedExecutor implements Executor {
     draft.correlationId = action.correlationId;
     draft.approvedBy = action.approvedBy;
     draft.domainActionId = action.id;
+    if (plugin.ground) {
+      try {
+        const grounded = await plugin.ground(draft, action, policy);
+        draft = grounded.draft;
+        draft.correlationId = action.correlationId;
+        draft.approvedBy = action.approvedBy;
+        draft.domainActionId = action.id;
+        action.payload = draft.payload;
+        action.groundedPayload = grounded.groundedPayload;
+        await withTenant(action.tenantId, (db) => db.update(domainActions).set({
+          payload: draft.payload,
+          groundedPayload: grounded.groundedPayload,
+        }).where(and(eq(domainActions.id, action.id), eq(domainActions.tenantId, action.tenantId))));
+        await appendEpisode(action.tenantId, action.id, "ground", {}, {
+          groundedPayload: grounded.groundedPayload,
+        });
+      } catch (error) {
+        if (!(error instanceof ActionGroundingError)) throw error;
+        await this.setStatus(action, "needs_human_review");
+        await appendEpisode(action.tenantId, action.id, "ground_blocked", {}, {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+        return {
+          status: "failure",
+          output: { groundingBlocked: true, code: error.code, ...error.details },
+          error: error.message,
+          errorKind: error.code === "PE_STALE_VERSION" ? "conflict" : "validation",
+        };
+      }
+    }
     if (plugin.prepareDurableOperation) {
       draft = await plugin.prepareDurableOperation(draft, action, policy);
       // Hooks return a draft so they can add the durable operation id. Re-stamp the

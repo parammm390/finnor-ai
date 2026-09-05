@@ -16,6 +16,7 @@ import {
   withTenant,
 } from "@finnor/db";
 import { settleExternalEffectObservation } from "@finnor/orchestration";
+import { openReceipt } from "@finnor/workflow-runtime";
 import type { ExternalObservationClassification } from "@finnor/shared-types";
 import { migrate } from "../../packages/db/migrate";
 
@@ -60,6 +61,22 @@ async function waitingScenario(label: string) {
       provider: "quickbooks", integrationId, businessEffectId: effectId, requestHash: semanticHash, status: "succeeded",
       response: { externalInvoiceId: `qbo-${label}` }, providerAcknowledgedAt: new Date(), verificationStatus: "awaiting_observation",
     });
+  });
+  await openReceipt({
+    tenantId,
+    workflowRunId: runId,
+    workflowStepId: stepId,
+    domainActionId: actionId,
+    businessEffectId: effectId,
+    intendedEffectHash: semanticHash,
+    authorizedEffectHash: semanticHash,
+    objective: `Observe external effect ${label}`,
+    evidence: [{ source: "workflow_step", ref: stepId, timestamp: new Date().toISOString() }],
+    policyApplied: null,
+    riskTier: "medium",
+    proposedAction: { actionType: "external_test", businessEffectId: effectId },
+    approval: { required: false },
+    expectedResult: { amountUsd: 125 },
   });
   return { actionId, effectId, commandId, runId, stepId, operationId, semanticHash };
 }

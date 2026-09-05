@@ -65,6 +65,7 @@ function pick(row: Record<string, unknown>, fields: readonly string[]): Record<s
 const DEAL_FIELDS = [
   "id", "name", "codeName", "status", "targetOrganizationId", "dealLeadEmployeeId", "signedLoiAt",
   "targetClosingAt", "version", "graphVersion", "createdAt", "updatedAt",
+  "actualCloseAt", "closeAuthorityDecisionId", "closeDecisionReceiptId",
 ] as const;
 const WORKSTREAM_FIELDS = [
   "id", "dealId", "kind", "name", "state", "ownerPartyType", "ownerPartyId", "targetAt", "dueAt",

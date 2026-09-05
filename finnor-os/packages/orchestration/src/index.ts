@@ -1515,6 +1515,13 @@ export class FinnorOrchestrator implements Orchestrator {
         if ((state?.revision ?? 1) !== approverAuthority.authorityRevision) return { claimed: null, current: null, staleAuthority: true as const };
       }
       const [before] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
+      // A completed action is already the durable result of an earlier approval.
+      // Replaying the same approval after the owning Work reaches its terminal
+      // state is a safe idempotent no-op; do not reinterpret the now-completed
+      // Work as a cancellation boundary.
+      if (decision === "approve" && before?.status === "completed") {
+        return { claimed: null, current: before };
+      }
       if (decision !== "reject" && before) {
         try {
           await assertActionNotCancelledTx(db, {

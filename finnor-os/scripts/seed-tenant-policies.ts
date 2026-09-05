@@ -164,6 +164,24 @@ export function policyRows(reviewLinkUrl: string | null, overrides: Record<strin
     // tenant override; WRITE remains confirmation-gated by the plugin itself.
     { actionType: "computer_task", policy: {}, requiresConfirmation: true },
 
+    // Private Equity Phase 4. Core authority can still require approval for any
+    // row; waiver and close also carry non-downgradeable hardening floors.
+    { actionType: "open_workstream", policy: {}, requiresConfirmation: false },
+    { actionType: "create_deal_request", policy: {}, requiresConfirmation: false },
+    { actionType: "submit_deliverable", policy: {}, requiresConfirmation: false },
+    { actionType: "record_finding", policy: {}, requiresConfirmation: false },
+    { actionType: "resolve_finding", policy: {}, requiresConfirmation: false },
+    { actionType: "raise_deal_risk", policy: {}, requiresConfirmation: false },
+    { actionType: "resolve_deal_risk", policy: {}, requiresConfirmation: false },
+    { actionType: "link_deal_dependency", policy: {}, requiresConfirmation: false },
+    { actionType: "mark_dependency_resolved", policy: {}, requiresConfirmation: false },
+    { actionType: "create_closing_condition", policy: {}, requiresConfirmation: false },
+    { actionType: "submit_condition_evidence", policy: {}, requiresConfirmation: false },
+    { actionType: "satisfy_closing_condition", policy: {}, requiresConfirmation: false },
+    { actionType: "waive_closing_condition", policy: {}, requiresConfirmation: true },
+    { actionType: "verify_closing_item", policy: {}, requiresConfirmation: false },
+    { actionType: "declare_deal_closed", policy: {}, requiresConfirmation: true },
+
     // The pricing_catalog pseudo-row: scalars only (DECISIONS: labor $95/h). Real US
     // sales-tax rates vary by state/locality — 7% is a real, usable generic default the
     // dealer localizes later, not the placeholder sentinel.

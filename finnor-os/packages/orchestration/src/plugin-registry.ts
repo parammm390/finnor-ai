@@ -30,6 +30,7 @@ import { manualStepPlugin } from "../../domain-plugins/manual-step/index";
 import { routeOptimizationPlugin } from "../../domain-plugins/route-optimization/index";
 import universalActionsPlugin from "../../domain-plugins/universal-actions/index";
 import computerTaskPlugin from "../../domain-plugins/computer-task/index";
+import privateEquityPlugin, { PRIVATE_EQUITY_ACTION_TYPES } from "../../domain-plugins/private-equity/index";
 
 export class PluginRegistry {
   private byActionType = new Map<string, DomainEnginePlugin>();
@@ -122,16 +123,28 @@ export class PluginRegistry {
   }
 }
 
-const PRIVATE_EQUITY_PLANNER_ACTIONS = ["clarification_request", "search_web"] as const;
+const UNIVERSAL_PLANNER_ACTIONS = [
+  "send_message", "place_call", "request_acknowledgement", "notify_group",
+  "create_task", "assign_task", "update_task", "handoff_work",
+  "delegate_objective", "escalate_work", "cancel_delegation",
+  "schedule_internal_event", "reschedule_internal_event", "share_document",
+] as const;
+const SHARED_PLANNER_ACTIONS = ["clarification_request", "search_web", "computer_task", ...UNIVERSAL_PLANNER_ACTIONS] as const;
+const PRIVATE_EQUITY_ACTION_SET = new Set<string>(PRIVATE_EQUITY_ACTION_TYPES);
 
-/** PE3 deliberately has no PE mutation action catalog. Deterministic Deal reads
- * are consumed before planning; only clarification and public research survive. */
+/** Action manifests are composed by active vertical. Registration remains global
+ * so durable replays can resolve historical actions, but a planner never sees or
+ * selects another vertical's vocabulary. */
 export function plannerActionTypesForVertical(registry: PluginRegistry, verticalKey: string): string[] {
   const registered = new Set(registry.actionTypes());
-  return verticalKey === "private_equity"
-    ? PRIVATE_EQUITY_PLANNER_ACTIONS.filter((actionType) => registered.has(actionType))
-    : registry.actionTypes();
+  if (verticalKey === "private_equity") {
+    return [...SHARED_PLANNER_ACTIONS, ...PRIVATE_EQUITY_ACTION_TYPES].filter((actionType) => registered.has(actionType));
+  }
+  if (verticalKey === "water") return registry.actionTypes().filter((actionType) => !PRIVATE_EQUITY_ACTION_SET.has(actionType));
+  return SHARED_PLANNER_ACTIONS.filter((actionType) => registered.has(actionType));
 }
+
+export const actionTypesForVertical = plannerActionTypesForVertical;
 
 export function createDefaultPluginRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
@@ -162,6 +175,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
     routeOptimizationPlugin,
     universalActionsPlugin,
     computerTaskPlugin,
+    privateEquityPlugin,
   ]) {
     registry.register(plugin);
   }

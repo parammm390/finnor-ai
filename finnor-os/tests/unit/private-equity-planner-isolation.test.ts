@@ -88,11 +88,17 @@ function privateEquityContext(): OperatingContext {
 }
 
 describe("Private Equity planner isolation", () => {
-  it("derives only clarification and public research actions for PE", () => {
+  it("composes shared and PE actions without exposing Water actions", () => {
     const registry = createDefaultPluginRegistry();
-    expect(plannerActionTypesForVertical(registry, "private_equity")).toEqual(["clarification_request", "search_web"]);
-    expect(registry.payloadSpecJson(plannerActionTypesForVertical(registry, "private_equity"))).not.toMatch(/create_invoice|schedule_water_test|close_deal/i);
+    const actions = plannerActionTypesForVertical(registry, "private_equity");
+    expect(actions).toContain("clarification_request");
+    expect(actions).toContain("send_message");
+    expect(actions).toContain("computer_task");
+    expect(actions).toContain("declare_deal_closed");
+    expect(actions).toHaveLength(32);
+    expect(registry.payloadSpecJson(actions)).not.toMatch(/create_invoice|schedule_water_test/i);
     expect(plannerActionTypesForVertical(registry, "water")).toContain("create_invoice");
+    expect(plannerActionTypesForVertical(registry, "water")).not.toContain("declare_deal_closed");
   });
 
   it("uses PE doctrine, exposes epistemic warnings, and drops a Water action without persisting it", async () => {

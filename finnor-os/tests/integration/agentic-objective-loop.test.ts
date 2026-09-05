@@ -23,6 +23,8 @@ import {
   workObjectiveSteps,
   workflowRuns,
   workflowSteps,
+  getPool,
+  CURRENT_MIGRATION_HEAD,
 } from "@finnor/db";
 import { ToolRegistry } from "@finnor/tools";
 import {
@@ -92,6 +94,14 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
     process.env.FINNOR_ENVIRONMENT = "test";
     process.env.AUTH_DEV_BYPASS = "1";
     await migrate(DB_URL);
+    await getPool().query(
+      `INSERT INTO finnor_os.service_release_heartbeats
+        (service,instance_id,release_sha,build_id,version,release_source,migration_head,environment,last_beat_at)
+       VALUES ('worker','agentic-objective-test','test','test','test','vitest',$1,'test',now())
+       ON CONFLICT (service,instance_id) DO UPDATE
+       SET migration_head=excluded.migration_head, last_beat_at=now()`,
+      [CURRENT_MIGRATION_HEAD],
+    );
     await withTenant(tenantId, async (db) => {
       await db.insert(tenants).values({ id: tenantId, name: "Objective Loop Test Dealer" });
       await db.insert(users).values({ id: ownerId, tenantId, email: `objective-owner-${tenantId}@example.test`, role: "owner", displayName: "Objective Owner" });
@@ -313,7 +323,7 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
     const failedRun = (await durableStepForAction(tenantId, action.id)).run;
     expect(await retryRun(tenantId, failedRun.id, failedRun.version, ownerId)).toMatchObject({ ok: true });
     const retried = await durableStepForAction(tenantId, action.id);
-    expect(await claimStep(tenantId, retried.step.id)).toBeTruthy();
+    expect(await claimStep(tenantId, retried.step.id, retried.step.dispatchGeneration)).toBeTruthy();
     await executeAuthorizedEffectStep(tenantId, retried.step.id, { tools });
     expect(await orchestrator.runObjectiveIteration({ tenantId, workId: started.workId, objectiveLoopId: started.objectiveLoopId })).toBe("completed");
     const recovered = await workAggregate(tenantId, started.workId);

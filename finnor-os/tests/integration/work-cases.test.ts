@@ -198,22 +198,21 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
       initialInstruction: "Canonical root before legacy history",
       status: "executing",
     }).returning());
-    try {
-      const canonical = await GET(request("?limit=1"), { params: Promise.resolve({ view: "work-cases" }) });
-      const canonicalBody = await canonical.json() as {
-        data: WorkCaseProjection[];
-        page: { rootScope: string; hasMore: boolean; nextCursor: string | null };
-      };
-      expect(canonicalBody.data.map((item) => item.root.id)).toEqual([work!.id]);
-      expect(canonicalBody.page).toMatchObject({ rootScope: "canonical_work", hasMore: true });
+    const canonical = await GET(request("?limit=1"), { params: Promise.resolve({ view: "work-cases" }) });
+    const canonicalBody = await canonical.json() as {
+      data: WorkCaseProjection[];
+      page: { rootScope: string; hasMore: boolean; nextCursor: string | null };
+    };
+    expect(canonicalBody.data.map((item) => item.root.id)).toEqual([work!.id]);
+    expect(canonicalBody.page).toMatchObject({ rootScope: "canonical_work", hasMore: true });
 
-      const legacy = await GET(request(`?limit=1&cursor=${encodeURIComponent(canonicalBody.page.nextCursor!)}`), { params: Promise.resolve({ view: "work-cases" }) });
-      const legacyBody = await legacy.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
-      expect(legacyBody.page.rootScope).toBe("legacy_instruction");
-      expect(legacyBody.data[0]?.root.kind).toBe("instruction");
-    } finally {
-      await withTenant(TENANT_ID, (db) => db.delete(works).where(eq(works.id, work!.id)));
-    }
+    const legacy = await GET(request(`?limit=1&cursor=${encodeURIComponent(canonicalBody.page.nextCursor!)}`), { params: Promise.resolve({ view: "work-cases" }) });
+    const legacyBody = await legacy.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
+    expect(legacyBody.page.rootScope).toBe("legacy_instruction");
+    expect(legacyBody.data[0]?.root.kind).toBe("instruction");
+    // Operational deltas are append-only and may retain this Work as provenance.
+    // The isolated test database owns the fixture lifecycle; deleting Work would
+    // attempt to rewrite that immutable audit record through ON DELETE SET NULL.
   });
 });
 
