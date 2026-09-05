@@ -155,6 +155,15 @@ export function queryAuthorityRequest(request: OperationalQueryRequest, workId?:
         : { type: "team" };
       break;
     }
+    case "deal_context":
+    case "deal_workstreams":
+    case "open_requests":
+    case "open_findings":
+    case "open_deal_risks":
+    case "critical_dependencies":
+    case "closing_readiness":
+      resource = { type: "pe_deal", ...(typeof params.dealId === "string" ? { id: params.dealId } : {}) };
+      break;
   }
   return { operation: "query", capability: `query:${request.intent}`, resource, risk: "low", workId };
 }

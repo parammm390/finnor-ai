@@ -1863,7 +1863,7 @@ async function runOperationalQuery(
     case "party_availability":
       throw new Error(`${request.intent} must execute outside an existing tenant transaction`);
     default:
-      return assertNever(request);
+      return assertNever(request as never);
   }
 }
 

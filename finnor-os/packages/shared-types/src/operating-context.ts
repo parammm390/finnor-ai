@@ -3,6 +3,8 @@ import type { OperationalPartySummary } from "./operational-queries";
 import type { OperatingIdentityAccess } from "./identity-access";
 import type { OperatingInteractionContext, OperatingInteractionPrecedence } from "./operating-interaction";
 import type { EmployeeConversationContext, EmployeePersonalMemory } from "./conversation-context";
+import type { TenantVerticalIdentity } from "./vertical-runtime";
+import type { PrivateEquityEpistemicWarning } from "./operational-queries";
 
 /**
  * Evidence classes are deliberately ordered.  Callers may enrich a higher class
@@ -120,6 +122,9 @@ export interface OperatingContext {
     id: string;
     companyName: string | null;
     timezone: string | null;
+    /** Present on freshly assembled contexts; optional only for replaying older
+     * version-1 fixtures that predate the vertical runtime boundary. */
+    vertical?: TenantVerticalIdentity;
     profile: TenantOperatingProfile;
   };
   employee: {
@@ -178,7 +183,9 @@ export interface OperatingContext {
       participantCount: number;
     }>;
   };
-  referencedEntities: CanonicalEntityRef[];
+  referencedEntities: CanonicalEntityRef<string>[];
+  /** Decision-relevant uncertainty is additive context, never canonical state. */
+  epistemicWarnings?: PrivateEquityEpistemicWarning[];
   canonicalSummaries: Array<{
     name: string;
     asOf: string;

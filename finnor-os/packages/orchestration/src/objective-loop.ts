@@ -40,8 +40,9 @@ import {
   outcomePackRuns,
   tenantOutcomePackSettings,
   type Db,
+  resolveTenantVertical,
 } from "@finnor/db";
-import { executeOperationalQuery } from "@finnor/read-models";
+import { resolvePrivateEquityDealReference } from "@finnor/private-equity";
 import { evaluateAuthority } from "@finnor/authority";
 import { listAvailableIdentityAccess } from "@finnor/security";
 import type { LLMChannel, LLMProvider } from "./llm";
@@ -49,6 +50,7 @@ import { resolveProviderForPurpose } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
 import { queryAuthorityRequest } from "./authority-runtime";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
+import { executeTenantOperationalQuery } from "./operational-query-runtime";
 import { ingestIntegrationEvent, markObjectiveWakeConsumed, objectiveWakeContext, recoverDueWorkEventWaits } from "./event-waits";
 import { resolveOperatingInteractionContext } from "./interaction-context";
 import {
@@ -632,22 +634,30 @@ function latestHouseholdId(aggregate: Awaited<ReturnType<typeof workAggregate>>)
 async function inspectCanonicalState(tenantId: string, workId: string, loop: typeof workObjectiveLoops.$inferSelect, step: typeof workObjectiveSteps.$inferSelect, ctx: TenantContext): Promise<{ inspection: ObjectiveInspection; inspectionHash: string }> {
   const aggregate = await workAggregate(tenantId, workId);
   if (!aggregate) throw new Error("Objective Work aggregate not found");
-  const businessRequest: OperationalQueryRequest = { intent: "business_state" };
+  const vertical = await resolveTenantVertical(tenantId);
+  let businessRequest: OperationalQueryRequest;
+  if (vertical.verticalKey === "private_equity") {
+    const resolution = await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
+    if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
+    businessRequest = { intent: "deal_context", dealId: resolution.dealId };
+  } else {
+    businessRequest = { intent: "business_state" };
+  }
   const businessAuthority = await evaluateAuthority(ctx, queryAuthorityRequest(businessRequest, workId));
   if (businessAuthority.outcome !== "allowed") throw new Error(`Authority denied canonical objective inspection: ${businessAuthority.reasonCode}`);
-  const businessState = await executeOperationalQuery(tenantId, businessRequest, {
+  const businessState = await executeTenantOperationalQuery(tenantId, businessRequest, {
     workId,
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
   const householdId = latestHouseholdId(aggregate);
   let companyContext: unknown;
   let companyAuthorityId: string | null = null;
-  if (householdId) {
+  if (vertical.verticalKey === "water" && householdId) {
     const companyRequest: OperationalQueryRequest = { intent: "company_context", householdId };
     const authority = await evaluateAuthority(ctx, queryAuthorityRequest(companyRequest, workId));
     companyAuthorityId = authority.id;
     if (authority.outcome === "allowed") {
-      companyContext = await executeOperationalQuery(tenantId, companyRequest, {
+      companyContext = await executeTenantOperationalQuery(tenantId, companyRequest, {
         workId,
         executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:company-context`,
       });
@@ -1229,7 +1239,7 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Authority denied the selected query: ${authority.reasonCode}`, decision, authorityDecisionId: authority.id, observation: { authority }, progressMade: false })).outcome;
       }
       try {
-        const result = await executeOperationalQuery(params.tenantId, validated.request, {
+        const result = await executeTenantOperationalQuery(params.tenantId, validated.request, {
           workId: params.workId,
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });

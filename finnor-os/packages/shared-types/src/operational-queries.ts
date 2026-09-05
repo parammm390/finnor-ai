@@ -24,7 +24,27 @@ export const OPERATIONAL_QUERY_INTENTS = [
   "party_context",
   "team_roster",
   "party_availability",
+  "deal_context",
+  "deal_workstreams",
+  "open_requests",
+  "open_findings",
+  "open_deal_risks",
+  "critical_dependencies",
+  "closing_readiness",
 ] as const;
+
+/** Phase 3 intentionally exposes a bounded Deal read surface. These are read
+ * intents, not PE actions and not a connector/data-fabric registry. */
+export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
+  "deal_context",
+  "deal_workstreams",
+  "open_requests",
+  "open_findings",
+  "open_deal_risks",
+  "critical_dependencies",
+  "closing_readiness",
+] as const;
+export type PrivateEquityOperationalQueryIntent = (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number];
 
 export type CanonicalOperationalQueryIntent = (typeof OPERATIONAL_QUERY_INTENTS)[number];
 /** Legacy aliases are accepted only at the router compatibility seam and are
@@ -176,6 +196,40 @@ export interface PartyAvailabilityRequest {
   page?: OperationalQueryPageRequest;
 }
 
+export interface DealScopedQueryRequest {
+  /** Exact canonical Deal id. tenantId is supplied only by authenticated execution. */
+  dealId: string;
+  page?: OperationalQueryPageRequest;
+}
+
+export interface DealContextRequest extends DealScopedQueryRequest { intent: "deal_context" }
+export interface DealWorkstreamsRequest extends DealScopedQueryRequest {
+  intent: "deal_workstreams";
+  states?: string[];
+  owner?: PartyRef;
+}
+export interface OpenRequestsRequest extends DealScopedQueryRequest {
+  intent: "open_requests";
+  workstreamId?: string;
+  requestedFrom?: PartyRef;
+  dueState?: "any" | "overdue" | "not_overdue";
+}
+export interface OpenFindingsRequest extends DealScopedQueryRequest {
+  intent: "open_findings";
+  workstreamId?: string;
+  severities?: Array<"low" | "medium" | "high" | "critical">;
+}
+export interface OpenDealRisksRequest extends DealScopedQueryRequest {
+  intent: "open_deal_risks";
+  workstreamId?: string;
+  severities?: Array<"low" | "medium" | "high" | "critical">;
+}
+export interface CriticalDependenciesRequest extends DealScopedQueryRequest {
+  intent: "critical_dependencies";
+  includeResolved?: boolean;
+}
+export interface ClosingReadinessRequest extends DealScopedQueryRequest { intent: "closing_readiness" }
+
 export type CanonicalOperationalQueryRequest =
   | CustomerLookupRequest
   | CustomerCohortRequest
@@ -189,7 +243,14 @@ export type CanonicalOperationalQueryRequest =
   | PartyLookupRequest
   | PartyContextRequest
   | TeamRosterRequest
-  | PartyAvailabilityRequest;
+  | PartyAvailabilityRequest
+  | DealContextRequest
+  | DealWorkstreamsRequest
+  | OpenRequestsRequest
+  | OpenFindingsRequest
+  | OpenDealRisksRequest
+  | CriticalDependenciesRequest
+  | ClosingReadinessRequest;
 
 export interface CustomerLookupCompatibilityRequest {
   intent: "customer_lookup";
@@ -546,6 +607,100 @@ export interface PartyAvailabilityResult extends OperationalQueryResultBase<"par
   sourceTables: string[];
 }
 
+export interface PrivateEquityEpistemicWarning {
+  propositionId: string;
+  predicate: string;
+  status: "UNKNOWN" | "STALE" | "CONFLICTING" | "UNCERTAIN" | "CONTRADICTED";
+  reason: string;
+  evidenceRefs: string[];
+}
+
+export interface PrivateEquityDecisionReadiness {
+  decisionId: string;
+  decisionType: "closing_condition_satisfaction" | "closing_item_verification" | "deal_close" | "request_fulfillment";
+  ready: boolean;
+  unresolvedPropositionIds: string[];
+  acquisitionOptions: Array<{
+    propositionId: string;
+    adapterId: string;
+    kind: string;
+    reason: string;
+  }>;
+}
+
+export interface DealContextResult extends OperationalQueryResultBase<"deal_context"> {
+  deal: Record<string, unknown> | null;
+  target: { id: string; name: string } | null;
+  lead: { id: string; name: string } | null;
+  counts: Record<string, Record<string, number>>;
+  workRefs: Array<{ workId: string; relationship: string }>;
+  epistemicWarnings: PrivateEquityEpistemicWarning[];
+}
+
+export interface DealWorkstreamsResult extends OperationalQueryResultBase<"deal_workstreams"> {
+  rows: Array<Record<string, unknown> & { id: string; state: string; blocking: boolean }>;
+}
+
+export interface OpenRequestsResult extends OperationalQueryResultBase<"open_requests"> {
+  rows: Array<Record<string, unknown> & { id: string; state: string; overdue: boolean }>;
+}
+
+export interface OpenFindingsResult extends OperationalQueryResultBase<"open_findings"> {
+  rows: Array<Record<string, unknown> & {
+    id: string;
+    state: string;
+    evidenceRefs: string[];
+    riskRefs: string[];
+    epistemicWarnings: PrivateEquityEpistemicWarning[];
+  }>;
+  epistemicWarnings: PrivateEquityEpistemicWarning[];
+}
+
+export interface OpenDealRisksResult extends OperationalQueryResultBase<"open_deal_risks"> {
+  rows: Array<Record<string, unknown> & {
+    id: string;
+    state: string;
+    evidenceRefs: string[];
+    findingRefs: string[];
+    epistemicWarnings: PrivateEquityEpistemicWarning[];
+  }>;
+  epistemicWarnings: PrivateEquityEpistemicWarning[];
+}
+
+export interface CriticalDependenciesResult extends OperationalQueryResultBase<"critical_dependencies"> {
+  rows: Array<{
+    dependencyId: string;
+    blocker: CanonicalEntityRef<string>;
+    blocked: CanonicalEntityRef<string>;
+    resolved: boolean;
+    blockerState: string | null;
+    blockedState: string | null;
+    blockerDueAt: string | null;
+    blockedDueAt: string | null;
+    workRefs: Array<{ workId: string; entityType: string; entityId: string }>;
+    ownerRefs: PartyRef[];
+    paths: CanonicalEntityRef<string>[][];
+  }>;
+}
+
+export interface ClosingReadinessResult extends OperationalQueryResultBase<"closing_readiness"> {
+  dealId: string;
+  eligible: boolean;
+  eligibility: Record<string, unknown> | null;
+  blockingConditions: Record<string, unknown>[];
+  failedConditions: Record<string, unknown>[];
+  unverifiedClosingItems: Record<string, unknown>[];
+  blockingDependencies: Record<string, unknown>[];
+  invalidWaivers: Record<string, unknown>[];
+  integrityErrors: string[];
+  criticalDependencies: CriticalDependenciesResult["rows"];
+  relevantFindings: OpenFindingsResult["rows"];
+  relevantDealRisks: OpenDealRisksResult["rows"];
+  epistemicWarnings: PrivateEquityEpistemicWarning[];
+  decisionReadiness: PrivateEquityDecisionReadiness[];
+  queryTrace: PrivateEquityOperationalQueryIntent[];
+}
+
 export type OperationalQueryResult =
   | CustomerLookupResult
   | CustomerCohortResult
@@ -559,7 +714,14 @@ export type OperationalQueryResult =
   | PartyLookupResult
   | PartyContextResult
   | TeamRosterResult
-  | PartyAvailabilityResult;
+  | PartyAvailabilityResult
+  | DealContextResult
+  | DealWorkstreamsResult
+  | OpenRequestsResult
+  | OpenFindingsResult
+  | OpenDealRisksResult
+  | CriticalDependenciesResult
+  | ClosingReadinessResult;
 
 /** Compact result accepted by the router compatibility seam. Canonical executor
  * results also carry these fields through OperationalQueryResultBase. */
@@ -601,4 +763,11 @@ export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
                                       : R extends PartyContextRequest ? PartyContextResult
                                         : R extends TeamRosterRequest ? TeamRosterResult
                                           : R extends PartyAvailabilityRequest ? PartyAvailabilityResult
+                                            : R extends DealContextRequest ? DealContextResult
+                                              : R extends DealWorkstreamsRequest ? DealWorkstreamsResult
+                                                : R extends OpenRequestsRequest ? OpenRequestsResult
+                                                  : R extends OpenFindingsRequest ? OpenFindingsResult
+                                                    : R extends OpenDealRisksRequest ? OpenDealRisksResult
+                                                      : R extends CriticalDependenciesRequest ? CriticalDependenciesResult
+                                                        : R extends ClosingReadinessRequest ? ClosingReadinessResult
                                     : never;

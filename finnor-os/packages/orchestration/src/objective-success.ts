@@ -10,8 +10,8 @@ import type {
   ObjectiveSuccessCriterionResult,
   ObjectiveSuccessVerification,
   OperationalQueryRequest,
+  CanonicalOperationalQueryRequest,
 } from "@finnor/shared-types";
-import { executeOperationalQuery } from "@finnor/read-models";
 import {
   businessEffects,
   businessOperations,
@@ -25,6 +25,7 @@ import {
 } from "@finnor/db";
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
+import { executeTenantOperationalQuery } from "./operational-query-runtime";
 
 const PathSchema = z.array(z.union([z.string().min(1).max(120), z.number().int().nonnegative()])).max(24);
 const AssertionSchema = z.object({
@@ -304,7 +305,7 @@ async function queryCriterion(params: {
   assertion: ObjectiveSuccessAssertion;
   executionKey: string;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const result = await executeOperationalQuery(params.tenantId, params.request, { workId: params.workId, executionKey: params.executionKey });
+  const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey });
   const assertion = evaluateObjectiveAssertion(result, params.assertion);
   const executionId = result.execution?.id;
   return {

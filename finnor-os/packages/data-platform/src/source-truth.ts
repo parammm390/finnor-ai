@@ -30,6 +30,7 @@ export type SourceMaterializationStatus =
   | "ambiguous"
   | "unresolved"
   | "conflict"
+  | "observed"
   | "tombstoned";
 
 export interface SourceMaterializationResult {
@@ -281,12 +282,15 @@ export async function recordExternalReferenceAcknowledgement(db: Db, params: {
   if (!integration || integration.binding !== params.provider) {
     throw new SourceTruthError("provider_binding_mismatch", "acknowledgement does not match the configured tenant integration/account");
   }
-  const [existing] = await db.select({ id: externalRefs.id, internalId: externalRefs.internalId }).from(externalRefs).where(and(
+  const [existing] = await db.select({ id: externalRefs.id, internalId: externalRefs.internalId, entity: externalRefs.entity }).from(externalRefs).where(and(
     eq(externalRefs.tenantId, params.tenantId),
     eq(externalRefs.integrationId, params.integrationId),
     eq(externalRefs.externalObjectType, params.externalObjectType),
     eq(externalRefs.externalId, params.externalId),
   )).limit(1);
+  if (existing?.entity && existing.entity !== params.canonicalEntity) {
+    throw new SourceTruthError("invalid_record", "provider object is already mapped to a different canonical entity type");
+  }
   if (existing?.internalId && existing.internalId !== params.canonicalEntityId) {
     throw new SourceTruthError("invalid_record", "provider object is already mapped to a different canonical entity");
   }
@@ -345,6 +349,9 @@ export async function materializeSourceRecord(db: Db, record: CanonicalSourceRec
     eq(externalRefs.externalObjectType, record.externalObjectType),
     eq(externalRefs.externalId, record.externalId),
   )).limit(1);
+  if (existing?.entity && existing.entity !== record.canonicalEntity) {
+    throw new SourceTruthError("invalid_record", "provider object is already mapped to a different canonical entity type");
+  }
 
   if (existing) {
     if (sourceSequence !== null && existing.sourceSequence !== null && sourceSequence < existing.sourceSequence) {
@@ -370,6 +377,37 @@ export async function materializeSourceRecord(db: Db, record: CanonicalSourceRec
     }
   }
 
+  // Observe-only records still use Source Truth's ordering/conflict semantics.
+  // A changed payload at the same provider position cannot be called "newer";
+  // retain the source link and open a reconciliation case instead of silently
+  // replacing the observation. A strictly newer sequence (or newer timestamp
+  // when sequence is unavailable) proceeds below and becomes a new evidence
+  // version without touching canonical business state.
+  if (record.materialization === "observe_only" && existing?.observedHash && existing.observedHash !== observedHash) {
+    const sameProviderPosition = sourceSequence !== null && existing.sourceSequence !== null
+      ? sourceSequence === existing.sourceSequence
+      : sourceSequence === null && existing.sourceSequence === null && existing.lastObservedAt !== null
+        ? observedAt.getTime() === existing.lastObservedAt.getTime()
+        : false;
+    if (sameProviderPosition) {
+      const sourceLinkId = await upsertSourceLink(db, record, {
+        internalId: existing.internalId,
+        mappingStatus: existing.internalId ? "mapped" : "unresolved",
+        observedHash,
+        canonicalHash: existing.canonicalHash,
+        syncStatus: "conflict",
+        conflictState: "divergent",
+      });
+      await openReconciliationCase(db, record, sourceLinkId, "external_drift", "observe_only_divergent", "manual", {
+        previousObservedHash: existing.observedHash,
+        observedHash,
+        sourceSequence: record.sourceSequence ?? null,
+        sourceVersion: record.sourceVersion ?? null,
+      });
+      return { status: "conflict", sourceLinkId, canonicalEntityId: existing.internalId ?? undefined, reason: "changed payload at the same provider position" };
+    }
+  }
+
   if ((record.candidateCanonicalIds?.length ?? 0) > 1) {
     const sourceLinkId = await upsertSourceLink(db, record, {
       internalId: null,
@@ -385,9 +423,44 @@ export async function materializeSourceRecord(db: Db, record: CanonicalSourceRec
     return { status: "ambiguous", sourceLinkId, reason: "multiple deterministic candidates" };
   }
 
+  let observeOnlyCandidate: string | undefined;
+  if (record.materialization === "observe_only") {
+    observeOnlyCandidate = record.candidateCanonicalIds?.length === 1
+      ? record.candidateCanonicalIds[0]
+      : existing?.internalId ?? undefined;
+    if (!observeOnlyCandidate) {
+      const sourceLinkId = await upsertSourceLink(db, record, {
+        internalId: null,
+        mappingStatus: "unresolved",
+        observedHash,
+        canonicalHash: existing?.canonicalHash,
+        syncStatus: "failed",
+        conflictState: "manual_resolution_required",
+      });
+      return { status: "unresolved", sourceLinkId, reason: "observe-only source requires one resolved canonical candidate" };
+    }
+    if (existing?.internalId && existing.internalId !== observeOnlyCandidate) {
+      throw new SourceTruthError("invalid_record", "observe-only provider object is mapped to a different canonical entity");
+    }
+    // `observe_only` is public Source Truth vocabulary, so the generic seam must
+    // independently prove the candidate is an active-vertical canonical row. PE's
+    // vertical mapper performs the stronger exact-Deal check before reaching here.
+    const candidate = await db.execute<{ available: boolean; canonical_tenant: string | null }>(sql`
+      SELECT scope.available,
+        CASE WHEN scope.available THEN finnor_os.canonical_entity_tenant(${record.canonicalEntity}, ${observeOnlyCandidate}::uuid) END::text AS canonical_tenant
+      FROM (SELECT finnor_os.canonical_entity_available(${record.tenantId}::uuid, ${record.canonicalEntity}) AS available) scope
+    `);
+    if (!candidate.rows[0]?.available) {
+      throw new SourceTruthError("invalid_record", "observe-only canonical entity is unavailable for the tenant vertical");
+    }
+    if (candidate.rows[0].canonical_tenant !== record.tenantId) {
+      throw new SourceTruthError("cross_tenant_reference", "observe-only canonical candidate crosses tenant boundary or is missing");
+    }
+  }
+
   if (record.deleted) {
     const sourceLinkId = await upsertSourceLink(db, record, {
-      internalId: existing?.internalId ?? null,
+      internalId: existing?.internalId ?? observeOnlyCandidate ?? null,
       mappingStatus: "tombstoned",
       observedHash,
       canonicalHash: existing?.canonicalHash,
@@ -395,7 +468,7 @@ export async function materializeSourceRecord(db: Db, record: CanonicalSourceRec
       providerDeleted: true,
       tombstonedAt: observedAt,
     });
-    if (existing?.internalId) {
+    if (existing?.internalId && record.materialization !== "observe_only") {
       await recordBusinessEvent(db, {
         tenantId: record.tenantId,
         entityType: record.canonicalEntity,
@@ -405,7 +478,27 @@ export async function materializeSourceRecord(db: Db, record: CanonicalSourceRec
         payload: { sourceLinkId, externalObjectType: record.externalObjectType },
       });
     }
-    return { status: "tombstoned", sourceLinkId, canonicalEntityId: existing?.internalId ?? undefined };
+    return { status: "tombstoned", sourceLinkId, canonicalEntityId: existing?.internalId ?? observeOnlyCandidate };
+  }
+
+  if (record.materialization === "observe_only") {
+    const candidate = observeOnlyCandidate!;
+    const sourceLinkId = await upsertSourceLink(db, record, {
+      internalId: candidate,
+      mappingStatus: "mapped",
+      observedHash,
+      canonicalHash: existing?.canonicalHash,
+      syncStatus: "observed",
+      conflictState: "none",
+    });
+    await resolveSourceCases(db, record, sourceLinkId);
+    return {
+      status: "observed",
+      sourceLinkId,
+      canonicalEntityId: candidate,
+      canonicalEntityType: record.canonicalEntity,
+      businessEffectId: record.businessEffectId,
+    };
   }
 
   let relationships: Record<string, string>;

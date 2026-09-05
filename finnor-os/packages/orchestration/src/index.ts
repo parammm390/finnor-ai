@@ -11,6 +11,7 @@ import {
   authorityStates,
   workObjectiveSteps,
   businessEffects,
+  resolveTenantVertical,
 } from "@finnor/db";
 import { buildMemorySnapshot, appendEpisode, appendShortTerm } from "@finnor/memory";
 import { createDefaultRegistry, type ToolRegistry } from "@finnor/tools";
@@ -58,6 +59,7 @@ import {
   type StartObjectiveOptions,
 } from "./objective-loop";
 import { classifyInstructionRoute, finalizeInstructionRoute, type InstructionRouteDecision } from "./instruction-routing";
+import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
 
 export * from "./llm";
 export * from "./planner";
@@ -96,6 +98,7 @@ export * from "./external-observation";
 export * from "./conversation-kernel";
 export * from "./outcome-packs";
 export * from "./autonomy";
+export * from "./operational-query-runtime";
 
 const EXTERNAL_RESEARCH_ACTION_TYPES = new Set(["search_web", "scan_competitors", "check_business_reviews"]);
 
@@ -585,8 +588,45 @@ export class FinnorOrchestrator implements Orchestrator {
     let instructionRoute: InstructionRouteDecision | undefined = opts.instructionRouteDecision;
     try {
       if (shouldClassify) {
-        const interpreted = this.fastReadOnlyRouter.interpret?.(instruction);
-        fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, opts.activeContext as OperatingInteractionContext | undefined) : undefined;
+        // Legacy/unit embeddings may provide a fully injected fast-read seam
+        // without a configured database. A missing vertical identity is not a
+        // reason to break that seam; the canonical dispatcher will still fail
+        // closed if an actual read is attempted. Only a confirmed PE identity
+        // takes the PE-specific resolver below.
+        let verticalKey: string | undefined;
+        try {
+          verticalKey = (await resolveTenantVertical(ctx.tenantId)).verticalKey;
+        } catch {
+          verticalKey = undefined;
+        }
+        if (verticalKey === "private_equity") {
+          const peDecision = await interpretPrivateEquityQuestion(ctx.tenantId, instruction, { workId, userId: ctx.userId });
+          if (peDecision.route === "fast_read") {
+            fastDecision = { route: "fast_read", confidence: "high", request: peDecision.request };
+          } else if (peDecision.route === "clarify") {
+            const names = peDecision.resolution.candidates.map((candidate) => candidate.codeName ?? candidate.name).slice(0, 5);
+            fastAnswer = {
+              kind: "answer",
+              intent: "conversation",
+              readOnly: true,
+              spokenSummary: peDecision.reason === "ambiguous_deal"
+                ? `I found multiple matching Deals: ${names.join(", ")}. Which exact Deal should I use?`
+                : "I could not resolve that Deal from this tenant's canonical PE records. Which exact Deal should I use?",
+              display: {
+                title: "Deal clarification required",
+                facts: names.map((name) => ({ label: "Candidate", value: name })),
+              },
+              evidence: [],
+              asOf: new Date().toISOString(),
+              freshness: { status: "unknown", observedAt: new Date().toISOString() },
+            };
+            instructionRoute = { version: 1, route: "CONVERSATION", reasonCodes: [`pe_${peDecision.reason}`] };
+          }
+        }
+        if (!fastDecision && !fastAnswer) {
+          const interpreted = this.fastReadOnlyRouter.interpret?.(instruction);
+          fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, opts.activeContext as OperatingInteractionContext | undefined) : undefined;
+        }
       }
       const routeReadDecision: OperationalQueryDecision = fastDecision ?? { route: "planner", reason: "unsupported" };
       instructionRoute ??= classifyInstructionRoute({

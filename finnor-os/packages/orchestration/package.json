@@ -11,6 +11,7 @@
     "@finnor/memory": "*",
     "@finnor/policy-schema": "*",
     "@finnor/plugins-shared": "*",
+    "@finnor/private-equity": "*",
     "@finnor/read-models": "*",
     "@finnor/security": "*",
     "@finnor/shared-types": "*",

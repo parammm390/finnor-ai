@@ -212,6 +212,16 @@ export async function closePool(): Promise<void> {
 /** Resolve the authenticated tenant's one active business vertical. */
 export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
   return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    // Preserve the canonical tenant lookup contract for callers that use the
+    // vertical-aware dispatcher.  A missing tenant is different from a real
+    // tenant whose vertical assignment has not been configured yet; keeping
+    // those errors distinct avoids changing existing read-plane behavior while
+    // still making the vertical boundary explicit.
+    const tenant = await client.query<{ id: string }>(
+      `SELECT id FROM finnor_os.tenants WHERE id=$1`,
+      [tenantId],
+    );
+    if (!tenant.rows[0]) throw new Error("Tenant not found");
     const result = await client.query<{
       tenant_id: string;
       vertical_key: string;
@@ -1498,7 +1508,14 @@ export type WorkQueryIntent =
   | "party_lookup"
   | "party_context"
   | "team_roster"
-  | "party_availability";
+  | "party_availability"
+  | "deal_context"
+  | "deal_workstreams"
+  | "open_requests"
+  | "open_findings"
+  | "open_deal_risks"
+  | "critical_dependencies"
+  | "closing_readiness";
 
 export interface BeginWorkQueryExecutionParams {
   tenantId: string;

@@ -28,15 +28,18 @@ import {
   internalEvents,
   orgUnitMemberships,
   tenantSettings,
+  canonicalTruthRegistry,
+  resolveTenantVertical,
 } from "@finnor/db";
-import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { buildMemorySnapshot } from "@finnor/memory";
-import { executeOperationalQuery, loadOperatingDirectoryContext, resolveHouseholdMention } from "@finnor/read-models";
+import { loadOperatingDirectoryContext, resolveHouseholdMention } from "@finnor/read-models";
 import { buildPlanningHealthContext } from "./planning-health";
 import { listAvailableIdentityAccess } from "@finnor/security";
+import { resolvePrivateEquityDealReference } from "@finnor/private-equity";
+import { executeTenantOperationalQuery } from "./operational-query-runtime";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const ENTITY_TYPES = new Set<string>(CANONICAL_ENTITY_TYPES);
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -132,6 +135,14 @@ export async function assembleOperatingContext(
   let companyDirectory: OperatingCompanyDirectory = emptyCompanyDirectory();
   let identityAccess: OperatingContext["identityAccess"] = emptyIdentityAccess();
   let universalActions: OperatingContext["universalActions"] = emptyUniversalActions();
+  let vertical: Awaited<ReturnType<typeof resolveTenantVertical>> | undefined;
+  let registeredEntityTypes = new Set<string>(CANONICAL_ENTITY_TYPES);
+
+  try {
+    vertical = await resolveTenantVertical(ctx.tenantId);
+  } catch (error) {
+    errors.push(`tenant vertical unavailable: ${error instanceof Error ? error.message : String(error)}`);
+  }
 
   try {
     const loaded = await withTenant(ctx.tenantId, async (db) => {
@@ -172,7 +183,13 @@ export async function assembleOperatingContext(
             .from(workEntityLinks)
             .where(and(eq(workEntityLinks.tenantId, ctx.tenantId), eq(workEntityLinks.workId, opts.workId)))
         : [];
-      return { tenantResult, companyProfile, employee, employeeProfile, activeWork, entities };
+      const registrations = vertical
+        ? await db.select({ entityType: canonicalTruthRegistry.entityType }).from(canonicalTruthRegistry).where(or(
+            isNull(canonicalTruthRegistry.verticalKey),
+            eq(canonicalTruthRegistry.verticalKey, vertical.verticalKey),
+          ))
+        : [];
+      return { tenantResult, companyProfile, employee, employeeProfile, activeWork, entities, registrations };
     }, UUID.test(ctx.userId) ? ctx.userId : undefined);
     tenantRow = loaded.tenantResult;
     tenantProfile = loaded.companyProfile;
@@ -180,6 +197,7 @@ export async function assembleOperatingContext(
     userProfile = loaded.employeeProfile;
     workRow = loaded.activeWork;
     linkedEntities = loaded.entities;
+    if (loaded.registrations.length > 0) registeredEntityTypes = new Set(loaded.registrations.map((row) => row.entityType));
   } catch (error) {
     errors.push(`profile/work context unavailable: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -309,7 +327,10 @@ export async function assembleOperatingContext(
     ...(interactionContext?.focusedEntity ? [interactionContext.focusedEntity] : []),
   ].find((ref) => ref.entityType === "household" && !interactionContext?.excludedEntities.some((excluded) => excluded.entityType === ref.entityType && excluded.entityId === ref.entityId));
   let resolvedHouseholdId = explicitHousehold?.entityId ?? opts.householdId;
-  if (opts.includeMemory && !resolvedHouseholdId) {
+  // Household resolution is Water-owned. A PE tenant must not turn a generic
+  // noun or an optional legacy household id into a Water reference in its
+  // planner context; PE anchors come from the Deal/Work registry below.
+  if ((vertical?.verticalKey === "water" || !vertical) && opts.includeMemory && !resolvedHouseholdId) {
     try {
       const resolved = await resolveHouseholdMention(ctx.tenantId, opts.instruction);
       if (resolved) {
@@ -352,31 +373,65 @@ export async function assembleOperatingContext(
   }
 
   const canonicalSummaries: OperatingContext["canonicalSummaries"] = [];
+  let epistemicWarnings: NonNullable<OperatingContext["epistemicWarnings"]> = [];
   if (opts.includeCanonicalBusinessState) {
     try {
-      const current = await executeOperationalQuery(ctx.tenantId, { intent: "business_state" });
-      canonicalSummaries.push({
-        name: "business_state",
-        asOf: current.asOf,
-        source: current.source.kind,
-        data: { status: current.status, count: current.count, data: record(current.data) },
-      });
-      sources.push({ kind: "CANONICAL", source: "operational_query:business_state", asOf: current.asOf, role: "context_only" });
+      if (vertical?.verticalKey === "private_equity") {
+        const resolution = await resolvePrivateEquityDealReference(ctx.tenantId, opts.instruction, { workId: opts.workId, userId: ctx.userId });
+        if (resolution.status !== "resolved") throw new Error(`PE Deal reference is ${resolution.status}`);
+        const [dealContext, closingReadiness] = await Promise.all([
+          executeTenantOperationalQuery(ctx.tenantId, { intent: "deal_context", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
+          executeTenantOperationalQuery(ctx.tenantId, { intent: "closing_readiness", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
+        ]);
+        canonicalSummaries.push({
+          name: "deal_context",
+          asOf: dealContext.asOf,
+          source: dealContext.source.kind,
+          data: { status: dealContext.status, deal: dealContext.deal, counts: dealContext.counts },
+        }, {
+          name: "closing_readiness",
+          asOf: closingReadiness.asOf,
+          source: closingReadiness.source.kind,
+          data: {
+            eligible: closingReadiness.eligible,
+            blockingConditions: closingReadiness.blockingConditions,
+            failedConditions: closingReadiness.failedConditions,
+            unverifiedClosingItems: closingReadiness.unverifiedClosingItems,
+            blockingDependencies: closingReadiness.blockingDependencies,
+            decisionReadiness: closingReadiness.decisionReadiness,
+          },
+        });
+        epistemicWarnings = [...dealContext.epistemicWarnings, ...closingReadiness.epistemicWarnings]
+          .filter((warning, index, all) => all.findIndex((candidate) => candidate.propositionId === warning.propositionId && candidate.status === warning.status) === index);
+        sources.push({ kind: "CANONICAL", source: "operational_query:deal_context", asOf: dealContext.asOf, role: "context_only" });
+        sources.push({ kind: "CANONICAL", source: "operational_query:closing_readiness", asOf: closingReadiness.asOf, role: "context_only" });
+      } else {
+        const current = await executeTenantOperationalQuery(ctx.tenantId, { intent: "business_state" });
+        canonicalSummaries.push({
+          name: "business_state",
+          asOf: current.asOf,
+          source: current.source.kind,
+          data: { status: current.status, count: current.count, data: record(current.data) },
+        });
+        sources.push({ kind: "CANONICAL", source: "operational_query:business_state", asOf: current.asOf, role: "context_only" });
+      }
     } catch (error) {
       errors.push(`canonical business state unavailable: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  const refs = new Map<string, CanonicalEntityRef>();
+  const refs = new Map<string, CanonicalEntityRef<string>>();
   for (const item of linkedEntities) {
-    if (ENTITY_TYPES.has(item.entityType) && UUID.test(item.entityId)) {
-      const ref = { entityType: item.entityType as CanonicalEntityRef["entityType"], entityId: item.entityId };
+    if (registeredEntityTypes.has(item.entityType) && UUID.test(item.entityId)) {
+      const ref = { entityType: item.entityType, entityId: item.entityId };
       refs.set(`${ref.entityType}:${ref.entityId}`, ref);
     }
   }
-  if (resolvedHouseholdId && UUID.test(resolvedHouseholdId)) refs.set(`household:${resolvedHouseholdId}`, { entityType: "household", entityId: resolvedHouseholdId });
+  if (resolvedHouseholdId && registeredEntityTypes.has("household") && UUID.test(resolvedHouseholdId)) {
+    refs.set(`household:${resolvedHouseholdId}`, { entityType: "household", entityId: resolvedHouseholdId });
+  }
   for (const ref of opts.conversationContext?.resolution.resolvedReferences ?? []) {
-    if (ENTITY_TYPES.has(ref.entityType) && UUID.test(ref.entityId)) {
+    if (registeredEntityTypes.has(ref.entityType) && UUID.test(ref.entityId)) {
       refs.set(`${ref.entityType}:${ref.entityId}`, { entityType: ref.entityType, entityId: ref.entityId });
     }
   }
@@ -389,7 +444,7 @@ export async function assembleOperatingContext(
   for (const ref of directInteractionRefs) {
     if (excludedInteractionRefs.has(`${ref.entityType}:${ref.entityId}`)) continue;
     refs.set(`${ref.entityType}:${ref.entityId}`, ref);
-    const partyRef = canonicalEntityRefToPartyRef(ref);
+    const partyRef = canonicalEntityRefToPartyRef(ref as CanonicalEntityRef);
     if (partyRef) trustedPartyRefs.set(`${partyRef.partyType}:${partyRef.partyId}`, partyRef);
   }
   // Read-only compatibility for historical Work created before the versioned
@@ -398,18 +453,18 @@ export async function assembleOperatingContext(
   if (!interactionContext && Array.isArray(legacyActive.entityRefs)) {
     for (const candidate of legacyActive.entityRefs) {
       const value = record(candidate);
-      if (typeof value.entityType === "string" && ENTITY_TYPES.has(value.entityType) && typeof value.entityId === "string" && UUID.test(value.entityId)) {
-        const legacyRef = { entityType: value.entityType as CanonicalEntityRef["entityType"], entityId: value.entityId };
+      if (typeof value.entityType === "string" && registeredEntityTypes.has(value.entityType) && typeof value.entityId === "string" && UUID.test(value.entityId)) {
+        const legacyRef = { entityType: value.entityType, entityId: value.entityId };
         refs.set(`${legacyRef.entityType}:${legacyRef.entityId}`, legacyRef);
-        const partyRef = canonicalEntityRefToPartyRef(legacyRef);
+        const partyRef = canonicalEntityRefToPartyRef(legacyRef as CanonicalEntityRef);
         if (partyRef) trustedPartyRefs.set(`${partyRef.partyType}:${partyRef.partyId}`, partyRef);
       }
     }
   }
   for (const candidate of linkedEntities) {
-    if (!ENTITY_TYPES.has(candidate.entityType) || !UUID.test(candidate.entityId)) continue;
-    const ref = { entityType: candidate.entityType as CanonicalEntityRef["entityType"], entityId: candidate.entityId };
-    const partyRef = canonicalEntityRefToPartyRef(ref);
+    if (!registeredEntityTypes.has(candidate.entityType) || !UUID.test(candidate.entityId)) continue;
+    const ref = { entityType: candidate.entityType, entityId: candidate.entityId };
+    const partyRef = canonicalEntityRefToPartyRef(ref as CanonicalEntityRef);
     if (partyRef) trustedPartyRefs.set(`${partyRef.partyType}:${partyRef.partyId}`, partyRef);
   }
 
@@ -447,6 +502,7 @@ export async function assembleOperatingContext(
       id: ctx.tenantId,
       companyName: tenantRow?.name ?? null,
       timezone: tenantRow?.timezone ?? null,
+      ...(vertical ? { vertical } : {}),
       profile: {
         industry: tenantProfile?.industry ?? null,
         niche: tenantProfile?.niche ?? null,
@@ -486,6 +542,7 @@ export async function assembleOperatingContext(
     identityAccess,
     universalActions,
     referencedEntities: [...refs.values()],
+    ...(epistemicWarnings.length > 0 ? { epistemicWarnings } : {}),
     canonicalSummaries,
     memory: {
       conversation: memory.shortTerm,

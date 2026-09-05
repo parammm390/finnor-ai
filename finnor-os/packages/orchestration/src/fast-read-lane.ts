@@ -20,12 +20,9 @@ import {
   type PartyRef,
   type TenantContext,
 } from "@finnor/shared-types";
-import {
-  executeOperationalQuery as canonicalExecuteOperationalQuery,
-  type CashCollections,
-  type OperationalQueryOptions,
-} from "@finnor/read-models";
+import { type CashCollections, type OperationalQueryOptions } from "@finnor/read-models";
 import { tenantSourceTruthReport, type TenantSourceTruthReport } from "@finnor/tools";
+import { executeTenantOperationalQuery } from "./operational-query-runtime";
 
 /** Keep the old public names, but make their public meaning canonical. */
 export type OperationalQueryIntent = CanonicalOperationalQueryIntent;
@@ -148,7 +145,7 @@ export type FastReadOnlyClassification =
   | PlannerReadFallback;
 
 /** Exactly the canonical read-model executor type, including its option seam. */
-export type ExecuteOperationalQuery = typeof canonicalExecuteOperationalQuery;
+export type ExecuteOperationalQuery = typeof executeTenantOperationalQuery;
 
 export interface FastReadOnlyRouter {
   classify(instruction: string): FastReadOnlyClassification;
@@ -564,6 +561,42 @@ export function validateOperationalQueryRequest(input: unknown): { success: true
       ...(typeof params.query === "string" ? { query: params.query } : {}),
     } };
   }
+  if (["deal_context", "deal_workstreams", "open_requests", "open_findings", "open_deal_risks", "critical_dependencies", "closing_readiness"].includes(intent)) {
+    const allowed: Record<string, string[]> = {
+      deal_context: ["dealId", "page", "limit"],
+      deal_workstreams: ["dealId", "states", "owner", "page", "limit"],
+      open_requests: ["dealId", "workstreamId", "requestedFrom", "dueState", "page", "limit"],
+      open_findings: ["dealId", "workstreamId", "severities", "page", "limit"],
+      open_deal_risks: ["dealId", "workstreamId", "severities", "page", "limit"],
+      critical_dependencies: ["dealId", "includeResolved", "page", "limit"],
+      closing_readiness: ["dealId", "page", "limit"],
+    };
+    const unknown = unknownFields(params, allowed[intent]!);
+    if (unknown.length) return { success: false, error: `Unknown fields for ${intent}: ${unknown.join(", ")}` };
+    const page = params.page ?? (params.limit === undefined ? undefined : { limit: params.limit });
+    if (page !== undefined && !isPage(page)) return { success: false, error: "Invalid page" };
+    if (typeof params.dealId !== "string" || !UUID.test(params.dealId)) return { success: false, error: "dealId must be a UUID" };
+    if (params.workstreamId !== undefined && (typeof params.workstreamId !== "string" || !UUID.test(params.workstreamId))) return { success: false, error: "workstreamId must be a UUID" };
+    if (params.owner !== undefined && !isPartyRef(params.owner)) return { success: false, error: "owner must be a PartyRef" };
+    if (params.requestedFrom !== undefined && !isPartyRef(params.requestedFrom)) return { success: false, error: "requestedFrom must be a PartyRef" };
+    if (params.states !== undefined && (!Array.isArray(params.states) || params.states.length > 20 || !params.states.every((value) => typeof value === "string" && value.length <= 80))) return { success: false, error: "states must be a bounded string array" };
+    if (params.severities !== undefined && (!Array.isArray(params.severities) || params.severities.length > 4 || !params.severities.every((value) => ["low", "medium", "high", "critical"].includes(String(value))))) return { success: false, error: "severities must contain PE severity values" };
+    if (params.dueState !== undefined && !["any", "overdue", "not_overdue"].includes(String(params.dueState))) return { success: false, error: "dueState must be any, overdue, or not_overdue" };
+    if (params.includeResolved !== undefined && typeof params.includeResolved !== "boolean") return { success: false, error: "includeResolved must be boolean" };
+    const request = {
+      intent,
+      dealId: params.dealId,
+      ...(params.workstreamId ? { workstreamId: params.workstreamId } : {}),
+      ...(params.owner ? { owner: params.owner } : {}),
+      ...(params.requestedFrom ? { requestedFrom: params.requestedFrom } : {}),
+      ...(params.states ? { states: params.states } : {}),
+      ...(params.severities ? { severities: params.severities } : {}),
+      ...(params.dueState ? { dueState: params.dueState } : {}),
+      ...(params.includeResolved === undefined ? {} : { includeResolved: params.includeResolved }),
+      ...(page ? { page } : {}),
+    } as OperationalQueryRequest;
+    return { success: true, request };
+  }
   return { success: false, error: "Unknown operational query intent" };
 }
 
@@ -700,6 +733,13 @@ const QUERY_SOURCE_CAPABILITIES: Record<OperationalQueryIntent, string[]> = {
   party_context: ["crm"],
   team_roster: [],
   party_availability: ["scheduling"],
+  deal_context: [],
+  deal_workstreams: [],
+  open_requests: [],
+  open_findings: [],
+  open_deal_risks: [],
+  critical_dependencies: [],
+  closing_readiness: [],
 };
 
 function querySourceTruth(intent: OperationalQueryIntent, report: TenantSourceTruthReport, assessedAt: string): OperationalQuerySourceTruth {
@@ -835,6 +875,35 @@ function summarizeData(intent: OperationalQueryIntent, result: OperationalQueryR
   if (intent === "party_context") return { title: "Party context", spokenSummary: result.status === "inactive" ? "The requested party is inactive or suspended, so no operational context was loaded." : `I retrieved ${resultCount(result)} bounded party-context records from the canonical directory.`, facts: [{ label: "Status", value: result.status }] };
   if (intent === "team_roster") return { title: "Team roster", spokenSummary: result.status === "inactive" ? "The requested team is inactive and cannot be used as an operational roster." : `I retrieved ${resultCount(result)} active team-roster members.`, facts: [{ label: "Members", value: String(resultCount(result)) }, { label: "Status", value: result.status }] };
   if (intent === "party_availability") return { title: "Party availability", spokenSummary: result.status === "inactive" ? "The requested party is inactive or suspended and cannot be used for dispatch." : `I retrieved the canonical availability state: ${String(resultValue(result, "availability") ?? "unknown")}.`, facts: [{ label: "Availability", value: String(resultValue(result, "availability") ?? "unknown") }, { label: "Status", value: result.status }] };
+  if (intent === "deal_context") {
+    const deal = isRecord(resultValue(result, "deal")) ? resultValue(result, "deal") as Record<string, unknown> : null;
+    const warnings = arrayLength(result, "epistemicWarnings");
+    return { title: "Deal context", spokenSummary: deal ? `I resolved ${String(deal.name ?? "the Deal")} from canonical PE records${warnings ? ` with ${warnings} epistemic warning${warnings === 1 ? "" : "s"}` : ""}.` : "I could not resolve that Deal in this tenant.", facts: [{ label: "Deal", value: String(deal?.name ?? "not found") }, { label: "Epistemic warnings", value: String(warnings) }] };
+  }
+  if (intent === "deal_workstreams") return { title: "Deal workstreams", spokenSummary: `I found ${arrayLength(result, "rows")} matching canonical Deal workstreams.`, facts: [{ label: "Workstreams", value: String(arrayLength(result, "rows")) }] };
+  if (intent === "open_requests") return { title: "Open requests", spokenSummary: `I found ${arrayLength(result, "rows")} open or acknowledged Deal requests.`, facts: [{ label: "Requests", value: String(arrayLength(result, "rows")) }] };
+  if (intent === "open_findings") return { title: "Open findings", spokenSummary: `I found ${arrayLength(result, "rows")} current Deal findings.`, facts: [{ label: "Findings", value: String(arrayLength(result, "rows")) }] };
+  if (intent === "open_deal_risks") return { title: "Open Deal risks", spokenSummary: `I found ${arrayLength(result, "rows")} current Deal risks.`, facts: [{ label: "Deal risks", value: String(arrayLength(result, "rows")) }] };
+  if (intent === "critical_dependencies") return { title: "Critical dependencies", spokenSummary: `I found ${arrayLength(result, "rows")} unresolved dependency paths in the Deal graph.`, facts: [{ label: "Dependencies", value: String(arrayLength(result, "rows")) }] };
+  if (intent === "closing_readiness") {
+    const eligible = resultValue(result, "eligible") === true;
+    const conditions = arrayLength(result, "blockingConditions", "failedConditions");
+    const items = arrayLength(result, "unverifiedClosingItems");
+    const dependencies = arrayLength(result, "blockingDependencies");
+    const warnings = arrayLength(result, "epistemicWarnings");
+    const blockers = conditions + items + dependencies;
+    return {
+      title: "Closing readiness",
+      spokenSummary: eligible
+        ? `The existing PE close-eligibility gate says this Deal is eligible to close${warnings ? `, with ${warnings} evidence warning${warnings === 1 ? "" : "s"}` : ""}.`
+        : `This Deal is not eligible to close. I found ${blockers} exact canonical blocker${blockers === 1 ? "" : "s"}${warnings ? ` and ${warnings} evidence warning${warnings === 1 ? "" : "s"}` : ""}.`,
+      facts: [
+        { label: "Close eligible", value: eligible ? "Yes" : "No" },
+        { label: "Canonical blockers", value: String(blockers) },
+        { label: "Epistemic warnings", value: String(warnings) },
+      ],
+    };
+  }
   if (intent === "company_context") {
     const context = isRecord(resultValue(result, "context")) ? resultValue(result, "context") as Record<string, unknown> : null;
     const household = context && isRecord(context.household) ? context.household : null;
@@ -874,6 +943,12 @@ function answerForExecution(execution: OperationalQueryExecution): AnswerEnvelop
   const legacySnapshot = execution.request.intent === "money_summary" ? snapshotFromMoneyResult(execution.result) : null;
   if (legacySnapshot) return { ...answerCashCollections(legacySnapshot, execution.result.asOf), query: execution };
   const summary = summarizeData(execution.request.intent, execution.result);
+  const epistemicWarnings = Array.isArray(resultValue(execution.result, "epistemicWarnings"))
+    ? resultValue(execution.result, "epistemicWarnings") as Array<Record<string, unknown>>
+    : [];
+  const epistemicFreshness = epistemicWarnings.some((warning) => warning.status === "STALE")
+    ? "stale" as const
+    : epistemicWarnings.length > 0 ? "unknown" as const : undefined;
   return {
     kind: "answer",
     intent: execution.request.intent,
@@ -883,7 +958,7 @@ function answerForExecution(execution: OperationalQueryExecution): AnswerEnvelop
     evidence: [{ source: `operational_query:${execution.request.intent}`, ref: execution.metadata.queryId, timestamp: execution.result.asOf, kind: "CANONICAL" }],
     asOf: execution.result.asOf,
     freshness: {
-      status: execution.metadata.sourceTruth?.status ?? "fresh",
+      status: epistemicFreshness ?? execution.metadata.sourceTruth?.status ?? "fresh",
       observedAt: execution.metadata.sourceTruth?.sources
         .map((source) => source.asOf).filter((value): value is string => Boolean(value)).sort()[0]
         ?? execution.result.asOf,
@@ -915,7 +990,7 @@ export function createFastReadOnlyRouter(deps: FastReadOnlyRouterDeps = {}): Fas
       if (deps.cashCollections && request.intent === "money_summary") {
         raw = legacyCashResult(await deps.cashCollections(ctx.tenantId), clock().toISOString());
       } else {
-        raw = await (deps.executeOperationalQuery ?? canonicalExecuteOperationalQuery)(ctx.tenantId, request, executionOptions);
+        raw = await (deps.executeOperationalQuery ?? executeTenantOperationalQuery)(ctx.tenantId, request, executionOptions);
       }
       const completedAt = clock().toISOString();
       const sourceTruthLoader = deps.sourceTruth ?? (!deps.executeOperationalQuery && !deps.cashCollections ? tenantSourceTruthReport : undefined);

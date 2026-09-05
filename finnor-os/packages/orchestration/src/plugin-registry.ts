@@ -83,17 +83,21 @@ export class PluginRegistry {
     return [...this.byActionType.keys()];
   }
 
-  private specCache: string | null = null;
+  private specCache = new Map<string, string>();
 
   /** Compact payload spec for the Planner prompt: one line per action type,
    *  `field*` = required, `field?` = optional, `field:enum(a|b)` for enums.
    *  ~10x fewer tokens than full JSON Schema — lower latency, no TPM stalls —
    *  while still telling the model exactly which field names to emit.
    *  Cached: plugins register once at startup, so this is stable per process. */
-  payloadSpecJson(): string {
-    if (this.specCache) return this.specCache;
+  payloadSpecJson(allowedActionTypes?: readonly string[]): string {
+    const allowed = allowedActionTypes ? new Set(allowedActionTypes) : null;
+    const cacheKey = allowed ? [...allowed].sort().join("\u0000") : "*";
+    const cached = this.specCache.get(cacheKey);
+    if (cached) return cached;
     const lines: string[] = [];
     for (const [actionType, plugin] of this.byActionType) {
+      if (allowed && !allowed.has(actionType)) continue;
       const schema = plugin.payloadSchemas?.[actionType];
       if (!schema) {
         lines.push(`${actionType}: (free-form object)`);
@@ -112,9 +116,21 @@ export class PluginRegistry {
       });
       lines.push(`${actionType}: ${fields.join(", ")}`);
     }
-    this.specCache = lines.join("\n");
-    return this.specCache;
+    const result = lines.join("\n");
+    this.specCache.set(cacheKey, result);
+    return result;
   }
+}
+
+const PRIVATE_EQUITY_PLANNER_ACTIONS = ["clarification_request", "search_web"] as const;
+
+/** PE3 deliberately has no PE mutation action catalog. Deterministic Deal reads
+ * are consumed before planning; only clarification and public research survive. */
+export function plannerActionTypesForVertical(registry: PluginRegistry, verticalKey: string): string[] {
+  const registered = new Set(registry.actionTypes());
+  return verticalKey === "private_equity"
+    ? PRIVATE_EQUITY_PLANNER_ACTIONS.filter((actionType) => registered.has(actionType))
+    : registry.actionTypes();
 }
 
 export function createDefaultPluginRegistry(): PluginRegistry {
