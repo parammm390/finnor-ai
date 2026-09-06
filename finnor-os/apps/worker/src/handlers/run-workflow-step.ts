@@ -44,7 +44,15 @@ export const runWorkflowStep: JobHandler = async (payload) => {
     throw new Error("run_workflow_step requires tenantId and workflowStepId");
   }
 
-  await resolveTenantVertical(tenantId);
+  // A stale/forged queue payload can name a tenant that no longer exists. Treat
+  // that as a harmless no-op at the dispatch boundary; real database failures
+  // still propagate so the queue can retry rather than silently losing work.
+  try {
+    await resolveTenantVertical(tenantId);
+  } catch (error) {
+    if (error instanceof Error && /^(Tenant not found|Tenant vertical identity is missing)$/.test(error.message)) return;
+    throw error;
+  }
   await recoverStaleSteps(tenantId);
   const claimed = await claimStep(tenantId, stepId, requestedGeneration);
   if (!claimed) return;

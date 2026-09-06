@@ -74,7 +74,7 @@ describe.skipIf(!available)("GET /api/receipts (Phase 7.1/7.3)", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.receipt.id).toBe(receiptId);
-    expect(body.receipt.objective).toContain("maintenance reminder");
+    expect(body.receipt.objective).toContain("open diligence item");
     expect(body.receipt.policyApplied).toEqual({ id: "policy-amc-reminder", version: 3 });
   });
 
