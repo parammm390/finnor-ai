@@ -84,7 +84,11 @@ jobs:
       # dealer-zero-e2e.test.ts failed on this repo's first-ever real CI run with
       # `relation "finnor_langgraph.checkpoints" does not exist`.
       - run: npm run setup:langgraph
-      - run: npm test
+      # Phase 5 deliberately retires the Water-only conversation resolver. Its
+      # old Phase 6 integration fixture asserts Water appointment/household
+      # entities and is outside this release gate; do not silently re-enable
+      # that vertical while certifying the retirement boundary.
+      - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
       # Phase 6 (§6.3): the real dump/restore round-trip this repo's backup-restore
       # runbook documents as blocked on Postgres client tools — this runner has them
       # (or apt provides them), so it runs for real here instead of staying a

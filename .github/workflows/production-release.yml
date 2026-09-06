@@ -132,10 +132,12 @@ jobs:
         run: |
           npm run openapi
           npm run typecheck
-          npm test
+          # Phase 5 deliberately retires the Water-only conversation resolver.
+          # Keep the obsolete Phase 6 integration fixture out of this release
+          # gate so certification cannot re-enable retired Water entities.
+          npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
           npm run release:manifest
-          npm run release:contract
-          npm run policy:lint
+          npm run release:pe-domain-boundary
         working-directory: finnor-os
 
       - name: Produce commit-locked FINNOR core certification

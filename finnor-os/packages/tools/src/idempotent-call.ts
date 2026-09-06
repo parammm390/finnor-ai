@@ -165,7 +165,7 @@ export async function recordExternalOperationResult(
   const redacted = redactStructured(response) as Record<string, unknown>;
   // Opaque provider/native record identifiers are required for safe crash replay.
   // Preserve only vertical-neutral identifiers after structural redaction.
-  for (const key of ["id", "messageId", "callId", "communicationIdentityId", "documentId", "taskId", "dealId", "companyId", "partyId", "externalRecordId", "linkId", "envelopeId"]) {
+  for (const key of ["id", "contactId", "messageId", "callId", "communicationIdentityId", "documentId", "taskId", "dealId", "companyId", "partyId", "externalRecordId", "linkId", "envelopeId"]) {
     if (typeof response[key] === "string") redacted[key] = response[key];
   }
   return withTenant(tenantId, async (db) => {
