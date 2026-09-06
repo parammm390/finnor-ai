@@ -788,7 +788,7 @@ export function AdaptiveWorkspaceShell({
       {fixtureLabel && <div className="fixed left-1/2 top-2 z-[100] -translate-x-1/2"><span className="j-chip border border-violet-300/40 bg-violet-400/15 text-violet-200">FIXTURE · {fixtureLabel}</span></div>}
       {publicPreview && <div className="fixed left-1/2 top-2 z-[100] -translate-x-1/2"><span className="j-chip border border-cyan-300/30 bg-cyan-300/10 text-cyan-100">PUBLIC PREVIEW</span></div>}
       <aside className="jarvis-adaptive-nav" aria-label="JARVIS navigation">
-        <Link href={withOperationalContext("/jarvis", undefined, projection?.workId)} className="jarvis-adaptive-nav__brand"><span><TenantBrandMark size={24} /></span><strong>JARVIS</strong></Link>
+        <Link href={withOperationalContext("/jarvis", undefined, projection?.workId)} className="jarvis-adaptive-nav__brand" aria-label="JARVIS home"><span><TenantBrandMark size={24} /></span><strong>JARVIS</strong></Link>
         <nav>{navItems.map(({ key, href, icon: Icon }) => <Link key={href} href={withOperationalContext(href, undefined, projection?.workId)} aria-current={href === "/jarvis" ? "page" : undefined} title={workspaceConfig.terminology[key]}><Icon size={17} /><span>{workspaceConfig.terminology[key]}</span></Link>)}</nav>
         <div className="jarvis-adaptive-nav__status" data-state={liveframe.mode}><i /><span>{stateLabel(projection?.state ?? "idle")}</span></div>
       </aside>
