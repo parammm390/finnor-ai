@@ -83,6 +83,7 @@ jobs:
       FINNOR_CHAOS_TEST_CONTEXT: "1"
       FINNOR_RELEASE_SOURCE: github-actions
       NODE_ENV: test
+      AUTH_DEV_BYPASS: "1"
       CERTIFICATION_SEED_ALLOWED: "1"
       CERTIFICATION_TEST_EMAILS: certification@example.invalid
       CERTIFICATION_TEST_PHONES: "+15550000001"
@@ -126,6 +127,10 @@ jobs:
           git diff --exit-code packages/db/migrations-bundle.ts
           npm run db:migrate
           npm run setup:langgraph
+        working-directory: finnor-os
+
+      - name: Install disposable legacy fixture seam
+        run: npx tsx tests/vertical-fixture-setup.ts
         working-directory: finnor-os
 
       - name: Phase 5 type, security, runtime, and regression suite

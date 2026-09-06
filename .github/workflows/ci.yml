@@ -75,14 +75,15 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:planner-evals
       - run: npm run db:migrate
+      # The setup file is also loaded by Vitest, but a fresh database does not have
+      # the target table at module-load time. Install the disposable legacy-fixture
+      # seam explicitly after migrations so pre-Phase-5 generic fixtures get their
+      # test-only Water identity; production code remains fail-closed.
+      - name: Install disposable legacy fixture seam
+        run: npx tsx tests/vertical-fixture-setup.ts
       - run: npm run db:seed
-      # setup.ts's own header comment already documented this as "run once in CI right
-      # after db:migrate" -- it just never actually got added here. Local dev never hit
-      # this gap because the embedded dev Postgres data directory persists across runs,
-      # so the schema was already there from some earlier session; a truly fresh
-      # database (this runner's ephemeral container) never got it, and
-      # dealer-zero-e2e.test.ts failed on this repo's first-ever real CI run with
-      # `relation "finnor_langgraph.checkpoints" does not exist`.
+      # A truly fresh runner database needs the LangGraph schema explicitly; local dev
+      # often hides this because its embedded Postgres data directory persists.
       - run: npm run setup:langgraph
       # Phase 5 deliberately retires the Water-only conversation resolver. Its
       # old Phase 6 integration fixture asserts Water appointment/household
