@@ -289,10 +289,13 @@ async function forwardTest(req: NextRequest, segments: string[], method: "GET" |
   }
 }
 
-type JarvisRouteContext = { params: Promise<{ path: string[] }> };
+// Next 16 supplies a Promise here, while the route unit tests (and older Next
+// runtimes) call handlers with the already-resolved object. Accept both at the
+// boundary and normalize once so the implementation stays version-compatible.
+type JarvisRouteContext = { params: Promise<{ path: string[] }> | { path: string[] } };
 
 export async function GET(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await params).path;
+  const segments = (await Promise.resolve(params)).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedGet(segments)) return proxyError("Not found", 404);
 
@@ -313,7 +316,7 @@ export async function GET(req: NextRequest, { params }: JarvisRouteContext): Pro
 }
 
 export async function POST(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await params).path;
+  const segments = (await Promise.resolve(params)).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedPost(segments)) return proxyError("Not found", 404);
 
@@ -334,7 +337,7 @@ function isAllowedPut(segments: string[]): boolean {
 }
 
 export async function PUT(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await params).path;
+  const segments = (await Promise.resolve(params)).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl) || !isAllowedPut(segments)) return proxyError("Not found", 404);
   if (hasTestKey(req)) return forwardTest(req, segments, "PUT");
   const auth = hasBearer(req);
@@ -343,7 +346,7 @@ export async function PUT(req: NextRequest, { params }: JarvisRouteContext): Pro
 }
 
 export async function DELETE(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await params).path;
+  const segments = (await Promise.resolve(params)).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl) || !isUserPrefs(segments)) return proxyError("Not found", 404);
   if (hasTestKey(req)) return forwardTest(req, segments, "DELETE");
   const auth = hasBearer(req);
