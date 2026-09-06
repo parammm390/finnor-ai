@@ -52,6 +52,7 @@ export default defineConfig({
     // to tests/ silently skipped the orchestration trace sanitizer and ops-overview
     // plugin tests even though `npm test` appeared green.
     include: ["tests/**/*.test.ts", "packages/**/*.test.ts", "apps/**/*.test.ts"],
+    setupFiles: ["./tests/vertical-fixture-setup.ts"],
     testTimeout: 30_000,
     pool: "forks",
     // Integration tests share ONE real database (migrations, jobs table, tenant rows).

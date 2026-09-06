@@ -103,6 +103,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
+    await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
         ($1,$2,'PE3 Atlas Tenant'),($3,$4,'PE3 Foreign Tenant'),($5,$6,'PE3 Retirement Boundary')`,

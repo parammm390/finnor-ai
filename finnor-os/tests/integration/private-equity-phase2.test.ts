@@ -114,6 +114,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
+    await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
         ($1,$2,'Atlas PE Tenant'),($3,$4,'Other PE Tenant'),($5,$6,'Retirement Boundary Tenant'),
