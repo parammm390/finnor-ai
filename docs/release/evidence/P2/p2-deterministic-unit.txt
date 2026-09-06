@@ -1,42 +1,33 @@
 
- RUN  v4.1.10 /private/tmp/finnor-p2-closure/finnor-os
+ RUN  v4.1.10 /Users/paramdave/Desktop/FINNOR/finnor-os
 
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > routes a high-confidence cash-collections question 6ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: hi 1ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: Hello! 0ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: good morning 0ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: Create an invoice for the overdue customer 0ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: How can we improve cash collections? 0ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: What is the QuickBooks collections status? 0ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps an ordinary business people question on a typed query instead of generic conversation 2ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not mistake an unqualified customer/account context request for party context: Show the full context 2ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not mistake an unqualified customer/account context request for party context: Show the complete context for John's account 1ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > returns a bounded, citation-safe cash answer from the authenticated tenant 41ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not load secrets, memory, or the planner on the fast path 12ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > routes the exact capability prompt before memory retrieval or business-question planning 3ms
- ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not answer a greeting from the fast router 0ms
- ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > reads the provider key at request time and returns a cited, hashed snapshot 7ms
- ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > fails closed for private DNS answers, robots exclusions, and missing terms approval 1ms
- ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > supports an explicit terms policy and deterministic freshness decisions 0ms
- ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > rejects an unscoped watch instead of using a global namespace 0ms
- ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > baselines silently and emits one changed-only alert with evidence ports 2ms
- ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > does not invent a successful result when the provider returns no readable content 0ms
+ ✓ tests/unit/critic.test.ts > critic — unconfigured state > criticConfigured reports false when no Bedrock key is set 6138ms
+ ✓ tests/unit/critic.test.ts > critic — unconfigured state > criticConfigured reports true once AWS_BEDROCK_API_KEY is set 0ms
+ ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > returns the parsed verdict when the model responds with clean JSON 1ms
+ ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > surfaces a flagged verdict with its reason 0ms
+ ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > degrades to an honest unflagged default when the model response is not valid JSON 0ms
+ ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > degrades to an honest unflagged default when the JSON doesn't match the expected shape 0ms
+ ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > wraps and rethrows a provider failure rather than swallowing it 1ms
 stderr | tests/unit/secrets.test.ts > secrets manager > refuses a production boot when AUTH_DEV_BYPASS is configured, even as 0
 [security] production refused: AUTH_DEV_BYPASS must be unset
 
 stderr | tests/unit/secrets.test.ts > secrets manager > refuses the env provider in production unless the loud emergency override is set
 [security] production refused: SECRETS_PROVIDER=aws-secrets-manager is required (set ALLOW_PLAINTEXT_ENV_SECRETS=1 only for an emergency override)
 
- ✓ tests/unit/secrets.test.ts > secrets manager > defaults to the env provider, unloaded until first call 351ms
- ✓ tests/unit/secrets.test.ts > secrets manager > ensureSecretsLoaded resolves cleanly on the env provider and marks itself loaded 14ms
- ✓ tests/unit/secrets.test.ts > secrets manager > refuses a production boot when AUTH_DEV_BYPASS is configured, even as 0 8ms
- ✓ tests/unit/secrets.test.ts > secrets manager > refuses the env provider in production unless the loud emergency override is set 9ms
- ✓ tests/unit/secrets.test.ts > secrets manager > aws-secrets-manager provider requires FINNOR_SECRET_IDS 7ms
- ✓ tests/unit/secrets.test.ts > secrets manager > aws-secrets-manager: fetches a secret, sets process.env, dedupes concurrent calls, and retries on a transient failure 311ms
- ✓ tests/unit/secrets.test.ts > secrets manager > malformed FINNOR_SECRET_IDS JSON throws a clear error, not a cryptic parse failure 8ms
- ✓ tests/unit/secrets.test.ts > secrets manager > FINNOR_SECRET_IDS as a JSON array (not an object) is rejected the same way 9ms
- ✓ tests/unit/secrets.test.ts > secrets manager > does not retry a non-retryable AWS error (AccessDenied) — fails fast 12ms
- ✓ tests/unit/secrets.test.ts > secrets manager > reads tenant references without env mutation and supports stage/id rotation selectors 7ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > defaults to the env provider, unloaded until first call 287ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > ensureSecretsLoaded resolves cleanly on the env provider and marks itself loaded 10ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > refuses a production boot when AUTH_DEV_BYPASS is configured, even as 0 10ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > refuses the env provider in production unless the loud emergency override is set 7ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > aws-secrets-manager provider requires FINNOR_SECRET_IDS 9ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > aws-secrets-manager: fetches a secret, sets process.env, dedupes concurrent calls, and retries on a transient failure 307ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > malformed FINNOR_SECRET_IDS JSON throws a clear error, not a cryptic parse failure 20ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > FINNOR_SECRET_IDS as a JSON array (not an object) is rejected the same way 11ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > does not retry a non-retryable AWS error (AccessDenied) — fails fast 13ms
+ ✓ tests/unit/secrets.test.ts > secrets manager > reads tenant references without env mutation and supports stage/id rotation selectors 8ms
+ ✓ tests/unit/observability.test.ts > observability — Sentry wiring > ToolRegistry.call() adds a breadcrumb and captures a message on failure 488ms
+ ✓ tests/unit/observability.test.ts > observability — Sentry wiring > ToolRegistry.call() adds a breadcrumb (no captureMessage) on success 15ms
+ ✓ tests/unit/observability.test.ts > observability — Sentry wiring > errorResponse() captures unexpected errors (not AuthError) via Sentry 48ms
+ ✓ tests/unit/observability.test.ts > observability — Sentry wiring > errorResponse() does NOT report an AuthError to Sentry — expected auth failures aren't incidents 14ms
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > falls from an HTTP 429 provider failure to the next configured provider 2ms
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > falls from an HTTP 401 provider failure to the next configured provider 0ms
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > falls from an HTTP 500 provider failure to the next configured provider 0ms
@@ -44,16 +35,53 @@ stderr | tests/unit/secrets.test.ts > secrets manager > refuses the env provider
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > converts an abortable provider timeout into a shared deadline error 22ms
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > preserves caller abort propagation instead of starting a fallback after cancellation 1ms
  ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > exposes every purpose/channel route with the configured Mistral/DeepSeek order 2ms
- ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > routes GLM, Mistral, and DeepSeek through one Bedrock key with concrete model provenance 55ms
+ ✓ tests/unit/p2-llm-faults.test.ts > Phase 2 deterministic LLM fault matrix > routes GLM, Mistral, and DeepSeek through one Bedrock key with concrete model provenance 48ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > routes a high-confidence cash-collections question 2ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: hi 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: Hello! 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > keeps greetings out of the synthetic fast lane: good morning 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: Create an invoice for the overdue customer 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: How can we improve cash collections? 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: What is the QuickBooks collections status? 0ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > falls back for uncertain or consequential input: Tell me about technician availability 1ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > returns a bounded, citation-safe cash answer from the authenticated tenant 16ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not load secrets, memory, or the planner on the fast path 4ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > routes the exact capability prompt before memory retrieval or business-question planning 35ms
+ ✓ tests/unit/fast-read-lane.test.ts > fast read-only lane > does not answer a greeting from the fast router 0ms
+ ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > fails closed for an unnamed provider and never treats Groq as the route default 2ms
+ ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > fails closed for an invalid explicit route instead of falling back to defaults 62ms
+ ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > resolves Mistral from runtime configuration and preserves structured JSON mode 1ms
+ ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > passes one absolute deadline and caller signal through every fallback attempt 15ms
+ ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > moves a predictably slow provider behind a fast one for voice 1ms
+ ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > strips a disallowed field before run() is invoked when piiAllowlist is set 61ms
+ ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > tools without piiAllowlist keep today's pass-through behavior 1ms
+ ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > an allowlisted field missing from input is simply omitted, never fabricated 0ms
+ ✓ tests/unit/webhook-fuzz.test.ts > inbound webhook fuzz wall > rejects malformed or unauthenticated payloads on every provider route without a 5xx 44ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > parses capability:mode pairs into their preset configs 1ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > returns an empty map for unset/empty input 0ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > silently ignores unknown modes and malformed entries — never throws over an env typo 0ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > applyEmulatorFaultsFromEnv > applies only the named, known capabilities and reports what it applied 1ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > applyEmulatorFaultsFromEnv > no-ops with EMULATOR_FAULTS unset 0ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > is undefined when no override has been set for that (capability, tenant) 1ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > only affects the tenant it was set for — a different tenant sees no override 1ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > keeps a real, persistent per-tenant call count for counter-based faults (failEveryNth) 5ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > clearing an override (config: null) falls back to undefined again 0ms
+ ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > end-to-end through a real emulator function: the overridden tenant's calls fail, an unrelated tenant's don't 51ms
+ ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > reads the provider key at request time and returns a cited, hashed snapshot 10ms
+ ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > fails closed for private DNS answers, robots exclusions, and missing terms approval 1ms
+ ✓ tests/unit/firecrawl-watch.test.ts > Firecrawl research adapter > supports an explicit terms policy and deterministic freshness decisions 0ms
+ ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > rejects an unscoped watch instead of using a global namespace 0ms
+ ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > baselines silently and emits one changed-only alert with evidence ports 2ms
+ ✓ tests/unit/firecrawl-watch.test.ts > competitor watch service > does not invent a successful result when the provider returns no readable content 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision (voice confirmation parse path) > clear approvals 1ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision (voice confirmation parse path) > clear rejections 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision (voice confirmation parse path) > the LAST clear signal wins when the caller changes their mind 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision (voice confirmation parse path) > ambiguity fails closed — never approves 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision (voice confirmation parse path) > does not false-match inside other words 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > absent extras: behavior is byte-for-byte identical to no second argument 0ms
- ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > a configured approve phrase that isn't in the built-in list now approves 0ms
+ ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > a configured approve phrase that isn't in the built-in list now approves 1ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > a configured reject phrase that isn't in the built-in list now rejects 0ms
- ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > extra phrases still respect last-signal-wins against built-in patterns 0ms
+ ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > extra phrases still respect last-signal-wins against built-in patterns 1ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > fail-closed is preserved: ambiguity with extras configured still never approves 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > extra phrases are escaped, not interpreted as regex — a phrase containing regex metacharacters matches literally 0ms
  ✓ tests/unit/voice.test.ts > parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam) > extra phrase matching is case-insensitive, like the built-in patterns 0ms
@@ -62,34 +90,13 @@ stderr | tests/unit/secrets.test.ts > secrets manager > refuses the env provider
  ✓ tests/unit/voice.test.ts > diagnoseFailure (spoken failure diagnosis) > names the integration on outage errors without asking for a key 0ms
  ✓ tests/unit/voice.test.ts > diagnoseFailure (spoken failure diagnosis) > degrades gracefully with no integration tag 0ms
  ✓ tests/unit/voice.test.ts > buildConfirmationScript > appends the yes/no ask 0ms
- ✓ tests/unit/evidence-recorder.test.ts > Firecrawl evidence recorder > uses a stable tenant source and delegates content-hash retries idempotently 2ms
- ✓ tests/unit/evidence-recorder.test.ts > Firecrawl evidence recorder > refuses a public source returned by an unsafe source implementation 1ms
- ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > fails closed for an unnamed provider and never treats Groq as the route default 2ms
- ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > fails closed for an invalid explicit route instead of falling back to defaults 56ms
- ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > resolves Mistral from runtime configuration and preserves structured JSON mode 1ms
- ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > passes one absolute deadline and caller signal through every fallback attempt 1ms
- ✓ tests/unit/llm-routing.test.ts > JARVIS model routing > moves a predictably slow provider behind a fast one for voice 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > parses capability:mode pairs into their preset configs 1ms
- ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > returns an empty map for unset/empty input 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > parseEmulatorFaultsEnv > silently ignores unknown modes and malformed entries — never throws over an env typo 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > applyEmulatorFaultsFromEnv > applies only the named, known capabilities and reports what it applied 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > applyEmulatorFaultsFromEnv > no-ops with EMULATOR_FAULTS unset 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > is undefined when no override has been set for that (capability, tenant) 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > only affects the tenant it was set for — a different tenant sees no override 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > keeps a real, persistent per-tenant call count for counter-based faults (failEveryNth) 4ms
- ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > clearing an override (config: null) falls back to undefined again 0ms
- ✓ tests/unit/emulator-fault-injection.test.ts > per-tenant fault override (tenantFaultInjector) > end-to-end through a real emulator function: the overridden tenant's calls fail, an unrelated tenant's don't 46ms
- ✓ tests/unit/observability.test.ts > observability — Sentry wiring > ToolRegistry.call() adds a breadcrumb and captures a message on failure 550ms
- ✓ tests/unit/observability.test.ts > observability — Sentry wiring > ToolRegistry.call() adds a breadcrumb (no captureMessage) on success 18ms
- ✓ tests/unit/observability.test.ts > observability — Sentry wiring > errorResponse() captures unexpected errors (not AuthError) via Sentry 53ms
- ✓ tests/unit/observability.test.ts > observability — Sentry wiring > errorResponse() does NOT report an AuthError to Sentry — expected auth failures aren't incidents 23ms
- ✓ tests/unit/critic.test.ts > critic — unconfigured state > criticConfigured reports false when no Bedrock key is set 1243ms
- ✓ tests/unit/critic.test.ts > critic — unconfigured state > criticConfigured reports true once AWS_BEDROCK_API_KEY is set 0ms
- ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > returns the parsed verdict when the model responds with clean JSON 1ms
- ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > surfaces a flagged verdict with its reason 0ms
- ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > degrades to an honest unflagged default when the model response is not valid JSON 0ms
- ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > degrades to an honest unflagged default when the JSON doesn't match the expected shape 1ms
- ✓ tests/unit/critic.test.ts > critic — reviewAction verdict parsing > wraps and rethrows a provider failure rather than swallowing it 1ms
+ ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > uses Redis first and applies its fixed-window limit 3ms
+ ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > survives a Redis outage with an alerting in-memory fallback 2ms
+ ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > fails closed instead of using process memory during a production outage 1ms
+ ✓ tests/unit/logger-pii-redaction.test.ts > Pino PII redaction > keeps only redacted records in the bounded Axiom fallback buffer 6ms
+ ✓ tests/unit/logger-pii-redaction.test.ts > Pino PII redaction > redacts direct, nested, payload, and authorization fields before a log destination receives them 1ms
+ ✓ tests/unit/builtin-tools-sandbox-posture.test.ts > builtin outbound-call registration > does not select a live driver at registration from process-global credentials 3ms
+ ✓ tests/unit/builtin-tools-sandbox-posture.test.ts > builtin outbound-call registration > registers the real campaign adapter from operating mode even before managed secrets are loaded 1ms
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > preserves call.customer.number through parsing 1ms
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > preserves call.phoneNumberId through parsing 1ms
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > preserves call.phoneNumber.number (dialed number, expanded form) 0ms
@@ -97,25 +104,16 @@ stderr | tests/unit/secrets.test.ts > secrets manager > refuses the env provider
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > preserves unknown extra keys on call via passthrough (e.g. future Vapi fields) 0ms
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > preserves the bounded causal envelope without requiring provider identifiers 0ms
  ✓ tests/unit/vapi-webhook-schema.test.ts > VapiWebhookSchema (call-object field preservation) > still accepts a payload with no call object at all 0ms
- ✓ tests/unit/llm-routing-observability.test.ts > LLM composite provenance > records the concrete fallback provider and does not add a composite health sample 4ms
- ✓ tests/unit/builtin-tools-sandbox-posture.test.ts > builtin outbound-call registration > does not select a live driver at registration from process-global credentials 3ms
- ✓ tests/unit/builtin-tools-sandbox-posture.test.ts > builtin outbound-call registration > registers the real campaign adapter from operating mode even before managed secrets are loaded 1ms
- ✓ tests/unit/webhook-fuzz.test.ts > inbound webhook fuzz wall > rejects malformed or unauthenticated payloads on every provider route without a 5xx 36ms
+ ✓ tests/unit/llm-routing-observability.test.ts > LLM composite provenance > records the concrete fallback provider and does not add a composite health sample 6ms
+ ✓ tests/unit/evidence-recorder.test.ts > Firecrawl evidence recorder > uses a stable tenant source and delegates content-hash retries idempotently 3ms
+ ✓ tests/unit/evidence-recorder.test.ts > Firecrawl evidence recorder > refuses a public source returned by an unsafe source implementation 1ms
  ✓ tests/unit/evidence.test.ts > evidence corpus primitives > keeps chunks bounded and merges a short tail 2ms
  ✓ tests/unit/evidence.test.ts > evidence corpus primitives > fuses lexical and vector rankings by chunk identity 0ms
  ✓ tests/unit/evidence.test.ts > evidence corpus primitives > produces bounded citation excerpts 0ms
- ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > strips a disallowed field before run() is invoked when piiAllowlist is set 65ms
- ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > tools without piiAllowlist keep today's pass-through behavior 0ms
- ✓ tests/unit/tool-registry-pii.test.ts > ToolRegistry — PII minimization via piiAllowlist > an allowlisted field missing from input is simply omitted, never fabricated 0ms
- ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > uses Redis first and applies its fixed-window limit 3ms
- ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > survives a Redis outage with an alerting in-memory fallback 2ms
- ✓ tests/unit/rate-limit-ladder.test.ts > rate-limit degradation ladder > fails closed instead of using process memory during a production outage 0ms
- ✓ tests/unit/logger-pii-redaction.test.ts > Pino PII redaction > keeps only redacted records in the bounded Axiom fallback buffer 4ms
- ✓ tests/unit/logger-pii-redaction.test.ts > Pino PII redaction > redacts direct, nested, payload, and authorization fields before a log destination receives them 1ms
  ✓ tests/unit/crm-live-voice-contract.test.ts > native CRM SMS contract > records the resolved phone, never the contact UUID 2ms
 
  Test Files  19 passed (19)
-      Tests  106 passed (106)
-   Start at  08:58:52
-   Duration  14.80s (transform 1.60s, setup 0ms, import 10.24s, tests 3.05s, environment 1ms)
+      Tests  104 passed (104)
+   Start at  23:59:08
+   Duration  20.32s (transform 2.47s, setup 0ms, import 9.31s, tests 7.85s, environment 1ms)
 

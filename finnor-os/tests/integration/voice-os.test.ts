@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, households, domainActions, pendingConfirmations, handoffs, voiceIdentities } from "@finnor/db";
+import { withTenant, closePool, tenants, users, domainActions, pendingConfirmations, handoffs } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import {
   resolveVoiceIdentity,
@@ -23,6 +23,7 @@ const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5
 // before this suite's `onConflictDoNothing()` insert; the owner-line assertion then
 // depended on test scheduling. Keep the fixture tenant exclusive to Voice OS.
 const TENANT_ID = "b8c6a2df-1f23-4e45-8a67-2ce8e46089b1";
+const OWNER_ID = "b8c6a2df-1f23-4e45-8a67-2ce8e46089b2";
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -50,8 +51,19 @@ describe.skipIf(!available)("voice OS", () => {
     await withTenant(TENANT_ID, (db) =>
       db
         .insert(tenants)
-        .values({ id: TENANT_ID, name: "Voice OS Test Dealer", ownerPhone: "+15555550200" })
+        .values({ id: TENANT_ID, name: "Voice OS Test Fund", ownerPhone: "+15555550200" })
         .onConflictDoUpdate({ target: tenants.id, set: { ownerPhone: "+15555550200" } }),
+    );
+    await withTenant(TENANT_ID, (db) =>
+      db.insert(users).values({
+        id: OWNER_ID,
+        tenantId: TENANT_ID,
+        email: `voice-owner-${TENANT_ID}@example.test`,
+        role: "owner",
+        displayName: "Voice Owner",
+        phoneNumber: "+15555550200",
+        status: "active",
+      }).onConflictDoNothing(),
     );
   });
   afterAll(async () => {
@@ -64,26 +76,6 @@ describe.skipIf(!available)("voice OS", () => {
     // Idempotent: a second call for the same number returns the same identity row.
     const again = await resolveVoiceIdentity(TENANT_ID, "+15555550200");
     expect(again.id).toBe(identity.id);
-  });
-
-  it("resolves a known household's phone to role 'customer'", async () => {
-    const [hh] = await withTenant(TENANT_ID, (db) =>
-      db.insert(households).values({ tenantId: TENANT_ID, address: "1 Voice OS Ln", contactInfo: { phone: "+15555550201" } }).returning(),
-    );
-    try {
-      const identity = await resolveVoiceIdentity(TENANT_ID, "+15555550201");
-      expect(identity.role).toBe("customer");
-      expect(identity.matchedHouseholdId).toBe(hh!.id);
-    } finally {
-      // Always clean up, even on assertion failure — a leftover row with this same
-      // phone number would make the next run of this test nondeterministic (findHousehold
-      // has no ORDER BY, so an old + new row sharing a phone can resolve to either).
-      // voice_identities.matched_household_id FKs into households — clear first.
-      await withTenant(TENANT_ID, async (db) => {
-        await db.delete(voiceIdentities).where(eq(voiceIdentities.matchedHouseholdId, hh!.id));
-        await db.delete(households).where(eq(households.id, hh!.id));
-      });
-    }
   });
 
   it("an unrecognized number resolves to role 'unknown' — never silently owner", async () => {

@@ -90,9 +90,11 @@ jobs:
           # Playwright's downloaded Chromium needs the no-sandbox launch mode on
           # GitHub's containerized Linux runner; without it Lighthouse waits until
           # its launcher timeout before any audit begins.
-          # Audit the shipped, URL-addressable low-power experience using
-          # Lighthouse's standard desktop simulation — the same score model used
-          # by local release verification and Web Vitals tooling.
+          # Audit the shipped, URL-addressable low-power experience with the
+          # desktop category and the runner's real load. The gate keeps the same
+          # performance/accessibility/CLS thresholds; scripts/lighthouse-gate.mjs
+          # uses devtools throttling because GitHub's shared runner already has
+          # real CPU/network contention and simulated throttling double-counts it.
           #
           # A single Lighthouse pass on GitHub's shared runner is a genuinely noisy
           # sample, not a code regression: 5 real prior CI runs on unchanged code

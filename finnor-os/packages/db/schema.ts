@@ -13,7 +13,6 @@ import {
   vector,
   index,
   unique,
-  uniqueIndex,
   real,
   date,
   primaryKey,
@@ -60,20 +59,18 @@ export const tenantSettings = pgTable("tenant_settings", {
   // or mixing company vocabulary into per-user preferences. Runtime authority,
   // integrations, and credentials remain in their existing governed contracts.
   workspaceConfig: jsonb("workspace_config").notNull().default({
-    version: 2,
-    enabledSurfaces: ["home", "customers", "schedule", "money", "work", "agents"],
-    terminology: { home: "Home", work: "Work", customers: "Customers", schedule: "Schedule", money: "Money", agents: "AI Team" },
-    vocabulary: { customer: "Customer", homeowner: "Homeowner", account: "Account", technician: "Technician", installer: "Installer", serviceVisit: "Service Visit", appointment: "Appointment", quote: "Quote", proposal: "Proposal", invoice: "Invoice", job: "Job", work: "Work" },
+    version: 3,
+    enabledSurfaces: ["home", "work", "deals", "agents"],
+    terminology: { home: "Home", work: "Work", deals: "Deals", agents: "Agents" },
+    vocabulary: { deal: "deal", portfolioCompany: "portfolio company", dealParty: "deal party", workstream: "workstream", request: "request", deliverable: "deliverable", finding: "finding", risk: "risk", closingCondition: "closing condition", closingItem: "closing item", task: "task", work: "work" },
     voiceEnabled: true,
-    navigationPriority: ["home", "customers", "schedule", "money", "work", "agents"],
-    brand: { accent: "cyan", surfaceTone: "ink", radius: "soft", density: "balanced", typography: "system", motion: "standard", mark: "F", logoAssetKey: "finnor" },
+    navigationPriority: ["home", "deals", "work", "agents"],
+    brand: { accent: "cyan", surfaceTone: "ink", radius: "precise", density: "balanced", typography: "system", motion: "restrained", mark: "F", logoAssetKey: "finnor" },
     visibility: { policy: true, authority: true },
     roles: {
-      owner: { startView: "command", visibleSurfaces: ["home", "customers", "schedule", "money", "work", "agents"], ready: { primaryFocus: "operational_attention", heroMetric: "pending_approvals", pulseMetrics: ["pending_approvals", "collected_usd", "overdue_invoice_value", "open_leads", "runs_in_flight"], attentionCategories: ["recovery", "approval", "schedule", "money", "customer", "work"], quickActions: [{ key: "inspect_blocked_work" }, { key: "review_overdue_invoices" }, { key: "review_pending_approvals" }], primaryProjection: "work" } },
-      dispatcher: { startView: "schedule", visibleSurfaces: ["home", "customers", "schedule", "work", "agents"], ready: { primaryFocus: "dispatch", heroMetric: "technician_load", pulseMetrics: ["technician_load", "pending_approvals", "runs_in_flight", "stuck_runs"], attentionCategories: ["recovery", "approval", "schedule", "customer", "work"], quickActions: [{ key: "review_schedule" }, { key: "review_technician_load" }, { key: "inspect_blocked_work" }], primaryProjection: "schedule" } },
-      technician: { startView: "my-day", visibleSurfaces: ["home", "customers", "schedule", "work"], ready: { primaryFocus: "assigned_work", heroMetric: "assigned_work_today", pulseMetrics: ["assigned_work_today"], attentionCategories: ["recovery", "schedule", "customer", "work"], quickActions: [{ key: "open_my_day" }], primaryProjection: "assigned-day" } },
+      owner: { startView: "command", visibleSurfaces: ["home", "work", "deals", "agents"], ready: { primaryFocus: "deal_execution", heroMetric: "closing_readiness", pulseMetrics: ["open_deals", "open_requests", "critical_deal_risks", "pending_approvals"], attentionCategories: ["deal", "closing", "risk", "approval", "work"], quickActions: [{ key: "review_closing_readiness" }, { key: "review_open_requests" }, { key: "review_pending_approvals" }, { key: "inspect_blocked_work" }], primaryProjection: "deal" } },
     },
-    scenes: { ready: { detail: "balanced", emphasis: "presence" }, listening: { detail: "compact", emphasis: "presence" }, plan: { detail: "balanced", emphasis: "context" }, approval: { detail: "detailed", emphasis: "evidence" }, working: { detail: "balanced", emphasis: "evidence" }, outcome: { detail: "detailed", emphasis: "evidence" }, recovery: { detail: "detailed", emphasis: "context" } },
+    scenes: { ready: { detail: "balanced", emphasis: "evidence" }, listening: { detail: "balanced", emphasis: "evidence" }, plan: { detail: "balanced", emphasis: "evidence" }, approval: { detail: "balanced", emphasis: "evidence" }, working: { detail: "balanced", emphasis: "evidence" }, outcome: { detail: "balanced", emphasis: "evidence" }, recovery: { detail: "balanced", emphasis: "evidence" } },
     extensions: {},
   }),
   // Phase 2 tenant-safe routing/delegation policy. Provider credentials and raw
@@ -104,6 +101,46 @@ export const tenantSettings = pgTable("tenant_settings", {
     failClosedStatuses: ["disconnected", "connecting", "expired", "reauth_required", "revoked", "disabled", "misconfigured", "provider_unavailable"],
     healthCheckMinutes: 15,
   }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Core ↔ vertical runtime boundary.  Core owns identity/resolution and the
+// canonical truth catalogue; individual vertical packages own their rows and
+// mutation semantics.  `vertical_key = null` in the truth registry means a Core
+// entity is available to every active vertical, including `none`.
+export const verticalDefinitions = pgTable("vertical_definitions", {
+  key: text("key").primaryKey(),
+  displayName: text("display_name").notNull(),
+  implementationOwner: text("implementation_owner").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tenantVerticalAssignments = pgTable("tenant_vertical_assignments", {
+  tenantId: uuid("tenant_id").primaryKey().references(() => tenants.id, { onDelete: "cascade" }),
+  verticalKey: text("vertical_key").notNull().references(() => verticalDefinitions.key),
+  version: integer("version").notNull().default(1),
+  effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull().defaultNow(),
+  sourceSystem: text("source_system").notNull().default("finnor"),
+  sourceRef: text("source_ref"),
+  createdBy: text("created_by").notNull().default("system:legacy-water-default"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const canonicalTruthRegistry = pgTable("canonical_truth_registry", {
+  entityType: text("entity_type").primaryKey(),
+  verticalKey: text("vertical_key").references(() => verticalDefinitions.key),
+  sourceSchema: text("source_schema").notNull().default("finnor_os"),
+  sourceTable: text("source_table").notNull(),
+  idColumn: text("id_column").notNull().default("id"),
+  tenantColumn: text("tenant_column").notNull().default("tenant_id"),
+  writableOwner: text("writable_owner").notNull(),
+  mutationBoundary: text("mutation_boundary").notNull(),
+  workAttachable: boolean("work_attachable").notNull().default(false),
+  active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -885,7 +922,7 @@ export const works = pgTable(
     sessionId: text("session_id"),
     initialChannel: text("initial_channel", { enum: ["voice", "text", "console"] }).notNull(),
     initialInstruction: text("initial_instruction").notNull(),
-    executionModel: text("execution_model", { enum: ["query", "conversation", "atomic_action", "objective", "clarify", "atomic_effect"] }),
+    executionModel: text("execution_model", { enum: ["query", "atomic_effect", "objective"] }),
     createdBy: uuid("created_by").references(() => users.id),
     currentOwnerId: uuid("current_owner_id").references(() => users.id),
     assignedTo: uuid("assigned_to").references(() => users.id),
@@ -921,7 +958,6 @@ export const workInputs = pgTable(
     contextSnapshot: jsonb("context_snapshot"),
     contextSnapshotHash: text("context_snapshot_hash"),
     contextCapturedAt: timestamp("context_captured_at", { withTimezone: true }),
-    intakeDeadlineAt: timestamp("intake_deadline_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -929,7 +965,6 @@ export const workInputs = pgTable(
     unique("work_inputs_tenant_instruction_idx").on(t.tenantId, t.instructionId),
     unique("work_inputs_work_idempotency_idx").on(t.workId, t.idempotencyKey),
     index("work_inputs_work_created_idx").on(t.workId, t.createdAt),
-    index("work_inputs_tenant_intake_deadline_idx").on(t.tenantId, t.intakeDeadlineAt),
   ],
 );
 
@@ -1012,6 +1047,13 @@ export const workQueryExecutions = pgTable(
         "party_context",
         "team_roster",
         "party_availability",
+        "deal_context",
+        "deal_workstreams",
+        "open_requests",
+        "open_findings",
+        "open_deal_risks",
+        "critical_dependencies",
+        "closing_readiness",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),
@@ -1324,9 +1366,6 @@ export const proposals = pgTable("proposals", {
   quoteId: uuid("quote_id"),
 });
 
-/** Read-only compatibility projection backed by canonical messages + conversations.
- * Kept as pgTable metadata so existing Drizzle read paths remain source-compatible;
- * migration 0107 makes the database object a non-updatable security-invoker view. */
 export const communicationsLog = pgTable("communications_log", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().default(sql`finnor_os.request_tenant_id()`).references(() => tenants.id),
@@ -1356,6 +1395,7 @@ export const domainPolicies = pgTable(
     // null, migration 0023).
     version: integer("version").notNull().default(1),
     effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull().defaultNow(),
+    active: boolean("active").notNull().default(true),
   },
   (t) => [
     unique("domain_policies_tenant_id_id_key").on(t.tenantId, t.id),
@@ -1939,7 +1979,7 @@ export const jobs = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     type: text("type").notNull(),
     payload: jsonb("payload").notNull().default({}),
-    status: text("status", { enum: ["queued", "running", "completed", "failed", "dead_letter"] })
+    status: text("status", { enum: ["queued", "running", "completed", "failed", "dead_letter", "quarantined"] })
       .notNull()
       .default("queued"),
     attempts: integer("attempts").notNull().default(0),
@@ -2099,6 +2139,8 @@ export const serviceReleaseHeartbeats = pgTable(
     deploymentId: text("deployment_id"),
     capabilities: text("capabilities").array().notNull().default([]),
     environment: text("environment").notNull(),
+    cutoverProtocol: integer("cutover_protocol").notNull().default(0),
+    productEpoch: integer("product_epoch").notNull().default(0),
     lastBeatAt: timestamp("last_beat_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -2106,6 +2148,33 @@ export const serviceReleaseHeartbeats = pgTable(
     index("service_release_heartbeats_fresh_idx").on(t.service, t.lastBeatAt),
   ],
 );
+
+/** The single durable product-authority owner used by API, worker, orchestrator,
+ * scheduler, source sync, and release certification. */
+export const productRuntimeAuthority = pgTable("product_runtime_authority", {
+  authorityKey: text("authority_key").primaryKey(),
+  epoch: integer("epoch").notNull().default(5),
+  state: text("state", { enum: ["preparing", "water_intake_frozen", "water_retired"] }).notNull().default("preparing"),
+  activeProductVertical: text("active_product_vertical").notNull().default("private_equity"),
+  minimumCutoverProtocol: integer("minimum_cutover_protocol").notNull().default(5),
+  waterIntakeFrozenAt: timestamp("water_intake_frozen_at", { withTimezone: true }),
+  waterRetiredAt: timestamp("water_retired_at", { withTimezone: true }),
+  activatedBy: text("activated_by"),
+  activationEvidence: jsonb("activation_evidence").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const waterTenantRetirementDispositions = pgTable("water_tenant_retirement_dispositions", {
+  tenantId: uuid("tenant_id").primaryKey().references(() => tenants.id),
+  classification: text("classification", { enum: ["SYNTHETIC_REFERENCE", "TEST", "STAGING", "REAL_PRODUCTION", "UNKNOWN"] }).notNull(),
+  authorized: boolean("authorized").notNull().default(false),
+  authorizationRef: text("authorization_ref"),
+  obligations: jsonb("obligations").notNull().default([]),
+  classifiedBy: text("classified_by").notNull(),
+  classifiedAt: timestamp("classified_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const apiRateLimits = pgTable("api_rate_limits", {
   bucketKey: text("bucket_key").notNull(),
@@ -2505,8 +2574,9 @@ export const procurementOrders = pgTable("procurement_orders", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Authoritative, writable communication model. communications_log is a read-only
-// compatibility projection of these messages joined to their conversation/customer.
+// Persists what communications_log/sandbox_outbox never captured: a queryable,
+// permanent record of calls/messages, replacing the old "transcript embedded once in
+// jobs.payload, then discarded" pattern in webhooks/vapi/route.ts.
 export const conversations = pgTable("conversations", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
@@ -2540,25 +2610,17 @@ export const calls = pgTable(
   (t) => [unique("calls_tenant_source_external_idx").on(t.tenantId, t.sourceSystem, t.externalId)],
 );
 
-export const messages = pgTable(
-  "messages",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
-    conversationId: uuid("conversation_id").references(() => conversations.id),
-    direction: text("direction", { enum: ["inbound", "outbound"] }).notNull(),
-    channel: text("channel").notNull(),
-    content: text("content").notNull(),
-    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
-    ...provenanceColumns(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("messages_tenant_source_external_unique")
-      .on(table.tenantId, table.sourceSystem, table.externalId)
-      .where(sql`${table.sourceSystem} IS NOT NULL AND ${table.externalId} IS NOT NULL`),
-  ],
-);
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  conversationId: uuid("conversation_id").references(() => conversations.id),
+  direction: text("direction", { enum: ["inbound", "outbound"] }).notNull(),
+  channel: text("channel").notNull(),
+  content: text("content").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  ...provenanceColumns(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 // Canonical document entity; embeddings.documentId (added above) can point here.
 export const documents = pgTable("documents", {
@@ -3535,7 +3597,7 @@ export const tenantIntegrations = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     capability: text("capability", {
-      enum: ["scheduling", "documents", "inventory", "crm", "communications", "esign", "accounting", "payments", "marketing"],
+      enum: ["scheduling", "documents", "inventory", "crm", "communications", "esign", "accounting", "payments", "marketing", "private_equity_source"],
     }).notNull(),
     binding: text("binding").notNull(),
     mode: text("mode", { enum: ["real", "sandbox", "emulator"] }).notNull().default("emulator"),

@@ -52,8 +52,8 @@ describe.skipIf(!available)("GET /api/receipts (Phase 7.1/7.3)", () => {
     const opened = await openReceipt({
       tenantId: TENANT_A,
       domainActionId,
-      objective: "send a maintenance reminder to a lapsed AMC household",
-      evidence: [{ source: "maintenance_agreements", ref: "amc-42", timestamp: new Date().toISOString() }],
+      objective: "request acknowledgement of an open diligence item",
+      evidence: [{ source: "deal_requests", ref: "request-42", timestamp: new Date().toISOString() }],
       policyApplied: { id: "policy-amc-reminder", version: 3 },
       riskTier: "low",
       proposedAction: { actionType: "send_service_reminder" },
@@ -74,7 +74,7 @@ describe.skipIf(!available)("GET /api/receipts (Phase 7.1/7.3)", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.receipt.id).toBe(receiptId);
-    expect(body.receipt.objective).toContain("maintenance reminder");
+    expect(body.receipt.objective).toContain("open diligence item");
     expect(body.receipt.policyApplied).toEqual({ id: "policy-amc-reminder", version: 3 });
   });
 

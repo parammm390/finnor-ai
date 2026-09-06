@@ -1,464 +1,118 @@
-# FINNOR OS
+# FINNOR
 
-**FINNOR is a governed AI operating system for service businesses.**
+FINNOR is a governed execution system for water treatment companies. It turns an instruction into grounded context, an executable plan, policy-scoped action, durable recovery and permanent evidence. JARVIS is the command surface through which the operation is understood, directed and verified.
 
-JARVIS is the human operating surface. FINNOR is the execution system underneath it.
+This repository contains the public product story and demos, the JARVIS command experience, and the `finnor-os` execution stack. Voice is one supported instruction channel; it is not the product category.
 
-The system accepts a business objective or instruction, grounds it in canonical company state, evaluates authority and policy, converts intent into bounded typed actions, executes through durable workflows and governed integrations, observes the real outcome, reconciles uncertainty, and preserves evidence of what happened.
+## Tech Stack
+- **Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Motion and spatial storytelling:** GSAP, Framer Motion, Three.js and React Three Fiber
+- **Icons:** lucide-react
+- **Database/Backend:** Supabase
 
-```text
-Human / Event / Voice / API
-           │
-           ▼
-   Context + Company State
-           │
-           ▼
-      Planner / Objective
-           │
-           ▼
- Authority + Policy + Approval
-           │
-           ▼
- Typed Actions / Work / Effects
-           │
-           ▼
- Durable Execution Runtime
-   ├─ Native FINNOR operations
-   ├─ Provider APIs / MCP
-   ├─ Messaging / Voice
-   ├─ Workflow runtime
-   └─ Governed Computer Use
-           │
-           ▼
- Observe → Verify → Reconcile
-           │
-           ▼
- Canonical State + Receipts + Evidence
-```
+## Setup Instructions
 
-This repository contains the public FINNOR product experience, JARVIS, and the complete `finnor-os` backend/runtime.
-
----
-
-## What FINNOR is
-
-FINNOR is **not a chatbot, not a CRM wrapper, and not a collection of disconnected AI agents**.
-
-It is an operating layer for company work:
-
-- understands company context and current business state;
-- knows employees, roles, scopes, identities, accounts and authority;
-- plans and executes bounded business actions;
-- pauses consequential work for approval when policy requires it;
-- persists long-running Work across requests, workers and restarts;
-- performs external operations through native integrations, APIs, MCP and governed computer use;
-- reacts to external events and resumes waiting objectives;
-- verifies outcomes instead of treating provider dispatch as business success;
-- records durable evidence, receipts, failures and recovery paths;
-- exposes the operating state through JARVIS.
-
-The product is currently optimized for service-business operations, initially including water-treatment operators, but the runtime itself is built around tenant-scoped business primitives rather than one hard-coded workflow.
-
----
-
-## JARVIS
-
-JARVIS is the operator-facing command and control surface for FINNOR.
-
-Its major product surfaces include:
-
-- **Command / Voice** — instruct FINNOR through text or supported voice channels;
-- **Work** — inspect the durable causal record for objectives, actions, approvals, workflows, evidence and outcomes;
-- **Customers** — operate against canonical customer and household context;
-- **Schedule** — appointments, service and operational timing;
-- **Money** — invoices, collections and financial operating views;
-- **Agents** — agent and automation activity;
-- **Activity Theater** — live operational activity across actions, workflow steps, computer steps and calls;
-- **Execution / Workflow Theater** — visual execution state tied to persisted workflow/action state;
-- **Operational Time Machine** — read-only causal replay of decisions, evidence, governance and execution history.
-
-JARVIS is deliberately a projection of persisted system truth. Presentation is not allowed to invent execution progress that the backend has not recorded.
-
----
-
-## Core architecture
-
-### 1. Company world
-
-FINNOR maintains tenant-scoped canonical business state and organization context across people, roles, teams, locations, customers, work orders, appointments, conversations, calls, messages, documents, invoices, payments, inventory and other operational records.
-
-The database layer uses PostgreSQL with tenant isolation and RLS-aware application access.
-
-### 2. Identity, access and authority
-
-Execution identity is explicit.
-
-FINNOR models:
-
-- employees and service principals;
-- role assignments and authority grants;
-- tenant/resource/self/assignment scopes;
-- application identities and auth profiles;
-- risk and amount caps;
-- approval requirements and approval chains;
-- governed delegation and handoff.
-
-Authority is re-evaluated at execution time and fails closed when identity or scope is ambiguous.
-
-### 3. Typed action fabric
-
-FINNOR executes through a registered action vocabulary rather than free-form tool invention.
-
-The current generated action manifest contains **59 registered actions** spanning business operations, universal company actions and governed computer execution.
-
-Examples include:
-
-- customer messaging and follow-up;
-- payment collection and invoice operations;
-- scheduling and rescheduling;
-- lead and CRM operations;
-- inventory and service workflows;
-- proposals, quotes and signatures;
-- marketing operations;
-- business queries and research;
-- task creation, assignment and updates;
-- delegation, escalation and handoff;
-- internal event scheduling;
-- document sharing;
-- `computer_task` for governed browser/computer execution when a safer native/API route is unavailable.
-
-Each action carries typed payload expectations, risk/approval semantics and execution behavior.
-
-### 4. Durable Work
-
-`Work` is the durable causal envelope for operational responsibility.
-
-A Work record can survive:
-
-- approval delays;
-- provider latency;
-- worker restarts;
-- retries;
-- external waits;
-- handoffs;
-- partial failures;
-- recovery and reconciliation.
-
-JARVIS reads Work as the canonical operating story rather than maintaining a second UI-only state machine.
-
-### 5. Objective runtime
-
-FINNOR supports persistent governed objectives in addition to bounded instruction planning.
-
-The objective runtime follows a controlled loop:
-
-```text
-Inspect canonical state
-        ↓
-Choose exactly one bounded next step
-        ↓
-Query / Act / Wait / Block / Complete
-        ↓
-Observe durable result
-        ↓
-Re-inspect company state
-        ↓
-Continue only when justified
-```
-
-Objectives have budgets, durable iterations, explicit waits, event wake-ups and terminal states. The runtime never assumes an action succeeded merely because a provider accepted a request.
-
-### 6. Approval and policy
-
-Consequential execution is governed by explicit policy and authority checks.
-
-The system supports:
-
-- no-approval actions;
-- policy-gated actions;
-- required approval;
-- typed confirmation for higher-risk effects;
-- immutable confirmation evidence;
-- approval drift detection;
-- execution-time authority revalidation.
-
-### 7. Durable workflow runtime
-
-Longer operations are represented as durable workflow steps rather than one HTTP request pretending to be a workflow engine.
-
-The runtime includes:
-
-- persisted workflow state;
-- leased work;
-- retries and backoff;
-- outbox delivery;
-- idempotent external operations;
-- compensation;
-- reconciliation;
-- dead-letter handling;
-- explicit failure classes;
-- recovery paths.
-
-### 8. Governed computer use
-
-FINNOR includes a bounded computer-execution subsystem for work that cannot be completed through a reliable native integration or API.
-
-The computer runtime provides:
-
-- tenant- and Work-scoped runs;
-- explicit application and auth-profile selection;
-- origin restrictions;
-- read-only vs mutation modes;
-- authority revalidation before execution;
-- step/time/cost/artifact/screenshot limits;
-- isolated provider sessions;
-- durable step history;
-- post-action observation;
-- cancellation;
-- crash/uncertain-write reconciliation;
-- evidence capture;
-- deterministic terminal states.
-
-Computer use is a **fallback execution route**, not permission for an LLM to browse arbitrary systems or invent credentials.
-
-### 9. Event-driven runtime
-
-External reality can wake FINNOR.
-
-The runtime supports durable event waits and wake claims so objectives can pause for real business events and resume later without keeping an HTTP request or model session alive.
-
-Examples include waiting for acknowledgements, provider events, workflow progress or a deadline.
-
-### 10. Memory, research and evidence
-
-FINNOR separates canonical business truth from softer context.
-
-Planning truth precedence is intentionally biased toward live operational state and durable execution evidence before semantic memory or external research.
-
-The stack includes:
-
-- PostgreSQL canonical state;
-- Redis short-term runtime state where configured;
-- semantic retrieval / embeddings where configured;
-- evidence corpus and immutable versions;
-- external research with bounded discovery/verification paths;
-- episodic and execution history;
-- decision receipts.
-
-### 11. Read models and projections
-
-Operational UI is driven by read models/projections rather than raw table access.
-
-The system contains projections for business state, Work, activity, readiness, customer context, money, operational deltas, reliability and other operating views.
-
----
-
-## Execution guarantees
-
-FINNOR is designed around several non-negotiable rules:
-
-1. **No invented capability** — the planner may only select registered actions/tools.
-2. **No invented identity** — execution must resolve an allowed actor/account/profile.
-3. **No silent consequential action** — policy and authority gates run before effects.
-4. **No success-by-dispatch** — provider acceptance is not automatically business success.
-5. **No duplicate external effect on retry** — external operations use idempotency/reconciliation where required.
-6. **No fake progress** — JARVIS renders persisted state, not staged animation timelines.
-7. **No cross-tenant leakage** — tenant isolation is enforced in the data and service layers.
-8. **No unsafe browser free-for-all** — computer use is bounded by application, identity, origins, mode and budgets.
-9. **No long autonomous loop inside serverless requests** — durable jobs/workflows carry continued execution.
-10. **No unverified production claim** — live integration certification is configuration- and environment-dependent.
-
----
-
-## Repository map
-
-```text
-.
-├── src/                         # Public website + JARVIS frontend
-│   ├── app/                     # Next.js routes
-│   ├── components/jarvis/       # JARVIS operating experience
-│   └── lib/                     # Frontend clients/projections/helpers
-│
-├── finnor-os/
-│   ├── apps/
-│   │   ├── api/                 # FINNOR API
-│   │   ├── worker/              # Durable/background execution workers
-│   │   ├── orchestrator/        # Orchestration runtime process
-│   │   ├── console/             # Internal console
-│   │   └── supplier-canary/     # Integration/canary surface
-│   │
-│   ├── packages/
-│   │   ├── authority/           # Authority evaluation and grants
-│   │   ├── computer/            # Governed computer-use runtime
-│   │   ├── data-platform/       # Canonical import/data lifecycle
-│   │   ├── db/                  # Schema, migrations, repositories, queue
-│   │   ├── domain-plugins/      # Registered business actions
-│   │   ├── memory/              # Runtime/semantic memory
-│   │   ├── orchestration/       # Planner, executor, objective runtime
-│   │   ├── policy-schema/       # Shared request/policy schemas
-│   │   ├── projections/         # Operational delta projections
-│   │   ├── read-models/         # Tenant-safe operational query/read models
-│   │   ├── security/            # Identity/access/security services
-│   │   ├── shared-types/        # Shared contracts
-│   │   ├── tools/               # Integrations, LLMs and provider wrappers
-│   │   ├── voice-os/            # Voice runtime
-│   │   └── workflow-runtime/    # Durable workflow + reconciliation layer
-│   │
-│   ├── tests/                   # Unit/integration/live certification suites
-│   └── scripts/                 # Release, certification and generated contracts
-│
-├── docs/                        # Architecture, evidence and release documentation
-├── e2e/                         # Browser/product tests
-├── infra/                       # Deployment contracts
-└── .github/workflows/           # CI, security and production release gates
-```
-
----
-
-## AI / model architecture
-
-FINNOR is **provider-routed**, not identified with one model vendor.
-
-The backend can select configured model providers by purpose/channel with explicit deadlines, health-aware ordering, fallbacks and usage/provenance recording.
-
-Current code supports provider families/routes including configured Bedrock-hosted models and OpenAI-compatible providers such as Mistral and DeepSeek. Voice can use its own channel-specific runtime. Model availability is always environment-dependent.
-
-**Gemini is not the identity of FINNOR.** Legacy/public demo code may still use Gemini for optional narrative/profile generation, but that is an isolated demo concern and not the core planning/execution architecture.
-
----
-
-## Integrations
-
-FINNOR contains integration/tooling surfaces for categories including:
-
-- voice/calling;
-- email and messaging;
-- scheduling;
-- CRM;
-- accounting;
-- payments;
-- e-signature/documents;
-- marketing/ad platforms;
-- web research;
-- semantic memory/embeddings;
-- routing/geography;
-- governed computer execution.
-
-Specific providers are activated only when the tenant/environment has valid configuration and the appropriate binding is enabled. External integrations commonly default to safe/emulated behavior until explicitly activated.
-
-Never infer that every provider is live merely because an adapter exists in source.
-
----
-
-## Current production boundary
-
-The repository contains more capability than any single deployed environment necessarily has activated.
-
-Production readiness is determined by source parity, migration state, deployment identity, environment configuration, live provider canaries, security gates and recovery certification — not by README claims.
-
-The canonical release path is defined by:
-
-- `infra/deployment/production.contract.json`
-- `.github/workflows/production-release.yml`
-- generated release/certification artifacts under `docs/release/`
-
-A direct frontend deploy is **not** equivalent to a complete FINNOR production release because the system also depends on API, persistent worker/runtime, database state, credentials and release identity parity.
-
----
-
-## Development
-
-### Frontend / JARVIS
-
+### 1. Install Dependencies
 ```bash
 npm install
+```
+
+### 2. Configure Environment Variables
+Copy the example environment file and add your Supabase credentials:
+```bash
+cp .env.example .env.local
+```
+Fill in the credentials in `.env.local`:
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key (safe for browser)
+- `SUPABASE_URL`: Your Supabase Project URL for server-side lead writes
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (kept secret on the server)
+- `GEMINI_API_KEY`: Optional, server-side only, used by `/api/generate-demo` for conservative profile personalization
+- `GEMINI_MODEL`: Optional, defaults to `gemini-2.5-flash-lite`
+- `NEXT_PUBLIC_VAPI_PUBLIC_KEY`: Optional, enables the live browser voice demo
+- `NEXT_PUBLIC_VAPI_ASSISTANT_ID`: Optional, reusable Vapi assistant for the dispatch demo
+- `VAPI_WEBHOOK_SECRET`: Optional, protects `/api/voice/webhook` when configured in Vapi
+- `NEXT_PUBLIC_DEMO_MOCK_MODE`: Set to `true` to force polished mock mode
+- `LEAD_NOTIFY_WEBHOOK_URL`: Optional webhook for demo-generated notifications
+- `GMAIL_USER` and `GMAIL_APP_PASSWORD`: Optional, used by the contact form email notification
+
+### 3. Run Locally
+```bash
 npm run dev
 ```
+Navigate to [http://localhost:3000](http://localhost:3000).
 
-The root application is the public site and JARVIS frontend.
+## Supabase Setup
+1. Create a new project in [Supabase](https://supabase.com).
+2. Go to the SQL Editor and paste the contents of `supabase/schema.sql` to create the `leads` and `demo_leads` tables.
+3. Configure your API keys in the `.env.local` file.
+4. _(Optional but recommended)_ Setup Row Level Security (RLS) policies as commented in the schema.
 
-### FINNOR OS
+## Product and positioning sources
 
-```bash
-cd finnor-os
-npm install
-```
+- **Product truth, live-site audit and positioning decision:** `docs/FINNOR-REBUILD-PRODUCT-TRUTH.md`
+- **Public product story:** `src/components/rebuild/`
+- **Editorial resources and trust:** `src/components/resources/`
+- **JARVIS product surface:** `src/components/jarvis/`
+- **Execution system:** `finnor-os/`
+- **Brand configuration and links:** `src/config/site.ts`
 
-Use the scripts defined in `finnor-os/package.json` for API, worker, tests, generation and certification tasks.
+## Editing supporting content
 
-The backend targets modern Node.js and uses workspace packages under `finnor-os/packages/*`.
+Shared information and route-specific content are organized by surface.
+- **Brand name, tagline, email, links:** Edit `src/config/site.ts`.
+- **Homepage:** Edit `src/components/rebuild/`.
+- **Field notes, trust, checklist, glossary and estimator:** Edit `src/components/resources/`.
+- **Contact Form:** Logic is handled in `src/app/api/contact/route.ts` and UI in `src/components/sections/ContactForm.tsx`.
 
----
+## Public instruction demo
 
-## Configuration
+The demo at `/demo` isolates one instruction channel and produces a governed handoff preview. It is explicitly not a representation of FINNOR’s complete execution system.
 
-Do **not** treat this README as the environment-variable contract.
+- **Route:** `src/app/demo/page.tsx`
+- **Client experience:** `src/components/demo/`
+- **API endpoint:** `src/app/api/generate-demo/route.ts`
+- **Lead APIs:** `src/app/api/demo-leads/route.ts` and `src/app/api/demo-leads/update/route.ts`
+- **Scraping:** `src/lib/scrape/scrape-site.ts`
+- **Profile extraction:** `src/lib/llm/gemini.ts`
+- **Voice prompt builder:** `src/lib/llm/prompt-builder.ts`
+- **Supabase lead writes:** `src/lib/leads/supabase.ts`
+- **Backend readiness:** `src/app/api/health/route.ts`
+- **Voice webhook:** `src/app/api/voice/webhook/route.ts`
 
-Use the repository's generated environment/release contracts and `.env.example` files as the current source for configuration requirements. Provider credentials and live bindings vary by environment and tenant.
+The endpoint reads a company website with bounded timeouts and public-host guardrails. It marks unknown facts as unknown and falls back to a generic, clearly labelled workflow when scraping or model summarization is unavailable.
 
-Important configuration families include:
+For Vapi, use one reusable assistant and reference the dynamic variables passed by the browser call:
+- `{{ companyName }}`
+- `{{ websiteUrl }}`
+- `{{ companySummary }}`
+- `{{ detectedServices }}`
+- `{{ dispatchAngle }}`
+- `{{ safeDemoScenario }}`
+- `{{ voicePrompt }}`
+- `{{ techAlertPreview }}`
+- `{{ crmPreview }}`
 
-- database / PostgreSQL;
-- Redis where enabled;
-- Supabase authentication;
-- model providers;
-- voice providers;
-- embeddings / semantic memory;
-- research providers;
-- communications;
-- payments/accounting/e-signature;
-- CRM/marketing;
-- secrets management;
-- computer-use provider/runtime;
-- observability.
+The browser also sends the safe system context into the live call. If Vapi keys are not configured, the page reports that voice is not configured instead of failing silently.
 
-Production is intentionally fail-closed for unsafe development bypasses and unsupported secret configuration.
+## Lifecycle Demo
+The customer lifecycle demo is available at `/demo/lifecycle`.
 
----
+- **Route:** `src/app/demo/lifecycle/page.tsx`
+- **Client experience:** `src/components/lifecycle/`
+- **Water lookup API:** `src/app/api/lifecycle/water/route.ts`
+- **Diagnosis API:** `src/app/api/lifecycle/diagnose/route.ts`
+- **Scenario math:** `src/lib/lifecycle/`
+- **Narrative layer:** `src/lib/llm/lifecycle-diagnosis.ts`
 
-## Testing and certification
+The flow takes a service-area ZIP, pricing tier, household size, services, and concern. It pulls public water data, computes sizing and quote logic locally, optionally uses Gemini for the narrative layer, and falls back to deterministic copy when Gemini is unavailable.
 
-The repository contains multiple levels of verification:
+Before publishing, call `/api/health` locally or in preview. `readyForProduction` should be `true` after Gemini, Supabase, and Vapi browser credentials are configured. Configure Vapi to send call events to `/api/voice/webhook` and set the same `VAPI_WEBHOOK_SECRET` in Vercel and Vapi.
 
-- unit tests;
-- integration tests;
-- tenant-isolation and RLS tests;
-- action-contract tests;
-- authority/policy tests;
-- idempotency/outbox/recovery tests;
-- objective and event-runtime tests;
-- computer-use tests;
-- browser/JARVIS E2E tests;
-- load/reliability gates;
-- optional live-provider canaries;
-- release certification and source-parity gates.
+## Deployment
+Production deployment is governed by [`infra/deployment/production.contract.json`](infra/deployment/production.contract.json) and the single guarded [`production-release.yml`](.github/workflows/production-release.yml) workflow.
 
-Live-provider tests are intentionally opt-in and must never be confused with deterministic CI success.
+That workflow resolves the exact Vercel frontend/API projects, Azure worker runtime, embedded orchestrator, database, credentials, and migration head before mutation; it accepts only a clean checkout of the exact remote `main` SHA and refuses PASS until every runtime reports the same release identity. A direct `vercel --prod` deploy is not a production release because it bypasses worker/orchestrator deployment and parity verification.
 
----
-
-## Product truth vs. demo surfaces
-
-Some public/demo routes intentionally demonstrate only a slice of FINNOR and may use isolated model/provider code for narrative generation.
-
-Those demos do **not** define the system architecture.
-
-For current product truth, start with:
-
-- `finnor-os/packages/orchestration/`
-- `finnor-os/packages/authority/`
-- `finnor-os/packages/computer/`
-- `finnor-os/packages/workflow-runtime/`
-- `finnor-os/packages/tools/`
-- `finnor-os/packages/read-models/`
-- `finnor-os/packages/db/`
-- `src/components/jarvis/`
-- `docs/release/`
-
----
-
-## Design principle
-
-> **FINNOR should not merely tell a business what to do. It should safely carry responsibility for the work until the verified business state says the outcome is complete.**
-
-That principle drives the architecture: canonical state, explicit authority, typed actions, durable Work, bounded autonomy, real-world execution, verification, reconciliation and evidence.
+For local or preview work, use the relevant framework's development commands. Do not infer production targets, provider names, or credentials from this README; update the canonical contract first and let its validator fail closed.

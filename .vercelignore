@@ -1,11 +1,4 @@
-# The marketing deployment does not need the backend workspace, except for the
-# two reference-tenant manifests consumed by the static tenant-experience fixture.
-finnor-os/*
-!finnor-os/docs/
-finnor-os/docs/*
-!finnor-os/docs/reference-tenants/
-finnor-os/docs/reference-tenants/*
-!finnor-os/docs/reference-tenants/*.reference.json
+finnor-os
 .claude
 .codex
 /work

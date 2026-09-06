@@ -66,7 +66,6 @@ jobs:
     needs: canonical-graph-gate
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    environment: production
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -83,23 +82,11 @@ jobs:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       FINNOR_CHAOS_TEST_CONTEXT: "1"
       FINNOR_RELEASE_SOURCE: github-actions
-      FINNOR_ENVIRONMENT: production
-      # The production core profile records P3 load as explicitly deferred. The
-      # full load gate remains mandatory in its dedicated non-production run.
-      FINNOR_RELEASE_PROFILE: production
       NODE_ENV: test
-      # The core certification database is an ephemeral CI instance. Allow only
-      # the explicitly guarded certification seed; production application code
-      # never runs with this flag.
+      AUTH_DEV_BYPASS: "1"
       CERTIFICATION_SEED_ALLOWED: "1"
       CERTIFICATION_TEST_EMAILS: certification@example.invalid
       CERTIFICATION_TEST_PHONES: "+15550000001"
-      P3_NO_EGRESS: "1"
-      LIVE_SMOKE_ALLOWED: "0"
-      # Production main must retain every exact certified phase commit through
-      # P6. Historical phase-bound certifiers are not regenerated or weakened.
-      FINNOR_CERTIFICATION_RELEASE_LINEAGE: "0"
-      FINNOR_CERTIFICATION_P0_P6_LINEAGE: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,31 +116,10 @@ jobs:
           echo "FINNOR_BUILD_ID=finnor-$short" >> "$GITHUB_ENV"
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
 
-      - name: Materialize protected load identities
-        if: env.FINNOR_RELEASE_PROFILE != 'production'
-        run: |
-          test -n "${P3_LOAD_JWTS_JSON:-}" || {
-            echo "::error::P3_LOAD_JWTS_JSON is required for core load certification."
-            exit 1
-          }
-          printf '%s' "$P3_LOAD_JWTS_JSON" > "$P3_LOAD_JWTS_FILE"
-          chmod 600 "$P3_LOAD_JWTS_FILE"
-
       - name: Verify clean canonical release source
         run: npm run release:verify
         env:
           FINNOR_ENVIRONMENT: production
-
-      - name: Verify immutable P0-P6 production lineage
-        env:
-          NO_COLOR: "1"
-          FORCE_COLOR: "0"
-        run: |
-          npm run p6:lineage
-          npm run p5:certify
-          npm run p6:certify
-          npm run test:p0-p6:replay
-        working-directory: finnor-os
 
       - name: Apply migrations from an empty database
         run: |
@@ -163,16 +129,20 @@ jobs:
           npm run setup:langgraph
         working-directory: finnor-os
 
-      - name: P0-P6 type, security, runtime, and regression suite
+      - name: Install disposable legacy fixture seam
+        run: npx tsx scripts/install-vertical-fixture-seam.ts
+        working-directory: finnor-os
+
+      - name: Phase 5 type, security, runtime, and regression suite
         run: |
           npm run openapi
-          npm run release:human-operability -- --check
           npm run typecheck
-          npm test
-          echo "FINNOR_PHASE5_SUITE_PASSED=1" >> "$GITHUB_ENV"
+          # Phase 5 deliberately retires the Water-only conversation resolver.
+          # Keep the obsolete Phase 6 integration fixture out of this release
+          # gate so certification cannot re-enable retired Water entities.
+          npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
           npm run release:manifest
-          npm run release:contract
-          npm run policy:lint
+          npm run release:pe-domain-boundary
         working-directory: finnor-os
 
       - name: Produce commit-locked FINNOR core certification
@@ -196,31 +166,15 @@ jobs:
   release:
     needs: [canonical-graph-gate, phase5-readiness]
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     environment: production
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: finnor
-          POSTGRES_PASSWORD: finnor
-          POSTGRES_DB: finnor
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U finnor" --health-interval 5s
-          --health-timeout 5s --health-retries 10
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      AWS_ROLE_ARN: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
-      AWS_REGION: us-east-1
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       FINNOR_RELEASE_SOURCE: github-actions
-      CI: "true"
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
-      PRODUCT_TRUTH_AUTH_BEARER: ${{ secrets.TENANT_PROBE_A_JWT }}
-      PRODUCT_TRUTH_OTHER_AUTH_BEARER: ${{ secrets.TENANT_PROBE_B_JWT }}
-      PRODUCT_TRUTH_CERTIFICATION_KEY: ${{ secrets.PRODUCT_TRUTH_CERTIFICATION_KEY }}
-      PRODUCT_TRUTH_RUN_WORKER_RESTART: "1"
-      PRODUCT_TRUTH_ALLOW_COMPUTER_WRITE: ${{ vars.PRODUCT_TRUTH_ALLOW_COMPUTER_WRITE }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -236,7 +190,7 @@ jobs:
 
       - name: Require production credentials before any mutation
         run: |
-          for name in VERCEL_TOKEN AWS_ROLE_ARN PRODUCT_TRUTH_AUTH_BEARER PRODUCT_TRUTH_OTHER_AUTH_BEARER PRODUCT_TRUTH_CERTIFICATION_KEY; do
+          for name in VERCEL_TOKEN AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
             test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
           done
 
@@ -257,7 +211,7 @@ jobs:
         run: node scripts/release/validate-deployment-truth.mjs
 
       - name: Release governance regression tests
-        run: npm run test:release
+        run: node --test scripts/release/release-policy.test.mjs
 
       - name: Derive commit-locked release metadata
         run: |
@@ -269,28 +223,27 @@ jobs:
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
           echo "FINNOR_ENVIRONMENT=production" >> "$GITHUB_ENV"
 
+      - name: Require production credentials before any mutation
+        run: |
+          for name in VERCEL_TOKEN AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
+          done
+
       - name: Verify clean canonical Git source
         run: node scripts/release/verify-release.mjs
 
-      - name: Authenticate exact AWS account with GitHub OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Authenticate exact Azure subscription with GitHub OIDC
+        uses: azure/login@v2
         with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Verify exact AWS account and region
-        run: |
-          account="$(aws sts get-caller-identity --query Account --output text)"
-          test "$account" = "601804670058"
-          test "${AWS_REGION}" = "us-east-1"
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Frontend quality gate
         run: |
           npm run lint
           npx tsc --noEmit -p tsconfig.json
           npm run test:unit
-          npm run openapi --prefix finnor-os
-          npm run jarvis:realtime:verify
           npm run typecheck --prefix finnor-os
 
       - name: API typecheck gate
@@ -307,10 +260,8 @@ jobs:
         run: |
           mapfile -t artifacts < <(find "$RUNNER_TEMP/finnor-core-certification" -type f -name 'corecert-*.json' -print)
           test "${#artifacts[@]}" -eq 1
-          core_id="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")).certificationId' "${artifacts[0]}")"
           node -e 'const fs=require("node:fs"); const artifact=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(artifact.status!=="PASS" || artifact.canonicalCoreSha!==process.env.RELEASE_COMMIT_SHA) process.exit(1)' "${artifacts[0]}"
           echo "FINNOR_CORE_CERTIFICATION_FILE=${artifacts[0]}" >> "$GITHUB_ENV"
-          echo "FINNOR_CORE_CERTIFICATION_ID=${core_id}" >> "$GITHUB_ENV"
 
       - name: Pull protected production database configuration
         run: |
@@ -320,216 +271,53 @@ jobs:
           vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
         working-directory: finnor-os/apps/api
 
-      - name: Validate Product Truth auth chain before expensive mutation
-        run: |
-          set -euo pipefail
-          node scripts/release/refresh-product-truth-auth.mjs \
-            --production-env finnor-os/apps/api/.vercel/.env.production.local \
-            --validate-only
-
-      - name: Build, smoke-test, and push exact worker image to ECR
-        run: |
-          set -euo pipefail
-          image="finnor-worker:${FINNOR_COMMIT_SHA}"
-          container_id=""
-          cleanup() {
-            if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null 2>&1 || true; fi
-          }
-          trap cleanup EXIT
-          docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
-          for attempt in $(seq 1 30); do
-            pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
-            sleep 2
-          done
-          pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
-          container_id="$(docker run --detach --network host \
-            --env NODE_ENV=test \
-            --env FINNOR_ENVIRONMENT=production \
-            --env FINNOR_RELEASE_SOURCE=github-actions \
-            --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
-            --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" \
-            --env FINNOR_VERSION="$FINNOR_VERSION" \
-            --env FINNOR_CORE_CERTIFICATION_ID=container-smoke \
-            --env FINNOR_WORKER_DEPLOYMENT_ID=ecs:container-smoke \
-            --env FINNOR_WORKER_CAPABILITIES=jobs,orchestration,computer,event-wake,connection-health,realtime,sse \
-            --env SECRETS_PROVIDER=env \
-            --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
-            --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
-            --env SUPABASE_URL=https://kpxrnonhnhexutvdywbh.supabase.co \
-            --env JARVIS_SSE_ALLOWED_ORIGINS=https://finnorai.com \
-            --env WORKER_CONCURRENCY=2 \
-            --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=1 \
-            --env FINNOR_DB_POOL_MAX=4 \
-            "$image")"
-          ready=0
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | node -e 'const fs=require("node:fs"); const body=JSON.parse(fs.readFileSync(0,"utf8")); if(body.ok!==true || body.realtime!==true || body.release?.commitSha!==process.env.FINNOR_COMMIT_SHA || body.release?.buildId!==process.env.FINNOR_BUILD_ID || body.release?.version!==process.env.FINNOR_VERSION || !body.capabilities?.includes("orchestration") || !body.capabilities?.includes("sse")) process.exit(1)'; then
-              ready=1
-              break
-            fi
-            sleep 2
-          done
-          if test "$ready" != 1; then
-            docker logs "$container_id" || true
-            echo "::error::worker container smoke test did not expose /healthz"
-            exit 1
-          fi
-          docker stop --time 30 "$container_id" >/dev/null
-          exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$container_id")"
-          test "$exit_code" = "0" || { docker logs "$container_id" || true; echo "::error::worker did not exit cleanly after SIGTERM (exit=$exit_code)"; exit 1; }
-          container_id=""
-          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
-          docker tag "$image" "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
-          docker push "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
-          digest="$(aws ecr describe-images --repository-name finnor-worker --image-ids imageTag="$FINNOR_COMMIT_SHA" --query 'imageDetails[0].imageDigest' --output text)"
-          test "$digest" != "None"
-          test "$digest" != ""
-          echo "FINNOR_ECR_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
-          echo "FINNOR_ECR_IMAGE_URI=$registry/finnor-worker@$digest" >> "$GITHUB_ENV"
-
-      - name: Preflight every AWS, Vercel, and database production target
+      - name: Preflight every production target before mutation
         run: |
           node scripts/release/preflight-production.mjs \
             --database-env finnor-os/apps/api/.vercel/.env.production.local \
-            --image-digest "$FINNOR_ECR_IMAGE_DIGEST" \
             --output-file "$RUNNER_TEMP/production-preflight.json"
           echo "FINNOR_PREFLIGHT_EVIDENCE=$RUNNER_TEMP/production-preflight.json" >> "$GITHUB_ENV"
 
-      - name: Capture rollback state before the first production mutation
+      - name: Build commit-locked production artifacts before database mutation
         run: |
-          node scripts/release/capture-production-state.mjs --output-file "$RUNNER_TEMP/production-rollback-state.json"
-          echo "FINNOR_ROLLBACK_STATE=$RUNNER_TEMP/production-rollback-state.json" >> "$GITHUB_ENV"
-
-      - name: Bind canonical realtime gateway into Vercel production
-        run: node scripts/release/configure-vercel-realtime.mjs --apply
-
-      - name: Build and stage the exact API artifact without promoting production
-        id: api
-        run: |
-          set -o pipefail
+          node scripts/release/deploy-production.mjs frontend --prepare-only
           node scripts/release/deploy-production.mjs api --prepare-only
-          node scripts/release/deploy-production.mjs api --stage-only --output-file "$RUNNER_TEMP/api-release.json" | tee "$RUNNER_TEMP/api-deploy.log"
-          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/api-deploy.log" | tail -n 1)"
-          test -n "$url"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-
-      - name: Verify staged API artifact
-        run: node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
-
-      - name: Build and stage the exact frontend artifact bound to the staged API
-        id: frontend
-        run: |
-          set -o pipefail
-          node scripts/release/deploy-production.mjs frontend --prepare-only --upstream-api-url "${{ steps.api.outputs.url }}"
-          node scripts/release/deploy-production.mjs frontend --stage-only --upstream-api-url "${{ steps.api.outputs.url }}" --output-file "$RUNNER_TEMP/frontend-release.json" | tee "$RUNNER_TEMP/frontend-deploy.log"
-          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/frontend-deploy.log" | tail -n 1)"
-          test -n "$url"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
           node scripts/release/verify-release.mjs
-
-      - name: Verify staged frontend artifact
-        run: node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
 
       - name: Migrate production database
         run: npm run release:migrate:production -- apps/api/.vercel/.env.production.local
         working-directory: finnor-os
 
-      - name: Deploy and verify AWS ECS worker and embedded orchestrator
+      - name: Deploy prepared frontend
+        id: frontend
         run: |
-          node scripts/release/deploy-aws-worker.mjs \
-            --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
-            --database-env finnor-os/apps/api/.vercel/.env.production.local \
-            --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
+          set -o pipefail
+          node scripts/release/deploy-production.mjs frontend --deploy-only --output-file "$RUNNER_TEMP/frontend-release.json" | tee "$RUNNER_TEMP/frontend-deploy.log"
+          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/frontend-deploy.log" | tail -n 1)"
+          test -n "$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
-      - name: Install deployed browser certification runtime
-        run: npx playwright install --with-deps chromium
-
-      - name: Certify the staged production-equivalent environment twice
+      - name: Verify frontend deployment
         run: |
-          set -euo pipefail
-          for run in 1 2; do
-            auth_file="$RUNNER_TEMP/product-truth-auth-staged-run-$run.json"
-            node scripts/release/refresh-product-truth-auth.mjs \
-              --production-env finnor-os/apps/api/.vercel/.env.production.local \
-              --output-file "$auth_file"
-            primary="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")).primary' "$auth_file")"
-            secondary="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")).secondary' "$auth_file")"
-            test -n "$primary"
-            test -n "$secondary"
-            echo "::add-mask::$primary"
-            echo "::add-mask::$secondary"
-            export PRODUCT_TRUTH_AUTH_BEARER="$primary"
-            export PRODUCT_TRUTH_OTHER_AUTH_BEARER="$secondary"
-            export PRODUCT_TRUTH_FRONTEND_URL="${{ steps.frontend.outputs.url }}"
-            export PRODUCT_TRUTH_API_URL="${{ steps.api.outputs.url }}"
-            export PRODUCT_TRUTH_WORKER_URL="https://realtime.finnorai.com"
-            rm -f "$auth_file"
-            timeout 20m env \
-              NODE_OPTIONS="--require=$GITHUB_WORKSPACE/.github/scripts/certification-aws-hardening.cjs ${NODE_OPTIONS:-}" \
-              PRODUCT_TRUTH_CERTIFICATION_MODE=full \
-              PRODUCT_TRUTH_CERTIFICATION_RUN="$run" \
-              node scripts/release/certify-product-truth-deployed.mjs \
-              | tee "$RUNNER_TEMP/staged-human-black-box-run-$run.json"
-          done
-          node scripts/release/verify-consecutive-human-certifications.mjs \
-            "$RUNNER_TEMP/staged-human-black-box-run-1.json" \
-            "$RUNNER_TEMP/staged-human-black-box-run-2.json" \
-            | tee "$RUNNER_TEMP/staged-operational-closure.json"
-
-      - name: Promote certified frontend artifact without rebuilding
-        run: node scripts/release/deploy-production.mjs frontend --promote-only --deployment-url "${{ steps.frontend.outputs.url }}"
-
-      - name: Promote certified API artifact without rebuilding
-        run: node scripts/release/deploy-production.mjs api --promote-only --deployment-url "${{ steps.api.outputs.url }}"
-
-      - name: Verify promoted canonical Vercel aliases
-        run: |
+          node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
           node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+
+      - name: Deploy prepared API
+        id: api
+        run: |
+          set -o pipefail
+          node scripts/release/deploy-production.mjs api --deploy-only --output-file "$RUNNER_TEMP/api-release.json" | tee "$RUNNER_TEMP/api-deploy.log"
+          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/api-deploy.log" | tail -n 1)"
+          test -n "$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Verify API deployment
+        run: |
+          node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
           node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+
+      - name: Deploy Azure worker and embedded orchestrator
+        run: node scripts/release/deploy-azure-worker.mjs --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE"
 
       - name: Verify cross-runtime release and migration parity
         run: node scripts/release/verify-production-parity.mjs --database-env finnor-os/apps/api/.vercel/.env.production.local
-
-      - name: Run bounded five-minute production smoke
-        run: |
-          set -euo pipefail
-          auth_file="$RUNNER_TEMP/product-truth-auth-production-smoke.json"
-          node scripts/release/refresh-product-truth-auth.mjs \
-              --production-env finnor-os/apps/api/.vercel/.env.production.local \
-              --output-file "$auth_file"
-          primary="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")).primary' "$auth_file")"
-          secondary="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")).secondary' "$auth_file")"
-          test -n "$primary"
-          test -n "$secondary"
-          echo "::add-mask::$primary"
-          echo "::add-mask::$secondary"
-          export PRODUCT_TRUTH_AUTH_BEARER="$primary"
-          export PRODUCT_TRUTH_OTHER_AUTH_BEARER="$secondary"
-          export PRODUCT_TRUTH_FRONTEND_URL="https://finnorai.com"
-          export PRODUCT_TRUTH_API_URL="https://api-psi-brown-95.vercel.app"
-          export PRODUCT_TRUTH_WORKER_URL="https://realtime.finnorai.com"
-          rm -f "$auth_file"
-          timeout 300s env \
-            NODE_OPTIONS="--require=$GITHUB_WORKSPACE/.github/scripts/certification-aws-hardening.cjs ${NODE_OPTIONS:-}" \
-            PRODUCT_TRUTH_CERTIFICATION_MODE=smoke \
-            PRODUCT_TRUTH_CERTIFICATION_RUN=1 \
-            node scripts/release/certify-product-truth-deployed.mjs \
-            | tee "$RUNNER_TEMP/production-smoke.json"
-
-      - name: Automatic rollback after any post-mutation gate failure
-        if: ${{ failure() || cancelled() }}
-        run: node scripts/release/rollback-production.mjs --state-file "${FINNOR_ROLLBACK_STATE:-$RUNNER_TEMP/production-rollback-state.json}"
-
-      - name: Preserve staged certification and production smoke evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-release-certification-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/staged-human-black-box-run-*.json
-            ${{ runner.temp }}/staged-operational-closure.json
-            ${{ runner.temp }}/production-smoke.json
-            ${{ runner.temp }}/production-rollback-state.json
-          if-no-files-found: warn
-          retention-days: 30

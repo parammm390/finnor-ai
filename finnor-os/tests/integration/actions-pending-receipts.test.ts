@@ -48,7 +48,7 @@ describe.skipIf(!available)("GET /api/actions/pending — embedded receipts (Pha
       db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "send_service_reminder", payload: {}, status: "pending", summary: "has receipts" }).returning(),
     );
     const [noReceiptAction] = await withTenant(TENANT_ID, (db) =>
-      db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "create_invoice", payload: {}, status: "pending", summary: "no receipts yet" }).returning(),
+      db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "record_finding", payload: {}, status: "pending", summary: "no receipts yet" }).returning(),
     );
 
     const first = await openReceipt({
@@ -68,7 +68,7 @@ describe.skipIf(!available)("GET /api/actions/pending — embedded receipts (Pha
       tenantId: TENANT_ID,
       domainActionId: withReceiptAction!.id,
       objective: "retry attempt (the latest one, should win)",
-      evidence: [{ source: "households", ref: "h1", timestamp: new Date().toISOString() }],
+      evidence: [{ source: "diligence_documents", ref: "doc-1", timestamp: new Date().toISOString() }],
       policyApplied: { id: "p1", version: 2 },
       riskTier: "high",
       proposedAction: { actionType: "send_service_reminder" },

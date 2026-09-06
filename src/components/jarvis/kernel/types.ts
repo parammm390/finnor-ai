@@ -64,12 +64,12 @@ export type RecoveryKind =
 
 export type InstructionState =
   | "idle" | "captured" | "understanding" | "planning" | "clarifying"
-  | "awaiting_approval" | "executing" | "waiting" | "blocked" | "recovering" | "verifying" | "stopping"
+  | "awaiting_approval" | "executing" | "verifying" | "stopping"
   | "completed" | "partial" | "failed" | "cancelled"
 
 export type CancelableInstructionState =
   | "captured" | "understanding" | "planning" | "clarifying"
-  | "awaiting_approval" | "executing" | "waiting" | "blocked" | "recovering" | "verifying"
+  | "awaiting_approval" | "executing" | "verifying"
 
 /** §4.4 events — every named event a machine transition responds to. `RESET` is
  *  valid from any state. Unlisted (state, event) pairs are a no-op + dev warning,

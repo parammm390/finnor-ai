@@ -1,5 +1,4 @@
-// Exa web search — real-time web intelligence (competitor scans, review lookups,
-// water-quality news, anything the dealer asks about the outside world).
+// Exa web search — governed, read-only public intelligence for active product work.
 // Wrapped like every integration: timeout, retry, typed errors.
 
 import { IntegrationError } from "./errors";

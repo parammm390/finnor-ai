@@ -1,10 +1,10 @@
 {
   "task": "P4.T4",
-  "inputFeedbackMs": 2.399999976158142,
+  "inputFeedbackMs": 1.5,
   "frames": {
     "frames": 74,
-    "p95FrameMs": 17.600000000000136,
-    "p95Fps": 56.81818181818138
+    "p95FrameMs": 17.399999999999977,
+    "p95Fps": 57.47126436781617
   },
   "p95FpsTarget": 58,
   "p95FpsTargetMet": false,

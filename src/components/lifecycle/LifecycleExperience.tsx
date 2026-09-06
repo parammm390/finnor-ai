@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -423,14 +422,14 @@ export function LifecycleExperience({ sample }: { sample: LifecycleScenario }) {
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Want to see instruction ingress?
                 </p>
-                <Link
+                <a
                   href="/demo"
                   className="mt-2 inline-flex items-center gap-2 text-sm font-black text-slate-950 transition hover:text-sky-800"
                   data-cursor="hover"
                 >
                   Open the public instruction demo
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

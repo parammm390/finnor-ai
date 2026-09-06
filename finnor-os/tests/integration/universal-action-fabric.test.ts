@@ -30,7 +30,6 @@ import {
 } from "@finnor/tools";
 import { assembleOperatingContext, createDefaultPluginRegistry, GatedExecutor, groundEntitiesWithDb } from "@finnor/orchestration";
 import { resolveParty } from "@finnor/read-models";
-import { setTenantSecretReaderForTesting } from "@finnor/security";
 import { migrate } from "../../packages/db/migrate";
 import universalActionsPlugin, {
   acceptDelegation,
@@ -61,6 +60,7 @@ const MARIO_A = randomUUID();
 const MARIO_B = randomUUID();
 const SARAH = randomUUID();
 const SUSPENDED = randomUUID();
+const SUSPENDED_OWNER = randomUUID();
 const ROGUE = randomUUID();
 const DENY_ASSIGN_TASK_ROLE = randomUUID();
 const TENANT_B_EMPLOYEE = randomUUID();
@@ -69,21 +69,11 @@ const WORK_A = randomUUID();
 const WORK_B = randomUUID();
 const DOCUMENT_A = randomUUID();
 const HOUSEHOLD_A = randomUUID();
+const EXTERNAL_CONTACT_A = randomUUID();
 const EMAIL_IDENTITY = randomUUID();
 const SMS_IDENTITY = randomUUID();
 const VOICE_IDENTITY = randomUUID();
 const UNAUTHORIZED_IDENTITY = randomUUID();
-
-const CREDENTIAL_ENV_KEYS = [
-  "FINNOR_LEGACY_CREDENTIAL_TENANT_IDS",
-  "GMAIL_USER",
-  "GMAIL_APP_PASSWORD",
-  "GOHIGHLEVEL_API_KEY",
-  "VAPI_API_KEY",
-  "VAPI_PHONE_NUMBER_ID",
-  "VAPI_ASSISTANT_ID",
-] as const;
-const savedCredentialEnv = new Map(CREDENTIAL_ENV_KEYS.map((key) => [key, process.env[key]]));
 
 const policy = (actionType: string, requiresConfirmation = true): DomainPolicy => ({
   id: randomUUID(),
@@ -163,16 +153,24 @@ function communicationTools(calls: Array<{ tool: string; input: Record<string, u
 }
 
 describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () => {
+  const priorCredentials = {
+    GOHIGHLEVEL_API_KEY: process.env.GOHIGHLEVEL_API_KEY,
+    VAPI_API_KEY: process.env.VAPI_API_KEY,
+    VAPI_PHONE_NUMBER_ID: process.env.VAPI_PHONE_NUMBER_ID,
+    VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
+    GMAIL_USER: process.env.GMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    FINNOR_LEGACY_CREDENTIAL_TENANT_IDS: process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS,
+  };
+
   beforeAll(async () => {
-    const allowedLegacyTenants = new Set((process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS ?? "").split(",").map((value) => value.trim()).filter(Boolean));
-    allowedLegacyTenants.add(TENANT_A);
-    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = [...allowedLegacyTenants].join(",");
+    process.env.GOHIGHLEVEL_API_KEY = "pe4-test-ghl-key";
+    process.env.VAPI_API_KEY = "pe4-test-vapi-key";
+    process.env.VAPI_PHONE_NUMBER_ID = "pe4-test-phone-number";
+    process.env.VAPI_ASSISTANT_ID = "pe4-test-assistant";
     process.env.GMAIL_USER = "owner@example.test";
-    process.env.GMAIL_APP_PASSWORD = "acceptance-gmail-password";
-    process.env.GOHIGHLEVEL_API_KEY = "acceptance-ghl-key";
-    process.env.VAPI_API_KEY = "acceptance-vapi-key";
-    process.env.VAPI_PHONE_NUMBER_ID = "+15551110002";
-    process.env.VAPI_ASSISTANT_ID = "acceptance-vapi-assistant";
+    process.env.GMAIL_APP_PASSWORD = "pe4-test-app-password";
+    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = TENANT_A;
     process.env.DATABASE_URL = SUPER_URL;
     await migrate(SUPER_URL);
     const admin = new pg.Client({ connectionString: SUPER_URL });
@@ -205,6 +203,11 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
         ],
       );
       await admin.query(
+        `INSERT INTO finnor_os.users(id,tenant_id,email,role,display_name,phone_number,status)
+         VALUES ($1,$2,$3,'owner','Suspended Owner','+15550000008','suspended')`,
+        [SUSPENDED_OWNER, TENANT_A, `suspended-owner-${TENANT_A}@example.test`],
+      );
+      await admin.query(
         `INSERT INTO finnor_os.org_units(id,tenant_id,unit_key,name,kind)
          VALUES ($1,$2,'phoenix-install','Phoenix Install Team','team')`,
         [PHOENIX_TEAM, TENANT_A],
@@ -229,6 +232,11 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
         `INSERT INTO finnor_os.households(id,tenant_id,address,contact_info)
          VALUES ($1,$2,'Governed address','{"name":"Peterson"}'::jsonb)`,
         [HOUSEHOLD_A, TENANT_A],
+      );
+      await admin.query(
+        `INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,name,business_email)
+         VALUES ($1,$2,'external-contact-a','External Contact','external-contact@example.test')`,
+        [EXTERNAL_CONTACT_A, TENANT_A],
       );
       await admin.query(
         `INSERT INTO finnor_os.communication_identities
@@ -277,27 +285,20 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     } finally {
       await admin.end();
     }
-    setTenantSecretReaderForTesting(async (reference): Promise<Record<string, string>> => {
-      if (reference.includes("/gmail/")) return { user: "owner@example.test", appPassword: "universal-action-test-app-password" };
-      if (reference.includes("/vapi/")) return { apiKey: "universal-action-vapi-key", phoneNumberId: "universal-action-phone", assistantId: "universal-action-assistant" };
-      if (reference.includes("/ghl/")) return { apiKey: "universal-action-ghl-key", locationId: "universal-action-location" };
-      throw new Error(`Unexpected test credential reference: ${reference}`);
-    });
     process.env.DATABASE_URL = APP_URL;
     await closePool();
   }, 30_000);
 
   afterAll(async () => {
-    setTenantSecretReaderForTesting(null);
     await closePool();
     process.env.DATABASE_URL = SUPER_URL;
-    for (const [key, value] of savedCredentialEnv) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+    for (const [name, value] of Object.entries(priorCredentials)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
     }
   });
 
-  it("resolves ambiguity before execution and sends one canonical SMS with a durable receipt", async () => {
+  it("resolves ambiguity before execution and sends one canonical email with a durable receipt", async () => {
     const before = await withTenant(TENANT_A, (db) => db.select().from(communicationDeliveries));
     const ambiguous = await resolveParty(TENANT_A, { query: "Mario" }, { requesterEmployeeId: OWNER });
     expect(ambiguous.status).toBe("ambiguous");
@@ -307,28 +308,29 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     const calls: Array<{ tool: string; input: Record<string, unknown> }> = [];
     const payload = {
       recipient: { partyType: "employee", partyId: MARIO_A },
-      channel: "sms",
+      channel: "email",
+      subject: "Peterson installation update",
       body: "The Peterson install moved to 2 PM.",
       purpose: "installation_update",
-      communicationIdentityRef: { communicationIdentityId: SMS_IDENTITY },
+      communicationIdentityRef: { communicationIdentityId: EMAIL_IDENTITY },
       workRef: { workId: WORK_A },
     };
     const { action, result } = await executeAction({
       actionType: "send_message",
       payload,
       tools: communicationTools(calls),
-      communicationIdentityId: SMS_IDENTITY,
+      communicationIdentityId: EMAIL_IDENTITY,
       workId: WORK_A,
     });
     expect(result.status).toBe("success");
     expect(calls).toHaveLength(1);
-    expect(calls[0]).toMatchObject({ tool: "send_sms_to_number", input: { phoneNumber: "+15550000002" } });
+    expect(calls[0]).toMatchObject({ tool: "send_email", input: { to: `mario-a-${TENANT_A}@example.test` } });
     const deliveries = await withTenant(TENANT_A, (db) => db.select().from(communicationDeliveries).where(eq(communicationDeliveries.domainActionId, action.id)));
     expect(deliveries).toHaveLength(1);
-    expect(deliveries[0]).toMatchObject({ recipientType: "employee", recipientId: MARIO_A, channel: "sms", status: "sent", communicationIdentityId: SMS_IDENTITY });
+    expect(deliveries[0]).toMatchObject({ recipientType: "employee", recipientId: MARIO_A, channel: "email", status: "sent", communicationIdentityId: EMAIL_IDENTITY });
     const events = await withTenant(TENANT_A, (db) => db.select().from(universalActionEvents).where(eq(universalActionEvents.domainActionId, action.id)));
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ actorId: OWNER, communicationIdentityId: SMS_IDENTITY, route: expect.stringMatching(/native|api/) });
+    expect(events[0]).toMatchObject({ actorId: OWNER, communicationIdentityId: EMAIL_IDENTITY, route: expect.stringMatching(/native|api/) });
   });
 
   it("places one governed call through the explicitly permitted voice identity", async () => {
@@ -560,8 +562,8 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     expect(await withTenant(TENANT_A, (db) => db.select().from(internalEventEvents).where(eq(internalEventEvents.internalEventId, eventId)))).toHaveLength(2);
 
     const assembled = await assembleOperatingContext(
-      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "dispatcher", authorityRoles: ["dispatcher"] },
-      { instruction: "Coordinate the Peterson installation", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
+      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "owner", authorityRoles: ["owner"] },
+      { instruction: "Coordinate the diligence review", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
     );
     expect(assembled.context.universalActions?.capabilities).toMatchObject({ browserExecutable: false, computerExecutable: false });
     expect(assembled.context.universalActions?.upcomingInternalEvents).toContainEqual(expect.objectContaining({
@@ -583,7 +585,7 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
 
     const external = await executeAction({
       actionType: "share_document",
-      payload: { documentRef: { documentId: DOCUMENT_A }, recipient: { partyType: "household", partyId: HOUSEHOLD_A }, accessLevel: "view" },
+      payload: { documentRef: { documentId: DOCUMENT_A }, recipient: { partyType: "external_contact", partyId: EXTERNAL_CONTACT_A }, accessLevel: "view" },
     });
     expect(external.result.status).toBe("integration_unavailable");
     expect(external.result.output.route).toMatchObject({ route: "manual", executable: false, reasonCode: "external_sharing_disallowed" });
@@ -722,14 +724,14 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     ]));
   });
 
-  it("denies an out-of-authority task assignment before mutation or provider effect", async () => {
+  it("denies a suspended owner task assignment before mutation or provider effect", async () => {
     const [targetTask] = await withTenant(TENANT_A, (db) => db.select().from(tasks).limit(1));
     const [row] = await withTenant(TENANT_A, (db) => db.insert(domainActions).values({
       tenantId: TENANT_A,
       actionType: "assign_task",
       payload: { taskRef: { taskId: targetTask!.id }, assigneeRef: { partyType: "employee", partyId: MARIO_A } },
       status: "draft",
-      initiatedBy: ROGUE,
+      initiatedBy: SUSPENDED_OWNER,
     }).returning());
     const action = { ...row!, createdAt: row!.createdAt.toISOString(), payload: row!.payload as Record<string, unknown> } as DomainAction;
     const before = (await withTenant(TENANT_A, (db) => db.select().from(tasks).where(eq(tasks.id, targetTask!.id))))[0];

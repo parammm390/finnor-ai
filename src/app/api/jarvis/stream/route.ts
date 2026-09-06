@@ -23,16 +23,15 @@ export const runtime = "edge"
 const OS_API = process.env.NEXT_PUBLIC_OS_API_URL
 
 export async function GET(req: Request): Promise<Response> {
+  if (!OS_API) return Response.json({ error: "Jarvis proxy is not configured" }, { status: 500 })
+
+  const incoming = new URL(req.url)
   const headerAuth = req.headers.get("authorization")
   // Tokens in URLs leak into access logs, browser history, telemetry, and referrer
   // surfaces. The browser transport uses authenticated streaming fetch, so this
   // relay accepts the Authorization header only.
   const bearer = headerAuth?.startsWith("Bearer ") ? headerAuth.slice("Bearer ".length) : null
   if (!bearer) return Response.json({ error: "Sign in required" }, { status: 401 })
-
-  if (!OS_API) return Response.json({ error: "Jarvis proxy is not configured" }, { status: 500 })
-
-  const incoming = new URL(req.url)
 
   const instructionId = incoming.searchParams.get("instructionId")
   if (!instructionId) return Response.json({ error: "instructionId is required" }, { status: 400 })

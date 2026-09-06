@@ -2,8 +2,9 @@
 // so the route stays a thin auth+params wrapper, matching this repo's convention
 // (packages/orchestration's decide() playing the same role for actions/:id/confirm).
 
-import { withTenant, deadLetters, outboxEvents, workflowSteps } from "@finnor/db";
+import { withTenant, deadLetters, outboxEvents, resolveTenantVertical, workflowRuns, workflowSteps } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
+import { isRetiredWaterAction, isRetiredWaterWorkflow, RetiredVerticalError } from "@finnor/shared-types";
 
 export type ReplayResult =
   // Replaying an outbox event does not create a second workflow run: it reuses the
@@ -19,6 +20,7 @@ export type ReplayResult =
  *  new one, satisfying the "replay re-enqueues with the same idempotency key" rule
  *  without needing a second identifier anywhere. */
 export async function replayDeadLetter(tenantId: string, deadLetterId: string): Promise<ReplayResult> {
+  await resolveTenantVertical(tenantId);
   return withTenant(tenantId, async (db) => {
     const [row] = await db.select().from(deadLetters).where(and(eq(deadLetters.id, deadLetterId), eq(deadLetters.tenantId, tenantId)));
     if (!row) return { replayed: false, reason: "not_found" };
@@ -32,8 +34,17 @@ export async function replayDeadLetter(tenantId: string, deadLetterId: string): 
       .where(eq(outboxEvents.id, row.relatedOutboxEventId));
     const stepId = row.relatedWorkflowStepId ?? outbox?.workflowStepId;
     const [step] = stepId
-      ? await db.select({ workflowRunId: workflowSteps.workflowRunId }).from(workflowSteps).where(eq(workflowSteps.id, stepId))
+      ? await db.select({
+          workflowRunId: workflowSteps.workflowRunId,
+          stepType: workflowSteps.stepType,
+          workflowType: workflowRuns.workflowType,
+        }).from(workflowSteps)
+          .innerJoin(workflowRuns, eq(workflowRuns.id, workflowSteps.workflowRunId))
+          .where(and(eq(workflowSteps.id, stepId), eq(workflowSteps.tenantId, tenantId), eq(workflowRuns.tenantId, tenantId)))
       : [];
+    if (step && (isRetiredWaterAction(step.stepType) || isRetiredWaterWorkflow(step.workflowType))) {
+      throw new RetiredVerticalError("water");
+    }
 
     await db
       .update(outboxEvents)

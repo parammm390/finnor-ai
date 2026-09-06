@@ -1,136 +1,59 @@
-// B2.T5: the planner consumes the same tenant integration rows and durable circuit
-// state that execution uses.  This keeps an unavailable provider from becoming a
-// pending action that is guaranteed to fail later.
+// Active planning health is intentionally small after the Water retirement.
+// Private Equity mutations are canonical database operations; the only external
+// transports exposed to the general planner are Core employee voice and email.
 
-import { tenantIntegrations, withTenant } from "@finnor/db";
-import { circuitSnapshot, resolveCapabilityBindingsForTenant, type CapabilityBindingsReport } from "@finnor/tools";
-import { eq } from "drizzle-orm";
+import { circuitSnapshot, tenantProviderConfigured } from "@finnor/tools";
 
-type Capability = keyof CapabilityBindingsReport;
-
-const CAPABILITIES = [
-  "scheduling",
-  "documents",
-  "inventory",
-  "crm",
-  "communications",
-  "esign",
-  "accounting",
-  "payments",
-  "marketing",
-] as const satisfies readonly Capability[];
+export type ActivePlanningCapability = "employee_voice" | "transactional_email";
 
 export interface PlanningCapabilityHealth {
-  capability: Capability;
-  binding: string;
-  source: "tenant" | "env" | "default";
-  health: "ok" | "degraded" | "down" | "unknown";
+  capability: ActivePlanningCapability;
+  binding: "vapi" | "resend";
+  source: "tenant";
+  health: "ok" | "down" | "unknown";
   circuit: "closed" | "open";
   unavailable: boolean;
   reason: string | null;
 }
 
-export type PlanningHealthContext = Record<Capability, PlanningCapabilityHealth>;
+export type PlanningHealthContext = Record<ActivePlanningCapability, PlanningCapabilityHealth>;
 
-/**
- * Health is advisory to the model and authoritative for the deterministic
- * post-plan safeguard below.  A tenant-row health=down or an open durable circuit
- * blocks a provider-backed action; "degraded" remains visible context but does not
- * pretend that a circuit is open.
- */
-export async function buildPlanningHealthContext(tenantId: string): Promise<PlanningHealthContext> {
-  const [bindings, integrationRows] = await Promise.all([
-    resolveCapabilityBindingsForTenant(tenantId),
-    withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(eq(tenantIntegrations.tenantId, tenantId))),
+async function capabilityHealth(
+  tenantId: string,
+  capability: ActivePlanningCapability,
+  provider: "vapi" | "resend",
+): Promise<PlanningCapabilityHealth> {
+  const [configured, circuit] = await Promise.all([
+    tenantProviderConfigured(tenantId, provider),
+    circuitSnapshot(provider, tenantId),
   ]);
-  const providerNames = [...new Set(CAPABILITIES.map((capability) => bindings[capability].mode))];
-  const circuits = await Promise.all(providerNames.map((provider) => circuitSnapshot(provider, tenantId)));
-  const integrationByCapability = new Map(integrationRows.map((row) => [row.capability, row]));
-  const circuitByProvider = new Map(circuits.map((row) => [row.provider, row]));
-
-  return Object.fromEntries(
-    CAPABILITIES.map((capability) => {
-      const resolution = bindings[capability];
-      const integration = integrationByCapability.get(capability);
-      const circuit = circuitByProvider.get(resolution.mode);
-      const circuitOpen = circuit?.state === "open";
-      const health = integration?.health ?? "unknown";
-      const down = health === "down";
-      const reason = circuitOpen
-        ? `${resolution.mode} circuit breaker is open after repeated real-call failures.`
-        : down
-          ? `Integration health is down${integration?.lastError ? `: ${integration.lastError}` : "."}`
-          : null;
-      return [
-        capability,
-        {
-          capability,
-          binding: resolution.mode,
-          source: resolution.source,
-          health,
-          circuit: circuitOpen ? "open" : "closed",
-          unavailable: circuitOpen || down,
-          reason,
-        } satisfies PlanningCapabilityHealth,
-      ];
-    }),
-  ) as PlanningHealthContext;
-}
-
-/** Exact provider-backed paths in the current plugins.  We deliberately do not
- * infer a capability for actions that only write Finnor's native data model. */
-function requiredCapabilities(actionType: string, payload: Record<string, unknown>): Capability[] {
-  switch (actionType) {
-    case "bulk_notify_existing_customers":
-      return payload.channel === "call" ? ["communications"] : ["crm"];
-    case "send_proposal":
-      return payload.channel === "sms" ? ["crm"] : [];
-    case "send_customer_message":
-    case "send_follow_up":
-      return payload.channel === "email" ? [] : ["crm"];
-    case "send_payment_reminder":
-      return payload.channel === "call" ? ["communications"] : payload.channel === "email" ? [] : ["crm"];
-    case "call_overdue_invoices":
-      return ["communications"];
-    case "summarize_ad_performance":
-    case "launch_ad_campaign":
-      return ["marketing"];
-    case "create_review_request":
-      // The configured policy selects email or SMS after planning.  CRM is the
-      // only possible provider-backed SMS path, so fail closed while it is down.
-      return ["crm"];
-    default:
-      return [];
-  }
-}
-
-export interface ManualStepSuggestion {
-  actionType: "manual_step_suggestion";
-  payload: {
-    originalActionType: string;
-    originalPayload: Record<string, unknown>;
-    unavailableCapabilities: Capability[];
-    reason: string;
-  };
-}
-
-/** Deterministic final guard: model prompt compliance is useful, but it is never
- * the thing that enforces an open circuit. */
-export function manualStepForUnavailableIntegration(
-  actionType: string,
-  payload: Record<string, unknown>,
-  health: PlanningHealthContext,
-): ManualStepSuggestion | null {
-  const unavailable = requiredCapabilities(actionType, payload).filter((capability) => health[capability].unavailable);
-  if (unavailable.length === 0) return null;
-  const details = unavailable.map((capability) => `${capability}: ${health[capability].reason ?? "integration unavailable"}`);
+  const open = circuit.state === "open";
+  const unavailable = !configured || open;
   return {
-    actionType: "manual_step_suggestion",
-    payload: {
-      originalActionType: actionType,
-      originalPayload: payload,
-      unavailableCapabilities: unavailable,
-      reason: `Cannot safely run ${actionType.replaceAll("_", " ")} because ${details.join("; ")}`,
-    },
+    capability,
+    binding: provider,
+    source: "tenant",
+    health: open ? "down" : configured ? "ok" : "unknown",
+    circuit: open ? "open" : "closed",
+    unavailable,
+    reason: open ? `${provider} circuit breaker is open` : configured ? null : `${provider} is not configured`,
   };
+}
+
+export async function buildPlanningHealthContext(tenantId: string): Promise<PlanningHealthContext> {
+  const [employeeVoice, transactionalEmail] = await Promise.all([
+    capabilityHealth(tenantId, "employee_voice", "vapi"),
+    capabilityHealth(tenantId, "transactional_email", "resend"),
+  ]);
+  return { employee_voice: employeeVoice, transactional_email: transactionalEmail };
+}
+
+// Runtime route resolution remains the authoritative transport gate. There is no
+// Retired-vertical fallback actions are never synthesized when a provider is absent.
+export function manualStepForUnavailableIntegration(
+  _actionType: string,
+  _payload: Record<string, unknown>,
+  _health: PlanningHealthContext,
+): null {
+  return null;
 }

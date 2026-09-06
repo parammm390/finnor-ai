@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation"
 import { X } from "lucide-react"
 import type { ReactNode } from "react"
 import { CommandRail } from "./bridge/CommandRail"
-import { PersistentThreadSidebar } from "./bridge/PersistentThreadSidebar"
 import { useKernel } from "./kernel/store"
 import { projectKernelLiveFrame } from "./kernel/liveframe"
 import { useOperatingInteraction } from "./kernel/operating-interaction"
@@ -44,12 +43,10 @@ export function OperatingCanvas({ children }: { children: ReactNode }) {
   const kernel = useKernel()
   const voice = useVapiSession()
   const showPersistentRail = Boolean(auth.session && auth.role === "owner" && OPERATING_SURFACES.has(pathname))
-  const showThreadSidebar = Boolean(auth.session)
   const liveframe = projectKernelLiveFrame(kernel, voice.localVolumeLevel)
   return (
-    <div data-operating-canvas data-operating-surface={pathname} data-operating-persistent-rail={showPersistentRail ? "true" : undefined} data-operating-thread-sidebar={showThreadSidebar ? "true" : undefined}>
-      {showThreadSidebar && <PersistentThreadSidebar />}
-      <div className="jarvis-operating-canvas__content">{children}</div>
+    <div data-operating-canvas data-operating-surface={pathname} data-operating-persistent-rail={showPersistentRail ? "true" : undefined}>
+      {children}
       {auth.session && <OperatingContextBar />}
       {showPersistentRail && <CommandRail liveframe={liveframe} />}
     </div>

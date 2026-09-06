@@ -11,15 +11,15 @@ function context(overrides: Partial<OperatingContext["tenant"]["profile"]> = {},
     truthPrecedence: ["CANONICAL", "WORK", "PROFILE", "SESSION", "MEMORY", "WEB"],
     tenant: {
       id: "tenant-1",
-      companyName: "Aqua Example",
+      companyName: "Apex Capital",
       timezone: "America/New_York",
       profile: {
-        industry: "water treatment",
-        niche: "residential water filtration",
+        industry: "private equity",
+        niche: "lower-middle-market buyout",
         description: null,
         primaryGeographies: ["Florida"],
         foundedYear: null,
-        idealCustomerProfile: { segment: "homeowners on private wells" },
+        idealCustomerProfile: { segment: "founder-owned B2B software" },
         businessFacts: {},
         comparisonDefaults: {},
         updatedAt: "2026-08-17T00:00:00.000Z",
@@ -97,8 +97,8 @@ describe("authenticated competitor research resolution", () => {
       action_type: "search_web",
       payload: {
         researchContext: {
-          companyName: "Aqua Example",
-          industry: "water treatment",
+          companyName: "Apex Capital",
+          industry: "private equity",
           geographies: ["Florida"],
           comparison: {
             founderAge: 39,
@@ -112,7 +112,7 @@ describe("authenticated competitor research resolution", () => {
         },
       },
     });
-    expect(result.action.payload.query).toMatch(/actual residential water filtration companies in Florida/i);
+    expect(result.action.payload.query).toMatch(/actual lower-middle-market buyout companies in Florida/i);
     expect(result.action.payload.query).toMatch(/exclude generic market statistics/i);
   });
 });

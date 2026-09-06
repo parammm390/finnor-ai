@@ -4,10 +4,10 @@ This file records credential locations, never values. The deployment topology au
 
 | Surface | Current purpose | Credential rule |
 | --- | --- | --- |
-| GitHub `production` environment | Runs the one guarded production release | `VERCEL_TOKEN` is a secret; `AWS_GITHUB_ACTIONS_ROLE_ARN` is a deployment variable consumed through GitHub OIDC. No static AWS credentials are stored in GitHub. |
+| GitHub `production` environment | Runs the one guarded production release | `VERCEL_TOKEN` is a secret; `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` are environment variables used for workload-identity login. |
 | Vercel project `api` | API runtime | Infrastructure/shared runtime vars only. Tenant provider credentials must not be stored here. |
 | Vercel project `finnor-agency` | Frontend/marketing runtime | Public/build configuration only unless source explicitly requires a secret. |
-| AWS ECS Fargate `finnor-production` / `finnor-worker` | Persistent worker with embedded orchestrator and SSE gateway | The ECS task role `finnor-worker-task` reads the existing `finnor/prod/*` secrets and tenant-scoped `finnor/tenants/*` references from AWS Secrets Manager. Task definitions contain identifiers only, never secret values or static AWS credentials. |
+| Azure VM `finnor-jarvis-worker` | Persistent worker with embedded orchestrator | Root-readable `/etc/finnor/jarvis-worker.env` contains existing runtime secrets; `/etc/finnor/release.env` contains non-secret commit-derived release identity. Deployments preserve the secret file. |
 | Production database | Tenant credential references and operational state | Tenant integration rows store provider, reference, version, and non-secret metadata only; secret material stays in the referenced secret provider. |
 
 Required release identity on every runtime: `FINNOR_COMMIT_SHA`, `FINNOR_BUILD_ID`, `FINNOR_VERSION`, `FINNOR_ENVIRONMENT`, `FINNOR_RELEASE_SOURCE`.

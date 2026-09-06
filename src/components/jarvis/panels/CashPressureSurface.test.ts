@@ -26,7 +26,7 @@ function workCase(actionTypes: string[]): WorkCaseProjection {
     status: "Waiting",
     createdAt: "2026-08-08T00:00:00.000Z",
     updatedAt: "2026-08-08T00:00:00.000Z",
-    source: { kind: "instruction", id: "instruction-1", channel: "typed" },
+    source: { kind: "typed", id: "instruction-1", channel: "typed" },
     instruction: null,
     actions: actionTypes.map((actionType, index) => ({
       id: `action-${index}`,

@@ -10,7 +10,7 @@
 // app-wide provider.
 //
 // Honest state of the SSE path: B1 (the realtime backbone — pg_notify → SSE gateway
-// on the retired worker transport) has not shipped yet as of this session. There is no real SSE endpoint
+// on Railway) has not shipped yet as of this session. There is no real SSE endpoint
 // to connect to. This hook still implements the SSE branch for real (EventSource,
 // exponential-backoff reconnect, browser-native Last-Event-ID resumption) so it's
 // ready the day B1 ships — but until a caller passes a real `sseUrl`, every consumer

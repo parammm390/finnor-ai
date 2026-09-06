@@ -3,7 +3,8 @@ import type { ComputerEffectStatus, ComputerExecutionMode, ComputerRunStatus } f
 import type { BusinessEffectSet, BusinessEffectVerification } from "./business-effects";
 import type { ObjectiveSuccessCondition, ObjectiveSuccessVerification } from "./objectives";
 
-export const EXECUTION_COMPENSATABLE_STEP_TYPES = ["hold_appointment", "reserve_stock"] as const;
+// No active Phase-5 workflow step has a registered typed compensation binding.
+export const EXECUTION_COMPENSATABLE_STEP_TYPES = [] as const;
 
 /**
  * Presentation-safe, reconstructable view of one durable Work execution. The
@@ -15,7 +16,7 @@ export interface ExecutionProjection {
   work: {
     id: string;
     status: string;
-    executionModel: "query" | "conversation" | "atomic_action" | "objective" | "clarify" | null;
+    executionModel: "query" | "atomic_effect" | "objective" | null;
     objective: string;
     objectiveState: string | null;
     successCondition: ObjectiveSuccessCondition | null;

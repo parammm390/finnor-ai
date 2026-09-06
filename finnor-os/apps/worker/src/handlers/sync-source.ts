@@ -4,6 +4,7 @@ import {
   authProfiles,
   enqueueJob,
   integrationSyncCheckpoints,
+  resolveTenantVertical,
   tenantIntegrations,
   withTenant,
 } from "@finnor/db";
@@ -18,26 +19,6 @@ import { createSourceAdapterRegistry, IntegrationError, logWithTrace } from "@fi
 import type { SourceSyncCursor } from "@finnor/shared-types";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { JobHandler } from "../queue";
-
-const SUPPORTED_PROVIDERS = ["ghl", "quickbooks", "stripe", "vapi"] as const;
-type SupportedProvider = typeof SUPPORTED_PROVIDERS[number];
-
-function isSupportedProvider(value: string): value is SupportedProvider {
-  return (SUPPORTED_PROVIDERS as readonly string[]).includes(value);
-}
-
-const DEFAULT_INITIAL_SCOPES: Record<SupportedProvider, readonly string[]> = {
-  ghl: ["contacts"],
-  quickbooks: ["customers", "invoices", "payments"],
-  stripe: [],
-  vapi: ["calls"],
-};
-const DEFAULT_INCREMENTAL_SCOPES: Record<SupportedProvider, readonly string[]> = {
-  ghl: ["contacts"],
-  quickbooks: ["accounting_changes"],
-  stripe: [],
-  vapi: ["calls"],
-};
 
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -56,7 +37,7 @@ export async function loadSourceCredentialContext(
   integration: {
     id: string;
     capability: string;
-    binding: SupportedProvider;
+    binding: string;
     mode: string;
     config: unknown;
     credentialProvider: "aws-secrets-manager" | "legacy-env" | null;
@@ -177,12 +158,14 @@ async function processSourcePage(payload: Record<string, unknown>): Promise<void
   const scope = typeof payload.scope === "string" ? payload.scope : "";
   const remainingScopes = stringArray(payload.remainingScopes);
   if (!tenantId || !integrationId || !scope) throw new Error("sync_source requires tenantId, integrationId, and scope");
+  await resolveTenantVertical(tenantId);
 
   const [integration] = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(and(
     eq(tenantIntegrations.tenantId, tenantId),
     eq(tenantIntegrations.id, integrationId),
   )).limit(1));
-  if (!integration || !isSupportedProvider(integration.binding)) return;
+  if (!integration) return;
+  const adapter = createSourceAdapterRegistry().get(integration.binding);
   if (integration.mode === "emulator") {
     await withTenant(tenantId, (db) => db.update(tenantIntegrations).set({
       syncStatus: "blocked", freshnessState: "unknown", reconciliationStatus: "blocked",
@@ -205,7 +188,6 @@ async function processSourcePage(payload: Record<string, unknown>): Promise<void
       ...integration,
       binding: integration.binding,
     });
-    const adapter = createSourceAdapterRegistry().get(integration.binding);
     if (!adapter.scopes.includes(scope)) throw new IntegrationError(integration.binding, `source scope ${scope} is not supported`, false, "config");
     const cursor = object(checkpoint.cursor) as SourceSyncCursor;
     const page = await adapter.readPage(scope, { ...cursor, version: 1 }, {
@@ -215,16 +197,11 @@ async function processSourcePage(payload: Record<string, unknown>): Promise<void
       credentialContext,
     });
 
-    // Parent objects must map before child relationships in mixed delta responses.
-    const rank: Record<string, number> = { customer: 0, contact: 0, invoice: 1, appointment: 1, payment: 2 };
-    const records = [...page.records].sort((a, b) => (rank[a.externalObjectType] ?? 9) - (rank[b.externalObjectType] ?? 9));
-    for (const record of records) {
+    // A registered vertical adapter owns any dependency ordering inside its page.
+    for (const record of page.records) {
       if (record.tenantId !== tenantId || record.integrationId !== integrationId || record.provider !== integration.binding) {
         throw new IntegrationError(integration.binding, "adapter returned cross-tenant/account source identity", false, "auth");
       }
-      // Calls are already canonicalized by the signed Vapi webhook. Polling remains
-      // observation/read-back coverage until that existing call writer is unified.
-      if (record.canonicalEntity === "call") continue;
       await withTenant(tenantId, (db) => materializeSourceRecord(db, record));
     }
 
@@ -233,7 +210,7 @@ async function processSourcePage(payload: Record<string, unknown>): Promise<void
     const initialChainComplete = !page.hasMore && remainingScopes.length === 0;
     await withTenant(tenantId, async (db) => {
       await db.update(integrationSyncCheckpoints).set({
-        cursor: page.hasMore ? page.nextCursor : scope === "accounting_changes" || scope === "calls" ? page.nextCursor : { version: 1 },
+        cursor: page.hasMore ? page.nextCursor : { version: 1 },
         cursorVersion: 1,
         highWatermark: page.highWatermark ? new Date(page.highWatermark) : completedAt,
         status: "idle",
@@ -287,28 +264,30 @@ export const syncSource: JobHandler = processSourcePage;
 export const syncSources: JobHandler = async (payload) => {
   const tenantId = typeof payload.tenantId === "string" ? payload.tenantId : "";
   if (!tenantId) throw new Error("sync_sources requires tenantId");
+  await resolveTenantVertical(tenantId);
+  const registry = createSourceAdapterRegistry();
+  const providers = registry.providers();
+  if (providers.length === 0) {
+    logWithTrace({ traceId: payload._correlationId as string | undefined }).info({ tenantId }, "[source-sync] no active vertical source mappings");
+    return;
+  }
   const integrations = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(and(
     eq(tenantIntegrations.tenantId, tenantId),
-    inArray(tenantIntegrations.binding, [...SUPPORTED_PROVIDERS]),
+    inArray(tenantIntegrations.binding, providers),
   )));
   for (const integration of integrations) {
-    const provider = integration.binding as SupportedProvider;
+    const provider = integration.binding;
+    const adapter = registry.get(provider);
     const sourcePolicy = object(integration.sourcePolicy);
     const configuredScopes = integration.syncScopes.length > 0 ? integration.syncScopes : stringArray(sourcePolicy.syncScopes);
-    const defaults = integration.syncInitializedAt ? DEFAULT_INCREMENTAL_SCOPES[provider] : DEFAULT_INITIAL_SCOPES[provider];
-    const scopes = configuredScopes.length > 0 ? configuredScopes.filter((scope) => createSourceAdapterRegistry().get(provider).scopes.includes(scope)) : [...defaults];
-    // Initial dependency-bearing snapshots are serialized (QBO customer before
-    // invoice before payment). Incremental CDC pages already sort parent records
-    // before children inside one transaction.
-    const scheduledScopes = !integration.syncInitializedAt && scopes.length > 1 ? scopes.slice(0, 1) : scopes;
-    for (const scope of scheduledScopes) {
+    const scopes = configuredScopes.filter((scope) => adapter.scopes.includes(scope));
+    for (const scope of scopes) {
       await enqueueJob(
         "sync_source",
         {
           tenantId,
           integrationId: integration.id,
           scope,
-          ...(!integration.syncInitializedAt && scopes.length > 1 ? { remainingScopes: scopes.slice(1) } : {}),
         },
         `source-sync:${tenantId}:${integration.id}:${scope}:${new Date().toISOString().slice(0, 16)}`,
         typeof payload._correlationId === "string" ? payload._correlationId : undefined,

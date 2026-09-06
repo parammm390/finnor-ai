@@ -5,7 +5,7 @@ The machine-readable authority is [`../../infra/deployment/production.contract.j
 Production topology:
 
 - frontend and API: the exact Vercel projects in the contract;
-- worker: the exact ECS Fargate cluster, service, task family, and immutable ECR image in the contract;
+- worker: the exact Azure VM and systemd unit in the contract;
 - orchestrator: embedded in the worker process unless the contract explicitly changes to a separate required target;
 - database: the contracted production host and migration head.
 
@@ -13,11 +13,11 @@ Production topology:
 
 1. prove `HEAD` equals the fetched `origin/main` SHA and the tree is clean;
 2. validate the deployment contract and required credentials;
-3. resolve Vercel, AWS, database, environment, and migration targets before mutation;
+3. resolve Vercel, Azure, database, environment, and migration targets before mutation;
 4. run release and Phase 1–3 gates;
 5. confirm migration compatibility and apply only pending migrations;
-6. deploy Vercel frontend/API and the ECS worker image at the same SHA;
-7. verify API, frontend, worker heartbeat, embedded orchestrator, ECS/ALB health, immutable image digest, and database head;
+6. deploy Vercel frontend/API and the Azure worker at the same SHA;
+7. verify API, frontend, worker heartbeat, embedded orchestrator, Azure source checkout, and database head;
 8. run production smokes and repeat parity verification.
 
 Any missing required runtime, stale target, dirty/non-main checkout, failed authentication, migration inconsistency, or SHA mismatch makes the release FAILED/PARTIAL. A partial deployment is never PASS.

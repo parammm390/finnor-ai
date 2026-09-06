@@ -122,10 +122,11 @@ async function loadActorScope(tenantId: string, actorId: string): Promise<ActorS
   }, actorId);
   if (!loaded.employee) throw new IdentityAccessError("invalid_actor", "The canonical employee does not belong to this tenant");
   if (loaded.employee.status !== "active") throw new IdentityAccessError("actor_inactive", "The canonical employee is not active");
+  if (loaded.employee.role !== "owner") throw new IdentityAccessError("actor_inactive", "The employee role is retired from the active runtime");
   return {
     actorId,
     employeeId: actorId,
-    role: loaded.employee.role,
+    role: "owner",
     teamIds: new Set(loaded.memberships.map((row) => row.teamId)),
     locationIds: new Set([
       ...(loaded.employee.primaryLocationId ? [loaded.employee.primaryLocationId] : []),

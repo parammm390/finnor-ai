@@ -26,7 +26,7 @@ function workCase(visitId: string, entities: WorkCaseProjection["linkedEntities"
     status: "Working",
     createdAt: "2026-08-08T00:00:00.000Z",
     updatedAt: "2026-08-08T00:00:00.000Z",
-    source: { kind: "instruction", id: "instruction-1", channel: "typed" },
+    source: { kind: "typed", id: "instruction-1", channel: "typed" },
     instruction: null,
     actions: [],
     approvals: [],
@@ -47,7 +47,7 @@ describe("P2.T4 Dispatch Field continuity contract", () => {
     expect(dispatchSourceState({ data: { stops: [] }, loading: false, error: null })).toBe("live")
   })
   it("matches a Work case only by the exact visit/service-visit ID", () => {
-    const sameHouseholdDifferentVisit = { ...workCase("visit-2"), linkedEntities: [{ entityType: "household" as const, entityId: stop.householdId, via: "action.payload.householdId" }] }
+    const sameHouseholdDifferentVisit = { ...workCase("visit-2"), linkedEntities: [{ entityType: "household", entityId: stop.householdId, via: "action.payload.householdId" }] }
     expect(exactWorkCaseForStop(stop, [sameHouseholdDifferentVisit])).toBeNull()
     expect(exactWorkCaseForStop(stop, [workCase(stop.visitId)])?.id).toBe("case-visit-1")
   })

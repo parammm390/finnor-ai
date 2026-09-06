@@ -1,7 +1,7 @@
 // Clarification is a first-class action, not a planner error string. It deliberately
 // produces no external effect: its only purpose is to preserve an ambiguous request
-// as a durable, tenant-scoped question card instead of guessing a customer, price, or
-// appointment detail.
+// as a durable, tenant-scoped question card instead of guessing an entity, party, or
+// consequential business detail.
 
 import type { DomainEnginePlugin } from "../shared/plugin-interface";
 import type { DomainPolicy, DraftAction, ExecutionResult, ValidationResult } from "@finnor/shared-types";

@@ -105,10 +105,10 @@ describe.skipIf(!available)("GET /api/vitals", () => {
     expect(body3.heartbeat.healthy).toBe(false);
   });
 
-  it("includes resolved capability bindings", async () => {
+  it("includes the active Core capabilities", async () => {
     const res = await vitalsRoute(req(TENANT_A));
     const body = await res.json();
-    expect(body.bindings).toBeDefined();
-    expect(typeof body.bindings).toBe("object");
+    expect(body.capabilities).toBeDefined();
+    expect(typeof body.capabilities).toBe("object");
   });
 });

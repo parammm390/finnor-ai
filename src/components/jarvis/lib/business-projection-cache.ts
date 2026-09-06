@@ -24,17 +24,11 @@ export interface ProjectionDefinition<T> {
   owner: string
   staleMs: number
   pollMs?: number
-  /**
-   * Optional faster interval used only while the realtime transport is in its
-   * bounded polling fallback. The normal `pollMs` remains a slow sanity
-   * refresh so healthy SSE is the primary invalidation/fetch path.
-   */
+  /** Poll interval used for selected active projections while realtime is down. */
   fallbackPollMs?: number
   tags: readonly ProjectionTag[]
   load: () => Promise<T>
 }
-
-export type RealtimeProjectionStatus = "connecting" | "live" | "polling" | "paused"
 
 export type ProjectionStatus = "idle" | "loading" | "ready" | "error"
 
@@ -109,7 +103,7 @@ export class BusinessProjectionCache {
   private generation = 0
   private visible = true
   private online = true
-  private realtimeStatus: RealtimeProjectionStatus = "paused"
+  private realtimeMode: "live" | "polling" = "live"
   private metrics: ProjectionMetrics = { ...EMPTY_METRICS }
   private metricsListeners = new Set<() => void>()
   private onMetrics?: (metrics: ProjectionMetrics) => void
@@ -309,29 +303,16 @@ export class BusinessProjectionCache {
     }
   }
 
-  /**
-   * Realtime owns freshness while it is healthy. A projection may opt into a
-   * bounded fast fallback interval, but only while the shared stream has
-   * explicitly declared `polling`; changing the status reschedules existing
-   * subscriptions immediately so a 2s timer cannot survive a recovered SSE.
-   */
-  setRealtimeStatus(status: RealtimeProjectionStatus): void {
-    if (this.realtimeStatus === status) return
-    this.realtimeStatus = status
-    for (const entry of this.entries.values()) {
-      if (entry.listeners.size > 0) this.schedule(entry)
-    }
-  }
-
-  /** Compatibility shorthand for the stream owner, which only needs live/polling. */
   setRealtimeMode(mode: "live" | "polling"): void {
-    const status = mode === "polling" ? "polling" : "live"
-    const changed = this.realtimeStatus !== status
-    this.setRealtimeStatus(status)
-    if (!changed || mode !== "polling") return
+    if (this.realtimeMode === mode) return
+    this.realtimeMode = mode
     for (const entry of this.entries.values()) {
-      if (entry.listeners.size > 0 && this.visible && this.online) {
+      this.clearTimer(entry)
+      if (!this.visible || !this.online || entry.listeners.size === 0) continue
+      if (mode === "polling" && entry.definition.fallbackPollMs) {
         void this.ensure(entry.id, true).catch(() => undefined)
+      } else {
+        this.schedule(entry)
       }
     }
   }
@@ -346,10 +327,10 @@ export class BusinessProjectionCache {
 
   private schedule(entry: Entry): void {
     this.clearTimer(entry)
-    if (!this.visible || !this.online || entry.listeners.size === 0 || !entry.definition.pollMs) return
-    const pollMs = this.realtimeStatus === "polling"
+    const pollMs = this.realtimeMode === "polling"
       ? entry.definition.fallbackPollMs ?? entry.definition.pollMs
       : entry.definition.pollMs
+    if (!this.visible || !this.online || entry.listeners.size === 0 || !pollMs) return
     const elapsed = entry.snapshot.updatedAt === null ? pollMs : Date.now() - entry.snapshot.updatedAt
     const delay = Math.max(0, pollMs - elapsed)
     entry.timer = setTimeout(() => {

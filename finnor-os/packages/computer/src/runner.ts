@@ -283,7 +283,6 @@ export class ComputerRunner {
           observation,
           stepNumber,
           effectStatus: run.effectStatus as "none" | "pending" | "dispatching" | "succeeded" | "failed" | "unknown",
-          deadlineAt: run.deadlineAt?.getTime() ?? startedAt + limits.timeoutMs,
         });
 
         if (decision.kind === "block") {

@@ -52,15 +52,6 @@ function publishRealtimeStatus(status: "connecting" | "live" | "polling" | "paus
   window.dispatchEvent(new CustomEvent("jarvis:realtime-status", { detail }))
 }
 
-/** Expose the authenticated ledger frame to browser certification/telemetry.
- * The frame is still reduced into the tenant-scoped cache below; this event is
- * only an observation that a real authenticated delta crossed the browser
- * boundary and carries no authority or mutation semantics. */
-function publishOperationalDelta(delta: OperationalDelta): void {
-  if (typeof window === "undefined") return
-  window.dispatchEvent(new CustomEvent("jarvis:operational-delta", { detail: delta }))
-}
-
 async function consumeSse(
   response: Response,
   signal: AbortSignal,
@@ -264,7 +255,6 @@ export function BusinessProjectionProvider({ children }: { children: React.React
             if (event !== "operational_delta" || !data || typeof data !== "object") return
             const delta = data as OperationalDelta
             if (id !== delta.cursor || !applyDelta(delta)) throw new Error("Operational delta ordering gap")
-            publishOperationalDelta(delta)
           })
           if (!cancelled) throw new Error("Realtime gateway disconnected")
         } catch (error) {

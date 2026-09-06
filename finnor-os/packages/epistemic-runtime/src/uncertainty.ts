@@ -4,8 +4,8 @@ import type {
   DecisionRequirement,
   EpistemicState,
   PropositionDefinition,
-  StaticAdmissibilityIssue,
-  StaticAdmissibilityResult,
+  StaticAdmissibilityIssueLike,
+  StaticAdmissibilityResultLike,
   Uncertainty,
   UncertaintyCategory,
 } from "./contracts";
@@ -18,16 +18,6 @@ export interface AcquisitionPolicySnapshot {
   externalObservationPossible?: boolean;
 }
 
-function permittedAcquisitionOptions(
-  requirement: DecisionRequirement,
-  policy: AcquisitionPolicySnapshot,
-): AcquisitionOption[] {
-  return requirement.acquisitionOptions.filter((option) =>
-    (!policy.allowedAdapters || policy.allowedAdapters.includes(option.adapterId))
-    && !policy.deniedAdapters?.includes(option.adapterId),
-  );
-}
-
 function categoryFor(
   state: EpistemicState,
   requirement: DecisionRequirement,
@@ -35,7 +25,10 @@ function categoryFor(
 ): { category: UncertaintyCategory; why: string; reasonCodes: string[] } {
   const proposition = propositionById(state, requirement.propositionId);
   if (!proposition) return { category: "UNOBSERVABLE", why: "Required proposition is absent from the epistemic contract.", reasonCodes: ["PROPOSITION_NOT_DECLARED"] };
-  const permitted = permittedAcquisitionOptions(requirement, policy);
+  const permitted = requirement.acquisitionOptions.filter((option) =>
+    (!policy.allowedAdapters || policy.allowedAdapters.includes(option.adapterId))
+    && !policy.deniedAdapters?.includes(option.adapterId),
+  );
   if (requirement.acquisitionOptions.length > 0 && permitted.length === 0) {
     return { category: "PERMISSION_BLOCKED", why: "Every declared acquisition adapter is denied by the current read/privacy boundary.", reasonCodes: ["ACQUISITION_PERMISSION_BLOCKED"] };
   }
@@ -96,16 +89,14 @@ export function analyzeUncertainty(
           criticality: requirement.criticality,
           mandatory: requirement.mandatory,
         },
-        // Permission is a legality boundary, not merely a scoring feature. A
-        // denied adapter must never become a candidate action.
-        possibleAcquisitionActions: permittedAcquisitionOptions(requirement, policy),
+        possibleAcquisitionActions: [...requirement.acquisitionOptions],
         consequenceOfActingWithoutResolution: requirement.consequenceIfUnresolved,
       };
     })
     .sort((left, right) => `${left.requiredPropositionId}:${left.category}`.localeCompare(`${right.requiredPropositionId}:${right.category}`));
 }
 
-function p2AcquisitionOptions(issue: StaticAdmissibilityIssue): AcquisitionOption[] {
+function p2AcquisitionOptions(issue: StaticAdmissibilityIssueLike): AcquisitionOption[] {
   const detailCode = typeof issue.detail?.resolutionReasonCode === "string" ? issue.detail.resolutionReasonCode : issue.reasonCode;
   if (detailCode === "ENTITY_REFERENCE_AMBIGUOUS") {
     return [
@@ -129,7 +120,7 @@ function p2AcquisitionOptions(issue: StaticAdmissibilityIssue): AcquisitionOptio
   return [];
 }
 
-function subjectForP2Issue(issue: StaticAdmissibilityIssue): PropositionDefinition["subject"] {
+function subjectForP2Issue(issue: StaticAdmissibilityIssueLike): PropositionDefinition["subject"] {
   const detailCode = typeof issue.detail?.resolutionReasonCode === "string" ? issue.detail.resolutionReasonCode : issue.reasonCode;
   if (detailCode.startsWith("ENTITY_")) return { kind: "entity", type: "canonical_entity", id: issue.nodeId };
   if (detailCode.startsWith("CAPABILITY_") || detailCode.includes("BINDING")) return { kind: "system", type: "capability", id: issue.nodeId };
@@ -144,7 +135,7 @@ export interface P2UnresolvedRequirements {
 /** Converts only P2 UNRESOLVED issues. REJECTED is intentionally not representable
  * as an acquisition request and must be handled by the P2 handoff gate. */
 export function requirementsFromP2Unresolved(
-  result: StaticAdmissibilityResult,
+  result: StaticAdmissibilityResultLike,
   decisionId: string,
   criticality: DecisionCriticality = "CONSEQUENTIAL",
 ): P2UnresolvedRequirements {
@@ -182,7 +173,7 @@ export function requirementsFromP2Unresolved(
   return { propositions, requirements };
 }
 
-export function p2IssueUncertaintyCategory(issue: StaticAdmissibilityIssue): UncertaintyCategory {
+export function p2IssueUncertaintyCategory(issue: StaticAdmissibilityIssueLike): UncertaintyCategory {
   const code = typeof issue.detail?.resolutionReasonCode === "string" ? issue.detail.resolutionReasonCode : issue.reasonCode;
   if (code.includes("AMBIGUOUS")) return "AMBIGUOUS";
   if (code.includes("STALE")) return "STALE";

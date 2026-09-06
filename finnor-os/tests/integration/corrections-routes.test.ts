@@ -38,17 +38,17 @@ describe.skipIf(!available)("corrections routes (§5.6)", () => {
     process.env.DATABASE_URL = DB_URL;
     process.env.AUTH_DEV_BYPASS = "1";
     await migrate(DB_URL);
-    await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "Corrections Route Test Dealer" }).onConflictDoNothing());
+    await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "Corrections Route Test Project" }).onConflictDoNothing());
     const { receiptId: id } = await openReceipt({
       tenantId: TENANT_ID,
-      objective: "answer_customer_question: what's your service area",
+      objective: "review_diligence_finding: what evidence supports the leverage claim",
       evidence: [],
       policyApplied: null,
       riskTier: "low",
       proposedAction: {},
       approval: { required: false },
     });
-    await finalizeReceipt(TENANT_ID, id, { actualResult: { output: { answer: "We only service a 10 mile radius." } } });
+    await finalizeReceipt(TENANT_ID, id, { actualResult: { output: { answer: "The claim uses the draft lender model." } } });
     receiptId = id;
   });
   afterAll(async () => {
@@ -60,7 +60,7 @@ describe.skipIf(!available)("corrections routes (§5.6)", () => {
   });
 
   it("a non-owner role is forbidden from submitting a correction", async () => {
-    const res = await submitCorrection(req("/api/corrections", { method: "POST", role: "technician", body: { receiptId, correctedFact: "x" } }));
+    const res = await submitCorrection(req("/api/corrections", { method: "POST", role: "analyst", body: { receiptId, correctedFact: "x" } }));
     expect(res.status).toBe(403);
   });
 
@@ -78,7 +78,7 @@ describe.skipIf(!available)("corrections routes (§5.6)", () => {
 
   it("owner submits a correction — derives question/wrongAnswer from the real receipt, links it back", async () => {
     const res = await submitCorrection(
-      req("/api/corrections", { method: "POST", body: { receiptId, correctedFact: "We actually service a 25 mile radius." } }),
+      req("/api/corrections", { method: "POST", body: { receiptId, correctedFact: "The signed lender model is the authoritative evidence." } }),
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -86,9 +86,9 @@ describe.skipIf(!available)("corrections routes (§5.6)", () => {
 
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(memoryCorrections).where(eq(memoryCorrections.id, body.id)));
     expect(row!.receiptId).toBe(receiptId);
-    expect(row!.question).toBe("answer_customer_question: what's your service area");
-    expect(row!.wrongAnswer).toBe("We only service a 10 mile radius.");
-    expect(row!.correctedFact).toBe("We actually service a 25 mile radius.");
+    expect(row!.question).toBe("review_diligence_finding: what evidence supports the leverage claim");
+    expect(row!.wrongAnswer).toBe("The claim uses the draft lender model.");
+    expect(row!.correctedFact).toBe("The signed lender model is the authoritative evidence.");
     expect(row!.correctedBy).toBeTruthy();
   });
 

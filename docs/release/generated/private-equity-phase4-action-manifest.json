@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-05T22:12:17.129Z",
+  "vertical": "private_equity",
+  "composition": {
+    "sharedCoreCount": 17,
+    "privateEquityDomainCount": 15,
+    "activeCount": 32,
+    "waterActiveCount": 59,
+    "globalReplayRegistryCount": 74
+  },
+  "invariants": {
+    "derivedFromRuntimeRegistry": true,
+    "derivedFromStaticPluginDiscovery": true,
+    "exactHardeningCoverage": true,
+    "privateEquityExcludedFromWater": true,
+    "waterDomainExcludedFromPrivateEquity": true
+  },
+  "actions": [
+    {
+      "actionType": "clarification_request",
+      "composition": "shared_core",
+      "plugin": "clarification",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/clarification/index.ts",
+        "line": 20
+      },
+      "profile": "META_NO_SIDE_EFFECT",
+      "approvalFloor": "NONE",
+      "capabilityFamily": "none",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "search_web",
+      "composition": "shared_core",
+      "plugin": "web-research",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/web-research/index.ts",
+        "line": 262
+      },
+      "profile": "READ_ONLY",
+      "approvalFloor": "NONE",
+      "capabilityFamily": "exa/firecrawl/evidence",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "computer_task",
+      "composition": "shared_core",
+      "plugin": "computer-task",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/computer-task/index.ts",
+        "line": 41
+      },
+      "profile": "EXTERNAL_SIDE_EFFECT",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "computer/application/identity",
+      "external": true,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "send_message",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "EXTERNAL_SIDE_EFFECT",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "communications/identity",
+      "external": true,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "place_call",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "EXTERNAL_SIDE_EFFECT",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "voice/communications/identity",
+      "external": true,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "request_acknowledgement",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "delegation/communications",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "notify_group",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "BATCH_EXTERNAL",
+      "approvalFloor": "TYPED_REQUIRED",
+      "capabilityFamily": "communications/identity",
+      "external": true,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "create_task",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "tasks/work",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "assign_task",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "tasks/authority",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "update_task",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "tasks/work",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "handoff_work",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "work/authority",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "delegate_objective",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "DURABLE_WORKFLOW",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "delegation/tasks/work",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "escalate_work",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "delegation/authority",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "cancel_delegation",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "delegation/authority",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "schedule_internal_event",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "scheduling/work",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "reschedule_internal_event",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "scheduling/work",
+      "external": false,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "share_document",
+      "composition": "shared_core",
+      "plugin": "universal-actions",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
+        "line": 66
+      },
+      "profile": "EXTERNAL_SIDE_EFFECT",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "documents/communications",
+      "external": true,
+      "receiptRequired": true
+    },
+    {
+      "actionType": "open_workstream",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/work",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "open_workstream",
+        "canonicalMutationOwner": "createWorkstream",
+        "resultEntityType": "pe_workstream",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "create_deal_request",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/work",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "create_deal_request",
+        "canonicalMutationOwner": "createRequest",
+        "resultEntityType": "pe_request",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "submit_deliverable",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/documents",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "submit_deliverable",
+        "canonicalMutationOwner": "receiveDeliverable",
+        "resultEntityType": "pe_deliverable",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "record_finding",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "record_finding",
+        "canonicalMutationOwner": "createFinding",
+        "resultEntityType": "pe_finding",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "resolve_finding",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "resolve_finding",
+        "canonicalMutationOwner": "resolveFinding",
+        "resultEntityType": "pe_finding",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "raise_deal_risk",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/risk",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "raise_deal_risk",
+        "canonicalMutationOwner": "createDealRisk",
+        "resultEntityType": "pe_deal_risk",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "resolve_deal_risk",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/risk",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "resolve_deal_risk",
+        "canonicalMutationOwner": "resolveDealRisk",
+        "resultEntityType": "pe_deal_risk",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "link_deal_dependency",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/dependency",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "link_deal_dependency",
+        "canonicalMutationOwner": "createDependency",
+        "resultEntityType": "pe_dependency",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "mark_dependency_resolved",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/dependency",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "mark_dependency_resolved",
+        "canonicalMutationOwner": "removeDependency",
+        "resultEntityType": "pe_dependency",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "create_closing_condition",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "create_closing_condition",
+        "canonicalMutationOwner": "createClosingCondition",
+        "resultEntityType": "pe_closing_condition",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "submit_condition_evidence",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "submit_condition_evidence",
+        "canonicalMutationOwner": "attachCanonicalEvidence",
+        "resultEntityType": "pe_evidence_link",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "satisfy_closing_condition",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "satisfy_closing_condition",
+        "canonicalMutationOwner": "satisfyClosingCondition",
+        "resultEntityType": "pe_closing_condition",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "waive_closing_condition",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "waive_closing_condition",
+        "canonicalMutationOwner": "waiveClosingCondition",
+        "resultEntityType": "pe_closing_condition",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "verify_closing_item",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "verify_closing_item",
+        "canonicalMutationOwner": "verifyClosingItem",
+        "resultEntityType": "pe_closing_item",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    },
+    {
+      "actionType": "declare_deal_closed",
+      "composition": "private_equity",
+      "plugin": "private-equity",
+      "payloadSchema": {
+        "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+        "line": 538
+      },
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "TYPED_REQUIRED",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receiptRequired": true,
+      "peContract": {
+        "actionType": "declare_deal_closed",
+        "canonicalMutationOwner": "declareDealClosed",
+        "resultEntityType": "pe_deal",
+        "idempotencyIdentity": "domain_action_id",
+        "verification": "canonical_return_and_reread",
+        "receiptPath": "core_durable_action_receipt"
+      }
+    }
+  ]
+}

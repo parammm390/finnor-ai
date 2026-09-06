@@ -88,18 +88,6 @@ export const businessProjections = {
   setupStatus: (): ProjectionDefinition<SetupStatus> => ({ key: ["system", "setup"], owner: "data-core.sanity", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.setupStatus }),
   integrationsStatus: (): ProjectionDefinition<IntegrationsStatus> => ({ key: ["system", "integrations"], owner: "agents", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.integrationsStatus }),
   workCases: (): ProjectionDefinition<WorkCaseProjection[]> => ({ key: ["read-model", "work-cases"], owner: "work", staleMs: PROJECTION_FRESHNESS.active, pollMs: 15_000, fallbackPollMs: 2_000, tags: ["work", "actions", "approvals", "workflows", "receipts", "customers", "schedule", "money", "agents", "queries"], load: async () => (await jarvisClient.workCases()).data }),
-  activeWork: (workId: string, posture: "active" | "waiting" = "active"): ProjectionDefinition<WorkCaseProjection | null> => ({
-    key: ["read-model", "active-work", workId],
-    owner: "thread.work",
-    // Realtime deltas are the primary freshness path. Keep a slow sanity
-    // refresh while the stream is healthy, and only enter the fast interval
-    // when the shared provider has explicitly fallen back to polling.
-    staleMs: posture === "waiting" ? 60_000 : 60_000,
-    pollMs: 60_000,
-    fallbackPollMs: posture === "waiting" ? 5_000 : 2_000,
-    tags: ["work", "actions", "approvals", "workflows", "receipts", "computer", "activity", "queries"],
-    load: () => jarvisClient.workCase(workId),
-  }),
   workExecution: (workId: string): ProjectionDefinition<ExecutionProjection> => ({
     key: ["work-execution", workId],
     owner: "work.execution",

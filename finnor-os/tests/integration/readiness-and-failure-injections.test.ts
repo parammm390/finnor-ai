@@ -81,13 +81,13 @@ describe.skipIf(!available)("readiness_log + failure_injections (Phase 8)", () =
 
   it("readiness SLO payload derives values, 30-day trend, and burn from the durable scorecard", async () => {
     const scorecard = await readinessSloScorecard(TENANT_ID);
-    expect(scorecard).toHaveLength(13);
+    expect(scorecard).toHaveLength(3);
     const success = scorecard.find((row) => row.id === "post_approval_success");
     expect(success?.target).toEqual({ operator: ">=", value: 0.99, unit: "ratio" });
     expect(success?.trend30d).toHaveLength(1);
     expect(success?.value).toBeNull(); // empty tenant has no invented success rate
     expect(success?.errorBudgetBurn).toBeNull();
-    expect(scorecard.find((row) => row.id === "workflow_p95")?.unavailableReason).toMatch(/budget/i);
+    expect(scorecard.find((row) => row.id === "workflow_p95")?.target).toBeNull();
   });
 
   it("GET /api/read-models/readiness requires auth and is tenant-scoped", async () => {
@@ -110,8 +110,8 @@ describe.skipIf(!available)("readiness_log + failure_injections (Phase 8)", () =
     const res = await GET(req(TENANT_ID, "readiness-slo"), { params: Promise.resolve({ view: "readiness-slo" }) });
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data).toHaveLength(13);
-    expect(body.data.find((row: { id: string }) => row.id === "queue_oldest_pending").unavailableReason).toMatch(/tenant/i);
+    expect(body.data).toHaveLength(3);
+    expect(body.data.find((row: { id: string }) => row.id === "workflow_p95")).toBeDefined();
   });
 
   it("failure_injections: real row insert, RLS-isolated, and readable via the route", async () => {

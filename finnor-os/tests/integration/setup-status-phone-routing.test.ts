@@ -77,36 +77,35 @@ describe.skipIf(!available)("GET /api/setup/status — phoneRouting (Phase 14)",
     expect(body.phoneRouting.numbers[0]!.phoneNumber).toBe(myNumber);
   });
 
-  it("reports the environment block (Phase 16c / A1.T3): nodeEnv, secret provider, and every binding's resolved mode + source", async () => {
+  it("reports the active Core + Private Equity environment contract without credential values", async () => {
     const res = await GET(req());
     const body = (await res.json()) as {
       environment: {
         nodeEnv: string;
         secretProvider: { provider: string; loaded: boolean };
-        bindings: Record<string, { mode: string; source: string }>;
+        activeProductVertical: string;
+        capabilities: {
+          employee_voice: { provider: string };
+          transactional_email: { provider: string };
+        };
         bootSafety: {
           authDevBypassConfigured: boolean;
-          ownedCapabilityEmulators: string[];
           databaseRole: { currentUser: string; bypassRls: boolean };
+          databaseConnectionFingerprint: string;
         };
       };
     };
     expect(body.environment.nodeEnv).toBeTruthy();
     expect(body.environment.secretProvider.provider).toBe("env"); // no SECRETS_PROVIDER set in this test run
-    // Finnor-owned capabilities (A1.T2) default to "native" — there's no external SaaS
-    // behind them. External capabilities still default to "emulator" until a dealer
-    // opts a real provider in. Neither test-run env sets any *_BINDING var, so every
-    // entry here reports source: "default".
-    for (const key of ["scheduling", "documents", "inventory", "crm"]) {
-      expect(body.environment.bindings[key]).toEqual({ mode: "native", source: "default" });
-    }
-    for (const key of ["communications", "esign", "accounting", "payments", "marketing"]) {
-      expect(body.environment.bindings[key]).toEqual({ mode: "emulator", source: "default" });
-    }
+    expect(body.environment.activeProductVertical).toBe("private_equity");
+    expect(body.environment.capabilities).toEqual({
+      employee_voice: { provider: "vapi" },
+      transactional_email: { provider: "resend" },
+    });
     expect(body.environment.bootSafety.authDevBypassConfigured).toBe(true);
-    expect(body.environment.bootSafety.ownedCapabilityEmulators).toEqual([]);
     expect(body.environment.bootSafety.databaseRole.currentUser).toBeTruthy();
     expect(body.environment.bootSafety.databaseRole.bypassRls).toBeTypeOf("boolean");
+    expect(body.environment.bootSafety.databaseConnectionFingerprint).toMatch(/^[0-9a-f]{16}$/);
   });
 
   it("§5.1: reports embeddings as unconfigured (honest, not a guessed 'healthy') when EMBEDDINGS_API_KEY is unset", async () => {

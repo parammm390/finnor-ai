@@ -1,4 +1,4 @@
-import { CURRENT_MIGRATION_HEAD, getPool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, PHASE5_CUTOVER_PROTOCOL, getPool } from "@finnor/db";
 
 export interface WorkerFleetReadiness {
   migrationHead: string | null;
@@ -17,11 +17,10 @@ export async function readWorkerFleetReadiness(): Promise<WorkerFleetReadiness> 
          WHERE service='worker'
            AND migration_head=$1
            AND ($2::text IS NULL OR release_sha=$2)
-           AND deployment_id LIKE 'ecs:%'
-           AND environment='production'
-           AND capabilities @> ARRAY['jobs','orchestration','realtime','sse']::text[]
+           AND cutover_protocol>=$3
+           AND product_epoch=(SELECT epoch FROM finnor_os.product_runtime_authority WHERE authority_key='product')
            AND last_beat_at>now()-interval '90 seconds') AS healthy_workers`,
-    [CURRENT_MIGRATION_HEAD, process.env.FINNOR_COMMIT_SHA?.trim() || null],
+    [CURRENT_MIGRATION_HEAD, process.env.FINNOR_COMMIT_SHA?.trim() || null, PHASE5_CUTOVER_PROTOCOL],
   );
   const row = result.rows[0];
   return {
@@ -39,12 +38,6 @@ function workerUnavailable(message: string): Error & { status: number; code: str
 
 /** Fail closed before accepting business Work that needs the worker fleet. */
 export async function requireWorkerFleetReady(): Promise<void> {
-  // Integration tests exercise the in-process orchestrator without starting a
-  // worker container. Keep that fixture-only path available, while production
-  // (including CI's production release profile) remains fail-closed on the
-  // exact ECS heartbeat contract below.
-  if (process.env.NODE_ENV === "test" && process.env.FINNOR_ENVIRONMENT !== "production") return;
-
   let readiness: WorkerFleetReadiness;
   try {
     readiness = await readWorkerFleetReadiness();

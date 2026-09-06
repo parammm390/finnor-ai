@@ -11,7 +11,6 @@ import { ActionRenderer } from "../ui/renderers/ActionRenderer"
 import { ErrorState, EmptyState } from "../ui/primitives"
 import { Press } from "../ui/motion/primitives"
 import { useJarvis } from "./data-core"
-import { submitInstruction } from "../kernel/instruction"
 
 type Planned = { id: string; actionType: string; payload: Record<string, unknown>; status: string; createdAt: string }
 type Mode = "navigate" | "search" | "instruct"
@@ -83,14 +82,10 @@ export function CommandPaletteV2({
         onClose()
         return
       }
-      const result = await submitInstruction(instruction, { source: "typed" })
-      const actions = result.executionModel === "ATOMIC_ACTION" || result.executionModel === "CLARIFY" ? result.actions as Planned[] : []
+      const result = await jarvisClient.submitAction({ instruction, channel: "console" }) as { planned: Planned[] }
+      const actions = result.planned ?? []
       setPlanned(actions)
-      // Clarification requests are visible questions, not pending business
-      // effects. Only executable actions belong in the optimistic approval queue.
-      data.injectOptimisticPending(actions
-        .filter((action) => action.actionType !== "clarification_request")
-        .map((action) => ({ ...action, summary: null, groundedPayload: undefined })))
+      data.injectOptimisticPending(actions.map((action) => ({ ...action, summary: null, groundedPayload: undefined })))
     } catch (e) {
       setError(e instanceof JarvisApiError && e.status === 401 ? "Sign in to plan an instruction." : e instanceof Error ? e.message : "Instruction could not be planned.")
     } finally {

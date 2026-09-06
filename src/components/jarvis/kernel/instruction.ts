@@ -13,12 +13,9 @@
 // own instruction/session concept, not a replacement for `CommandBar` (left
 // unedited per this session's binding: "read, not edited").
 
-import { jarvisGet } from "../lib/api"
-import { jarvisClient } from "@/lib/jarvis-client"
-import type { AnswerResponse, PlannedActionResponse, SubmitInstructionResult } from "@/lib/jarvis-client"
+import { jarvisGet, jarvisPost } from "../lib/api"
+import type { OperationalQueryExecution } from "../workspaces/contracts"
 import type { OperatingInteractionContextValue } from "./operating-interaction"
-
-export type { AnswerResponse, PlannedActionResponse, SubmitInstructionResult } from "@/lib/jarvis-client"
 
 export type InstructionSource = "voice" | "typed"
 
@@ -120,12 +117,64 @@ export interface SubmitInstructionOpts {
   activeContext?: OperatingInteractionContextValue
 }
 
+/** The shape `POST /api/actions` returns for each planned `DomainAction` — the
+ *  fields the Thread's plan/clarification/execution blocks read. Kept structural
+ *  (not importing the backend's own type) the same way `CommandBar.tsx`'s local
+ *  `PlannedAction` already does, since this is a client module reading a JSON
+ *  response, not sharing a build-time type with the API package. */
+export interface PlannedActionResponse {
+  id: string
+  actionType: string
+  payload: Record<string, unknown>
+  policyId: string | null
+  policyVersion?: number | null
+  /** Real sibling action ids from domain_actions.depends_on. The API returns
+   *  this durable DAG fact alongside each planned action when it is available. */
+  dependsOn?: string[] | null
+  status: string
+  createdAt: string
+  groundedPayload?: Array<{ field: string; status: "verified" | "not_found" | "unverifiable" }> | null
+  reasoning?: string
+}
+
+export interface AnswerResponseFact {
+  label: string
+  value: string
+  source?: string
+}
+
+/** Additive read-only answer returned alongside `planned` by the actions API.
+ *  The display projection is optional so the client remains compatible with
+ *  both the direct fast lane and older trace-shaped answer envelopes. */
+export interface AnswerResponse {
+  kind: "answer"
+  spokenSummary: string
+  displaySummary?: string
+  facts?: AnswerResponseFact[]
+  display?: {
+    title?: string
+    facts?: AnswerResponseFact[]
+  }
+  query?: OperationalQueryExecution
+}
+
+export interface SubmitInstructionResult {
+  planned: PlannedActionResponse[]
+  answer?: AnswerResponse
+  query?: OperationalQueryExecution
+  sessionId: string
+  workId: string | null
+  instructionId: string | null
+  threadId: string | null
+  assistantMessage?: { id: string; originalText: string; createdAt: string }
+}
+
 /** The one path an instruction (typed or spoken) enters the system by (§3.2:
  *  "voice and text are one code path"). Mints/reuses this source's session id and
  *  sends it in the POST body — the single change that closes V8's frontend gap. */
-export async function submitInstruction(text: string, opts: SubmitInstructionOpts): Promise<SubmitInstructionResult & { sessionId: string }> {
+export async function submitInstruction(text: string, opts: SubmitInstructionOpts): Promise<SubmitInstructionResult> {
   const sessionId = opts.sessionId ?? getOrCreateSessionId(opts.source)
-  const result = await jarvisClient.submitInstruction({
+  const body = await jarvisPost<{ planned?: PlannedActionResponse[]; answer?: AnswerResponse; query?: OperationalQueryExecution; workId?: string; instructionId?: string; threadId?: string; assistantMessage?: { id: string; originalText: string; createdAt: string } }>("actions", {
     instruction: text,
     channel: opts.source === "voice" ? "voice" : "text",
     sessionId,
@@ -134,10 +183,16 @@ export async function submitInstruction(text: string, opts: SubmitInstructionOpt
     threadId: opts.threadId,
     activeContext: opts.activeContext,
   })
-  // sessionId is transport provenance, intentionally returned only by this
-  // browser seam for continuity; it is not part of the durable canonical API
-  // response contract.
-  return { ...result, sessionId }
+  return {
+    planned: body.planned ?? [],
+    ...(body.answer ? { answer: body.answer } : {}),
+    ...(body.query ? { query: body.query } : {}),
+    sessionId,
+    workId: body.workId ?? opts.workId ?? opts.instructionId ?? null,
+    instructionId: body.instructionId ?? opts.instructionId ?? null,
+    threadId: body.threadId ?? opts.threadId ?? null,
+    ...(body.assistantMessage ? { assistantMessage: body.assistantMessage } : {}),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -320,11 +375,6 @@ export function startTracePoll(
     }
     if (stopped) return
     if (Date.now() - startedAtMs >= TRACE_POLL_CEILING_MS) {
-      report("unavailable", {
-        status: 0,
-        message: "Instruction trace polling reached its bounded ceiling; reconcile canonical Work",
-        attempts: Math.max(consecutiveFailures, notFoundRetries),
-      })
       stop()
       return
     }

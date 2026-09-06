@@ -19,7 +19,7 @@ Purpose: move runtime application connections from the owning `postgres` role to
 2. `ALTER ROLE finnor_app LOGIN PASSWORD '<generated password>'` through the current
    owner connection.
 3. Update the AWS-managed `DATABASE_URL` value to the restricted URL; add the preserved
-   owner URL as `MIGRATIONS_DATABASE_URL` only on the canonical Vercel API and ECS worker surfaces.
+   owner URL as `MIGRATIONS_DATABASE_URL` only on the canonical Vercel API and Azure worker surfaces.
 4. Restart/deploy staging. Probe `SELECT current_user, rolbypassrls` through the runtime
    URL and run the tenant-isolation suite. Roll back by restoring the prior managed
    `DATABASE_URL` value immediately if either fails.

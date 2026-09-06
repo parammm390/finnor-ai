@@ -7,10 +7,9 @@ export const OUTCOME_PACK_AUTONOMY_MODES = ["shadow", "approval", "autopilot"] a
 export type OutcomePackAutonomyMode = (typeof OUTCOME_PACK_AUTONOMY_MODES)[number];
 
 export const OUTCOME_PACK_IDS = [
-  "lead_to_verified_water_test_booking",
-  "stuck_installation_service_resolution",
-  "overdue_receivable_collection",
-  "service_due_lifecycle",
+  "deal_to_verified_closing_readiness",
+  "deal_request_resolution",
+  "critical_deal_dependency_resolution",
   "general_operator_objective",
 ] as const;
 export type OutcomePackId = (typeof OUTCOME_PACK_IDS)[number];
@@ -67,7 +66,7 @@ export interface OutcomePackStartBinding {
   packVersion: number;
   mode: OutcomePackAutonomyMode;
   objective: string;
-  subjectRefs: CanonicalEntityRef[];
+  subjectRefs: CanonicalEntityRef<string>[];
   successCondition: ObjectiveSuccessCondition;
   input: Record<string, unknown>;
   certificationFingerprint: string;

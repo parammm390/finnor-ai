@@ -3,10 +3,9 @@
 // keyed by a real composite primary key so concurrent claims are enforced by Postgres
 // itself, not app-level sequencing. Used by ScopedToolRegistry (registry.ts) so a
 // retried execution (reflection retry, a resumed LangGraph thread) never re-fires an
-// already-completed external side effect like sending an SMS or syncing an invoice.
+// already-completed external side effect such as delivering a message twice.
 
 import { withTenant, externalOperations, tenantIntegrations, authProfiles } from "@finnor/db";
-import type { Db } from "@finnor/db";
 import { and, eq, sql } from "drizzle-orm";
 import { redactStructured } from "@finnor/security";
 
@@ -26,9 +25,8 @@ export async function claimExternalOperation(
   provider?: string,
   businessEffectId?: string,
   authProfileRef?: string,
-  txDb?: Db,
 ): Promise<ClaimResult> {
-  const claim = async (db: Db): Promise<ClaimResult> => {
+  return withTenant(tenantId, async (db) => {
     let integrationId: string | null = null;
     if (provider && ACCOUNT_BOUND_PROVIDERS.has(provider)) {
       const candidates = authProfileRef
@@ -126,8 +124,7 @@ export async function claimExternalOperation(
       return { claimed: false, existing: refetched ?? existing } as const;
     }
     return { claimed: false, existing } as const;
-  };
-  return txDb ? claim(txDb) : withTenant(tenantId, claim);
+  });
 }
 
 /**
@@ -164,19 +161,14 @@ export async function recordExternalOperationResult(
   operationKey: string,
   status: "succeeded" | "failed" | "unknown",
   response: Record<string, unknown>,
-  txDb?: Db,
 ): Promise<ExternalOperationRow | null> {
   const redacted = redactStructured(response) as Record<string, unknown>;
-  // Provider/native record identifiers are required to resume a multi-step effect
-  // after a crash (for example: replay a successful contact upsert, then send the
-  // SMS to that contact). They are opaque operational keys, not message content or
-  // phone/email PII. Preserve only this small allowlist after structural redaction;
-  // without it the cached replay returned "[REDACTED]" as contactId and made a safe
-  // retry fail before the send.
-  for (const key of ["id", "contactId", "householdId", "messageId", "campaignId", "visitId", "appointmentId", "callId", "communicationIdentityId", "externalInvoiceId", "externalCustomerId", "linkId", "envelopeId"]) {
+  // Opaque provider/native record identifiers are required for safe crash replay.
+  // Preserve only vertical-neutral identifiers after structural redaction.
+  for (const key of ["id", "contactId", "messageId", "callId", "communicationIdentityId", "documentId", "taskId", "dealId", "companyId", "partyId", "externalRecordId", "linkId", "envelopeId"]) {
     if (typeof response[key] === "string") redacted[key] = response[key];
   }
-  const record = async (db: Db): Promise<ExternalOperationRow | null> => {
+  return withTenant(tenantId, async (db) => {
     const [operation] = await db.select({ integrationId: externalOperations.integrationId }).from(externalOperations).where(and(
       eq(externalOperations.tenantId, tenantId),
       eq(externalOperations.domainActionId, domainActionId),
@@ -185,7 +177,7 @@ export async function recordExternalOperationResult(
     const requiresObservation = Boolean(operation?.integrationId);
     const [row] = await db
       .update(externalOperations)
-      // Cached results are replayed internally, but they are still durable customer
+      // Cached results are replayed internally, but they are still durable business
       // data. Keep only the minimum structured result and redact direct identifiers
       // before persisting the ledger.
       .set({
@@ -201,8 +193,7 @@ export async function recordExternalOperationResult(
       .where(and(eq(externalOperations.domainActionId, domainActionId), eq(externalOperations.operationKey, operationKey)))
       .returning();
     return row ?? null;
-  };
-  return txDb ? record(txDb) : withTenant(tenantId, record);
+  });
 }
 
 /** Explicit provider reconciliation is the only way an unknown operation becomes a

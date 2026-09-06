@@ -10,5 +10,12 @@
     "tests/**/*.ts",
     "scripts/**/*.ts"
   ],
-  "exclude": ["node_modules", "**/node_modules", "**/.next"]
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "**/.next",
+    "**/* 2.ts",
+    "**/* 2.tsx",
+    "**/* 2.json"
+  ]
 }

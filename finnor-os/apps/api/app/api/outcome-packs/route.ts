@@ -4,7 +4,6 @@ import { OUTCOME_PACK_DEFINITIONS, evaluateOutcomeAutonomyReadiness, outcomePack
 import { outcomePackCertifications, tenantOutcomePackSettings, withTenant } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { errorResponse, requireContext } from "../../../lib/auth";
-import { createInteractiveIntakeDeadline, requireInteractiveIntakeTime } from "../../../lib/intake-deadline";
 
 export async function GET(req: Request): Promise<Response> {
   try {
@@ -37,10 +36,8 @@ export async function POST(req: Request): Promise<Response> {
     const ctx = await requireContext(req);
     const parsed = StartOutcomePackSchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
-    const intakeDeadlineAt = createInteractiveIntakeDeadline(parsed.data.channel);
     const budgets = parsed.data.budgets;
     const input = { ...parsed.data.input, mode: parsed.data.input.mode ?? "approval" };
-    requireInteractiveIntakeTime(intakeDeadlineAt);
     const started = await startOutcomePack(parsed.data.packId as OutcomePackId, input, ctx, {
       channel: parsed.data.channel,
       sessionId: parsed.data.sessionId,
@@ -54,7 +51,6 @@ export async function POST(req: Request): Promise<Response> {
       maxPlannerFailures: budgets?.maxPlannerFailures,
       maxConsecutiveNoProgress: budgets?.maxConsecutiveNoProgress,
       deadlineAt: budgets?.deadlineAt ? new Date(budgets.deadlineAt) : undefined,
-      intakeDeadlineAt: new Date(intakeDeadlineAt),
     });
     return Response.json({ outcomePack: started }, { status: started.duplicate ? 200 : 202 });
   } catch (error) {

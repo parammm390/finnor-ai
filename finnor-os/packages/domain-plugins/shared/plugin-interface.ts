@@ -10,6 +10,26 @@ import type {
 } from "@finnor/shared-types";
 import type { ToolRegistry } from "@finnor/tools";
 
+export interface DomainActionGrounding {
+  draft: DraftAction;
+  groundedPayload: Array<{
+    field: string;
+    status: "verified" | "not_found" | "unverifiable";
+  }>;
+}
+
+/** A typed, expected refusal at the intent -> execution-truth boundary. */
+export class ActionGroundingError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+    readonly details: Record<string, unknown> = {},
+  ) {
+    super(message);
+    this.name = "ActionGroundingError";
+  }
+}
+
 export interface DomainEnginePlugin {
   /** Human-readable plugin name, for logs and the audit view. */
   name: string;
@@ -22,6 +42,10 @@ export interface DomainEnginePlugin {
   // Async allowed: batch plugins read tenant data (read-only!) to build the spoken
   // summary. Side effects still belong exclusively in execute().
   draft(actionType: string, payload: unknown, policy: DomainPolicy): DraftAction | Promise<DraftAction>;
+  /** Resolve planner intent to current canonical identifiers/state before a
+   * BusinessEffect is compiled or authority is evaluated. Plugins that omit this
+   * hook retain the established compiler-only grounding path. */
+  ground?(draft: DraftAction, action: DomainAction, policy: DomainPolicy): Promise<DomainActionGrounding>;
   /** Upgrade 6: optional proposal-time hook for the small set of actions whose
    * approved work must outlive the approval request. It freezes an inspectable
    * operation/cohort before the gate and returns the operation id in the draft.

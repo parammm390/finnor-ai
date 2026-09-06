@@ -10,7 +10,7 @@ function workCase(id: string, status: WorkCaseStatus, overrides: Partial<WorkCas
     status,
     createdAt: "2026-08-15T08:00:00.000Z",
     updatedAt: "2026-08-15T09:00:00.000Z",
-    source: { kind: "system", id, channel: "text" },
+    source: { kind: "work", id, channel: "text" },
     instruction: null,
     actions: [],
     approvals: [],
@@ -46,7 +46,7 @@ describe("projectRestingAttention", () => {
     const rows = [
       workCase("working", "Working"),
       workCase("approval", "Needs you", { approvals: [{ actionId: "a1", status: "pending", decidedBy: null, decidedAt: null, pendingConfirmationId: "p1" }] }),
-      workCase("failure", "Failed", { durableWork: { id: "failure", status: "failed", executionModel: "atomic_action", sessionId: null, channel: "text", activeContext: null, initiatedBy: null, currentOwnerId: null, assignedTo: null, authorityContext: null, finalOutcome: null, failure: { message: "Provider did not confirm delivery" }, recovery: { message: "Retry delivery" }, handoffs: [] } }),
+      workCase("failure", "Failed", { durableWork: { id: "failure", status: "failed", sessionId: null, channel: "text", activeContext: null, initiatedBy: null, currentOwnerId: null, assignedTo: null, authorityContext: null, finalOutcome: null, failure: { message: "Provider did not confirm delivery" }, recovery: { message: "Retry delivery" } } }),
       workCase("schedule", "Needs you", { linkedEntities: [{ entityType: "work_order", entityId: "wo-1", via: "work" }] }),
       workCase("money", "Needs you", { linkedEntities: [{ entityType: "invoice", entityId: "inv-1", via: "action" }] }),
       workCase("complete", "Completed"),
@@ -75,8 +75,8 @@ describe("projectRestingAttention", () => {
 
   it("promotes a due waiting objective without treating ordinary in-flight Work as urgent", () => {
     const projected = projectRestingAttention([
-      workCase("due", "Waiting", { objectiveLoop: { id: "objective", objective: "Follow up", state: "waiting", revision: 1, reason: "Customer reply window elapsed", nextStep: "Re-inspect the customer record", nextRunAt: "2026-08-15T09:00:00.000Z", lastObservation: null, successCondition: null, successVerification: null, successVerifiedAt: null, cancelledAt: null, budget: { steps: 1, maxSteps: 10, actions: 0, maxActions: 5, queries: 1, maxQueries: 10 }, iterations: [], eventWaits: [], wakeClaims: [] } }),
-      workCase("future", "Waiting", { objectiveLoop: { id: "future", objective: "Wait", state: "waiting", revision: 1, reason: null, nextStep: null, nextRunAt: "2026-08-16T09:00:00.000Z", lastObservation: null, successCondition: null, successVerification: null, successVerifiedAt: null, cancelledAt: null, budget: { steps: 1, maxSteps: 10, actions: 0, maxActions: 5, queries: 1, maxQueries: 10 }, iterations: [], eventWaits: [], wakeClaims: [] } }),
+      workCase("due", "Waiting", { objectiveLoop: { id: "objective", objective: "Follow up", state: "waiting", revision: 1, reason: "Customer reply window elapsed", nextStep: "Re-inspect the customer record", nextRunAt: "2026-08-15T09:00:00.000Z", lastObservation: null, budget: { steps: 1, maxSteps: 10, actions: 0, maxActions: 5, queries: 1, maxQueries: 10 }, iterations: [] } }),
+      workCase("future", "Waiting", { objectiveLoop: { id: "future", objective: "Wait", state: "waiting", revision: 1, reason: null, nextStep: null, nextRunAt: "2026-08-16T09:00:00.000Z", lastObservation: null, budget: { steps: 1, maxSteps: 10, actions: 0, maxActions: 5, queries: 1, maxQueries: 10 }, iterations: [] } }),
       workCase("working", "Working"),
     ], Date.parse("2026-08-15T10:00:00.000Z"))
 

@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const TENANT_EXPERIENCE_VERSION = 2 as const
-export const WORKSPACE_SURFACES = ["home", "customers", "schedule", "money", "work", "agents"] as const
+export const WORKSPACE_SURFACES = ["home", "work", "customers", "schedule", "money", "agents"] as const
 export type WorkspaceSurfaceKey = typeof WORKSPACE_SURFACES[number]
 export type WorkspaceAccent = "cyan" | "teal" | "amber" | "violet"
 export type ExperienceRole = "owner" | "dispatcher" | "technician"
@@ -96,7 +96,7 @@ export type TenantExtensionConfig = z.infer<typeof ExtensionSchema>
 export const DEFAULT_TENANT_WORKSPACE_CONFIG: TenantWorkspaceConfig = {
   version: 2,
   enabledSurfaces: [...WORKSPACE_SURFACES],
-  terminology: { home: "Home", work: "Work", customers: "Customers", schedule: "Schedule", money: "Money", agents: "AI Team" },
+  terminology: { home: "Home", work: "Work", customers: "Customers", schedule: "Schedule", money: "Money", agents: "Agents" },
   vocabulary: { customer: "Customer", homeowner: "Homeowner", account: "Account", technician: "Technician", installer: "Installer", serviceVisit: "Service Visit", appointment: "Appointment", quote: "Quote", proposal: "Proposal", invoice: "Invoice", job: "Job", work: "Work" },
   voiceEnabled: true,
   navigationPriority: [...WORKSPACE_SURFACES],

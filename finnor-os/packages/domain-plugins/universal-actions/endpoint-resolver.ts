@@ -26,19 +26,6 @@ function endpointSql(tenantId: string, ref: PartyRef, channel: Exclude<Universal
       FROM finnor_os.users u
       WHERE u.tenant_id=${tenantId}::uuid AND u.status='active'
       UNION ALL
-      SELECT 'household',h.id,coalesce(nullif(btrim(h.contact_info->>'name'),''),'Customer household'),
-             CASE WHEN ${channel}='email' THEN nullif(btrim(h.contact_info->>'email'),'') ELSE nullif(btrim(h.contact_info->>'phone'),'') END
-      FROM finnor_os.households h WHERE h.tenant_id=${tenantId}::uuid
-      UNION ALL
-      SELECT 'contact',c.id,c.name,m.value
-      FROM finnor_os.contacts c
-      JOIN LATERAL (
-        SELECT value FROM finnor_os.contact_methods
-        WHERE tenant_id=c.tenant_id AND contact_id=c.id AND method_type=${methodType} AND consent=true
-        ORDER BY created_at,id LIMIT 1
-      ) m ON true
-      WHERE c.tenant_id=${tenantId}::uuid AND c.archived_at IS NULL
-      UNION ALL
       SELECT 'external_organization',o.id,o.name,
              CASE WHEN ${channel}='email' THEN o.business_email ELSE o.business_phone END
       FROM finnor_os.external_organizations o WHERE o.tenant_id=${tenantId}::uuid AND o.active=true

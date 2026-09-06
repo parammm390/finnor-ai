@@ -13,6 +13,16 @@ node_modules
 *.tsbuildinfo
 vercel_output.txt
 
+# macOS/iCloud conflict copies are cloud-only artifacts, not source files. Keep
+# them out of the release candidate so tooling never traverses a duplicate file
+# with a non-canonical basename (for example `index 2.ts`).
+**/* 2.ts
+**/* 2.tsx
+**/* 2.json
+
+# Local recovery workspace is a nested repository, never a release artifact.
+/.codex-release-recovery/
+
 # Playwright (Phase 7 §7.10) run artifacts — never source
 /playwright-report/
 /test-results/

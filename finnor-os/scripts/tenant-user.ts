@@ -3,7 +3,7 @@ import type pg from "pg";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getPool } from "@finnor/db";
 
-export type TenantUserRole = "owner" | "dispatcher" | "technician";
+export type TenantUserRole = "owner";
 export type TenantUserStatus = "active" | "suspended";
 
 export type TenantAuthAdmin = SupabaseClient["auth"]["admin"];
@@ -66,6 +66,7 @@ export async function ensureTenantUser(
   input: EnsureTenantUserInput,
   dependencies: { auth: TenantAuthAdmin; pool?: pg.Pool },
 ): Promise<EnsureTenantUserResult> {
+  if (input.role !== "owner") throw new Error("Phase 5 permits only the owner role");
   const email = normalizeEmail(input.email);
   const pool = dependencies.pool ?? getPool();
   const client = await pool.connect();

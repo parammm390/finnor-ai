@@ -56,12 +56,14 @@ describe.skipIf(!available)("scan_integration_health (A3.T2)", () => {
   });
 
   it("reports native binding as ok — no external vendor to probe", async () => {
-    await withTenant(TENANT, (db) => db.insert(tenantIntegrations).values({ tenantId: TENANT, capability: "crm", binding: "native", mode: "real" }));
+    await withTenant(TENANT, (db) => db.delete(tenantIntegrations).where(and(eq(tenantIntegrations.tenantId, TENANT), eq(tenantIntegrations.capability, "communications"))));
+    await withTenant(TENANT, (db) => db.insert(tenantIntegrations).values({ tenantId: TENANT, capability: "communications", binding: "native", mode: "real" }));
     await scanIntegrationHealth({ tenantId: TENANT });
-    const row = await rowFor("crm");
+    const row = await rowFor("communications");
     expect(row?.health).toBe("ok");
     expect(row?.lastCheckAt).not.toBeNull();
     expect(row?.lastError).toBeNull();
+    await withTenant(TENANT, (db) => db.delete(tenantIntegrations).where(and(eq(tenantIntegrations.tenantId, TENANT), eq(tenantIntegrations.capability, "communications"))));
   });
 
   it("reports down and the breaker's own reason the instant a circuit is open — never an independent, disagreeing reading", async () => {

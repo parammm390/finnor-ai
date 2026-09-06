@@ -24,9 +24,6 @@
 import { jarvisGet, jarvisPost, jarvisPut, JarvisApiError } from "../components/jarvis/lib/api"
 import type { paths } from "./jarvis/openapi-types"
 import type { OperatingInteractionContextValue } from "../components/jarvis/kernel/operating-interaction"
-import type { OperationalQueryExecution } from "../components/jarvis/workspaces/contracts"
-import type { AssistantSemanticKind, InstructionExecutionModel, InstructionSubmissionResult as CanonicalInstructionSubmissionResult } from "../../finnor-os/packages/shared-types/src/instruction-submission"
-import type { WorkCaseProjection as CanonicalWorkCaseProjection } from "../../finnor-os/packages/read-models/src/work-cases"
 import type {
   StatsResponse,
   PendingAction,
@@ -47,48 +44,6 @@ import type {
 } from "../components/jarvis/lib/data-core"
 
 export { JarvisApiError }
-export type { AssistantSemanticKind, InstructionExecutionModel } from "../../finnor-os/packages/shared-types/src/instruction-submission"
-
-export interface PlannedActionResponse {
-  id: string
-  actionType: string
-  payload: Record<string, unknown>
-  policyId: string | null
-  policyVersion?: number | null
-  dependsOn?: string[] | null
-  status: string
-  createdAt: string
-  groundedPayload?: Array<{ field: string; status: "verified" | "not_found" | "unverifiable" }> | null
-  reasoning?: string
-}
-
-export interface AnswerResponseFact {
-  label: string
-  value: string
-  source?: string
-}
-
-export interface AnswerResponse {
-  kind: "answer"
-  spokenSummary: string
-  displaySummary?: string
-  facts?: AnswerResponseFact[]
-  display?: { title?: string; facts?: AnswerResponseFact[] }
-  query?: OperationalQueryExecution
-}
-
-export type SubmitInstructionResult = CanonicalInstructionSubmissionResult<PlannedActionResponse, OperationalQueryExecution, AnswerResponse>
-
-export interface SubmitInstructionRequest {
-  instruction: string
-  channel?: "voice" | "text" | "console"
-  sessionId?: string
-  instructionId?: string
-  workId?: string
-  threadId?: string
-  idempotencyKey?: string
-  activeContext?: OperatingInteractionContextValue
-}
 
 // Every real proxy-reachable path this client calls, keyed by a friendly name, mapped
 // to its "/api/..." form. `satisfies Record<string, keyof paths>` fails to compile if
@@ -411,8 +366,100 @@ export interface EmployeeDirectoryEntry {
   roles: string[]
   legacyRole: string
 }
-/** One authoritative Work read model shared with the backend projector. */
-export type WorkCaseProjection = CanonicalWorkCaseProjection
+export interface WorkCaseProjection {
+  id: string
+  root: { kind: string; id: string }
+  title: string
+  status: WorkCaseStatus
+  createdAt: string
+  updatedAt: string
+  source: { kind: string; id: string | null; channel: string | null }
+  instruction: WorkInstruction | null
+  actions: WorkAction[]
+  approvals: WorkApproval[]
+  workflows: WorkWorkflow[]
+  receipts: WorkReceipt[]
+  operations?: WorkOperation[]
+  linkedEntities: WorkEntityLink[]
+  businessEvents: WorkBusinessEvent[]
+  calls: WorkCall[]
+  relatedActionIds: string[]
+  provenance: string[]
+  durableWork?: {
+    id: string
+    status: string
+    sessionId: string | null
+    channel: string
+    activeContext: unknown
+    initiatedBy: string | null
+    currentOwnerId: string | null
+    assignedTo: string | null
+    authorityContext: unknown
+    finalOutcome: unknown
+    failure: unknown
+    recovery: unknown
+    handoffs?: Array<{
+      sequence: number
+      fromEmployeeId: string | null
+      toEmployeeId: string | null
+      actorId: string | null
+      note: string | null
+      authorityRevision: number | null
+      createdAt: string
+    }>
+  }
+  objectiveLoop?: {
+    id: string
+    objective: string
+    state: "continue" | "awaiting_approval" | "waiting" | "blocked" | "completed" | "failed" | "cancelled"
+    revision: number
+    reason: string | null
+    nextStep: string | null
+    nextRunAt: string | null
+    lastObservation: unknown
+    budget: { steps: number; maxSteps: number; actions: number; maxActions: number; queries: number; maxQueries: number }
+    iterations: Array<{
+      id: string
+      stepNumber: number
+      phase: string
+      decisionKind: string | null
+      reason: string | null
+      observation: unknown
+      progressMade: boolean | null
+      outcome: string | null
+      scheduledFor: string | null
+      completedAt: string | null
+      plannerAttempts: Array<{ id: string; attempt: number; status: string; provider: string | null; failure: unknown }>
+    }>
+  }
+  outcomePack?: {
+    id: string
+    packId: string
+    packVersion: number
+    mode: "shadow" | "approval" | "autopilot"
+    status: string
+    certificationFingerprint: string
+    objective: string
+    subjectRefs: unknown
+    blockedReason: string | null
+    finalVerification: unknown
+    latestAutonomyDecision: {
+      outcome: string
+      eligible: boolean
+      reasonCodes: string[]
+      grantId: string | null
+      evaluatedAt: string
+    } | null
+    shadowProposals: Array<{
+      id: string
+      businessEffectId: string
+      semanticHash: string
+      comparisonStatus: string
+      proposedAt: string
+      comparedAt: string | null
+    }>
+  }
+}
 
 // Phase 3 — presentation-safe detail projection for one selected durable Work.
 export type ExecutionNodeStatus = "waiting_dependency" | "runnable" | "awaiting_approval" | "approved" | "executing" | "verifying" | "succeeded" | "failed" | "blocked" | "denied" | "rejected"
@@ -580,8 +627,8 @@ export const jarvisClient = {
   policy: (tenantId: string, actionType: string): Promise<unknown> => jarvisGet(`policies/${tenantId}/${actionType}`),
 
   // ---- POST ----
-  submitInstruction: (body: SubmitInstructionRequest): Promise<SubmitInstructionResult> =>
-    jarvisPost<SubmitInstructionResult>("actions", body),
+  submitAction: (body: { instruction: string; channel?: "voice" | "text" | "console"; sessionId?: string }): Promise<{ planned: unknown[] }> =>
+    jarvisPost<{ planned: unknown[] }>("actions", body),
 
   startObjective: (body: { objective: string; channel?: "voice" | "text" | "console"; idempotencyKey?: string; activeContext?: OperatingInteractionContextValue }): Promise<ObjectiveStartResponse> =>
     jarvisPost<ObjectiveStartResponse>("objectives", body),
@@ -625,11 +672,6 @@ export const jarvisClient = {
     data: WorkCaseProjection[]
     page: { limit: number; hasMore: boolean; nextCursor: string | null; rootScope: "canonical_work" | "legacy_instruction"; childRowsTruncated: boolean; childRowLimitPerTable: number }
   }> => jarvisGet("read-models/work-cases"),
-
-  workCase: async (workId: string): Promise<WorkCaseProjection | null> => {
-    const response = await jarvisGet<{ view: "work-cases"; data: WorkCaseProjection[] }>("read-models/work-cases", { workId })
-    return response.data[0] ?? null
-  },
 
   workExecution: (workId: string): Promise<{ execution: ExecutionProjection }> =>
     jarvisGet<{ execution: ExecutionProjection }>(`works/${workId}/execution`),

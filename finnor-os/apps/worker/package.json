@@ -16,8 +16,6 @@
     "@finnor/db": "*",
     "@finnor/memory": "*",
     "@finnor/orchestration": "*",
-    "@finnor/plugin-bulk-notify": "*",
-    "@finnor/plugin-service-reminders": "*",
     "@finnor/projections": "*",
     "@finnor/read-models": "*",
     "@finnor/security": "*",

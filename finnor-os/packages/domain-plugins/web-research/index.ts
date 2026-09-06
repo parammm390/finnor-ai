@@ -1,6 +1,5 @@
-// Web research domain plugin — REAL via Exa: competitor scans, review lookups, and
-// open web research. Read-only against the outside world, so it defaults ungated
-// (seeded policy) — but still flows through the same audit pipeline as everything else.
+// Core web research plugin. Domain-neutral research stays reusable while vertical-
+// specific monitoring and business wrappers are intentionally absent.
 
 import type { DomainEnginePlugin } from "../shared/plugin-interface";
 import type { DraftAction, ExecutionResult, ValidationResult, DomainPolicy } from "@finnor/shared-types";
@@ -236,24 +235,8 @@ export const WebSearchSchema = z.object({
     sourceKinds: z.tuple([z.literal("PROFILE"), z.literal("WEB")]),
   }).optional(),
 });
-export const CompetitorScanSchema = z.object({
-  area: z.string().min(2).max(200), // "Cedar Falls Iowa"
-  focus: opt(z.string().max(200)), // e.g. "pricing", "PFAS treatment"
-  // Explicit source URLs opt this scan into Firecrawl snapshots. Discovery still
-  // uses Exa below; monitoring never guesses URLs from a search snippet.
-  sources: opt(z.array(z.string().url().max(2048)).max(5)),
-  responseChannel: ResponseChannelSchema.optional(),
-});
-export const ReviewScanSchema = z.object({
-  businessName: z.string().min(2).max(200),
-  area: opt(z.string().max(200)),
-  responseChannel: ResponseChannelSchema.optional(),
-});
-
 const SCHEMAS: Record<string, z.ZodTypeAny> = {
   search_web: WebSearchSchema,
-  scan_competitors: CompetitorScanSchema,
-  check_business_reviews: ReviewScanSchema,
 };
 
 export const webResearchPlugin: DomainEnginePlugin = {
@@ -275,14 +258,9 @@ export const webResearchPlugin: DomainEnginePlugin = {
 
   draft(actionType, payload, policy: DomainPolicy): DraftAction {
     const p = SCHEMAS[actionType]!.parse(payload) as Record<string, unknown>;
-    const summaries: Record<string, string> = {
-      search_web: `Search the web: "${p.query}"`,
-      scan_competitors: `Scan water treatment competitors around ${p.area}${p.focus ? ` (focus: ${p.focus})` : ""}.`,
-      check_business_reviews: `Look up recent reviews of ${p.businessName}${p.area ? ` in ${p.area}` : ""}.`,
-    };
     return {
       actionType,
-      summary: summaries[actionType]!,
+      summary: `Search the web: "${p.query}"`,
       payload: { ...p, tenantId: policy.tenantId },
       requiresConfirmation: policy.requiresConfirmation,
     };
@@ -292,75 +270,7 @@ export const webResearchPlugin: DomainEnginePlugin = {
     const p = draft.payload;
     const tenantId = String(p.tenantId ?? "");
     const responseChannel = (p.responseChannel ?? "text") as LLMChannel;
-    const query =
-      draft.actionType === "search_web"
-        ? String(p.query)
-        : draft.actionType === "scan_competitors"
-          ? `water treatment softener filtration companies near ${p.area}${p.focus ? ` ${p.focus}` : ""}`
-        : `${p.businessName}${p.area ? ` ${p.area}` : ""} customer reviews complaints ratings`;
-
-    const sourceUrls = draft.actionType === "scan_competitors" && Array.isArray(p.sources)
-      ? p.sources.filter((value): value is string => typeof value === "string")
-      : [];
-    if (sourceUrls.length > 0) {
-      const scraped: FirecrawlScrapeResult[] = [];
-      const failedSources: Array<{ url: string; error: string }> = [];
-      for (const url of sourceUrls) {
-        const result = await tools.call("firecrawl_scrape", { url });
-        if (!result.ok) failedSources.push({ url, error: result.error ?? "source unavailable" });
-        else {
-          const value = result.output.result as FirecrawlScrapeResult | undefined;
-          if (value?.snapshot && value.citation && typeof value.content === "string") scraped.push(value);
-          else failedSources.push({ url, error: "source returned no typed citation" });
-        }
-      }
-      if (scraped.length === 0) {
-        return {
-          status: "integration_unavailable",
-          output: { query, results: [], citations: [], failedSources },
-          error: "No competitor source could be read; no claims were generated.",
-          errorKind: "provider_down",
-        };
-      }
-      const citations: WebCitation[] = scraped.map((result) => result.citation);
-      const sourceProjection = scraped.map((result) => ({ title: result.title, url: result.url, excerpt: result.excerpt }));
-      let spokenSummary = `Read ${scraped.length} verified competitor source snapshot${scraped.length === 1 ? "" : "s"}; review the cited pages for exact details.`;
-      try {
-        spokenSummary = await synthesizeVerifiedResearch(query, sourceProjection, responseChannel, tenantId, p.researchContext as Record<string, unknown> | undefined);
-      } catch (error) {
-        console.warn("[web-research] source synthesis unavailable", {
-          name: error instanceof Error ? error.name : "UnknownError",
-          message: error instanceof Error ? error.message.slice(0, 240) : "Unknown provider failure",
-        });
-        // The verified source projection remains useful and cited even if the
-        // answer model is temporarily unavailable.
-      }
-      return {
-        status: "success",
-        output: {
-          query,
-          results: scraped.map((result) => ({ title: result.title, url: result.url, snippet: result.excerpt })),
-          citedResults: scraped.map((result) => ({
-            provider: result.provider,
-            title: result.title,
-            url: result.url,
-            excerpt: result.excerpt,
-            citation: result.citation,
-            snapshot: result.snapshot,
-          })),
-          citations: citations.map((citation) => ({ ...citation, evidenceKind: "WEB" })),
-          failedSources,
-          spokenSummary,
-          displaySafe: {
-            title: "Verified research",
-            evidenceKind: "WEB",
-            sourceCount: scraped.length,
-            sources: sourceProjection.map(({ title, url }) => ({ title, url })),
-          },
-        },
-        expected: { answered: true, sourceSnapshots: scraped.length, partial: failedSources.length > 0 },
-      };
-    }
+    const query = String(p.query);
 
     const r = await tools.call("web_search", { query, numResults: Number(p.numResults ?? 5) });
     if (!r.ok) {
@@ -415,5 +325,3 @@ export const webResearchPlugin: DomainEnginePlugin = {
 };
 
 export default webResearchPlugin;
-
-export * from "./watch-service";

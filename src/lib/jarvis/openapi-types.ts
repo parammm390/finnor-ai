@@ -415,151 +415,12 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Canonical QUERY, CONVERSATION, ATOMIC_ACTION, or CLARIFY result */
+                /** @description Planned domain actions */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @constant */
-                            executionModel: "QUERY";
-                            actions: {
-                                [key: string]: unknown;
-                            }[];
-                            query: {
-                                [key: string]: unknown;
-                            };
-                            answer?: {
-                                [key: string]: unknown;
-                            };
-                            /** Format: uuid */
-                            workId: string;
-                            /** Format: uuid */
-                            workInputId: string;
-                            /** Format: uuid */
-                            instructionId: string;
-                            /** Format: uuid */
-                            threadId: string;
-                            assistantMessage: {
-                                /** Format: uuid */
-                                id: string;
-                                originalText: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** @enum {string} */
-                                semanticKind: "ANSWER" | "ACKNOWLEDGEMENT" | "CLARIFICATION";
-                            };
-                        } | {
-                            /** @constant */
-                            executionModel: "CONVERSATION";
-                            actions: {
-                                [key: string]: unknown;
-                            }[];
-                            answer: {
-                                [key: string]: unknown;
-                            };
-                            /** Format: uuid */
-                            workId: string;
-                            /** Format: uuid */
-                            workInputId: string;
-                            /** Format: uuid */
-                            instructionId: string;
-                            /** Format: uuid */
-                            threadId: string;
-                            assistantMessage: {
-                                /** Format: uuid */
-                                id: string;
-                                originalText: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** @enum {string} */
-                                semanticKind: "ANSWER" | "ACKNOWLEDGEMENT" | "CLARIFICATION";
-                            };
-                        } | {
-                            /** @constant */
-                            executionModel: "ATOMIC_ACTION";
-                            actions: {
-                                [key: string]: unknown;
-                            }[];
-                            /** Format: uuid */
-                            workId: string;
-                            /** Format: uuid */
-                            workInputId: string;
-                            /** Format: uuid */
-                            instructionId: string;
-                            /** Format: uuid */
-                            threadId: string;
-                            assistantMessage: {
-                                /** Format: uuid */
-                                id: string;
-                                originalText: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** @enum {string} */
-                                semanticKind: "ANSWER" | "ACKNOWLEDGEMENT" | "CLARIFICATION";
-                            };
-                        } | {
-                            /** @constant */
-                            executionModel: "CLARIFY";
-                            actions: {
-                                [key: string]: unknown;
-                            }[];
-                            /** Format: uuid */
-                            workId: string;
-                            /** Format: uuid */
-                            workInputId: string;
-                            /** Format: uuid */
-                            instructionId: string;
-                            /** Format: uuid */
-                            threadId: string;
-                            assistantMessage: {
-                                /** Format: uuid */
-                                id: string;
-                                originalText: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** @enum {string} */
-                                semanticKind: "ANSWER" | "ACKNOWLEDGEMENT" | "CLARIFICATION";
-                            };
-                        };
-                    };
-                };
-                /** @description Canonical durable OBJECTIVE handoff */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @constant */
-                            executionModel: "OBJECTIVE";
-                            actions: {
-                                [key: string]: unknown;
-                            }[];
-                            /** Format: uuid */
-                            objectiveLoopId: string;
-                            /** @enum {string} */
-                            objectiveState: "continue" | "awaiting_approval" | "waiting" | "blocked" | "completed" | "failed" | "cancelled";
-                            /** Format: uuid */
-                            workId: string;
-                            /** Format: uuid */
-                            workInputId: string;
-                            /** Format: uuid */
-                            instructionId: string;
-                            /** Format: uuid */
-                            threadId: string;
-                            assistantMessage: {
-                                /** Format: uuid */
-                                id: string;
-                                originalText: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** @enum {string} */
-                                semanticKind: "ANSWER" | "ACKNOWLEDGEMENT" | "CLARIFICATION";
-                            };
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Invalid payload */
                 400: {
@@ -570,13 +431,6 @@ export interface paths {
                 };
                 /** @description Bad auth */
                 401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Legacy response requires canonical Work projection */
-                409: {
                     headers: {
                         [name: string]: unknown;
                     };

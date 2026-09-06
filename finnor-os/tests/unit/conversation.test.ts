@@ -3,7 +3,7 @@ import type { LLMProvider } from "../../packages/orchestration/src/llm";
 import { isConversationalTurn, LLMConversationResponder, safeReadFallbackForInstruction } from "@finnor/orchestration";
 
 const memory = {
-  shortTerm: { turns: [{ instruction: "How are collections?", result: "Two invoices are overdue." }] },
+  shortTerm: { turns: [{ instruction: "How is closing readiness?", result: "One condition is still open." }] },
   longTerm: null,
   semantic: [],
   episodic: [],
@@ -16,19 +16,7 @@ describe("real conversational lane", () => {
     (instruction) => expect(isConversationalTurn(instruction)).toBe(true),
   );
 
-  it.each([
-    "Hello JARVIS. Confirm this certification session is connected. 1-abc",
-    "Hello JARVIS. This exact certification submission must be idempotent. 1-abc",
-  ])("recognizes a nonce-scoped greeting/status acknowledgement: %s", (instruction) => {
-    expect(isConversationalTurn(instruction)).toBe(true);
-  });
-
-  it("does not let a greeting prefix bypass consequential business routing", () => {
-    expect(isConversationalTurn("Hello JARVIS. Confirm the payment is received.")).toBe(false);
-    expect(isConversationalTurn("Hello JARVIS. Send the invoice to Acme.")).toBe(false);
-  });
-
-  it.each(["Create an invoice for Acme", "Research current water-treatment ad trends", "How much cash is overdue?", "What can you tell me about our leads?"])(
+  it.each(["Open a diligence workstream", "Research current private-equity diligence trends", "Which closing conditions are open?", "What can you tell me about our deals?"])(
     "keeps business reads and actions on the planner stack: %s",
     (instruction) => expect(isConversationalTurn(instruction)).toBe(false),
   );
@@ -42,7 +30,7 @@ describe("real conversational lane", () => {
       "hey",
       { tenantId: "tenant-a", userId: "owner-a", role: "owner", correlationId: "trace-a" },
       memory,
-      { channel: "text", capabilityActionTypes: ["search_web", "create_invoice", "route_suggestion"] },
+      { channel: "text", capabilityActionTypes: ["search_web", "open_workstream", "send_message"] },
     );
 
     expect(complete).toHaveBeenCalledWith(expect.objectContaining({
@@ -63,23 +51,20 @@ describe("real conversational lane", () => {
 });
 
 describe("safe empty-plan recovery", () => {
-  const actions = ["answer_business_question", "search_web"];
+  const actions = ["search_web"];
 
   it("routes external research to the existing web research action", () => {
-    expect(safeReadFallbackForInstruction("Research the latest local competitor reviews", actions)).toMatchObject({
+    expect(safeReadFallbackForInstruction("Research the latest diligence benchmarks", actions)).toMatchObject({
       action_type: "search_web",
-      payload: { query: "Research the latest local competitor reviews" },
+      payload: { query: "Research the latest diligence benchmarks" },
     });
   });
 
-  it("routes an internal business question to grounded business QA", () => {
-    expect(safeReadFallbackForInstruction("How much cash is overdue?", actions)).toMatchObject({
-      action_type: "answer_business_question",
-      payload: { question: "How much cash is overdue?" },
-    });
+  it("keeps internal business questions on the canonical query plane", () => {
+    expect(safeReadFallbackForInstruction("Which closing conditions are open?", actions)).toBeNull();
   });
 
   it("never guesses a write when the planner returned no valid action", () => {
-    expect(safeReadFallbackForInstruction("Create and send an invoice for Acme", actions)).toBeNull();
+    expect(safeReadFallbackForInstruction("Create and send a diligence request", actions)).toBeNull();
   });
 });

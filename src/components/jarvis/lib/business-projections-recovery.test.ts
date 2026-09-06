@@ -21,12 +21,4 @@ describe("business projection realtime recovery", () => {
     expect(delay).toBeGreaterThan(recoveryStatus)
     expect(runtime).not.toContain("try { await replay() } catch")
   })
-
-  it("publishes accepted authenticated deltas to the browser observation surface", () => {
-    const callback = source.slice(source.indexOf("await consumeSse"), source.indexOf("if (!cancelled) throw new Error", source.indexOf("await consumeSse")))
-    expect(callback).toContain('event !== "operational_delta"')
-    expect(callback).toContain("applyDelta(delta)")
-    expect(callback).toContain("publishOperationalDelta(delta)")
-    expect(callback.indexOf("publishOperationalDelta(delta)")).toBeGreaterThan(callback.indexOf("applyDelta(delta)"))
-  })
 })

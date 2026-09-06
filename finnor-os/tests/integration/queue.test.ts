@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { getPool, closePool } from "@finnor/db";
-import { JobQueue, reservedInteractiveConcurrency, workerConcurrency } from "../../apps/worker/src/queue";
+import { JobQueue, workerConcurrency } from "../../apps/worker/src/queue";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 
@@ -163,27 +163,10 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
     expect(rows[0].n).toBe(3);
   });
 
-  it("an interactive-reserved slot never claims Objective/batch work", async () => {
-    await clearQueueTestJobs();
-    const queue = new JobQueue();
-    const completed: string[] = [];
-    queue.register("drain_test", async (payload) => { completed.push(String(payload.id)); });
-    await queue.enqueue("drain_test", { id: "objective" }, `batch-${Date.now()}`, "batch", 100);
-    expect(await queue.tick("interactive")).toBe(false);
-    await queue.enqueue("drain_test", { id: "command" }, `interactive-${Date.now()}`, "interactive", 1);
-    expect(await queue.tick("interactive")).toBe(true);
-    expect(completed).toEqual(["command"]);
-    const { rows } = await getPool().query("SELECT status FROM jobs WHERE type='drain_test' AND payload->>'id'='objective'");
-    expect(rows).toEqual([{ status: "queued" }]);
-  });
-
   it("bounds each process's worker slots and drains an in-flight claim before SIGTERM shutdown", async () => {
     expect(workerConcurrency("3")).toBe(3);
-    expect(workerConcurrency("0")).toBe(2);
-    expect(workerConcurrency("99")).toBe(2);
-    expect(reservedInteractiveConcurrency(1)).toBe(0);
-    expect(reservedInteractiveConcurrency(2)).toBe(1);
-    expect(reservedInteractiveConcurrency(4, "2")).toBe(2);
+    expect(workerConcurrency("0")).toBe(1);
+    expect(workerConcurrency("99")).toBe(1);
     await clearQueueTestJobs();
     const queue = new JobQueue();
     const controller = new AbortController();

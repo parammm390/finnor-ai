@@ -1,6 +1,6 @@
 // B1.T4 acceptance: a Vapi "status-update" webhook message (in-progress call lifecycle
 // — no durable row exists for this yet, see the route's own comment) results in a real
-// 'jarvis_events' NOTIFY with kind:"call_status", carrying the call id and status.
+// 'jarvis_events' NOTIFY with kind:"voice_status", carrying the call id and status.
 // Real POST through the actual route handler, real LISTEN connection, not a mock.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -67,17 +67,17 @@ describe.skipIf(!available)("POST /api/webhooks/vapi — status-update notifies 
     await closePool();
   });
 
-  it("in-progress status fires a call_status NOTIFY", async () => {
+  it("in-progress status fires a voice_status NOTIFY", async () => {
     const callId = `status-update-test-${randomUUID()}`;
     events = [];
     const res = await POST(statusUpdateRequest(callId, "in-progress"));
     expect(res.status).toBe(200);
 
     const deadline = Date.now() + 3000;
-    let found = events.find((e) => e.kind === "call_status" && e.id === callId);
+    let found = events.find((e) => e.kind === "voice_status" && e.id === callId);
     while (!found && Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 25));
-      found = events.find((e) => e.kind === "call_status" && e.id === callId);
+      found = events.find((e) => e.kind === "voice_status" && e.id === callId);
     }
     expect(found).toBeDefined();
     expect(found!.tenantId).toBe(SEED_TENANT_ID);
@@ -92,10 +92,10 @@ describe.skipIf(!available)("POST /api/webhooks/vapi — status-update notifies 
     await POST(statusUpdateRequest(callId, "ended"));
 
     const deadline = Date.now() + 3000;
-    while (events.filter((e) => e.kind === "call_status" && e.id === callId).length < 3 && Date.now() < deadline) {
+    while (events.filter((e) => e.kind === "voice_status" && e.id === callId).length < 3 && Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 25));
     }
-    const statuses = events.filter((e) => e.kind === "call_status" && e.id === callId).map((e) => e.status);
+    const statuses = events.filter((e) => e.kind === "voice_status" && e.id === callId).map((e) => e.status);
     expect(statuses.sort()).toEqual(["ended", "in-progress", "ringing"]);
   });
 });

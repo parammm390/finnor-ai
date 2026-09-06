@@ -20,11 +20,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@finnor/shared-types": r("./packages/shared-types/src/index.ts"),
-      "@finnor/epistemic-runtime": r("./packages/epistemic-runtime/src/index.ts"),
-      "@finnor/operational-ir": r("./packages/operational-ir/src/index.ts"),
-      "@finnor/program-search": r("./packages/program-search/src/index.ts"),
-      "@finnor/speculative-runtime": r("./packages/speculative-runtime/src/index.ts"),
-      "@finnor/trace-compiler": r("./packages/trace-compiler/src/index.ts"),
       "@finnor/policy-schema": r("./packages/policy-schema/src/index.ts"),
       // Deep subpath imports (apps/api's admin/migrate route uses these two) — must
       // come before the bare "@finnor/db" entry below since Vite's object-form alias
@@ -48,6 +43,7 @@ export default defineConfig({
       "@finnor/orchestration": r("./packages/orchestration/src/index.ts"),
       "@finnor/voice-os": r("./packages/voice-os/src/index.ts"),
       "@finnor/read-models": r("./packages/read-models/src/index.ts"),
+      "@finnor/private-equity": r("./packages/private-equity/src/index.ts"),
       "@finnor/plugins-shared": r("./packages/domain-plugins/shared/plugin-interface.ts"),
     },
   },
@@ -56,6 +52,7 @@ export default defineConfig({
     // to tests/ silently skipped the orchestration trace sanitizer and ops-overview
     // plugin tests even though `npm test` appeared green.
     include: ["tests/**/*.test.ts", "packages/**/*.test.ts", "apps/**/*.test.ts"],
+    setupFiles: ["./tests/vertical-fixture-setup.ts"],
     testTimeout: 30_000,
     pool: "forks",
     // Integration tests share ONE real database (migrations, jobs table, tenant rows).

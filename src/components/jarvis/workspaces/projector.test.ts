@@ -46,19 +46,8 @@ describe("projectThreadWorkspace", () => {
     expect(projected.query?.result.intent).toBe("customer_cohort")
   })
 
-  it("keeps a pre-Work infrastructure failure in a receipt", () => {
-    expect(projectThreadWorkspace(thread({
-      machine: { instructionState: "failed" },
-      answerResult: null,
-      workId: null,
-      workPosture: null,
-      everExecuted: false,
-    })).kind).toBe("receipt")
-  })
-
-  it("uses recovery only after execution or in the canonical recovering state", () => {
-    expect(projectThreadWorkspace(thread({ machine: { instructionState: "failed" }, answerResult: null, everExecuted: true })).kind).toBe("recovery")
-    expect(projectThreadWorkspace(thread({ machine: { instructionState: "recovering" }, answerResult: null })).kind).toBe("recovery")
+  it("keeps failed action work in recovery", () => {
+    expect(projectThreadWorkspace(thread({ machine: { instructionState: "failed" }, answerResult: null })).kind).toBe("recovery")
   })
 
   it("routes bulk action plans to campaign work", () => {

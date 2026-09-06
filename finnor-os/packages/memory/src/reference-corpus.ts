@@ -63,7 +63,7 @@ export async function ingestPublicReferencePdf(params: {
   const documentId = existingDocument?.id ?? (await withTenant(params.tenantId, async (db) => {
     const created = await createDocument(db, {
       tenantId: params.tenantId,
-      kind: "public_water_treatment_reference",
+      kind: "public_reference",
       title: params.source.title,
       storageRef: params.source.url,
       provenance: { sourceSystem: params.source.organization, externalId: params.source.url, createdBy: "b3_reference_corpus" },

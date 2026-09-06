@@ -40,7 +40,7 @@ async function draftPendingAction(instruction: string | null): Promise<string> {
   const [row] = await withTenant(TENANT_ID, (db) =>
     db
       .insert(domainActions)
-      .values({ tenantId: TENANT_ID, actionType: "create_invoice", payload: { amountUsd: 50 }, status: "pending", summary: "Create a $50 invoice." })
+      .values({ tenantId: TENANT_ID, actionType: "record_finding", payload: { statement: "Revenue concentration requires review." }, status: "pending", summary: "Record a diligence finding." })
       .returning(),
   );
   await appendEpisode(
@@ -48,7 +48,7 @@ async function draftPendingAction(instruction: string | null): Promise<string> {
     row!.id,
     "planned",
     instruction ? { instruction } : { source: "system_scan" },
-    { actionType: "create_invoice", reasoning: instruction ? "Caller asked for a $50 invoice." : null },
+    { actionType: "record_finding", reasoning: instruction ? "Caller asked to record a diligence finding." : null },
   );
   return row!.id;
 }
@@ -71,7 +71,7 @@ describe.skipIf(!available)("critic_review handler", () => {
   });
 
   it("is a clean no-op when Bedrock isn't configured — never touches the action, never calls fetch", async () => {
-    const actionId = await draftPendingAction("Create a $50 invoice for the Petersons.");
+    const actionId = await draftPendingAction("Record the revenue-concentration diligence finding.");
     await expect(criticReview({ tenantId: TENANT_ID, actionId })).resolves.toBeUndefined();
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(domainActions).where(eq(domainActions.id, actionId)));
     expect(row!.status).toBe("pending");
@@ -87,7 +87,7 @@ describe.skipIf(!available)("critic_review handler", () => {
 
   it("is a no-op when the action is no longer pending", async () => {
     process.env.AWS_BEDROCK_API_KEY = "test-key";
-    const actionId = await draftPendingAction("Create a $50 invoice for the Petersons.");
+    const actionId = await draftPendingAction("Record the revenue-concentration diligence finding.");
     await withTenant(TENANT_ID, (db) => db.update(domainActions).set({ status: "approved" }).where(eq(domainActions.id, actionId)));
     await criticReview({ tenantId: TENANT_ID, actionId });
     const episodes = await readEpisodes(TENANT_ID, { domainActionId: actionId });
@@ -97,7 +97,7 @@ describe.skipIf(!available)("critic_review handler", () => {
   it("records an unflagged verdict as a real episode without touching status", async () => {
     process.env.AWS_BEDROCK_API_KEY = "test-key";
     mockFetchOnce('{"flagged": false, "reason": "Matches the instruction."}');
-    const actionId = await draftPendingAction("Create a $50 invoice for the Petersons.");
+    const actionId = await draftPendingAction("Record the revenue-concentration diligence finding.");
     await criticReview({ tenantId: TENANT_ID, actionId });
     const episodes = await readEpisodes(TENANT_ID, { domainActionId: actionId });
     const critic = episodes.find((e) => e.step === "critic_review");
@@ -109,8 +109,8 @@ describe.skipIf(!available)("critic_review handler", () => {
 
   it("escalates to needs_human_review when the critic flags a real mismatch", async () => {
     process.env.AWS_BEDROCK_API_KEY = "test-key";
-    mockFetchOnce('{"flagged": true, "reason": "Instruction said $50, drafted action says $5000."}');
-    const actionId = await draftPendingAction("Create a $50 invoice for the Petersons.");
+    mockFetchOnce('{"flagged": true, "reason": "The drafted finding contradicts the source evidence."}');
+    const actionId = await draftPendingAction("Record the revenue-concentration diligence finding.");
     await criticReview({ tenantId: TENANT_ID, actionId });
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(domainActions).where(eq(domainActions.id, actionId)));
     expect(row!.status).toBe("needs_human_review");

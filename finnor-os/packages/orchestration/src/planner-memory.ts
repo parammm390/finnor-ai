@@ -7,7 +7,7 @@ import { redactText, redactStructured } from "@finnor/security";
 const MAX_MEMORY_WORDS = 1500;
 const MAX_SHORT_TERM_TURNS = 6;
 const FOLLOW_UP_REFERENCE = /\b(?:again|also|same|them|they|their|him|his|her|hers|it|its|that|those|these|this|former|latter|previous|earlier|above|second\s+one|first\s+one|last\s+one)\b/i;
-const SELF_CONTAINED_INTENT = /\b(?:research|search|look\s+up|show|tell|give|summarize|explain|create|send|record|update|change|delete|remove|approve|reject|schedule|book|call|text|email|pay|charge|reorder|restock|launch|assign|execute|run|start|reschedule|what|which|where|when|who|how|is|are|do|does|did|can|could)\b/i;
+const SELF_CONTAINED_INTENT = /\b(?:research|search|look\s+up|show|tell|give|summarize|explain|create|open|close|resolve|verify|submit|waive|declare|raise|link|send|record|update|change|delete|remove|approve|reject|schedule|book|call|text|email|pay|charge|launch|assign|execute|run|start|what|which|where|when|who|how|is|are|do|does|did|can|could)\b/i;
 
 function isClarificationFragment(instruction: string): boolean {
   const normalized = instruction.trim().replace(/\s+/g, " ");
@@ -33,7 +33,7 @@ function boundedText(value: unknown, max = 500): string | null {
  * self-contained instruction receives no prior turns at all. When continuity is
  * needed, preserve only bounded identifiers/action state and citation references;
  * free-form answer prose is deliberately excluded so an old research result can
- * never be copied into a later scheduling/customer answer.
+ * never be copied into a later operational answer.
  */
 export function plannerShortTermContext(
   instruction: string,
@@ -128,36 +128,8 @@ export function plannerMemoryContext(memory: MemorySnapshot, enabled = plannerMe
   if (!enabled) return {};
   let remaining = MAX_MEMORY_WORDS;
   const longTerm = (memory.longTerm ?? {}) as Record<string, unknown>;
-  const hasDetailedHouseholdHistory = Boolean(longTerm.household) || ["equipment", "recentVisits", "agreements", "recentCommunications"].some(
-    (key) => Array.isArray(longTerm[key]) && (longTerm[key] as unknown[]).length > 0,
-  );
-  const rawHousehold = longTerm.household && typeof longTerm.household === "object" && !Array.isArray(longTerm.household)
-    ? (longTerm.household as Record<string, unknown>)
-    : null;
-  const rawContactInfo = rawHousehold?.contactInfo && typeof rawHousehold.contactInfo === "object" && !Array.isArray(rawHousehold.contactInfo)
-    ? (rawHousehold.contactInfo as Record<string, unknown>)
-    : null;
-  const safeHousehold = rawHousehold
-    ? {
-        id: rawHousehold.id ?? null,
-        customerName: typeof rawContactInfo?.name === "string" ? rawContactInfo.name : null,
-        createdAt: rawHousehold.createdAt ?? null,
-        marketingConsent: rawHousehold.marketingConsent ?? null,
-      }
-    : null;
-  const householdHistoryProjection = hasDetailedHouseholdHistory
-    ? {
-        household: safeHousehold,
-        equipment: Array.isArray(longTerm.equipment) ? longTerm.equipment.slice(0, 10) : [],
-        recentVisits: Array.isArray(longTerm.recentVisits) ? longTerm.recentVisits.slice(0, 10) : [],
-        agreements: Array.isArray(longTerm.agreements) ? longTerm.agreements.slice(0, 10) : [],
-        recentCommunications: Array.isArray(longTerm.recentCommunications) ? longTerm.recentCommunications.slice(0, 15) : [],
-        canonicalSummary: longTerm.canonicalSummary ?? null,
-      }
-    : null;
-  const serializedHistory = householdHistoryProjection ? JSON.stringify(redactStructured(householdHistoryProjection)) : "";
-  const boundedHistory = withinWordBudget(serializedHistory, remaining);
-  remaining -= boundedHistory.used;
+  const canonicalSummary = withinWordBudget(JSON.stringify(redactStructured(longTerm.canonicalSummary ?? null)), remaining);
+  remaining -= canonicalSummary.used;
   const semantic: string[] = [];
   for (const hit of memory.semantic.slice(0, 5)) {
     const redacted = redactText(hit.chunk).value;
@@ -167,8 +139,7 @@ export function plannerMemoryContext(memory: MemorySnapshot, enabled = plannerMe
     remaining -= bounded.used;
   }
   return {
-    canonicalSummary: redactStructured(longTerm.canonicalSummary ?? null),
-    householdHistory: boundedHistory.text || null,
+    canonicalSummary: canonicalSummary.text || null,
     semantic,
   };
 }

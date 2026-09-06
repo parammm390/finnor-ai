@@ -6,7 +6,6 @@
 
 import { getPool, withTenant, authProfiles, deadLetters, tenantIntegrations } from "@finnor/db";
 import { and, eq, sql } from "drizzle-orm";
-import { resolveCapabilityBindingsForTenant } from "@finnor/tools";
 import { requireContext, errorResponse } from "../../../lib/auth";
 
 // A worker beats every 30s (apps/worker/src/heartbeat.ts) — 3x that cadence is enough
@@ -17,28 +16,26 @@ const HEARTBEAT_STALE_AFTER_SECONDS = 90;
 // enqueues on a clock, not reactively. Kept as a literal list (not imported from the
 // worker app) since apps/api doesn't depend on apps/worker and shouldn't start to.
 const SCAN_JOB_TYPES = [
-  "scheduled_reminder",
-  "scan_cold_leads",
-  "scan_low_inventory",
-  "scan_service_due",
-  "scan_data_quality",
+  "recover_objectives",
+  "recover_computer_tasks",
   "relay_outbox_events",
-  "scan_appointment_no_shows",
   "scan_approval_expiry",
   "scan_reliability_alerts",
   "scan_integration_health",
   "scan_connection_health",
+  "scan_watchdog",
+  "scan_dlq_triage",
   "learning_digest",
-  "simulator_tick",
-  "owner_digest",
+  "purge_retention",
   "daily_scorecard",
+  "project_read_models",
 ];
 
 export async function GET(req: Request): Promise<Response> {
   try {
     const ctx = await requireContext(req);
 
-    const [queueRow, heartbeatRow, dlqRows, scanRows, bindings, integrationHealthRows, connectionRows] = await Promise.all([
+    const [queueRow, heartbeatRow, dlqRows, scanRows, historicalIntegrationRows, connectionRows] = await Promise.all([
       getPool().query<{ depth: string; oldest_pending_age_seconds: number | null }>(
         `SELECT count(*)::int AS depth, extract(epoch FROM (now() - min(run_at)))::int AS oldest_pending_age_seconds
          FROM jobs WHERE status = 'queued' AND run_at <= now()`,
@@ -62,7 +59,6 @@ export async function GET(req: Request): Promise<Response> {
         `SELECT type, max(run_at) AS last_run_at FROM jobs WHERE type = ANY($1::text[]) GROUP BY type`,
         [SCAN_JOB_TYPES],
       ),
-      resolveCapabilityBindingsForTenant(ctx.tenantId),
       withTenant(ctx.tenantId, (db) =>
         db
           .select({
@@ -87,6 +83,9 @@ export async function GET(req: Request): Promise<Response> {
 
     const heartbeatAgeSeconds = heartbeatRow.rows[0]?.age_seconds ?? null;
     const lastRunByType = Object.fromEntries(scanRows.rows.map((r) => [r.type, r.last_run_at]));
+    const integrationHealthRows = historicalIntegrationRows.filter((row) =>
+      row.capability === "communications" && ["vapi", "resend", "native"].includes(row.binding),
+    );
 
     return Response.json(
       {
@@ -103,7 +102,10 @@ export async function GET(req: Request): Promise<Response> {
           migrationHead: heartbeatRow.rows[0]?.migration_head ?? null,
         },
         dlq: { openCount: dlqRows[0]?.count ?? 0 },
-        bindings,
+        capabilities: {
+          employee_voice: { provider: "vapi" },
+          transactional_email: { provider: "resend" },
+        },
         // A3.T2: real per-binding health (breaker-aware) for whichever capabilities
         // this tenant has an explicit tenant_integrations row for — EMU-tagged
         // implicitly via `binding` (D1.T2's pulse bar reads this field for that label).

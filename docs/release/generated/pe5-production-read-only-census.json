@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-06T16:09:51.719Z",
+  "environment": "production",
+  "method": "PostgreSQL REPEATABLE READ READ ONLY aggregate census",
+  "privacy": {
+    "tenantIdentifiersIncluded": false,
+    "tenantNamesIncluded": false,
+    "credentialsIncluded": false
+  },
+  "target": {
+    "apiProject": "api",
+    "apiProductionCommit": "f40526617c7e22258c12a2b669975ddaaf33e7fc",
+    "databaseProvider": "supabase-postgres",
+    "databaseRegion": "ap-northeast-1"
+  },
+  "candidate": {
+    "branch": "codex/p3-epistemic-runtime",
+    "commit": "b5f36a9129ff2a40edc0926da29f3250a9976d13",
+    "originMainCommit": "4cc85c5534988f2b9f4b5938f0e4b6758985206c",
+    "mergeBase": "c95720496b5c42391a8c6ef796170f4a365232ca",
+    "candidateOnlyCommits": 11,
+    "originMainOnlyCommits": 236
+  },
+  "database": {
+    "migrationCount": 110,
+    "migrationHead": "0108_operating_product_closure.sql",
+    "candidateMigrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "candidateLineageMatchesProduction": false,
+    "phase5AuthoritySchemaPresent": false,
+    "missingPhase5Tables": [
+      "tenant_vertical_assignments",
+      "product_runtime_authority",
+      "water_tenant_retirement_dispositions"
+    ]
+  },
+  "lineage": {
+    "status": "DIVERGENT_FORWARD_REPAIR_REQUIRED",
+    "productionRecordedNotPresentInCandidate": [
+      "0108_operating_product_closure.sql"
+    ],
+    "candidateMissingFromProduction": [
+      "0109_atomic_water_runtime_retirement.sql"
+    ],
+    "divergentCandidateMigrations": [
+      "0104_core_vertical_runtime_boundary.sql",
+      "0105_private_equity_execution_graph.sql",
+      "0106_private_equity_truth_and_cognition.sql",
+      "0107_private_equity_execution_semantics.sql"
+    ],
+    "appliedNotRecorded": {
+      "migrations": [],
+      "status": "NONE_CONFIRMED_BY_READ_ONLY_SCHEMA_AUDIT"
+    },
+    "appliedAndRecorded": {
+      "status": "NOT_ASSERTED_FROM_NAME_ONLY_LEDGER"
+    },
+    "evidence": "Production records 0108_operating_product_closure.sql while the candidate PE/core authority objects and 0109 are absent from the live schema; no historical migration row was rewritten.",
+    "repairStrategy": "Apply the idempotent 0109 forward repair after backup/snapshot; historical migrations remain immutable and production 0108 remains untouched.",
+    "mutationPerformed": false
+  },
+  "tenantClassification": {
+    "totalTenants": 4,
+    "tenantsWithLegacyWaterRows": 3,
+    "configuredReferenceTenants": 1,
+    "authorized": 0,
+    "unknown": 3,
+    "classification": "UNKNOWN"
+  },
+  "legacyRowCounts": {
+    "appointments": 0,
+    "communications_log": 404,
+    "contacts": 0,
+    "equipment": 165,
+    "households": 248,
+    "inventory_items": 12,
+    "invoices": 36,
+    "leads": 23,
+    "maintenance_agreements": 41,
+    "opportunities": 0,
+    "payments": 0,
+    "proposals": 1,
+    "quotes": 0,
+    "service_visits": 394,
+    "technicians": 35,
+    "work_orders": 0
+  },
+  "inFlight": {
+    "activeWaterAssociatedWorks": 75,
+    "waterAssociatedWorkInputs": 411,
+    "activeWaterAssociatedObjectives": 3,
+    "activeWaterAssociatedActions": 1015,
+    "pendingWaterAssociatedApprovals": 51,
+    "activeWaterAssociatedBusinessEffects": 3,
+    "activeWaterAssociatedWorkflows": 0,
+    "activeWaterAssociatedEventWaits": 0,
+    "ambiguousWaterAssociatedExternalOperations": 0,
+    "ambiguousWaterAssociatedIntegrationOperations": 0,
+    "activeWaterAssociatedComputerRuns": 0,
+    "openWaterAssociatedReconciliationCases": 0,
+    "openWaterAssociatedOutboxItems": 0,
+    "openWaterAssociatedInboxItems": 0,
+    "waterAssociatedJobs": {
+      "runnable": 1,
+      "running": 1,
+      "deadLetter": 660
+    },
+    "authorityApprovalRequests": {
+      "approved": 2,
+      "pending": 32,
+      "rejected": 1
+    }
+  },
+  "runtimeProvenance": {
+    "requiredRoles": ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"],
+    "observedRoles": ["worker"],
+    "workerInstancesRecorded": 29,
+    "freshWorkerInstances": 2,
+    "freshWorkerReleases": 2,
+    "allRequiredRolesPresent": false,
+    "singleCompatibleRelease": false
+  },
+  "topologyEvidence": {
+    "contractWorkerProvider": "azure-vm",
+    "repositoryReleaseMechanism": "GitHub Actions Azure OIDC plus deploy-azure-worker.mjs",
+    "contractResources": [
+      "finnor-jarvis-worker",
+      "finnor-production-rg",
+      "northcentralus"
+    ],
+    "runtimeHeartbeatDeploymentLabel": "ecs:finnor-production:finnor-worker:<sha>",
+    "runtimeHeartbeatLabelSource": "application-provided FINNOR_WORKER_DEPLOYMENT_ID/RAILWAY_DEPLOYMENT_ID",
+    "awsControlPlaneEvidence": "ECS list-clusters was not authorized; no ECS task or service control-plane evidence was obtained.",
+    "decision": "KEEP_AZURE_CONTRACT_AUTHORITATIVE_ECS_LABEL_UNVERIFIED",
+    "logicalRoleOwners": {
+      "api": "Vercel API project api",
+      "worker": "Azure VM finnor-jarvis-worker",
+      "orchestrator": "embedded worker process (no independent production heartbeat observed)",
+      "supplier-canary": "finnor-os/apps/supplier-canary source; deployed production owner not proven",
+      "scheduler-owner": "embedded worker scheduler-owner heartbeat; no separate production heartbeat observed"
+    }
+  },
+  "cutoverDecision": "BLOCKED_CUTOVER_UNKNOWN_WATER_TENANTS",
+  "blockers": [
+    "Three tenants with legacy Water rows remain UNKNOWN and have no authorized disposition.",
+    "Water-associated active Work, Objective, Action, Approval, BusinessEffect, running job, and DLQ state is not drained or dispositioned.",
+    "Only Worker heartbeats are present; all five required runtime roles do not share one verified cutover-compatible release.",
+    "Production migration lineage conflicts with the candidate Phase 0-5 migration lineage.",
+    "The durable Phase 5 authority and tenant disposition tables are not present in production."
+  ],
+  "mutationPerformed": false
+}

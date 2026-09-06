@@ -5,13 +5,13 @@
 // file's lease_expires_at is an additional, finer-grained atomic claim on top of the
 // job-level lease, not a second queue system.
 
-import { withTenant, enqueueJob, workflowSteps, workflowRuns, commands, jobs, integrationOperations, reconciliationCases, domainActions, domainPolicies, domainPolicyRevisions, businessEffects, decisionReceipts, reconcileWorkStatus, transitionWorkTx, type Db } from "@finnor/db";
+import { withTenant, enqueueJob, workflowSteps, workflowRuns, commands, jobs, integrationOperations, reconciliationCases, domainActions, domainPolicies, domainPolicyRevisions, businessEffects, decisionReceipts, reconcileWorkStatus, resolveTenantVertical, transitionWorkTx, type Db } from "@finnor/db";
 import { and, eq, lt, sql, desc, inArray, or } from "drizzle-orm";
 import { maybeChaosKill } from "./chaos";
 import { openReconciliationCase } from "./reconciliation";
 import { openReceiptTx, finalizeReceiptTx, findReceiptByStep, findReceiptByStepTx } from "./receipts";
 import { ingestReceipt } from "./memory-ingest";
-import type { ReceiptEvidence } from "@finnor/shared-types";
+import { isRetiredWaterAction, isRetiredWaterWorkflow, RetiredVerticalError, type ReceiptEvidence } from "@finnor/shared-types";
 import { workflowStepJobKey } from "./job-identity";
 
 // Overridable (FINNOR_STEP_LEASE_SECONDS) so the chaos-test script can prove real
@@ -24,6 +24,16 @@ function leaseSeconds(): number {
 export type WorkflowStepRow = typeof workflowSteps.$inferSelect;
 
 const ACTIONABLE_JOB_STATUSES = ["queued", "running"] as const;
+
+async function assertActiveStepTx(db: Db, tenantId: string, step: Pick<WorkflowStepRow, "stepType" | "workflowRunId">): Promise<void> {
+  if (isRetiredWaterAction(step.stepType)) throw new RetiredVerticalError("water");
+  const [run] = await db.select({ workflowType: workflowRuns.workflowType }).from(workflowRuns).where(and(
+    eq(workflowRuns.tenantId, tenantId),
+    eq(workflowRuns.id, step.workflowRunId),
+  )).limit(1);
+  if (!run) throw new Error("Workflow run not found");
+  if (isRetiredWaterWorkflow(run.workflowType)) throw new RetiredVerticalError("water");
+}
 
 async function enqueueWorkflowStepJobTx(
   db: Db,
@@ -43,6 +53,7 @@ async function enqueueWorkflowStepJobTx(
 
 export async function enqueueStep(tenantId: string, stepId: string, idempotencyKey: string): Promise<void> {
   void idempotencyKey; // retained for source compatibility; delivery identity is step + generation.
+  await resolveTenantVertical(tenantId);
   await withTenant(tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${workflowSteps} WHERE ${workflowSteps.tenantId}=${tenantId} AND ${workflowSteps.id}=${stepId}::uuid FOR UPDATE`);
     const [step] = await db.select().from(workflowSteps).where(and(
@@ -51,6 +62,7 @@ export async function enqueueStep(tenantId: string, stepId: string, idempotencyK
       eq(workflowSteps.status, "pending"),
     )).limit(1);
     if (!step) return;
+    await assertActiveStepTx(db, tenantId, step);
     const [run] = await db.select({ status: workflowRuns.status }).from(workflowRuns).where(and(
       eq(workflowRuns.tenantId, tenantId),
       eq(workflowRuns.id, step.workflowRunId),
@@ -84,6 +96,7 @@ export async function redriveStepTx(db: Db, tenantId: string, stepId: string): P
     eq(workflowSteps.id, stepId),
   )).limit(1);
   if (!step || !["pending", "leased", "failed"].includes(step.status)) return null;
+  await assertActiveStepTx(db, tenantId, step);
 
   const dispatchGeneration = step.dispatchGeneration + 1;
   const [redriven] = await db.update(workflowSteps).set({
@@ -107,6 +120,12 @@ export async function redriveStepTx(db: Db, tenantId: string, stepId: string): P
 }
 
 export async function redriveNextPendingStepTx(db: Db, tenantId: string, workflowRunId: string): Promise<WorkflowStepRow | null> {
+  const [run] = await db.select({ workflowType: workflowRuns.workflowType }).from(workflowRuns).where(and(
+    eq(workflowRuns.tenantId, tenantId),
+    eq(workflowRuns.id, workflowRunId),
+  )).limit(1);
+  if (!run) throw new Error("Workflow run not found");
+  if (isRetiredWaterWorkflow(run.workflowType)) throw new RetiredVerticalError("water");
   const steps = await db.select().from(workflowSteps).where(and(
     eq(workflowSteps.tenantId, tenantId),
     eq(workflowSteps.workflowRunId, workflowRunId),
@@ -147,7 +166,11 @@ async function openReceiptForClaimTx(db: Db, tenantId: string, step: WorkflowSte
         : [];
       if (revision) policyApplied = { id: revision.policyId, version: revision.version };
       else {
-        const [policy] = await db.select().from(domainPolicies).where(and(eq(domainPolicies.tenantId, tenantId), eq(domainPolicies.id, action.policyId)));
+        const [policy] = await db.select().from(domainPolicies).where(and(
+          eq(domainPolicies.tenantId, tenantId),
+          eq(domainPolicies.id, action.policyId),
+          eq(domainPolicies.active, true),
+        ));
         if (policy) policyApplied = { id: policy.id, version: policy.version };
       }
     }
@@ -178,8 +201,14 @@ async function openReceiptForClaimTx(db: Db, tenantId: string, step: WorkflowSte
 /** Atomic claim — mirrors runAction()'s UPDATE...WHERE status=<expected> pattern.
  *  Returns null if the step is already leased/completed (duplicate job delivery safe). */
 export async function claimStep(tenantId: string, stepId: string, requestedGeneration = 0): Promise<WorkflowStepRow | null> {
+  await resolveTenantVertical(tenantId);
   maybeChaosKill("pre_commit");
   const claimed = await withTenant(tenantId, async (db) => {
+    const [candidate] = await db.select({ stepType: workflowSteps.stepType, workflowRunId: workflowSteps.workflowRunId }).from(workflowSteps).where(and(
+      eq(workflowSteps.id, stepId),
+      eq(workflowSteps.tenantId, tenantId),
+    )).limit(1);
+    if (candidate) await assertActiveStepTx(db, tenantId, candidate);
     const [claimed] = await db
       .update(workflowSteps)
       .set({
@@ -340,11 +369,16 @@ export async function failStep(
 /** Enqueues the next pending step in sequence, or marks the workflow_run (and its
  *  parent command) completed once every step has finished. Before enqueueing, merges
  *  every already-completed step's evidence into the next step's payload under
- *  `context.<stepType>` — a later step (e.g. confirm_appointment) can reference an
- *  earlier step's output (e.g. hold_appointment's holdId) without the caller having
- *  known it in advance at submitCommand() time. */
+ *  `context.<stepType>` — a later step can reference an earlier step's output without
+ *  the caller having known it in advance at submitCommand() time. */
 export async function advanceWorkflow(tenantId: string, workflowRunId: string): Promise<void> {
+  await resolveTenantVertical(tenantId);
   maybeChaosKill("mid_multi_step");
+  const [activeRun] = await withTenant(tenantId, (db) => db.select({ workflowType: workflowRuns.workflowType }).from(workflowRuns).where(and(
+    eq(workflowRuns.tenantId, tenantId),
+    eq(workflowRuns.id, workflowRunId),
+  )).limit(1));
+  if (activeRun && isRetiredWaterWorkflow(activeRun.workflowType)) throw new RetiredVerticalError("water");
   const allSteps = await withTenant(tenantId, (db) =>
     db.select().from(workflowSteps).where(and(eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.workflowRunId, workflowRunId))).orderBy(workflowSteps.sequence),
   );
@@ -450,6 +484,7 @@ export async function advanceWorkflow(tenantId: string, workflowRunId: string): 
  *  - status 'failed':   a failed attempt delivered nothing — safe to reset and retry.
  */
 export async function recoverStaleSteps(tenantId: string): Promise<{ recovered: number; reconciled: number }> {
+  await resolveTenantVertical(tenantId);
   const stale = await withTenant(tenantId, (db) =>
     db
       .select()
