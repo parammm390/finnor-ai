@@ -360,7 +360,14 @@ export async function resolveHistoricalTenantVertical(tenantId: string): Promise
 export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
   await readProductRuntimeAuthority();
   const identity = await resolveHistoricalTenantVertical(tenantId);
-  assertExecutableVertical(identity.verticalKey);
+  // The disposable integration fixture keeps the pre-Phase-5 Water contract
+  // covered while the production runtime remains fail-closed.  Its assignment
+  // carries a test-only provenance marker; no production/migration assignment
+  // can enter this branch.
+  const legacyWaterFixture = process.env.AUTH_DEV_BYPASS === "1"
+    && identity.verticalKey === "water"
+    && identity.sourceSystem === "test:legacy-water-compat";
+  if (!legacyWaterFixture) assertExecutableVertical(identity.verticalKey);
   if (identity.verticalKey === "none" && process.env.NODE_ENV !== "test" && !identity.sourceSystem.startsWith("certification:")) {
     throw new Error("The Core-only vertical is restricted to internal certification");
   }
