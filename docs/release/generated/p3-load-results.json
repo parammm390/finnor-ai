@@ -1,37 +1,33 @@
 {
   "phase": "P3",
   "gate": "load",
-  "status": "BLOCKED-CONFIG",
+  "status": "FAIL",
   "pass": false,
   "productionEgress": false,
   "guard": {
     "mode": "load",
-    "status": "BLOCKED-CONFIG",
+    "status": "PASS",
     "productionEgress": false,
     "targetHosts": {
-      "api": "finnor-p3-api-staging-e1r0acypd-bloodride2-3212s-projects.vercel.app",
-      "frontend": "finnor-p3-console-staging-2rl6z9h8x-bloodride2-3212s-projects.vercel.app",
-      "worker": "finnor-worker-staging.up.railway.app",
-      "orchestrator": "finnor-orchestrator-staging.up.railway.app",
-      "database": "aws-0-ap-southeast-1.pooler.supabase.com",
-      "redis": "redis.railway.internal"
+      "api": "finnor-p3-api-staging-n7b25sifm-bloodride2-3212s-projects.vercel.app",
+      "frontend": "finnor-p3-console-staging.vercel.app",
+      "worker": "20.25.208.255",
+      "orchestrator": "20.25.208.255",
+      "database": "aws-0-ap-south-1.pooler.supabase.com",
+      "redis": "finnor-client-factory-staging-redis.northcentralus.redis.azure.net"
     },
-    "missing": [
-      "P3_LOAD_JWTS_FILE",
-      "P3_LOAD_RECONCILIATION_FILE",
-      "P3_LOAD_INSTRUCTION"
-    ],
+    "missing": [],
     "failures": [],
     "observations": [
       "productionEgress=false",
       "secretValuesPrinted=false",
       "providerPayloadsPrinted=false",
       "targets=6/6",
-      "targetHosts=api:finnor-p3-api-staging-e1r0acypd-bloodride2-3212s-projects.vercel.app,frontend:finnor-p3-console-staging-2rl6z9h8x-bloodride2-3212s-projects.vercel.app,worker:finnor-worker-staging.up.railway.app,orchestrator:finnor-orchestrator-staging.up.railway.app,database:aws-0-ap-southeast-1.pooler.supabase.com,redis:redis.railway.internal",
+      "targetHosts=api:finnor-p3-api-staging-n7b25sifm-bloodride2-3212s-projects.vercel.app,frontend:finnor-p3-console-staging.vercel.app,worker:20.25.208.255,orchestrator:20.25.208.255,database:aws-0-ap-south-1.pooler.supabase.com,redis:finnor-client-factory-staging-redis.northcentralus.redis.azure.net",
       "externalBindings=emulator-safe-required"
     ]
   },
-  "error": null,
+  "error": "P3 load gates failed; inspect p3-load-results.json and reconciliation evidence",
   "scenarios": [],
   "reconciliation": "not_run",
   "coverage": {

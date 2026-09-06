@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
-import { withTenant, workQueryExecutions } from "@finnor/db";
+import { canonicalTruthRegistry, resolveTenantVertical, withTenant } from "@finnor/db";
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
-import type { CanonicalEntityRef, OperatingInteractionContext } from "@finnor/shared-types";
-import { eq } from "drizzle-orm";
+import { isRetiredWaterCanonicalEntity, type CanonicalEntityRef, type OperatingInteractionContext } from "@finnor/shared-types";
+import { eq, isNull, or } from "drizzle-orm";
 import type { OperationalQueryDecision } from "./fast-read-lane";
 
 export class OperatingInteractionContextError extends Error {
@@ -16,11 +16,11 @@ export class OperatingInteractionContextError extends Error {
   }
 }
 
-function key(ref: CanonicalEntityRef): string {
+function key(ref: CanonicalEntityRef<string>): string {
   return `${ref.entityType}:${ref.entityId}`;
 }
 
-function unique(refs: CanonicalEntityRef[]): CanonicalEntityRef[] {
+function unique(refs: CanonicalEntityRef<string>[]): CanonicalEntityRef<string>[] {
   return [...new Map(refs.map((ref) => [key(ref), ref])).values()];
 }
 
@@ -32,12 +32,10 @@ function normalizeLegacyContext(value: unknown, channel: "voice" | "text" | "con
   const legacy = object(value);
   if (legacy.version === 1 || Object.keys(legacy).length === 0) return value;
   const entityRefs = Array.isArray(legacy.entityRefs) ? legacy.entityRefs : [];
-  const householdId = typeof legacy.householdId === "string" ? legacy.householdId : null;
   return {
     version: 1,
     capturedAt: new Date().toISOString(),
     source: channel,
-    ...(householdId ? { focusedEntity: { entityType: "household", entityId: householdId } } : {}),
     selectedEntities: entityRefs,
     excludedEntities: [],
     surface: { id: "home", route: "/jarvis", spatialState: "canvas" },
@@ -81,8 +79,18 @@ export async function resolveOperatingInteractionContext(params: {
     ...(context.activeWork ? [{ entityType: "work" as const, entityId: context.activeWork.workId }] : []),
   ]);
 
+  if (refs.some((ref) => isRetiredWaterCanonicalEntity(ref.entityType))) {
+    throw new OperatingInteractionContextError("An operating-context entity type is retired", 403, "operating_context_scope_denied");
+  }
+
+  const vertical = await resolveTenantVertical(params.tenantId);
+
   const resolved = await withTenant(params.tenantId, async (db) => {
     const entityTenants = new Map<string, string | null>();
+    const registrations = await db.select({ entityType: canonicalTruthRegistry.entityType }).from(canonicalTruthRegistry).where(or(
+      isNull(canonicalTruthRegistry.verticalKey),
+      eq(canonicalTruthRegistry.verticalKey, vertical.verticalKey),
+    ));
     if (refs.length > 0) {
       const values = sql.join(refs.map((ref) => sql`(${ref.entityType}::text, ${ref.entityId}::uuid)`), sql`, `);
       const result = await db.execute<{ entity_type: CanonicalEntityRef["entityType"]; entity_id: string; tenant_id: string | null }>(sql`
@@ -95,61 +103,13 @@ export async function resolveOperatingInteractionContext(params: {
       for (const row of result.rows) entityTenants.set(`${row.entity_type}:${row.entity_id}`, row.tenant_id);
     }
 
-    const [cohortExecution] = context.cohort
-      ? await db.select({
-          id: workQueryExecutions.id,
-          workId: workQueryExecutions.workId,
-          intent: workQueryExecutions.intent,
-          request: workQueryExecutions.request,
-          status: workQueryExecutions.status,
-          resultSummary: workQueryExecutions.resultSummary,
-          completedAt: workQueryExecutions.completedAt,
-        }).from(workQueryExecutions).where(eq(workQueryExecutions.id, context.cohort.executionId)).limit(1)
-      : [];
-    return { entityTenants, cohortExecution };
+    return { entityTenants, registered: new Set(registrations.map((row) => row.entityType)) };
   });
 
   for (const ref of refs) {
-    if (resolved.entityTenants.get(key(ref)) !== params.tenantId) {
+    if (!resolved.registered.has(ref.entityType) || resolved.entityTenants.get(key(ref)) !== params.tenantId) {
       throw new OperatingInteractionContextError("An operating-context reference is unavailable in this tenant", 403, "operating_context_scope_denied");
     }
-  }
-
-  let cohort: OperatingInteractionContext["cohort"];
-  let filters = context.filters;
-  if (context.cohort) {
-    const execution = resolved.cohortExecution;
-    const request = object(execution?.request);
-    const summary = object(execution?.resultSummary);
-    const totalCount = summary.totalCount;
-    if (
-      !execution
-      || execution.status !== "succeeded"
-      || execution.intent !== "customer_cohort"
-      || request.intent !== "customer_cohort"
-      || request.cohort !== "inactive"
-      || typeof request.minDaysInactive !== "number"
-      || summary.totalCountExact !== true
-      || typeof totalCount !== "number"
-      || !Number.isInteger(totalCount)
-      || totalCount < 0
-    ) {
-      throw new OperatingInteractionContextError("The cohort reference is not a completed, exact tenant-scoped customer cohort", 403, "operating_context_cohort_denied");
-    }
-    cohort = {
-      kind: "work_query_execution",
-      executionId: execution.id,
-      entityType: "household",
-      queryIntent: "customer_cohort",
-      count: totalCount,
-    };
-    // The stored query receipt, never the client, supplies consequential cohort
-    // bounds. Preserve other visible filters but replace this field canonically.
-    filters = [
-      ...filters.filter((filter) => filter.field !== "minDaysInactive" && filter.field !== "cohort"),
-      { field: "cohort", operator: "eq" as const, value: "inactive" },
-      { field: "minDaysInactive", operator: "gte" as const, value: request.minDaysInactive },
-    ].slice(0, 20);
   }
 
   return {
@@ -163,15 +123,14 @@ export async function resolveOperatingInteractionContext(params: {
     selectedEntities: unique(context.selectedEntities),
     excludedEntities: unique(context.excludedEntities),
     surface: context.surface,
-    filters,
+    filters: context.filters,
     ...(context.timeContext ? { timeContext: context.timeContext } : {}),
-    ...(cohort ? { cohort } : {}),
   };
 }
 
 /** Exact direct target set after explicit exclusions. Focus is the singular
  * target only when no additive selection exists. */
-export function effectiveInteractionTargets(context: OperatingInteractionContext | undefined): CanonicalEntityRef[] {
+export function effectiveInteractionTargets(context: OperatingInteractionContext | undefined): CanonicalEntityRef<string>[] {
   if (!context) return [];
   const excluded = new Set(context.excludedEntities.map(key));
   const candidates = context.selectedEntities.length > 0
@@ -189,7 +148,7 @@ export function interactionAwareOperationalDecision(
   context: OperatingInteractionContext | undefined,
 ): OperationalQueryDecision {
   if (decision.route !== "fast_read" || !context) return decision;
-  const hasExplicitScope = effectiveInteractionTargets(context).length > 0 || Boolean(context.cohort);
+  const hasExplicitScope = effectiveInteractionTargets(context).length > 0;
   return hasExplicitScope && decision.request.intent !== "company_context"
     ? { route: "planner", reason: "unsupported" }
     : decision;

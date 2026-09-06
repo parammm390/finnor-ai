@@ -3,7 +3,7 @@
 // keyed by a real composite primary key so concurrent claims are enforced by Postgres
 // itself, not app-level sequencing. Used by ScopedToolRegistry (registry.ts) so a
 // retried execution (reflection retry, a resumed LangGraph thread) never re-fires an
-// already-completed external side effect like sending an SMS or syncing an invoice.
+// already-completed external side effect such as delivering a message twice.
 
 import { withTenant, externalOperations, tenantIntegrations, authProfiles } from "@finnor/db";
 import { and, eq, sql } from "drizzle-orm";
@@ -163,13 +163,9 @@ export async function recordExternalOperationResult(
   response: Record<string, unknown>,
 ): Promise<ExternalOperationRow | null> {
   const redacted = redactStructured(response) as Record<string, unknown>;
-  // Provider/native record identifiers are required to resume a multi-step effect
-  // after a crash (for example: replay a successful contact upsert, then send the
-  // SMS to that contact). They are opaque operational keys, not message content or
-  // phone/email PII. Preserve only this small allowlist after structural redaction;
-  // without it the cached replay returned "[REDACTED]" as contactId and made a safe
-  // retry fail before the send.
-  for (const key of ["id", "contactId", "householdId", "messageId", "campaignId", "visitId", "appointmentId", "callId", "communicationIdentityId", "externalInvoiceId", "externalCustomerId", "linkId", "envelopeId"]) {
+  // Opaque provider/native record identifiers are required for safe crash replay.
+  // Preserve only vertical-neutral identifiers after structural redaction.
+  for (const key of ["id", "messageId", "callId", "communicationIdentityId", "documentId", "taskId", "dealId", "companyId", "partyId", "externalRecordId", "linkId", "envelopeId"]) {
     if (typeof response[key] === "string") redacted[key] = response[key];
   }
   return withTenant(tenantId, async (db) => {
@@ -181,7 +177,7 @@ export async function recordExternalOperationResult(
     const requiresObservation = Boolean(operation?.integrationId);
     const [row] = await db
       .update(externalOperations)
-      // Cached results are replayed internally, but they are still durable customer
+      // Cached results are replayed internally, but they are still durable business
       // data. Keep only the minimum structured result and redact direct identifiers
       // before persisting the ledger.
       .set({

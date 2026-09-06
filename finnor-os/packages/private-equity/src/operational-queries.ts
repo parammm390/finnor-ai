@@ -233,7 +233,7 @@ function dependencyRows(graph: DealExecutionGraph, includeResolved: boolean): Cr
     const blockedMeta = metadata.get(`${blocked.entityType}:${blocked.entityId}`);
     const ownerRefs = [blockerMeta?.owner, blockedMeta?.owner]
       .filter((owner): owner is { partyType: string; partyId: string } => owner !== undefined
-        && ["employee", "team", "location", "household", "contact", "external_organization", "external_contact"].includes(owner.partyType))
+      && ["employee", "team", "location", "external_organization", "external_contact"].includes(owner.partyType))
       .map((owner) => ({ partyType: owner.partyType as PartyRef["partyType"], partyId: owner.partyId }));
     const workRefs = [...(workByEntity.get(`${blocker.entityType}:${blocker.entityId}`) ?? []), ...(workByEntity.get(`${blocked.entityType}:${blocked.entityId}`) ?? [])]
       .filter((item, index, all) => all.findIndex((candidate) => candidate.workId === item.workId && candidate.entityType === item.entityType && candidate.entityId === item.entityId) === index)

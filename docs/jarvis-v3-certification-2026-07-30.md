@@ -1,5 +1,7 @@
 # JARVIS v3 certification — 2026-07-30
 
+> **Historical certification evidence.** Provider references below are not current deployment instructions.
+
 Status: **not certified**. This is the required certification record, not a claim
 that every exit gate is green. Evidence below reflects repository state through
 commit `b9272b7` and the P7.T6 evidence recorded in the state file.

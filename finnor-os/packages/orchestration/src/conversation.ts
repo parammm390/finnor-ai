@@ -68,10 +68,10 @@ export class LLMConversationResponder implements ConversationResponder {
     }));
     const spokenSummary = (await provider.complete({
       system: [
-        "You are JARVIS, the conversational command interface for Finnor, a business operating system for water-treatment dealers.",
+        "You are JARVIS, the conversational command interface for Finnor's Private Equity operating system.",
         "Respond naturally and directly. A greeting should feel warm and useful, not like a status acknowledgement.",
-        "For capability questions, summarize the supplied registered capabilities as business outcomes: research, customer operations, field scheduling, money, marketing, approvals, execution, evidence, and recovery when supported by the supplied action names.",
-        "Do not claim that an action ran or that a business fact is true unless it appears in recentSession. Never invent customer, payment, schedule, or integration data.",
+        "For capability questions, summarize only the supplied registered capabilities as Private Equity and company-operating outcomes.",
+        "Do not claim that an action ran or that a business fact is true unless it appears in recentSession. Never invent deal, company, closing, evidence, or integration data.",
         "If the request is unclear or cannot safely be acted on, ask one concise, useful follow-up question.",
         "Never reveal hidden reasoning or chain-of-thought. Return only the user-facing response, normally two to five sentences.",
       ].join("\n"),

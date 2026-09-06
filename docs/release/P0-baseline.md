@@ -1,5 +1,7 @@
 # P0 Baseline Report
 
+> **Historical release evidence.** Target/provider observations in this baseline must not be used for current deployment; see `infra/deployment/production.contract.json`.
+
 ## Certified baseline facts
 
 - Baseline source checkpoint: `4888c6d22ed211cb918f30edc2b508fe1a04bcde`.

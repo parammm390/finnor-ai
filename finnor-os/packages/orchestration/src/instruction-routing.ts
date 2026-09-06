@@ -17,7 +17,7 @@ const OBJECTIVE_SIGNALS = [
   /\b(?:and then|then|after|before|once|until|unless|if|when|whenever)\b/i,
   /\b(?:ensure|make sure|own (?:this|it)|take care of|handle|resolve|unstuck|coordinate|arrange|oversee)\b/i,
   /\b(?:wait|reply|respond|response|acknowledg|approval|approve|deadline|follow up later)\b/i,
-  /\b(?:delegate|handoff|hand off|team|vendor|supplier|customer)\b.*\b(?:complete|finish|respond|confirm|accept)\b/i,
+  /\b(?:delegate|handoff|hand off|team|vendor|external party|deal party)\b.*\b(?:complete|finish|respond|confirm|accept)\b/i,
   /\b(?:recover|retry|replan|fallback|compensat|escalat|outage|failure)\b/i,
   /\b(?:across|multi[- ]?step|workflow|browser|computer)\b/i,
 ];
@@ -25,7 +25,7 @@ const OBJECTIVE_SIGNALS = [
 const ATOMIC_VERB = /^(?:please\s+)?(?:send|text|email|message|call|assign|update|set|mark|reschedule|cancel|create|record)\b/i;
 const DIRECT_TARGET = /(?:\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|\+\d{8,15}\b|\b[^\s@]+@[^\s@]+\.[^\s@]+\b)/i;
 const NAMED_TARGET = /\b(?:to|for|on)\s+(?:the\s+)?[\p{L}\d][\p{L}\d'’&.-]*(?:\s+[\p{L}\d][\p{L}\d'’&.-]*){0,5}\s*$/iu;
-const PREPARED_EFFECT = /\b(?:this|that|already[- ]prepared|exact)\b.*\b(?:message|task|field|visit|invoice|payment|record)\b/i;
+const PREPARED_EFFECT = /\b(?:this|that|already[- ]prepared|exact)\b.*\b(?:message|task|document|finding|risk|condition|record)\b/i;
 const QUESTION_SHAPE = /^(?:(?:please\s+)?(?:how|what|which|where|when|who|is|are|do|does|did|can|could|would)\b|(?:please\s+)?(?:tell me|show(?:\s+me)?|pull\s+up|find|get|give me|list|summarize|explain)\b)|\?\s*$/i;
 const QUESTION_OBJECTIVE_LANGUAGE = [
   /\b(?:and then|then|after|before|once|until|unless|if|whenever)\b/i,
@@ -42,7 +42,7 @@ function exactContextTarget(context: OperatingInteractionContext | Record<string
   if (!context || typeof context !== "object" || Array.isArray(context)) return false;
   const row = context as Record<string, unknown>;
   const selected = Array.isArray(row.selectedEntities) ? row.selectedEntities : [];
-  return selected.length === 1 || Boolean(row.focusedEntity) || typeof row.householdId === "string";
+  return selected.length === 1 || Boolean(row.focusedEntity) || typeof row.dealId === "string" || typeof row.partyId === "string";
 }
 
 function strictAtomicCandidate(instruction: string, context?: OperatingInteractionContext | Record<string, unknown>): boolean {

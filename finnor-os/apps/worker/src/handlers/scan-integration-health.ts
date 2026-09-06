@@ -18,17 +18,12 @@ import { reconciliationCases, withTenant, tenantIntegrations } from "@finnor/db"
 import { eq, and, sql } from "drizzle-orm";
 import {
   testTenantVapiConnection,
-  testTenantGhlConnection,
-  testTenantDocusignConnection,
-  testTenantQuickBooksConnection,
-  testTenantStripeConnection,
-  testTenantAdsConnections,
   tenantResendStatus,
   circuitSnapshot,
 } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 
-const CIRCUIT_BREAKER_PROVIDERS = new Set(["vapi", "stripe", "quickbooks", "ghl", "docusign", "resend"]);
+const CIRCUIT_BREAKER_PROVIDERS = new Set(["vapi", "resend"]);
 
 type Health = "ok" | "degraded" | "down" | "unknown";
 
@@ -41,38 +36,6 @@ async function probeBinding(tenantId: string, binding: string): Promise<{ health
       const r = await testTenantVapiConnection(tenantId);
       return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
     }
-    case "ghl": {
-      const r = await testTenantGhlConnection(tenantId);
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "docusign": {
-      const r = await testTenantDocusignConnection(tenantId);
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "quickbooks": {
-      const r = await testTenantQuickBooksConnection(tenantId);
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "stripe": {
-      const r = await testTenantStripeConnection(tenantId);
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "meta":
-    case "meta_ads": {
-      const r = (await testTenantAdsConnections(tenantId)).meta;
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "google_ads": {
-      const r = (await testTenantAdsConnections(tenantId)).googleAds;
-      return { health: r.healthy === true ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
-    }
-    case "ads": {
-      const results = Object.values(await testTenantAdsConnections(tenantId));
-      const configured = results.filter((result) => result.configured);
-      if (configured.some((result) => result.healthy === true)) return { health: "ok", error: null };
-      const failed = configured.find((result) => result.healthy === false);
-      return failed ? { health: "degraded", error: failed.error ?? "Tenant ads connection failed" } : { health: "unknown", error: null };
-    }
     case "resend": {
       const r = await tenantResendStatus(tenantId);
       return { health: r.configured ? "ok" : r.healthy === false ? "degraded" : "unknown", error: r.error ?? null };
@@ -81,7 +44,6 @@ async function probeBinding(tenantId: string, binding: string): Promise<{ health
     // an outage here would mean Postgres itself is down, which every other query in
     // this same job would already be failing on.
     case "native":
-    case "emulator":
     case "dry_run":
       return { health: "ok", error: null };
     default:
@@ -93,7 +55,12 @@ export const scanIntegrationHealth: JobHandler = async (payload) => {
   const tenantId = String(payload.tenantId ?? "");
   if (!tenantId) throw new Error("scan_integration_health requires tenantId");
 
-  const rows = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(eq(tenantIntegrations.tenantId, tenantId)));
+  const historicalRows = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(eq(tenantIntegrations.tenantId, tenantId)));
+  // Legacy Water integration rows remain historical evidence. Only the Core
+  // communication transports are health-probed by the active runtime.
+  const rows = historicalRows.filter((row) =>
+    row.capability === "communications" && ["vapi", "resend", "native"].includes(row.binding),
+  );
   if (rows.length === 0) return; // no tenant_integrations rows yet — nothing to check, pure env/default resolution stands
 
   for (const row of rows) {

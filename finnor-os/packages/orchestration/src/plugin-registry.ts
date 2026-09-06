@@ -2,32 +2,15 @@
 // action_types here; the orchestrator routes by action_type, nothing else.
 
 import type { DomainEnginePlugin } from "@finnor/plugins-shared";
-import type { DomainPolicy, SimulationResult } from "@finnor/shared-types";
+import {
+  PRIVATE_EQUITY_VERTICAL,
+  assertExecutableVertical,
+  type DomainPolicy,
+  type SimulationResult,
+} from "@finnor/shared-types";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import waterTestPlugin from "../../domain-plugins/water-test/index";
-import maintenanceAgreementPlugin from "../../domain-plugins/maintenance-agreement/index";
-import crmPlugin from "../../domain-plugins/crm/index";
-import inventoryPlugin from "../../domain-plugins/inventory/index";
-import schedulingPlugin from "../../domain-plugins/scheduling/index";
-import quotationPlugin from "../../domain-plugins/quotation/index";
-import accountingPlugin from "../../domain-plugins/accounting/index";
-import marketingPlugin from "../../domain-plugins/marketing/index";
-import customerCommPlugin from "../../domain-plugins/customer-comm/index";
-import waterDomainKnowledgePlugin from "../../domain-plugins/water-domain-knowledge/index";
-import proposalBatchPlugin from "../../domain-plugins/proposal-batch/index";
-import bulkNotifyPlugin from "../../domain-plugins/bulk-notify/index";
-import technicianReportsPlugin from "../../domain-plugins/technician-reports/index";
-import serviceRemindersPlugin from "../../domain-plugins/service-reminders/index";
-import complianceDocumentationPlugin from "../../domain-plugins/compliance-documentation/index";
 import webResearchPlugin from "../../domain-plugins/web-research/index";
-import opsOverviewPlugin from "../../domain-plugins/ops-overview/index";
-import leadToWaterTestPlugin from "../../domain-plugins/lead-to-water-test/index";
-import proposalSignaturePlugin from "../../domain-plugins/proposal-signature/index";
-import proposalToInstallationPlugin from "../../domain-plugins/proposal-to-installation/index";
-import invoiceToCashPlugin from "../../domain-plugins/invoice-to-cash/index";
 import { clarificationPlugin } from "../../domain-plugins/clarification/index";
-import { manualStepPlugin } from "../../domain-plugins/manual-step/index";
-import { routeOptimizationPlugin } from "../../domain-plugins/route-optimization/index";
 import universalActionsPlugin from "../../domain-plugins/universal-actions/index";
 import computerTaskPlugin from "../../domain-plugins/computer-task/index";
 import privateEquityPlugin, { PRIVATE_EQUITY_ACTION_TYPES } from "../../domain-plugins/private-equity/index";
@@ -130,17 +113,14 @@ const UNIVERSAL_PLANNER_ACTIONS = [
   "schedule_internal_event", "reschedule_internal_event", "share_document",
 ] as const;
 const SHARED_PLANNER_ACTIONS = ["clarification_request", "search_web", "computer_task", ...UNIVERSAL_PLANNER_ACTIONS] as const;
-const PRIVATE_EQUITY_ACTION_SET = new Set<string>(PRIVATE_EQUITY_ACTION_TYPES);
-
-/** Action manifests are composed by active vertical. Registration remains global
- * so durable replays can resolve historical actions, but a planner never sees or
- * selects another vertical's vocabulary. */
+/** Action manifests are composed only from executable verticals. Historical action
+ * identity is rendered from durable rows and never requires executable registration. */
 export function plannerActionTypesForVertical(registry: PluginRegistry, verticalKey: string): string[] {
+  assertExecutableVertical(verticalKey);
   const registered = new Set(registry.actionTypes());
-  if (verticalKey === "private_equity") {
+  if (verticalKey === PRIVATE_EQUITY_VERTICAL) {
     return [...SHARED_PLANNER_ACTIONS, ...PRIVATE_EQUITY_ACTION_TYPES].filter((actionType) => registered.has(actionType));
   }
-  if (verticalKey === "water") return registry.actionTypes().filter((actionType) => !PRIVATE_EQUITY_ACTION_SET.has(actionType));
   return SHARED_PLANNER_ACTIONS.filter((actionType) => registered.has(actionType));
 }
 
@@ -149,30 +129,8 @@ export const actionTypesForVertical = plannerActionTypesForVertical;
 export function createDefaultPluginRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
   for (const plugin of [
-    waterTestPlugin,
-    maintenanceAgreementPlugin,
-    crmPlugin,
-    inventoryPlugin,
-    schedulingPlugin,
-    quotationPlugin,
-    accountingPlugin,
-    marketingPlugin,
-    customerCommPlugin,
-    waterDomainKnowledgePlugin,
-    proposalBatchPlugin,
-    bulkNotifyPlugin,
-    technicianReportsPlugin,
-    serviceRemindersPlugin,
-    complianceDocumentationPlugin,
     webResearchPlugin,
-    opsOverviewPlugin,
-    leadToWaterTestPlugin,
-    proposalSignaturePlugin,
-    proposalToInstallationPlugin,
-    invoiceToCashPlugin,
     clarificationPlugin,
-    manualStepPlugin,
-    routeOptimizationPlugin,
     universalActionsPlugin,
     computerTaskPlugin,
     privateEquityPlugin,

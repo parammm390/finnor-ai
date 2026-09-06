@@ -1,6 +1,7 @@
 // Converted from .eslintrc.json to .cjs so the Phase 7 override below can carry a
 // real comment explaining itself (JSON has no comment syntax).
 module.exports = {
+  root: true,
   extends: ["next/core-web-vitals"],
   overrides: [
     {

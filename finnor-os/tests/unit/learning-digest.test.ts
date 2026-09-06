@@ -8,21 +8,21 @@ import { summarizeActionOutcomes, buildTopConcerns, computeUnclearConfirmations,
 describe("summarizeActionOutcomes", () => {
   it("buckets rows by actionType and status", () => {
     const rows = [
-      { actionType: "create_invoice", status: "completed" },
-      { actionType: "create_invoice", status: "completed" },
-      { actionType: "create_invoice", status: "failed" },
-      { actionType: "create_invoice", status: "rejected" },
-      { actionType: "create_invoice", status: "pending" },
-      { actionType: "schedule_water_test", status: "completed" },
+      { actionType: "record_finding", status: "completed" },
+      { actionType: "record_finding", status: "completed" },
+      { actionType: "record_finding", status: "failed" },
+      { actionType: "record_finding", status: "rejected" },
+      { actionType: "record_finding", status: "pending" },
+      { actionType: "raise_deal_risk", status: "completed" },
     ];
     const stats = summarizeActionOutcomes(rows);
-    const invoice = stats.find((s) => s.actionType === "create_invoice")!;
-    expect(invoice.total).toBe(5);
-    expect(invoice.completed).toBe(2);
-    expect(invoice.failed).toBe(1);
-    expect(invoice.rejected).toBe(1);
-    expect(invoice.pending).toBe(1);
-    expect(invoice.decided).toBe(4); // total minus draft minus pending
+    const finding = stats.find((s) => s.actionType === "record_finding")!;
+    expect(finding.total).toBe(5);
+    expect(finding.completed).toBe(2);
+    expect(finding.failed).toBe(1);
+    expect(finding.rejected).toBe(1);
+    expect(finding.pending).toBe(1);
+    expect(finding.decided).toBe(4); // total minus draft minus pending
   });
 
   it("computes failureRate against total and rejectionRate against decided, not total", () => {
@@ -78,24 +78,24 @@ describe("buildTopConcerns", () => {
 
   it("flags an action_type crossing the failure threshold with a real sample", () => {
     const stats: ActionTypeStats[] = [
-      { actionType: "create_invoice", total: 10, draft: 0, pending: 0, completed: 5, failed: 5, rejected: 0, needsHumanReview: 0, blockedIntegration: 0, decided: 10, failureRate: 0.5, rejectionRate: 0 },
+      { actionType: "record_finding", total: 10, draft: 0, pending: 0, completed: 5, failed: 5, rejected: 0, needsHumanReview: 0, blockedIntegration: 0, decided: 10, failureRate: 0.5, rejectionRate: 0 },
     ];
     const concerns = buildTopConcerns(stats, noCriticFindings, 90);
     expect(concerns).toHaveLength(1);
-    expect(concerns[0]).toContain("create_invoice");
+    expect(concerns[0]).toContain("record_finding");
     expect(concerns[0]).toContain("50%");
   });
 
   it("flags an action_type crossing the rejection threshold with a real decided sample", () => {
     const stats: ActionTypeStats[] = [
-      { actionType: "bulk_notify_existing_customers", total: 12, draft: 0, pending: 2, completed: 3, failed: 0, rejected: 7, needsHumanReview: 0, blockedIntegration: 0, decided: 10, failureRate: 0, rejectionRate: 0.7 },
+      { actionType: "raise_deal_risk", total: 12, draft: 0, pending: 2, completed: 3, failed: 0, rejected: 7, needsHumanReview: 0, blockedIntegration: 0, decided: 10, failureRate: 0, rejectionRate: 0.7 },
     ];
     const concerns = buildTopConcerns(stats, noCriticFindings, 90);
-    expect(concerns.some((c) => c.includes("bulk_notify_existing_customers") && c.includes("70%"))).toBe(true);
+    expect(concerns.some((c) => c.includes("raise_deal_risk") && c.includes("70%"))).toBe(true);
   });
 
   it("appends a critic summary line when there are flagged findings", () => {
-    const findings: CriticFinding[] = [{ actionId: "a1", actionType: "create_invoice", reason: "Amount mismatch", createdAt: new Date().toISOString() }];
+    const findings: CriticFinding[] = [{ actionId: "a1", actionType: "record_finding", reason: "Evidence mismatch", createdAt: new Date().toISOString() }];
     const concerns = buildTopConcerns([], findings, 30);
     expect(concerns).toHaveLength(1);
     expect(concerns[0]).toContain("1 action");
@@ -103,7 +103,7 @@ describe("buildTopConcerns", () => {
 
   it("returns an empty list when nothing crosses any threshold", () => {
     const stats: ActionTypeStats[] = [
-      { actionType: "create_invoice", total: 20, draft: 0, pending: 0, completed: 19, failed: 1, rejected: 0, needsHumanReview: 0, blockedIntegration: 0, decided: 20, failureRate: 0.05, rejectionRate: 0 },
+      { actionType: "record_finding", total: 20, draft: 0, pending: 0, completed: 19, failed: 1, rejected: 0, needsHumanReview: 0, blockedIntegration: 0, decided: 20, failureRate: 0.05, rejectionRate: 0 },
     ];
     expect(buildTopConcerns(stats, noCriticFindings, 90)).toEqual([]);
   });

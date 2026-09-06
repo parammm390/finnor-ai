@@ -27,24 +27,20 @@
 // tick, not live).
 
 import { withTenant, readModelProjections, getPool } from "@finnor/db";
-import { pipelineHealth, reliability, activitySnapshot, type PipelineHealth, type ReliabilityMetrics, type ActivitySnapshot } from "@finnor/read-models";
+import { reliability, activitySnapshot, type ReliabilityMetrics, type ActivitySnapshot } from "@finnor/read-models";
 import { and, eq } from "drizzle-orm";
 import { getLogger } from "@finnor/tools";
 import type { JarvisEvent } from "@finnor/shared-types";
 
-export const PROJECTED_VIEWS = ["pipeline-health", "reliability", "activity-snapshot"] as const;
+export const PROJECTED_VIEWS = ["reliability", "activity-snapshot"] as const;
 export type ProjectedView = (typeof PROJECTED_VIEWS)[number];
 
-export type ProjectionData<V extends ProjectedView> = V extends "pipeline-health"
-  ? PipelineHealth
-  : V extends "reliability"
+export type ProjectionData<V extends ProjectedView> = V extends "reliability"
     ? ReliabilityMetrics
     : ActivitySnapshot;
 
 async function computeView(tenantId: string, view: ProjectedView): Promise<unknown> {
   switch (view) {
-    case "pipeline-health":
-      return pipelineHealth(tenantId);
     case "reliability":
       return reliability(tenantId);
     case "activity-snapshot":
@@ -118,8 +114,6 @@ const DIRTY_VIEWS_BY_KIND: Record<string, ProjectedView[]> = {
   dead_letter: ["reliability"],
   action_log: ["activity-snapshot"],
   call: ["activity-snapshot"],
-  lead: ["pipeline-health"],
-  quote: ["pipeline-health"],
 };
 
 const DEBOUNCE_MS = 750;

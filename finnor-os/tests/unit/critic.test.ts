@@ -29,27 +29,27 @@ describe("critic — unconfigured state", () => {
 
 describe("critic — reviewAction verdict parsing", () => {
   const input = {
-    instruction: "Create a $50 invoice for the Petersons",
-    actionType: "create_invoice",
-    payload: { amountUsd: 50, customerName: "the Petersons" },
-    summary: "Create a $50 invoice for the Petersons.",
-    reasoning: "Caller explicitly named the Petersons and the amount.",
+    instruction: "Record a high-severity leverage finding for the Apex deal",
+    actionType: "record_finding",
+    payload: { severity: "high", statement: "Leverage exceeds the approved range" },
+    summary: "Record the high-severity leverage finding for Apex.",
+    reasoning: "The instruction names the deal, severity, and evidence statement.",
   };
 
   it("returns the parsed verdict when the model responds with clean JSON", async () => {
     const { reviewAction } = await import("@finnor/orchestration");
-    const verdict = await reviewAction(input, fakeProvider('{"flagged": false, "reason": "Amount and customer match the instruction."}'));
-    expect(verdict).toEqual({ flagged: false, reason: "Amount and customer match the instruction." });
+    const verdict = await reviewAction(input, fakeProvider('{"flagged": false, "reason": "Deal, severity, and statement match the instruction."}'));
+    expect(verdict).toEqual({ flagged: false, reason: "Deal, severity, and statement match the instruction." });
   });
 
   it("surfaces a flagged verdict with its reason", async () => {
     const { reviewAction } = await import("@finnor/orchestration");
     const verdict = await reviewAction(
-      { ...input, payload: { amountUsd: 5000, customerName: "the Petersons" } },
-      fakeProvider('{"flagged": true, "reason": "Instruction said $50, drafted action says $5000."}'),
+      { ...input, payload: { severity: "low", statement: "Leverage is within range" } },
+      fakeProvider('{"flagged": true, "reason": "The drafted severity and evidence contradict the instruction."}'),
     );
     expect(verdict.flagged).toBe(true);
-    expect(verdict.reason).toContain("$5000");
+    expect(verdict.reason).toContain("contradict");
   });
 
   it("degrades to an honest unflagged default when the model response is not valid JSON", async () => {

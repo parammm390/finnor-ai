@@ -6,7 +6,7 @@
 // domain-plugins must not depend on orchestration. Callers pass a plain descriptor list.
 
 import { withTenant, domainPolicies } from "@finnor/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { findPlaceholderPaths } from "./plugin-interface";
 
 export interface ActionTypeDescriptor {
@@ -27,7 +27,10 @@ export async function scanActionTypeReadiness(
   tenantId: string,
   descriptors: ActionTypeDescriptor[],
 ): Promise<ActionTypeReadiness[]> {
-  const rows = await withTenant(tenantId, (db) => db.select().from(domainPolicies).where(eq(domainPolicies.tenantId, tenantId)));
+  const rows = await withTenant(tenantId, (db) => db.select().from(domainPolicies).where(and(
+    eq(domainPolicies.tenantId, tenantId),
+    eq(domainPolicies.active, true),
+  )));
   const byActionType = new Map(rows.map((r) => [r.actionType, r]));
   return descriptors.map(({ actionType, pluginName }) => {
     const row = byActionType.get(actionType);

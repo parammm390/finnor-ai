@@ -7,7 +7,6 @@ import { wrappedCall, DEFAULT_RETRY } from "./wrap";
 import { createHash } from "node:crypto";
 import { ensureSecretsLoaded, minimizeExternalInput } from "@finnor/security";
 import { claimExternalOperation, recordExternalOperationResult, awaitExternalOperationResolution, markExternalOperationUnknown } from "./idempotent-call";
-import { resolveCapabilityBindingsForTenant } from "./binding-resolution";
 import { initObservability, Sentry } from "./observability";
 
 /** Trusted execution metadata injected by an action/workflow boundary. It is never
@@ -33,7 +32,7 @@ export interface Tool {
   retryPolicy?: RetryPolicy;
   /** Fields actually forwarded to this external provider. Omitted = today's
    *  pass-through behavior (opt-in per tool). Every builtin tool schema uses
-   *  .passthrough(), so without this a stray field (household notes, an SSN some
+   *  .passthrough(), so without this a stray field (deal notes, an SSN some
    *  future planner payload attaches) flows straight to the external adapter. */
   piiAllowlist?: readonly string[];
   run(input: Record<string, unknown>, runtime?: Readonly<ToolRuntimeContext>): Promise<Record<string, unknown>>;
@@ -207,11 +206,7 @@ export class ScopedToolRegistry extends ToolRegistry {
   private async callForOperation(name: string, input: Record<string, unknown>, operationKey: string): Promise<ToolCallResult> {
     const requestHash = hashInput(input);
     const declaredProvider = this.base.integrationFor(name) ?? undefined;
-    const provider = declaredProvider === "tenant-routed"
-      ? name.startsWith("vapi_")
-        ? (await resolveCapabilityBindingsForTenant(this.ctx.tenantId)).communications.mode
-        : (await resolveCapabilityBindingsForTenant(this.ctx.tenantId)).crm.mode
-      : declaredProvider;
+    const provider = declaredProvider;
     const claim = await claimExternalOperation(
       this.ctx.tenantId,
       this.ctx.domainActionId,

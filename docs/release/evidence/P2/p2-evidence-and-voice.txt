@@ -1,34 +1,36 @@
 
  RUN  v4.1.10 /Users/paramdave/Desktop/FINNOR/finnor-os
 
- ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > only consented households are ever targeted 59ms
- ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > the draft speaks the count and a sample line, and is always gated 40ms
- ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > execute sends only to the consented list 168ms
- ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > drafts a roster from real install visits, executes after voice approval, logs proposals 141ms
- ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > a spoken rejection halts the batch permanently 23ms
- ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > an unclear answer decides nothing (fail closed) 3ms
- ✓ tests/integration/vapi-webhook-identity.test.ts > POST /api/webhooks/vapi — caller identity resolves post-fix > a caller matching tenants.ownerPhone is resolved as owner — no handoff message 34ms
- ✓ tests/integration/vapi-webhook-identity.test.ts > POST /api/webhooks/vapi — caller identity resolves post-fix > an unrecognized number still gets the handoff (identity resolution is real, not bypassed) 49ms
- ✓ tests/integration/voice-os.test.ts > voice OS > resolves the tenant's registered owner line to role 'owner' 13ms
- ✓ tests/integration/voice-os.test.ts > voice OS > resolves a known household's phone to role 'customer' 53ms
- ✓ tests/integration/voice-os.test.ts > voice OS > an unrecognized number resolves to role 'unknown' — never silently owner 5ms
- ✓ tests/integration/voice-os.test.ts > voice OS > openVoiceSession is idempotent by callExternalId 4ms
- ✓ tests/integration/voice-os.test.ts > voice OS > a session only ever resolves ITS OWN open confirmations — the cross-session bug fix 29ms
- ✓ tests/integration/voice-os.test.ts > voice OS > createHandoff records an escalation for an unresolved caller 6ms
- ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 1. requiresConfirmation:false takes the low path — no repair episode, tier:low, candidateBGenerated:false 81ms
- ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 2. $50 invoice (below default $500 threshold, requiresConfirmation:true) is medium — repair runs, no candidate B 106ms
+ ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > only consented households are ever targeted 42ms
+ ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > the draft speaks the count and a sample line, and is always gated 63ms
+ ✓ tests/integration/voice-and-batch.test.ts > consent filter on bulk_notify (TCPA) > approval atomically authorizes durable worker execution without synchronous sends 62ms
+ ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > drafts a roster from real install visits, executes after voice approval, logs proposals 221ms
+ ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > a spoken rejection halts the batch permanently 38ms
+ ✓ tests/integration/voice-and-batch.test.ts > send_proposal_to_recent_installs — full gated batch flow > an unclear answer decides nothing (fail closed) 2ms
+ ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 1. requiresConfirmation:false takes the low path — no repair episode, tier:low, candidateBGenerated:false 64ms
+ ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 2. $50 invoice (below default $500 threshold, requiresConfirmation:true) is medium — repair runs, no candidate B 67ms
  ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 3. $5,000 invoice (above threshold) is high — candidate B generated, both scored, winner logged 19ms
- ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 4. a workflow-tagged action type is high regardless of amount — the compiledGraph.kind trigger 19ms
- ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 5. a tenant policy override (riskThresholds.amountUsd:100) makes a $150 invoice high tier even though the default would make it medium 16ms
- ✓ tests/integration/vapi-status-update-notify.test.ts > POST /api/webhooks/vapi — status-update notifies jarvis_events > in-progress status fires a call_status NOTIFY 74ms
- ✓ tests/integration/vapi-status-update-notify.test.ts > POST /api/webhooks/vapi — status-update notifies jarvis_events > distinct statuses for the same call are not deduped away 30ms
- ✓ tests/integration/evidence-corpus.test.ts > evidence corpus > appends an immutable version, is retry-idempotent, and records citable research hits 43ms
+ ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 4. a workflow-tagged action type is high regardless of amount — the compiledGraph.kind trigger 21ms
+ ✓ tests/integration/reasoning-tier.test.ts > LLMPlanner reasoning tier > 5. a tenant policy override (riskThresholds.amountUsd:100) makes a $150 invoice high tier even though the default would make it medium 15ms
+ ✓ tests/integration/vapi-status-update-notify.test.ts > POST /api/webhooks/vapi — status-update notifies jarvis_events > in-progress status fires a call_status NOTIFY 39ms
+ ✓ tests/integration/vapi-status-update-notify.test.ts > POST /api/webhooks/vapi — status-update notifies jarvis_events > distinct statuses for the same call are not deduped away 38ms
+(node:12178) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ tests/integration/vapi-webhook-identity.test.ts > POST /api/webhooks/vapi — caller identity resolves post-fix > a caller matching tenants.ownerPhone is resolved as owner — no handoff message 32ms
+ ✓ tests/integration/vapi-webhook-identity.test.ts > POST /api/webhooks/vapi — caller identity resolves post-fix > an unrecognized number still gets the handoff (identity resolution is real, not bypassed) 34ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > resolves the tenant's registered owner line to role 'owner' 8ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > resolves a known household's phone to role 'customer' 34ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > an unrecognized number resolves to role 'unknown' — never silently owner 7ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > openVoiceSession is idempotent by callExternalId 4ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > a session only ever resolves ITS OWN open confirmations — the cross-session bug fix 28ms
+ ✓ tests/integration/voice-os.test.ts > voice OS > createHandoff records an escalation for an unresolved caller 6ms
+ ✓ tests/integration/policy-engine-v2.test.ts > B6 policy engine v2 > preserves effective-dated revisions, simulates history without a write, and records approval drift 65ms
+ ✓ tests/integration/evidence-corpus.test.ts > evidence corpus > appends an immutable version, is retry-idempotent, and records citable research hits 42ms
  ✓ tests/integration/evidence-corpus.test.ts > evidence corpus > does not return tenant A's evidence in tenant B's scoped search 4ms
  ✓ tests/integration/evidence-corpus.test.ts > evidence corpus > does not expose public-cache writes through the tenant service 1ms
- ✓ tests/integration/policy-engine-v2.test.ts > B6 policy engine v2 > preserves effective-dated revisions, simulates history without a write, and records approval drift 42ms
 
  Test Files  7 passed (7)
       Tests  25 passed (25)
-   Start at  01:01:37
-   Duration  13.45s (transform 986ms, setup 0ms, import 10.41s, tests 2.10s, environment 1ms)
+   Start at  23:59:48
+   Duration  9.43s (transform 1000ms, setup 0ms, import 6.92s, tests 2.00s, environment 0ms)
 

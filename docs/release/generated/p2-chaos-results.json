@@ -1,6 +1,6 @@
 {
   "phase": "P2",
-  "generatedAt": "2026-08-06T19:32:04.998Z",
+  "generatedAt": "2026-08-24T18:30:05.476Z",
   "guardedContext": true,
   "localDatabaseOnly": true,
   "productionEgress": false,
@@ -35,7 +35,7 @@
       "status": "PASS",
       "skipped": 0,
       "evidencePath": "docs/release/evidence/P2/p2-deterministic-unit.txt",
-      "summary": "Test Files  19 passed (19) | Tests  99 passed (99)"
+      "summary": "Test Files  19 passed (19) | Tests  104 passed (104)"
     },
     {
       "id": "queue-and-workflow-durability",
@@ -54,13 +54,13 @@
         "tests/integration/reflection-error-kind-gate.test.ts",
         "tests/integration/terminal-plan-repair.test.ts"
       ],
-      "database": "finnor_p2_26255_1786044675581_02e3c5c0",
+      "database": "finnor_p2_11884_1787596169179_0bf8410a",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
       "skipped": 0,
       "evidencePath": "docs/release/evidence/P2/p2-queue-and-workflow-durability.txt",
-      "summary": "Test Files  12 passed (12) | Tests  63 passed (63)"
+      "summary": "Test Files  12 passed (12) | Tests  67 passed (67)"
     },
     {
       "id": "evidence-and-voice",
@@ -74,7 +74,7 @@
         "tests/integration/policy-engine-v2.test.ts",
         "tests/integration/reasoning-tier.test.ts"
       ],
-      "database": "finnor_p2_26255_1786044697345_2eebabb5",
+      "database": "finnor_p2_11884_1787596188407_1b8f7caa",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -93,13 +93,13 @@
         "tests/integration/payment-webhook-auth.test.ts",
         "tests/integration/payment-webhook-receipt.test.ts"
       ],
-      "database": "finnor_p2_26255_1786044711351_fb264495",
+      "database": "finnor_p2_11884_1787596198216_3acbb9c4",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
       "skipped": 0,
       "evidencePath": "docs/release/evidence/P2/p2-security-and-tenant-boundaries.txt",
-      "summary": "Test Files  6 passed (6) | Tests  32 passed (32)"
+      "summary": "Test Files  6 passed (6) | Tests  36 passed (36)"
     }
   ],
   "faults": [

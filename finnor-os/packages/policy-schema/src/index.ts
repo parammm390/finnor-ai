@@ -2,9 +2,9 @@
 // Business rule CONTENT never lives here; only its shape does.
 
 import { z } from "zod";
-import { CANONICAL_ENTITY_TYPES, OUTCOME_PACK_IDS } from "@finnor/shared-types";
+import { OUTCOME_PACK_IDS, isRetiredWaterCanonicalEntity } from "@finnor/shared-types";
 
-export const RoleSchema = z.enum(["owner", "dispatcher", "technician"]);
+export const RoleSchema = z.enum(["owner"]);
 
 export const DomainActionStatusSchema = z.enum([
   "draft",
@@ -50,7 +50,10 @@ export type DomainActionInput = z.infer<typeof DomainActionSchema>;
 // ---- API boundary schemas (every route validates with these) ----
 
 export const CanonicalEntityRefSchema = z.object({
-  entityType: z.enum(CANONICAL_ENTITY_TYPES),
+  // Vertical packages own their entity strings. The authenticated resolver below
+  // this schema checks the active registry; this seam only rejects the historical
+  // Water extension before any lookup can occur.
+  entityType: z.string().regex(/^[a-z][a-z0-9_]{1,63}$/).refine((value) => !isRetiredWaterCanonicalEntity(value), "Entity type is retired"),
   entityId: z.string().uuid(),
 }).strict();
 
@@ -71,7 +74,7 @@ export const OperatingInteractionContextSchema = z.object({
   selectedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   excludedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   surface: z.object({
-    id: z.enum(["home", "customers", "money", "work", "schedule", "agents"]),
+    id: z.enum(["home", "work", "agents", "deals"]),
     route: z.string().startsWith("/jarvis").max(300).optional(),
     spatialState: z.enum(["canvas", "detail", "list", "map", "timeline"]).optional(),
   }).strict(),
@@ -85,13 +88,6 @@ export const OperatingInteractionContextSchema = z.object({
     end: z.string().datetime().optional(),
     timezone: z.string().min(1).max(100).optional(),
   }).strict().optional(),
-  cohort: z.object({
-    kind: z.literal("work_query_execution"),
-    executionId: z.string().uuid(),
-    entityType: z.literal("household"),
-    queryIntent: z.literal("customer_cohort"),
-    count: z.number().int().min(0),
-  }).strict().optional(),
 }).strict().superRefine((context, issue) => {
   const selected = new Set(context.selectedEntities.map((ref) => `${ref.entityType}:${ref.entityId}`));
   const excluded = new Set<string>();
@@ -99,8 +95,7 @@ export const OperatingInteractionContextSchema = z.object({
     const key = `${ref.entityType}:${ref.entityId}`;
     if (excluded.has(key)) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "Duplicate exclusions are not allowed" });
     excluded.add(key);
-    if (!context.cohort && !selected.has(key)) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "An exclusion must belong to the direct selection or referenced cohort" });
-    if (context.cohort && ref.entityType !== context.cohort.entityType) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "Cohort exclusions must use the cohort entity type" });
+    if (!selected.has(key)) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "An exclusion must belong to the direct selection" });
   }
   if (context.timeContext?.start && context.timeContext.end && context.timeContext.start > context.timeContext.end) {
     issue.addIssue({ code: z.ZodIssueCode.custom, path: ["timeContext"], message: "timeContext.start must be before timeContext.end" });
@@ -294,12 +289,3 @@ export const VapiWebhookSchema = z.object({
     })
     .passthrough(),
 });
-
-// GoHighLevel webhook: CRM sync events.
-export const GhlWebhookSchema = z
-  .object({
-    type: z.string(),
-    locationId: z.string().optional(),
-    contactId: z.string().optional(),
-  })
-  .passthrough();

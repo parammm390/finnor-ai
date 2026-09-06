@@ -83,7 +83,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
   const priorLegacyCredentialTenants = process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS;
   const tenantA = randomUUID();
   const tenantB = randomUUID();
-  const waterTenant = randomUUID();
+  const unboundTenant = randomUUID();
   const actor = randomUUID();
   const approver = randomUUID();
   const actorB = randomUUID();
@@ -179,8 +179,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     await admin.connect();
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
-        ($1,$2,'PE4 Atlas Shadow'),($3,$4,'PE4 Foreign'),($5,$6,'PE4 Water')`,
-      [tenantA, `pe4-a-${randomUUID()}`, tenantB, `pe4-b-${randomUUID()}`, waterTenant, `pe4-water-${randomUUID()}`],
+        ($1,$2,'PE4 Atlas Shadow'),($3,$4,'PE4 Foreign'),($5,$6,'PE4 Unbound')`,
+      [tenantA, `pe4-a-${randomUUID()}`, tenantB, `pe4-b-${randomUUID()}`, unboundTenant, `pe4-unbound-${randomUUID()}`],
     );
     await admin.query(
       `INSERT INTO finnor_os.users(id,tenant_id,email,role,display_name) VALUES
@@ -269,8 +269,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
 
     process.env.DATABASE_URL = APP_URL;
     await closePool();
-    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 1, createdBy: actor, sourceSystem: "integration:pe4" });
-    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 1, createdBy: actorB, sourceSystem: "integration:pe4" });
+    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "integration:pe4" });
+    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 0, createdBy: actorB, sourceSystem: "integration:pe4" });
   }, 60_000);
 
   afterAll(async () => {
@@ -910,7 +910,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     expect((await listDealHistory(ctxA, validDealId)).filter((event) => event.eventType === "pe_deal_closed")).toHaveLength(1);
   }, 60_000);
 
-  it("blocks PE external egress unless an explicit sandbox/emulator binding exists while leaving Water active", async () => {
+  it("blocks PE external egress unless an explicit sandbox/emulator binding exists", async () => {
     const externalEffect = {
       operation: { name: "send_message", class: "external_side_effect", external: true },
       bindings: [],
@@ -918,6 +918,6 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     } as unknown as BusinessEffectSet;
     await expect(verifyBusinessEffectPreconditions(tenantB, externalEffect)).rejects.toThrow(/sandbox or emulator.*unbound egress is blocked/i);
     await expect(verifyBusinessEffectPreconditions(tenantA, externalEffect)).resolves.toBeUndefined();
-    await expect(verifyBusinessEffectPreconditions(waterTenant, externalEffect)).resolves.toBeUndefined();
+    await expect(verifyBusinessEffectPreconditions(unboundTenant, externalEffect)).rejects.toThrow(/vertical identity is missing/i);
   });
 });

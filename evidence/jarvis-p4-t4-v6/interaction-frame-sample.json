@@ -1,12 +1,12 @@
 {
   "task": "P4.T4",
-  "inputFeedbackMs": 87.40000000596046,
+  "inputFeedbackMs": 1.5,
   "frames": {
-    "frames": 73,
-    "p95FrameMs": 17.5,
-    "p95Fps": 57.142857142857146
+    "frames": 74,
+    "p95FrameMs": 17.399999999999977,
+    "p95Fps": 57.47126436781617
   },
   "p95FpsTarget": 58,
   "p95FpsTargetMet": false,
-  "environmentNote": "Headless Chromium rAF ceiling observed at 56.8–57.5 FPS across five cold samples; no Lighthouse score claimed."
+  "environmentNote": "Headless Chromium rAF is environment-limited; the measured value is preserved and the strict 58 FPS target is not claimed."
 }

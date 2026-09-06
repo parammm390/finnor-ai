@@ -7,17 +7,17 @@
       "mode": "ready",
       "dominant": "presence",
       "scrollWidth": 1440,
-      "scrollHeight": 1000,
+      "scrollHeight": 1118,
       "primaryStatuses": [
         {
           "text": "Ready",
           "visible": true
         }
       ],
-      "nowGroups": 1,
+      "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
-      "businessPulseCount": 1,
+      "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
       "minCraftFontSize": 11,
@@ -42,7 +42,7 @@
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
-      "businessPulseCount": 1,
+      "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
       "minCraftFontSize": 11,
@@ -57,20 +57,15 @@
       "mode": "thinking",
       "dominant": "thread",
       "scrollWidth": 1440,
-      "scrollHeight": 1000,
-      "primaryStatuses": [
-        {
-          "text": "Building the response",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1103,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -82,20 +77,15 @@
       "mode": "decision",
       "dominant": "approval",
       "scrollWidth": 1440,
-      "scrollHeight": 1000,
-      "primaryStatuses": [
-        {
-          "text": "Waiting for a decision",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1103,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 1,
       "approvalFocusInsideDialog": true,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -108,19 +98,14 @@
       "dominant": "weave",
       "scrollWidth": 1440,
       "scrollHeight": 1000,
-      "primaryStatuses": [
-        {
-          "text": "Execution in progress",
-          "visible": true
-        }
-      ],
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -132,210 +117,50 @@
       "mode": "resolved",
       "dominant": "receipt",
       "scrollWidth": 1440,
-      "scrollHeight": 1000,
-      "primaryStatuses": [
-        {
-          "text": "Outcome recorded",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 1440,
-      "fixture": "recovery",
-      "scene": "recovery",
-      "mode": "fault",
-      "dominant": "recovery",
-      "scrollWidth": 1440,
-      "scrollHeight": 1000,
-      "primaryStatuses": [
-        {
-          "text": "Needs operator attention",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "rest",
-      "scene": "ready",
-      "mode": "ready",
-      "dominant": "presence",
-      "scrollWidth": 768,
-      "scrollHeight": 1024,
-      "primaryStatuses": [
-        {
-          "text": "Ready",
-          "visible": true
-        }
-      ],
-      "nowGroups": 1,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 1,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "listening",
-      "scene": "listening",
-      "mode": "listening",
-      "dominant": "dock",
-      "scrollWidth": 768,
-      "scrollHeight": 1024,
-      "primaryStatuses": [
-        {
-          "text": "Listening",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 1,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "plan",
-      "scene": "plan",
-      "mode": "thinking",
-      "dominant": "thread",
-      "scrollWidth": 768,
-      "scrollHeight": 1188,
-      "primaryStatuses": [
-        {
-          "text": "Building the response",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "approval",
-      "scene": "approval",
-      "mode": "decision",
-      "dominant": "approval",
-      "scrollWidth": 768,
-      "scrollHeight": 1188,
-      "primaryStatuses": [
-        {
-          "text": "Waiting for a decision",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 1,
-      "approvalFocusInsideDialog": true,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "execution",
-      "scene": "working",
-      "mode": "working",
-      "dominant": "weave",
-      "scrollWidth": 768,
-      "scrollHeight": 1127,
-      "primaryStatuses": [
-        {
-          "text": "Execution in progress",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "receipt",
-      "scene": "outcome",
-      "mode": "resolved",
-      "dominant": "receipt",
-      "scrollWidth": 768,
-      "scrollHeight": 1358,
-      "primaryStatuses": [
-        {
-          "text": "Outcome recorded",
-          "visible": true
-        }
-      ],
-      "nowGroups": 0,
-      "nowRows": 0,
-      "operationsFloorCount": 0,
-      "businessPulseCount": 0,
-      "approvalCockpitCount": 0,
-      "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
-      "untrustedCurrencyNodes": [],
-      "rawNowRailCopy": [],
-      "infiniteRestAnimations": []
-    },
-    {
-      "viewport": 768,
-      "fixture": "recovery",
-      "scene": "recovery",
-      "mode": "fault",
-      "dominant": "recovery",
-      "scrollWidth": 768,
       "scrollHeight": 1191,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 1440,
+      "fixture": "recovery",
+      "scene": "recovery",
+      "mode": "fault",
+      "dominant": "recovery",
+      "scrollWidth": 1440,
+      "scrollHeight": 1018,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "rest",
+      "scene": "ready",
+      "mode": "ready",
+      "dominant": "presence",
+      "scrollWidth": 768,
+      "scrollHeight": 1113,
       "primaryStatuses": [
         {
-          "text": "Needs operator attention",
+          "text": "Ready",
           "visible": true
         }
       ],
@@ -351,23 +176,148 @@
       "infiniteRestAnimations": []
     },
     {
+      "viewport": 768,
+      "fixture": "listening",
+      "scene": "listening",
+      "mode": "listening",
+      "dominant": "dock",
+      "scrollWidth": 768,
+      "scrollHeight": 1024,
+      "primaryStatuses": [
+        {
+          "text": "Listening",
+          "visible": true
+        }
+      ],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": 11,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "plan",
+      "scene": "plan",
+      "mode": "thinking",
+      "dominant": "thread",
+      "scrollWidth": 768,
+      "scrollHeight": 1149,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "approval",
+      "scene": "approval",
+      "mode": "decision",
+      "dominant": "approval",
+      "scrollWidth": 768,
+      "scrollHeight": 1149,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 1,
+      "approvalFocusInsideDialog": true,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "execution",
+      "scene": "working",
+      "mode": "working",
+      "dominant": "weave",
+      "scrollWidth": 768,
+      "scrollHeight": 1201,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "receipt",
+      "scene": "outcome",
+      "mode": "resolved",
+      "dominant": "receipt",
+      "scrollWidth": 768,
+      "scrollHeight": 1294,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
+      "viewport": 768,
+      "fixture": "recovery",
+      "scene": "recovery",
+      "mode": "fault",
+      "dominant": "recovery",
+      "scrollWidth": 768,
+      "scrollHeight": 1121,
+      "primaryStatuses": [],
+      "nowGroups": 0,
+      "nowRows": 0,
+      "operationsFloorCount": 0,
+      "businessPulseCount": 0,
+      "approvalCockpitCount": 0,
+      "approvalFocusInsideDialog": false,
+      "minCraftFontSize": null,
+      "untrustedCurrencyNodes": [],
+      "rawNowRailCopy": [],
+      "infiniteRestAnimations": []
+    },
+    {
       "viewport": 390,
       "fixture": "rest",
       "scene": "ready",
       "mode": "ready",
       "dominant": "presence",
       "scrollWidth": 390,
-      "scrollHeight": 1040,
+      "scrollHeight": 969,
       "primaryStatuses": [
         {
           "text": "Ready",
           "visible": true
         }
       ],
-      "nowGroups": 1,
+      "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
-      "businessPulseCount": 1,
+      "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
       "minCraftFontSize": 11,
@@ -382,7 +332,7 @@
       "mode": "listening",
       "dominant": "dock",
       "scrollWidth": 390,
-      "scrollHeight": 1060,
+      "scrollHeight": 856,
       "primaryStatuses": [
         {
           "text": "Listening",
@@ -392,7 +342,7 @@
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
-      "businessPulseCount": 1,
+      "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
       "minCraftFontSize": 11,
@@ -407,20 +357,15 @@
       "mode": "thinking",
       "dominant": "thread",
       "scrollWidth": 390,
-      "scrollHeight": 1619,
-      "primaryStatuses": [
-        {
-          "text": "Building the response",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1451,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -432,20 +377,15 @@
       "mode": "decision",
       "dominant": "approval",
       "scrollWidth": 390,
-      "scrollHeight": 1638,
-      "primaryStatuses": [
-        {
-          "text": "Waiting for a decision",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1470,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 1,
       "approvalFocusInsideDialog": true,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -457,20 +397,15 @@
       "mode": "working",
       "dominant": "weave",
       "scrollWidth": 390,
-      "scrollHeight": 1644,
-      "primaryStatuses": [
-        {
-          "text": "Execution in progress",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1300,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -482,20 +417,15 @@
       "mode": "resolved",
       "dominant": "receipt",
       "scrollWidth": 390,
-      "scrollHeight": 1675,
-      "primaryStatuses": [
-        {
-          "text": "Outcome recorded",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1466,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -507,20 +437,15 @@
       "mode": "fault",
       "dominant": "recovery",
       "scrollWidth": 390,
-      "scrollHeight": 1531,
-      "primaryStatuses": [
-        {
-          "text": "Needs operator attention",
-          "visible": true
-        }
-      ],
+      "scrollHeight": 1316,
+      "primaryStatuses": [],
       "nowGroups": 0,
       "nowRows": 0,
       "operationsFloorCount": 0,
       "businessPulseCount": 0,
       "approvalCockpitCount": 0,
       "approvalFocusInsideDialog": false,
-      "minCraftFontSize": 11,
+      "minCraftFontSize": null,
       "untrustedCurrencyNodes": [],
       "rawNowRailCopy": [],
       "infiniteRestAnimations": []
@@ -533,20 +458,15 @@
     "mode": "decision",
     "dominant": "approval",
     "scrollWidth": 390,
-    "scrollHeight": 1638,
-    "primaryStatuses": [
-      {
-        "text": "Waiting for a decision",
-        "visible": true
-      }
-    ],
+    "scrollHeight": 1470,
+    "primaryStatuses": [],
     "nowGroups": 0,
     "nowRows": 0,
     "operationsFloorCount": 0,
     "businessPulseCount": 0,
     "approvalCockpitCount": 1,
     "approvalFocusInsideDialog": true,
-    "minCraftFontSize": 11,
+    "minCraftFontSize": null,
     "untrustedCurrencyNodes": [],
     "rawNowRailCopy": [],
     "infiniteRestAnimations": []

@@ -57,7 +57,7 @@ async function listFinnorGeneratedColumns(client: pg.Client): Promise<Map<string
   return result;
 }
 
-/** Dumps every real table in the finnor_os schema. Dev/demo-scale only (Dealer Zero,
+/** Dumps every real table in the finnor_os schema. Development/reference-scale only,
  *  not a real multi-tenant production body of data) — a straight `SELECT *` per table
  *  is the honest scope here; a real production-scale dump would need streaming/paging,
  *  noted as a known limit rather than pretended away. */

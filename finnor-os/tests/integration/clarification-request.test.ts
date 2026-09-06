@@ -24,7 +24,7 @@ describe.skipIf(!available)("clarification request", () => {
   afterAll(async () => { await closePool(); });
 
   it("registers, validates, and gates an ambiguous plan as a durable question card", async () => {
-    const provider: LLMProvider = { name: "clarification-stub", async complete() { return JSON.stringify({ actions: [{ action_type: "clarification_request", payload: { question: "Which Henderson household should receive the quote?", missingFields: ["householdId"] } }] }); } };
+    const provider: LLMProvider = { name: "clarification-stub", async complete() { return JSON.stringify({ actions: [{ action_type: "clarification_request", payload: { question: "Which deal should receive the diligence request?", missingFields: ["dealId"] } }] }); } };
     const plugins = createDefaultPluginRegistry();
     expect(plugins.actionTypes()).toContain("clarification_request");
     const [action] = await new LLMPlanner(plugins, provider).plan("Send the Hendersons a quote.", context(), memory());
@@ -35,8 +35,8 @@ describe.skipIf(!available)("clarification request", () => {
     // floor in the fixed release spec. It must never enter the approval queue or
     // present Answer/Skip/Cancel as Approve/Reject; the durable question is the
     // completed, receipted action itself.
-    expect(result.output).toMatchObject({ clarificationRequested: true, question: "Which Henderson household should receive the quote?" });
+    expect(result.output).toMatchObject({ clarificationRequested: true, question: "Which deal should receive the diligence request?" });
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(domainActions).where(eq(domainActions.id, action!.id)));
-    expect(row).toMatchObject({ actionType: "clarification_request", status: "completed", payload: { missingFields: ["householdId"] } });
+    expect(row).toMatchObject({ actionType: "clarification_request", status: "completed", payload: { missingFields: ["dealId"] } });
   });
 });

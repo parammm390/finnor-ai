@@ -4,14 +4,12 @@
 // (apps/worker/src/queue.ts), not a second queue system.
 
 export * from "./chaos";
-export * from "./capability";
 export * from "./commands";
 export * from "./job-identity";
 export * from "./steps";
 export * from "./outbox";
 export * from "./inbox";
 export * from "./reconciliation";
-export * from "./compensation";
 export * from "./envelope";
 export * from "./receipts";
 export * from "./dlq";

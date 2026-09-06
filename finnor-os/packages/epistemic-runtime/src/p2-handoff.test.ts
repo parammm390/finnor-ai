@@ -31,9 +31,9 @@ const UNRESOLVED: StaticAdmissibilityResultLike = {
   issues: [{
     status: "UNRESOLVED",
     reasonCode: "ENTITY_RESOLUTION_UNRESOLVED",
-    nodeId: "entity:invoice",
-    path: "resolution.entity:invoice",
-    message: "Invoice identity unresolved",
+    nodeId: "entity:pe_deal",
+    path: "resolution.entity:pe_deal",
+    message: "Deal identity unresolved",
     detail: { resolutionReasonCode: "ENTITY_REFERENCE_UNRESOLVED" },
   }],
 };
@@ -65,7 +65,7 @@ describe("P2 to P3 handoff", () => {
   it("maps actual P2 resolution reason codes to typed mandatory propositions", () => {
     const result = requirementsFromP2Unresolved(UNRESOLVED, "decision:test");
     expect(result.propositions).toEqual([
-      expect.objectContaining({ id: "p2:entity:invoice:ENTITY_REFERENCE_UNRESOLVED" }),
+      expect.objectContaining({ id: "p2:entity:pe_deal:ENTITY_REFERENCE_UNRESOLVED" }),
     ]);
     expect(result.requirements[0]).toMatchObject({ mandatory: true, acceptableStatuses: ["KNOWN"] });
     expect(result.requirements[0]?.acquisitionOptions[0]).toMatchObject({ kind: "READ", adapterId: "CANONICAL_OPERATIONAL_QUERY" });
@@ -78,9 +78,9 @@ describe("P2 to P3 handoff", () => {
       issues: [{
         status: "UNRESOLVED",
         reasonCode: "ENTITY_RESOLUTION_UNRESOLVED",
-        nodeId: "entity:customer",
-        path: "resolution.entity:customer",
-        message: "Customer identity is ambiguous",
+        nodeId: "entity:deal_party",
+        path: "resolution.entity:deal_party",
+        message: "Deal-party identity is ambiguous",
         detail: { resolutionReasonCode: "ENTITY_REFERENCE_AMBIGUOUS" },
       }],
     };

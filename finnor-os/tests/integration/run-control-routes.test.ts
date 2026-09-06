@@ -61,7 +61,7 @@ describe.skipIf(!available)("run-control routes (§2.7)", () => {
 
   it("pause: non-owner gets 403, owner gets 200, malformed body gets 400", async () => {
     const runId = await newRun();
-    const forbidden = await pauseRoute(req(`/api/workflows/runs/${runId}/pause`, { role: "technician" }), { params: Promise.resolve({ id: runId }) });
+    const forbidden = await pauseRoute(req(`/api/workflows/runs/${runId}/pause`, { role: "analyst" }), { params: Promise.resolve({ id: runId }) });
     expect(forbidden.status).toBe(403);
 
     const badBody = await pauseRoute(req(`/api/workflows/runs/${runId}/pause`, { body: { expectedVersion: "not-a-number" } }), { params: Promise.resolve({ id: runId }) });

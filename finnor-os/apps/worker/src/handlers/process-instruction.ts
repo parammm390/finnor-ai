@@ -23,7 +23,7 @@ export const processInstruction: JobHandler = async (payload) => {
   await orchestrator.handleInstruction(instruction, {
     tenantId,
     userId: "00000000-0000-4000-8000-0000000000ee", // system principal for webhook-originated work
-    role: "dispatcher",
+    role: "owner",
     correlationId,
   }, {
     channel: "voice",

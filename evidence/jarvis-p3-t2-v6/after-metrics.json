@@ -2,47 +2,50 @@
   "snapshots": [
     {
       "viewport": 1440,
-      "rows": 5,
+      "rows": 9,
       "selectedRows": 1,
-      "statusText": "Status unavailable — assistant configuration is not exposed to JARVIS yet.",
+      "statusText": "CALLING AGENTSFive Vapi personas preserved from the backend registryJARVISUnderstands your instruction, plans against the business, asks when uncertain, and routes consequential actions through approval.Assistant status not readCall records not readFollow-upChecks in after a new installation or major service visit, captures satisfaction, and can gently ask for a review.Assistant status not readCall records not readService ReminderContacts customers whose treatment equipment is due or coming due for filter, membrane, or service work.Assistant status not readCall records not readWin-backReconnects with past customers who have gone quiet and can present an approved win-back offer.Assistant status not readCall records not readPayment CollectorGives a friendly heads-up about overdue invoices using the collection context a human approved.Assistant status not readCall records not read",
       "providerScope": "Provider fact · not agent readiness",
       "inspectorCount": 0,
       "scrollWidth": 1440,
-      "layoutColumns": "248px 1146px",
+      "layoutColumns": "284px 1110px",
       "sourceLabels": [
-        "manifest:v6",
+        "registered-action-contracts",
         "api:integrations-status",
-        "truth-rule:assistant-configuration"
+        "api:integrations-status",
+        "api:work-cases"
       ]
     },
     {
       "viewport": 768,
-      "rows": 5,
+      "rows": 9,
       "selectedRows": 1,
-      "statusText": "Status unavailable — assistant configuration is not exposed to JARVIS yet.",
+      "statusText": "CALLING AGENTSFive Vapi personas preserved from the backend registryJARVISUnderstands your instruction, plans against the business, asks when uncertain, and routes consequential actions through approval.Assistant status not readCall records not readFollow-upChecks in after a new installation or major service visit, captures satisfaction, and can gently ask for a review.Assistant status not readCall records not readService ReminderContacts customers whose treatment equipment is due or coming due for filter, membrane, or service work.Assistant status not readCall records not readWin-backReconnects with past customers who have gone quiet and can present an approved win-back offer.Assistant status not readCall records not readPayment CollectorGives a friendly heads-up about overdue invoices using the collection context a human approved.Assistant status not readCall records not read",
       "providerScope": "Provider fact · not agent readiness",
       "inspectorCount": 0,
       "scrollWidth": 768,
-      "layoutColumns": "210px 512px",
+      "layoutColumns": "284px 438px",
       "sourceLabels": [
-        "manifest:v6",
+        "registered-action-contracts",
         "api:integrations-status",
-        "truth-rule:assistant-configuration"
+        "api:integrations-status",
+        "api:work-cases"
       ]
     },
     {
       "viewport": 390,
-      "rows": 5,
+      "rows": 9,
       "selectedRows": 1,
-      "statusText": "Status unavailable — assistant configuration is not exposed to JARVIS yet.",
+      "statusText": "CALLING AGENTSFive Vapi personas preserved from the backend registryJARVISUnderstands your instruction, plans against the business, asks when uncertain, and routes consequential actions through approval.Assistant status not readCall records not readFollow-upChecks in after a new installation or major service visit, captures satisfaction, and can gently ask for a review.Assistant status not readCall records not readService ReminderContacts customers whose treatment equipment is due or coming due for filter, membrane, or service work.Assistant status not readCall records not readWin-backReconnects with past customers who have gone quiet and can present an approved win-back offer.Assistant status not readCall records not readPayment CollectorGives a friendly heads-up about overdue invoices using the collection context a human approved.Assistant status not readCall records not read",
       "providerScope": "Provider fact · not agent readiness",
       "inspectorCount": 0,
       "scrollWidth": 390,
-      "layoutColumns": "368px",
+      "layoutColumns": "284px 74px",
       "sourceLabels": [
-        "manifest:v6",
+        "registered-action-contracts",
         "api:integrations-status",
-        "truth-rule:assistant-configuration"
+        "api:integrations-status",
+        "api:work-cases"
       ]
     }
   ],

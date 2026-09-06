@@ -2,9 +2,8 @@
 // structured read-models first, (2) tenant-scoped semantic second, (3) merged with
 // citations — "the LLM never answers from semantic memory alone when a structured
 // source exists." This module owns the merge/citation/confidence machinery; each
-// answer action supplies its own structured facts (it already knows how to query its
-// own domain — ops-overview's business snapshot, water-domain-knowledge's reference
-// table, a household lookup) rather than this module guessing what's relevant.
+// answer action supplies its own structured facts (for example, a canonical Deal
+// query or current Work projection) rather than this module guessing what's relevant.
 
 import { querySemantic, type SemanticHit } from "./semantic";
 import { findMatchingCorrection } from "./corrections";

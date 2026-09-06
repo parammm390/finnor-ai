@@ -105,7 +105,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await expect(loadEmployeeConversationThread({ tenantId: tenantA, ownerEmployeeId: peer, threadId: thread.id })).resolves.toBeNull();
     await expect(loadEmployeeConversationThread({ tenantId: tenantB, ownerEmployeeId: otherTenantOwner, threadId: thread.id })).resolves.toBeNull();
     expect(await listEmployeeConversationThreads(tenantA, peer)).toEqual([]);
-    await expect(prepareEmployeeConversationTurn({ ctx: { tenantId: tenantA, userId: peer, employeeId: peer, role: "dispatcher" }, threadId: thread.id, instruction: "Continue this private thread.", instructionId: randomUUID(), channel: "text" })).rejects.toThrow("conversation_thread_not_found");
+    await expect(prepareEmployeeConversationTurn({ ctx: { tenantId: tenantA, userId: peer, employeeId: peer, role: "owner" }, threadId: thread.id, instruction: "Continue this private thread.", instructionId: randomUUID(), channel: "text" })).rejects.toThrow("conversation_thread_not_found");
 
     const serviceConnection = new pg.Client({ connectionString: APP_URL });
     await serviceConnection.connect();

@@ -6,6 +6,7 @@ import { withTenant, domainPolicies, domainPolicyRevisions } from "@finnor/db";
 import { UpsertPolicySchema } from "@finnor/policy-schema";
 import { and, desc, eq, lte, sql } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../../lib/auth";
+import { isRetiredWaterAction } from "@finnor/shared-types";
 
 type Params = { params: Promise<{ tenantId: string; actionType: string }> };
 
@@ -29,6 +30,7 @@ function projectRevision(base: PolicyBase, revision: PolicyRevision): PolicyBase
 export async function GET(req: Request, { params }: Params): Promise<Response> {
   try {
     const { tenantId, actionType } = await params;
+    if (isRetiredWaterAction(actionType)) return Response.json({ error: "RETIRED_VERTICAL" }, { status: 410 });
     const ctx = await requireContext(req);
     if (ctx.tenantId !== tenantId) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
@@ -64,6 +66,7 @@ export async function GET(req: Request, { params }: Params): Promise<Response> {
 export async function PUT(req: Request, { params }: Params): Promise<Response> {
   try {
     const { tenantId, actionType } = await params;
+    if (isRetiredWaterAction(actionType)) return Response.json({ error: "RETIRED_VERTICAL" }, { status: 410 });
     const ctx = await requireContext(req);
     if (ctx.tenantId !== tenantId) {
       return Response.json({ error: "Forbidden" }, { status: 403 });

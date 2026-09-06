@@ -262,7 +262,8 @@ function failureShape(error: unknown): Record<string, unknown> {
 }
 
 function role(value: unknown): Role {
-  return value === "dispatcher" || value === "technician" ? value : "owner";
+  void value;
+  return "owner";
 }
 
 function channel(value: string): LLMChannel {
@@ -331,12 +332,12 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         "Complete only when the persisted business success condition appears true in current canonical state, including when a previously expected action is no longer necessary. Include evidence using exact query/effect/event/delegation/computer ids or a typed canonical query assertion.",
         "Wait only for a future business condition. Use waitFor with exact canonical refs and optionally deadlineAt for 'event X OR deadline Y'. Never correlate by similar names or message text. A timer-only wait may use deadlineAt without waitFor. Block when safe progress requires a human fact/integration. Fail only for a terminal objective failure.",
         `Allowed action types: ${input.allowedActionTypes.join(", ")}`,
-        `Typed operational query intents: customer_lookup, customer_cohort, schedule_range, money_summary, work_list, inventory_status, agent_activity, business_state, company_context.`,
-        'Operational query requests are strict flat objects: inventory_status accepts only {"intent":"inventory_status","sku":"optional exact SKU","lowStockOnly":false,"includeOpenProcurement":true}; it has no order_number field. A supplier order/reference is not an inventory SKU. If canonical state has no supplier-order record or provider API binding and an exact governed supplier application/auth profile is visible, use one READ_ONLY computer_task instead of repeatedly querying inventory.',
+        `Typed operational query intents: work_list, agent_activity, company_context, party_lookup, party_context, team_roster, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness.`,
+        "Deal-scoped operational queries require the exact dealId from canonical state. Never infer a deal, company, fund, party, request, finding, risk, condition, or workstream from a similar label.",
         "Action payload schemas follow. Field names and required fields are strict:",
         input.actionPayloadSpec,
         `Exact governed computer access visible for this decision: ${JSON.stringify(input.inspection.executionAccess)}`,
-        'For a governed supplier-order lookup, computer_task still requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"supplier_order",identifier:<order reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never replace these fields with order_number or browser instructions.',
+        'For governed external diligence evidence, computer_task requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"diligence_record",identifier:<exact reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never invent a URL, account, profile, or reference.',
         'Return one JSON object. query/action/wait may include recoveryMode: retry|replan|recover|compensate|escalate. Shapes: {"kind":"query","request":{"intent":"..."},"reason":"...","nextStep":"..."}; {"kind":"action","actionType":"...","payload":{},"reason":"...","nextStep":"..."}; {"kind":"wait","waitFor":{"eventType":"delegation.acknowledged","delegationId":"exact UUID","subject":{"type":"employee","id":"exact UUID"}},"deadlineAt":"optional ISO","condition":"short label","reason":"..."}; {"kind":"complete","outcome":{},"evidence":[{"kind":"canonical_query","request":{"intent":"..."},"assertion":{"path":["rows"],"operator":"array_contains","expected":{}}}],"reason":"..."}; {"kind":"block","reason":"...","recovery":"..."}; {"kind":"fail","reason":"...","failure":{}}.',
       ].join("\n"),
       user: JSON.stringify({ objective: input.objective, remainingBudget: input.remaining, canonicalInspection: input.inspection }),
@@ -682,16 +683,6 @@ async function currentIterationState(tenantId: string, loopId: string, stepId: s
   });
 }
 
-function latestHouseholdId(aggregate: Awaited<ReturnType<typeof workAggregate>>): string | null {
-  if (!aggregate) return null;
-  const links = aggregate.entityLinks as Array<{ entityType: string; entityId: string }>;
-  const linked = links.find((link) => link.entityType === "household")?.entityId;
-  if (linked) return linked;
-  const activeContext = isRecord((aggregate.work as { activeContext?: unknown }).activeContext) ? (aggregate.work as { activeContext: Record<string, unknown> }).activeContext : {};
-  if (typeof activeContext.householdId === "string") return activeContext.householdId;
-  return canonicalRefsFromContext(activeContext).find((ref) => ref.entityType === "household")?.entityId ?? null;
-}
-
 async function inspectCanonicalState(tenantId: string, workId: string, loop: typeof workObjectiveLoops.$inferSelect, step: typeof workObjectiveSteps.$inferSelect, ctx: TenantContext): Promise<{ inspection: ObjectiveInspection; inspectionHash: string }> {
   const aggregate = await workAggregate(tenantId, workId);
   if (!aggregate) throw new Error("Objective Work aggregate not found");
@@ -705,7 +696,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     // one-step query decisions when the objective needs requests/workstreams.
     businessRequest = { intent: "closing_readiness", dealId: resolution.dealId };
   } else {
-    businessRequest = { intent: "business_state" };
+    businessRequest = { intent: "work_list", recordId: workId };
   }
   const businessAuthority = await evaluateAuthority(ctx, queryAuthorityRequest(businessRequest, workId));
   if (businessAuthority.outcome !== "allowed") throw new Error(`Authority denied canonical objective inspection: ${businessAuthority.reasonCode}`);
@@ -713,20 +704,6 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     workId,
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
-  const householdId = latestHouseholdId(aggregate);
-  let companyContext: unknown;
-  let companyAuthorityId: string | null = null;
-  if (vertical.verticalKey === "water" && householdId) {
-    const companyRequest: OperationalQueryRequest = { intent: "company_context", householdId };
-    const authority = await evaluateAuthority(ctx, queryAuthorityRequest(companyRequest, workId));
-    companyAuthorityId = authority.id;
-    if (authority.outcome === "allowed") {
-      companyContext = await executeTenantOperationalQuery(tenantId, companyRequest, {
-        workId,
-        executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:company-context`,
-      });
-    }
-  }
   const objectiveSteps = aggregate.objectiveSteps as Array<typeof workObjectiveSteps.$inferSelect>;
   const actorId = ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null);
   const [identityAccess, computerConfig, computerRunRows, delegationRows, acknowledgementRows, eventWake] = await Promise.all([
@@ -840,7 +817,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
         maxConsecutiveNoProgress: loop.maxConsecutiveNoProgress, deadlineAt: loop.deadlineAt.toISOString(),
       },
     },
-    companyGraph: { householdId, entityLinks: aggregate.entityLinks },
+    companyGraph: { entityLinks: aggregate.entityLinks },
     executionAccess: { identityAccess, computerTask: computerConfig },
     computerRuns: computerRunInspection,
     delegations: delegationRows.map((row) => ({
@@ -871,7 +848,6 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
       trustClass: event.trustClass,
     })),
     businessState: bounded(businessState, 40_000),
-    ...(companyContext === undefined ? {} : { companyContext: bounded(companyContext, 40_000) }),
     actions,
     businessEffects: effectRows.map((effect) => ({
       ...effect,
@@ -884,7 +860,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
       stepNumber: item.stepNumber, decisionKind: item.decisionKind, decisionReason: item.decisionReason,
       outcome: item.iterationOutcome, observation: bounded(item.observation, 8_000), progressMade: item.progressMade,
     })),
-    inspectionAuthority: { businessState: businessAuthority.id, companyContext: companyAuthorityId },
+    inspectionAuthority: { businessState: businessAuthority.id, companyContext: null },
   };
   return { inspection, inspectionHash: hash(inspection) };
 }

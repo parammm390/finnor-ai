@@ -32,7 +32,7 @@ const FAILURE_SPIKE_MIN_SAMPLE = 5;
 // No dedicated "flapping" signal exists (see file header) — a circuit sitting open,
 // or one failing right at the edge of opening, is the honest proxy available today.
 const FLAPPING_CONSECUTIVE_FAILURES_THRESHOLD = 3;
-const MONITORED_PROVIDERS = ["vapi", "stripe", "quickbooks"] as const;
+const MONITORED_PROVIDERS = ["vapi", "resend"] as const;
 
 export interface ReliabilityAlert {
   kind: "reconciliation_backlog" | "dlq_depth" | "failure_spike" | "provider_flapping" | "secret_store_unreachable";

@@ -218,7 +218,7 @@ export class GatedExecutor implements Executor {
     if (!effect) await this.setStatus(action, "executing");
     // Scoped per action execution: claims each external tool call against the
     // external_operations ledger so a reflection retry never re-fires an
-    // already-completed side effect (send an SMS twice, double-sync an invoice).
+    // already-completed side effect (for example, delivering a message twice).
     const identityRef = draft.payload.communicationIdentityRef && typeof draft.payload.communicationIdentityRef === "object"
       ? draft.payload.communicationIdentityRef as Record<string, unknown>
       : null;

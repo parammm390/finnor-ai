@@ -87,7 +87,7 @@ describe("web-research discovery verification", () => {
       return { ok: true, output: { result: { malformed: true } } };
     });
 
-    const result = await webResearchPlugin.execute(draft("water treatment pricing"), asToolRegistry(tools));
+    const result = await webResearchPlugin.execute(draft("private equity credit market pricing"), asToolRegistry(tools));
     const output = result.output as {
       results: Array<Record<string, unknown>>;
       citedResults: Array<Record<string, unknown>>;

@@ -111,14 +111,8 @@ The flow takes a service-area ZIP, pricing tier, household size, services, and c
 Before publishing, call `/api/health` locally or in preview. `readyForProduction` should be `true` after Gemini, Supabase, and Vapi browser credentials are configured. Configure Vapi to send call events to `/api/voice/webhook` and set the same `VAPI_WEBHOOK_SECRET` in Vercel and Vapi.
 
 ## Deployment
-This project is optimized for deployment on Vercel.
+Production deployment is governed by [`infra/deployment/production.contract.json`](infra/deployment/production.contract.json) and the single guarded [`production-release.yml`](.github/workflows/production-release.yml) workflow.
 
-1. Push your repository to GitHub.
-2. Import the project into your Vercel dashboard.
-3. Add your Environment Variables during the Vercel setup (`GEMINI_API_KEY`, `GEMINI_MODEL`, `NEXT_PUBLIC_VAPI_PUBLIC_KEY`, `NEXT_PUBLIC_VAPI_ASSISTANT_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_DEMO_MOCK_MODE`, and optional `LEAD_NOTIFY_WEBHOOK_URL`).
-4. Click Deploy.
+That workflow resolves the exact Vercel frontend/API projects, Azure worker runtime, embedded orchestrator, database, credentials, and migration head before mutation; it accepts only a clean checkout of the exact remote `main` SHA and refuses PASS until every runtime reports the same release identity. A direct `vercel --prod` deploy is not a production release because it bypasses worker/orchestrator deployment and parity verification.
 
-If the Vercel CLI is already linked, deploy from the project root:
-```bash
-npx vercel --prod
-```
+For local or preview work, use the relevant framework's development commands. Do not infer production targets, provider names, or credentials from this README; update the canonical contract first and let its validator fail closed.

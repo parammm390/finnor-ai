@@ -5,6 +5,7 @@
 import { commands, workflowRuns, workflowSteps, domainActions, jobs, type Db } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import { workflowStepJobKey } from "./job-identity";
+import { isRetiredWaterAction, isRetiredWaterWorkflow, RetiredVerticalError } from "@finnor/shared-types";
 
 export interface StepDefinition {
   stepType: string;
@@ -64,6 +65,13 @@ async function enqueueFirstStepTx(db: Db, tenantId: string, stepId: string, disp
 }
 
 export async function submitCommand(db: Db, params: SubmitCommandParams): Promise<SubmitCommandResult> {
+  if (
+    isRetiredWaterAction(params.commandType)
+    || isRetiredWaterWorkflow(params.workflowType)
+    || params.steps.some((step) => isRetiredWaterAction(step.stepType))
+  ) {
+    throw new RetiredVerticalError("water");
+  }
   const [originAction] = !params.workId && params.domainActionId
     ? await db.select({ workId: domainActions.workId }).from(domainActions).where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.id, params.domainActionId))).limit(1)
     : [];

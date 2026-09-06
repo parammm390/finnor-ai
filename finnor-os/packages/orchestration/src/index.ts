@@ -1,13 +1,23 @@
 // Orchestration core (§9): Planner → confirmation gate → Executor → Reflection.
 // This module is the single entry point the API, webhooks, and workers all use.
 
-import type { DomainAction, DomainPolicy, TenantContext, ExecutionResult, MemorySnapshot, OperatingContext, OperatingInteractionContext, EmployeeConversationContext, Role } from "@finnor/shared-types";
+import {
+  RetiredVerticalError,
+  isRetiredWaterAction,
+  type DomainAction,
+  type DomainPolicy,
+  type TenantContext,
+  type ExecutionResult,
+  type MemorySnapshot,
+  type OperatingContext,
+  type OperatingInteractionContext,
+  type EmployeeConversationContext,
+  type Role,
+} from "@finnor/shared-types";
 import {
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
   decisionReceipts, planRepairs, enqueueJob, receiveWork, transitionWork,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
-  authorizeBusinessOperationTx, businessOperations,
-  attachWorkEntity,
   authorityStates,
   workObjectiveSteps,
   businessEffects,
@@ -100,7 +110,7 @@ export * from "./outcome-packs";
 export * from "./autonomy";
 export * from "./operational-query-runtime";
 
-const EXTERNAL_RESEARCH_ACTION_TYPES = new Set(["search_web", "scan_competitors", "check_business_reviews"]);
+const EXTERNAL_RESEARCH_ACTION_TYPES = new Set(["search_web"]);
 
 export interface InstructionResult {
   actions: DomainAction[];
@@ -114,7 +124,6 @@ export interface InstructionResult {
 
 export interface InstructionOptions {
   sessionId?: string;
-  householdId?: string;
   instructionId?: string;
   workId?: string;
   workInputId?: string;
@@ -452,9 +461,7 @@ export class FinnorOrchestrator implements Orchestrator {
       });
       return { execution: normalizedExecution, ...(answer ? { answer } : {}) };
     } catch (err) {
-      const publicMessage = request.intent === "schedule_range"
-        ? "The canonical schedule could not be queried, so appointments cannot be verified."
-        : `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
+      const publicMessage = `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
       const failure = { ...workFailure(err, publicMessage), message: publicMessage, cause: err instanceof Error ? err.message.slice(0, 300) : "query unavailable" };
       await transitionWork(ctx.tenantId, work.workId, "failed", "query_execution_failed", {
         intent: request.intent,
@@ -699,8 +706,8 @@ export class FinnorOrchestrator implements Orchestrator {
     }
 
     // Greetings and capability turns are conversational by contract. Keep them
-    // off the household resolver, semantic retrieval, and planner path so a simple
-    // "hey" is fast, cannot inherit an unrelated customer/research context, and
+    // off semantic retrieval and the planner path so a simple "hey" is fast,
+    // cannot inherit unrelated company/research context, and
     // still produces the same explicit progress trace as every other turn.
     if (instructionRoute?.route === "CONVERSATION") {
       try {
@@ -731,8 +738,6 @@ export class FinnorOrchestrator implements Orchestrator {
     // Secrets are needed by the existing planner/provider path only. Keeping boot
     // after the deterministic branch makes a fast read independent of Secrets
     // Manager latency or availability.
-    let mentionedHousehold: { householdId: string; label: string } | null = null;
-    let resolvedHouseholdId: string | undefined;
     let memory: MemorySnapshot;
     try {
       if (opts.conversationContext?.resolution.status !== "clarification_required") await ensureSecretsLoaded();
@@ -741,7 +746,6 @@ export class FinnorOrchestrator implements Orchestrator {
         instruction,
         workId,
         sessionId: opts.sessionId,
-        householdId: opts.householdId,
         activeContext: opts.activeContext,
         conversationContext: opts.conversationContext,
         includeMemory: true,
@@ -750,20 +754,9 @@ export class FinnorOrchestrator implements Orchestrator {
       });
       operatingContext = assembled.context;
       memory = assembled.memory;
-      mentionedHousehold = assembled.mentionedHousehold;
-      resolvedHouseholdId = assembled.resolvedHouseholdId;
       await transitionWork(ctx.tenantId, workId, "understanding", "context_resolved", {
-        householdId: resolvedHouseholdId ?? null,
-        mentionedHousehold: mentionedHousehold?.label ?? null,
         operatingContextHealth: operatingContext.health.status,
-      }, resolvedHouseholdId && !operatingContext.interactionContext
-        ? { activeContext: { householdId: resolvedHouseholdId }, expectedWorkInputId: workInputId }
-        : { expectedWorkInputId: workInputId });
-      if (resolvedHouseholdId) await attachWorkEntity(ctx.tenantId, workId, {
-        entityType: "household",
-        entityId: resolvedHouseholdId,
-        source: "orchestrator.context_resolved",
-      });
+      }, { expectedWorkInputId: workInputId });
     } catch (err) {
       const failure = workFailure(err, "Context retrieval failed");
       await transitionWork(ctx.tenantId, workId, "failed", "understanding_failed", failure, { failure, expectedWorkInputId: workInputId });
@@ -778,12 +771,11 @@ export class FinnorOrchestrator implements Orchestrator {
       const contextChips = [
         { label: "explicit canvas targets", count: operatingContext?.interactionContext?.selectedEntities.length || (operatingContext?.interactionContext?.focusedEntity ? 1 : 0), source: "interaction:explicit", kind: "CANONICAL", role: "context_only" },
         { label: "explicit exclusions", count: operatingContext?.interactionContext?.excludedEntities.length ?? 0, source: "interaction:exclusions", kind: "CANONICAL", role: "context_only" },
-        { label: "bounded cohort reference", count: operatingContext?.interactionContext?.cohort ? 1 : 0, source: "interaction:cohort", kind: "CANONICAL", role: "context_only" },
         { label: "authenticated company profile", count: operatingContext?.tenant.companyName ? 1 : 0, source: "profile:tenant", kind: "PROFILE", role: "context_only" },
         { label: "current Work", count: operatingContext?.activeWork ? 1 : 0, source: "work:active", kind: "WORK", role: "context_only" },
         { label: "canonical business state", count: operatingContext?.canonicalSummaries.length ?? 0, source: "operational:business-state", kind: "CANONICAL", role: "context_only" },
         { label: "prior turns this session", count: memory.shortTerm ? 1 : 0, source: "memory:short-term", kind: "SESSION", role: "context_only" },
-        { label: "household history", count: memory.longTerm ? 1 : 0, source: "memory:long-term", kind: "MEMORY", role: "context_only" },
+        { label: "durable context history", count: memory.longTerm ? 1 : 0, source: "memory:long-term", kind: "MEMORY", role: "context_only" },
         { label: "related past instructions", count: memory.semantic.length, source: "memory:semantic", kind: "MEMORY", role: "context_only" },
         { label: "recent execution history", count: memory.episodic.length, source: "memory:episodic", kind: "WORK", role: "context_only" },
       ].filter((c) => c.count > 0);
@@ -1023,6 +1015,8 @@ export class FinnorOrchestrator implements Orchestrator {
       objectiveStepId?: string;
     } = {},
   ): Promise<{ action: DomainAction; result: ExecutionResult }> {
+    if (isRetiredWaterAction(actionType)) throw new RetiredVerticalError("water");
+    await resolveTenantVertical(tenantId);
     await ensureSecretsLoaded();
     const row = await withTenant(tenantId, async (db) => {
       const [created] = await db.insert(domainActions).values({
@@ -1091,11 +1085,11 @@ export class FinnorOrchestrator implements Orchestrator {
     const policy = await this.loadPolicy(action);
     // Real bug found while building Phase 3's e2e proof test: unlike the LLM-planner
     // path (planner.ts:327, sets policyId at insert time), draftKnownAction — the
-    // shared primitive EVERY proactive scan and the Dealer Zero simulator uses — never
+    // shared primitive every governed proactive source uses — never
     // persisted policyId onto the domain_actions row, even when loadPolicy() resolved a
     // real, versioned policy. openReceiptForFirstClaim (workflow-runtime/src/steps.ts)
     // reads policyId straight off that row, so every system-originated receipt's
-    // policyApplied silently came back null — the majority of Dealer Zero's real
+    // policyApplied silently came back null — active runtime drafts must never
     // traffic, not an edge case. version 0 is defaultPolicy()'s sentinel for "no real
     // row exists" (index.ts:58) — only persist a real, stored policy's id, never that.
     if (policy.version && policy.version > 0 && policy.id !== action.policyId) {
@@ -1136,6 +1130,7 @@ export class FinnorOrchestrator implements Orchestrator {
    * executing, so duplicate HTTP/webhook deliveries never duplicate a side effect.
    */
   async runAction(actionId: string, tenantId: string, approvedBy?: string): Promise<ExecutionResult> {
+    await resolveTenantVertical(tenantId);
     await ensureSecretsLoaded();
     const row = await withTenant(tenantId, async (db) => {
       // Status alone is never approval evidence. decide() writes this immutable
@@ -1148,6 +1143,9 @@ export class FinnorOrchestrator implements Orchestrator {
         .orderBy(desc(actionLog.timestamp))
         .limit(1);
       const [currentBeforeClaim] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId))).limit(1);
+      if (currentBeforeClaim && isRetiredWaterAction(currentBeforeClaim.actionType)) {
+        return { claimed: null, current: currentBeforeClaim, retiredBoundary: true as const };
+      }
       if (currentBeforeClaim && currentBeforeClaim.status !== "completed") {
         try {
           await assertActionNotCancelledTx(db, {
@@ -1183,6 +1181,9 @@ export class FinnorOrchestrator implements Orchestrator {
       return { claimed: null, current };
     });
     if (!row.current) return { status: "failure", output: {}, error: "Action not found" };
+    if (("retiredBoundary" in row && row.retiredBoundary) || isRetiredWaterAction(row.current.actionType)) {
+      return { status: "failure", output: { code: "RETIRED_VERTICAL" }, error: new RetiredVerticalError("water").message, errorKind: "terminal" };
+    }
     if ("cancelledBoundary" in row && row.cancelledBoundary) {
       return { status: "failure", output: { cancelled: true }, error: "Execution refused: the instruction or Work item is cancelled." };
     }
@@ -1409,7 +1410,7 @@ export class FinnorOrchestrator implements Orchestrator {
       // entirely regardless of FORCE ROW LEVEL SECURITY; without this, an
       // unqualified `.limit(1)` by actionType alone can non-deterministically pick
       // up another tenant's policy row for the same action_type). Same convention
-      // scan-low-inventory.ts and friends already follow.
+      // All worker handlers follow the same failure-kind contract.
       const [revision] = action.policyId
         ? await db.select().from(domainPolicyRevisions).where(and(eq(domainPolicyRevisions.policyId, action.policyId), eq(domainPolicyRevisions.tenantId, action.tenantId), action.policyVersion ? eq(domainPolicyRevisions.version, action.policyVersion) : lte(domainPolicyRevisions.effectiveFrom, new Date()))).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version)).limit(1)
         : await db.select().from(domainPolicyRevisions).where(and(eq(domainPolicyRevisions.actionType, action.actionType), eq(domainPolicyRevisions.tenantId, action.tenantId), lte(domainPolicyRevisions.effectiveFrom, new Date()))).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version)).limit(1);
@@ -1425,7 +1426,7 @@ export class FinnorOrchestrator implements Orchestrator {
           // domain_actions.policy_id, which foreign-keys to domain_policies(id),
           // so every draftKnownAction call that resolved a real (version > 0)
           // policy failed with "violates foreign key constraint
-          // domain_actions_policy_id_fkey" — this broke get_business_overview and
+          // domain_actions_policy_id_fkey" — this broke registered actions and
           // every proactive scan.
           id: row.policyId,
           tenantId: row.tenantId,
@@ -1599,27 +1600,6 @@ export class FinnorOrchestrator implements Orchestrator {
             : { status: "compiled" })
           .where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, effect.id), eq(businessEffects.status, "compiled")));
       }
-      const durableOperation = decision === "approve"
-        ? await authorizeBusinessOperationTx(db, {
-            tenantId,
-            domainActionId: actionId,
-            approvedBy: decidedBy,
-            authorityDecisionId: approverAuthority?.id,
-            authorityRevision: approverAuthority?.authorityRevision,
-          })
-        : null;
-      if (durableOperation) {
-        await db.update(domainActions).set({ status: "executing", executionStartedAt: new Date() })
-          .where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
-        await db.insert(actionLog).values({
-          tenantId,
-          domainActionId: actionId,
-          step: "operation_authorized",
-          input: { by: decidedBy, operationId: durableOperation.id },
-          output: { status: durableOperation.status, queued: durableOperation.authorized },
-        });
-        return { claimed: { ...claimed, status: "executing" as const, executionStartedAt: new Date() }, current: claimed, durableOperation };
-      }
       const durableAction = decision === "approve" && effect
         ? await authorizeActionExecutionTx(db, {
             tenantId,
@@ -1634,20 +1614,10 @@ export class FinnorOrchestrator implements Orchestrator {
         return {
           claimed: { ...claimed, status: "executing" as const, executionStartedAt: new Date() },
           current: claimed,
-          durableOperation: null,
           durableAction,
         };
       }
-      if (decision === "reject") {
-        const [operation] = await db.update(businessOperations).set({ status: "cancelled", completedAt: new Date(), updatedAt: new Date(), finalOutcome: { rejected: true, decidedBy } })
-          .where(and(eq(businessOperations.tenantId, tenantId), eq(businessOperations.domainActionId, actionId), eq(businessOperations.status, "awaiting_approval")))
-          .returning({ id: businessOperations.id });
-        if (operation) {
-          await db.update(decisionReceipts).set({ actualResult: { rejected: true }, finalizedAt: new Date() })
-            .where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.operationId, operation.id)));
-        }
-      }
-      return { claimed, current: claimed, durableOperation: null, durableAction: null, staleAuthority: false as const };
+      return { claimed, current: claimed, durableAction: null, staleAuthority: false as const };
     });
     if ("staleAuthority" in transition && transition.staleAuthority) {
       return { status: "failure", output: { staleAuthority: true }, error: "Authority changed while the decision was being applied; review the request again." };
@@ -1672,28 +1642,6 @@ export class FinnorOrchestrator implements Orchestrator {
       return { status: "success", output: { idempotent: true, status: transition.current.status } };
     }
     const row = transition.claimed;
-    if (transition.durableOperation) {
-      if (row.instructionId) {
-        await emitInstructionEvent(tenantId, row.instructionId, "executing", {
-          actionId,
-          operationId: transition.durableOperation.id,
-          durable: true,
-        }).catch(() => undefined);
-      }
-      if (row.workId) await reconcileWorkStatus(tenantId, row.workId);
-      await resumeObjectiveForAction(tenantId, actionId).catch(() => false);
-      return {
-        status: "success",
-        output: {
-          authorized: true,
-          durable: true,
-          operationId: transition.durableOperation.id,
-          operationStatus: transition.durableOperation.status,
-          queued: transition.durableOperation.authorized,
-        },
-        expected: { durableWorkerExecution: true },
-      };
-    }
     if ("durableAction" in transition && transition.durableAction) {
       if (row.instructionId) {
         await emitInstructionEvent(tenantId, row.instructionId, "executing", {
@@ -1852,5 +1800,3 @@ export function providerForPolicy(policy: DomainPolicy, channel: "voice" | "text
   return policy.modelProvider ? resolveProvider(policy.modelProvider) : resolveProviderForPurpose("planning", channel);
 }
 export * from "./workflow";
-export * from "./dealer-zero-replay";
-export * from "./training-mode";

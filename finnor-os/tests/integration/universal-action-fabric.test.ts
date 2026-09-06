@@ -549,8 +549,8 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     expect(await withTenant(TENANT_A, (db) => db.select().from(internalEventEvents).where(eq(internalEventEvents.internalEventId, eventId)))).toHaveLength(2);
 
     const assembled = await assembleOperatingContext(
-      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "dispatcher", authorityRoles: ["dispatcher"] },
-      { instruction: "Coordinate the Peterson installation", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
+      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "owner", authorityRoles: ["owner"] },
+      { instruction: "Coordinate the diligence review", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
     );
     expect(assembled.context.universalActions?.capabilities).toMatchObject({ browserExecutable: false, computerExecutable: false });
     expect(assembled.context.universalActions?.upcomingInternalEvents).toContainEqual(expect.objectContaining({

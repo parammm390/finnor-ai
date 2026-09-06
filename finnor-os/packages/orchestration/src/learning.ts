@@ -203,7 +203,7 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
         .select({ createdAt: scanFindings.createdAt, digestedAt: scanFindings.digestedAt })
         .from(scanFindings)
         .where(and(eq(scanFindings.tenantId, tenantId), gte(scanFindings.createdAt, since), isNotNull(scanFindings.digestedAt)));
-      // Two-stage traversal (same pattern as household360): direct rows first, then
+      // Two-stage traversal: direct rows first, then
       // the caller turns that hang off their session ids — a JOIN would work too, but
       // this mirrors the established convention for this kind of "children of a set
       // of parent ids" query in this codebase.

@@ -45,11 +45,11 @@ describe.skipIf(!available)("DecisionReceipt (§2.2)", () => {
   it("opens a receipt at proposal time (unfinalized) and finalizes it with an actual result", async () => {
     const { receiptId } = await openReceipt({
       tenantId: TENANT_A,
-      objective: "send a follow-up SMS to a lapsed lead",
-      evidence: [{ source: "leads", ref: "lead-123", timestamp: new Date().toISOString() }],
+      objective: "request an acknowledgement from the deal lead",
+      evidence: [{ source: "deal_requests", ref: "request-123", timestamp: new Date().toISOString() }],
       policyApplied: { id: "policy-1", version: 1 },
       riskTier: "medium",
-      proposedAction: { actionType: "send_follow_up", leadId: "lead-123" },
+      proposedAction: { actionType: "request_acknowledgement", requestId: "request-123" },
       approval: { required: true, approvedBy: "owner-1", at: new Date().toISOString() },
       correlationId: "corr-1",
     });
@@ -69,11 +69,11 @@ describe.skipIf(!available)("DecisionReceipt (§2.2)", () => {
   it("finalizes with a typed failure instead of an actual result", async () => {
     const { receiptId } = await openReceipt({
       tenantId: TENANT_A,
-      objective: "sync an invoice to QuickBooks",
+      objective: "record a diligence finding",
       evidence: [],
       policyApplied: null,
       riskTier: "high",
-      proposedAction: { actionType: "sync_invoice" },
+      proposedAction: { actionType: "record_finding" },
       approval: { required: false },
     });
     await finalizeReceipt(TENANT_A, receiptId, {

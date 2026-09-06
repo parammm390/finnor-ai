@@ -11,18 +11,18 @@ describe("extractPredicted", () => {
   it("returns the real predicted object from a genuine predictedReceipt", () => {
     const predictedReceipt = {
       version: 1,
-      actionType: "start_invoice_to_cash_workflow",
+      actionType: "declare_deal_closed",
       simulation: {
         mode: "dry_run",
-        summary: "Dry run: payment-link, delivery, and accounting-sync steps would be queued for $890; no command or payment link was created.",
-        predicted: { invoiceId: "inv-1", invoiceFound: true, amountUsd: 890, steps: ["create_payment_link", "send_message", "sync_invoice"] },
+        summary: "Dry run: the deal would close only if all conditions and closing items remain verified.",
+        predicted: { dealId: "deal-1", eligible: true, unresolvedConditions: 0, unverifiedItems: 0 },
       },
     };
     expect(extractPredicted(predictedReceipt)).toEqual({
-      invoiceId: "inv-1",
-      invoiceFound: true,
-      amountUsd: 890,
-      steps: ["create_payment_link", "send_message", "sync_invoice"],
+      dealId: "deal-1",
+      eligible: true,
+      unresolvedConditions: 0,
+      unverifiedItems: 0,
     });
   });
 

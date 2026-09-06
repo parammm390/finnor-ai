@@ -28,7 +28,7 @@ import {
   type UniversalActionType,
   type UniversalCommunicationChannel,
 } from "@finnor/shared-types";
-import { resolveCapabilityBindingsForTenant, type ToolRegistry } from "@finnor/tools";
+import type { ToolRegistry } from "@finnor/tools";
 import { and, eq, sql } from "drizzle-orm";
 import { expandInternalRecipients, resolveCommunicationTargets } from "./endpoint-resolver";
 import { completeDelegation, transitionDelegation } from "./delegation-state";
@@ -169,11 +169,9 @@ async function routeForCommunication(
       ? decideUniversalActionRoute({ actionType, channel, recipient })
       : { route: "manual", executable: false, reasonCode: "manual_required", provider: null, hierarchyRank: 4 };
   }
-  const bindings = await resolveCapabilityBindingsForTenant(scope.tenantId);
   if (explicitIdentity) {
-    const compatible = channel === "email"
-      || (channel === "sms" && bindings.crm.mode === "ghl")
-      || (channel === "voice" && bindings.communications.mode === "vapi");
+    const compatible = (channel === "email" && explicitIdentity.provider === "gmail")
+      || (channel === "voice" && explicitIdentity.provider === "vapi");
     return decideUniversalActionRoute({
       actionType,
       channel,
@@ -182,19 +180,16 @@ async function routeForCommunication(
       provider: explicitIdentity.provider,
     });
   }
-  if (channel === "sms" && (bindings.crm.mode === "native" || bindings.crm.mode === "emulator")) {
-    return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: true, provider: "native" });
-  }
-  if (channel === "voice" && bindings.communications.mode !== "vapi") {
-    return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: true, provider: "native" });
-  }
-  let provider: string | null = channel === "email" ? "gmail" : channel === "sms" ? "ghl" : "vapi";
+  let provider: string | null = channel === "email" ? "gmail" : channel === "voice" ? "vapi" : null;
   let available = false;
   if (scope.actorId) {
     const access = await listAvailableIdentityAccess(scope.tenantId, scope.actorId).catch(() => null);
     const identity = access?.communicationIdentities.find((item) => item.channel === channel && item.status === "active");
-    available = Boolean(identity);
-    provider = identity?.provider ?? provider;
+    available = Boolean(identity && (
+      (channel === "email" && identity.provider === "gmail")
+      || (channel === "voice" && identity.provider === "vapi")
+    ));
+    provider = available ? identity?.provider ?? provider : provider;
   }
   return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: available, provider });
 }

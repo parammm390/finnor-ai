@@ -97,8 +97,7 @@ describe("Private Equity planner isolation", () => {
     expect(actions).toContain("declare_deal_closed");
     expect(actions).toHaveLength(32);
     expect(registry.payloadSpecJson(actions)).not.toMatch(/create_invoice|schedule_water_test/i);
-    expect(plannerActionTypesForVertical(registry, "water")).toContain("create_invoice");
-    expect(plannerActionTypesForVertical(registry, "water")).not.toContain("declare_deal_closed");
+    expect(() => plannerActionTypesForVertical(registry, "water")).toThrow(/retired/i);
   });
 
   it("uses PE doctrine, exposes epistemic warnings, and drops a Water action without persisting it", async () => {
@@ -121,7 +120,7 @@ describe("Private Equity planner isolation", () => {
     );
     expect(actions).toEqual([]);
     expect(capturedSystem).toMatch(/Task is not Request.*Document is not Deliverable.*ready is not verified/i);
-    expect(capturedSystem).toMatch(/Provider acknowledgement is not provider observation/i);
+    expect(capturedSystem).toMatch(/provider acknowledgement is not verified external outcome/i);
     expect(capturedSystem).not.toMatch(/water treatment|schedule_water_test|create_invoice/i);
     expect(capturedUser).toContain("closing_item.verified");
     expect(capturedUser).toContain("UNKNOWN");

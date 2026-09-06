@@ -1,4 +1,4 @@
-import { CURRENT_MIGRATION_HEAD, getPool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, PHASE5_CUTOVER_PROTOCOL, getPool } from "@finnor/db";
 
 export interface WorkerFleetReadiness {
   migrationHead: string | null;
@@ -17,8 +17,10 @@ export async function readWorkerFleetReadiness(): Promise<WorkerFleetReadiness> 
          WHERE service='worker'
            AND migration_head=$1
            AND ($2::text IS NULL OR release_sha=$2)
+           AND cutover_protocol>=$3
+           AND product_epoch=(SELECT epoch FROM finnor_os.product_runtime_authority WHERE authority_key='product')
            AND last_beat_at>now()-interval '90 seconds') AS healthy_workers`,
-    [CURRENT_MIGRATION_HEAD, process.env.FINNOR_COMMIT_SHA?.trim() || null],
+    [CURRENT_MIGRATION_HEAD, process.env.FINNOR_COMMIT_SHA?.trim() || null, PHASE5_CUTOVER_PROTOCOL],
   );
   const row = result.rows[0];
   return {

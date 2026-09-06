@@ -5,20 +5,6 @@ import { ACTION_HARDENING_SPEC_BY_ACTION, approvalRequirementForAction } from ".
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const RESOURCE_KEYS: Record<string, string> = {
-  householdId: "household",
-  customerId: "household",
-  targetId: "household",
-  technicianId: "technician",
-  visitId: "service_visit",
-  serviceVisitId: "service_visit",
-  workOrderId: "work_order",
-  invoiceId: "invoice",
-  paymentId: "payment",
-  leadId: "lead",
-  opportunityId: "opportunity",
-  quoteId: "quote",
-  proposalId: "proposal",
-  appointmentId: "appointment",
   workId: "work",
   taskId: "task",
   documentId: "document",
@@ -151,26 +137,20 @@ export function queryAuthorityRequest(request: OperationalQueryRequest, workId?:
   const params = raw.params && typeof raw.params === "object" ? raw.params as Record<string, unknown> : raw;
   let resource: AuthorityResource = { type: "*" };
   switch (request.intent) {
-    case "customer_lookup":
-    case "customer_cohort": resource = { type: "household", ...(typeof params.householdId === "string" ? { id: params.householdId } : {}) }; break;
-    case "schedule_range": resource = { type: "schedule", ...(typeof params.technicianId === "string" ? { id: params.technicianId } : {}) }; break;
-    case "money_summary": resource = { type: "financial_ledger" }; break;
     case "work_list": resource = { type: "work", ...(typeof params.recordId === "string" ? { id: params.recordId } : {}) }; break;
-    case "inventory_status": resource = { type: "inventory" }; break;
     case "agent_activity": resource = { type: "agent_activity" }; break;
-    case "business_state": resource = { type: "business_state" }; break;
     case "company_context": {
       const anchor = params.anchor && typeof params.anchor === "object" ? params.anchor as Record<string, unknown> : null;
       resource = anchor && typeof anchor.partyType === "string"
         ? { type: anchor.partyType, ...(typeof anchor.partyId === "string" ? { id: anchor.partyId } : {}) }
         : anchor && typeof anchor.entityType === "string"
           ? { type: anchor.entityType, ...(typeof anchor.entityId === "string" ? { id: anchor.entityId } : {}) }
-          : { type: "household", ...(typeof params.householdId === "string" ? { id: params.householdId } : {}) };
+          : { type: "company" };
       break;
     }
     case "party_lookup":
     case "party_context":
-    case "party_availability": {
+    {
       const ref = params.ref && typeof params.ref === "object" ? params.ref as Record<string, unknown> : null;
       resource = ref && typeof ref.partyType === "string"
         ? { type: ref.partyType, ...(typeof ref.partyId === "string" ? { id: ref.partyId } : {}) }

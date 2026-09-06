@@ -58,16 +58,15 @@ describe("Private Equity Phase 4 executable action contract", () => {
     }
   });
 
-  it("composes manifests by vertical and keeps PE actions out of Water planning", () => {
+  it("composes the PE and Core manifests and refuses the retired vertical", () => {
     const registry = createDefaultPluginRegistry();
     const pe = plannerActionTypesForVertical(registry, "private_equity");
-    const water = plannerActionTypesForVertical(registry, "water");
     const shared = plannerActionTypesForVertical(registry, "none");
     expect(pe).toHaveLength(32);
-    expect(water).toHaveLength(59);
     expect(shared).toHaveLength(17);
     expect(EXPECTED_PE_ACTIONS.every((action) => pe.includes(action))).toBe(true);
-    expect(EXPECTED_PE_ACTIONS.every((action) => !water.includes(action) && !shared.includes(action))).toBe(true);
+    expect(EXPECTED_PE_ACTIONS.every((action) => !shared.includes(action))).toBe(true);
+    expect(() => plannerActionTypesForVertical(registry, "water")).toThrow(/retired/i);
     expect(pe).not.toContain("create_invoice");
     expect(actionHardeningSpecForVertical("private_equity").map((row) => row.actionType).sort()).toEqual([...pe].sort());
   });

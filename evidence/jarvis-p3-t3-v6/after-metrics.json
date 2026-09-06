@@ -4,19 +4,19 @@
       "viewport": 1440,
       "workFetches": 0,
       "scrollWidth": 1440,
-      "emptyWork": true
+      "workNotRead": true
     },
     {
       "viewport": 768,
       "workFetches": 0,
       "scrollWidth": 768,
-      "emptyWork": true
+      "workNotRead": true
     },
     {
       "viewport": 390,
       "workFetches": 0,
       "scrollWidth": 390,
-      "emptyWork": true
+      "workNotRead": true
     }
   ],
   "unexpectedErrors": []

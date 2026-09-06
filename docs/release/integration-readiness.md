@@ -1,5 +1,7 @@
 # Phase 3 Integration Readiness
 
+> **Historical release evidence.** This dated staging report is retained for audit only and is not an active environment or deployment contract.
+
 **Generated:** 2026-08-07
 **Repository HEAD:** `f4623cb15a496cc0d78aa5e8025ed1ba7281ce73`
 **Verified staging SHA:** `f4623cb15a496cc0d78aa5e8025ed1ba7281ce73`

@@ -4,11 +4,11 @@
   "canonicalGit": {
     "remote": "origin",
     "branch": "main",
-    "repository": "parammm390/JARVIS",
+    "repository": "parammm390/finnor-ai",
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0102_workflow_step_redrive_generation.sql",
+    "requiredMigrationHead": "0109_atomic_water_runtime_retirement.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

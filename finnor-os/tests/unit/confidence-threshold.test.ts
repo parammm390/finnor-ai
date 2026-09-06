@@ -9,7 +9,7 @@ function policyWith(policy: Record<string, unknown>): DomainPolicy {
   return {
     id: "p1",
     tenantId: "t1",
-    actionType: "answer_customer_question",
+    actionType: "record_finding",
     policy,
     requiresConfirmation: false,
     confirmationTemplate: null,

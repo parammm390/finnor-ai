@@ -1,36 +1,19 @@
-// Typed plan compiler (Phase 6, docs/jarvis-90-execution-blueprint.md §6). A real
-// staging step between the Planner's raw LLM output and the domain_actions row it
-// becomes — today that gap is bridged only by prompt text ("a pending create_invoice
-// has no real invoice id" is a warning in planner.ts's system prompt, not a structural
-// guarantee). This module makes two of those guarantees real:
+// Typed plan compiler: a structural boundary between planner output and durable
+// actions. It grounds active Core/Private Equity references and freezes effects.
 //
-//  1. Entity grounding — any payload field that names an existing-row reference
-//     (householdId, invoiceId, ...) is checked against the real table for this tenant.
-//     Only a small, known set of id fields is checked — an unrecognized field name is
+//  1. Entity grounding — payload fields that name active canonical references are
+//     checked against the real table for this tenant. Unrecognized field names are
 //     reported "unverifiable", never silently assumed fine.
 //  2. Command graph tagging — whether this action_type, once approved, executes as a
 //     single plugin.execute() call or drives the durable multi-step runtime
 //     (@finnor/workflow-runtime). This is a structural TAG, not a fabricated step list:
-//     the actual steps for a workflow action (e.g. whether workflow 3 needs a
-//     receive_procurement step) depend on runtime state only known at execute() time,
-//     and this module does not pretend to predict that.
+//     actual steps depend on runtime state and are never fabricated here.
 //
 // Explicitly NOT in scope: changing the Planner's own LLM call, or auto-executing a
 // multi-step workflow without the existing confirmation gate.
 
 import {
   withTenant,
-  households,
-  invoices,
-  quotes,
-  leads,
-  workOrders,
-  maintenanceAgreements,
-  technicians,
-  proposals,
-  serviceVisits,
-  contacts,
-  appointments,
   tasks,
   works,
   documents,
@@ -42,16 +25,13 @@ import {
   applicationAccounts,
   authProfiles,
   businessEffects,
-  businessOperations,
-  communicationsLog,
   messages,
-  inventoryItems,
   domainActions,
   domainPolicies,
   decisionReceipts,
   reconciliationCases,
+  resolveTenantVertical,
   tenantIntegrations,
-  tenantVerticalAssignments,
   evidenceSources,
   evidenceSourceVersions,
   externalOperations,
@@ -82,63 +62,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // (already-typed) column, not a generic lookup map, so this leans on the exact same
 // query shape every other plugin in this repo already uses.
 async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string, value: string): Promise<"verified" | "not_found" | "unverifiable"> {
-  const tenant = (condition: SQL) => (tenantId ? and(condition, eq(households.tenantId, tenantId)) : condition);
   const tenantFor = (condition: SQL, tableTenantId: AnyColumn) => (tenantId ? and(condition, eq(tableTenantId, tenantId)) : condition);
   switch (field) {
-    case "householdId": {
-      const [row] = await db.select({ id: households.id }).from(households).where(tenantFor(eq(households.id, value), households.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "invoiceId": {
-      const [row] = await db.select({ id: invoices.id }).from(invoices).where(tenantFor(eq(invoices.id, value), invoices.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "quoteId": {
-      const [row] = await db.select({ id: quotes.id }).from(quotes).where(tenantFor(eq(quotes.id, value), quotes.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "leadId": {
-      const [row] = await db.select({ id: leads.id }).from(leads).where(tenantFor(eq(leads.id, value), leads.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "workOrderId": {
-      const [row] = await db.select({ id: workOrders.id }).from(workOrders).where(tenantFor(eq(workOrders.id, value), workOrders.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "agreementId": {
-      const [row] = await db
-        .select({ id: maintenanceAgreements.id })
-        .from(maintenanceAgreements)
-        .innerJoin(households, eq(maintenanceAgreements.householdId, households.id))
-        .where(tenant(eq(maintenanceAgreements.id, value)))
-        .limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "technicianId": {
-      const [row] = await db.select({ id: technicians.id }).from(technicians).where(tenantFor(eq(technicians.id, value), technicians.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "proposalId": {
-      const [row] = await db
-        .select({ id: proposals.id })
-        .from(proposals)
-        .innerJoin(households, eq(proposals.householdId, households.id))
-        .where(tenant(eq(proposals.id, value)))
-        .limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "visitId": {
-      const [row] = await db.select({ id: serviceVisits.id }).from(serviceVisits).innerJoin(households, eq(serviceVisits.householdId, households.id)).where(tenant(eq(serviceVisits.id, value))).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "contactId": {
-      const [row] = await db.select({ id: contacts.id }).from(contacts).where(tenantFor(eq(contacts.id, value), contacts.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
-    case "appointmentId": {
-      const [row] = await db.select({ id: appointments.id }).from(appointments).where(tenantFor(eq(appointments.id, value), appointments.tenantId)).limit(1);
-      return row ? "verified" : "not_found";
-    }
     case "taskId": {
       const [row] = await db.select({ id: tasks.id }).from(tasks).where(tenantFor(eq(tasks.id, value), tasks.tenantId)).limit(1);
       return row ? "verified" : "not_found";
@@ -253,14 +178,8 @@ function collectGroundingCandidates(value: unknown, path = ""): GroundingCandida
   return candidates;
 }
 
-// The vertical-workflow action types (Phase 4/5) that submit a multi-step command
-// graph through @finnor/workflow-runtime rather than executing as one plugin call.
-const WORKFLOW_ACTION_TYPES = new Set([
-  "start_water_test_workflow",
-  "request_proposal_signature",
-  "start_installation_workflow",
-  "start_invoice_to_cash_workflow",
-]);
+// No active product action delegates to a legacy vertical workflow graph.
+const WORKFLOW_ACTION_TYPES = new Set<string>();
 
 export interface GroundedField {
   field: string;
@@ -335,15 +254,10 @@ export async function compileAction(
 // ---------------------------------------------------------------------------
 
 const EFFECT_RESOURCE_KEYS: Record<string, string> = {
-  householdId: "household", customerId: "household", targetId: "household",
-  technicianId: "technician", visitId: "service_visit", serviceVisitId: "service_visit",
-  workOrderId: "work_order", invoiceId: "invoice", paymentId: "payment", leadId: "lead",
-  opportunityId: "opportunity", quoteId: "quote", proposalId: "proposal",
-  appointmentId: "appointment", workId: "work", taskId: "task", documentId: "document",
+  workId: "work", taskId: "task", documentId: "document",
   locationId: "location", delegationId: "delegation", internalEventId: "internal_event",
   objectiveLoopId: "objective_loop", communicationIdentityId: "communication_identity",
   applicationAccountId: "application_account", authProfileId: "auth_profile",
-  agreementId: "maintenance_agreement", maintenanceAgreementId: "maintenance_agreement",
   dealId: "pe_deal", dealPartyId: "pe_deal_party", requestedFromDealPartyId: "pe_deal_party",
   responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
   deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
@@ -503,22 +417,6 @@ async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTa
   const peState = await safePrivateEquityState(db, tenantId, target.type, target.id);
   if (peState) return peState;
   switch (target.type) {
-    case "household": {
-      const [row] = await db.select({ id: households.id, createdAt: households.createdAt }).from(households).where(and(eq(households.tenantId, tenantId), eq(households.id, target.id))).limit(1);
-      return row ? { id: row.id, createdAt: iso(row.createdAt) } : null;
-    }
-    case "service_visit": {
-      const [row] = await db.select({ id: serviceVisits.id, householdId: serviceVisits.householdId, technicianId: serviceVisits.technicianId, type: serviceVisits.type, scheduledAt: serviceVisits.scheduledAt, completedAt: serviceVisits.completedAt }).from(serviceVisits).where(and(eq(serviceVisits.tenantId, tenantId), eq(serviceVisits.id, target.id))).limit(1);
-      return row ? { ...row, scheduledAt: iso(row.scheduledAt), completedAt: iso(row.completedAt) } : null;
-    }
-    case "appointment": {
-      const [row] = await db.select({ id: appointments.id, subjectType: appointments.subjectType, subjectId: appointments.subjectId, technicianId: appointments.technicianId, status: appointments.status, scheduledAt: appointments.scheduledAt, durationMinutes: appointments.durationMinutes, holdExpiresAt: appointments.holdExpiresAt }).from(appointments).where(and(eq(appointments.tenantId, tenantId), eq(appointments.id, target.id))).limit(1);
-      return row ? { ...row, scheduledAt: iso(row.scheduledAt), holdExpiresAt: iso(row.holdExpiresAt) } : null;
-    }
-    case "invoice": {
-      const [row] = await db.select({ id: invoices.id, householdId: invoices.householdId, amountUsd: invoices.amountUsd, status: invoices.status, dueDate: invoices.dueDate }).from(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.id, target.id))).limit(1);
-      return row ? { ...row, amountUsd: Number(row.amountUsd), dueDate: iso(row.dueDate) } : null;
-    }
     case "task": {
       const [row] = await db.select({ id: tasks.id, subjectType: tasks.subjectType, subjectId: tasks.subjectId, title: tasks.title, dueAt: tasks.dueAt, assignedPartyType: tasks.assignedPartyType, assignedPartyId: tasks.assignedPartyId, status: tasks.status, priority: tasks.priority }).from(tasks).where(and(eq(tasks.tenantId, tenantId), eq(tasks.id, target.id))).limit(1);
       return row ? { ...row, dueAt: iso(row.dueAt) } : null;
@@ -535,26 +433,6 @@ async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTa
       const [row] = await db.select({ id: delegations.id, workId: delegations.workId, taskId: delegations.taskId, targetType: delegations.targetType, targetId: delegations.targetId, status: delegations.status, acknowledgementDeadline: delegations.acknowledgementDeadline, completionDeadline: delegations.completionDeadline }).from(delegations).where(and(eq(delegations.tenantId, tenantId), eq(delegations.id, target.id))).limit(1);
       return row ? { ...row, acknowledgementDeadline: iso(row.acknowledgementDeadline), completionDeadline: iso(row.completionDeadline) } : null;
     }
-    case "lead": {
-      const [row] = await db.select({ id: leads.id, householdId: leads.householdId, status: leads.status, archivedAt: leads.archivedAt }).from(leads).where(and(eq(leads.tenantId, tenantId), eq(leads.id, target.id))).limit(1);
-      return row ? { ...row, archivedAt: iso(row.archivedAt) } : null;
-    }
-    case "work_order": {
-      const [row] = await db.select({ id: workOrders.id, householdId: workOrders.householdId, quoteId: workOrders.quoteId, status: workOrders.status, technicianId: workOrders.technicianId, depositAmountUsd: workOrders.depositAmountUsd, scheduledAt: workOrders.scheduledAt }).from(workOrders).where(and(eq(workOrders.tenantId, tenantId), eq(workOrders.id, target.id))).limit(1);
-      return row ? { ...row, depositAmountUsd: row.depositAmountUsd === null ? null : Number(row.depositAmountUsd), scheduledAt: iso(row.scheduledAt) } : null;
-    }
-    case "quote": {
-      const [row] = await db.select({ id: quotes.id, householdId: quotes.householdId, status: quotes.status, totalUsd: quotes.totalUsd, validUntil: quotes.validUntil }).from(quotes).where(and(eq(quotes.tenantId, tenantId), eq(quotes.id, target.id))).limit(1);
-      return row ? { ...row, totalUsd: row.totalUsd === null ? null : Number(row.totalUsd), validUntil: iso(row.validUntil) } : null;
-    }
-    case "proposal": {
-      const [row] = await db.select({ id: proposals.id, householdId: proposals.householdId, quoteId: proposals.quoteId, status: proposals.status, sentAt: proposals.sentAt }).from(proposals).where(and(eq(proposals.tenantId, tenantId), eq(proposals.id, target.id))).limit(1);
-      return row ? { ...row, sentAt: iso(row.sentAt) } : null;
-    }
-    case "maintenance_agreement": {
-      const [row] = await db.select({ id: maintenanceAgreements.id, householdId: maintenanceAgreements.householdId, cadence: maintenanceAgreements.cadence, status: maintenanceAgreements.status, renewalDate: maintenanceAgreements.renewalDate }).from(maintenanceAgreements).where(and(eq(maintenanceAgreements.tenantId, tenantId), eq(maintenanceAgreements.id, target.id))).limit(1);
-      return row ? { ...row, renewalDate: iso(row.renewalDate) } : null;
-    }
     case "communication_identity": {
       const [row] = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider, channel: communicationIdentities.channel, status: communicationIdentities.status, authProfileId: communicationIdentities.authProfileId, updatedAt: communicationIdentities.updatedAt }).from(communicationIdentities).where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.id, target.id))).limit(1);
       return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
@@ -567,24 +445,14 @@ async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTa
       const [row] = await db.select({ id: authProfiles.id, authProfileRef: authProfiles.authProfileRef, applicationAccountId: authProfiles.applicationAccountId, status: authProfiles.status, connectionStatus: authProfiles.connectionStatus, connectionRevision: authProfiles.connectionRevision, updatedAt: authProfiles.updatedAt }).from(authProfiles).where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.id, target.id))).limit(1);
       return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
     }
-    case "inventory_item": {
-      const [row] = await db.select({ id: inventoryItems.id, sku: inventoryItems.sku, name: inventoryItems.name, quantity: inventoryItems.quantity, reorderThreshold: inventoryItems.reorderThreshold, unitCostUsd: inventoryItems.unitCostUsd }).from(inventoryItems).where(and(eq(inventoryItems.tenantId, tenantId), eq(inventoryItems.sku, target.id))).limit(1);
-      return row ? { ...row, unitCostUsd: row.unitCostUsd === null ? null : Number(row.unitCostUsd) } : null;
-    }
     default:
       return null;
   }
 }
 
 function preconditionSnapshot(actionType: string, target: Pick<BusinessEffectTarget, "type">, values: Record<string, unknown>): Record<string, unknown> {
-  if (actionType === "renew_maintenance_agreement" && target.type === "maintenance_agreement") {
-    // The renewal scanner transitions active -> renewal_sent immediately after it
-    // durably queues the gated reminder. That lifecycle marker is expected between
-    // compile and approval; stable agreement identity, household, cadence, and renewal
-    // date remain frozen. Execution separately rejects terminal renewed/lapsed states.
-    const { status: _scannerLifecycle, ...stableAgreement } = values;
-    return stableAgreement;
-  }
+  void actionType;
+  void target;
   return values;
 }
 
@@ -659,11 +527,8 @@ function amountExposure(payload: Record<string, unknown>): { amount: number; cur
 }
 
 function expectedState(actionType: string, payload: Record<string, unknown>, before: BusinessEffectStateSnapshot[]): Record<string, unknown> | null {
-  if (["create_invoice", "create_lead", "generate_quote", "create_task", "schedule_internal_event", "delegate_objective", "generate_compliance_summary",
+  if (["create_task", "schedule_internal_event", "delegate_objective",
     "open_workstream", "create_deal_request", "record_finding", "raise_deal_risk", "link_deal_dependency", "create_closing_condition", "submit_condition_evidence"].includes(actionType)) return { exists: true };
-  if (actionType === "reschedule_visit" && typeof payload.newTime === "string") return { scheduledAt: new Date(payload.newTime).toISOString() };
-  if (actionType === "assign_technician_to_visit" && typeof payload.technicianId === "string") return { technicianId: payload.technicianId };
-  if (actionType === "record_payment") return { status: "paid" };
   if (actionType === "update_task") return Object.fromEntries(["title", "dueAt", "status", "priority"].filter((key) => key in payload).map((key) => [key, payload[key]]));
   if (actionType === "assign_task" && payload.assigneeRef && typeof payload.assigneeRef === "object") {
     const assignee = payload.assigneeRef as Record<string, unknown>;
@@ -681,11 +546,6 @@ function expectedState(actionType: string, payload: Record<string, unknown>, bef
   if (actionType === "waive_closing_condition") return { state: "waived" };
   if (actionType === "verify_closing_item") return { state: "verified" };
   if (actionType === "declare_deal_closed") return { status: "closed", actualCloseAt: { exists: true } };
-  if (actionType === "log_stock_used_on_visit") {
-    const inventory = before.find((snapshot) => snapshot.target.type === "inventory_item");
-    const quantity = Number(payload.quantity);
-    if (inventory && typeof inventory.values.quantity === "number" && Number.isFinite(quantity)) return { quantity: inventory.values.quantity - quantity };
-  }
   return null;
 }
 
@@ -704,19 +564,13 @@ function isCreateResultTarget(actionType: string, payload: Record<string, unknow
 
 function approvalSummary(actionType: string, payload: Record<string, unknown>, targets: BusinessEffectTarget[], before: BusinessEffectStateSnapshot[], exposure: { amount: number; currency: string } | null, draftSummary: string): string {
   const target = targets[0] ? `${targets[0].type} ${targets[0].id}` : "the governed target";
-  if (actionType === "schedule_water_test") {
-    return `Schedule a water test at ${String(payload.address ?? "the approved address")} for ${String(payload.contactName ?? target)} (${String(payload.contactPhone ?? target)}) at ${String(payload.requestedAt ?? "the next available time")}.`;
-  }
-  if (actionType === "renew_maintenance_agreement") {
-    return `Send the ${String(payload.cadence ?? "approved")} maintenance renewal to ${String(payload.householdLabel ?? target)} at ${String(payload.contactPhone ?? target)}.`;
-  }
-  if (["send_message", "send_customer_message", "send_follow_up"].includes(actionType)) {
+  if (actionType === "send_message") {
     const body = String(payload.body ?? payload.message ?? "").slice(0, 500);
     return `Send the approved ${String(payload.channel ?? "message")} to ${target}${body ? `: “${body}”` : ""}.`;
   }
   if (actionType === "place_call") return `Place the approved call to ${target}: ${String(payload.objective ?? "").slice(0, 500)}.`;
   if (actionType === "notify_group") return `Notify exactly ${target} through ${String(payload.channel ?? "the approved channel")}: “${String(payload.body ?? "").slice(0, 500)}”.`;
-  if (actionType === "reschedule_visit" || actionType === "reschedule_internal_event") {
+  if (actionType === "reschedule_internal_event") {
     const prior = before[0]?.values ?? {};
     const from = prior.scheduledAt ?? prior.startsAt ?? "the recorded time";
     const to = payload.newTime ?? payload.startsAt;
@@ -780,7 +634,6 @@ async function compileBusinessEffectWithDb(params: {
     && target.id === params.action.workId
     && params.action.actionType !== "handoff_work"
   ));
-  if (params.action.actionType === "log_stock_used_on_visit" && typeof payload.sku === "string") initialTargets.push({ kind: "entity", type: "inventory_item", id: payload.sku, sourcePath: "sku" });
   const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external));
   if (resolved.bindings.some((binding) => binding.selection === "fixed" && binding.authProfileRef && !binding.authProfileId)) {
     throw new BusinessEffectBoundaryError("effect_missing", "The requested governed authentication profile does not exist in this tenant");
@@ -792,6 +645,7 @@ async function compileBusinessEffectWithDb(params: {
         eq(domainPolicies.id, params.policy.id),
         eq(domainPolicies.tenantId, params.action.tenantId),
         eq(domainPolicies.actionType, params.action.actionType),
+        eq(domainPolicies.active, true),
       )).limit(1)
     : [];
   const policyId = canonicalPolicy?.id ?? null;
@@ -799,10 +653,8 @@ async function compileBusinessEffectWithDb(params: {
   const before: BusinessEffectStateSnapshot[] = [];
   for (const target of targets) {
     const values = await safeState(params.db, params.action.tenantId, target);
-    // Canonical entity tables such as inventory use business keys (for example a
-    // SKU), not UUIDs. safeState already proves those rows exist under this
-    // tenant. Fall back to the polymorphic UUID registry only when no canonical
-    // state reader knows the entity type.
+    // Some canonical entity tables use business keys rather than UUIDs. safeState
+    // proves known rows; fall back to the polymorphic registry otherwise.
     if (target.kind === "party" || (target.kind === "entity" && !values)) {
       const grounded = await lookUpTypedRef(params.db, params.action.tenantId, target.kind, target.type, target.id).catch(() => "not_found" as const);
       if (grounded !== "verified" && !isCreateResultTarget(params.action.actionType, payload, target)) {
@@ -893,7 +745,6 @@ export async function ensureBusinessEffect(params: {
     if (row.scopeHash !== candidate.scopeHash) throw new BusinessEffectBoundaryError("material_effect_change", "DomainAction is already bound to a materially different Business Effect");
     const effect = row.effect as BusinessEffectSet;
     await db.update(domainActions).set({ businessEffectId: row.id }).where(and(eq(domainActions.tenantId, params.action.tenantId), eq(domainActions.id, params.action.id), sql`${domainActions.businessEffectId} IS NULL`));
-    await db.update(businessOperations).set({ businessEffectId: row.id }).where(and(eq(businessOperations.tenantId, params.action.tenantId), eq(businessOperations.domainActionId, params.action.id), sql`${businessOperations.businessEffectId} IS NULL`));
     params.draft.businessEffect = effect;
     params.action.businessEffectId = effect.id;
     return effect;
@@ -901,13 +752,13 @@ export async function ensureBusinessEffect(params: {
 }
 
 export async function verifyBusinessEffectPreconditions(tenantId: string, effect: BusinessEffectSet): Promise<void> {
+  // Resolve the governed runtime identity before inspecting or executing any
+  // effect. A real tenant with no explicit assignment must fail closed; an
+  // absent row can never be interpreted as Core or Private Equity implicitly.
+  const vertical = await resolveTenantVertical(tenantId);
   await withTenant(tenantId, async (db) => {
     if (effect.operation.external) {
-      const [vertical] = await db.select({ verticalKey: tenantVerticalAssignments.verticalKey })
-        .from(tenantVerticalAssignments)
-        .where(eq(tenantVerticalAssignments.tenantId, tenantId))
-        .limit(1);
-      if (vertical?.verticalKey === "private_equity") {
+      if (vertical.verticalKey === "private_equity") {
         const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId);
         const capabilityByAction: Record<string, Array<typeof tenantIntegrations.$inferSelect["capability"]>> = {
           send_message: ["communications"], place_call: ["communications"], notify_group: ["communications"],
@@ -973,10 +824,6 @@ export async function verifyBusinessEffectPreconditions(tenantId: string, effect
     for (const precondition of effect.preconditions) {
       if (!precondition.expectedHash) continue;
       const current = await safeState(db, tenantId, precondition.target);
-      if (effect.operation.name === "renew_maintenance_agreement" && precondition.target.type === "maintenance_agreement"
-          && current?.status !== "active" && current?.status !== "renewal_sent") {
-        throw new BusinessEffectBoundaryError("stale_precondition", "maintenance agreement is no longer eligible for renewal outreach; recompile and renew authorization");
-      }
       const compiled = effect.before.find((snapshot) => snapshot.target.kind === precondition.target.kind
         && snapshot.target.type === precondition.target.type && snapshot.target.id === precondition.target.id);
       const comparable = current && compiled
@@ -1044,16 +891,10 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
       observed: result.output,
     };
     status = "verified";
-  } else if (["send_message", "send_customer_message", "send_follow_up"].includes(effect.operation.name)) {
+  } else if (effect.operation.name === "send_message") {
     // Provider acceptance is transport evidence, not business-outcome evidence.  The
-    // customer communication plugins also project a successful send into Finnor's
-    // canonical message history.  Observe that row (preferably by the exact action
-    // provenance, with the legacy household log as a bounded fallback) before this
-    // EffectSet can participate in objective completion.
-    const householdId = typeof effect.delta.values.householdId === "string"
-      ? effect.delta.values.householdId
-      : effect.targets.find((target) => target.type === "household")?.id;
-    const channel = typeof result.output.channel === "string" ? result.output.channel : null;
+    // The Core communication runtime projects a successful send into canonical
+    // message history. Observe only the exact action provenance.
     const observed = await withTenant(tenantId, async (db) => {
       const [message] = await db.select({ id: messages.id, channel: messages.channel, sentAt: messages.sentAt })
         .from(messages)
@@ -1065,20 +906,7 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
         .orderBy(desc(messages.sentAt))
         .limit(1);
       if (message) return { canonicalMessageId: message.id, channel: message.channel, recordedAt: message.sentAt.toISOString() };
-      if (!householdId) return null;
-      const conditions = [
-        eq(communicationsLog.tenantId, tenantId),
-        eq(communicationsLog.householdId, householdId),
-        eq(communicationsLog.direction, "outbound"),
-        sql`${communicationsLog.timestamp} >= ${new Date(effect.provenance.compiledAt)}`,
-      ];
-      if (channel) conditions.push(eq(communicationsLog.channel, channel));
-      const [legacy] = await db.select({ id: communicationsLog.id, channel: communicationsLog.channel, timestamp: communicationsLog.timestamp })
-        .from(communicationsLog)
-        .where(and(...conditions))
-        .orderBy(desc(communicationsLog.timestamp))
-        .limit(1);
-      return legacy ? { canonicalCommunicationId: legacy.id, channel: legacy.channel, recordedAt: legacy.timestamp.toISOString() } : null;
+      return null;
     });
     verification = observed && !requiresExternalObservation
       ? { state: "verified", basis: "Canonical outbound communication state was observed after execution", checkedAt: new Date().toISOString(), observed }
@@ -1097,8 +925,8 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
     status = observed ? "verified" : "divergent";
   } else if (effect.expected.state && effect.expected.observation === "canonical_state") {
     // Effect target[0] is often the synthetic `proposed_business_change` resource.
-    // Verification must observe the real canonical entity snapshot (inventory item,
-    // invoice, visit, etc.), not depend on target ordering.
+    // Verification must observe the real canonical entity snapshot, not depend on
+    // target ordering.
     const candidates = [
       ...effect.before.map((snapshot) => snapshot.target),
       ...effect.targets.filter((target) => target.type !== "proposed_business_change"),

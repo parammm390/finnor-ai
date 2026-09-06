@@ -4,7 +4,6 @@ import { recordBusinessEvent } from "./events";
 
 export interface CreateDocumentParams {
   tenantId: string;
-  householdId?: string;
   kind: string;
   title: string;
   storageRef?: string;
@@ -16,7 +15,6 @@ export async function createDocument(db: Db, params: CreateDocumentParams): Prom
     .insert(documents)
     .values({
       tenantId: params.tenantId,
-      householdId: params.householdId ?? null,
       kind: params.kind,
       title: params.title,
       storageRef: params.storageRef ?? null,

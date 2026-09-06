@@ -9,7 +9,7 @@ import universalActionsPlugin, {
   canTransitionDelegation,
 } from "../../packages/domain-plugins/universal-actions/index";
 import {
-  LEGACY_ACTION_HARDENING_SPEC,
+  ACTION_HARDENING_SPEC,
   TOTAL_ACTION_COUNT,
   UNIVERSAL_ACTION_HARDENING_SPEC,
 } from "../../scripts/release/action-hardening-spec";
@@ -64,14 +64,14 @@ function policy(actionType: string): DomainPolicy {
 }
 
 describe("Universal Action + Delegation contract", () => {
-  it("adds exactly 14 explicit actions while preserving the original 44-action catalog", () => {
+  it("registers exactly the active Core, universal, computer, and Private Equity catalog", () => {
     expect(UNIVERSAL_ACTION_TYPES).toEqual([
       "send_message", "place_call", "request_acknowledgement", "notify_group",
       "create_task", "assign_task", "update_task", "handoff_work",
       "delegate_objective", "escalate_work", "cancel_delegation",
       "schedule_internal_event", "reschedule_internal_event", "share_document",
     ]);
-    expect(LEGACY_ACTION_HARDENING_SPEC).toHaveLength(44);
+    expect(ACTION_HARDENING_SPEC).toHaveLength(TOTAL_ACTION_COUNT);
     expect(UNIVERSAL_ACTION_HARDENING_SPEC.map((row) => row.actionType)).toEqual(UNIVERSAL_ACTION_TYPES);
     expect(universalActionsPlugin.actionTypes).toEqual(UNIVERSAL_ACTION_TYPES);
 
@@ -79,7 +79,7 @@ describe("Universal Action + Delegation contract", () => {
     expect(registered).toHaveLength(TOTAL_ACTION_COUNT);
     expect(new Set(registered).size).toBe(TOTAL_ACTION_COUNT);
     expect(registered).toContain("computer_task");
-    for (const row of LEGACY_ACTION_HARDENING_SPEC) expect(registered).toContain(row.actionType);
+    for (const row of ACTION_HARDENING_SPEC) expect(registered).toContain(row.actionType);
     for (const actionType of UNIVERSAL_ACTION_TYPES) expect(registered).toContain(actionType);
   });
 
@@ -110,7 +110,7 @@ describe("Universal Action + Delegation contract", () => {
   it("keeps browser and computer as non-executable route vocabulary only", () => {
     const parties: PartyRef[] = [
       employee,
-      { partyType: "contact", partyId: TEAM_ID },
+      { partyType: "external_contact", partyId: TEAM_ID },
     ];
     const observed = new Set<string>();
     for (const actionType of UNIVERSAL_ACTION_TYPES) {

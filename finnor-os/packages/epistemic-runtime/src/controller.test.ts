@@ -23,7 +23,7 @@ describe("bounded epistemic controller", () => {
     };
     const run = await runEpistemicController({
       state: testState(),
-      requirements: [testRequirement("invoice.balance", [testOption()])],
+      requirements: [testRequirement("deal.debt_capacity", [testOption()])],
       budget,
       executor: { execute },
       clock: { now: () => TEST_NOW },

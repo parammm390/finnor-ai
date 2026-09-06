@@ -77,7 +77,7 @@ async function scopedQuery<T extends pg.QueryResultRow = pg.QueryResultRow>(
 describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution graph", () => {
   const tenantA = randomUUID();
   const tenantB = randomUUID();
-  const waterTenant = randomUUID();
+  const retirementBoundaryTenant = randomUUID();
   const noneTenant = randomUUID();
   const leadA = randomUUID();
   const associateA = randomUUID();
@@ -107,11 +107,6 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     auth: { tenantId: tenantB, userId: leadB, employeeId: leadB, role: "owner" },
     provenance: { sourceSystem: "integration:pe2", createdBy: leadB },
   };
-  const waterCtx: PeMutationContext = {
-    auth: { tenantId: waterTenant, userId: "system:water-test", role: "owner" },
-    provenance: { sourceSystem: "integration:pe2", createdBy: "system:water-test" },
-  };
-
   let admin: pg.Client;
 
   beforeAll(async () => {
@@ -121,10 +116,16 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     await admin.connect();
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
-        ($1,$2,'Atlas PE Tenant'),($3,$4,'Other PE Tenant'),($5,$6,'Water Regression Tenant'),
+        ($1,$2,'Atlas PE Tenant'),($3,$4,'Other PE Tenant'),($5,$6,'Retirement Boundary Tenant'),
         ($7,$8,'No Vertical Tenant')`,
-      [tenantA, `pe-a-${randomUUID()}`, tenantB, `pe-b-${randomUUID()}`, waterTenant, `water-${randomUUID()}`,
+      [tenantA, `pe-a-${randomUUID()}`, tenantB, `pe-b-${randomUUID()}`, retirementBoundaryTenant, `retired-${randomUUID()}`,
         noneTenant, `none-${randomUUID()}`],
+    );
+    await admin.query(
+      `INSERT INTO finnor_os.tenant_vertical_assignments
+        (tenant_id,vertical_key,source_system,created_by)
+       VALUES ($1,'none','certification:pe2','system:none-test')`,
+      [noneTenant],
     );
     await admin.query(
       `INSERT INTO finnor_os.users(id,tenant_id,email,role,display_name) VALUES
@@ -172,9 +173,9 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     );
     process.env.DATABASE_URL = APP_URL;
     await closePool();
-    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 1, createdBy: leadA, sourceSystem: "integration:pe2" });
-    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 1, createdBy: leadB, sourceSystem: "integration:pe2" });
-    await configureTenantVertical({ tenantId: noneTenant, verticalKey: "none", expectedVersion: 1, createdBy: "system:none-test", sourceSystem: "integration:pe2" });
+    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadA, sourceSystem: "integration:pe2" });
+    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadB, sourceSystem: "integration:pe2" });
+    await configureTenantVertical({ tenantId: retirementBoundaryTenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadA, sourceSystem: "integration:pe2" });
   });
 
   afterAll(async () => {
@@ -479,7 +480,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
       [noneTenant],
     );
     expect(none.rows[0]).toEqual({ vertical: "none", core_available: true, water_available: false, pe_available: false });
-    expect((await admin.query("SELECT finnor_os.active_tenant_vertical($1) vertical", [waterTenant])).rows[0]?.vertical).toBe("water");
+    expect((await admin.query("SELECT finnor_os.active_tenant_vertical($1) vertical", [retirementBoundaryTenant])).rows[0]?.vertical).toBe("private_equity");
 
     const fabricatedDealId = randomUUID();
     await expect(scopedQuery(tenantA, leadA,
@@ -600,17 +601,23 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     expect((await scopedQuery(tenantA, leadA, "SELECT * FROM finnor_os.pe_deals WHERE tenant_id=$1 AND id IN (SELECT id FROM finnor_os.pe_deals WHERE tenant_id=$2)", [tenantB, tenantB])).rows).toHaveLength(0);
   });
 
-  it("isolates Water and PE registrations while preserving Water writes", async () => {
-    const waterHousehold = randomUUID();
-    await scopedQuery(waterTenant, "system:water-test",
+  it("keeps retired Water registrations inert while PE and none boundaries hold", async () => {
+    await expect(scopedQuery(retirementBoundaryTenant, "system:retirement-test",
+      "SELECT * FROM finnor_os.configure_tenant_vertical($1,'water',1,'forged','integration:pe2')",
+      [retirementBoundaryTenant])).rejects.toThrow(/RETIRED_VERTICAL/i);
+    const retiredHousehold = randomUUID();
+    await expect(scopedQuery(retirementBoundaryTenant, "system:retirement-test",
       "INSERT INTO finnor_os.households(id,tenant_id,address,contact_info) VALUES ($1,$2,$3,$4)",
-      [waterHousehold, waterTenant, "1 Water Way", { name: "Water Customer" }]);
-    expect((await scopedQuery(waterTenant, "system:water-test", "SELECT id FROM finnor_os.households WHERE id=$1", [waterHousehold])).rows).toHaveLength(1);
+      [retiredHousehold, retirementBoundaryTenant, "1 Retired Way", { name: "Retired fixture" }])).rejects.toThrow(/RETIRED_VERTICAL|unsupported.*vertical/i);
+    expect((await scopedQuery(retirementBoundaryTenant, "system:retirement-test", "SELECT id FROM finnor_os.households WHERE id=$1", [retiredHousehold])).rows).toHaveLength(0);
     await expect(scopedQuery(tenantA, leadA,
       "INSERT INTO finnor_os.households(id,tenant_id,address,contact_info) VALUES ($1,$2,$3,$4)",
-      [randomUUID(), tenantA, "2 Invalid Way", { name: "Not a PE target" }])).rejects.toThrow(/unsupported.*vertical/i);
-    await expect(createDeal(waterCtx, {
-      targetOrganizationId: targetA, name: "Invalid Water Deal", dealLeadEmployeeId: leadA,
+      [randomUUID(), tenantA, "2 Invalid Way", { name: "Not a PE target" }])).rejects.toThrow(/RETIRED_VERTICAL|unsupported.*vertical/i);
+    await expect(createDeal({
+      auth: { tenantId: noneTenant, userId: "system:none-test", role: "owner" },
+      provenance: { sourceSystem: "integration:pe2", createdBy: "system:none-test" },
+    }, {
+      targetOrganizationId: targetA, name: "Invalid Core-only Deal", dealLeadEmployeeId: leadA,
       signedLoiAt: new Date(), targetClosingAt: new Date(),
     })).rejects.toBeInstanceOf(PeDomainError);
   });

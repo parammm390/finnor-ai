@@ -17,7 +17,6 @@ const openapi = JSON.parse(readFileSync(join(process.cwd(), "openapi.json"), "ut
         requestBody: { content: { "application/json": { schema: JsonSchema } } };
       };
     };
-    "/api/works/{id}": { get: { summary: string } };
   };
 };
 
@@ -45,7 +44,21 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
       (branch.properties?.intent as { const?: string } | undefined)?.const,
       branch.properties ?? {},
     ]));
-    expect(byIntent.get("schedule_range")).toEqual(expect.objectContaining({ localDateRange: expect.any(Object) }));
+    expect([...byIntent.keys()].sort()).toEqual([
+      "agent_activity",
+      "closing_readiness",
+      "company_context",
+      "critical_dependencies",
+      "deal_context",
+      "deal_workstreams",
+      "open_deal_risks",
+      "open_findings",
+      "open_requests",
+      "party_context",
+      "party_lookup",
+      "team_roster",
+      "work_list",
+    ]);
     expect(byIntent.get("agent_activity")).toEqual(expect.objectContaining({ localDateRange: expect.any(Object) }));
     expect(byIntent.get("work_list")).toEqual(expect.objectContaining({
       openOnly: expect.any(Object),
@@ -53,13 +66,11 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
       // workId is the durable Work attachment metadata, not the query filter.
       workId: expect.any(Object),
     }));
-    expect(byIntent.get("inventory_status")).toEqual(expect.objectContaining({ sku: expect.any(Object) }));
-    expect(byIntent.get("customer_cohort")).toEqual(expect.objectContaining({ asOf: expect.any(Object) }));
-    expect(byIntent.get("company_context")).toEqual(expect.objectContaining({ anchor: expect.any(Object), householdId: expect.any(Object), query: expect.any(Object) }));
+    expect(byIntent.get("company_context")).toEqual(expect.objectContaining({ anchor: expect.any(Object), query: expect.any(Object) }));
     expect(byIntent.get("party_lookup")).toEqual(expect.objectContaining({ ref: expect.any(Object), query: expect.any(Object) }));
     expect(byIntent.get("party_context")).toEqual(expect.objectContaining({ ref: expect.any(Object), query: expect.any(Object) }));
     expect(byIntent.get("team_roster")).toEqual(expect.objectContaining({ teamRef: expect.any(Object), query: expect.any(Object) }));
-    expect(byIntent.get("party_availability")).toEqual(expect.objectContaining({ ref: expect.any(Object), query: expect.any(Object), localDateRange: expect.any(Object), includeCapacity: expect.any(Object) }));
-    expect(openapi.paths["/api/works/{id}"].get.summary).toMatch(/query executions/i);
+    expect(byIntent.get("deal_context")).toEqual(expect.objectContaining({ dealId: expect.any(Object), page: expect.any(Object) }));
+    expect(byIntent.get("closing_readiness")).toEqual(expect.objectContaining({ dealId: expect.any(Object), page: expect.any(Object) }));
   });
 });

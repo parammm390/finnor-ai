@@ -1,78 +1,125 @@
 
  RUN  v4.1.10 /Users/paramdave/Desktop/FINNOR/finnor-os
 
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > worker killed mid-step: a leased step whose lease expired is recovered exactly once, receipt reflects the real outcome 130ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > same event x5: 5 duplicate deliveries of the same operation produce exactly one real external call 72ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > restart mid-transition: crash between completeStep and advanceWorkflow is recovered by a later advanceWorkflow call with no duplicate step execution 31ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > provider timeout -> retry: succeeds on the 2nd attempt, exactly one integration_operations row, receipt shows success 51ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > provider hard-fail (single step, no compensation target): failStep records a terminal, typed failure — zero successful calls 25ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > worker killed mid-step (step 2): step 2's lease expiry is recovered without re-running step 1 259ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > same event x5 on step [ADDRESS_1]1 is already completed 141ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > restart mid-transition between step [ADDRESS_2]2 96ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > provider timeout -> retry on step 2 157ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > provider hard-fail on step 2 -> compensates step 1 (the held appointment is really released) 98ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > worker killed mid-step: draft-then-crash before approval is untouched; approving afterward still executes exactly once 33ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > same event x5: approving/executing the same action 5 times concurrently produces exactly one real send 234ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > restart mid-transition: a reminder drafted right before a simulated crash still lets the second reminder fire correctly on the next scan tick 190ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > provider timeout -> retry: the plugin's own tool call retries and ultimately succeeds 68ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > provider hard-fail: a permanently failing send is recorded as a real failure, never silently swallowed 1571ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > a pending action past its configured timeout is escalated to needs_human_review and re-notified — never auto-approved, never auto-rejected, never executed 13ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > a pending action still within its timeout window is left untouched 7ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > no confirmationTimeoutHours configured falls back to the 24h application default 10ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > the approval option stays open after expiry — needs_human_review is exactly the status the confirm route already accepts 7ms
- ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > running the scan again on an already-escalated action is a no-op — no duplicate transition, no duplicate notification 10ms
- ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > gates before any tool call, executes after approve via decide(), audits every step — same guarantees as the legacy engine 280ms
- ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > reject halts execution permanently: no tool ever fires, thread is closed not left dangling 40ms
- ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > property sweep: every unapproved persisted status is re-gated with zero tool calls 146ms
- ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > THE ACTUAL POINT: a gate survives a full instance restart — a completely fresh executor/checkpointer/graph, sharing no in-memory state with the one that gated the action, resumes it correctly purely from Postgres 77ms
- ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > delivers a pending event and marks it delivered 15ms
- ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > N concurrent relayers deliver each pending event exactly once (SKIP LOCKED proof) 245ms
- ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > a terminal error dead-letters immediately, without waiting for 3 attempts 18ms
- ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > a retryable error backs off and only dead-letters after exhausting attempts 18ms
- ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > an unrecognized envelope version is rejected into dead_letters without ever reaching the deliverer 8ms
- ✓ tests/integration/langgraph-workflow-actions.test.ts > LangGraph restart proof — start_invoice_to_cash_workflow on the graph engine > gate survives a full instance restart: paused on instance A, approved through a brand-new instance B, submitCommand fires exactly once, re-approve is idempotent 217ms
- ✓ tests/integration/langgraph-workflow-actions.test.ts > LangGraph restart proof — start_invoice_to_cash_workflow on the graph engine > reject path: thread closed via a fresh instance, no commands row ever created 43ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying an already-SUCCEEDED call (simulating a retry) returns the cached result — run() never fires twice 119ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying an already-FAILED call actually re-runs it — reflection retries are never blocked 13ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying a SUCCEEDED call with DIFFERENT input errors instead of silently accepting drift 7ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > multiple calls to the SAME tool within ONE instance (a bulk-send loop) are each treated as distinct operations — never collapsed 11ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > concurrent calls for the same key: only one real invocation, proving the composite PK enforces atomicity 88ms
- ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a tool registry without idempotency scoping (base ToolRegistry) is unaffected — opt-in via ScopedToolRegistry only 1ms
- ✓ tests/integration/compensation.test.ts > compensation > emulator binding: a held appointment is released on compensation, and the compensation_case resolves succeeded 96ms
- ✓ tests/integration/compensation.test.ts > compensation > native binding: a held appointment row is canceled on compensation, and the compensation_case resolves succeeded 27ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > worker killed mid-step: a leased step whose lease expired is recovered exactly once, receipt reflects the real outcome 232ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > same event x5: 5 duplicate deliveries of the same operation produce exactly one real external call 127ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > restart mid-transition: crash between completeStep and advanceWorkflow is recovered by a later advanceWorkflow call with no duplicate step execution 37ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > provider timeout -> retry: succeeds on the 2nd attempt, exactly one integration_operations row, receipt shows success 77ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 1 — simple (single step) > provider hard-fail (single step, no compensation target): failStep records a terminal, typed failure — zero successful calls 37ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > worker killed mid-step (step 2): step 2's lease expiry is recovered without re-running step 1 229ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > same event x5 on step [ADDRESS_1]1 is already completed 255ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > restart mid-transition between step [ADDRESS_2]2 102ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > provider timeout -> retry on step 2 166ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 2 — multi-step compensating > provider hard-fail on step 2 -> compensates step 1 (the held appointment is really released) 143ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > worker killed mid-step: draft-then-crash before approval is untouched; approving afterward still executes exactly once 108ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > same event x5: approving/executing the same action 5 times concurrently produces exactly one real send 261ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > restart mid-transition: a reminder drafted right before a simulated crash still lets the second reminder fire correctly on the next scan tick 234ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > provider timeout -> retry: the plugin's own tool call retries and ultimately succeeds 135ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > flow 3 — AMC renewal > provider hard-fail: a permanently failing send is recorded as a real failure, never silently swallowed 129ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > a pending action past its configured timeout is escalated to needs_human_review and re-notified — never auto-approved, never auto-rejected, never executed 22ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > a pending action still within its timeout window is left untouched 13ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > no confirmationTimeoutHours configured falls back to the 24h application default 11ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > the approval option stays open after expiry — needs_human_review is exactly the status the confirm route already accepts 13ms
+ ✓ tests/integration/chaos-matrix.test.ts > chaos matrix (§2.8) > approval expiry (closes the chaos matrix's 6th failure mode) > running the scan again on an already-escalated action is a no-op — no duplicate transition, no duplicate notification 13ms
+ ✓ tests/integration/compensation.test.ts > compensation > emulator binding: a held appointment is released on compensation, and the compensation_case resolves succeeded 202ms
+ ✓ tests/integration/compensation.test.ts > compensation > native binding: a held appointment row is canceled on compensation, and the compensation_case resolves succeeded 58ms
+ ✓ tests/integration/compensation.test.ts > compensation > governs compensation as a new exact Business Effect linked to the original 140ms
+(node:12080) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
  ✓ tests/integration/compensation.test.ts > compensation > communications binding has no compensate() — compensateStep records an explicit failed compensation_case, never a silent no-op 67ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > submitCommand is idempotent by (tenant, idempotency_key) — same ids returned, no duplicate rows 21ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > claimStep is atomic — a second claim on an already-leased step is a safe no-op 30ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > advanceWorkflow enqueues the next pending step, then marks the run and command completed once every step is done 61ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > failStep marks the workflow_run and command failed via advanceWorkflow 26ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: no integration_operations claim yet — resets to pending and re-enqueues (nothing external happened) 24ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: integration_operations row 'succeeded' — completes the step and resumes (exactly-once, resumed correctly) 38ms
- ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: integration_operations row stuck 'running' — opens a reconciliation_case, never blindly retries 28ms
- ✓ tests/integration/terminal-plan-repair.test.ts > terminal plan repair > creates one lineaged revised remainder and gates it after a terminal receipt 165ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > retries a retryable failure on the first attempt 57ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > retries a provider_down failure too (matches outbox.ts's own replayable judgment) 7ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a validation failure immediately, without retrying 9ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a terminal failure immediately (no errorKind at all) 7ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a retryable failure on the SECOND attempt (never retries twice) 14ms
- ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > still accepts a real success outcome 5ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > closed by default; stays closed on success 46ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > opens after 3 real consecutive failures, not before 13ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > a success after opening closes it again and resets the failure count 10ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > withCircuitBreaker refuses to even attempt the call while open — zero real calls made while degraded 19ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > half-open recovery (A3.T3): once the cooldown has elapsed, the next call is let through as a probe — success closes it, failure re-opens and restarts the cooldown 18ms
- ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > claimBudget enforces a real daily cap per tenant+provider+metric, independent metrics don't interfere 6ms
-stderr | tests/integration/p2-postgres-transient.test.ts > Phase 2 local Postgres transient fault > recovers a pooled client after its backend is terminated once
-[db] idle pooled connection error (non-fatal, connection recycled): read ECONNRESET
-
- ✓ tests/integration/p2-postgres-transient.test.ts > Phase 2 local Postgres transient fault > recovers a pooled client after its backend is terminated once 99ms
+ ✓ tests/integration/compensation.test.ts > compensation > exposes compensation through the owner-authorized route and refuses a technician 58ms
+ ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > gates before any tool call, executes after approve via decide(), audits every step — same guarantees as the legacy engine 276ms
+ ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > reject halts execution permanently: no tool ever fires, thread is closed not left dangling 93ms
+ ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > property sweep: every unapproved persisted status is re-gated with zero tool calls 191ms
+ ✓ tests/integration/langgraph-gate-flow.test.ts > LangGraph gate flow — schedule_water_test on the new engine > THE ACTUAL POINT: a gate survives a full instance restart — a completely fresh executor/checkpointer/graph, sharing no in-memory state with the one that gated the action, resumes it correctly purely from Postgres 117ms
+ ✓ tests/integration/langgraph-workflow-actions.test.ts > LangGraph restart proof — start_invoice_to_cash_workflow on the graph engine > gate survives a full instance restart: paused on instance A, approved through a brand-new instance B, submitCommand fires exactly once, re-approve is idempotent 488ms
+ ✓ tests/integration/langgraph-workflow-actions.test.ts > LangGraph restart proof — start_invoice_to_cash_workflow on the graph engine > reject path: thread closed via a fresh instance, no commands row ever created 97ms
+ ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > delivers a pending event and marks it delivered 17ms
+ ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > N concurrent relayers deliver each pending event exactly once (SKIP LOCKED proof) 256ms
+ ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > a terminal error dead-letters immediately, without waiting for 3 attempts 13ms
+ ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > a retryable error backs off and only dead-letters after exhausting attempts 22ms
+ ✓ tests/integration/outbox-dispatch.test.ts > outbox dispatch (§2.3) > an unrecognized envelope version is rejected into dead_letters without ever reaching the deliverer 9ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying an already-SUCCEEDED call (simulating a retry) returns the cached result — run() never fires twice 85ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > preserves opaque provider IDs needed by a resumed multi-step effect while still redacting direct PII 10ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying an already-FAILED call actually re-runs it — reflection retries are never blocked 15ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a fresh instance replaying a SUCCEEDED call with DIFFERENT input errors instead of silently accepting drift 8ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > multiple calls to the SAME tool within ONE instance (a bulk-send loop) are each treated as distinct operations — never collapsed 14ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > concurrent calls for the same key: only one real invocation, proving the composite PK enforces atomicity 77ms
+ ✓ tests/integration/external-operations-idempotency.test.ts > ScopedToolRegistry — external_operations idempotency ledger > a tool registry without idempotency scoping (base ToolRegistry) is unaffected — opt-in via ScopedToolRegistry only 0ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > submitCommand is idempotent by (tenant, idempotency_key) — same ids returned, no duplicate rows 17ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > claimStep is atomic — a second claim on an already-leased step is a safe no-op 35ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > advanceWorkflow enqueues the next pending step, then marks the run and command completed once every step is done 53ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > failStep marks the workflow_run and command failed via advanceWorkflow 20ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: no integration_operations claim yet — resets to pending and re-enqueues (nothing external happened) 16ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: integration_operations row 'succeeded' — completes the step and resumes (exactly-once, resumed correctly) 30ms
+ ✓ tests/integration/workflow-runtime.test.ts > durable execution runtime > recoverStaleSteps: integration_operations row stuck 'running' — opens a reconciliation_case, never blindly retries 24ms
+ ✓ tests/integration/terminal-plan-repair.test.ts > terminal plan repair > creates one lineaged revised remainder and gates it after a terminal receipt 148ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > closed by default; stays closed on success 34ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > opens after 3 real consecutive failures, not before 18ms
+[18:29:45] [31mERROR[39m: [36mcircuit breaker for test_provider_4_4 is open[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_open"
+    [35mconsecutiveFailures[39m: 3
+[18:29:45] [33mWARN[39m: [36mcircuit breaker open for test_provider_4_4 — call refused[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_refused"
+    [35mconsecutiveFailures[39m: 3
+[18:29:45] [33mWARN[39m: [36mcircuit breaker open for test_provider_4_4 — call refused[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_refused"
+    [35mconsecutiveFailures[39m: 3
+[18:29:45] [32mINFO[39m: [36mcircuit breaker cooldown elapsed for test_provider_4_4 — attempting one probe call[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_half_open_probe"
+    [35mprobeOwner[39m: "ba7089d3-6136-453e-8392-be587a1c5b78"
+[18:29:45] [31mERROR[39m: [36mcircuit breaker for test_provider_4_4 is open[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_open"
+    [35mconsecutiveFailures[39m: 4
+[18:29:45] [33mWARN[39m: [36mcircuit breaker open for test_provider_4_4 — call refused[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_refused"
+    [35mconsecutiveFailures[39m: 4
+[18:29:45] [32mINFO[39m: [36mcircuit breaker cooldown elapsed for test_provider_4_4 — attempting one probe call[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_half_open_probe"
+    [35mprobeOwner[39m: "2624cdac-ce47-482a-bfeb-e4815550c8f8"
+[18:29:45] [32mINFO[39m: [36mcircuit breaker for test_provider_4_4 closed — probe succeeded[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_closed"
+[18:29:45] [32mINFO[39m: [36mcircuit breaker cooldown elapsed for test_provider_4_4 — attempting one probe call[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_half_open_probe"
+    [35mprobeOwner[39m: "644fb19f-5353-44f4-9062-f070e702e618"
+[18:29:45] [33mWARN[39m: [36mcircuit breaker probe already in flight for test_provider_4_4[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_probe_already_claimed"
+[18:29:45] [32mINFO[39m: [36mcircuit breaker for test_provider_4_4 closed — probe succeeded[39m
+    [35mprovider[39m: "test_provider_4_4"
+    [35mevent[39m: "circuit_breaker_closed"
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > a success after opening closes it again and resets the failure count 14ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > withCircuitBreaker refuses to even attempt the call while open — zero real calls made while degraded 18ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > half-open recovery (A3.T3): once the cooldown has elapsed, the next call is let through as a probe — success closes it, failure re-opens and restarts the cooldown 23ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > admits exactly one half-open probe across concurrent worker processes 16ms
+ ✓ tests/integration/provider-circuit-breaker-budget.test.ts > Phase 4 §4.4: durable circuit breaker + per-tenant budget > claimBudget enforces a real daily cap per tenant+provider+metric, independent metrics don't interfere 8ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > retries a retryable failure on the first attempt 42ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > retries a provider_down failure too (matches outbox.ts's own replayable judgment) 9ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a validation failure immediately, without retrying 11ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a terminal failure immediately (no errorKind at all) 8ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > escalates a retryable failure on the SECOND attempt (never retries twice) 13ms
+ ✓ tests/integration/reflection-error-kind-gate.test.ts > OutcomeReflection retry gate keys off errorKind (A4.T1) > still accepts a real success outcome 4ms
 stderr | tests/integration/inbox-dedup.test.ts > inbox event dedup + matching > sending the same (provider, event_id) twice applies the business effect once and marks the replay duplicate
-[decision_receipts] no receipt found to finalize for step a54d06cb-1771-4af4-9ef2-eb29038424b8
+[decision_receipts] no receipt found to finalize for step 39d12071-5507-4463-a3aa-d7a32a75144f
 
  ✓ tests/integration/inbox-dedup.test.ts > inbox event dedup + matching > sending the same (provider, event_id) twice applies the business effect once and marks the replay duplicate 32ms
  ✓ tests/integration/inbox-dedup.test.ts > inbox event dedup + matching > an inbound event that can't be matched to any open step opens a reconciliation_case 6ms
+stderr | tests/integration/p2-postgres-transient.test.ts > Phase 2 local Postgres transient fault > recovers a pooled client after its backend is terminated once
+[db] idle pooled connection error (non-fatal, connection recycled): read ECONNRESET
+
+ ✓ tests/integration/p2-postgres-transient.test.ts > Phase 2 local Postgres transient fault > recovers a pooled client after its backend is terminated once 59ms
 
  Test Files  12 passed (12)
-      Tests  63 passed (63)
-   Start at  01:01:16
-   Duration  21.07s (transform 1.16s, setup 0ms, import 12.68s, tests 6.92s, environment 1ms)
+      Tests  67 passed (67)
+   Start at  23:59:29
+   Duration  18.37s (transform 1.82s, setup 0ms, import 10.48s, tests 6.90s, environment 1ms)
 

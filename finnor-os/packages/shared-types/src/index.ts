@@ -1,9 +1,6 @@
 // Shared type contracts for the Finnor AI Operating System.
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
 
-export * from "./dealer-zero-fixtures";
-export * from "./dealer-zero-scenarios";
-export * from "./dealer-zero-time-compression";
 export * from "./operational-queries";
 export * from "./company-graph";
 export * from "./operating-context";
@@ -12,7 +9,6 @@ export * from "./conversation-context";
 export * from "./identity-access";
 export * from "./universal-actions";
 export * from "./computer";
-export * from "./business-world";
 export * from "./operational-delta";
 export * from "./execution-projection";
 export * from "./causal-replay";
@@ -21,8 +17,9 @@ export * from "./objectives";
 export * from "./source-truth";
 export * from "./outcome-packs";
 export * from "./vertical-runtime";
+export * from "./retired-water";
 
-export type Role = "owner" | "dispatcher" | "technician";
+export type Role = "owner";
 
 export interface TenantContext {
   tenantId: string;
@@ -253,20 +250,6 @@ export interface ReflectionOutcome {
 // payload. Call this "pattern context" or "retrieval" everywhere, never "learning":
 // nothing here is fine-tuned or trained, it's a live aggregate query over existing
 // rows, same honesty standard as every other memory source in this file.
-export interface HouseholdProposalPattern {
-  totalSent: number;
-  accepted: number;
-  declined: number;
-  expired: number;
-  avgAcceptedTotalUsd: number | null;
-}
-export interface TechnicianReliabilityPattern {
-  technicianId: string;
-  name: string;
-  totalAppointments: number;
-  noShowCount: number;
-  noShowRate: number;
-}
 // Phase 12 (loop closure) — undigested scan_findings surfaced as soft context, same
 // honesty rule as the rest of this interface: informs the planner, never instructs it.
 export interface ScanSignal {
@@ -277,8 +260,6 @@ export interface ScanSignal {
 }
 
 export interface PatternContext {
-  householdProposals: HouseholdProposalPattern | null; // null only when no householdId was supplied
-  technicianReliability: TechnicianReliabilityPattern[]; // tenant-wide, [] if no data yet
   scanSignals: ScanSignal[]; // tenant-wide, newest 10, [] if none open
 }
 
@@ -300,7 +281,7 @@ export interface MemorySnapshot {
   patterns: PatternContext | null;
 }
 
-export type JobStatus = "queued" | "running" | "completed" | "failed" | "dead_letter";
+export type JobStatus = "queued" | "running" | "completed" | "failed" | "dead_letter" | "quarantined";
 
 export interface Job {
   id: string;

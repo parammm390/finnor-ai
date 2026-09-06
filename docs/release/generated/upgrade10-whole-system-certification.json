@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "upgrade": 10,
   "status": "PASS",
-  "startedAt": "2026-08-12T23:26:48.976Z",
-  "completedAt": "2026-08-12T23:27:01.387Z",
-  "sourceCommit": "459688ed7749030cdc99c8a99e655b5792090572",
+  "startedAt": "2026-08-22T22:12:37.124Z",
+  "completedAt": "2026-08-22T22:12:58.703Z",
+  "sourceCommit": "a8578cf865cdaae2d1a325ab08232410e53d4a1b",
   "environment": {
     "databaseHost": "localhost",
     "disposableDatabasePrefix": "finnor_upgrade10_",
@@ -17,12 +17,12 @@
     "migration": {
       "exitCode": 0,
       "signal": null,
-      "durationMs": 1106
+      "durationMs": 2061
     },
     "journeys": {
       "exitCode": 0,
       "signal": null,
-      "durationMs": 11030,
+      "durationMs": 19168,
       "files": [
         "tests/integration/whole-system-integration.test.ts",
         "tests/integration/agentic-objective-loop.test.ts",
@@ -75,23 +75,16 @@
   ],
   "metrics": [
     {
-      "name": "provider_failure_safe_recovery",
-      "recoveryMs": 149,
-      "providerAttempts": 3,
-      "duplicateSideEffects": 0,
-      "objectiveCompletionCorrect": true
-    },
-    {
       "name": "voice_text_handoff_approval_completion",
-      "latencyMs": 620,
-      "staleStateConvergenceMs": 54,
+      "latencyMs": 1090,
+      "staleStateConvergenceMs": 19,
       "canonicalQueryExecutions": 7,
       "duplicateSideEffects": 0,
       "objectiveCompletionCorrect": true
     },
     {
       "name": "durable_operation_partial_failure_recovery",
-      "recoveryMs": 81,
+      "recoveryMs": 139,
       "targetCount": 2,
       "duplicateRecoveryRequests": 1,
       "duplicateSideEffects": 0,
@@ -99,15 +92,22 @@
     },
     {
       "name": "waiting_restart_resume",
-      "recoveryMs": 88,
+      "recoveryMs": 290,
       "recoveryScanEnqueues": 1,
       "duplicateContinuationJobs": 0,
       "objectiveCompletionCorrect": true
     },
     {
       "name": "cross_projection_business_change",
-      "staleStateConvergenceMs": 59,
+      "staleStateConvergenceMs": 32,
       "relevantProjectionsChecked": 5,
+      "duplicateSideEffects": 0,
+      "objectiveCompletionCorrect": true
+    },
+    {
+      "name": "provider_failure_safe_recovery",
+      "recoveryMs": 219,
+      "providerAttempts": 3,
       "duplicateSideEffects": 0,
       "objectiveCompletionCorrect": true
     }

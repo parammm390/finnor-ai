@@ -22,13 +22,9 @@ import { appendEpisode, readEpisodes } from "@finnor/memory";
 import { Sentry } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 
-// Per-workflow-kind "this should have finished by now" deadline. Honest interpretation
-// (same posture as scan-reliability-alerts.ts's own "no flapping-history data" note):
-// these are conservative first-pass values, not derived from real p95s — A7.T1 is what
-// computes those from real history; tune these once that data exists. The 4 known async
-// workflow-kind types (§1) get their own row; anything else (single-action commands,
-// which normally finish in one runtime-bridge call) falls back to a much shorter default,
-// since a single_action run sitting "running" past a few minutes is far more suspicious.
+// Conservative first-pass thresholds, not fabricated p95s. Active product single-action
+// runs get a short bound; any future active multi-step workflow uses the shared default
+// until measured production history justifies a named threshold.
 const ORPHANED_STEP_MINUTES = 10;
 const UNFINALIZED_RECEIPT_MINUTES = 60;
 // Half of scan-approval-expiry's own default — a nudge should land well before the

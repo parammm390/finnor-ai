@@ -9,6 +9,7 @@ import { initObservability, Sentry, logWithTrace } from "@finnor/tools";
 import { checkRateLimit, secondsUntilWindowReset } from "./rate-limit";
 import { redactText } from "@finnor/security";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
+import { readProductRuntimeAuthority } from "@finnor/db";
 
 export class AuthError extends Error {
   constructor(
@@ -51,6 +52,7 @@ export async function requireContext(req: Request): Promise<TenantContext> {
     const role = (req.headers.get("x-user-role") ?? "owner") as Role;
     if (tenantId) {
       await enforceRateLimit(`tenant:${tenantId}`);
+      await readProductRuntimeAuthority();
       return { tenantId, userId, role, correlationId };
     }
   }
@@ -75,6 +77,7 @@ export async function requireContext(req: Request): Promise<TenantContext> {
     throw err;
   }
   await enforceRateLimit(`tenant:${ctx.tenantId}`);
+  await readProductRuntimeAuthority();
   return { ...ctx, correlationId };
 }
 

@@ -8,10 +8,11 @@ Generated from source `process.env.*` references and local/deployment configurat
 | --- | --- | --- | --- | --- |
 | Postgres | required | `DATABASE_URL`, `MIGRATIONS_DATABASE_URL`, `POSTGRES_URL` | configured | not applicable / not configured |
 | Redis | required | `REDIS_URL` | configured | not applicable / not configured |
-| Railway API / worker / orchestrator | required for Railway deployment | `RAILWAY_GIT_COMMIT_SHA` | missing | not applicable / not configured |
+| FINNOR release identity | required on every runtime | `FINNOR_BUILD_ID`, `FINNOR_COMMIT_SHA`, `FINNOR_ENVIRONMENT`, `FINNOR_RELEASE_SOURCE`, `FINNOR_VERSION` | missing | not applicable / not configured |
+| Azure persistent runtime | required by the production release workflow | none referenced | missing | not applicable / not configured |
 | Sentry | optional unless error reporting is enabled | `SENTRY_DSN` | configured | not applicable / not configured |
-| Supabase auth | required | `FINNOR_OS_SUPABASE_KEY`, `FINNOR_OS_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | configured | not applicable / not configured |
-| Vapi | required if voice is enabled | `NEXT_PUBLIC_VAPI_ASSISTANT_ID`, `NEXT_PUBLIC_VAPI_PUBLIC_KEY`, `NEXT_PUBLIC_VAPI_WEB_ASSISTANT_ID`, `VAPI_API_KEY`, `VAPI_ASSISTANT_ID`, `VAPI_DAILY_CALL_CAP`, `VAPI_DEFAULT_TENANT_ID`, `VAPI_PHONE_NUMBER_ID`, `VAPI_TEST_PHONE_NUMBER`, `VAPI_WEBHOOK_SECRET` | configured | not applicable / not configured |
+| Supabase auth | required | `FINNOR_OS_SUPABASE_KEY`, `FINNOR_OS_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | configured | not applicable / not configured |
+| Vapi | required if voice is enabled | `NEXT_PUBLIC_VAPI_ASSISTANT_ID`, `NEXT_PUBLIC_VAPI_PUBLIC_KEY`, `NEXT_PUBLIC_VAPI_WEB_ASSISTANT_ID`, `VAPI_API_KEY`, `VAPI_ASSISTANT_ID`, `VAPI_PHONE_NUMBER_ID`, `VAPI_WEBHOOK_SECRET` | configured | not applicable / not configured |
 | OpenAI Realtime | required if Realtime is enabled | none referenced | missing | not applicable / not configured |
 | Bedrock LLM chain | required for the configured GLM/Mistral/DeepSeek chain | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_REGION` | configured | not applicable / not configured |
 | GLM provider family | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_GLM_MODEL_ID` | configured | not applicable / not configured |
@@ -21,29 +22,22 @@ Generated from source `process.env.*` references and local/deployment configurat
 | Firecrawl | required for verified web facts | `FIRECRAWL_API_BASE_URL`, `FIRECRAWL_API_KEY` | missing | not applicable / not configured |
 | Embeddings | optional unless semantic evidence is enabled | `EMBEDDINGS_API_KEY` | configured | not applicable / not configured |
 | Zep | optional | `ZEP_API_KEY` | missing | not applicable / not configured |
-| Stripe | required when Stripe binding is selected | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | missing | not applicable / not configured |
-| QuickBooks | required when QuickBooks binding is selected | `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET`, `QUICKBOOKS_ENVIRONMENT`, `QUICKBOOKS_REALM_ID`, `QUICKBOOKS_REFRESH_TOKEN` | missing | not applicable / not configured |
-| DocuSign | required when DocuSign binding is selected | `DOCUSIGN_ACCOUNT_ID`, `DOCUSIGN_BASE_URL`, `DOCUSIGN_CONNECT_SECRET`, `DOCUSIGN_INTEGRATION_KEY`, `DOCUSIGN_PRIVATE_KEY`, `DOCUSIGN_USER_ID` | missing | not applicable / not configured |
-| Communications / SMS | required when external communications binding is selected | `COMMS_MODE`, `COMMUNICATIONS_BINDING`, `GMAIL_APP_PASSWORD`, `GMAIL_USER`, `RESEND_ALLOWLIST_OWNER_EMAIL`, `RESEND_API_KEY`, `RESEND_DAILY_CAP`, `RESEND_FROM_ADDRESS` | configured | `COMMS_MODE` |
-| Resend / email | required when Resend is selected | `RESEND_ALLOWLIST_OWNER_EMAIL`, `RESEND_API_KEY`, `RESEND_DAILY_CAP`, `RESEND_FROM_ADDRESS` | configured | not applicable / not configured |
-| GoHighLevel | required when GHL CRM binding is selected | `CRM_BINDING`, `GHL_LOCATION_ID`, `GHL_WATER_TEST_CALENDAR_ID`, `GHL_WEBHOOK_PUBLIC_KEY`, `GOHIGHLEVEL_API_KEY` | missing | not applicable / not configured |
-| Meta Ads | required when live marketing binding is selected | `META_ADS_ACCESS_TOKEN`, `META_ADS_ACCOUNT_ID`, `META_ADS_WRITE_ENABLED` | missing | not applicable / not configured |
-| Google Ads | required when Google Ads is selected | `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_CUSTOMER_ID`, `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_WRITE_ENABLED` | missing | not applicable / not configured |
-| OSRM / routing | required when external routing is selected | none referenced | missing | not applicable / not configured |
-| Secrets provider | required when external secret provider is selected | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_NOVA_MICRO_MODEL_ID`, `AWS_BEDROCK_OPENAI_OSS_MODEL_ID`, `AWS_BEDROCK_QWEN_FAST_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_REGION`, `AWS_BEDROCK_REGION`, `AWS_REGION`, `FINNOR_SECRET_IDS`, `SECRETS_PROVIDER` | configured | not applicable / not configured |
+| Gmail / email | required only for a tenant-bound Gmail communication identity | `GMAIL_APP_PASSWORD`, `GMAIL_USER` | configured | not applicable / not configured |
+| Resend / system notifications | required only when the Finnor-owned notification sender is enabled | `RESEND_ALLOWLIST_OWNER_EMAIL`, `RESEND_API_KEY`, `RESEND_DAILY_CAP` | configured | not applicable / not configured |
+| Historical GHL callback quarantine | required while the retired callback endpoint remains configured | `GHL_WEBHOOK_PUBLIC_KEY`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
+| Historical payment callback quarantine | required while the retired callback endpoint remains configured | `PAYMENT_EMULATOR_WEBHOOK_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET`, `STRIPE_WEBHOOK_SECRET` | missing | not applicable / not configured |
+| Historical e-sign callback quarantine | required while the retired callback endpoint remains configured | `DOCUSIGN_CONNECT_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
+| Historical marketing callback quarantine | required while the retired callback endpoint remains configured | `MARKETING_WEBHOOK_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
+| Secrets provider | required when an external secret provider is selected | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_NOVA_MICRO_MODEL_ID`, `AWS_BEDROCK_OPENAI_OSS_MODEL_ID`, `AWS_BEDROCK_QWEN_FAST_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_REGION`, `AWS_BEDROCK_REGION`, `AWS_REGION`, `FINNOR_SECRET_IDS`, `SECRETS_PROVIDER` | configured | not applicable / not configured |
 
-## Capability binding resolution
+## Active provider boundary
 
-Source: `finnor-os/packages/tools/src/binding-resolution.ts`. Finnor-owned capabilities default to `native`; external capabilities default to `emulator`. Tenant integration rows override environment/default resolution.
+Active provider access is resolved from authenticated tenant integration rows and governed identity references. No environment binding can enable a retired business capability.
 
-| Capability | Environment variable | Default mode | Live mode |
-| --- | --- | --- | --- |
-| scheduling | `SCHEDULING_BINDING` | native | native / configured value |
-| documents | `DOCUMENTS_BINDING` | native | native / configured value |
-| inventory | `INVENTORY_BINDING` | native | native / configured value |
-| crm | `CRM_BINDING` | native | ghl / configured value |
-| communications | `COMMUNICATIONS_BINDING` | emulator | vapi |
-| esign | `ESIGN_BINDING` | emulator | docusign |
-| accounting | `ACCOUNTING_BINDING` | emulator | quickbooks |
-| payments | `PAYMENTS_BINDING` | emulator | stripe |
-| marketing | `MARKETING_BINDING` | emulator | dry_run / configured value |
+| Active responsibility | Resolution | Default |
+| --- | --- | --- |
+| email communication | tenant-bound Gmail identity or guarded Finnor Resend sender | unavailable without explicit identity/configuration |
+| employee/business-party voice | tenant-bound Vapi identity | unavailable without explicit identity/configuration |
+| public web research | Exa / Firecrawl read-only tools | unavailable without explicit credentials |
+| Private Equity source observation | explicit `private_equity_source` tenant integration | no provider-to-business mapper by default |
+| retired provider callbacks | authenticated receipt-only quarantine | no business mutation |

@@ -86,7 +86,7 @@ export type PropositionValue =
 
 export interface EvidenceSource {
   kind: EvidenceKind;
-  /** Actual audited owner/capability name, for example operational_query:money_summary. */
+  /** Actual audited owner/capability name, for example operational_query:closing_readiness. */
   owner: string;
   ref: string;
   authority: SourceAuthority;

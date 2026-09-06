@@ -65,7 +65,7 @@ describe.skipIf(!available)("intake idempotency (A4.T6)", () => {
     const key = `test-${randomUUID()}`;
     const instructionId = randomUUID();
     const claim = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
-    const realResponse = { planned: [{ actionType: "schedule_water_test", payload: {} }] };
+    const realResponse = { planned: [{ actionType: "record_finding", payload: {} }] };
     await recordWorkResponse(TENANT_ID, claim.workId, realResponse);
 
     const repeat = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });

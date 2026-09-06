@@ -20,7 +20,7 @@ export interface TriageSuggestion {
 type DeadLetterRow = typeof deadLetters.$inferSelect;
 
 // A dead letter has no dedicated "provider" column — the envelope's own `type` (e.g.
-// "invoice.payment_failed") is the finest-grained real signal available for "this kind
+// a provider-specific event type) is the finest-grained real signal available for "this kind
 // of failure, from this kind of event," so it doubles as the provider/family axis rather
 // than guessing at a delimiter convention this codebase doesn't actually establish
 // anywhere. Honest interpretation, not a fabricated field.

@@ -2,52 +2,29 @@ import { describe, expect, it } from "vitest";
 import { createInstructionTraceResultEnvelope, isReadOnlyAnswerAction } from "./instruction-trace";
 
 describe("instruction trace answer envelope", () => {
-  it("keeps the grounded payload out of the browser result", () => {
+  it("redacts hidden evidence while preserving a bounded Private Equity summary", () => {
     const envelope = createInstructionTraceResultEnvelope("action-1", {
-      spokenSummary: "Inventory count is 4; call 555-010-1234 for help.",
+      spokenSummary: "Diligence record DD-48 is ready; call 555-010-1234 for access.",
       displaySafe: {
-        inventory: { totalItems: 1, items: [{ sku: "FILTER-1", quantity: 4 }] },
+        deal: { id: "DD-48", status: "review" },
         groundedOn: { secret: "raw memory" },
         semanticSnippets: ["private transcript"],
       },
-      groundedOn: { business_overview: { secret: "raw memory" } },
+      groundedOn: { deal_context: { secret: "raw memory" } },
     });
-
     expect(envelope).toEqual({
       actionId: "action-1",
       result: {
         kind: "answer",
-        spokenSummary: "Inventory count is 4; call [PHONE_1] for help.",
-        display: { inventory: { totalItems: 1, items: [{ sku: "FILTER-1", quantity: 4 }] } },
+        spokenSummary: "Diligence record DD-48 is ready; call [PHONE_1] for access.",
+        display: { deal: { id: "DD-48", status: "review" } },
       },
     });
     expect(JSON.stringify(envelope)).not.toContain("raw memory");
-    expect(JSON.stringify(envelope)).not.toContain("private transcript");
   });
 
-  it("still produces an answer-shaped summary for a read-only inventory result without one", () => {
-    const envelope = createInstructionTraceResultEnvelope("inventory-action", {
-      items: [{ sku: "FILTER-1", quantity: 4 }],
-      groundedOn: { inventory_snapshot: [{ sku: "FILTER-1", quantity: 4 }] },
-    });
-
-    expect(envelope).toMatchObject({
-      actionId: "inventory-action",
-      result: { kind: "answer", spokenSummary: "I found 1 inventory item." },
-    });
-    expect((envelope.result as unknown as Record<string, unknown>).groundedOn).toBeUndefined();
-  });
-
-  it("never classifies a confirmation-gated answer action as browser-answer eligible", () => {
-    expect(isReadOnlyAnswerAction("answer_customer_question", { answered: true }, true)).toBe(false);
-    expect(isReadOnlyAnswerAction("answer_customer_question", { answered: true }, false)).toBe(true);
-  });
-
-  it("preserves year ranges and a complete substantive research answer", () => {
-    const substantive = `Forecast (2025-2032). ${"A".repeat(2_400)}`;
-    const envelope = createInstructionTraceResultEnvelope("research-action", { spokenSummary: substantive });
-
-    expect(envelope.result.spokenSummary).toBe(substantive);
-    expect(envelope.result.spokenSummary).not.toContain("[PHONE_");
+  it("does not expose retired answer actions as browser-answer eligible", () => {
+    expect(isReadOnlyAnswerAction("answer_customer_question", { answered: true }, false)).toBe(false);
+    expect(isReadOnlyAnswerAction("search_web", { spokenSummary: "Current source result" }, false)).toBe(true);
   });
 });

@@ -55,7 +55,7 @@ const databaseAvailable = await canConnect(SUPER_URL);
 describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition", () => {
   const tenantA = randomUUID();
   const tenantB = randomUUID();
-  const waterTenant = randomUUID();
+  const retirementBoundaryTenant = randomUUID();
   const leadA = randomUUID();
   const leadB = randomUUID();
   const targetA = randomUUID();
@@ -105,8 +105,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     await admin.connect();
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
-        ($1,$2,'PE3 Atlas Tenant'),($3,$4,'PE3 Foreign Tenant'),($5,$6,'PE3 Water Tenant')`,
-      [tenantA, `pe3-a-${randomUUID()}`, tenantB, `pe3-b-${randomUUID()}`, waterTenant, `pe3-water-${randomUUID()}`],
+        ($1,$2,'PE3 Atlas Tenant'),($3,$4,'PE3 Foreign Tenant'),($5,$6,'PE3 Retirement Boundary')`,
+      [tenantA, `pe3-a-${randomUUID()}`, tenantB, `pe3-b-${randomUUID()}`, retirementBoundaryTenant, `pe3-retired-${randomUUID()}`],
     );
     await admin.query(
       `INSERT INTO finnor_os.users(id,tenant_id,email,role,display_name) VALUES
@@ -135,8 +135,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
 
     process.env.DATABASE_URL = APP_URL;
     await closePool();
-    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 1, createdBy: leadA, sourceSystem: "integration:pe3" });
-    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 1, createdBy: leadB, sourceSystem: "integration:pe3" });
+    await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadA, sourceSystem: "integration:pe3" });
+    await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadB, sourceSystem: "integration:pe3" });
 
     const deal = await createDeal(ctxA, {
       targetOrganizationId: targetA,
@@ -573,10 +573,10 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     );
     expect(plannerCalls).toBe(0);
     expect(result.query?.request).toEqual({ intent: "closing_readiness", dealId });
-    expect(result.answer?.spokenSummary).toMatch(/not eligible to close.*exact canonical blocker/i);
+    expect(result.answer?.spokenSummary).toMatch(/not ready to close.*2 blocking conditions remain/i);
   }, 30_000);
 
-  it("fails closed across tenants and verticals while preserving Water and shared Core query registration", async () => {
+  it("fails closed across tenants and the retired vertical while preserving shared Core query registration", async () => {
     await expect(executeTenantOperationalQuery(tenantB, { intent: "deal_context", dealId }, { now: AS_OF }))
       .rejects.toThrow(/not found|authenticated tenant/i);
     await expect(recordPrivateEquityDocumentClaim(ctxB, {
@@ -609,16 +609,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     expect(operationalQueryIntentsForVertical("private_equity")).not.toEqual(expect.arrayContaining([
       "customer_lookup", "customer_cohort", "schedule_range", "inventory_status", "business_state", "party_availability",
     ]));
-    expect(operationalQueryIntentsForVertical("water")).toEqual(expect.arrayContaining([
-      "work_list", "agent_activity", "company_context", "party_lookup", "party_context", "team_roster",
-      "customer_lookup", "customer_cohort", "schedule_range", "inventory_status", "business_state", "party_availability",
-    ]));
-    expect(operationalQueryIntentsForVertical("water")).not.toEqual(expect.arrayContaining(["deal_context", "closing_readiness"]));
-    await expect(executeTenantOperationalQuery(waterTenant, { intent: "deal_context", dealId }, { now: AS_OF }))
-      .rejects.toThrow("Operational query intent is unavailable for this tenant vertical");
-    await expect(executeTenantOperationalQuery(tenantA, { intent: "business_state" }, { now: AS_OF }))
-      .rejects.toThrow("Operational query intent is unavailable for this tenant vertical");
-    const waterState = await executeTenantOperationalQuery(waterTenant, { intent: "business_state" }, { now: AS_OF });
-    expect(waterState).toMatchObject({ intent: "business_state", status: "ok", source: { kind: "canonical_postgres" } });
+    expect(() => operationalQueryIntentsForVertical("water")).toThrow(/retired.*unavailable/i);
+    await expect(executeTenantOperationalQuery(retirementBoundaryTenant, { intent: "deal_context", dealId }, { now: AS_OF }))
+      .rejects.toThrow(/not found|authenticated tenant|vertical identity is missing/i);
   });
 });

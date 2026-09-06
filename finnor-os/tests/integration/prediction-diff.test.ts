@@ -23,14 +23,14 @@ describe.skipIf(!available)("planner prediction diff", () => {
 
   it("persists field-level match/mismatch and exposes per-type accuracy in reliability", async () => {
     const actionType = `prediction_test_${randomUUID().slice(0, 8)}`;
-    const predictedReceipt = { version: 1, actionType: "prediction_test", simulation: { predicted: { expectedResult: { invoiceId: "inv-1", amount: 125 } } } };
+    const predictedReceipt = { version: 1, actionType: "prediction_test", simulation: { predicted: { expectedResult: { recordId: "record-1", confidence: 0.9 } } } };
     const [matchedRow] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType, payload: {}, status: "completed", predictedReceipt }).returning());
     const [mismatchedRow] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType, payload: {}, status: "completed", predictedReceipt }).returning());
-    await recordPredictionDiff(actionFromRow(matchedRow!), { status: "success", output: { invoiceId: "inv-1", amount: 125 } });
-    await recordPredictionDiff(actionFromRow(mismatchedRow!), { status: "success", output: { invoiceId: "inv-1", amount: 99 } });
+    await recordPredictionDiff(actionFromRow(matchedRow!), { status: "success", output: { recordId: "record-1", confidence: 0.9 } });
+    await recordPredictionDiff(actionFromRow(mismatchedRow!), { status: "success", output: { recordId: "record-1", confidence: 0.4 } });
     const [stored] = await withTenant(TENANT_ID, (db) => db.select({ diff: domainActions.predictionDiff }).from(domainActions).where(eq(domainActions.id, mismatchedRow!.id)));
     expect(stored!.diff).toMatchObject({ compared: 2, matched: 1, accuracy: 0.5 });
-    expect((stored!.diff as { fields: unknown[] }).fields).toEqual(expect.arrayContaining([expect.objectContaining({ path: "invoiceId", matched: true }), expect.objectContaining({ path: "amount", matched: false })]));
+    expect((stored!.diff as { fields: unknown[] }).fields).toEqual(expect.arrayContaining([expect.objectContaining({ path: "recordId", matched: true }), expect.objectContaining({ path: "confidence", matched: false })]));
     const metrics = await reliability(TENANT_ID, 1);
     expect(metrics.predictionAccuracy).toContainEqual({ actionType, comparedFields: 4, matchedFields: 3, accuracy: 0.75 });
   });

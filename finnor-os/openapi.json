@@ -1,184 +1,27 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Finnor OS API",
-    "version": "0.1.0",
-    "description": "Multi-tenant AI orchestration API for water treatment dealers. All /api routes (except webhooks) require a Supabase bearer token; every response is tenant-scoped by RLS."
+    "title": "FINNOR Private Equity API",
+    "version": "5.0.0",
+    "description": "Private Equity is the only active product vertical. Historical Water payloads are receipt-only quarantine inputs."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
   },
   "paths": {
-    "/api/ready": {
-      "get": {
-        "summary": "Dependency readiness for database, migration head, worker fleet, and managed secrets",
-        "responses": {
-          "200": {
-            "description": "Ready with exact release provenance"
-          },
-          "503": {
-            "description": "A process-level dependency is not ready"
-          }
-        }
-      }
-    },
-    "/api/connections/google/start": {
+    "/api/instructions": {
       "post": {
-        "summary": "Start a governed Google OAuth connection using one-time state and PKCE",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "authProfileRef": {
-                    "type": "string",
-                    "pattern": "^[a-z0-9][a-z0-9_-]{1,126}[a-z0-9]$"
-                  },
-                  "redirectUri": {
-                    "type": "string",
-                    "format": "uri"
-                  }
-                },
-                "required": [
-                  "authProfileRef"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Safe provider authorization URL and expiry; verifier remains HttpOnly"
-          },
-          "400": {
-            "description": "Invalid or unsupported connection"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Employee authority denied"
-          }
-        }
-      }
-    },
-    "/api/connections/google/callback": {
-      "get": {
-        "summary": "Consume one Google OAuth callback and bind the verified provider account",
-        "parameters": [
+        "security": [
           {
-            "name": "state",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "code",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "bearerAuth": []
           }
         ],
-        "responses": {
-          "303": {
-            "description": "Redirect to the connection settings result"
-          }
-        }
-      }
-    },
-    "/api/connections/{ref}": {
-      "get": {
-        "summary": "Read safe connection lifecycle status",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Safe status/scopes/timestamps without credential reference or token"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Profile not found"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Revoke a governed connection locally and attempt provider revocation",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Local revocation is authoritative"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Employee authority denied"
-          }
-        }
-      }
-    },
-    "/api/connections/{ref}/verify": {
-      "post": {
-        "summary": "Run a bounded connection health verification",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Connection usable"
-          },
-          "409": {
-            "description": "Connection degraded, expired, or requires reauthentication"
-          }
-        }
-      }
-    },
-    "/api/stats": {
-      "get": {
-        "summary": "Pending/blocked counts + recent actions",
-        "responses": {
-          "200": {
-            "description": "StatsResponse"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/actions": {
-      "post": {
-        "summary": "Submit a new instruction (voice transcript or text)",
         "requestBody": {
           "content": {
             "application/json": {
@@ -256,48 +99,7 @@
                         "properties": {
                           "entityType": {
                             "type": "string",
-                            "enum": [
-                              "household",
-                              "contact",
-                              "user",
-                              "technician",
-                              "equipment",
-                              "service_visit",
-                              "maintenance_agreement",
-                              "lead",
-                              "opportunity",
-                              "quote",
-                              "proposal",
-                              "work_order",
-                              "appointment",
-                              "invoice",
-                              "payment",
-                              "conversation",
-                              "call",
-                              "message",
-                              "communication",
-                              "document",
-                              "task",
-                              "work",
-                              "domain_action",
-                              "workflow_run",
-                              "workflow_step",
-                              "business_operation",
-                              "business_operation_target",
-                              "decision_receipt",
-                              "business_event",
-                              "org_unit",
-                              "tenant_location",
-                              "external_organization",
-                              "external_contact",
-                              "delegation",
-                              "acknowledgement_request",
-                              "communication_delivery",
-                              "internal_event",
-                              "document_share",
-                              "inventory_item",
-                              "computer_run"
-                            ]
+                            "pattern": "^[a-z][a-z0-9_]{1,63}$"
                           },
                           "entityId": {
                             "type": "string",
@@ -317,48 +119,7 @@
                           "properties": {
                             "entityType": {
                               "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
                             },
                             "entityId": {
                               "type": "string",
@@ -381,48 +142,7 @@
                           "properties": {
                             "entityType": {
                               "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
                             },
                             "entityId": {
                               "type": "string",
@@ -445,11 +165,9 @@
                             "type": "string",
                             "enum": [
                               "home",
-                              "customers",
-                              "money",
                               "work",
-                              "schedule",
-                              "agents"
+                              "agents",
+                              "deals"
                             ]
                           },
                           "route": {
@@ -545,39 +263,6 @@
                           }
                         },
                         "additionalProperties": false
-                      },
-                      "cohort": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string",
-                            "const": "work_query_execution"
-                          },
-                          "executionId": {
-                            "type": "string",
-                            "format": "uuid"
-                          },
-                          "entityType": {
-                            "type": "string",
-                            "const": "household"
-                          },
-                          "queryIntent": {
-                            "type": "string",
-                            "const": "customer_cohort"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": 0
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "executionId",
-                          "entityType",
-                          "queryIntent",
-                          "count"
-                        ],
-                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -600,100 +285,21 @@
         },
         "responses": {
           "201": {
-            "description": "Planned domain actions"
+            "description": "Work accepted"
           },
           "400": {
-            "description": "Invalid payload"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/threads": {
-      "get": {
-        "summary": "List the authenticated employee's private durable conversation threads",
-        "responses": {
-          "200": {
-            "description": "Bounded Postgres thread summaries owned by the current employee"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Canonical human principal required"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a private durable conversation thread for the authenticated employee",
-        "responses": {
-          "201": {
-            "description": "Canonical Postgres thread summary"
-          },
-          "400": {
-            "description": "Invalid payload"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Canonical human principal required"
-          }
-        }
-      }
-    },
-    "/api/threads/{id}": {
-      "get": {
-        "summary": "Load one employee-owned thread and a bounded page of exact original messages",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 200
-            }
-          },
-          {
-            "name": "beforeSequence",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Thread summary plus exact ordered messages"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Canonical human principal required"
-          },
-          "404": {
-            "description": "Thread absent or owned by another employee/tenant"
+            "description": "Invalid or retired request"
           }
         }
       }
     },
     "/api/objectives": {
       "post": {
-        "summary": "Accept responsibility for one persistent, governed Work objective and queue its first bounded iteration",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -772,48 +378,7 @@
                         "properties": {
                           "entityType": {
                             "type": "string",
-                            "enum": [
-                              "household",
-                              "contact",
-                              "user",
-                              "technician",
-                              "equipment",
-                              "service_visit",
-                              "maintenance_agreement",
-                              "lead",
-                              "opportunity",
-                              "quote",
-                              "proposal",
-                              "work_order",
-                              "appointment",
-                              "invoice",
-                              "payment",
-                              "conversation",
-                              "call",
-                              "message",
-                              "communication",
-                              "document",
-                              "task",
-                              "work",
-                              "domain_action",
-                              "workflow_run",
-                              "workflow_step",
-                              "business_operation",
-                              "business_operation_target",
-                              "decision_receipt",
-                              "business_event",
-                              "org_unit",
-                              "tenant_location",
-                              "external_organization",
-                              "external_contact",
-                              "delegation",
-                              "acknowledgement_request",
-                              "communication_delivery",
-                              "internal_event",
-                              "document_share",
-                              "inventory_item",
-                              "computer_run"
-                            ]
+                            "pattern": "^[a-z][a-z0-9_]{1,63}$"
                           },
                           "entityId": {
                             "type": "string",
@@ -833,48 +398,7 @@
                           "properties": {
                             "entityType": {
                               "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
                             },
                             "entityId": {
                               "type": "string",
@@ -897,48 +421,7 @@
                           "properties": {
                             "entityType": {
                               "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
                             },
                             "entityId": {
                               "type": "string",
@@ -961,11 +444,9 @@
                             "type": "string",
                             "enum": [
                               "home",
-                              "customers",
-                              "money",
                               "work",
-                              "schedule",
-                              "agents"
+                              "agents",
+                              "deals"
                             ]
                           },
                           "route": {
@@ -1060,39 +541,6 @@
                             "maxLength": 100
                           }
                         },
-                        "additionalProperties": false
-                      },
-                      "cohort": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string",
-                            "const": "work_query_execution"
-                          },
-                          "executionId": {
-                            "type": "string",
-                            "format": "uuid"
-                          },
-                          "entityType": {
-                            "type": "string",
-                            "const": "household"
-                          },
-                          "queryIntent": {
-                            "type": "string",
-                            "const": "customer_cohort"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": 0
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "executionId",
-                          "entityType",
-                          "queryIntent",
-                          "count"
-                        ],
                         "additionalProperties": false
                       }
                     },
@@ -1415,3277 +863,17 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Idempotent replay of an existing objective"
-          },
-          "202": {
-            "description": "Objective persisted and queued"
-          },
-          "400": {
-            "description": "Invalid objective or budget"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/outcome-packs": {
-      "get": {
-        "summary": "List the five certified outcome contracts, tenant operating state, and evidence-derived autonomy readiness",
-        "responses": {
-          "200": {
-            "description": "Definitions, settings, certifications, active grants, and explicit readiness gates"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      },
-      "post": {
-        "summary": "Accept responsibility for one versioned Outcome Pack on the existing durable Objective controller",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "packId": {
-                    "type": "string",
-                    "enum": [
-                      "lead_to_verified_water_test_booking",
-                      "stuck_installation_service_resolution",
-                      "overdue_receivable_collection",
-                      "service_due_lifecycle",
-                      "general_operator_objective"
-                    ]
-                  },
-                  "input": {
-                    "type": "object",
-                    "additionalProperties": {}
-                  },
-                  "channel": {
-                    "type": "string",
-                    "enum": [
-                      "voice",
-                      "text",
-                      "console"
-                    ],
-                    "default": "console"
-                  },
-                  "sessionId": {
-                    "type": "string",
-                    "maxLength": 500
-                  },
-                  "instructionId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "workId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "idempotencyKey": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200
-                  },
-                  "activeContext": {
-                    "type": "object",
-                    "properties": {
-                      "version": {
-                        "type": "number",
-                        "const": 1
-                      },
-                      "capturedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "source": {
-                        "type": "string",
-                        "enum": [
-                          "voice",
-                          "text",
-                          "console"
-                        ]
-                      },
-                      "activeWork": {
-                        "type": "object",
-                        "properties": {
-                          "workId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "workId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "focusedEntity": {
-                        "type": "object",
-                        "properties": {
-                          "entityType": {
-                            "type": "string",
-                            "enum": [
-                              "household",
-                              "contact",
-                              "user",
-                              "technician",
-                              "equipment",
-                              "service_visit",
-                              "maintenance_agreement",
-                              "lead",
-                              "opportunity",
-                              "quote",
-                              "proposal",
-                              "work_order",
-                              "appointment",
-                              "invoice",
-                              "payment",
-                              "conversation",
-                              "call",
-                              "message",
-                              "communication",
-                              "document",
-                              "task",
-                              "work",
-                              "domain_action",
-                              "workflow_run",
-                              "workflow_step",
-                              "business_operation",
-                              "business_operation_target",
-                              "decision_receipt",
-                              "business_event",
-                              "org_unit",
-                              "tenant_location",
-                              "external_organization",
-                              "external_contact",
-                              "delegation",
-                              "acknowledgement_request",
-                              "communication_delivery",
-                              "internal_event",
-                              "document_share",
-                              "inventory_item",
-                              "computer_run"
-                            ]
-                          },
-                          "entityId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "entityType",
-                          "entityId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "selectedEntities": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "entityType": {
-                              "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
-                            },
-                            "entityId": {
-                              "type": "string",
-                              "format": "uuid"
-                            }
-                          },
-                          "required": [
-                            "entityType",
-                            "entityId"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "maxItems": 50,
-                        "default": []
-                      },
-                      "excludedEntities": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "entityType": {
-                              "type": "string",
-                              "enum": [
-                                "household",
-                                "contact",
-                                "user",
-                                "technician",
-                                "equipment",
-                                "service_visit",
-                                "maintenance_agreement",
-                                "lead",
-                                "opportunity",
-                                "quote",
-                                "proposal",
-                                "work_order",
-                                "appointment",
-                                "invoice",
-                                "payment",
-                                "conversation",
-                                "call",
-                                "message",
-                                "communication",
-                                "document",
-                                "task",
-                                "work",
-                                "domain_action",
-                                "workflow_run",
-                                "workflow_step",
-                                "business_operation",
-                                "business_operation_target",
-                                "decision_receipt",
-                                "business_event",
-                                "org_unit",
-                                "tenant_location",
-                                "external_organization",
-                                "external_contact",
-                                "delegation",
-                                "acknowledgement_request",
-                                "communication_delivery",
-                                "internal_event",
-                                "document_share",
-                                "inventory_item",
-                                "computer_run"
-                              ]
-                            },
-                            "entityId": {
-                              "type": "string",
-                              "format": "uuid"
-                            }
-                          },
-                          "required": [
-                            "entityType",
-                            "entityId"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "maxItems": 50,
-                        "default": []
-                      },
-                      "surface": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "enum": [
-                              "home",
-                              "customers",
-                              "money",
-                              "work",
-                              "schedule",
-                              "agents"
-                            ]
-                          },
-                          "route": {
-                            "type": "string",
-                            "pattern": "^\\/jarvis",
-                            "maxLength": 300
-                          },
-                          "spatialState": {
-                            "type": "string",
-                            "enum": [
-                              "canvas",
-                              "detail",
-                              "list",
-                              "map",
-                              "timeline"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "id"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "filters": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "field": {
-                              "type": "string",
-                              "pattern": "^[a-z][a-zA-Z0-9_.-]{0,63}$"
-                            },
-                            "operator": {
-                              "type": "string",
-                              "enum": [
-                                "eq",
-                                "neq",
-                                "in",
-                                "not_in",
-                                "gte",
-                                "lte",
-                                "contains"
-                              ]
-                            },
-                            "value": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "maxLength": 200
-                                },
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "boolean"
-                                },
-                                {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string",
-                                    "maxLength": 200
-                                  },
-                                  "maxItems": 50
-                                }
-                              ]
-                            }
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "maxItems": 20,
-                        "default": []
-                      },
-                      "timeContext": {
-                        "type": "object",
-                        "properties": {
-                          "start": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "end": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "timezone": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 100
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "cohort": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string",
-                            "const": "work_query_execution"
-                          },
-                          "executionId": {
-                            "type": "string",
-                            "format": "uuid"
-                          },
-                          "entityType": {
-                            "type": "string",
-                            "const": "household"
-                          },
-                          "queryIntent": {
-                            "type": "string",
-                            "const": "customer_cohort"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": 0
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "executionId",
-                          "entityType",
-                          "queryIntent",
-                          "count"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
-                    "required": [
-                      "version",
-                      "capturedAt",
-                      "source",
-                      "surface"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "budgets": {
-                    "type": "object",
-                    "properties": {
-                      "maxSteps": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 50
-                      },
-                      "maxActions": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 25
-                      },
-                      "maxQueries": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 50
-                      },
-                      "maxPlannerFailures": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10
-                      },
-                      "maxConsecutiveNoProgress": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10
-                      },
-                      "deadlineAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      }
-                    },
-                    "additionalProperties": false
-                  }
-                },
-                "required": [
-                  "packId",
-                  "input"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Pack, Work, and Objective persisted and first iteration queued"
-          },
-          "400": {
-            "description": "Invalid pack input or disabled pack"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/outcome-packs/grants": {
-      "get": {
-        "summary": "List tenant-scoped progressive-autonomy grants and their current status",
-        "responses": {
-          "200": {
-            "description": "Current and historical exact-scope grants"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "403": {
-            "description": "Owner authority required"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create one narrow, expiring autonomy grant only after deterministic readiness passes",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "packId": {
-                    "type": "string",
-                    "enum": [
-                      "lead_to_verified_water_test_booking",
-                      "stuck_installation_service_resolution",
-                      "overdue_receivable_collection",
-                      "service_due_lifecycle",
-                      "general_operator_objective"
-                    ]
-                  },
-                  "packVersion": {
-                    "type": "integer",
-                    "exclusiveMinimum": 0
-                  },
-                  "scope": {
-                    "type": "object",
-                    "properties": {
-                      "effectClasses": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "internal_draft",
-                            "internal_write",
-                            "operational_change",
-                            "financial_write",
-                            "external_side_effect",
-                            "external_spend",
-                            "batch_external",
-                            "durable_workflow"
-                          ]
-                        },
-                        "minItems": 1,
-                        "maxItems": 8
-                      },
-                      "resources": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 120
-                            },
-                            "ids": {
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "minLength": 1,
-                                "maxLength": 500
-                              },
-                              "maxItems": 100
-                            }
-                          },
-                          "required": [
-                            "type"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "minItems": 1,
-                        "maxItems": 100
-                      },
-                      "principal": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "providers": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 120
-                            },
-                            "applicationAccountId": {
-                              "type": "string",
-                              "format": "uuid"
-                            }
-                          },
-                          "required": [
-                            "provider"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "maxItems": 50
-                      },
-                      "maxAmountUsd": {
-                        "anyOf": [
-                          {
-                            "type": "number",
-                            "minimum": 0
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "maxRisk": {
-                        "type": "string",
-                        "enum": [
-                          "low",
-                          "medium",
-                          "high"
-                        ]
-                      },
-                      "validFrom": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "expiresAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "policyVersion": {
-                        "anyOf": [
-                          {
-                            "type": "integer",
-                            "exclusiveMinimum": 0
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "authorityRevision": {
-                        "type": "integer",
-                        "exclusiveMinimum": 0
-                      },
-                      "certificationFingerprint": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{64}$"
-                      },
-                      "reviewAfter": {
-                        "type": "string",
-                        "format": "date-time"
-                      }
-                    },
-                    "required": [
-                      "effectClasses",
-                      "resources",
-                      "principal",
-                      "providers",
-                      "maxAmountUsd",
-                      "maxRisk",
-                      "validFrom",
-                      "expiresAt",
-                      "policyVersion",
-                      "authorityRevision",
-                      "certificationFingerprint",
-                      "reviewAfter"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "reason": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 2000
-                  }
-                },
-                "required": [
-                  "packId",
-                  "packVersion",
-                  "scope",
-                  "reason"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
           "201": {
-            "description": "Grant persisted"
-          },
-          "400": {
-            "description": "Invalid scope or readiness not earned"
-          },
-          "403": {
-            "description": "Owner authority required"
+            "description": "Objective accepted"
           }
         }
       }
     },
-    "/api/outcome-packs/grants/{id}": {
-      "delete": {
-        "summary": "Revoke an autonomy grant and prevent all future uncommitted effects that depended on it",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 2000
-                  }
-                },
-                "required": [
-                  "reason"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Grant revoked"
-          },
-          "403": {
-            "description": "Owner authority required"
-          },
-          "404": {
-            "description": "Grant not found in tenant"
-          }
-        }
-      }
-    },
-    "/api/outcome-packs/control": {
+    "/api/objectives/{id}/control": {
       "post": {
-        "summary": "Enable or disable an Outcome Pack; disabling pauses active runs and suspends grants",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "packId": {
-                    "type": "string",
-                    "enum": [
-                      "lead_to_verified_water_test_booking",
-                      "stuck_installation_service_resolution",
-                      "overdue_receivable_collection",
-                      "service_due_lifecycle",
-                      "general_operator_objective"
-                    ]
-                  },
-                  "enabled": {
-                    "type": "boolean"
-                  },
-                  "reason": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 2000
-                  }
-                },
-                "required": [
-                  "packId",
-                  "enabled",
-                  "reason"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Tenant pack operating state updated"
-          },
-          "403": {
-            "description": "Owner authority required"
-          }
-        }
-      }
-    },
-    "/api/employees": {
-      "get": {
-        "summary": "List the authenticated tenant's employee directory for governed Work ownership and handoff",
-        "responses": {
-          "200": {
-            "description": "{employees: [{id, displayName, status, roles, legacyRole}]}"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/queries": {
-      "post": {
-        "summary": "Execute one bounded deterministic operational query without invoking the planner",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "customer_lookup"
-                      },
-                      "householdId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "address": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "contact": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "phone": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "customer_cohort"
-                      },
-                      "cohort": {
-                        "type": "string",
-                        "const": "inactive"
-                      },
-                      "minDaysInactive": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 3650
-                      },
-                      "asOf": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent",
-                      "cohort",
-                      "minDaysInactive"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "schedule_range"
-                      },
-                      "range": {
-                        "type": "object",
-                        "properties": {
-                          "start": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "end": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        },
-                        "required": [
-                          "start",
-                          "end"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "localDateRange": {
-                        "type": "object",
-                        "properties": {
-                          "startDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          },
-                          "endDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          }
-                        },
-                        "required": [
-                          "startDate"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "money_summary"
-                      },
-                      "range": {
-                        "type": "object",
-                        "properties": {
-                          "start": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "end": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        },
-                        "required": [
-                          "start",
-                          "end"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "start": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "end": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "work_list"
-                      },
-                      "section": {
-                        "type": "string",
-                        "enum": [
-                          "all",
-                          "works",
-                          "work_orders",
-                          "tasks"
-                        ]
-                      },
-                      "openOnly": {
-                        "type": "boolean"
-                      },
-                      "statuses": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 80
-                        },
-                        "maxItems": 20
-                      },
-                      "recordId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "inventory_status"
-                      },
-                      "sku": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 120
-                      },
-                      "lowStockOnly": {
-                        "type": "boolean"
-                      },
-                      "includeOpenProcurement": {
-                        "type": "boolean"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "agent_activity"
-                      },
-                      "range": {
-                        "type": "object",
-                        "properties": {
-                          "start": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "end": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        },
-                        "required": [
-                          "start",
-                          "end"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "localDateRange": {
-                        "type": "object",
-                        "properties": {
-                          "startDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          },
-                          "endDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          }
-                        },
-                        "required": [
-                          "startDate"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "business_state"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "company_context"
-                      },
-                      "anchor": {
-                        "anyOf": [
-                          {
-                            "type": "object",
-                            "properties": {
-                              "entityType": {
-                                "type": "string",
-                                "enum": [
-                                  "household",
-                                  "contact",
-                                  "user",
-                                  "technician",
-                                  "equipment",
-                                  "service_visit",
-                                  "maintenance_agreement",
-                                  "lead",
-                                  "opportunity",
-                                  "quote",
-                                  "proposal",
-                                  "work_order",
-                                  "appointment",
-                                  "invoice",
-                                  "payment",
-                                  "conversation",
-                                  "call",
-                                  "message",
-                                  "communication",
-                                  "document",
-                                  "task",
-                                  "work",
-                                  "domain_action",
-                                  "workflow_run",
-                                  "workflow_step",
-                                  "business_operation",
-                                  "business_operation_target",
-                                  "decision_receipt",
-                                  "business_event",
-                                  "org_unit",
-                                  "tenant_location",
-                                  "external_organization",
-                                  "external_contact"
-                                ]
-                              },
-                              "entityId": {
-                                "type": "string",
-                                "format": "uuid"
-                              }
-                            },
-                            "required": [
-                              "entityType",
-                              "entityId"
-                            ],
-                            "additionalProperties": false
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "partyType": {
-                                "type": "string",
-                                "enum": [
-                                  "employee",
-                                  "team",
-                                  "location",
-                                  "household",
-                                  "contact",
-                                  "external_organization",
-                                  "external_contact"
-                                ]
-                              },
-                              "partyId": {
-                                "type": "string",
-                                "format": "uuid"
-                              }
-                            },
-                            "required": [
-                              "partyType",
-                              "partyId"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
-                      },
-                      "householdId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "party_lookup"
-                      },
-                      "ref": {
-                        "type": "object",
-                        "properties": {
-                          "partyType": {
-                            "type": "string",
-                            "enum": [
-                              "employee",
-                              "team",
-                              "location",
-                              "household",
-                              "contact",
-                              "external_organization",
-                              "external_contact"
-                            ]
-                          },
-                          "partyId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "partyType",
-                          "partyId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "party_context"
-                      },
-                      "ref": {
-                        "type": "object",
-                        "properties": {
-                          "partyType": {
-                            "type": "string",
-                            "enum": [
-                              "employee",
-                              "team",
-                              "location",
-                              "household",
-                              "contact",
-                              "external_organization",
-                              "external_contact"
-                            ]
-                          },
-                          "partyId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "partyType",
-                          "partyId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "team_roster"
-                      },
-                      "teamRef": {
-                        "type": "object",
-                        "properties": {
-                          "partyType": {
-                            "type": "string",
-                            "const": "team"
-                          },
-                          "partyId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "partyType",
-                          "partyId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "intent": {
-                        "type": "string",
-                        "const": "party_availability"
-                      },
-                      "ref": {
-                        "type": "object",
-                        "properties": {
-                          "partyType": {
-                            "type": "string",
-                            "enum": [
-                              "employee",
-                              "team",
-                              "location",
-                              "household",
-                              "contact",
-                              "external_organization",
-                              "external_contact"
-                            ]
-                          },
-                          "partyId": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": [
-                          "partyType",
-                          "partyId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "query": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 300
-                      },
-                      "localDateRange": {
-                        "type": "object",
-                        "properties": {
-                          "startDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          },
-                          "endDate": {
-                            "type": "string",
-                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
-                          }
-                        },
-                        "required": [
-                          "startDate"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "includeCapacity": {
-                        "type": "boolean"
-                      },
-                      "page": {
-                        "type": "object",
-                        "properties": {
-                          "limit": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 100
-                          },
-                          "cursor": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 4096
-                          }
-                        },
-                        "additionalProperties": false
-                      },
-                      "workId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "executionKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "idempotencyKey": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "required": [
-                      "intent"
-                    ],
-                    "additionalProperties": false
-                  }
-                ],
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Typed canonical PostgreSQL result with Work/execution metadata"
-          },
-          "400": {
-            "description": "Invalid or mismatched typed query request"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/dealer-zero/time-compression": {
-      "post": {
-        "summary": "Read-only, explicitly synthetic Dealer Zero time-compression script (owner-only)",
-        "responses": {
-          "200": {
-            "description": "{demo:true, synthetic:true, frames} with optional real receipt ids"
-          },
-          "403": {
-            "description": "Not an owner or not the Dealer Zero demo tenant"
-          }
-        }
-      }
-    },
-    "/api/actions/pending": {
-      "get": {
-        "summary": "List actions awaiting confirmation (filter=blocked for stuck items)",
-        "parameters": [
+        "security": [
           {
-            "name": "filter",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "blocked"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Pending actions with their exact frozen Business Effect",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "actions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "format": "uuid"
-                          },
-                          "actionType": {
-                            "type": "string"
-                          },
-                          "summary": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "payload": {
-                            "type": "object",
-                            "additionalProperties": {}
-                          },
-                          "status": {
-                            "type": "string"
-                          },
-                          "businessEffect": {
-                            "anyOf": [
-                              {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string",
-                                    "format": "uuid"
-                                  },
-                                  "schemaVersion": {
-                                    "type": "number",
-                                    "const": 1
-                                  },
-                                  "semanticHash": {
-                                    "type": "string",
-                                    "pattern": "^[0-9a-f]{64}$"
-                                  },
-                                  "scopeHash": {
-                                    "type": "string",
-                                    "pattern": "^[0-9a-f]{64}$"
-                                  },
-                                  "operation": {
-                                    "type": "object",
-                                    "properties": {
-                                      "name": {
-                                        "type": "string"
-                                      },
-                                      "class": {
-                                        "type": "string"
-                                      },
-                                      "external": {
-                                        "type": "boolean"
-                                      }
-                                    },
-                                    "required": [
-                                      "name",
-                                      "class",
-                                      "external"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  "targets": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "object",
-                                      "properties": {
-                                        "kind": {
-                                          "type": "string"
-                                        },
-                                        "type": {
-                                          "type": "string"
-                                        },
-                                        "id": {
-                                          "type": "string"
-                                        },
-                                        "sourcePath": {
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "kind",
-                                        "type",
-                                        "id"
-                                      ],
-                                      "additionalProperties": false
-                                    }
-                                  },
-                                  "bindings": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "object",
-                                      "additionalProperties": {}
-                                    }
-                                  },
-                                  "before": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "object",
-                                      "additionalProperties": {}
-                                    }
-                                  },
-                                  "delta": {
-                                    "type": "object",
-                                    "properties": {
-                                      "operation": {
-                                        "type": "string"
-                                      },
-                                      "values": {
-                                        "type": "object",
-                                        "additionalProperties": {}
-                                      }
-                                    },
-                                    "required": [
-                                      "operation",
-                                      "values"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  "expected": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                  },
-                                  "authority": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                  },
-                                  "approval": {
-                                    "type": "object",
-                                    "properties": {
-                                      "required": {
-                                        "type": "boolean"
-                                      },
-                                      "typedConfirmation": {
-                                        "type": "boolean"
-                                      },
-                                      "summary": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "required",
-                                      "typedConfirmation",
-                                      "summary"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  "provenance": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                  }
-                                },
-                                "required": [
-                                  "id",
-                                  "schemaVersion",
-                                  "semanticHash",
-                                  "scopeHash",
-                                  "operation",
-                                  "targets",
-                                  "bindings",
-                                  "before",
-                                  "delta",
-                                  "expected",
-                                  "authority",
-                                  "approval",
-                                  "provenance"
-                                ],
-                                "additionalProperties": true
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "businessEffectStatus": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "actionType",
-                          "summary",
-                          "payload",
-                          "status",
-                          "businessEffect",
-                          "businessEffectStatus"
-                        ],
-                        "additionalProperties": true
-                      }
-                    }
-                  },
-                  "required": [
-                    "actions"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/actions/{id}/confirm": {
-      "post": {
-        "summary": "Approve a pending action — executes bounded work or durably queues an associated business operation",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "note": {
-                    "type": "string",
-                    "maxLength": 2000
-                  },
-                  "typedConfirmation": {
-                    "type": "boolean",
-                    "const": true
-                  }
-                },
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{result} or {status, idempotent:true} if already decided"
-          },
-          "403": {
-            "description": "Role cannot approve"
-          },
-          "404": {
-            "description": "Action not found"
-          },
-          "409": {
-            "description": "Not pending/needs_human_review"
-          }
-        }
-      }
-    },
-    "/api/operations/{id}": {
-      "get": {
-        "summary": "Inspect a durable business operation, its frozen targets, per-target execution state, events, and receipt",
-        "responses": {
-          "200": {
-            "description": "{operation: {operation, targets, events, receipt}}"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Operation not found"
-          }
-        }
-      }
-    },
-    "/api/operations/{id}/retry": {
-      "post": {
-        "summary": "Recover retryable, configuration, or human-review targets without replaying successful or policy-skipped targets",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "recoveryKey": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200
-                  }
-                },
-                "required": [
-                  "recoveryKey"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "{result: {operationId, retried, duplicate, queued}, operation}"
-          },
-          "400": {
-            "description": "Invalid recovery key"
-          },
-          "403": {
-            "description": "Role cannot approve recovery"
-          },
-          "404": {
-            "description": "Operation not found"
-          },
-          "409": {
-            "description": "Operation has no recoverable targets or cannot be retried in its current state"
-          }
-        }
-      }
-    },
-    "/api/computer/runs/{id}": {
-      "get": {
-        "summary": "Reconstruct one tenant-scoped computer run from safe durable run, step, and artifact metadata",
-        "responses": {
-          "200": {
-            "description": "{run, steps, artifacts}; no provider/auth handles or artifact bytes"
-          },
-          "404": {
-            "description": "Computer run not found"
-          }
-        }
-      }
-    },
-    "/api/computer/runs/{id}/cancel": {
-      "post": {
-        "summary": "Request durable cancellation of an active computer run",
-        "responses": {
-          "200": {
-            "description": "{run, cancellationRequested}"
-          },
-          "403": {
-            "description": "Not the actor or an authorized approver"
-          },
-          "404": {
-            "description": "Computer run not found"
-          }
-        }
-      }
-    },
-    "/api/actions/{id}/reject": {
-      "post": {
-        "summary": "Reject a pending action — halts it permanently",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": {
-                    "type": "string",
-                    "maxLength": 2000
-                  }
-                },
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{status:'rejected'} or {status, idempotent:true}"
-          },
-          "403": {
-            "description": "Role cannot decide"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
-    "/api/actions/{id}/escalate": {
-      "post": {
-        "summary": "Flag a still-pending action as needing human review (not approve/reject)",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "note": {
-                    "type": "string",
-                    "maxLength": 2000
-                  }
-                },
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{result} or {status:'needs_human_review', idempotent:true}"
-          },
-          "403": {
-            "description": "Role cannot decide"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Not pending"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs": {
-      "get": {
-        "summary": "Live + recent-terminal workflow runs with steps",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{runs: WorkflowRun[]}"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs/{id}/pause": {
-      "post": {
-        "summary": "Pause a running workflow run (owner-only, optimistic concurrency)",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedVersion": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "expectedVersion"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{run}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Version conflict / illegal transition"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs/{id}/resume": {
-      "post": {
-        "summary": "Resume a paused workflow run",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedVersion": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "expectedVersion"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{run}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Version conflict / illegal transition"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs/{id}/cancel": {
-      "post": {
-        "summary": "Cancel a workflow run",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedVersion": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "expectedVersion"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{run}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Version conflict / illegal transition"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs/{id}/retry": {
-      "post": {
-        "summary": "Retry a failed workflow run",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedVersion": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "expectedVersion"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{run}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Version conflict / illegal transition"
-          }
-        }
-      }
-    },
-    "/api/workflows/runs/{id}/escalate": {
-      "post": {
-        "summary": "Escalate a workflow run",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedVersion": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "expectedVersion"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{run}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "409": {
-            "description": "Version conflict / illegal transition"
-          }
-        }
-      }
-    },
-    "/api/workflows/steps/{id}/compensate": {
-      "post": {
-        "summary": "Compensate one completed workflow effect with its registered typed binding",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 2000
-                  }
-                },
-                "required": [
-                  "reason"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Compensation succeeded or an existing successful case was returned"
-          },
-          "400": {
-            "description": "Invalid reason"
-          },
-          "403": {
-            "description": "Not authorized"
-          },
-          "404": {
-            "description": "Step not found"
-          },
-          "409": {
-            "description": "Illegal or unsupported compensation"
-          },
-          "502": {
-            "description": "Compensation attempted and failed; case and receipt were preserved"
-          }
-        }
-      }
-    },
-    "/api/events": {
-      "get": {
-        "summary": "business_events cross-entity timeline (backward `before` paging)",
-        "parameters": [
-          {
-            "name": "entityType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "before",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{events: EventRow[]}"
-          }
-        }
-      }
-    },
-    "/api/business-world": {
-      "get": {
-        "summary": "Bounded canonical Business World projection for one operating scene",
-        "parameters": [
-          {
-            "name": "scene",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "customer",
-                "schedule",
-                "money",
-                "work",
-                "inventory",
-                "computer"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{data: BusinessWorldProjection}"
-          },
-          "400": {
-            "description": "Invalid scene"
-          }
-        }
-      }
-    },
-    "/api/operational-deltas": {
-      "get": {
-        "summary": "Establish or replay a bounded tenant-scoped operational delta cursor",
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 250
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OperationalDeltaPage"
-          },
-          "400": {
-            "description": "Invalid cursor"
-          },
-          "409": {
-            "description": "Cursor tenant scope mismatch"
-          }
-        }
-      }
-    },
-    "/api/read-models/{view}": {
-      "get": {
-        "summary": "Named cross-entity read-model view (pipeline-health, technician-load, stock-risk, cash-collections, service-due, sla-breaches, follow-up-debt, data-quality, household-360, reliability, readiness, failure-injections)",
-        "responses": {
-          "200": {
-            "description": "{view, data}"
-          },
-          "404": {
-            "description": "Unknown view (or no such household for household-360)"
-          }
-        }
-      }
-    },
-    "/api/comms": {
-      "get": {
-        "summary": "Outbox + communications history (native comms layer)",
-        "responses": {
-          "200": {
-            "description": "{outbox, communications}"
-          }
-        }
-      }
-    },
-    "/api/insights": {
-      "get": {
-        "summary": "Action-type failure/rejection stats + critic findings + unclear-confirmation phrasings",
-        "responses": {
-          "200": {
-            "description": "Insights"
-          }
-        }
-      }
-    },
-    "/api/setup/status": {
-      "get": {
-        "summary": "Dealer setup readiness + integration self-tests + env/binding posture",
-        "responses": {
-          "200": {
-            "description": "SetupStatus"
-          }
-        }
-      }
-    },
-    "/api/integrations/status": {
-      "get": {
-        "summary": "Real self-tests for every external integration (not just presence)",
-        "responses": {
-          "200": {
-            "description": "IntegrationsStatus"
-          }
-        }
-      }
-    },
-    "/api/resources/{kind}": {
-      "get": {
-        "summary": "Whitelisted table reads (households, inventory, invoices, technicians, visits, compliance-policy, workflows)",
-        "responses": {
-          "200": {
-            "description": "{rows}"
-          },
-          "404": {
-            "description": "Unknown resource kind"
-          }
-        }
-      }
-    },
-    "/api/audit": {
-      "get": {
-        "summary": "Paginated, filterable audit log",
-        "parameters": [
-          {
-            "name": "actionType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{entries, limit, offset}"
-          },
-          "400": {
-            "description": "Invalid query"
-          }
-        }
-      }
-    },
-    "/api/receipts": {
-      "get": {
-        "summary": "Look up decision receipts by domainActionId, workflowStepId, or workflowRunId",
-        "parameters": [
-          {
-            "name": "domainActionId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "workflowStepId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "workflowRunId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{receipts}"
-          },
-          "400": {
-            "description": "None of the three ids provided"
-          }
-        }
-      }
-    },
-    "/api/receipts/{id}": {
-      "get": {
-        "summary": "Full DecisionReceipt by id — the 'Why?' view",
-        "responses": {
-          "200": {
-            "description": "{receipt}"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
-    "/api/me": {
-      "get": {
-        "summary": "Caller's own userId/tenantId/role",
-        "responses": {
-          "200": {
-            "description": "{userId, tenantId, role}"
-          }
-        }
-      }
-    },
-    "/api/overview": {
-      "get": {
-        "summary": "Daily briefing (real receipted get_business_overview action, 5-minute cache unless ?refresh=1)",
-        "parameters": [
-          {
-            "name": "refresh",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{domainActionId, receiptId?, cached, ...output}"
-          },
-          "502": {
-            "description": "Briefing could not be generated"
-          }
-        }
-      }
-    },
-    "/api/dlq": {
-      "get": {
-        "summary": "Dead-letter queue, owner-only",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "open",
-                "replayed",
-                "discarded"
-              ]
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{deadLetters}"
-          },
-          "403": {
-            "description": "Not owner"
-          }
-        }
-      }
-    },
-    "/api/dlq/{id}": {
-      "get": {
-        "summary": "Single dead-letter row, owner-only",
-        "responses": {
-          "200": {
-            "description": "{deadLetter}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
-    "/api/dlq/{id}/replay": {
-      "post": {
-        "summary": "Re-enqueue a dead-lettered outbox event, owner-only",
-        "responses": {
-          "200": {
-            "description": "{replayed:true}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "not_found"
-          },
-          "409": {
-            "description": "not_open / not_replayable / no_linked_outbox_event"
-          }
-        }
-      }
-    },
-    "/api/dlq/{id}/discard": {
-      "post": {
-        "summary": "Permanently give up on a dead-lettered event, owner-only",
-        "responses": {
-          "200": {
-            "description": "{discarded:true}"
-          },
-          "403": {
-            "description": "Not owner"
-          },
-          "404": {
-            "description": "not_found"
-          },
-          "409": {
-            "description": "not_open"
-          }
-        }
-      }
-    },
-    "/api/corrections": {
-      "get": {
-        "summary": "List memory corrections (gated, owner default)",
-        "responses": {
-          "200": {
-            "description": "{corrections}"
-          },
-          "403": {
-            "description": "Role cannot view"
-          }
-        }
-      },
-      "post": {
-        "summary": "Submit a correction to a past AI answer, receipt-linked",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "receiptId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "correctedFact": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 2000
-                  }
-                },
-                "required": [
-                  "receiptId",
-                  "correctedFact"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "{id}"
-          },
-          "403": {
-            "description": "Role cannot submit"
-          },
-          "404": {
-            "description": "Receipt not found"
-          }
-        }
-      }
-    },
-    "/api/vitals": {
-      "get": {
-        "summary": "D1.T2 pulse bar — queue depth/oldest-pending age, worker heartbeat age, this tenant's open DLQ count, resolved capability bindings, per-scan-type last-run clocks",
-        "responses": {
-          "200": {
-            "description": "{queue, heartbeat, dlq, bindings, scans}"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/activity": {
-      "get": {
-        "summary": "D1.T3 activity theater — merged action_log + workflow_step + computer_step + call feed, forward-only (occurredAt,id) keyset cursor",
-        "parameters": [
-          {
-            "name": "since",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{items, nextCursor, hasMore}"
-          },
-          "400": {
-            "description": "Invalid query"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/policies/{tenantId}/{actionType}": {
-      "get": {
-        "summary": "Read a domain policy",
-        "responses": {
-          "200": {
-            "description": "Policy"
-          },
-          "404": {
-            "description": "Not configured"
-          }
-        }
-      },
-      "put": {
-        "summary": "Create or update a domain policy (owner only)",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "policy": {
-                    "type": "object",
-                    "additionalProperties": {}
-                  },
-                  "requiresConfirmation": {
-                    "type": "boolean"
-                  },
-                  "confirmationTemplate": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "modelProvider": {
-                    "type": "string"
-                  },
-                  "confirmationTimeoutHours": {
-                    "anyOf": [
-                      {
-                        "type": "integer",
-                        "exclusiveMinimum": 0
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "version": {
-                    "type": "integer",
-                    "exclusiveMinimum": 0
-                  },
-                  "effectiveFrom": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "required": [
-                  "policy",
-                  "requiresConfirmation"
-                ],
-                "additionalProperties": false,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Saved policy"
-          }
-        }
-      }
-    },
-    "/api/instructions/{id}": {
-      "get": {
-        "summary": "Read one tenant-scoped instruction trace session",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Instruction session"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Instruction not found"
-          }
-        }
-      }
-    },
-    "/api/instructions/{id}/events": {
-      "get": {
-        "summary": "Read new tenant-scoped instruction lifecycle events after a sequence number",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "after",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ordered instruction trace events"
-          },
-          "400": {
-            "description": "Invalid after cursor"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Instruction not found"
-          }
-        }
-      }
-    },
-    "/api/works": {
-      "get": {
-        "summary": "List durable Work, optionally by session or active state",
-        "parameters": [
-          {
-            "name": "sessionId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "active",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "{works: Work[]}"
-          },
-          "401": {
-            "description": "Bad auth"
-          }
-        }
-      }
-    },
-    "/api/works/{id}": {
-      "get": {
-        "summary": "Read one Work with inputs, planner attempts, query executions, actions, approvals, workflow runs, receipts, recovery, and events",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Canonical durable Work aggregate"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Work not found"
-          }
-        }
-      }
-    },
-    "/api/works/{id}/execution": {
-      "get": {
-        "summary": "Read one bounded, tenant-scoped execution projection for a durable Work",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Presentation-safe action DAG, authority, workflow, computer, uncertainty, and receipt truth"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Work not found"
-          }
-        }
-      }
-    },
-    "/api/works/{id}/replay": {
-      "get": {
-        "summary": "Replay one Work's evidence-backed causal history without mutating operational state",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Bounded, privacy-safe trigger-to-outcome causal graph with explicit provenance gaps"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Work not found"
-          }
-        }
-      }
-    },
-    "/api/works/{id}/objective": {
-      "get": {
-        "summary": "Inspect one Work objective, its bounded iterations, observations, decisions, and planner attempts",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Durable objective-loop audit"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Work objective not found"
-          }
-        }
-      },
-      "post": {
-        "summary": "Continue, interrupt, or redirect the same persistent Work objective",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -5042,32 +1230,16 @@
         },
         "responses": {
           "200": {
-            "description": "Objective interrupted"
-          },
-          "202": {
-            "description": "Continuation or redirect durably queued"
-          },
-          "400": {
-            "description": "Invalid control command"
-          },
-          "404": {
-            "description": "Work objective not found"
+            "description": "Control recorded"
           }
         }
       }
     },
-    "/api/works/{id}/handoff": {
+    "/api/work/{id}/handoff": {
       "post": {
-        "summary": "Transfer responsibility for the same durable Work to an active employee in the same tenant",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -5097,38 +1269,16 @@
         },
         "responses": {
           "200": {
-            "description": "Idempotent handoff to the existing owner"
-          },
-          "202": {
-            "description": "Work owner and authority context updated; employee_handoff event appended"
-          },
-          "400": {
-            "description": "Inactive, missing, or foreign-tenant target employee"
-          },
-          "403": {
-            "description": "Only the current owner may hand off this Work"
-          },
-          "404": {
-            "description": "Work not found"
-          },
-          "409": {
-            "description": "Concurrent ownership change"
+            "description": "Handoff recorded"
           }
         }
       }
     },
-    "/api/works/{id}/retry": {
+    "/api/outcome-packs": {
       "post": {
-        "summary": "Retry failed Work through the ordinary planner with an idempotent recovery claim",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -5137,14 +1287,295 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "packId": {
+                    "type": "string",
+                    "enum": [
+                      "deal_to_verified_closing_readiness",
+                      "deal_request_resolution",
+                      "critical_deal_dependency_resolution",
+                      "general_operator_objective"
+                    ]
+                  },
+                  "input": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "voice",
+                      "text",
+                      "console"
+                    ],
+                    "default": "console"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "instructionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "idempotencyKey": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "activeContext": {
+                    "type": "object",
+                    "properties": {
+                      "version": {
+                        "type": "number",
+                        "const": 1
+                      },
+                      "capturedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "voice",
+                          "text",
+                          "console"
+                        ]
+                      },
+                      "activeWork": {
+                        "type": "object",
+                        "properties": {
+                          "workId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "workId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "focusedEntity": {
+                        "type": "object",
+                        "properties": {
+                          "entityType": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{1,63}$"
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "entityType",
+                          "entityId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "selectedEntities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "entityType": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
+                            },
+                            "entityId": {
+                              "type": "string",
+                              "format": "uuid"
+                            }
+                          },
+                          "required": [
+                            "entityType",
+                            "entityId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 50,
+                        "default": []
+                      },
+                      "excludedEntities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "entityType": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_]{1,63}$"
+                            },
+                            "entityId": {
+                              "type": "string",
+                              "format": "uuid"
+                            }
+                          },
+                          "required": [
+                            "entityType",
+                            "entityId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 50,
+                        "default": []
+                      },
+                      "surface": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "enum": [
+                              "home",
+                              "work",
+                              "agents",
+                              "deals"
+                            ]
+                          },
+                          "route": {
+                            "type": "string",
+                            "pattern": "^\\/jarvis",
+                            "maxLength": 300
+                          },
+                          "spatialState": {
+                            "type": "string",
+                            "enum": [
+                              "canvas",
+                              "detail",
+                              "list",
+                              "map",
+                              "timeline"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "field": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-zA-Z0-9_.-]{0,63}$"
+                            },
+                            "operator": {
+                              "type": "string",
+                              "enum": [
+                                "eq",
+                                "neq",
+                                "in",
+                                "not_in",
+                                "gte",
+                                "lte",
+                                "contains"
+                              ]
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "maxLength": 200
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "maxLength": 200
+                                  },
+                                  "maxItems": 50
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "field",
+                            "operator",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 20,
+                        "default": []
+                      },
+                      "timeContext": {
+                        "type": "object",
+                        "properties": {
+                          "start": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "end": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "timezone": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 100
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "capturedAt",
+                      "source",
+                      "surface"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "budgets": {
+                    "type": "object",
+                    "properties": {
+                      "maxSteps": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                      },
+                      "maxActions": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 25
+                      },
+                      "maxQueries": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                      },
+                      "maxPlannerFailures": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10
+                      },
+                      "maxConsecutiveNoProgress": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10
+                      },
+                      "deadlineAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "additionalProperties": false
                   }
                 },
                 "required": [
-                  "idempotencyKey"
+                  "packId",
+                  "input"
                 ],
                 "additionalProperties": false,
                 "$schema": "http://json-schema.org/draft-07/schema#"
@@ -5154,50 +1585,1107 @@
         },
         "responses": {
           "201": {
-            "description": "Recovery planner result"
-          },
-          "202": {
-            "description": "Duplicate retry still planning"
-          },
-          "409": {
-            "description": "Work is not retryable"
+            "description": "Outcome pack started"
           }
         }
       }
     },
-    "/api/stream": {
-      "get": {
-        "summary": "Stream one instruction lifecycle as Server-Sent Events",
-        "parameters": [
+    "/api/queries": {
+      "post": {
+        "security": [
           {
-            "name": "instructionId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "bearerAuth": []
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "work_list"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "section": {
+                        "type": "string",
+                        "enum": [
+                          "all",
+                          "works",
+                          "tasks"
+                        ]
+                      },
+                      "openOnly": {
+                        "type": "boolean"
+                      },
+                      "statuses": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        },
+                        "maxItems": 20
+                      },
+                      "recordId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "agent_activity"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "range": {
+                        "type": "object",
+                        "properties": {
+                          "start": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "end": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "start",
+                          "end"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "localDateRange": {
+                        "type": "object",
+                        "properties": {
+                          "startDate": {
+                            "type": "string",
+                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
+                          },
+                          "endDate": {
+                            "type": "string",
+                            "pattern": "^(?:today|tomorrow|\\d{4}-\\d{2}-\\d{2})$"
+                          }
+                        },
+                        "required": [
+                          "startDate"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "company_context"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "anchor": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "entityType": {
+                                "type": "string",
+                                "enum": [
+                                  "work",
+                                  "task",
+                                  "user",
+                                  "org_unit",
+                                  "tenant_location",
+                                  "external_organization",
+                                  "external_contact",
+                                  "document",
+                                  "domain_action",
+                                  "workflow_run",
+                                  "workflow_step",
+                                  "pe_fund",
+                                  "pe_portfolio_company",
+                                  "pe_deal",
+                                  "pe_deal_party",
+                                  "pe_workstream",
+                                  "pe_request",
+                                  "pe_deliverable",
+                                  "pe_finding",
+                                  "pe_deal_risk",
+                                  "pe_closing_condition",
+                                  "pe_closing_item",
+                                  "pe_deal_dependency"
+                                ]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "entityType",
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "partyType": {
+                                "type": "string",
+                                "enum": [
+                                  "employee",
+                                  "team",
+                                  "location",
+                                  "external_organization",
+                                  "external_contact"
+                                ]
+                              },
+                              "partyId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "partyType",
+                              "partyId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "party_lookup"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "ref": {
+                        "type": "object",
+                        "properties": {
+                          "partyType": {
+                            "type": "string",
+                            "enum": [
+                              "employee",
+                              "team",
+                              "location",
+                              "external_organization",
+                              "external_contact"
+                            ]
+                          },
+                          "partyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "partyType",
+                          "partyId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "party_context"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "ref": {
+                        "type": "object",
+                        "properties": {
+                          "partyType": {
+                            "type": "string",
+                            "enum": [
+                              "employee",
+                              "team",
+                              "location",
+                              "external_organization",
+                              "external_contact"
+                            ]
+                          },
+                          "partyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "partyType",
+                          "partyId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "team_roster"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "teamRef": {
+                        "type": "object",
+                        "properties": {
+                          "partyType": {
+                            "type": "string",
+                            "enum": [
+                              "employee",
+                              "team",
+                              "location",
+                              "external_organization",
+                              "external_contact"
+                            ]
+                          },
+                          "partyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "partyType",
+                          "partyId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "deal_context"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "deal_workstreams"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "states": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        },
+                        "maxItems": 20
+                      },
+                      "owner": {
+                        "type": "object",
+                        "properties": {
+                          "partyType": {
+                            "type": "string",
+                            "enum": [
+                              "employee",
+                              "team",
+                              "location",
+                              "external_organization",
+                              "external_contact"
+                            ]
+                          },
+                          "partyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "partyType",
+                          "partyId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "open_requests"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "workstreamId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "requestedFrom": {
+                        "type": "object",
+                        "properties": {
+                          "partyType": {
+                            "type": "string",
+                            "enum": [
+                              "employee",
+                              "team",
+                              "location",
+                              "external_organization",
+                              "external_contact"
+                            ]
+                          },
+                          "partyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "partyType",
+                          "partyId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "dueState": {
+                        "type": "string",
+                        "enum": [
+                          "any",
+                          "overdue",
+                          "not_overdue"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "open_findings"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "workstreamId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "severities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "critical"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "open_deal_risks"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "workstreamId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "severities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "critical"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "critical_dependencies"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "includeResolved": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "closing_readiness"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "dealId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "cursor": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "dealId"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "EventSource stream; each data frame is one instruction trace event"
+          "201": {
+            "description": "Canonical query completed"
           },
           "400": {
-            "description": "instructionId is missing"
-          },
-          "401": {
-            "description": "Bad auth"
-          },
-          "404": {
-            "description": "Instruction not found"
+            "description": "Invalid or retired query"
+          }
+        }
+      }
+    },
+    "/api/actions/{id}/confirm": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "typedConfirmation": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approval recorded"
+          }
+        }
+      }
+    },
+    "/api/actions/{id}/reject": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rejection recorded"
+          }
+        }
+      }
+    },
+    "/api/actions/{id}/escalate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Escalation recorded"
+          }
+        }
+      }
+    },
+    "/api/policies/{tenantId}/{actionType}": {
+      "put": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "policy": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "requiresConfirmation": {
+                    "type": "boolean"
+                  },
+                  "confirmationTemplate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "modelProvider": {
+                    "type": "string"
+                  },
+                  "confirmationTimeoutHours": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "effectiveFrom": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "policy",
+                  "requiresConfirmation"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active policy saved"
           }
         }
       }
     },
     "/api/webhooks/vapi": {
       "post": {
-        "summary": "Vapi inbound call events (transcripts → Planner instructions)",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5269,42 +2757,43 @@
         },
         "responses": {
           "200": {
-            "description": "Received"
+            "description": "Employee voice event received"
           }
         }
       }
     },
     "/api/webhooks/ghl": {
       "post": {
-        "summary": "GoHighLevel CRM sync events",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string"
-                  },
-                  "locationId": {
-                    "type": "string"
-                  },
-                  "contactId": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type"
-                ],
-                "additionalProperties": true,
-                "$schema": "http://json-schema.org/draft-07/schema#"
-              }
-            }
-          }
-        },
         "responses": {
-          "200": {
-            "description": "Received"
+          "410": {
+            "description": "Authenticated historical payload quarantined; never executed"
+          }
+        }
+      }
+    },
+    "/api/webhooks/marketing": {
+      "post": {
+        "responses": {
+          "410": {
+            "description": "Authenticated historical payload quarantined; never executed"
+          }
+        }
+      }
+    },
+    "/api/webhooks/payment": {
+      "post": {
+        "responses": {
+          "410": {
+            "description": "Authenticated historical payload quarantined; never executed"
+          }
+        }
+      }
+    },
+    "/api/webhooks/esign": {
+      "post": {
+        "responses": {
+          "410": {
+            "description": "Authenticated historical payload quarantined; never executed"
           }
         }
       }

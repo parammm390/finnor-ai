@@ -37,24 +37,8 @@ jobs:
           # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on
           # the hosted runner before any of this workflow's actual checks run.
           node-version: 22
-      # `npm ci` rejects this historical lockfile on GitHub's Linux runner because
-      # several hoisted transitive entries are absent, although a fresh Node 22
-      # install resolves the declared graph without changing package-lock.json.
-      # Keep the release checks runnable while that broader lockfile normalization
-      # is handled separately. Emit an annotation tail on failure: the public Checks
-      # API exposes annotations but not raw Actions logs to a signed-out diagnosis
-      # session.
       - name: Install dependencies
-        run: |
-          set +e
-          npm install --prefer-online --no-audit > npm-ci.log 2>&1
-          install_status=$?
-          if [ "$install_status" -ne 0 ]; then
-            tail -n 25 npm-ci.log | while IFS= read -r line; do
-              echo "::error file=.github/workflows/marketing-ci.yml::$line"
-            done
-          fi
-          exit "$install_status"
+        run: npm ci --no-audit --no-fund
       # Phase 7 §7.8: no-restricted-properties(Math.random) under src/components/
       # jarvis and src/app/jarvis, defined in .eslintrc.cjs — this is what actually
       # enforces it; running lint in CI is what makes that enforcement real instead

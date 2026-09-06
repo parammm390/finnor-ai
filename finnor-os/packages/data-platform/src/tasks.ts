@@ -7,7 +7,7 @@ export interface CreateTaskParams {
   subjectId: string;
   title: string;
   dueAt?: Date;
-  assigneeType?: "user" | "technician";
+  assigneeType?: "user";
   assigneeId?: string;
   priority?: "low" | "normal" | "high";
 }

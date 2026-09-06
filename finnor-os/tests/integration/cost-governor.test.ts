@@ -39,7 +39,7 @@ describe.skipIf(!available)("B5 cost governor", () => {
   afterAll(async () => { await closePool(); });
 
   it("persists provider-reported tokens and configured cost", async () => {
-    const [action] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "get_business_overview", payload: {}, status: "draft" }).returning());
+    const [action] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "record_finding", payload: {}, status: "draft" }).returning());
     const provider = resolveProvider("test-cost");
     await provider.complete({ system: "stable policy", user: "hello", tenantId: TENANT_ID, actionId: action!.id, traceId: "b5-ledger", purpose: "planning" });
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(llmCalls).where(eq(llmCalls.traceId, "b5-ledger")));
@@ -52,7 +52,7 @@ describe.skipIf(!available)("B5 cost governor", () => {
   });
 
   it("defers a non-urgent call at a forced hard cap without calling the provider", async () => {
-    const [action] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "get_business_overview", payload: {}, status: "draft" }).returning());
+    const [action] = await withTenant(TENANT_ID, (db) => db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "record_finding", payload: {}, status: "draft" }).returning());
     await withTenant(TENANT_ID, (db) => db.insert(tenantLlmBudgets).values({ tenantId: TENANT_ID, dailyTokenBudget: 0, softLimitPercent: 80 }).onConflictDoUpdate({ target: tenantLlmBudgets.tenantId, set: { dailyTokenBudget: 0 } }));
     await expect(resolveProvider("test-cost").complete({ system: "x", user: "y", tenantId: TENANT_ID, actionId: action!.id, traceId: "b5-hard-cap", purpose: "critic" })).rejects.toBeInstanceOf(LLMBudgetDeferredError);
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(llmCalls).where(eq(llmCalls.traceId, "b5-hard-cap")));

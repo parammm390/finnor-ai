@@ -8,7 +8,24 @@ import pg from "pg";
 import * as schema from "./schema";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
-import { CANONICAL_ENTITY_TYPES, type AttachWorkEntityInput, type CanonicalEntityRef, type CanonicalTruthRegistration, type DecisionContextSnapshot, type EmployeeConversationChannel, type EmployeeConversationMessage, type EmployeeConversationThreadSummary, type EmployeePersonalMemory, type TenantVerticalIdentity } from "@finnor/shared-types";
+import { CURRENT_MIGRATION_HEAD } from "./migration-head";
+import {
+  CANONICAL_ENTITY_TYPES,
+  assertExecutableVertical,
+  isRetiredWaterAction,
+  isRetiredWaterJob,
+  RetiredVerticalError,
+  type AttachWorkEntityInput,
+  type CanonicalEntityRef,
+  type CanonicalTruthRegistration,
+  type CanonicalOperationalQueryIntent,
+  type DecisionContextSnapshot,
+  type EmployeeConversationChannel,
+  type EmployeeConversationMessage,
+  type EmployeeConversationThreadSummary,
+  type EmployeePersonalMemory,
+  type TenantVerticalIdentity,
+} from "@finnor/shared-types";
 
 export * from "./schema";
 export * from "./migration-head";
@@ -209,8 +226,98 @@ export async function closePool(): Promise<void> {
   }
 }
 
-/** Resolve the authenticated tenant's one active business vertical. */
-export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
+export const PHASE5_CUTOVER_PROTOCOL = 5 as const;
+
+export interface ProductRuntimeAuthority {
+  epoch: number;
+  state: "preparing" | "water_intake_frozen" | "water_retired";
+  activeProductVertical: "private_equity";
+  minimumCutoverProtocol: number;
+  waterIntakeFrozenAt: string | null;
+  waterRetiredAt: string | null;
+}
+
+/** Read the one durable product authority. Every executable runtime role calls this
+ * boundary; missing migration/state fails closed instead of falling back to Water. */
+export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAuthority> {
+  const result = await getPool().query<{
+    epoch: number;
+    state: ProductRuntimeAuthority["state"];
+    active_product_vertical: "private_equity";
+    minimum_cutover_protocol: number;
+    water_intake_frozen_at: Date | null;
+    water_retired_at: Date | null;
+  }>(
+    `SELECT epoch,state,active_product_vertical,minimum_cutover_protocol,
+            water_intake_frozen_at,water_retired_at
+       FROM finnor_os.product_runtime_authority
+      WHERE authority_key='product'`,
+  );
+  const row = result.rows[0];
+  if (!row || row.epoch < PHASE5_CUTOVER_PROTOCOL || row.active_product_vertical !== "private_equity") {
+    throw new Error("Product runtime authority is unavailable");
+  }
+  return {
+    epoch: Number(row.epoch),
+    state: row.state,
+    activeProductVertical: row.active_product_vertical,
+    minimumCutoverProtocol: Number(row.minimum_cutover_protocol),
+    waterIntakeFrozenAt: row.water_intake_frozen_at?.toISOString() ?? null,
+    waterRetiredAt: row.water_retired_at?.toISOString() ?? null,
+  };
+}
+
+export interface CutoverHeartbeatInput {
+  service: "api" | "worker" | "orchestrator" | "supplier-canary" | "scheduler-owner";
+  instanceId: string;
+  releaseSha: string;
+  buildId: string;
+  version: string;
+  releaseSource: string;
+  coreCertificationId?: string | null;
+  migrationHead?: string;
+  deploymentId?: string | null;
+  capabilities?: string[];
+  environment: string;
+}
+
+/** Upsert a role's compatible-release proof against the current persisted epoch.
+ * The activation function independently validates freshness, protocol, migration,
+ * and a single shared release across every required role. */
+export async function recordCutoverCompatibleHeartbeat(input: CutoverHeartbeatInput): Promise<void> {
+  const authority = await readProductRuntimeAuthority();
+  await getPool().query(
+    `INSERT INTO finnor_os.service_release_heartbeats
+       (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,
+        migration_head,deployment_id,capabilities,environment,cutover_protocol,product_epoch,last_beat_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now())
+     ON CONFLICT (service,instance_id) DO UPDATE SET
+       release_sha=EXCLUDED.release_sha,build_id=EXCLUDED.build_id,version=EXCLUDED.version,
+       release_source=EXCLUDED.release_source,core_certification_id=EXCLUDED.core_certification_id,
+       migration_head=EXCLUDED.migration_head,deployment_id=EXCLUDED.deployment_id,
+       capabilities=EXCLUDED.capabilities,environment=EXCLUDED.environment,
+       cutover_protocol=EXCLUDED.cutover_protocol,product_epoch=EXCLUDED.product_epoch,last_beat_at=now()`,
+    [
+      input.service,
+      input.instanceId,
+      input.releaseSha,
+      input.buildId,
+      input.version,
+      input.releaseSource,
+      input.coreCertificationId ?? null,
+      input.migrationHead ?? CURRENT_MIGRATION_HEAD,
+      input.deploymentId ?? null,
+      input.capabilities ?? [],
+      input.environment,
+      PHASE5_CUTOVER_PROTOCOL,
+      authority.epoch,
+    ],
+  );
+}
+
+/** Read a tenant's persisted product identity for audit/history without granting it
+ * runtime authority. Most callers must use resolveTenantVertical instead. */
+export async function resolveHistoricalTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
   return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
     // Preserve the canonical tenant lookup contract for callers that use the
     // vertical-aware dispatcher.  A missing tenant is different from a real
@@ -248,6 +355,18 @@ export async function resolveTenantVertical(tenantId: string): Promise<TenantVer
   });
 }
 
+/** Resolve the authenticated tenant's executable business vertical. Historical
+ * Water assignments remain truthful in storage but are never executable. */
+export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
+  await readProductRuntimeAuthority();
+  const identity = await resolveHistoricalTenantVertical(tenantId);
+  assertExecutableVertical(identity.verticalKey);
+  if (identity.verticalKey === "none" && process.env.NODE_ENV !== "test" && !identity.sourceSystem.startsWith("certification:")) {
+    throw new Error("The Core-only vertical is restricted to internal certification");
+  }
+  return identity;
+}
+
 /**
  * Explicit vertical reassignment boundary.  The database refuses a switch while
  * canonical rows owned by the current vertical exist, so changing a label can
@@ -261,6 +380,7 @@ export async function configureTenantVertical(params: {
   sourceSystem?: string;
   sourceRef?: string;
 }): Promise<TenantVerticalIdentity> {
+  assertExecutableVertical(params.verticalKey);
   return withTenantTransaction(params.tenantId, { isolation: "serializable" }, async (_db, client) => {
     const result = await client.query<{
       tenant_id: string;
@@ -299,7 +419,7 @@ export async function listCanonicalTruthRegistrations(tenantId: string): Promise
     }>(
       `SELECT entity_type,vertical_key,source_schema,source_table,writable_owner,mutation_boundary,work_attachable
          FROM finnor_os.canonical_truth_registry
-        WHERE vertical_key IS NULL OR vertical_key=finnor_os.active_tenant_vertical($1)
+        WHERE active AND (vertical_key IS NULL OR vertical_key=finnor_os.active_tenant_vertical($1))
         ORDER BY entity_type`,
       [tenantId],
     );
@@ -327,6 +447,10 @@ export async function enqueueJob(
   lane: "interactive" | "batch" = "batch",
   priority = 0,
 ): Promise<void> {
+  if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
+    throw new RetiredVerticalError("water");
+  }
+  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
     `INSERT INTO jobs (type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5)
@@ -347,6 +471,10 @@ export async function enqueueJobAt(
   priority = 0,
 ): Promise<void> {
   if (Number.isNaN(runAt.getTime())) throw new Error("Scheduled job runAt is invalid");
+  if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
+    throw new RetiredVerticalError("water");
+  }
+  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
     `INSERT INTO jobs (type, payload, run_at, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6)
@@ -356,211 +484,8 @@ export async function enqueueJobAt(
   );
 }
 
-// ---------------------------------------------------------------------------
-// Upgrade 6: additive durable business-operation primitives. Approval code uses the
-// in-transaction authorizer below so an approved cohort and its first worker job can
-// never be separated by a process crash.
-// ---------------------------------------------------------------------------
-
-export interface FrozenBusinessOperationTarget {
-  targetId: string;
-  frozenSnapshot: Record<string, unknown>;
-  preparedPayload: Record<string, unknown>;
-}
-
-export interface CreateBusinessOperationParams {
-  tenantId: string;
-  workId?: string | null;
-  domainActionId: string;
-  operationType: "customer_winback";
-  configuration: Record<string, unknown>;
-  cohortDefinition: Record<string, unknown>;
-  targets: FrozenBusinessOperationTarget[];
-  summary: string;
-  policyApplied: { id: string; version: number } | null;
-  correlationId?: string | null;
-}
-
-async function appendBusinessOperationEventTx(
-  db: Db,
-  params: { tenantId: string; operationId: string; targetId?: string | null; eventType: string; payload?: Record<string, unknown> },
-): Promise<void> {
-  await db.execute(sql`SELECT id FROM ${schema.businessOperations} WHERE ${schema.businessOperations.id} = ${params.operationId} FOR UPDATE`);
-  const [latest] = await db
-    .select({ maxSequence: sql<number>`coalesce(max(${schema.businessOperationEvents.sequence}), 0)::int` })
-    .from(schema.businessOperationEvents)
-    .where(eq(schema.businessOperationEvents.operationId, params.operationId));
-  await db.insert(schema.businessOperationEvents).values({
-    tenantId: params.tenantId,
-    operationId: params.operationId,
-    targetId: params.targetId ?? null,
-    sequence: (latest?.maxSequence ?? 0) + 1,
-    eventType: params.eventType,
-    payload: params.payload ?? {},
-  });
-}
-
-/** Freeze the exact proposal cohort once. Re-drafting an already-pending action is
- * idempotent and can never replace its approved targets with a freshly queried set. */
-export async function createBusinessOperation(params: CreateBusinessOperationParams): Promise<{ id: string; created: boolean; status: string }> {
-  return withTenant(params.tenantId, async (db) => {
-    const [action] = await db.select({
-      id: schema.domainActions.id,
-      workId: schema.domainActions.workId,
-      authorityDecisionId: schema.domainActions.authorityDecisionId,
-      authorityRevision: schema.domainActions.authorityRevision,
-    })
-      .from(schema.domainActions)
-      .where(and(eq(schema.domainActions.id, params.domainActionId), eq(schema.domainActions.tenantId, params.tenantId)))
-      .limit(1);
-    if (!action) throw new Error("Cannot prepare a durable operation for an unknown action");
-    if ((params.workId ?? null) !== (action.workId ?? null)) throw new Error("Durable operation Work does not match its action");
-
-    const [existing] = await db.select().from(schema.businessOperations)
-      .where(and(eq(schema.businessOperations.tenantId, params.tenantId), eq(schema.businessOperations.domainActionId, params.domainActionId)))
-      .limit(1);
-    if (existing) {
-      const rows = await db.select({ targetId: schema.businessOperationTargets.targetId })
-        .from(schema.businessOperationTargets)
-        .where(eq(schema.businessOperationTargets.operationId, existing.id))
-        .orderBy(asc(schema.businessOperationTargets.ordinal));
-      const frozen = rows.map((row) => row.targetId);
-      const proposed = params.targets.map((target) => target.targetId);
-      if (canonicalJson(frozen) !== canonicalJson(proposed)) {
-        throw new Error("Durable operation cohort is already frozen and cannot be replaced");
-      }
-      return { id: existing.id, created: false, status: existing.status };
-    }
-
-    const [operation] = await db.insert(schema.businessOperations).values({
-      tenantId: params.tenantId,
-      workId: params.workId ?? null,
-      domainActionId: params.domainActionId,
-      operationType: params.operationType,
-      status: "awaiting_approval",
-      configuration: params.configuration,
-      cohortDefinition: params.cohortDefinition,
-      targetCount: params.targets.length,
-      pendingCount: params.targets.length,
-      authorityDecisionId: action.authorityDecisionId,
-      authorityRevision: action.authorityRevision,
-    }).returning();
-    if (!operation) throw new Error("Failed to create durable business operation");
-
-    if (params.targets.length > 0) {
-      await db.insert(schema.businessOperationTargets).values(params.targets.map((target, ordinal) => ({
-        tenantId: params.tenantId,
-        operationId: operation.id,
-        targetId: target.targetId,
-        ordinal,
-        frozenSnapshot: target.frozenSnapshot,
-        preparedPayload: target.preparedPayload,
-        idempotencyKey: `${operation.id}:target:${target.targetId}`,
-      })));
-    }
-    await appendBusinessOperationEventTx(db, {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      eventType: "cohort_frozen",
-      payload: {
-        targetCount: params.targets.length,
-        domainActionId: params.domainActionId,
-        authorityDecisionId: action.authorityDecisionId,
-        authorityRevision: action.authorityRevision,
-      },
-    });
-    await db.insert(schema.decisionReceipts).values({
-      tenantId: params.tenantId,
-      workId: params.workId ?? null,
-      domainActionId: params.domainActionId,
-      operationId: operation.id,
-      objective: params.summary,
-      evidence: params.targets.map((target) => ({ source: "households", ref: target.targetId, timestamp: operation.cohortFrozenAt.toISOString() })),
-      policyApplied: params.policyApplied,
-      riskTier: "high",
-      proposedAction: {
-        operationId: operation.id,
-        operationType: params.operationType,
-        configuration: params.configuration,
-        cohortDefinition: params.cohortDefinition,
-        frozenTargetIds: params.targets.map((target) => target.targetId),
-        authorityDecisionId: action.authorityDecisionId,
-        authorityRevision: action.authorityRevision,
-      },
-      approval: { required: true },
-      expectedResult: { targetCount: params.targets.length, perTargetState: true, durableWorkerExecution: true },
-      correlationId: params.correlationId ?? null,
-    });
-    return { id: operation.id, created: true, status: operation.status };
-  });
-}
-
-export interface AuthorizedBusinessOperation {
-  id: string;
-  status: string;
-  authorized: boolean;
-}
-
-/** Must be called inside the same transaction that writes the immutable approval
- * episode. It moves the operation to queued and inserts the first dispatcher job as
- * one atomic commit. */
-export async function authorizeBusinessOperationTx(
-  db: Db,
-  params: {
-    tenantId: string;
-    domainActionId: string;
-    approvedBy: string;
-    authorityDecisionId?: string | null;
-    authorityRevision?: number | null;
-    correlationId?: string | null;
-  },
-): Promise<AuthorizedBusinessOperation | null> {
-  const [operation] = await db.select().from(schema.businessOperations)
-    .where(and(eq(schema.businessOperations.tenantId, params.tenantId), eq(schema.businessOperations.domainActionId, params.domainActionId)))
-    .limit(1);
-  if (!operation) return null;
-  if (operation.status !== "awaiting_approval") return { id: operation.id, status: operation.status, authorized: false };
-  const now = new Date();
-  const [queued] = await db.update(schema.businessOperations).set({
-    status: "queued",
-    approvedBy: params.approvedBy,
-    authorityDecisionId: params.authorityDecisionId ?? operation.authorityDecisionId,
-    authorityRevision: params.authorityRevision ?? operation.authorityRevision,
-    approvedAt: now,
-    updatedAt: now,
-  }).where(and(eq(schema.businessOperations.id, operation.id), eq(schema.businessOperations.status, "awaiting_approval"))).returning();
-  if (!queued) {
-    const [raced] = await db.select().from(schema.businessOperations).where(eq(schema.businessOperations.id, operation.id)).limit(1);
-    return raced ? { id: raced.id, status: raced.status, authorized: false } : null;
-  }
-  await db.update(schema.decisionReceipts).set({ approval: { required: true, approvedBy: params.approvedBy, at: now.toISOString() } })
-    .where(and(eq(schema.decisionReceipts.tenantId, params.tenantId), eq(schema.decisionReceipts.operationId, operation.id)));
-  await appendBusinessOperationEventTx(db, {
-    tenantId: params.tenantId,
-    operationId: operation.id,
-    eventType: "execution_authorized",
-    payload: {
-      approvedBy: params.approvedBy,
-      domainActionId: params.domainActionId,
-      authorityDecisionId: params.authorityDecisionId ?? operation.authorityDecisionId,
-      authorityRevision: params.authorityRevision ?? operation.authorityRevision,
-    },
-  });
-  await db.insert(schema.jobs).values({
-    type: "dispatch_business_operation",
-    payload: {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      actionId: params.domainActionId,
-      ...(params.correlationId ? { _correlationId: params.correlationId } : {}),
-    },
-    idempotencyKey: `business-operation:${operation.id}:dispatch:authorized`,
-    lane: "batch",
-    priority: 10,
-  }).onConflictDoNothing({ target: schema.jobs.idempotencyKey });
-  return { id: queued.id, status: queued.status, authorized: true };
-}
-
+/** Read-only access to truthful historical Water operation evidence. Runtime
+ * creation, approval, dispatch, recovery, and cancellation were retired in P5. */
 export async function businessOperationAggregate(tenantId: string, operationId: string): Promise<Record<string, unknown> | null> {
   return withTenant(tenantId, async (db) => {
     const [operation] = await db.select().from(schema.businessOperations)
@@ -578,86 +503,6 @@ export async function businessOperationAggregate(tenantId: string, operationId: 
   });
 }
 
-export async function retryBusinessOperation(params: {
-  tenantId: string;
-  operationId: string;
-  requestedBy: string;
-  recoveryKey: string;
-}): Promise<{ retried: number; duplicate: boolean; workId: string | null; actionType: string }> {
-  if (!params.recoveryKey.trim() || params.recoveryKey.length > 200) throw new Error("recoveryKey must be non-empty and at most 200 characters");
-  return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.businessOperations} WHERE ${schema.businessOperations.tenantId}=${params.tenantId} AND ${schema.businessOperations.id}=${params.operationId} FOR UPDATE`);
-    const [operation] = await db.select().from(schema.businessOperations).where(and(
-      eq(schema.businessOperations.tenantId, params.tenantId),
-      eq(schema.businessOperations.id, params.operationId),
-    )).limit(1);
-    if (!operation) throw new Error("Business operation not found");
-    if (operation.workId) {
-      await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.tenantId}=${params.tenantId} AND ${schema.works.id}=${operation.workId} FOR UPDATE`);
-      const [work] = await db.select({ status: schema.works.status }).from(schema.works).where(and(
-        eq(schema.works.tenantId, params.tenantId),
-        eq(schema.works.id, operation.workId),
-      )).limit(1);
-      if (!work) throw new Error("Business operation Work not found");
-      if (work.status === "cancelled" || work.status === "completed") {
-        throw new Error(`Business operation belongs to terminal ${work.status} Work; it is not recoverable`);
-      }
-    }
-    const [action] = await db.select({ actionType: schema.domainActions.actionType }).from(schema.domainActions).where(and(
-      eq(schema.domainActions.tenantId, params.tenantId),
-      eq(schema.domainActions.id, operation.domainActionId),
-    )).limit(1);
-    if (!action) throw new Error("Business operation action not found");
-    const jobKey = `business-operation:${operation.id}:manual-retry:${params.recoveryKey}`;
-    const [existingJob] = await db.select({ id: schema.jobs.id }).from(schema.jobs).where(eq(schema.jobs.idempotencyKey, jobKey)).limit(1);
-    if (existingJob) return { retried: 0, duplicate: true, workId: operation.workId, actionType: action.actionType };
-    if (!["needs_human_review", "completed_with_failures", "failed"].includes(operation.status)) {
-      throw new Error(`Business operation is ${operation.status}; it is not recoverable`);
-    }
-    const targets = await db.update(schema.businessOperationTargets).set({
-      status: "retry",
-      // Attempts are a permanent delivery generation. Keeping them monotonic means
-      // the dispatcher cannot collide with a completed target job from an earlier
-      // human-authorized recovery. Grant a fresh three-attempt budget above history.
-      maxAttempts: sql`${schema.businessOperationTargets.attempts} + 3`,
-      jobKey: null,
-      nextAttemptAt: new Date(),
-      leaseExpiresAt: null,
-      failureClass: "retryable",
-      errorKind: "retryable",
-      lastError: "A human authorized recovery after reviewing the prior failure.",
-      completedAt: null,
-      updatedAt: new Date(),
-    }).where(and(
-      eq(schema.businessOperationTargets.operationId, operation.id),
-      eq(schema.businessOperationTargets.status, "failed"),
-      inArray(schema.businessOperationTargets.failureClass, ["retryable", "configuration", "human_review"]),
-    )).returning({ id: schema.businessOperationTargets.id });
-    if (targets.length === 0) throw new Error("Business operation has no retryable or reviewable failed targets");
-    await db.update(schema.businessOperations).set({ status: "queued", completedAt: null, failure: null, updatedAt: new Date() })
-      .where(eq(schema.businessOperations.id, operation.id));
-    await db.update(schema.domainActions).set({ status: "executing", executionStartedAt: new Date() })
-      .where(eq(schema.domainActions.id, operation.domainActionId));
-    await db.update(schema.decisionReceipts).set({ failure: null, finalizedAt: null })
-      .where(and(eq(schema.decisionReceipts.tenantId, params.tenantId), eq(schema.decisionReceipts.operationId, operation.id)));
-    await appendBusinessOperationEventTx(db, {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      eventType: "recovery_authorized",
-      payload: { requestedBy: params.requestedBy, recoveryKey: params.recoveryKey, targetCount: targets.length },
-    });
-    await db.insert(schema.jobs).values({
-      type: "dispatch_business_operation",
-      payload: { tenantId: params.tenantId, operationId: operation.id, actionId: operation.domainActionId },
-      idempotencyKey: jobKey,
-      lane: "batch",
-      priority: 10,
-    });
-    return { retried: targets.length, duplicate: false, workId: operation.workId, actionType: action.actionType };
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Upgrade 2: durable Work kernel. These primitives live beside withTenant so the
 // API, orchestrator, voice intake, and workflow runtime can share one transactional
 // lifecycle implementation without creating package dependency cycles.
@@ -754,9 +599,6 @@ const canonicalEntityTypes = new Set<string>(CANONICAL_ENTITY_TYPES);
 export function canonicalRefsFromContext(value: unknown): CanonicalEntityRef[] {
   const context = jsonObject(value);
   const refs: CanonicalEntityRef[] = [];
-  if (typeof context.householdId === "string" && isUuid(context.householdId)) {
-    refs.push({ entityType: "household", entityId: context.householdId });
-  }
   const candidates = [
     ...(Array.isArray(context.entityRefs) ? context.entityRefs : []),
     ...(context.focusedEntity ? [context.focusedEntity] : []),
@@ -807,6 +649,9 @@ export async function attachWorkEntity(
  * any caller may invoke the planner. Both client instruction ids and explicit
  * idempotency keys are unique claims, so a network retry cannot create a second Work. */
 export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWork> {
+  // This is the canonical intake boundary shared by text, voice, objectives, and
+  // system-created Work. Refuse a retired persisted identity before any row exists.
+  await resolveTenantVertical(params.tenantId);
   const desiredWorkId = params.workId ?? params.instructionId ?? randomUUID();
   const desiredInstructionId = params.instructionId ?? randomUUID();
   const contextSnapshot = boundedProvenance(params.activeContext);
@@ -1314,30 +1159,23 @@ async function decisionContextSnapshot(
     return "referenced";
   };
   const userIds = refs.filter((ref) => ref.entityType === "user").map((ref) => ref.entityId);
-  const householdIds = refs.filter((ref) => ref.entityType === "household").map((ref) => ref.entityId);
   // This function runs on one transaction-bound pg client. Query it in order;
   // concurrent client.query calls are deprecated and can interleave state.
   const userRows = userIds.length > 0
     ? await db.select({ id: schema.users.id, displayName: schema.users.displayName, email: schema.users.email, status: schema.users.status }).from(schema.users).where(inArray(schema.users.id, userIds))
     : [];
-  const householdRows = householdIds.length > 0
-    ? await db.select({ id: schema.households.id, address: schema.households.address, contactInfo: schema.households.contactInfo }).from(schema.households).where(inArray(schema.households.id, householdIds))
-    : [];
   const authorityState = await db.select({ revision: schema.authorityStates.revision }).from(schema.authorityStates).where(eq(schema.authorityStates.tenantId, work.tenantId)).limit(1);
   const userById = new Map(userRows.map((row) => [row.id, row]));
-  const householdById = new Map(householdRows.map((row) => [row.id, row]));
   const entities = refs.slice(0, 100).map((ref) => {
     const user = ref.entityType === "user" ? userById.get(ref.entityId) : undefined;
-    const household = ref.entityType === "household" ? householdById.get(ref.entityId) : undefined;
-    const contactInfo = jsonObject(household?.contactInfo);
     return {
       entityType: ref.entityType,
       entityId: ref.entityId,
       relationship: relationshipFor(ref),
-      label: user?.displayName ?? user?.email ?? (typeof contactInfo.name === "string" ? contactInfo.name : household?.address ?? null),
-      status: user?.status ?? (household ? "active" : null),
+      label: user?.displayName ?? user?.email ?? null,
+      status: user?.status ?? null,
       occurredAt: null,
-      sourceTable: user ? "users" : household ? "households" : null,
+      sourceTable: user ? "users" : null,
     };
   });
   const authority = jsonObject(work.authorityContext);
@@ -1358,7 +1196,7 @@ async function decisionContextSnapshot(
     cohort: jsonObject(context?.cohort).executionId && typeof jsonObject(context?.cohort).executionId === "string"
       ? {
           executionId: String(jsonObject(context?.cohort).executionId),
-          intent: String(jsonObject(context?.cohort).queryIntent ?? "customer_cohort"),
+          intent: String(jsonObject(context?.cohort).queryIntent ?? "work_list"),
           status: "succeeded",
           rowCount: Number(jsonObject(context?.cohort).count ?? 0),
           completedAt: null,
@@ -1495,27 +1333,7 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
 // read is never an LLM planner attempt, even when it is attached to a Work.
 // ---------------------------------------------------------------------------
 
-export type WorkQueryIntent =
-  | "customer_lookup"
-  | "customer_cohort"
-  | "schedule_range"
-  | "money_summary"
-  | "work_list"
-  | "inventory_status"
-  | "agent_activity"
-  | "business_state"
-  | "company_context"
-  | "party_lookup"
-  | "party_context"
-  | "team_roster"
-  | "party_availability"
-  | "deal_context"
-  | "deal_workstreams"
-  | "open_requests"
-  | "open_findings"
-  | "open_deal_risks"
-  | "critical_dependencies"
-  | "closing_readiness";
+export type WorkQueryIntent = CanonicalOperationalQueryIntent;
 
 export interface BeginWorkQueryExecutionParams {
   tenantId: string;
