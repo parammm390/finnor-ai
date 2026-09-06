@@ -863,7 +863,11 @@ async function main(): Promise<void> {
   // can block indefinitely while reading a cloud-only `.git/shallow`.  The
   // certification only needs a deterministic changed-path fingerprint here; the
   // release gate performs the authoritative clean-worktree check on CI.
-  const tree = await runCommand("git", ["diff", "--name-only", "--no-ext-diff", "--", "."]);
+  // Compare the index to HEAD rather than refreshing every worktree entry.  This
+  // keeps the evidence deterministic on developer checkouts containing cloud-only
+  // duplicate files; the canonical release gate still performs the full worktree
+  // cleanliness check before publication.
+  const tree = await runCommand("git", ["diff", "--cached", "--name-only", "--no-ext-diff", "HEAD"]);
   const blockedProductionConditions = new Set([3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 79]);
   const productionObservedConditions = new Set([7, 8]);
   const evidenceForCondition = (id: number): string => {
