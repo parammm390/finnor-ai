@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src scripts",
+    "lint": "eslint src scripts",
     "jarvis:types": "openapi-typescript finnor-os/openapi.json -o src/lib/jarvis/openapi-types.ts",
     "jarvis:realtime:verify": "node scripts/verify-jarvis-realtime-release.mjs",
     "test:unit": "vitest run",
