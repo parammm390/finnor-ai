@@ -15,7 +15,7 @@ export function CustomCursor() {
   const [hoveringClickable, setHoveringClickable] = useState(false)
   const [visible, setVisible] = useState(false)
   const [enabled, setEnabled] = useState(false)
-  const raf = useRef<number>()
+  const raf = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     // Pointer-precision devices only — never hijack touch.
