@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-05T22:12:17.129Z",
+  "status": "PASS",
+  "startingState": {
+    "branch": "codex/p3-epistemic-runtime",
+    "sha": "7e876b17b601b57b19d9c695ce714e2284b316b2",
+    "tree": "finnor-os was clean at task start; unrelated outer-repository modifications and untracked duplicate files were pre-existing and excluded from the Phase 4 commit."
+  },
+  "certificationState": {
+    "branch": "codex/p3-epistemic-runtime",
+    "head": "7e876b17b601b57b19d9c695ce714e2284b316b2"
+  },
+  "sourceFingerprint": "c4d079ab24e4b7142e84b7e3c2c7e8573202265e4d28e59c0aeacdb577b04b5f",
+  "database": {
+    "databaseName": "finnor_pe4_cert_phase4_20260906",
+    "isolatedName": true,
+    "migrationHead": "0107_private_equity_execution_semantics.sql",
+    "migrationCount": 108,
+    "migrationNamesHash": "480ce41ec1a156f4ef56cbb944991fe9263d536877018fdb486023867723871f"
+  },
+  "architectureOwners": {
+    "instructionWorkAndLinks": "packages/db/index.ts + packages/db/schema.ts",
+    "objectiveLoopAndBudgets": "packages/orchestration/src/objective-loop.ts",
+    "objectiveSuccess": "packages/orchestration/src/objective-success.ts",
+    "plannerAndCapabilityComposition": "packages/orchestration/src/planner.ts + packages/orchestration/src/plugin-registry.ts",
+    "groundingAndBusinessEffectCompiler": "packages/orchestration/src/compiler.ts",
+    "domainActionAndApproval": "packages/orchestration/src/index.ts",
+    "authority": "packages/orchestration/src/authority-runtime.ts + packages/authority/src/index.ts",
+    "durableExecution": "packages/orchestration/src/durable-execution.ts + apps/worker/src/handlers/run-workflow-step.ts",
+    "commandsStepsReceiptsAndDlq": "packages/workflow-runtime/src",
+    "eventsWaitsAndDeadlines": "packages/orchestration/src/event-waits.ts + packages/db/event-fabric.ts",
+    "externalObservationAndReconciliation": "packages/orchestration/src/external-observation.ts",
+    "computer": "packages/computer/src/runner.ts + packages/computer/src/repository.ts",
+    "peTruthAndMutations": "packages/private-equity/src",
+    "peEpistemicState": "packages/private-equity/src/epistemic.ts + packages/epistemic-runtime/src",
+    "peOperationalQueries": "packages/private-equity/src/operational-queries.ts",
+    "peActionAdapter": "packages/domain-plugins/private-equity/index.ts"
+  },
+  "programSearch": "No active @finnor/program-search package or authoritative runtime dependency was present; Phase 4 did not promote one.",
+  "speculativeRuntime": "No speculative result authorizes, proves, or mutates PE canonical truth; Phase 4 execution does not depend on speculative tables or a simulator.",
+  "actionContracts": [
+    {
+      "actionType": "open_workstream",
+      "canonicalMutationOwner": "createWorkstream",
+      "resultEntityType": "pe_workstream",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/work",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "create_deal_request",
+      "canonicalMutationOwner": "createRequest",
+      "resultEntityType": "pe_request",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/work",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "submit_deliverable",
+      "canonicalMutationOwner": "receiveDeliverable",
+      "resultEntityType": "pe_deliverable",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/documents",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "record_finding",
+      "canonicalMutationOwner": "createFinding",
+      "resultEntityType": "pe_finding",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "resolve_finding",
+      "canonicalMutationOwner": "resolveFinding",
+      "resultEntityType": "pe_finding",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "raise_deal_risk",
+      "canonicalMutationOwner": "createDealRisk",
+      "resultEntityType": "pe_deal_risk",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/risk",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "resolve_deal_risk",
+      "canonicalMutationOwner": "resolveDealRisk",
+      "resultEntityType": "pe_deal_risk",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/risk",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "link_deal_dependency",
+      "canonicalMutationOwner": "createDependency",
+      "resultEntityType": "pe_dependency",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/dependency",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "mark_dependency_resolved",
+      "canonicalMutationOwner": "removeDependency",
+      "resultEntityType": "pe_dependency",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/dependency",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "create_closing_condition",
+      "canonicalMutationOwner": "createClosingCondition",
+      "resultEntityType": "pe_closing_condition",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "submit_condition_evidence",
+      "canonicalMutationOwner": "attachCanonicalEvidence",
+      "resultEntityType": "pe_evidence_link",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "INTERNAL_WRITE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/evidence",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "satisfy_closing_condition",
+      "canonicalMutationOwner": "satisfyClosingCondition",
+      "resultEntityType": "pe_closing_condition",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "waive_closing_condition",
+      "canonicalMutationOwner": "waiveClosingCondition",
+      "resultEntityType": "pe_closing_condition",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "REQUIRED",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "verify_closing_item",
+      "canonicalMutationOwner": "verifyClosingItem",
+      "resultEntityType": "pe_closing_item",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "POLICY",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receipt": true
+    },
+    {
+      "actionType": "declare_deal_closed",
+      "canonicalMutationOwner": "declareDealClosed",
+      "resultEntityType": "pe_deal",
+      "idempotencyIdentity": "domain_action_id",
+      "verification": "canonical_return_and_reread",
+      "receiptPath": "core_durable_action_receipt",
+      "plugin": "private-equity",
+      "profile": "OPERATIONAL_CHANGE",
+      "approvalFloor": "TYPED_REQUIRED",
+      "capabilityFamily": "private-equity/closing",
+      "external": false,
+      "receipt": true
+    }
+  ],
+  "testEvidence": [
+    {
+      "gate": "pe_action_contract_and_vertical_composition",
+      "files": [
+        "tests/unit/private-equity-phase4-contract.test.ts",
+        "tests/unit/private-equity-planner-isolation.test.ts"
+      ]
+    },
+    {
+      "gate": "request_shadow_journey_condition_waiver_and_close",
+      "files": [
+        "tests/integration/private-equity-phase4.test.ts"
+      ]
+    },
+    {
+      "gate": "canonical_pe2_and_epistemic_pe3_regression",
+      "files": [
+        "tests/integration/private-equity-phase2.test.ts",
+        "tests/integration/private-equity-phase3.test.ts"
+      ]
+    },
+    {
+      "gate": "durable_event_wait_duplicate_wrong_event_deadline_race_and_cross_tenant",
+      "files": [
+        "tests/integration/event-driven-objective-runtime.test.ts"
+      ]
+    },
+    {
+      "gate": "provider_acknowledgement_observation_and_reconciliation",
+      "files": [
+        "tests/integration/external-effect-observation.test.ts"
+      ]
+    },
+    {
+      "gate": "computer_authorized_effect_identity_restart_and_readback",
+      "files": [
+        "tests/integration/computer-execution-fabric.test.ts"
+      ]
+    },
+    {
+      "gate": "durable_effect_approval_receipt_and_reconciliation_bridge",
+      "files": [
+        "tests/integration/single-action-runtime-bridge.test.ts"
+      ]
+    },
+    {
+      "gate": "dlq_redrive_and_causal_replay",
+      "files": [
+        "tests/integration/poison-job-replay-drill.test.ts",
+        "tests/integration/causal-replay.test.ts"
+      ]
+    },
+    {
+      "gate": "universal_actions_escalation_and_water_preservation",
+      "files": [
+        "tests/integration/universal-action-fabric.test.ts",
+        "tests/unit/universal-actions-contract.test.ts"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "name": "langgraph_checkpointer_setup",
+      "command": "npm run setup:langgraph",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1404,
+      "summary": [
+        "> finnor-os@0.1.0 setup:langgraph",
+        "> tsx packages/orchestration/src/graph/setup.ts",
+        "LangGraph checkpointer schema ready (finnor_langgraph)"
+      ]
+    },
+    {
+      "name": "policy_coverage",
+      "command": "npm run policy:lint",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4134,
+      "summary": [
+        "policy coverage green: 74/74 registered action types"
+      ]
+    },
+    {
+      "name": "typescript",
+      "command": "npx --no-install tsc -p tsconfig.release-pe4.json",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 18950,
+      "summary": []
+    },
+    {
+      "name": "full_core_p1_p6_and_pe4_test_suite",
+      "command": "npm test -- --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 595770,
+      "summary": [
+        "[upgrade10-metric] {\"name\":\"provider_failure_safe_recovery\",\"recoveryMs\":283,\"providerAttempts\":2,\"duplicateSideEffects\":0,\"objectiveCompletionCorrect\":true}",
+        "·stdout | tests/integration/whole-system-integration.test.ts > Upgrade 10 whole-system integration > keeps a durable bulk operation attached to its objective through partial failure, authorized recovery, duplicate delivery, and truthful completion",
+        "[upgrade10-metric] {\"name\":\"durable_operation_partial_failure_recovery\",\"recoveryMs\":172,\"targetCount\":2,\"duplicateRecoveryRequests\":1,\"duplicateSideEffects\":0,\"objectiveCompletionCorrect\":true}",
+        "[22:14:11] \u001b[31mERROR\u001b[39m: \u001b[36mjob test_fail failed\u001b[39m",
+        "\u001b[35mjobType\u001b[39m: \"test_fail\"",
+        "err: \"simulated failure\"",
+        "[22:14:11] \u001b[31mERROR\u001b[39m: \u001b[36mjob test_fail failed\u001b[39m",
+        "\u001b[35mjobType\u001b[39m: \"test_fail\"",
+        "err: \"simulated failure\"",
+        "·························································stdout | tests/integration/causal-replay.test.ts > Phase 5 CausalReplayProjection > reconstructs exact context, planner, dependency, governance, callback, failure, recovery, compensation, verification, and receipt edges",
+        "\u001b[35mconsecutiveFailures\u001b[39m: 3",
+        "\u001b[35mconsecutiveFailures\u001b[39m: 3",
+        "\u001b[35mconsecutiveFailures\u001b[39m: 3",
+        "\u001b[35mconsecutiveFailures\u001b[39m: 4",
+        "\u001b[35mconsecutiveFailures\u001b[39m: 4",
+        "policy coverage green: 74/74 registered action types",
+        "Test Files  310 passed | 3 skipped (313)",
+        "Tests  1551 passed | 5 skipped (1556)",
+        "Duration  595.03s (transform 6.52s, setup 0ms, import 376.56s, tests 172.57s, environment 33ms)",
+        "stderr | tests/integration/memory-auto-ingest.test.ts > memory auto-ingest (§5.2) > ingestMemory never throws even when the underlying write genuinely fails",
+        "[memory] ingestMemory skipped for doc1: Failed query: select \"id\", \"source_doc_id\", \"content_hash\" from \"finnor_os\".\"embeddings\" where (\"finnor_os\".\"embeddings\".\"tenant_id\" = $1 and \"finnor_os\".\"embeddings\".\"source_doc_id\" in ($2) and \"finnor_os\".\"embeddings\".\"superseded_at\" is null)"
+      ]
+    }
+  ],
+  "gates": {
+    "isolatedFreshMigration": true,
+    "runtimeRegistryCount": true,
+    "privateEquityCompositionCount": true,
+    "waterCompositionCount": true,
+    "sharedCompositionCount": true,
+    "exactVerticalComposition": true,
+    "exactPeActionBoundary": true,
+    "payloadSchemasDiscovered": true,
+    "hardApprovalFloors": true,
+    "langgraphCheckpointer": true,
+    "policyCoverage": true,
+    "typecheck": true,
+    "pe4ShadowCertification": true,
+    "waterAndCoreRegression": true
+  },
+  "shadowBoundary": {
+    "internalPeMutations": "real canonical mutations inside isolated PE test tenants",
+    "externalPeEffects": "explicit tenant emulator/sandbox/no-egress binding required",
+    "productionCutover": false,
+    "waterRetired": false
+  },
+  "phase5Inputs": [
+    "32-action PE planner composition (17 shared/core + 15 PE) derived from the runtime registry",
+    "59-action Water composition preserved independently",
+    "15 one-to-one PE DomainAction-to-PE2 mutation-owner contracts",
+    "PE objective-success predicates over canonical Request/Finding/Risk/Condition/ClosingItem/readiness/close truth",
+    "execution-time state/effect/authority revalidation with hard waiver and close approval floors",
+    "isolated PE external sandbox/emulator requirement and tenant credential boundary",
+    "green long-lived PE shadow corpus and full Core/P1-P6 regression evidence"
+  ],
+  "residualBlockers": []
+}

@@ -1,25 +1,20 @@
 // Postgres-backed job queue (§15–16): FOR UPDATE SKIP LOCKED polling, retry with
 // backoff, dead-letter after max attempts. Every handler idempotent.
 
-import { getPool } from "@finnor/db";
+import { getPool, readProductRuntimeAuthority, resolveTenantVertical } from "@finnor/db";
 import type { Job } from "@finnor/shared-types";
 import { Sentry, logWithTrace } from "@finnor/tools";
 import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
+import { RETIRED_WATER_JOB_TYPES, RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
 
 export type JobHandler = (payload: Record<string, unknown>) => Promise<void>;
 export type JobLane = "interactive" | "batch";
 
 /** A process-level cap: the database claim remains the cross-process boundary. */
 export function workerConcurrency(value = process.env.WORKER_CONCURRENCY): number {
-  const parsed = Number.parseInt(value ?? "2", 10);
-  return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 8 ? parsed : 2;
-}
-
-export function reservedInteractiveConcurrency(total: number, value = process.env.WORKER_INTERACTIVE_RESERVED_CONCURRENCY): number {
-  if (total < 2) return 0;
   const parsed = Number.parseInt(value ?? "1", 10);
-  return Number.isSafeInteger(parsed) && parsed >= 1 && parsed < total ? parsed : 1;
+  return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 8 ? parsed : 1;
 }
 
 export class JobQueue {
@@ -32,10 +27,17 @@ export class JobQueue {
   ) {}
 
   register(type: string, handler: JobHandler): void {
+    if (isRetiredWaterJob(type)) throw new RetiredVerticalError("water");
     this.handlers.set(type, handler);
   }
 
+  registeredTypes(): string[] {
+    return [...this.handlers.keys()].sort();
+  }
+
   async enqueue(type: string, payload: Record<string, unknown>, idempotencyKey?: string, lane: JobLane = "batch", priority = 0): Promise<void> {
+    if (isRetiredWaterJob(type)) throw new RetiredVerticalError("water");
+    if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
     await getPool().query(
       `INSERT INTO jobs (type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (idempotency_key) DO NOTHING`,
@@ -50,6 +52,14 @@ export class JobQueue {
    * failed run, so poison jobs still reach the dead-letter queue.
    */
   async recoverExpiredRunningJobs(leaseSeconds = this.leaseSeconds): Promise<number> {
+    await getPool().query(
+      `UPDATE jobs
+          SET status='quarantined',
+              last_error='RETIRED_VERTICAL: historical Water job is non-executable',
+              started_at=NULL,lease_owner=NULL,lease_expires_at=NULL,lease_heartbeat_at=NULL
+        WHERE type = ANY($1::text[]) AND status IN ('queued','running','failed','dead_letter')`,
+      [RETIRED_WATER_JOB_TYPES],
+    );
     const { rowCount } = await getPool().query(
       `UPDATE jobs
        SET status = CASE WHEN attempts >= max_attempts THEN 'dead_letter' ELSE 'queued' END,
@@ -62,15 +72,16 @@ export class JobQueue {
            lease_owner = NULL,
            lease_expires_at = NULL,
            lease_heartbeat_at = NULL
-       WHERE status = 'running'
+       WHERE status = 'running' AND type <> ALL($2::text[])
          AND coalesce(lease_expires_at, started_at + ($1 || ' seconds')::interval) <= now()`,
-      [String(leaseSeconds)],
+      [String(leaseSeconds), RETIRED_WATER_JOB_TYPES],
     );
     return rowCount ?? 0;
   }
 
   /** Claim and run one due job. Returns false when the queue is empty. */
-  async tick(lane: "any" | "interactive" = "any"): Promise<boolean> {
+  async tick(): Promise<boolean> {
+    await readProductRuntimeAuthority();
     await this.recoverExpiredRunningJobs();
     // A queue instance may intentionally host only a subset of handlers (tests,
     // lane-specific workers, rolling deploys). It must never claim and poison a job
@@ -85,11 +96,10 @@ export class JobQueue {
         const { rows } = await client.query(
           `SELECT id, type, payload, attempts, max_attempts FROM jobs
            WHERE status = 'queued' AND run_at <= now() AND type = ANY($1::text[])
-             AND ($2::text = 'any' OR lane = $2::text)
            ORDER BY CASE lane WHEN 'interactive' THEN 0 ELSE 1 END, priority DESC, run_at
            FOR UPDATE SKIP LOCKED
            LIMIT 1`,
-          [registeredTypes, lane],
+          [registeredTypes],
         );
         if (rows.length === 0) {
           await client.query("COMMIT");
@@ -201,18 +211,14 @@ export class JobQueue {
   async runLoop(pollMs = 2000, signal?: AbortSignal, concurrency = workerConcurrency()): Promise<void> {
     // Each slot claims through FOR UPDATE SKIP LOCKED. The cap prevents one process
     // from turning an outage into an unbounded set of in-flight provider calls.
-    const reserved = reservedInteractiveConcurrency(concurrency);
-    await Promise.all([
-      ...Array.from({ length: reserved }, () => this.runSlot(pollMs, signal, "interactive")),
-      ...Array.from({ length: concurrency - reserved }, () => this.runSlot(pollMs, signal, "any")),
-    ]);
+    await Promise.all(Array.from({ length: concurrency }, () => this.runSlot(pollMs, signal)));
   }
 
-  private async runSlot(pollMs: number, signal?: AbortSignal, lane: "any" | "interactive" = "any"): Promise<void> {
+  private async runSlot(pollMs: number, signal?: AbortSignal): Promise<void> {
     while (!signal?.aborted) {
       let worked = false;
       try {
-        worked = await this.tick(lane);
+        worked = await this.tick();
       } catch (err) {
         console.error("[worker] tick failed:", err);
       }

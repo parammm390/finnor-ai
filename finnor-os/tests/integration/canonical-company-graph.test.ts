@@ -8,6 +8,7 @@ import {
   businessEvents,
   calls,
   closePool,
+  communicationsLog,
   conversations,
   createBusinessOperation,
   domainActions,
@@ -21,7 +22,6 @@ import {
   withTenant,
   workEntityLinks,
 } from "@finnor/db";
-import { recordCustomerMessage } from "@finnor/data-platform";
 import { companyContext, executeOperationalQuery, resolveCanonicalHousehold, workCases } from "@finnor/read-models";
 import { and, eq } from "drizzle-orm";
 
@@ -61,9 +61,9 @@ describe.skipIf(!available)("Upgrade 7 canonical company graph", () => {
       const [conversation] = await db.insert(conversations).values({ tenantId: tenantA, householdId: household!.id, channel: "sms" }).returning();
       const [message] = await db.insert(messages).values({ tenantId: tenantA, conversationId: conversation!.id, direction: "inbound", channel: "sms", content: "Please confirm tomorrow." }).returning();
       const [call] = await db.insert(calls).values({ tenantId: tenantA, conversationId: conversation!.id, direction: "outbound" }).returning();
-      const communication = await recordCustomerMessage(db, { tenantId: tenantA, householdId: household!.id, channel: "email", direction: "outbound", content: "Service confirmation" });
+      const [communication] = await db.insert(communicationsLog).values({ householdId: household!.id, channel: "email", direction: "outbound", content: "Service confirmation" }).returning();
       await db.insert(businessEvents).values({ tenantId: tenantA, entityType: "payment", entityId: payment!.id, eventType: "payment_received" });
-      return { household: household!, asset: asset!, visit: visit!, invoice: invoice!, payment: payment!, appointment: appointment!, conversation: conversation!, message: message!, call: call!, communication: { id: communication.messageId } };
+      return { household: household!, asset: asset!, visit: visit!, invoice: invoice!, payment: payment!, appointment: appointment!, conversation: conversation!, message: message!, call: call!, communication: communication! };
     });
     householdA = seeded.household.id;
     paymentA = seeded.payment.id;

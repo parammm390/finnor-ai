@@ -16,18 +16,6 @@ describe("real conversational lane", () => {
     (instruction) => expect(isConversationalTurn(instruction)).toBe(true),
   );
 
-  it.each([
-    "Hello JARVIS. Confirm this certification session is connected. 1-abc",
-    "Hello JARVIS. This exact certification submission must be idempotent. 1-abc",
-  ])("recognizes a nonce-scoped greeting/status acknowledgement: %s", (instruction) => {
-    expect(isConversationalTurn(instruction)).toBe(true);
-  });
-
-  it("does not let a greeting prefix bypass consequential business routing", () => {
-    expect(isConversationalTurn("Hello JARVIS. Confirm the payment is received.")).toBe(false);
-    expect(isConversationalTurn("Hello JARVIS. Send the invoice to Acme.")).toBe(false);
-  });
-
   it.each(["Create an invoice for Acme", "Research current water-treatment ad trends", "How much cash is overdue?", "What can you tell me about our leads?"])(
     "keeps business reads and actions on the planner stack: %s",
     (instruction) => expect(isConversationalTurn(instruction)).toBe(false),

@@ -1,5 +1,6 @@
 import {
   acknowledgementRequests,
+  businessEvents,
   communicationDeliveries,
   communicationIdentities,
   delegations,
@@ -27,11 +28,10 @@ import {
   type UniversalActionType,
   type UniversalCommunicationChannel,
 } from "@finnor/shared-types";
-import { resolveCapabilityBindingsForTenant, type ToolRegistry } from "@finnor/tools";
+import type { ToolRegistry } from "@finnor/tools";
 import { and, eq, sql } from "drizzle-orm";
 import { expandInternalRecipients, resolveCommunicationTargets } from "./endpoint-resolver";
 import { completeDelegation, transitionDelegation } from "./delegation-state";
-import { createTask, recordBusinessEvent, updateTask } from "@finnor/data-platform";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTERNAL_PARTIES = new Set<PartyRef["partyType"]>(["employee", "team", "location"]);
@@ -169,11 +169,9 @@ async function routeForCommunication(
       ? decideUniversalActionRoute({ actionType, channel, recipient })
       : { route: "manual", executable: false, reasonCode: "manual_required", provider: null, hierarchyRank: 4 };
   }
-  const bindings = await resolveCapabilityBindingsForTenant(scope.tenantId);
   if (explicitIdentity) {
-    const compatible = channel === "email"
-      || (channel === "sms" && bindings.crm.mode === "ghl")
-      || (channel === "voice" && bindings.communications.mode === "vapi");
+    const compatible = (channel === "email" && explicitIdentity.provider === "gmail")
+      || (channel === "voice" && explicitIdentity.provider === "vapi");
     return decideUniversalActionRoute({
       actionType,
       channel,
@@ -182,19 +180,16 @@ async function routeForCommunication(
       provider: explicitIdentity.provider,
     });
   }
-  if (channel === "sms" && (bindings.crm.mode === "native" || bindings.crm.mode === "emulator")) {
-    return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: true, provider: "native" });
-  }
-  if (channel === "voice" && bindings.communications.mode !== "vapi") {
-    return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: true, provider: "native" });
-  }
-  let provider: string | null = channel === "email" ? "gmail" : channel === "sms" ? "ghl" : "vapi";
+  let provider: string | null = channel === "email" ? "gmail" : channel === "voice" ? "vapi" : null;
   let available = false;
   if (scope.actorId) {
     const access = await listAvailableIdentityAccess(scope.tenantId, scope.actorId).catch(() => null);
     const identity = access?.communicationIdentities.find((item) => item.channel === channel && item.status === "active");
-    available = Boolean(identity);
-    provider = identity?.provider ?? provider;
+    available = Boolean(identity && (
+      (channel === "email" && identity.provider === "gmail")
+      || (channel === "voice" && identity.provider === "vapi")
+    ));
+    provider = available ? identity?.provider ?? provider : provider;
   }
   return decideUniversalActionRoute({ actionType, channel, recipient, apiAvailable: available, provider });
 }
@@ -442,22 +437,27 @@ async function executeCreateTask(payload: Record<string, unknown>, tools: ToolRe
   if (assignee) await requireParty(scope, assignee);
   const workId = object(payload.workRef).workId as string | undefined;
   const row = await withTenant(scope.tenantId, async (db) => {
-    const { task } = await createTask(db, {
+    const [created] = await db.insert(tasks).values({
       tenantId: scope.tenantId,
       subjectType: subject.entityType,
       subjectId: subject.entityId,
       title: String(payload.title),
-      ...(payload.dueAt ? { dueAt: new Date(String(payload.dueAt)) } : {}),
-      ...(assignee?.partyType === "employee" || assignee?.partyType === "team" ? { assignedPartyType: assignee.partyType } : {}),
-      ...(assignee?.partyId ? { assignedPartyId: assignee.partyId } : {}),
-      ...(assignee?.partyType === "employee" ? { assigneeType: "user", assigneeId: assignee.partyId } : {}),
-      ...(workId ? { workId } : {}),
+      dueAt: payload.dueAt ? new Date(String(payload.dueAt)) : null,
+      assignedPartyType: assignee?.partyType === "employee" || assignee?.partyType === "team" ? assignee.partyType : null,
+      assignedPartyId: assignee?.partyId ?? null,
+      assigneeType: assignee?.partyType === "employee" ? "user" : null,
+      assigneeId: assignee?.partyType === "employee" ? assignee.partyId : null,
+      workId: workId ?? null,
       sourceDomainActionId: scope.domainActionId,
       priority: payload.priority as "low" | "normal" | "high",
-      eventPayload: { domainActionId: scope.domainActionId, assignee: assignee ?? null },
-      eventSource: "universal_action",
-    });
-    return task;
+    }).onConflictDoNothing().returning();
+    if (created) {
+      await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "task", entityId: created.id, eventType: "task_created", payload: { domainActionId: scope.domainActionId, assignee: assignee ?? null }, source: "universal_action" });
+      return created;
+    }
+    const [existing] = await db.select().from(tasks).where(eq(tasks.sourceDomainActionId, scope.domainActionId)).limit(1);
+    if (!existing) throw new Error("Task idempotency row was not found");
+    return existing;
   });
   await appendUniversalEvent({ scope, actionType: "create_task", eventType: "task_created", route: "native", subject: { type: "task", id: row.id }, evidence: { taskId: row.id, workId: row.workId, assignee: assignee ?? null } });
   return { status: "success" as const, output: { taskRef: { taskId: row.id }, status: row.status, assignee: assignee ?? null, route: decideUniversalActionRoute({ actionType: "create_task" }) }, expected: { taskId: row.id } };
@@ -469,20 +469,16 @@ async function executeAssignTask(payload: Record<string, unknown>, tools: ToolRe
   const assignee = payload.assigneeRef as PartyRef;
   await requireParty(scope, assignee);
   const row = await withTenant(scope.tenantId, async (db) => {
-    const updated = await updateTask(db, {
-      tenantId: scope.tenantId,
-      taskId,
-      patch: {
-        assignedPartyType: assignee.partyType as "employee" | "team",
-        assignedPartyId: assignee.partyId,
-        assigneeType: assignee.partyType === "employee" ? "user" : null,
-        assigneeId: assignee.partyType === "employee" ? assignee.partyId : null,
-      },
-      eventType: "task_assigned",
-      eventPayload: { domainActionId: scope.domainActionId, assignee },
-      eventSource: "universal_action",
-    });
+    await db.execute(sql`SELECT id FROM ${tasks} WHERE ${tasks.tenantId}=${scope.tenantId} AND ${tasks.id}=${taskId}::uuid FOR UPDATE`);
+    const [updated] = await db.update(tasks).set({
+      assignedPartyType: assignee.partyType as "employee" | "team",
+      assignedPartyId: assignee.partyId,
+      assigneeType: assignee.partyType === "employee" ? "user" : null,
+      assigneeId: assignee.partyType === "employee" ? assignee.partyId : null,
+      updatedAt: new Date(),
+    }).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).returning();
     if (!updated) throw new Error("Task not found");
+    await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "task", entityId: updated.id, eventType: "task_assigned", payload: { domainActionId: scope.domainActionId, assignee }, source: "universal_action" });
     return updated;
   });
   await appendUniversalEvent({ scope, actionType: "assign_task", eventType: "task_assigned", route: "native", subject: { type: "task", id: row.id }, evidence: { taskId: row.id, assignee } });
@@ -493,20 +489,18 @@ async function executeUpdateTask(payload: Record<string, unknown>, tools: ToolRe
   const scope = requireScope(tools);
   const taskId = String(object(payload.taskRef).taskId);
   const row = await withTenant(scope.tenantId, async (db) => {
-    const updated = await updateTask(db, {
-      tenantId: scope.tenantId,
-      taskId,
-      patch: {
-        ...(payload.title !== undefined ? { title: String(payload.title) } : {}),
-        ...(payload.dueAt !== undefined ? { dueAt: payload.dueAt === null ? null : new Date(String(payload.dueAt)) } : {}),
-        ...(payload.status !== undefined ? { status: payload.status as "open" | "done" | "cancelled" } : {}),
-        ...(payload.priority !== undefined ? { priority: payload.priority as "low" | "normal" | "high" } : {}),
-      },
-      eventPayload: { domainActionId: scope.domainActionId },
-      eventSource: "universal_action",
-    });
-    if (!updated) throw new Error("Task not found");
-    return updated;
+    await db.execute(sql`SELECT id FROM ${tasks} WHERE ${tasks.tenantId}=${scope.tenantId} AND ${tasks.id}=${taskId}::uuid FOR UPDATE`);
+    const [existing] = await db.select().from(tasks).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).limit(1);
+    if (!existing) throw new Error("Task not found");
+    const [updated] = await db.update(tasks).set({
+      ...(payload.title !== undefined ? { title: String(payload.title) } : {}),
+      ...(payload.dueAt !== undefined ? { dueAt: payload.dueAt === null ? null : new Date(String(payload.dueAt)) } : {}),
+      ...(payload.status !== undefined ? { status: payload.status as "open" | "done" | "cancelled" } : {}),
+      ...(payload.priority !== undefined ? { priority: payload.priority as "low" | "normal" | "high" } : {}),
+      updatedAt: new Date(),
+    }).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).returning();
+    await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "task", entityId: taskId, eventType: "task_updated", payload: { domainActionId: scope.domainActionId, status: updated!.status }, source: "universal_action" });
+    return updated!;
   });
   if (row.status === "done") {
     const [linked] = await withTenant(scope.tenantId, (db) => db.select({ id: delegations.id, status: delegations.status }).from(delegations).where(and(eq(delegations.tenantId, scope.tenantId), eq(delegations.taskId, row.id))).limit(1));
@@ -551,7 +545,7 @@ async function executeDelegateObjective(payload: Record<string, unknown>, tools:
       const [task] = await db.select({ id: tasks.id }).from(tasks).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).limit(1);
       if (!task) throw new Error("Delegation task does not exist in this tenant");
     } else {
-      const createdTask = await createTask(db, {
+      const [task] = await db.insert(tasks).values({
         tenantId: scope.tenantId,
         subjectType: "work",
         subjectId: workId,
@@ -559,14 +553,13 @@ async function executeDelegateObjective(payload: Record<string, unknown>, tools:
         dueAt: completionDeadline,
         assignedPartyType: target.partyType as "employee" | "team",
         assignedPartyId: target.partyId,
-        ...(target.partyType === "employee" ? { assigneeType: "user", assigneeId: target.partyId } : {}),
+        assigneeType: target.partyType === "employee" ? "user" : null,
+        assigneeId: target.partyType === "employee" ? target.partyId : null,
         workId,
         sourceDomainActionId: scope.domainActionId,
         priority: "high",
-        eventPayload: { domainActionId: scope.domainActionId, delegation: true },
-        eventSource: "universal_action",
-      });
-      taskId = createdTask.taskId;
+      }).returning();
+      taskId = task!.id;
     }
     const [created] = await db.insert(delegations).values({
       tenantId: scope.tenantId,
@@ -590,7 +583,7 @@ async function executeDelegateObjective(payload: Record<string, unknown>, tools:
     await db.insert(delegationEvents).values({ tenantId: scope.tenantId, delegationId: created!.id, seq: 1, eventType: "created", fromStatus: null, toStatus: "created", actorId: scope.actorId ?? null, evidence: { workId, taskId, objectiveLoopId: objectiveLoopId ?? null } });
     const [delivery] = await db.insert(communicationDeliveries).values({ tenantId: scope.tenantId, domainActionId: scope.domainActionId, workId, recipientType: target.partyType, recipientId: target.partyId, channel: "internal", route: "native", status: "delivered", provider: null }).returning();
     await db.insert(acknowledgementRequests).values({ tenantId: scope.tenantId, domainActionId: scope.domainActionId, delegationId: created!.id, deliveryId: delivery!.id, workId, taskId, recipientType: target.partyType, recipientId: target.partyId, request: `Acknowledge delegated objective: ${String(payload.objective)}`, status: "delivered", deadline: acknowledgementDeadline });
-    await recordBusinessEvent(db, { tenantId: scope.tenantId, entityType: "delegation", entityId: created!.id, eventType: "delegation_created", payload: { domainActionId: scope.domainActionId, workId, taskId, target }, source: "universal_action" });
+    await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "delegation", entityId: created!.id, eventType: "delegation_created", payload: { domainActionId: scope.domainActionId, workId, taskId, target }, source: "universal_action" });
     return created!;
   });
   let status = row.status as DelegationStatus;
@@ -641,7 +634,7 @@ async function executeScheduleInternalEvent(payload: Record<string, unknown>, to
       await db.insert(internalEventParticipants).values({ tenantId: scope.tenantId, internalEventId: created!.id, partyType: participant.partyType, partyId: participant.partyId }).onConflictDoNothing();
     }
     await db.insert(internalEventEvents).values({ tenantId: scope.tenantId, internalEventId: created!.id, domainActionId: scope.domainActionId, seq: 1, eventType: "scheduled", payload: { startsAt: payload.startsAt, endsAt: payload.endsAt, participantCount: participants.length } });
-    await recordBusinessEvent(db, { tenantId: scope.tenantId, entityType: "internal_event", entityId: created!.id, eventType: "internal_event_scheduled", payload: { domainActionId: scope.domainActionId, workId: workId ?? null }, source: "universal_action" });
+    await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "internal_event", entityId: created!.id, eventType: "internal_event_scheduled", payload: { domainActionId: scope.domainActionId, workId: workId ?? null }, source: "universal_action" });
     return created!;
   });
   await appendUniversalEvent({ scope, actionType: "schedule_internal_event", eventType: "internal_event_scheduled", route: "native", subject: { type: "internal_event", id: row.id }, evidence: { internalEventId: row.id, revision: row.revision, participantCount: participants.length } });

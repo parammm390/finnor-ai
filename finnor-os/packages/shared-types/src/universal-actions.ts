@@ -61,7 +61,7 @@ export interface UniversalRouteInput {
   externalSharingAllowed?: boolean;
 }
 
-const EXTERNAL_PARTIES = new Set<PartyRef["partyType"]>(["household", "contact", "external_organization", "external_contact"]);
+const EXTERNAL_PARTIES = new Set<PartyRef["partyType"]>(["external_organization", "external_contact"]);
 const COMMUNICATION_ACTIONS = new Set<UniversalActionType>(["send_message", "place_call", "notify_group"]);
 
 /** Pure, auditable route selection. Payloads never select a route. Missing providers

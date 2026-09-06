@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { importEntityRefs, importRows, importRuns, withTenant } from "@finnor/db";
-import { CanonicalImportError, writeCanonicalImportRow } from "@finnor/data-platform";
-import { DeclarativeImportDefinitionSchema, parseImportDefinition, type DeclarativeImportDefinition, type ImportEntity } from "./definition";
+import { importEntityRefs, importRows, importRuns, resolveTenantVertical, withTenant, type Db } from "@finnor/db";
+import { RetiredVerticalError, isRetiredWaterImportEntity } from "@finnor/shared-types";
+import { parseImportDefinition, type DeclarativeImportDefinition, type ImportEntity } from "./definition";
 import { mapSourceRow, type ImportIssue } from "./mapping";
 import { parseSource } from "./parser";
 import { validateCanonicalRow } from "./validation";
@@ -12,7 +12,7 @@ export * from "./mapping";
 export * from "./parser";
 export * from "./validation";
 
-const refEntityType = (entity: ImportEntity): string => entity === "customer" ? "household" : entity;
+const refEntityType = (entity: ImportEntity): string => entity;
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 const stable = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
@@ -25,6 +25,50 @@ export interface RunImportInput {
   definition: DeclarativeImportDefinition;
   source: { name: string; content: string };
   dryRun?: boolean;
+}
+
+export type ImportUpdateMode = "insert_only" | "fill_missing" | "source_owned";
+
+export class CanonicalImportError extends Error {
+  constructor(
+    public readonly code: "ambiguous_match" | "invalid_relationship" | "canonical_missing" | "unsafe_update",
+    message: string,
+    public readonly field?: string,
+  ) {
+    super(message);
+    this.name = "CanonicalImportError";
+  }
+}
+
+export interface CanonicalImportWriteParams {
+  tenantId: string;
+  entity: ImportEntity;
+  data: Record<string, unknown>;
+  relationships: Record<string, string>;
+  existingId?: string;
+  sourceOwned: boolean;
+  updateMode: ImportUpdateMode;
+  provenance: { sourceSystem: string; sourceId: string };
+}
+
+export interface CanonicalImportWriteResult {
+  entityType: string;
+  entityId: string;
+  action: "created" | "updated" | "skipped";
+  related?: Record<string, string>;
+}
+
+export type CanonicalImportWriter = (db: Db, params: CanonicalImportWriteParams) => Promise<CanonicalImportWriteResult>;
+const activeWriters = new Map<string, CanonicalImportWriter>();
+
+export function registerCanonicalImportWriter(entity: string, writer: CanonicalImportWriter): void {
+  if (isRetiredWaterImportEntity(entity)) throw new RetiredVerticalError("water");
+  if (activeWriters.has(entity)) throw new Error(`Canonical import writer already registered for ${entity}`);
+  activeWriters.set(entity, writer);
+}
+
+export function activeCanonicalImportWriterTypes(): string[] {
+  return [...activeWriters.keys()].sort();
 }
 
 export interface ImportReport {
@@ -46,7 +90,11 @@ async function recordQuarantine(tenantId: string, runId: string, rowNumber: numb
 }
 
 export async function runDeclarativeImport(input: RunImportInput): Promise<ImportReport> {
-  const definition = DeclarativeImportDefinitionSchema.parse(input.definition);
+  await resolveTenantVertical(input.tenantId);
+  const definition = parseImportDefinition(input.definition);
+  if (isRetiredWaterImportEntity(definition.entity)) throw new RetiredVerticalError("water");
+  const writer = activeWriters.get(definition.entity);
+  if (!writer) throw new CanonicalImportError("unsafe_update", `No active canonical import writer is registered for ${definition.entity}`);
   const rows = parseSource(input.source.content, definition.format, definition.delimiter);
   const sourceSha256 = sha256(input.source.content);
   const definitionSha256 = sha256(stable(definition));
@@ -103,7 +151,7 @@ export async function runDeclarativeImport(input: RunImportInput): Promise<Impor
             return "planned" as const;
           }
 
-          const write = await writeCanonicalImportRow(db, {
+          const write = await writer(db, {
             tenantId: input.tenantId, entity: definition.entity, data: mapped.data, relationships,
             existingId: resolvedRef?.canonicalEntityId, sourceOwned: Boolean(resolvedRef), updateMode: definition.updateMode,
             provenance: { sourceSystem: definition.sourceSystem, sourceId: mapped.sourceId! },

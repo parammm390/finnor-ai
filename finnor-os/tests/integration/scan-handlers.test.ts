@@ -14,6 +14,7 @@ import {
   serviceVisits,
   inventoryItems,
   maintenanceAgreements,
+  communicationsLog,
   domainPolicies,
   domainPolicyRevisions,
   scanFindings,
@@ -27,7 +28,6 @@ import {
   appointments,
   users,
 } from "@finnor/db";
-import { recordCustomerMessage } from "@finnor/data-platform";
 import { eq, and } from "drizzle-orm";
 import { scanLowInventory } from "../../apps/worker/src/handlers/scan-low-inventory";
 import { scanServiceDue } from "../../apps/worker/src/handlers/scan-service-due";
@@ -153,13 +153,12 @@ describe.skipIf(!available)("proactive scan handlers", () => {
         .returning(),
     );
     await withTenant(TENANT_ID, (db) =>
-      recordCustomerMessage(db, {
-        tenantId: TENANT_ID,
+      db.insert(communicationsLog).values({
         householdId: hh!.id,
         channel: "call",
         direction: "outbound",
         content: "old contact",
-        sentAt: new Date(Date.now() - 4 * 30 * 24 * 3600 * 1000), // 4 months ago — inside the 3-6 window
+        timestamp: new Date(Date.now() - 4 * 30 * 24 * 3600 * 1000), // 4 months ago — inside the 3-6 window
       }),
     );
     // No unique constraint on (tenant_id, action_type) to target with onConflict, and

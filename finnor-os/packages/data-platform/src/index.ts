@@ -1,26 +1,6 @@
-// Repository layer for the canonical business data platform (Phase 1,
-// docs/jarvis-90-execution-blueprint.md §1). Every function here takes an already-open
-// `db` handle — the caller opens the single withTenant() — so the entity write and its
-// business_events row land in one transaction. This is the enforcement point for
-// "plugins must stop writing arbitrary tables directly." The Business Truth Registry
-// names the one owner and approved mutation/import boundary for each business fact.
+// Vertical-neutral canonical data and Source Truth boundaries.
 
 export * from "./events";
-export * from "./contacts";
-export * from "./leads";
 export * from "./tasks";
-export * from "./appointments";
-export * from "./service-visits";
-export * from "./equipment";
-export * from "./work-orders";
-export * from "./price-book";
-export * from "./quotes";
-export * from "./payments";
-export * from "./invoices";
-export * from "./inventory";
-export * from "./maintenance-agreements";
-export * from "./conversations";
 export * from "./documents";
-export * from "./import-writes";
 export * from "./source-truth";
-export * from "./business-truth-registry";

@@ -6,6 +6,7 @@ import {
   makeValidateNode,
   routeAfterValidate,
   makeDraftNode,
+  routeAfterDraft,
   makeGateNode,
   routeAfterGate,
   pauseNode,
@@ -29,7 +30,7 @@ export function buildGateGraph(plugins: PluginRegistry, tools: ToolRegistry, che
     .addNode("rejected", makeRejectedNode())
     .addEdge(START, "validate")
     .addConditionalEdges("validate", routeAfterValidate, { draft: "draftAction", failed: "failed" })
-    .addEdge("draftAction", "gate")
+    .addConditionalEdges("draftAction", routeAfterDraft, { gate: "gate", failed: "failed" })
     .addConditionalEdges("gate", routeAfterGate, { pause: "pause", execute: "execute", failed: "failed" })
     .addConditionalEdges("pause", routeAfterPause, { execute: "execute", rejected: "rejected" })
     .addEdge("execute", END)

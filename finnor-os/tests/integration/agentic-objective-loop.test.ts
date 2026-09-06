@@ -8,13 +8,11 @@ import { migrate } from "../../packages/db/migrate";
 import {
   authorityDecisions,
   closePool,
-  CURRENT_MIGRATION_HEAD,
+  communicationsLog,
   domainActions,
-  getPool,
   households,
   jobs,
   sandboxOutbox,
-  serviceReleaseHeartbeats,
   tenants,
   users,
   withTenant,
@@ -25,8 +23,9 @@ import {
   workObjectiveSteps,
   workflowRuns,
   workflowSteps,
+  getPool,
+  CURRENT_MIGRATION_HEAD,
 } from "@finnor/db";
-import { recordCustomerMessage } from "@finnor/data-platform";
 import { ToolRegistry } from "@finnor/tools";
 import {
   controlWorkObjective,
@@ -87,7 +86,6 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
   const ownerId = randomUUID();
   const suspendedId = randomUUID();
   const householdId = randomUUID();
-  const workerInstanceId = `objective-test-${tenantId}`;
 
   beforeAll(async () => {
     process.env.DATABASE_URL = DB_URL;
@@ -98,13 +96,11 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
     await migrate(DB_URL);
     await getPool().query(
       `INSERT INTO finnor_os.service_release_heartbeats
-        (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,migration_head,capabilities,environment,last_beat_at)
-       VALUES ('worker',$1,$2,'objective-test','0.1.0','integration-test',NULL,$3,ARRAY['jobs','orchestration'],'test',now())
-       ON CONFLICT (service,instance_id) DO UPDATE SET
-         release_sha=excluded.release_sha,
-         migration_head=excluded.migration_head,
-         last_beat_at=excluded.last_beat_at`,
-      [workerInstanceId, process.env.FINNOR_COMMIT_SHA?.trim() || "objective-test", CURRENT_MIGRATION_HEAD],
+        (service,instance_id,release_sha,build_id,version,release_source,migration_head,environment,last_beat_at)
+       VALUES ('worker','agentic-objective-test','test','test','test','vitest',$1,'test',now())
+       ON CONFLICT (service,instance_id) DO UPDATE
+       SET migration_head=excluded.migration_head, last_beat_at=now()`,
+      [CURRENT_MIGRATION_HEAD],
     );
     await withTenant(tenantId, async (db) => {
       await db.insert(tenants).values({ id: tenantId, name: "Objective Loop Test Dealer" });
@@ -119,25 +115,9 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
       });
     });
     await withTenant(otherTenantId, (db) => db.insert(tenants).values({ id: otherTenantId, name: "Objective Loop Other Dealer" }));
-    await withTenant(tenantId, (db) => db.insert(serviceReleaseHeartbeats).values({
-      service: "worker",
-      instanceId: `objective-loop-${tenantId}`,
-      releaseSha: "objective-loop-test",
-      buildId: "objective-loop-test",
-      version: "objective-loop-test",
-      releaseSource: "test",
-      coreCertificationId: "objective-loop-test",
-      migrationHead: CURRENT_MIGRATION_HEAD,
-      capabilities: ["jobs", "orchestration"],
-      environment: "test",
-    }));
   });
 
   afterAll(async () => {
-    await getPool().query(
-      "DELETE FROM finnor_os.service_release_heartbeats WHERE service='worker' AND instance_id=$1",
-      [workerInstanceId],
-    );
     await closePool();
   });
 
@@ -306,7 +286,7 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
         if (!providerAvailable) throw new Error("test SMS provider unavailable");
         await withTenant(String(input.tenantId), async (db) => {
           await db.insert(sandboxOutbox).values({ tenantId: String(input.tenantId), channel: "sms", toNumber: "+15550191919", content: String(input.message) });
-          await recordCustomerMessage(db, { tenantId: String(input.tenantId), householdId: String(input.contactId), channel: "sms", direction: "outbound", content: String(input.message) });
+          await db.insert(communicationsLog).values({ householdId: String(input.contactId), channel: "sms", direction: "outbound", content: String(input.message) });
         });
         return { providerMessageId: `recovered-${providerAttempts}` };
       },
@@ -471,7 +451,7 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
   });
 
   it("completes without the originally expected action when fresh Company Graph state makes it unnecessary", async () => {
-    await withTenant(tenantId, (db) => recordCustomerMessage(db, { tenantId, householdId, channel: "sms", direction: "outbound", content: "Already followed up from the service desk." }));
+    await withTenant(tenantId, (db) => db.insert(communicationsLog).values({ householdId, channel: "sms", direction: "outbound", content: "Already followed up from the service desk." }));
     const planner = new ScriptedPlanner([
       (inspection) => {
         if (!JSON.stringify(inspection.companyContext).includes("Already followed up from the service desk")) {
@@ -514,9 +494,7 @@ describe.skipIf(!available)("Upgrade 9 governed agentic objective loop", () => {
     const firstBody = await first.json() as { objective: { workId: string; objectiveLoopId: string } };
     const canonicalJobKey = `objective:${firstBody.objective.objectiveLoopId}:revision:1:step:1`;
     const [initialJob] = await withTenant(tenantId, (db) => db.select().from(jobs).where(eq(jobs.idempotencyKey, canonicalJobKey)));
-    // Objective iterations use the batch lane so durable, slow Objectives cannot
-    // consume the worker slot reserved for simple interactive commands.
-    expect(initialJob).toMatchObject({ status: "queued", lane: "batch", priority: 100 });
+    expect(initialJob).toMatchObject({ status: "queued", lane: "interactive", priority: 100 });
     expect((await workAggregate(tenantId, firstBody.objective.workId))!.work).toMatchObject({ status: "executing", executionModel: "objective" });
 
     // Simulate the historical split-commit orphan: an idempotent replay must repair

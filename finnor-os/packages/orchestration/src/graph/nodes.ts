@@ -1,7 +1,5 @@
-// Graph nodes — each one mirrors a step of GatedExecutor.execute() exactly, calling
-// the SAME unchanged plugin validate/draft/execute methods and the SAME unchanged
-// appendEpisode/advanceWorkflowForAction/voice helpers. LangGraph is the engine
-// driving these; the plugins and their contract never change.
+// Graph nodes — each one mirrors a step of GatedExecutor.execute() exactly, including
+// grounding and durable-operation preparation before the authority boundary.
 
 import { interrupt } from "@langchain/langgraph";
 import { withTenant, domainActions, enqueueJob } from "@finnor/db";
@@ -22,6 +20,7 @@ import {
   ensureBusinessEffect,
   recordBusinessEffectOutcome,
 } from "../compiler";
+import { ActionGroundingError } from "@finnor/plugins-shared";
 
 async function setStatus(tenantId: string, actionId: string, status: DomainAction["status"]): Promise<void> {
   await withTenant(tenantId, async (db) => {
@@ -54,12 +53,71 @@ export function routeAfterValidate(state: GateState): "draft" | "failed" {
 export function makeDraftNode(plugins: PluginRegistry) {
   return async (state: GateState): Promise<Partial<GateState>> => {
     const plugin = plugins.resolve(state.actionType)!;
-    const draft = await plugin.draft(state.actionType, state.payload, state.policy);
+    let draft = await plugin.draft(state.actionType, state.payload, state.policy);
     draft.correlationId = state.correlationId;
     draft.domainActionId = state.actionId;
+    draft.approvedBy = state.approvedBy;
+    if (plugin.ground) {
+      const action: DomainAction = {
+        id: state.actionId,
+        tenantId: state.tenantId,
+        actionType: state.actionType,
+        payload: state.payload,
+        policyId: state.policy.id,
+        policyVersion: state.policy.version,
+        status: state.alreadyApproved ? "approved" : "draft",
+        correlationId: state.correlationId,
+        workId: state.workId ?? null,
+        createdAt: new Date().toISOString(),
+        initiatedBy: state.initiatedBy ?? null,
+        approvedBy: state.approvedBy,
+      };
+      try {
+        const grounded = await plugin.ground(draft, action, state.policy);
+        draft = grounded.draft;
+        draft.correlationId = state.correlationId;
+        draft.domainActionId = state.actionId;
+        draft.approvedBy = state.approvedBy;
+        await withTenant(state.tenantId, (db) => db.update(domainActions).set({
+          payload: draft.payload,
+          groundedPayload: grounded.groundedPayload,
+        }).where(and(eq(domainActions.id, state.actionId), eq(domainActions.tenantId, state.tenantId))));
+        await appendEpisode(state.tenantId, state.actionId, "ground", {}, { groundedPayload: grounded.groundedPayload });
+      } catch (error) {
+        if (!(error instanceof ActionGroundingError)) throw error;
+        const groundingError = { code: error.code, message: error.message, details: error.details };
+        await setStatus(state.tenantId, state.actionId, "needs_human_review");
+        await appendEpisode(state.tenantId, state.actionId, "ground_blocked", {}, groundingError);
+        return { groundingError };
+      }
+    }
+    if (plugin.prepareDurableOperation) {
+      const action: DomainAction = {
+        id: state.actionId,
+        tenantId: state.tenantId,
+        actionType: state.actionType,
+        payload: draft.payload,
+        policyId: state.policy.id,
+        policyVersion: state.policy.version,
+        status: state.alreadyApproved ? "approved" : "draft",
+        correlationId: state.correlationId,
+        workId: state.workId ?? null,
+        createdAt: new Date().toISOString(),
+        initiatedBy: state.initiatedBy ?? null,
+        approvedBy: state.approvedBy,
+      };
+      draft = await plugin.prepareDurableOperation(draft, action, state.policy);
+      draft.correlationId = state.correlationId;
+      draft.domainActionId = state.actionId;
+      draft.approvedBy = state.approvedBy;
+    }
     await appendEpisode(state.tenantId, state.actionId, "draft", {}, { summary: draft.summary });
-    return { draft };
+    return { draft, payload: draft.payload, groundingError: undefined };
   };
+}
+
+export function routeAfterDraft(state: GateState): "gate" | "failed" {
+  return state.groundingError ? "failed" : "gate";
 }
 
 export function makeGateNode() {
@@ -72,8 +130,10 @@ export function makeGateNode() {
       policyId: state.policy.id,
       policyVersion: state.policy.version,
       status: state.alreadyApproved ? "approved" : "draft",
+      workId: state.workId ?? null,
       createdAt: new Date().toISOString(),
       initiatedBy: state.initiatedBy ?? null,
+      approvedBy: state.approvedBy,
     };
     const approval = approvalRequirementForAction(state.actionType, state.policy.requiresConfirmation, state.draft!.requiresConfirmation);
     try {
@@ -225,14 +285,19 @@ export function makeExecuteNode(plugins: PluginRegistry, tools: ToolRegistry) {
 
 export function makeFailedNode() {
   return async (state: GateState): Promise<Partial<GateState>> => {
-    await setStatus(state.tenantId, state.actionId, "failed");
+    await setStatus(state.tenantId, state.actionId, state.groundingError ? "needs_human_review" : "failed");
     return {
       result: {
         status: "failure",
-        output: {},
-        error: state.authorityOutcome === "denied"
+        output: state.groundingError
+          ? { groundingBlocked: true, code: state.groundingError.code, ...state.groundingError.details }
+          : {},
+        error: state.groundingError
+          ? state.groundingError.message
+          : state.authorityOutcome === "denied"
           ? `Authority denied: ${state.authorityReasonCode ?? "not authorized"}`
           : `This request is missing required details: ${(state.validation?.errors ?? []).join("; ")}`,
+        ...(state.groundingError ? { errorKind: state.groundingError.code === "PE_STALE_VERSION" ? "conflict" as const : "validation" as const } : {}),
       },
     };
   };

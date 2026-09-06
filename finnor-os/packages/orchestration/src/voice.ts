@@ -17,8 +17,8 @@ function lastMatchIndex(text: string, pattern: RegExp): number {
  * Anything ambiguous is "unclear" — an unclear answer NEVER approves (fail-closed).
  *
  * `extra` is a per-tenant config seam (domain_policies for the `voice_confirmation`
- * action type, `policy.approvePhrases`/`policy.rejectPhrases`) — dealers can teach the
- * parser their own customers' phrasing without a code change. Phrases are escaped
+ * action type, `policy.approvePhrases`/`policy.rejectPhrases`) — tenants can teach the
+ * parser their teams' phrasing without a code change. Phrases are escaped
  * before becoming regex (never interpolated as user-supplied regex) and matched with
  * the exact same word-boundary, last-signal-wins logic as the built-in patterns.
  * Absent `extra`, behavior is byte-for-byte identical to before this parameter existed.
@@ -36,7 +36,7 @@ export function parseSpokenDecision(
   let lastApprove = lastMatchIndex(t, approvePatterns);
   let lastReject = lastMatchIndex(t, rejectPatterns);
 
-  // Lookaround boundaries, not \b: dealer-configured phrases may start or end with a
+  // Lookaround boundaries, not \b: tenant-configured phrases may start or end with a
   // non-word character (e.g. an apostrophe or punctuation), and \b only fires at a
   // word/non-word transition — it silently fails to match at a boundary where both
   // sides are non-word. (?<!\w)...(?!\w) has no such blind spot.
@@ -56,19 +56,14 @@ export function parseSpokenDecision(
 }
 
 const INTEGRATION_NAMES: Record<string, string> = {
-  ghl: "GoHighLevel (your CRM)",
   vapi: "Vapi (your phone system)",
   groq: "the AI planning service",
-  accounting: "your accounting system",
   exa: "the web search service",
+  firecrawl: "the source retrieval service",
   redis: "the session memory service",
-  meta_ads: "your Meta Ads account",
-  google_ads: "your Google Ads account",
-  quickbooks: "your QuickBooks account",
   email: "your email account",
-  maps: "the address lookup service",
-  stripe: "Stripe (your payment system)",
-  docusign: "DocuSign (your e-signature service)",
+  gmail: "your Gmail identity",
+  resend: "the Finnor notification sender",
 };
 
 /**

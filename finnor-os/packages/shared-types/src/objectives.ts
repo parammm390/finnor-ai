@@ -32,6 +32,16 @@ export type ObjectiveSuccessCriterion =
   | { kind: "no_open_execution" }
   | { kind: "all_objective_effects_verified"; minimumCount: number }
   | { kind: "canonical_query"; request: OperationalQueryRequest; assertion: ObjectiveSuccessAssertion }
+  | {
+      kind: "private_equity_truth";
+      dealId: string;
+      entityType: "pe_deal" | "pe_request" | "pe_finding" | "pe_deal_risk" | "pe_closing_condition" | "pe_closing_item";
+      entityId: string;
+      requirement:
+        | { kind: "state_in"; states: string[] }
+        | { kind: "close_eligible" }
+        | { kind: "deal_closed" };
+    }
   | { kind: "matched_wait"; minimumCount: number; eventType?: string }
   | { kind: "delegation_state"; minimumCount: number; requiredStatus: "acknowledged" | "accepted" | "completed" }
   | { kind: "computer_run_state"; minimumCount: number; requiredStatus: "succeeded"; evidenceRequired: boolean }

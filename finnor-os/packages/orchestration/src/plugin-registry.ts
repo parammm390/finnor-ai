@@ -2,42 +2,18 @@
 // action_types here; the orchestrator routes by action_type, nothing else.
 
 import type { DomainEnginePlugin } from "@finnor/plugins-shared";
-import type { DomainPolicy, SimulationResult } from "@finnor/shared-types";
+import {
+  PRIVATE_EQUITY_VERTICAL,
+  assertExecutableVertical,
+  type DomainPolicy,
+  type SimulationResult,
+} from "@finnor/shared-types";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import waterTestPlugin from "../../domain-plugins/water-test/index";
-import maintenanceAgreementPlugin from "../../domain-plugins/maintenance-agreement/index";
-import crmPlugin from "../../domain-plugins/crm/index";
-import inventoryPlugin from "../../domain-plugins/inventory/index";
-import schedulingPlugin from "../../domain-plugins/scheduling/index";
-import quotationPlugin from "../../domain-plugins/quotation/index";
-import accountingPlugin from "../../domain-plugins/accounting/index";
-import marketingPlugin from "../../domain-plugins/marketing/index";
-import customerCommPlugin from "../../domain-plugins/customer-comm/index";
-import waterDomainKnowledgePlugin from "../../domain-plugins/water-domain-knowledge/index";
-import proposalBatchPlugin from "../../domain-plugins/proposal-batch/index";
-import bulkNotifyPlugin from "../../domain-plugins/bulk-notify/index";
-import technicianReportsPlugin from "../../domain-plugins/technician-reports/index";
-import serviceRemindersPlugin from "../../domain-plugins/service-reminders/index";
-import complianceDocumentationPlugin from "../../domain-plugins/compliance-documentation/index";
 import webResearchPlugin from "../../domain-plugins/web-research/index";
-import opsOverviewPlugin from "../../domain-plugins/ops-overview/index";
-import leadToWaterTestPlugin from "../../domain-plugins/lead-to-water-test/index";
-import proposalSignaturePlugin from "../../domain-plugins/proposal-signature/index";
-import proposalToInstallationPlugin from "../../domain-plugins/proposal-to-installation/index";
-import invoiceToCashPlugin from "../../domain-plugins/invoice-to-cash/index";
 import { clarificationPlugin } from "../../domain-plugins/clarification/index";
-import { manualStepPlugin } from "../../domain-plugins/manual-step/index";
-import { routeOptimizationPlugin } from "../../domain-plugins/route-optimization/index";
 import universalActionsPlugin from "../../domain-plugins/universal-actions/index";
 import computerTaskPlugin from "../../domain-plugins/computer-task/index";
-
-export interface RegisteredActionDefinition {
-  plugin: string;
-  actionType: string;
-  payloadFields: string[];
-  requiredPayloadFields: string[];
-  payloadSpec: string;
-}
+import privateEquityPlugin, { PRIVATE_EQUITY_ACTION_TYPES } from "../../domain-plugins/private-equity/index";
 
 export class PluginRegistry {
   private byActionType = new Map<string, DomainEnginePlugin>();
@@ -91,13 +67,26 @@ export class PluginRegistry {
     return [...this.byActionType.keys()];
   }
 
-  /** Runtime-derived action contract used by the Human Capability Registry.
-   * This reads the same registered plugin schemas as validation and planning,
-   * so a user-facing capability cannot drift into a separate hand-maintained list. */
-  actionDefinitions(): RegisteredActionDefinition[] {
-    return [...this.byActionType].map(([actionType, plugin]) => {
+  private specCache = new Map<string, string>();
+
+  /** Compact payload spec for the Planner prompt: one line per action type,
+   *  `field*` = required, `field?` = optional, `field:enum(a|b)` for enums.
+   *  ~10x fewer tokens than full JSON Schema — lower latency, no TPM stalls —
+   *  while still telling the model exactly which field names to emit.
+   *  Cached: plugins register once at startup, so this is stable per process. */
+  payloadSpecJson(allowedActionTypes?: readonly string[]): string {
+    const allowed = allowedActionTypes ? new Set(allowedActionTypes) : null;
+    const cacheKey = allowed ? [...allowed].sort().join("\u0000") : "*";
+    const cached = this.specCache.get(cacheKey);
+    if (cached) return cached;
+    const lines: string[] = [];
+    for (const [actionType, plugin] of this.byActionType) {
+      if (allowed && !allowed.has(actionType)) continue;
       const schema = plugin.payloadSchemas?.[actionType];
-      if (!schema) return { plugin: plugin.name, actionType, payloadFields: [], requiredPayloadFields: [], payloadSpec: "(free-form object)" };
+      if (!schema) {
+        lines.push(`${actionType}: (free-form object)`);
+        continue;
+      }
       const json = zodToJsonSchema(schema, { $refStrategy: "none" }) as {
         properties?: Record<string, { type?: string; enum?: unknown[]; format?: string }>;
         required?: string[];
@@ -106,64 +95,45 @@ export class PluginRegistry {
       const fields = Object.entries(json.properties ?? {}).map(([name, def]) => {
         const mark = required.has(name) ? "*" : "?";
         if (def.enum) return `${name}${mark}:enum(${def.enum.join("|")})`;
-        const type = def.format === "uuid" ? "uuid" : (def.type ?? "any");
-        return `${name}${mark}:${type}`;
+        const t = def.format === "uuid" ? "uuid" : (def.type ?? "any");
+        return `${name}${mark}:${t}`;
       });
-      return {
-        plugin: plugin.name,
-        actionType,
-        payloadFields: Object.keys(json.properties ?? {}),
-        requiredPayloadFields: [...required],
-        payloadSpec: fields.join(", "),
-      };
-    });
-  }
-
-  private specCache: string | null = null;
-
-  /** Compact payload spec for the Planner prompt: one line per action type,
-   *  `field*` = required, `field?` = optional, `field:enum(a|b)` for enums.
-   *  ~10x fewer tokens than full JSON Schema — lower latency, no TPM stalls —
-   *  while still telling the model exactly which field names to emit.
-   *  Cached: plugins register once at startup, so this is stable per process. */
-  payloadSpecJson(): string {
-    if (this.specCache) return this.specCache;
-    const lines: string[] = [];
-    for (const definition of this.actionDefinitions()) lines.push(`${definition.actionType}: ${definition.payloadSpec}`);
-    this.specCache = lines.join("\n");
-    return this.specCache;
+      lines.push(`${actionType}: ${fields.join(", ")}`);
+    }
+    const result = lines.join("\n");
+    this.specCache.set(cacheKey, result);
+    return result;
   }
 }
+
+const UNIVERSAL_PLANNER_ACTIONS = [
+  "send_message", "place_call", "request_acknowledgement", "notify_group",
+  "create_task", "assign_task", "update_task", "handoff_work",
+  "delegate_objective", "escalate_work", "cancel_delegation",
+  "schedule_internal_event", "reschedule_internal_event", "share_document",
+] as const;
+const SHARED_PLANNER_ACTIONS = ["clarification_request", "search_web", "computer_task", ...UNIVERSAL_PLANNER_ACTIONS] as const;
+/** Action manifests are composed only from executable verticals. Historical action
+ * identity is rendered from durable rows and never requires executable registration. */
+export function plannerActionTypesForVertical(registry: PluginRegistry, verticalKey: string): string[] {
+  assertExecutableVertical(verticalKey);
+  const registered = new Set(registry.actionTypes());
+  if (verticalKey === PRIVATE_EQUITY_VERTICAL) {
+    return [...SHARED_PLANNER_ACTIONS, ...PRIVATE_EQUITY_ACTION_TYPES].filter((actionType) => registered.has(actionType));
+  }
+  return SHARED_PLANNER_ACTIONS.filter((actionType) => registered.has(actionType));
+}
+
+export const actionTypesForVertical = plannerActionTypesForVertical;
 
 export function createDefaultPluginRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
   for (const plugin of [
-    waterTestPlugin,
-    maintenanceAgreementPlugin,
-    crmPlugin,
-    inventoryPlugin,
-    schedulingPlugin,
-    quotationPlugin,
-    accountingPlugin,
-    marketingPlugin,
-    customerCommPlugin,
-    waterDomainKnowledgePlugin,
-    proposalBatchPlugin,
-    bulkNotifyPlugin,
-    technicianReportsPlugin,
-    serviceRemindersPlugin,
-    complianceDocumentationPlugin,
     webResearchPlugin,
-    opsOverviewPlugin,
-    leadToWaterTestPlugin,
-    proposalSignaturePlugin,
-    proposalToInstallationPlugin,
-    invoiceToCashPlugin,
     clarificationPlugin,
-    manualStepPlugin,
-    routeOptimizationPlugin,
     universalActionsPlugin,
     computerTaskPlugin,
+    privateEquityPlugin,
   ]) {
     registry.register(plugin);
   }

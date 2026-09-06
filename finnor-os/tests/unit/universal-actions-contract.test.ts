@@ -10,6 +10,7 @@ import universalActionsPlugin, {
 } from "../../packages/domain-plugins/universal-actions/index";
 import {
   LEGACY_ACTION_HARDENING_SPEC,
+  TOTAL_ACTION_COUNT,
   UNIVERSAL_ACTION_HARDENING_SPEC,
 } from "../../scripts/release/action-hardening-spec";
 
@@ -75,8 +76,8 @@ describe("Universal Action + Delegation contract", () => {
     expect(universalActionsPlugin.actionTypes).toEqual(UNIVERSAL_ACTION_TYPES);
 
     const registered = createDefaultPluginRegistry().actionTypes();
-    expect(registered).toHaveLength(59);
-    expect(new Set(registered).size).toBe(59);
+    expect(registered).toHaveLength(TOTAL_ACTION_COUNT);
+    expect(new Set(registered).size).toBe(TOTAL_ACTION_COUNT);
     expect(registered).toContain("computer_task");
     for (const row of LEGACY_ACTION_HARDENING_SPEC) expect(registered).toContain(row.actionType);
     for (const actionType of UNIVERSAL_ACTION_TYPES) expect(registered).toContain(actionType);

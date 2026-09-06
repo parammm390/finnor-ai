@@ -37,7 +37,7 @@ export class NotImplementedError extends IntegrationError {
   }
 }
 
-/** Shared shape for every provider self-test (ads.ts, quickbooks.ts, ...) — one
+/** Shared shape for every provider self-test — one
  *  definition so the integrations status endpoint has a uniform result to aggregate,
  *  and so re-exporting every adapter module from the package index doesn't collide
  *  on duplicate identical interface names. */

@@ -43,8 +43,8 @@ describe("epistemic property gates", () => {
           observedAt: "2026-08-30T00:00:00.000Z",
         }));
         const state = appendEvidenceAndRecompute(initial, records, "2026-08-31T00:10:00.000Z");
-        expect(propositionById(state, "invoice.balance")?.value).toEqual({ kind: "DETERMINISTIC", value: canonicalValue });
-        expect(propositionById(state, "invoice.balance")?.source?.truthClass).toBe("CANONICAL");
+        expect(propositionById(state, "deal.debt_capacity")?.value).toEqual({ kind: "DETERMINISTIC", value: canonicalValue });
+        expect(propositionById(state, "deal.debt_capacity")?.source?.truthClass).toBe("CANONICAL");
       },
     ), { seed: 31082026, numRuns: 200 });
   });

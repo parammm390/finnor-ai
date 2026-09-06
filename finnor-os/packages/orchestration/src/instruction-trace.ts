@@ -10,7 +10,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { getLogger } from "@finnor/tools";
 import { redactStructured, redactText } from "@finnor/security";
 import type { AnswerEnvelope } from "./fast-read-lane";
-import type { OperatingEvidenceKind } from "@finnor/shared-types";
+import { isRetiredWaterAction, type OperatingEvidenceKind } from "@finnor/shared-types";
 
 // 15 values, verbatim from this session's own binding list — see migration 0062's own
 // comment on the "14 vs 15" discrepancy between that list's stated count and its
@@ -57,21 +57,11 @@ export interface InstructionTraceResultEnvelope {
 // for older plugins that did not stamp expected.answered; it is never sufficient
 // when the executor says the action is waiting for approval.
 const READ_ONLY_ANSWER_ACTION_TYPES = new Set([
-  "answer_business_question",
-  "get_business_overview",
-  "check_stock_level",
-  "flag_reorder_needed",
-  "answer_water_question",
-  "answer_customer_question",
-  "check_reminder_due",
-  "check_technician_availability",
-  "summarize_ad_performance",
   "search_web",
-  "check_business_reviews",
 ]);
 
 export function isReadOnlyAnswerAction(actionType: string, expected: Record<string, unknown> | undefined, awaitingApproval: boolean): boolean {
-  if (awaitingApproval) return false;
+  if (awaitingApproval || isRetiredWaterAction(actionType)) return false;
   return expected?.answered === true || READ_ONLY_ANSWER_ACTION_TYPES.has(actionType);
 }
 
@@ -139,11 +129,6 @@ export function sanitizeInstructionTraceDisplay(value: unknown): Record<string, 
 }
 
 function fallbackSpokenSummary(output: Record<string, unknown>): string {
-  const items = output.items;
-  if (Array.isArray(items)) return `I found ${items.length} inventory item${items.length === 1 ? "" : "s"}.`;
-  const reorderNeeded = output.reorderNeeded;
-  if (Array.isArray(reorderNeeded)) return `${reorderNeeded.length} inventory item${reorderNeeded.length === 1 ? " needs" : "s need"} reordering.`;
-  if (typeof output.name === "string" && typeof output.quantity === "number") return `${output.name}: ${output.quantity} in stock.`;
   return "The requested information is ready.";
 }
 
@@ -163,7 +148,7 @@ function sanitizeOutputEvidence(output: Record<string, unknown>): NonNullable<In
         ? explicitKind
         : /^(?:exa|firecrawl|web|research)/i.test(source) || /^https?:\/\//i.test(ref) ? "WEB"
           : /semantic|memory|correction/i.test(source) ? "MEMORY"
-            : /(?:postgres|structured|snapshot|business.state|ops.overview|household|customer|lead|invoice|payment|appointment|service.visit|work.order|schedule|inventory|quote|proposal|read.model)/i.test(source) ? "CANONICAL"
+            : /(?:postgres|structured|snapshot|business.state|company|deal|workstream|request|finding|risk|dependency|closing|evidence|read.model)/i.test(source) ? "CANONICAL"
               : undefined;
       if (!source || !ref) return null;
       return { source, ref, timestamp: timestamp || new Date().toISOString(), ...(title ? { title } : {}), ...(kind ? { kind } : {}) };

@@ -3,7 +3,7 @@ import type {
   EpistemicState,
   EpistemicSemanticDiff,
   RedactedEpistemicTrace,
-  StaticAdmissibilityResult,
+  StaticAdmissibilityResultLike,
 } from "./contracts";
 import type { EpistemicControllerRun } from "./controller";
 import type { P2P3HandoffResult } from "./p2-handoff";
@@ -17,7 +17,7 @@ function redactedReasonCode(reasonCode: string): string {
 
 export function redactEpistemicTrace(
   run: EpistemicControllerRun,
-  options: { p2Statuses?: StaticAdmissibilityResult["status"][]; semanticDiff?: EpistemicSemanticDiff } = {},
+  options: { p2Statuses?: StaticAdmissibilityResultLike["status"][]; semanticDiff?: EpistemicSemanticDiff } = {},
 ): RedactedEpistemicTrace {
   const body = {
     decisionId: run.finalState.scope.decisionId,

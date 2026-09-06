@@ -1,12 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const ORDER = Object.freeze({
-  order: "WS-48",
-  status: "In transit — carrier exception cleared",
-  eta: "August 28, 2026 by 5:00 PM CDT",
-  tracking: "TST-WS48-20260828",
-  supplierReference: "SUP-9848",
-  risk: "Weather hold cleared August 21, 2026; a one-day contingency remains. No current carrier exception."
+const DILIGENCE_RECORD = Object.freeze({
+  reference: "DD-48",
+  status: "Third-party diligence packet received",
+  asOf: "August 28, 2026 at 5:00 PM CDT",
+  externalReference: "VDR-9848",
+  finding: "Insurance evidence is current; the environmental reliance letter remains under counsel review.",
+  risk: "Reliance-letter completion is an open closing dependency. No other critical exception is recorded."
 });
 
 function escapeHtml(value) {
@@ -56,6 +56,13 @@ function send(res, status, body, headers = {}) {
   res.end(body);
 }
 
+function sendJson(res, status, body) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.end(JSON.stringify(body));
+}
+
 export default function handler(req, res) {
   const role = process.env.PORTAL_ROLE;
   const signingKey = process.env.CANARY_SIGNING_KEY;
@@ -63,6 +70,21 @@ export default function handler(req, res) {
   const authOrigin = process.env.AUTH_ORIGIN;
   if (!role || !signingKey || !appOrigin || !authOrigin) return send(res, 503, page("Unavailable", "<h1>Canary configuration unavailable</h1>"));
   const url = new URL(req.url, role === "auth" ? authOrigin : appOrigin);
+
+  if (url.pathname === "/health") {
+    const commitSha = String(process.env.FINNOR_COMMIT_SHA ?? "unknown");
+    return sendJson(res, /^[0-9a-f]{40}$/i.test(commitSha) ? 200 : 503, {
+      ok: /^[0-9a-f]{40}$/i.test(commitSha),
+      service: "supplier-canary",
+      commitSha,
+      buildId: process.env.FINNOR_BUILD_ID ?? "unknown",
+      version: process.env.FINNOR_VERSION ?? "unknown",
+      source: process.env.FINNOR_RELEASE_SOURCE ?? "unknown",
+      environment: process.env.FINNOR_ENVIRONMENT ?? process.env.NODE_ENV ?? "unknown",
+      cutoverProtocol: 5,
+      migrationHead: "0109_atomic_water_runtime_retirement.sql",
+    });
+  }
 
   if (role === "auth") {
     if (url.pathname !== "/login") return send(res, 404, page("Not found", "<h1>Not found</h1>"));
@@ -84,18 +106,18 @@ export default function handler(req, res) {
     if (!verify(access, signingKey)) return send(res, 401, page("Unauthorized", "<h1>Unauthorized</h1>"));
     res.statusCode = 303;
     res.setHeader("Set-Cookie", `canary_session=${encodeURIComponent(access)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`);
-    res.setHeader("Location", "/orders");
+    res.setHeader("Location", "/records");
     res.end();
     return;
   }
 
   const authenticated = verify(decodeURIComponent(cookies(req).canary_session ?? ""), signingKey);
-  if (!authenticated) return send(res, 200, page("Supplier Canary Portal", `<h1>Supplier Canary Portal</h1><p>Secure deterministic order fixture for governed browser verification.</p><a href="${escapeHtml(authOrigin)}/login">Sign in to supplier portal</a>`));
-  if (url.pathname === "/" || url.pathname === "/orders") {
-    return send(res, 200, page("Supplier Orders", `<h1>Supplier orders</h1><p class="muted">Signed in with the governed test account.</p><table><thead><tr><th>Order</th><th>Status</th></tr></thead><tbody><tr><td><a href="/orders/WS-48">WS-48</a></td><td>${escapeHtml(ORDER.status)}</td></tr></tbody></table>`));
+  if (!authenticated) return send(res, 200, page("Diligence Canary Portal", `<h1>Diligence Canary Portal</h1><p>Secure deterministic external-record fixture for governed browser verification.</p><a href="${escapeHtml(authOrigin)}/login">Sign in to diligence portal</a>`));
+  if (url.pathname === "/" || url.pathname === "/records") {
+    return send(res, 200, page("Diligence Records", `<h1>Diligence records</h1><p class="muted">Signed in with the governed test account.</p><table><thead><tr><th>Reference</th><th>Status</th></tr></thead><tbody><tr><td><a href="/records/DD-48">DD-48</a></td><td>${escapeHtml(DILIGENCE_RECORD.status)}</td></tr></tbody></table>`));
   }
-  if (url.pathname === "/orders/WS-48") {
-    return send(res, 200, page("Order WS-48", `<h1>Order WS-48</h1><section data-testid="order-evidence"><dl><dt>Current delivery status</dt><dd>${escapeHtml(ORDER.status)}</dd><dt>Expected delivery</dt><dd>${escapeHtml(ORDER.eta)}</dd><dt>Tracking number</dt><dd>${escapeHtml(ORDER.tracking)}</dd><dt>Supplier reference</dt><dd>${escapeHtml(ORDER.supplierReference)}</dd></dl><p class="risk"><strong>Delay risk:</strong> ${escapeHtml(ORDER.risk)}</p></section><a href="/orders">Back to orders</a>`));
+  if (url.pathname === "/records/DD-48") {
+    return send(res, 200, page("Diligence DD-48", `<h1>Diligence DD-48</h1><section data-testid="diligence-evidence"><dl><dt>Status</dt><dd>${escapeHtml(DILIGENCE_RECORD.status)}</dd><dt>Evidence as of</dt><dd>${escapeHtml(DILIGENCE_RECORD.asOf)}</dd><dt>External reference</dt><dd>${escapeHtml(DILIGENCE_RECORD.externalReference)}</dd><dt>Finding</dt><dd>${escapeHtml(DILIGENCE_RECORD.finding)}</dd></dl><p class="risk"><strong>Closing risk:</strong> ${escapeHtml(DILIGENCE_RECORD.risk)}</p></section><a href="/records">Back to records</a>`));
   }
   return send(res, 404, page("Not found", "<h1>Not found</h1>"));
 }

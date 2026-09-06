@@ -10,12 +10,12 @@ export interface OperatingInteractionContext {
   capturedAt: string;
   source: "voice" | "text" | "console";
   activeWork?: { workId: string };
-  focusedEntity?: CanonicalEntityRef;
+  focusedEntity?: CanonicalEntityRef<string>;
   /** Direct selections are deliberately bounded. Large populations use cohort. */
-  selectedEntities: CanonicalEntityRef[];
-  excludedEntities: CanonicalEntityRef[];
+  selectedEntities: CanonicalEntityRef<string>[];
+  excludedEntities: CanonicalEntityRef<string>[];
   surface: {
-    id: "home" | "customers" | "money" | "work" | "schedule" | "agents";
+    id: "home" | "work" | "agents" | "deals";
     route?: string;
     spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
   };
@@ -28,15 +28,6 @@ export interface OperatingInteractionContext {
     start?: string;
     end?: string;
     timezone?: string;
-  };
-  /** Durable, tenant-scoped query receipt. The server replaces all descriptive
-   * fields with the stored execution's canonical request/result before use. */
-  cohort?: {
-    kind: "work_query_execution";
-    executionId: string;
-    entityType: "household";
-    queryIntent: "customer_cohort";
-    count: number;
   };
 }
 

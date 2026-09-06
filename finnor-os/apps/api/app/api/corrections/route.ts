@@ -1,8 +1,8 @@
 // §5.6 (JARVIS 95% MAESTRO PACK): correction loop. An operator marks a past AI
 // answer wrong with the correction — receipt-linked so it has real provenance, not a
 // free-floating claim. Falls back to owner-only (canApprove's own default when no
-// role_permissions row exists for this action type) — a dealer can widen access to
-// dispatcher/technician via the same policy editor as every other action.
+// role_permissions row exists for this action type). Active authority roles remain
+// governed by the same policy editor as every other action.
 
 import { withTenant, decisionReceipts, memoryCorrections } from "@finnor/db";
 import { recordCorrection } from "@finnor/memory";

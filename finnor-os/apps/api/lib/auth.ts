@@ -9,6 +9,7 @@ import { initObservability, Sentry, logWithTrace } from "@finnor/tools";
 import { checkRateLimit, secondsUntilWindowReset } from "./rate-limit";
 import { redactText } from "@finnor/security";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
+import { readProductRuntimeAuthority } from "@finnor/db";
 
 export class AuthError extends Error {
   constructor(
@@ -20,72 +21,6 @@ export class AuthError extends Error {
   ) {
     super(message);
   }
-}
-
-const DEFAULT_AUTHENTICATED_READ_RATE_LIMIT_PER_MINUTE = 600;
-
-function isReadOnlyRequest(req: Pick<Request, "method">): boolean {
-  const method = req.method.toUpperCase();
-  return method === "GET" || method === "HEAD";
-}
-
-/**
- * Authenticated requests have two materially different cost/safety profiles:
- * read-only projections are non-mutating and are refreshed by every open Jarvis
- * workspace, while mutations retain the existing tenant-wide budget (and any
- * route-specific budget layered on top). Keeping those buckets separate avoids
- * dashboard polling consuming the mutation budget without exempting reads from
- * abuse protection.
- *
- * This is intentionally a pure policy function so the bucket boundary and its
- * defaults are locked by unit tests instead of being inferred from deployment
- * behavior. GET/HEAD are the only methods classified as read-only; every other
- * authenticated method remains on the historical write bucket.
- */
-export function authenticatedRateLimitPolicy(
-  req: Pick<Request, "method">,
-  tenantId: string,
-): { bucketKey: string; limit?: number; kind: "read" | "write" } {
-  if (isReadOnlyRequest(req)) {
-    return {
-      bucketKey: `read:tenant:${tenantId}`,
-      limit: Number(process.env.RATE_LIMIT_READ_PER_MINUTE ?? DEFAULT_AUTHENTICATED_READ_RATE_LIMIT_PER_MINUTE),
-      kind: "read",
-    };
-  }
-  return { bucketKey: `tenant:${tenantId}`, kind: "write" };
-}
-
-/**
- * Pre-auth requests must be throttled before bearer verification because an
- * invalid token still spends Supabase/Auth capacity. Read-only requests use a
- * separate bounded bucket for the same reason as authenticated projections:
- * the public proxy may not preserve the end-user IP, so an `ip:unknown` write
- * bucket must not be able to exhaust the read budget for every open workspace.
- * Mutating and invalid-token traffic on non-read methods stay on the historical
- * 120/minute bucket; invalid read attempts remain bounded by the read bucket.
- */
-export function preAuthRateLimitPolicy(
-  req: Pick<Request, "method">,
-  clientIpAddress: string,
-): { bucketKey: string; limit: number; kind: "read" | "write" } {
-  if (isReadOnlyRequest(req)) {
-    return {
-      bucketKey: `ip-read:${clientIpAddress}`,
-      limit: Number(process.env.RATE_LIMIT_READ_PER_MINUTE ?? DEFAULT_AUTHENTICATED_READ_RATE_LIMIT_PER_MINUTE),
-      kind: "read",
-    };
-  }
-  return {
-    bucketKey: `ip:${clientIpAddress}`,
-    limit: Number(process.env.RATE_LIMIT_IP_PER_MINUTE ?? process.env.RATE_LIMIT_PER_MINUTE ?? 120),
-    kind: "write",
-  };
-}
-
-async function enforceTenantRateLimit(req: Pick<Request, "method">, tenantId: string): Promise<void> {
-  const policy = authenticatedRateLimitPolicy(req, tenantId);
-  await enforceRateLimit(policy.bucketKey, policy.limit);
 }
 
 /** Same convention as root/src/app/api/jarvis/[...path]/route.ts's own clientIp() —
@@ -116,7 +51,8 @@ export async function requireContext(req: Request): Promise<TenantContext> {
     const userId = req.headers.get("x-user-id") ?? "00000000-0000-4000-8000-0000000000aa";
     const role = (req.headers.get("x-user-role") ?? "owner") as Role;
     if (tenantId) {
-      await enforceTenantRateLimit(req, tenantId);
+      await enforceRateLimit(`tenant:${tenantId}`);
+      await readProductRuntimeAuthority();
       return { tenantId, userId, role, correlationId };
     }
   }
@@ -131,8 +67,7 @@ export async function requireContext(req: Request): Promise<TenantContext> {
   // rejected for free with ZERO rate limiting (enforceRateLimit only ran AFTER a
   // successful resolve), so spraying junk tokens could hammer that external call
   // unthrottled. IP-keyed since there's no tenant yet at this point in the request.
-  const preAuthPolicy = preAuthRateLimitPolicy(req, clientIp(req));
-  await enforceRateLimit(preAuthPolicy.bucketKey, preAuthPolicy.limit);
+  await enforceRateLimit(`ip:${clientIp(req)}`, Number(process.env.RATE_LIMIT_IP_PER_MINUTE ?? process.env.RATE_LIMIT_PER_MINUTE ?? 120));
 
   let ctx: Awaited<ReturnType<typeof resolveTenantFromBearerToken>>;
   try {
@@ -141,7 +76,8 @@ export async function requireContext(req: Request): Promise<TenantContext> {
     if (err instanceof AuthVerificationError) throw new AuthError(err.message, err.status);
     throw err;
   }
-  await enforceTenantRateLimit(req, ctx.tenantId);
+  await enforceRateLimit(`tenant:${ctx.tenantId}`);
+  await readProductRuntimeAuthority();
   return { ...ctx, correlationId };
 }
 

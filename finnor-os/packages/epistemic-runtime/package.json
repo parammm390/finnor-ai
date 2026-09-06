@@ -5,11 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "scripts": {
-    "test:p3:locked": "tsx scripts/run-locked-corpus.ts"
-  },
   "dependencies": {
-    "@finnor/operational-ir": "*",
     "@finnor/shared-types": "*"
   }
 }

@@ -24,7 +24,7 @@ import {
   workObjectiveLoops,
   works,
 } from "@finnor/db";
-import { EXECUTION_COMPENSATABLE_STEP_TYPES } from "@finnor/shared-types";
+import { EXECUTION_COMPENSATABLE_STEP_TYPES, isRetiredWaterAction, isRetiredWaterWorkflow } from "@finnor/shared-types";
 import type {
   DomainActionStatus,
   ErrorKind,
@@ -55,7 +55,6 @@ const EVIDENCE_LIMIT = 20;
 const UUID_TEXT = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const SECRET_KEY = /secret|password|passcode|access[\s_-]?token|refresh[\s_-]?token|private[\s_-]?key|api[\s_-]?key|credential|cookie|session[\s_-]?storage|local[\s_-]?storage|authorization|provider[\s_-]?session|auth[\s_-]?profile[\s_-]?ref/i;
-const RESTRICTED_KEY = /email|phone|address|message|body|content|script|note|provider[\s_-]?(message|account)[\s_-]?ref/i;
 const SECRET_VALUE_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi,
   /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g,
@@ -109,8 +108,7 @@ function boundedString(value: string): string {
 }
 
 /** Shared server boundary for action payloads, receipt results, computer results,
- * and failure details. Secret-shaped fields are removed for every role; technicians
- * additionally receive a least-privilege view of direct customer content. */
+ * and failure details. Secret-shaped fields are removed for every active viewer. */
 export function sanitizeExecutionValue(value: unknown, role: Role, depth = 0): unknown {
   if (depth > 7) return "[TRUNCATED]";
   if (typeof value === "string") return boundedString(value);
@@ -119,12 +117,7 @@ export function sanitizeExecutionValue(value: unknown, role: Role, depth = 0): u
   if (!value || typeof value !== "object") return null;
   return Object.fromEntries(Object.entries(value as Record<string, unknown>).slice(0, 80).flatMap(([key, nested]) => {
     if (SECRET_KEY.test(key)) return [];
-    return [[
-      key,
-      role === "technician" && RESTRICTED_KEY.test(key)
-        ? "[REDACTED]"
-        : sanitizeExecutionValue(nested, role, depth + 1),
-    ]];
+    return [[key, sanitizeExecutionValue(nested, role, depth + 1)]];
   }));
 }
 
@@ -133,23 +126,21 @@ function humanize(value: string): string {
 }
 
 const ID_FIELDS: Record<string, string> = {
-  householdId: "household",
-  contactId: "contact",
-  leadId: "lead",
-  opportunityId: "opportunity",
-  quoteId: "quote",
-  proposalId: "proposal",
-  invoiceId: "invoice",
-  paymentId: "payment",
-  appointmentId: "appointment",
-  visitId: "visit",
-  serviceVisitId: "service_visit",
-  workOrderId: "work_order",
-  technicianId: "technician",
+  dealId: "pe_deal",
+  workstreamId: "pe_workstream",
+  requestId: "pe_deal_request",
+  requestedFromDealPartyId: "pe_deal_party",
+  deliverableId: "pe_deliverable",
+  findingId: "pe_finding",
+  dealRiskId: "pe_deal_risk",
+  dependencyId: "pe_dependency",
+  closingConditionId: "pe_closing_condition",
+  closingItemId: "pe_closing_item",
+  evidenceSourceId: "evidence_source",
+  evidenceVersionId: "evidence_source_version",
+  verifierEmployeeId: "user",
   documentId: "document",
   taskId: "task",
-  equipmentId: "equipment",
-  maintenanceAgreementId: "maintenance_agreement",
   delegationId: "delegation",
 };
 
@@ -202,9 +193,9 @@ function evidenceFrom(value: unknown, role: Role): { rows: ExecutionEvidence[]; 
       if (typeof row.source !== "string" || typeof row.timestamp !== "string") return [];
       return [{
         source: row.source,
-        ref: role === "technician" ? null : typeof row.ref === "string" ? row.ref : null,
+        ref: typeof row.ref === "string" ? row.ref : null,
         timestamp: row.timestamp,
-        restricted: role === "technician",
+        restricted: false,
       } satisfies ExecutionEvidence];
     }),
     truncated: raw.length > EVIDENCE_LIMIT,
@@ -216,7 +207,7 @@ function actorFrom(row: { id: string; displayName: string | null; role: string }
   return {
     employeeId: row.id,
     displayName: row.displayName,
-    role: row.role === "owner" || row.role === "dispatcher" || row.role === "technician" ? row.role : null,
+    role: row.role === "owner" ? "owner" : null,
     sourceRef: `users:${row.id}`,
   };
 }
@@ -522,7 +513,7 @@ export async function executionProjection(
             sourceRef: `workflow_steps:${step.id}`,
           };
         }),
-        controls: workflowControls(run.status, run.id, run.version, viewer.canControlRuns === true, unknown),
+        controls: workflowControls(run.status, run.id, run.version, viewer.canControlRuns === true && !isRetiredWaterWorkflow(run.workflowType), unknown),
         createdAt: run.createdAt.toISOString(),
         updatedAt: run.updatedAt.toISOString(),
         sourceRef: `workflow_runs:${run.id}`,
@@ -610,10 +601,10 @@ export async function executionProjection(
       const external = ext[0];
       let route: ExecutionProviderRoute | null = null;
       if (computer) route = { application: computer.application, provider: computer.provider, identity: { kind: "application_account", id: computer.account.id, label: computer.account.label, channel: null }, route: "computer", source: "persisted_execution", sourceRef: computer.sourceRef };
-      else if (delivery) route = { application: delivery.channel === "internal" ? "FINNOR" : humanize(delivery.channel), provider: delivery.provider, identity: identity ? { kind: "communication_identity", id: identity.id, label: viewer.role === "technician" ? `Configured ${identity.channel} identity` : identity.identityKey, channel: identity.channel } : null, route: delivery.route, source: "persisted_execution", sourceRef: `communication_deliveries:${delivery.id}` };
+      else if (delivery) route = { application: delivery.channel === "internal" ? "FINNOR" : humanize(delivery.channel), provider: delivery.provider, identity: identity ? { kind: "communication_identity", id: identity.id, label: identity.identityKey, channel: identity.channel } : null, route: delivery.route, source: "persisted_execution", sourceRef: `communication_deliveries:${delivery.id}` };
       else if (integration) route = { application: humanize(integration.capability), provider: integration.provider, identity: null, route: "workflow", source: "persisted_execution", sourceRef: `integration_operations:${integration.id}` };
       else if (external?.provider) route = { application: null, provider: external.provider, identity: null, route: "api", source: "persisted_execution", sourceRef: `external_operations:${external.domainActionId}:${external.operationKey}` };
-      else if (configuredIdentity) route = { application: humanize(configuredIdentity.channel), provider: configuredIdentity.provider, identity: { kind: "communication_identity", id: configuredIdentity.id, label: viewer.role === "technician" ? `Configured ${configuredIdentity.channel} identity` : configuredIdentity.identityKey, channel: configuredIdentity.channel }, route: null, source: "persisted_configuration", sourceRef: `communication_identities:${configuredIdentity.id}` };
+      else if (configuredIdentity) route = { application: humanize(configuredIdentity.channel), provider: configuredIdentity.provider, identity: { kind: "communication_identity", id: configuredIdentity.id, label: configuredIdentity.identityKey, channel: configuredIdentity.channel }, route: null, source: "persisted_configuration", sourceRef: `communication_identities:${configuredIdentity.id}` };
       else if (configuredProfile) route = { application: configuredProfile.application, provider: configuredProfile.provider, identity: { kind: "application_account", id: configuredProfile.applicationAccountId, label: configuredProfile.displayName, channel: null }, route: null, source: "persisted_configuration", sourceRef: `auth_profiles:${configuredProfile.id}` };
       else if (actionRuns.length) route = { application: "FINNOR workflow runtime", provider: null, identity: null, route: "workflow", source: "persisted_execution", sourceRef: `workflow_runs:${actionRuns[0]!.id}` };
 
@@ -658,19 +649,20 @@ export async function executionProjection(
       const predicted = record(record(record(action.predictedReceipt).simulation).predicted).expectedResult;
       const expected = receipt?.expectedResult ?? (predicted && typeof predicted === "object" && !Array.isArray(predicted) ? sanitizeExecutionValue(predicted, viewer.role) as Record<string, unknown> : null);
       const controls: ExecutionControl[] = [];
-      if (approvable.has(action.id) && action.status === "pending") {
+      const retiredHistoricalAction = isRetiredWaterAction(action.actionType);
+      if (!retiredHistoricalAction && approvable.has(action.id) && action.status === "pending") {
         controls.push(
           { kind: "approve", label: "Approve", endpoint: `/api/actions/${action.id}/confirm`, method: "POST", expectedVersion: null, reason: "This exact pending consequence may be approved by the current employee." },
           { kind: "reject", label: "Reject", endpoint: `/api/actions/${action.id}/reject`, method: "POST", expectedVersion: null, reason: "This exact pending consequence may be rejected by the current employee." },
           { kind: "escalate", label: "Escalate", endpoint: `/api/actions/${action.id}/escalate`, method: "POST", expectedVersion: null, reason: "Pending actions may be escalated for additional review." },
         );
-      } else if (approvable.has(action.id) && action.status === "needs_human_review") {
+      } else if (!retiredHistoricalAction && approvable.has(action.id) && action.status === "needs_human_review") {
         controls.push(
           { kind: "approve", label: "Reauthorize", endpoint: `/api/actions/${action.id}/confirm`, method: "POST", expectedVersion: null, reason: "The backend will re-evaluate current authority before any effect." },
           { kind: "reject", label: "Reject", endpoint: `/api/actions/${action.id}/reject`, method: "POST", expectedVersion: null, reason: "Reject this exact reviewed consequence." },
         );
       }
-      if (computer && !["succeeded", "blocked", "failed", "timed_out", "cancelled"].includes(computer.status) && (computer.actor.employeeId === viewer.userId || viewer.canCancelComputer)) {
+      if (!retiredHistoricalAction && computer && !["succeeded", "blocked", "failed", "timed_out", "cancelled"].includes(computer.status) && (computer.actor.employeeId === viewer.userId || viewer.canCancelComputer)) {
         controls.push({ kind: "cancel", label: "Cancel computer task", endpoint: `/api/computer/runs/${computer.id}/cancel`, method: "POST", expectedVersion: null, reason: "The worker will stop before its next primitive and preserve completed evidence." });
       }
 
@@ -755,7 +747,7 @@ export async function executionProjection(
       work: {
         id: work.id,
         status: work.status,
-        executionModel: work.executionModel === "atomic_effect" ? "atomic_action" : work.executionModel,
+        executionModel: work.executionModel,
         objective,
         objectiveState: objectiveRows[0]?.state ?? null,
         successCondition: objectiveRows[0]?.successCondition as ExecutionProjection["work"]["successCondition"] ?? null,
@@ -771,7 +763,7 @@ export async function executionProjection(
       edges,
       workflows: projectedWorkflows,
       receipts: projectedReceipts,
-      viewer: { role: viewer.role, evidenceVisibility: viewer.role === "technician" ? "restricted" : "full" },
+      viewer: { role: viewer.role, evidenceVisibility: "full" },
       limits: { actions: ACTION_LIMIT, workflowSteps: WORKFLOW_STEP_LIMIT, computerStepsPerRun: COMPUTER_STEP_LIMIT, evidencePerReceipt: EVIDENCE_LIMIT },
       truncated: { actions: actionsTruncated, workflowSteps: workflowStepsTruncated, computerSteps: anyComputerTruncated, evidence: evidenceTruncated },
       asOf: new Date().toISOString(),

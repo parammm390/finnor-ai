@@ -4,20 +4,15 @@
 // evidence, policy id+version, risk tier) so the Approval Inbox can render it without a
 // second round trip per card.
 //
-// D2.T1 (Approval Cockpit): two more real-but-optional fields, both honestly absent
-// when there's nothing to report rather than fabricated. `critic` surfaces the async
+// The `critic` field surfaces the async
 // second-pass verdict from packages/orchestration/src/critic.ts's `critic_review`
 // action_log rows when one has actually run (needs AWS_BEDROCK_API_KEY — unconfigured
 // today per the credentials ledger, so this is real machinery that will typically
-// report null until that key exists, not a fake "pending" placeholder). `priceBook
-// Provenance` compares any {sku, price} pairs found in the payload against this
-// tenant's real price_book_items rows — see lib/price-book-provenance.ts for why this
-// is scoped to price-book comparison rather than a generic all-fields diff.
+// report null until that key exists, not a fake "pending" placeholder).
 
-import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog, priceBookItems } from "@finnor/db";
+import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog } from "@finnor/db";
 import { inArray, desc, eq, and, lt, or } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
-import { extractPriceCandidates, buildPriceBookProvenance } from "../../../../lib/price-book-provenance";
 import { extractPredicted } from "../../../../lib/predicted-outcome";
 import { eligibleApproversForActions } from "@finnor/authority";
 
@@ -117,16 +112,6 @@ export async function GET(req: Request): Promise<Response> {
     }
 
     const criticByActionId = new Map<string, CriticSummary>();
-    const allSkus = new Set<string>();
-    const candidatesByActionId = new Map<string, ReturnType<typeof extractPriceCandidates>>();
-    for (const r of pageRows) {
-      const candidates = extractPriceCandidates(r.payload);
-      if (candidates.length > 0) {
-        candidatesByActionId.set(r.id, candidates);
-        for (const c of candidates) allSkus.add(c.sku);
-      }
-    }
-
     if (actionIds.length > 0) {
       // Latest critic_review episode per action, same "order desc, keep first seen"
       // pattern as the receipt lookup above.
@@ -146,16 +131,6 @@ export async function GET(req: Request): Promise<Response> {
       }
     }
 
-    const priceBookRows =
-      allSkus.size > 0
-        ? await withTenant(ctx.tenantId, (db) =>
-            db
-              .select({ sku: priceBookItems.sku, label: priceBookItems.label, priceUsd: priceBookItems.priceUsd })
-              .from(priceBookItems)
-              .where(inArray(priceBookItems.sku, [...allSkus])),
-          )
-        : [];
-
     const approversByAction = new Map(Object.entries(await eligibleApproversForActions(ctx.tenantId, actionIds)));
     const actions = pageRows.map((r) => ({
       ...r,
@@ -165,7 +140,6 @@ export async function GET(req: Request): Promise<Response> {
       critic: criticByActionId.get(r.id) ?? null,
       eligibleApproverIds: approversByAction.get(r.id) ?? [],
       canCurrentEmployeeApprove: (approversByAction.get(r.id) ?? []).includes(ctx.employeeId ?? ctx.userId),
-      priceBookProvenance: buildPriceBookProvenance(candidatesByActionId.get(r.id) ?? [], priceBookRows),
       // jarvis-v3 P4.T1: the plugin's own simulate() prediction, normalized out of
       // the raw predictedReceipt column (already present on `r` via the `...r`
       // spread above) so the Approval Cockpit reads one clean field instead of

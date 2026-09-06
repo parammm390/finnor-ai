@@ -1,31 +1,18 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { createHash, randomBytes } from "node:crypto"
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs"
+import { createHash } from "node:crypto"
+import { readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
 const appName = process.argv[2]
 const prepareOnly = process.argv.includes("--prepare-only")
 const deployOnly = process.argv.includes("--deploy-only")
-const stageOnly = process.argv.includes("--stage-only")
-const promoteOnly = process.argv.includes("--promote-only")
 const outputIndex = process.argv.indexOf("--output-file")
 const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : undefined
-const deploymentUrlIndex = process.argv.indexOf("--deployment-url")
-const promotionUrl = deploymentUrlIndex >= 0 ? process.argv[deploymentUrlIndex + 1] : undefined
-const upstreamApiUrlIndex = process.argv.indexOf("--upstream-api-url")
-const upstreamApiUrl = upstreamApiUrlIndex >= 0 ? process.argv[upstreamApiUrlIndex + 1] : undefined
 if (!["frontend", "api"].includes(appName)) {
-  console.error("Usage: node scripts/release/deploy-production.mjs <frontend|api> [--prepare-only|--deploy-only|--stage-only|--promote-only --deployment-url <url>] [--upstream-api-url <https-url>] [--output-file path]")
+  console.error("Usage: node scripts/release/deploy-production.mjs <frontend|api> [--prepare-only|--deploy-only] [--output-file path]")
   process.exit(2)
 }
-const modes = [prepareOnly, deployOnly, stageOnly, promoteOnly].filter(Boolean).length
-if (modes > 1) throw new Error("Release modes are mutually exclusive")
-if (promoteOnly && (!promotionUrl || !/^https:\/\//.test(promotionUrl))) {
-  throw new Error("--promote-only requires --deployment-url <https-url>")
-}
-if (upstreamApiUrl !== undefined && (appName !== "frontend" || !/^https:\/\//.test(upstreamApiUrl))) {
-  throw new Error("--upstream-api-url is only valid for frontend and requires an https URL")
-}
+if (prepareOnly && deployOnly) throw new Error("--prepare-only and --deploy-only are mutually exclusive")
 
 const repoRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim()
 const contract = JSON.parse(readFileSync(join(repoRoot, "infra/deployment/production.contract.json"), "utf8"))
@@ -82,12 +69,7 @@ function git(args) {
 }
 
 function run(command, args, cwd, env) {
-  const safeArgs = args.map((arg, index) => {
-    if (args[index - 1] === "--token") return "<redacted>"
-    if (typeof arg === "string" && arg.startsWith("PRODUCT_TRUTH_CERTIFICATION_KEY=")) return "PRODUCT_TRUTH_CERTIFICATION_KEY=<redacted>"
-    if (typeof arg === "string" && arg.startsWith("JARVIS_UPSTREAM_VERCEL_BYPASS_SECRET=")) return "JARVIS_UPSTREAM_VERCEL_BYPASS_SECRET=<redacted>"
-    return arg
-  })
+  const safeArgs = args.map((arg, index) => args[index - 1] === "--token" ? "<redacted>" : arg === "--token" ? arg : arg)
   console.log(`$ ${command} ${safeArgs.join(" ")}`)
   const result = spawnSync(command, args, {
     cwd,
@@ -116,22 +98,12 @@ if (remoteMain !== commitSha) throw new Error(`Refusing to deploy ${commitSha}; 
 if (buildId !== `finnor-${commitSha.slice(0, 12)}`) throw new Error(`FINNOR_BUILD_ID must be commit-derived: ${buildId}`)
 if (!version.endsWith(`+${commitSha.slice(0, 12)}`)) throw new Error(`FINNOR_VERSION must be commit-derived: ${version}`)
 
-let productTruthCertificationKey = process.env.PRODUCT_TRUTH_CERTIFICATION_KEY?.trim()
-if (appName === "api" && (deployOnly || stageOnly) && !productTruthCertificationKey) {
-  const runnerTemp = process.env.RUNNER_TEMP?.trim()
-  if (!runnerTemp) throw new Error("PRODUCT_TRUTH_CERTIFICATION_KEY or RUNNER_TEMP is required for the commit-scoped API certification deployment")
-  productTruthCertificationKey = randomBytes(32).toString("hex")
-  const keyFile = join(runnerTemp, "product-truth-certification-key")
-  writeFileSync(keyFile, `${productTruthCertificationKey}\n`, { mode: 0o600 })
-  if (process.env.GITHUB_ACTIONS === "true") console.log(`::add-mask::${productTruthCertificationKey}`)
-  if (process.env.GITHUB_ENV) appendFileSync(process.env.GITHUB_ENV, `PRODUCT_TRUTH_CERTIFICATION_KEY=${productTruthCertificationKey}\n`)
-  console.log(`Generated one-run Product Truth certification capability at ${keyFile}`)
-}
-
 const appDir = resolve(repoRoot, app.directory)
 const tokenArgs = process.env.VERCEL_TOKEN ? ["--token", process.env.VERCEL_TOKEN] : []
 const env = {
   ...process.env,
+  // Vercel treats VERCEL_ORG_ID and VERCEL_PROJECT_ID as a pair. Scope every
+  // link/pull/build/deploy invocation to the exact project in the contract.
   VERCEL_ORG_ID: TEAM_ID,
   VERCEL_PROJECT_ID: app.projectId,
   FINNOR_COMMIT_SHA: commitSha,
@@ -140,39 +112,9 @@ const env = {
   FINNOR_ENVIRONMENT: environment,
   FINNOR_RELEASE_SOURCE: source,
   FINNOR_CORE_CERTIFICATION_ID: coreCertification.certificationId,
-  ...(upstreamApiUrl ? { NEXT_PUBLIC_OS_API_URL: upstreamApiUrl } : {}),
 }
 
-const productionUrl = target.productionUrl
-if (!productionUrl || !/^https:\/\//.test(productionUrl)) {
-  throw new Error(`Canonical ${appName} production URL is missing or invalid`)
-}
-
-if (promoteOnly) {
-  run("vercel", ["promote", promotionUrl, "--yes", "--scope", TEAM_ID, ...tokenArgs], appDir, env)
-  const result = {
-    app: appName,
-    project: app.project,
-    projectId: app.projectId,
-    commitSha,
-    buildId,
-    version,
-    environment,
-    source,
-    coreCertificationId: coreCertification.certificationId,
-    dirty: false,
-    remoteMain,
-    promoted: true,
-    deploymentUrl: promotionUrl,
-    productionUrl,
-  }
-  if (outputFile) writeFileSync(resolve(outputFile), `${JSON.stringify(result, null, 2)}\n`)
-  console.log(`\nFINNOR_PROMOTED_URL=${promotionUrl}`)
-  console.log(JSON.stringify(result, null, 2))
-  process.exit(0)
-}
-
-if (!deployOnly && !stageOnly) {
+if (!deployOnly) {
   run("vercel", ["pull", "--yes", "--environment=production", ...tokenArgs], appDir, env)
   const localConfig = join(appDir, ".vercel", "finnor-release.vercel.json")
   writeFileSync(localConfig, `${JSON.stringify({ installCommand: app.installCommand }, null, 2)}\n`)
@@ -183,26 +125,8 @@ if (prepareOnly) {
   process.exit(0)
 }
 
-const productTruthEnvArgs = appName === "api" && productTruthCertificationKey
-  ? [
-      "--env", "PRODUCT_TRUTH_CERTIFICATION_FIXTURES=1",
-      "--env", `PRODUCT_TRUTH_CERTIFICATION_KEY=${productTruthCertificationKey}`,
-    ]
-  : []
-const upstreamApiEnvArgs = upstreamApiUrl
-  ? [
-      "--build-env", `NEXT_PUBLIC_OS_API_URL=${upstreamApiUrl}`,
-      "--env", `NEXT_PUBLIC_OS_API_URL=${upstreamApiUrl}`,
-      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-        ? ["--env", `JARVIS_UPSTREAM_VERCEL_BYPASS_SECRET=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}`]
-        : []),
-    ]
-  : []
 const deployArgs = [
-  // The prepared output is a production-targeted Build Output API artifact.
-  // Stage it as a production deployment while suppressing domain assignment;
-  // the release job promotes the verified deployment only after AWS parity.
-  "deploy", "--prebuilt", ...(stageOnly ? ["--prod", "--skip-domain"] : ["--prod"]), "--yes",
+  "deploy", "--prebuilt", "--prod", "--yes",
   "--meta", `finnorCommitSha=${commitSha}`,
   "--meta", `finnorBuildId=${buildId}`,
   "--meta", `finnorVersion=${version}`,
@@ -212,7 +136,7 @@ const deployArgs = [
   "--meta", "gitDirty=0",
   "--meta", "githubDeployment=1",
   "--meta", "githubCommitOrg=parammm390",
-  "--meta", "githubCommitRepo=finnor-ai",
+  "--meta", "githubCommitRepo=JARVIS",
   "--meta", "githubCommitRef=main",
   "--meta", `githubCommitSha=${commitSha}`,
   "--env", `FINNOR_COMMIT_SHA=${commitSha}`,
@@ -221,19 +145,12 @@ const deployArgs = [
   "--env", `FINNOR_ENVIRONMENT=${environment}`,
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
   "--env", `FINNOR_CORE_CERTIFICATION_ID=${coreCertification.certificationId}`,
-  ...upstreamApiEnvArgs,
-  ...productTruthEnvArgs,
   ...tokenArgs,
 ]
 const deployOutput = run("vercel", deployArgs, appDir, env)
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
 const deploymentUrl = urls.at(-1)
 if (!deploymentUrl) throw new Error("Vercel did not return a deployment URL")
-
-if (!stageOnly) {
-  const productionAlias = new URL(productionUrl).host
-  run("vercel", ["alias", "set", deploymentUrl, productionAlias, "--scope", TEAM_ID, ...tokenArgs], appDir, env)
-}
 
 const result = {
   app: appName,
@@ -245,15 +162,12 @@ const result = {
   environment,
   source,
   coreCertificationId: coreCertification.certificationId,
-  productTruthCertificationFixtures: appName === "api" && Boolean(productTruthCertificationKey),
   dirty: false,
   remoteMain,
-  staged: stageOnly,
   deploymentUrl,
-  productionUrl,
 }
 if (outputFile) {
   writeFileSync(resolve(outputFile), `${JSON.stringify(result, null, 2)}\n`)
 }
-console.log(`\nFINNOR_DEPLOYMENT_URL=${deploymentUrl}`)
+console.log(`FINNOR_DEPLOYMENT_URL=${deploymentUrl}`)
 console.log(JSON.stringify(result, null, 2))

@@ -1,0 +1,1432 @@
+{
+  "title": "PE5 WATER RETIREMENT CERTIFICATION",
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T19:32:30.814Z",
+  "startedAt": "2026-09-06T19:30:33.677Z",
+  "status": "LOCAL_PASS_PRODUCTION_BLOCKED",
+  "certificationScope": "deterministic isolated full-history cutover rehearsal, post-cutover runtime tests, and sanitized read-only production census",
+  "startingState": {
+    "branch": "codex/p3-epistemic-runtime",
+    "sha": "b5f36a9129ff2a40edc0926da29f3250a9976d13",
+    "tree": {
+      "changedPaths": 0,
+      "porcelainSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summaryTail": "clean"
+    },
+    "implementationTreeDirty": false
+  },
+  "prerequisites": {
+    "status": "PASS",
+    "pe0": {
+      "ledger": "packages/shared-types/src/retired-water.ts",
+      "version": 2,
+      "rows": 250,
+      "counts": {
+        "retiredActions": 42,
+        "retiredQueries": 7,
+        "retiredCanonicalEntities": 19,
+        "retiredImportEntities": 12,
+        "retiredParties": 3,
+        "retiredJobs": 15,
+        "retiredWorkflows": 6,
+        "retiredReadModels": 8,
+        "retiredDoctrineSurfaces": 9,
+        "retiredImplementationPaths": 102,
+        "total": 250,
+        "byP5Action": {
+          "REMOVE_RUNTIME": 102,
+          "DELETE_SOURCE": 102,
+          "QUARANTINE_HISTORY": 27,
+          "RETAIN_CORE": 12,
+          "RETAIN_PROVIDER_TRANSPORT": 7
+        },
+        "unknown": 0
+      },
+      "unknown": 0,
+      "priorEvidenceHash": "6d45feede16205d57cfea7f2e0586ff524c2f0832a887ab08885130da2aba736"
+    },
+    "pe1": {
+      "executableVerticals": [
+        "none",
+        "private_equity"
+      ],
+      "evidenceMigration": "0104_core_vertical_runtime_boundary.sql"
+    },
+    "pe2": {
+      "evidenceMigration": "0105_private_equity_execution_graph.sql",
+      "certificationHash": "6d45feede16205d57cfea7f2e0586ff524c2f0832a887ab08885130da2aba736"
+    },
+    "pe3": {
+      "activeQueries": 13,
+      "certificationHash": "850b515991b5eab12aaab87c4b3b9d74c748ad86af64e3f669b9137bb9267e27"
+    },
+    "pe4": {
+      "priorStatus": "PASS",
+      "priorHead": "0107_private_equity_execution_semantics.sql",
+      "certificationHash": "d61d0f7c0e341d7842dc2b06cc5925e5616b9a952eab10168e854c54450454e7",
+      "postCutoverRerun": "required below"
+    }
+  },
+  "pe0Ledger": {
+    "version": 2,
+    "unknown": 0,
+    "counts": {
+      "retiredActions": 42,
+      "retiredQueries": 7,
+      "retiredCanonicalEntities": 19,
+      "retiredImportEntities": 12,
+      "retiredParties": 3,
+      "retiredJobs": 15,
+      "retiredWorkflows": 6,
+      "retiredReadModels": 8,
+      "retiredDoctrineSurfaces": 9,
+      "retiredImplementationPaths": 102,
+      "total": 250,
+      "byP5Action": {
+        "REMOVE_RUNTIME": 102,
+        "DELETE_SOURCE": 102,
+        "QUARANTINE_HISTORY": 27,
+        "RETAIN_CORE": 12,
+        "RETAIN_PROVIDER_TRANSPORT": 7
+      },
+      "unknown": 0
+    },
+    "sha256": "4e8268a5f13f5672a5bc5e9fe9cc0b812d8f85411c573e6584c392cc3b16b1f3",
+    "artifact": "docs/release/generated/pe5-disposition-ledger.json"
+  },
+  "runtime": {
+    "executableVerticals": [
+      "none",
+      "private_equity"
+    ],
+    "activeProductVertical": "private_equity",
+    "coreNonePurpose": "internal certification only",
+    "activeActionCount": 32,
+    "activeQueryCount": 13,
+    "activeParties": [
+      "employee",
+      "team",
+      "location",
+      "external_organization",
+      "external_contact"
+    ],
+    "activeWaterActions": 0,
+    "activeWaterQueries": 0,
+    "activeWaterWorkers": 0,
+    "activeWaterSchedules": 0,
+    "activeWaterSourceMappings": 0,
+    "activeWaterCanonicalWriters": 0,
+    "activeWaterImportDefinitions": 0,
+    "activeWaterReadModels": 0,
+    "activeWaterPlannerDoctrine": 0
+  },
+  "retirement": {
+    "actions": [
+      "schedule_water_test",
+      "renew_maintenance_agreement",
+      "create_lead",
+      "update_lead_status",
+      "log_interaction",
+      "assign_lead_to_technician",
+      "check_stock_level",
+      "flag_reorder_needed",
+      "log_stock_used_on_visit",
+      "assign_technician_to_visit",
+      "check_technician_availability",
+      "reschedule_visit",
+      "generate_quote",
+      "size_equipment_for_household",
+      "send_proposal",
+      "create_invoice",
+      "send_payment_reminder",
+      "record_payment",
+      "call_overdue_invoices",
+      "summarize_ad_performance",
+      "launch_ad_campaign",
+      "create_review_request",
+      "answer_customer_question",
+      "send_customer_message",
+      "send_follow_up",
+      "answer_water_question",
+      "send_proposal_to_recent_installs",
+      "bulk_notify_existing_customers",
+      "log_visit_report",
+      "flag_visit_issue",
+      "check_reminder_due",
+      "generate_compliance_summary",
+      "scan_competitors",
+      "check_business_reviews",
+      "get_business_overview",
+      "answer_business_question",
+      "start_water_test_workflow",
+      "request_proposal_signature",
+      "start_installation_workflow",
+      "start_invoice_to_cash_workflow",
+      "manual_step_suggestion",
+      "route_suggestion"
+    ],
+    "queries": [
+      "customer_lookup",
+      "customer_cohort",
+      "schedule_range",
+      "money_summary",
+      "inventory_status",
+      "business_state",
+      "party_availability"
+    ],
+    "entities": [
+      "household",
+      "contact",
+      "technician",
+      "equipment",
+      "service_visit",
+      "maintenance_agreement",
+      "lead",
+      "opportunity",
+      "quote",
+      "proposal",
+      "work_order",
+      "appointment",
+      "invoice",
+      "payment",
+      "conversation",
+      "call",
+      "message",
+      "communication",
+      "inventory_item"
+    ],
+    "parties": [
+      "household",
+      "contact",
+      "technician"
+    ],
+    "businessTruth": [
+      "household",
+      "contact",
+      "technician",
+      "equipment",
+      "service_visit",
+      "maintenance_agreement",
+      "lead",
+      "opportunity",
+      "quote",
+      "proposal",
+      "work_order",
+      "appointment",
+      "invoice",
+      "payment",
+      "conversation",
+      "call",
+      "message",
+      "communication",
+      "inventory_item"
+    ],
+    "writersAndMaterializers": [
+      "Water data-platform repositories",
+      "Water canonical import writers",
+      "Water source materializers"
+    ],
+    "imports": [
+      "customer",
+      "lead",
+      "appointment",
+      "service_visit",
+      "equipment",
+      "work_order",
+      "quote",
+      "proposal",
+      "invoice",
+      "payment",
+      "inventory_item",
+      "technician"
+    ],
+    "sources": [
+      "ghl",
+      "quickbooks",
+      "stripe"
+    ],
+    "workers": [
+      "scheduled_reminder",
+      "scan_cold_leads",
+      "scan_low_inventory",
+      "scan_service_due",
+      "scan_appointment_no_shows",
+      "simulator_tick",
+      "owner_digest",
+      "suggest_daily_routes",
+      "scan_ewma_reorder",
+      "scan_data_quality",
+      "quickbooks_sync",
+      "dispatch_business_operation",
+      "execute_business_operation_target",
+      "execute_business_operation_call_batch",
+      "run_client_factory"
+    ],
+    "schedulers": [
+      "scheduled_reminder",
+      "scan_cold_leads",
+      "scan_low_inventory",
+      "scan_service_due",
+      "scan_appointment_no_shows",
+      "simulator_tick",
+      "owner_digest",
+      "scan_ewma_reorder",
+      "scan_data_quality"
+    ],
+    "workflows": [
+      "lead_to_water_test",
+      "maintenance_agreement",
+      "maintenance_agreement_renewal",
+      "proposal_signature",
+      "proposal_to_installation",
+      "invoice_to_cash"
+    ],
+    "readModels": [
+      "household-360",
+      "route optimizer",
+      "slot recommender",
+      "reorder points",
+      "churn risk"
+    ],
+    "doctrine": [
+      "Water planner examples",
+      "Water customer conversation doctrine",
+      "Water policy defaults",
+      "Water provisioning",
+      "Dealer Zero"
+    ],
+    "implementationPaths": [
+      "apps/api/app/api/business-world",
+      "apps/api/app/api/comms",
+      "apps/api/app/api/data-quality/findings",
+      "apps/api/app/api/dealer-zero",
+      "apps/api/app/api/dispatch",
+      "apps/api/app/api/operations/[id]/retry/route.ts",
+      "apps/api/app/api/overview",
+      "apps/api/app/api/price-book",
+      "apps/api/app/api/resources",
+      "apps/api/app/api/stats",
+      "apps/api/app/api/technician",
+      "apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "apps/api/lib/price-book-provenance.ts",
+      "apps/worker/src/simulator",
+      "apps/worker/src/handlers/business-operation.ts",
+      "apps/worker/src/handlers/owner-digest.ts",
+      "apps/worker/src/handlers/quickbooks-sync.ts",
+      "apps/worker/src/handlers/run-client-factory.ts",
+      "apps/worker/src/handlers/scan-appointment-no-shows.ts",
+      "apps/worker/src/handlers/scan-cold-leads.ts",
+      "apps/worker/src/handlers/scan-data-quality.ts",
+      "apps/worker/src/handlers/scan-ewma-reorder.ts",
+      "apps/worker/src/handlers/scan-low-inventory.ts",
+      "apps/worker/src/handlers/scan-service-due.ts",
+      "apps/worker/src/handlers/scheduled-reminder.ts",
+      "apps/worker/src/handlers/simulator-tick.ts",
+      "apps/worker/src/handlers/suggest-daily-routes.ts",
+      "packages/data-platform/src/appointments.ts",
+      "packages/data-platform/src/contacts.ts",
+      "packages/data-platform/src/conversations.ts",
+      "packages/data-platform/src/import-writes.ts",
+      "packages/data-platform/src/leads.ts",
+      "packages/data-platform/src/payments.ts",
+      "packages/data-platform/src/price-book.ts",
+      "packages/data-platform/src/quotes.ts",
+      "packages/data-platform/src/work-orders.ts",
+      "packages/db/seed-scale.ts",
+      "packages/domain-plugins/accounting",
+      "packages/domain-plugins/bulk-notify",
+      "packages/domain-plugins/compliance-documentation",
+      "packages/domain-plugins/crm",
+      "packages/domain-plugins/customer-comm",
+      "packages/domain-plugins/inventory",
+      "packages/domain-plugins/invoice-to-cash",
+      "packages/domain-plugins/lead-to-water-test",
+      "packages/domain-plugins/maintenance-agreement",
+      "packages/domain-plugins/manual-step",
+      "packages/domain-plugins/marketing",
+      "packages/domain-plugins/ops-overview",
+      "packages/domain-plugins/proposal-batch",
+      "packages/domain-plugins/proposal-signature",
+      "packages/domain-plugins/proposal-to-installation",
+      "packages/domain-plugins/quotation",
+      "packages/domain-plugins/route-optimization",
+      "packages/domain-plugins/scheduling",
+      "packages/domain-plugins/service-reminders",
+      "packages/domain-plugins/technician-reports",
+      "packages/domain-plugins/water-domain-knowledge",
+      "packages/domain-plugins/water-test",
+      "packages/domain-plugins/web-research/watch-service.ts",
+      "packages/orchestration/src/dealer-zero-replay.ts",
+      "packages/orchestration/src/training-mode.ts",
+      "packages/read-models/src/churn-risk.ts",
+      "packages/read-models/src/reorder-points.ts",
+      "packages/read-models/src/route-optimizer.ts",
+      "packages/read-models/src/slot-recommender.ts",
+      "packages/shared-types/src/business-world.ts",
+      "packages/shared-types/src/dealer-zero-fixtures.ts",
+      "packages/shared-types/src/dealer-zero-scenarios.ts",
+      "packages/shared-types/src/dealer-zero-time-compression.ts",
+      "packages/tools/src/ads-write.ts",
+      "packages/tools/src/ads.ts",
+      "packages/tools/src/binding-resolution.ts",
+      "packages/tools/src/capabilities/accounting.ts",
+      "packages/tools/src/capabilities/communications.ts",
+      "packages/tools/src/capabilities/crm.ts",
+      "packages/tools/src/capabilities/documents.ts",
+      "packages/tools/src/capabilities/governed-runtime.ts",
+      "packages/tools/src/capabilities/inventory.ts",
+      "packages/tools/src/capabilities/marketing.ts",
+      "packages/tools/src/capabilities/scheduling.ts",
+      "packages/tools/src/compensation-capabilities.ts",
+      "packages/tools/src/docusign.ts",
+      "packages/tools/src/maps.ts",
+      "packages/tools/src/quickbooks.ts",
+      "packages/tools/src/sandbox.ts",
+      "packages/tools/src/stripe.ts",
+      "packages/workflow-runtime/src/capability.ts",
+      "packages/workflow-runtime/src/compensation.ts",
+      "scripts/client-factory.ts",
+      "scripts/client-lifecycle.ts",
+      "scripts/client-manifest.ts",
+      "scripts/client-provisioning.ts",
+      "scripts/eval-planner.ts",
+      "scripts/import-client-data.ts",
+      "scripts/import-synthetic-dealer.ts",
+      "scripts/provision-tenant.ts",
+      "scripts/seed-dealer-zero.ts",
+      "scripts/seed-demo-tenant.ts",
+      "scripts/seed-tenant-policies.ts",
+      "scripts/tenant-bootstrap.ts",
+      "scripts/update-vapi-winback.ts"
+    ]
+  },
+  "localRehearsalCensus": {
+    "tenantClassification": {
+      "c2679b20-bdf0-4c9b-81b7-cab7355b0990": {
+        "classification": "TEST",
+        "authorized": true,
+        "authorizationRef": "pe5:isolated-upgrade"
+      }
+    },
+    "beforeDrain": {
+      "tenant_disposition": 0,
+      "water_domain_action": 1,
+      "water_job": 1,
+      "water_workflow": 0,
+      "water_event_wait": 0,
+      "water_objective": 0,
+      "water_business_effect": 0,
+      "water_external_operation": 0,
+      "water_integration_operation": 0,
+      "water_computer_run": 0
+    },
+    "afterDrain": {
+      "tenant_disposition": 0,
+      "water_domain_action": 0,
+      "water_job": 0,
+      "water_workflow": 0,
+      "water_event_wait": 0,
+      "water_objective": 0,
+      "water_business_effect": 0,
+      "water_external_operation": 0,
+      "water_integration_operation": 0,
+      "water_computer_run": 0
+    },
+    "unknown": 0
+  },
+  "productionCensus": {
+    "schemaVersion": 1,
+    "capturedAt": "2026-09-06T16:09:51.719Z",
+    "environment": "production",
+    "method": "PostgreSQL REPEATABLE READ READ ONLY aggregate census",
+    "privacy": {
+      "tenantIdentifiersIncluded": false,
+      "tenantNamesIncluded": false,
+      "credentialsIncluded": false
+    },
+    "target": {
+      "apiProject": "api",
+      "apiProductionCommit": "f40526617c7e22258c12a2b669975ddaaf33e7fc",
+      "databaseProvider": "supabase-postgres",
+      "databaseRegion": "ap-northeast-1"
+    },
+    "candidate": {
+      "branch": "codex/p3-epistemic-runtime",
+      "commit": "b5f36a9129ff2a40edc0926da29f3250a9976d13",
+      "originMainCommit": "4cc85c5534988f2b9f4b5938f0e4b6758985206c",
+      "mergeBase": "c95720496b5c42391a8c6ef796170f4a365232ca",
+      "candidateOnlyCommits": 11,
+      "originMainOnlyCommits": 236
+    },
+    "database": {
+      "migrationCount": 110,
+      "migrationHead": "0108_operating_product_closure.sql",
+      "candidateMigrationHead": "0109_atomic_water_runtime_retirement.sql",
+      "candidateLineageMatchesProduction": false,
+      "phase5AuthoritySchemaPresent": false,
+      "missingPhase5Tables": [
+        "tenant_vertical_assignments",
+        "product_runtime_authority",
+        "water_tenant_retirement_dispositions"
+      ]
+    },
+    "lineage": {
+      "status": "DIVERGENT_FORWARD_REPAIR_REQUIRED",
+      "productionRecordedNotPresentInCandidate": [
+        "0108_operating_product_closure.sql"
+      ],
+      "candidateMissingFromProduction": [
+        "0109_atomic_water_runtime_retirement.sql"
+      ],
+      "divergentCandidateMigrations": [
+        "0104_core_vertical_runtime_boundary.sql",
+        "0105_private_equity_execution_graph.sql",
+        "0106_private_equity_truth_and_cognition.sql",
+        "0107_private_equity_execution_semantics.sql"
+      ],
+      "appliedNotRecorded": {
+        "migrations": [],
+        "status": "NONE_CONFIRMED_BY_READ_ONLY_SCHEMA_AUDIT"
+      },
+      "appliedAndRecorded": {
+        "status": "NOT_ASSERTED_FROM_NAME_ONLY_LEDGER"
+      },
+      "evidence": "Production records 0108_operating_product_closure.sql while the candidate PE/core authority objects and 0109 are absent from the live schema; no historical migration row was rewritten.",
+      "repairStrategy": "Apply the idempotent 0109 forward repair after backup/snapshot; historical migrations remain immutable and production 0108 remains untouched.",
+      "mutationPerformed": false
+    },
+    "tenantClassification": {
+      "totalTenants": 4,
+      "tenantsWithLegacyWaterRows": 3,
+      "configuredReferenceTenants": 1,
+      "authorized": 0,
+      "unknown": 3,
+      "classification": "UNKNOWN"
+    },
+    "legacyRowCounts": {
+      "appointments": 0,
+      "communications_log": 404,
+      "contacts": 0,
+      "equipment": 165,
+      "households": 248,
+      "inventory_items": 12,
+      "invoices": 36,
+      "leads": 23,
+      "maintenance_agreements": 41,
+      "opportunities": 0,
+      "payments": 0,
+      "proposals": 1,
+      "quotes": 0,
+      "service_visits": 394,
+      "technicians": 35,
+      "work_orders": 0
+    },
+    "inFlight": {
+      "activeWaterAssociatedWorks": 75,
+      "waterAssociatedWorkInputs": 411,
+      "activeWaterAssociatedObjectives": 3,
+      "activeWaterAssociatedActions": 1015,
+      "pendingWaterAssociatedApprovals": 51,
+      "activeWaterAssociatedBusinessEffects": 3,
+      "activeWaterAssociatedWorkflows": 0,
+      "activeWaterAssociatedEventWaits": 0,
+      "ambiguousWaterAssociatedExternalOperations": 0,
+      "ambiguousWaterAssociatedIntegrationOperations": 0,
+      "activeWaterAssociatedComputerRuns": 0,
+      "openWaterAssociatedReconciliationCases": 0,
+      "openWaterAssociatedOutboxItems": 0,
+      "openWaterAssociatedInboxItems": 0,
+      "waterAssociatedJobs": {
+        "runnable": 1,
+        "running": 1,
+        "deadLetter": 660
+      },
+      "authorityApprovalRequests": {
+        "approved": 2,
+        "pending": 32,
+        "rejected": 1
+      }
+    },
+    "runtimeProvenance": {
+      "requiredRoles": [
+        "api",
+        "worker",
+        "orchestrator",
+        "supplier-canary",
+        "scheduler-owner"
+      ],
+      "observedRoles": [
+        "worker"
+      ],
+      "workerInstancesRecorded": 29,
+      "freshWorkerInstances": 2,
+      "freshWorkerReleases": 2,
+      "allRequiredRolesPresent": false,
+      "singleCompatibleRelease": false
+    },
+    "topologyEvidence": {
+      "contractWorkerProvider": "azure-vm",
+      "repositoryReleaseMechanism": "GitHub Actions Azure OIDC plus deploy-azure-worker.mjs",
+      "contractResources": [
+        "finnor-jarvis-worker",
+        "finnor-production-rg",
+        "northcentralus"
+      ],
+      "runtimeHeartbeatDeploymentLabel": "ecs:finnor-production:finnor-worker:<sha>",
+      "runtimeHeartbeatLabelSource": "application-provided FINNOR_WORKER_DEPLOYMENT_ID/RAILWAY_DEPLOYMENT_ID",
+      "awsControlPlaneEvidence": "ECS list-clusters was not authorized; no ECS task or service control-plane evidence was obtained.",
+      "decision": "KEEP_AZURE_CONTRACT_AUTHORITATIVE_ECS_LABEL_UNVERIFIED",
+      "logicalRoleOwners": {
+        "api": "Vercel API project api",
+        "worker": "Azure VM finnor-jarvis-worker",
+        "orchestrator": "embedded worker process (no independent production heartbeat observed)",
+        "supplier-canary": "finnor-os/apps/supplier-canary source; deployed production owner not proven",
+        "scheduler-owner": "embedded worker scheduler-owner heartbeat; no separate production heartbeat observed"
+      }
+    },
+    "cutoverDecision": "BLOCKED_CUTOVER_UNKNOWN_WATER_TENANTS",
+    "blockers": [
+      "Three tenants with legacy Water rows remain UNKNOWN and have no authorized disposition.",
+      "Water-associated active Work, Objective, Action, Approval, BusinessEffect, running job, and DLQ state is not drained or dispositioned.",
+      "Only Worker heartbeats are present; all five required runtime roles do not share one verified cutover-compatible release.",
+      "Production migration lineage conflicts with the candidate Phase 0-5 migration lineage.",
+      "The durable Phase 5 authority and tenant disposition tables are not present in production."
+    ],
+    "mutationPerformed": false
+  },
+  "productionCensusSha256": "1abd14d9dcdf765fe4522df4bddbfeedd2b3f2d73fbcb0013986b89d3d100362",
+  "cutoverOwner": "database migration/restore principal via SECURITY DEFINER functions; normal finnor_app has no execute grant on cutover, trigger-retirement, census, or history-authority functions",
+  "cutoverSequence": [
+    "Loaded cutover-compatible code and forward migration with the barrier still preparing.",
+    "Proved all five required role heartbeats share one SHA, protocol, epoch and migration head.",
+    "Froze new Water intake at durable epoch 5.",
+    "Drained the seeded pending Water action and queued job; retained ambiguous/DLQ truth without blind retry.",
+    "Asserted every category in water_retirement_blockers() equals zero.",
+    "Flipped the durable authority atomically to water_retired / Private Equity / epoch 6.",
+    "Activated application-role legacy write guards and removed Water behavior-producing table triggers.",
+    "Confirmed all executable registries, sources, writers and provisioning are PE/Core-only.",
+    "Ran post-cutover PE2/PE3/P4 runtime certification.",
+    "Verified Water-only implementation files are absent while history files remain."
+  ],
+  "database": {
+    "engine": "embedded PostgreSQL",
+    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "migrationCount": 109,
+    "migrationNamesHash": "1f5f98f387b2212ad5b8b94284afe763eebe7ec264543ae641d8c81518b90069",
+    "fresh": {
+      "status": "PASS",
+      "evidence": {
+        "migrationHead": "0109_atomic_water_runtime_retirement.sql",
+        "epoch": 6,
+        "assignedVertical": "private_equity",
+        "workspaceVersion": 3
+      }
+    },
+    "populatedUpgrade": {
+      "status": "PASS",
+      "evidence": {
+        "epoch": 6,
+        "state": "water_retired",
+        "active_product_vertical": "private_equity",
+        "water_active": false,
+        "pe_active": true,
+        "assignment": "water",
+        "dead_job_status": "quarantined",
+        "legacy_user_status": "suspended",
+        "settings_safe": true,
+        "water_canonical_active": 0,
+        "behavior_trigger_count": 0,
+        "trigger_evidence": 59,
+        "peTenant": {
+          "vertical": "private_equity",
+          "version": 3
+        },
+        "historyCounts": {
+          "receipts": 1,
+          "events": 1,
+          "refs": 1,
+          "tables": 14
+        },
+        "securityBoundary": {
+          "securityDefinerCount": 12,
+          "publicExecuteCount": 0,
+          "privilegedApplicationExecuteCount": 0,
+          "explicitPeProvisioningAvailable": true
+        }
+      }
+    },
+    "restore": {
+      "status": "PASS",
+      "evidence": {
+        "method": "current-schema logical row backup/restore",
+        "state": "water_retired",
+        "epoch": 6,
+        "assignment": "water",
+        "rows": 4,
+        "migrations": 109,
+        "applicationMutationDenied": "RETIRED_VERTICAL: Water history is read-only "
+      }
+    },
+    "historicalFingerprint": "fb621aaca9b45e3c169126f9ae94858835f4e12007ca06cc51079f4ec1f85fe4",
+    "finalAuthority": {
+      "epoch": 6,
+      "state": "water_retired",
+      "activeProductVertical": "private_equity"
+    },
+    "legacyWriteProtection": "two server-owned deny triggers plus application-role privilege boundary; privileged history restore keyed by session_user allowlist",
+    "triggerRetirement": "non-internal behavior triggers on Water tables dropped atomically by the final activation function"
+  },
+  "history": {
+    "status": "PASS",
+    "evidence": {
+      "fingerprint": "fb621aaca9b45e3c169126f9ae94858835f4e12007ca06cc51079f4ec1f85fe4",
+      "replayNodes": 12,
+      "actionIdentity": "schedule_water_test",
+      "receipts": 1,
+      "events": 1,
+      "refs": 1,
+      "tables": 14
+    }
+  },
+  "safety": {
+    "mixedFreeze": "mixed-fleet freeze blocked: compatible worker provenance is not exclusive ",
+    "mixedActivation": "mixed-fleet cutover blocked: incompatible scheduler-owner instance is still live ",
+    "freezeAction": "RETIRED_VERTICAL: Water runtime mutation is disabled ",
+    "freezeTruth": "RETIRED_VERTICAL: Water history is read-only ",
+    "rollbackResults": {
+      "insertAction": "RETIRED_VERTICAL: Water runtime mutation is disabled ",
+      "mutateTruth": "RETIRED_VERTICAL: Water history is read-only ",
+      "queuedJob": "RETIRED_VERTICAL: Water runtime mutation is disabled ",
+      "dlqRedrive": "RETIRED_VERTICAL: Water runtime mutation is disabled "
+    },
+    "forgedWater": "RETIRED_VERTICAL ",
+    "status": "PASS",
+    "mixedFleetFreeze": "PASS",
+    "mixedFleetFinal": "PASS",
+    "delayedWebhooks": "authenticated receipt-only quarantine returning HTTP 410; integration tests cover no action/job/event mutation",
+    "delayedWebhookTests": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4637,
+      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
+      "outputLineCount": 32,
+      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+    },
+    "rollback": "normal finnor_app SQL paths rejected by durable epoch-6 database guards",
+    "sourceResurrection": "empty active mapper registry plus PE-DOMAIN-BOUNDARY"
+  },
+  "boundary": {
+    "status": "PASS",
+    "scannedFiles": 571,
+    "negativeControl": true,
+    "deliberateNegativeInjection": "PASS",
+    "ledgerRows": 250,
+    "ledgerUnknown": 0
+  },
+  "pe": {
+    "postCutoverTests": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 14615,
+      "outputHash": "c02bad7d7fd23e616f0f62e0f85d65b529ee772456bb1a4741154551194cb456",
+      "outputLineCount": 18,
+      "summary": "(Use `node --trace-deprecation ...` to show where the warning was created) | ·······(node:72484) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ···· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  01:02:10 |    Duration  14.24s (transform 1.41s, setup 0ms, import 6.75s, tests 7.15s, environment 0ms)"
+    },
+    "representativeExecution": "PASS",
+    "longLivedObjective": "PASS",
+    "closeSafety": "PASS",
+    "authorityEffectReconciliation": "PASS"
+  },
+  "coreRegression": {
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 18011,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "unit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit packages/orchestration/src/instruction-trace.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 67360,
+      "outputHash": "247a693d733796ed7d20f5e2503f7b261304eeb8d8d9353bc9e8afeeb5d84ce4",
+      "outputLineCount": 30,
+      "summary": "  name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ···················································································································································································································································································· |  Test Files  85 passed (85) |       Tests  350 passed (350) |    Start at  01:00:53 |    Duration  66.66s (transform 1.93s, setup 0ms, import 48.34s, tests 8.44s, environment 7ms)"
+    },
+    "plannerEvals": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/planner-evals --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4619,
+      "outputHash": "9798fbd645739fd3a037d7bc25d891dca3770fc138ebaa6dde732939720a7735",
+      "outputLineCount": 12,
+      "summary": "  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json | Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning. |  RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  01:02:00 |    Duration  4.20s (transform 1.71s, setup 0ms, import 4.08s, tests 6ms, environment 0ms)"
+    },
+    "pePostCutover": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 14615,
+      "outputHash": "c02bad7d7fd23e616f0f62e0f85d65b529ee772456bb1a4741154551194cb456",
+      "outputLineCount": 18,
+      "summary": "(Use `node --trace-deprecation ...` to show where the warning was created) | ·······(node:72484) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ···· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  01:02:10 |    Duration  14.24s (transform 1.41s, setup 0ms, import 6.75s, tests 7.15s, environment 0ms)"
+    },
+    "webhookQuarantine": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4637,
+      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
+      "outputLineCount": 32,
+      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+    }
+  },
+  "retained": [
+    "Core Work/Objective/Authority/Approval/BusinessEffect/event-wait/reconciliation",
+    "universal actions and computer runtime",
+    "Source Truth and generic Import engines with empty uncertified business registries",
+    "generic reference-tenant machinery and reusable provider transports",
+    "historical Water schema, rows, Work, receipts, BusinessEvents, external refs, replay and immutable migrations"
+  ],
+  "sourceRetirement": {
+    "activeWaterImplementationImports": 0,
+    "deletedImplementationPaths": [
+      "apps/api/app/api/business-world",
+      "apps/api/app/api/comms",
+      "apps/api/app/api/data-quality/findings",
+      "apps/api/app/api/dealer-zero",
+      "apps/api/app/api/dispatch",
+      "apps/api/app/api/operations/[id]/retry/route.ts",
+      "apps/api/app/api/overview",
+      "apps/api/app/api/price-book",
+      "apps/api/app/api/resources",
+      "apps/api/app/api/stats",
+      "apps/api/app/api/technician",
+      "apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "apps/api/lib/price-book-provenance.ts",
+      "apps/worker/src/simulator",
+      "apps/worker/src/handlers/business-operation.ts",
+      "apps/worker/src/handlers/owner-digest.ts",
+      "apps/worker/src/handlers/quickbooks-sync.ts",
+      "apps/worker/src/handlers/run-client-factory.ts",
+      "apps/worker/src/handlers/scan-appointment-no-shows.ts",
+      "apps/worker/src/handlers/scan-cold-leads.ts",
+      "apps/worker/src/handlers/scan-data-quality.ts",
+      "apps/worker/src/handlers/scan-ewma-reorder.ts",
+      "apps/worker/src/handlers/scan-low-inventory.ts",
+      "apps/worker/src/handlers/scan-service-due.ts",
+      "apps/worker/src/handlers/scheduled-reminder.ts",
+      "apps/worker/src/handlers/simulator-tick.ts",
+      "apps/worker/src/handlers/suggest-daily-routes.ts",
+      "packages/data-platform/src/appointments.ts",
+      "packages/data-platform/src/contacts.ts",
+      "packages/data-platform/src/conversations.ts",
+      "packages/data-platform/src/import-writes.ts",
+      "packages/data-platform/src/leads.ts",
+      "packages/data-platform/src/payments.ts",
+      "packages/data-platform/src/price-book.ts",
+      "packages/data-platform/src/quotes.ts",
+      "packages/data-platform/src/work-orders.ts",
+      "packages/db/seed-scale.ts",
+      "packages/domain-plugins/accounting",
+      "packages/domain-plugins/bulk-notify",
+      "packages/domain-plugins/compliance-documentation",
+      "packages/domain-plugins/crm",
+      "packages/domain-plugins/customer-comm",
+      "packages/domain-plugins/inventory",
+      "packages/domain-plugins/invoice-to-cash",
+      "packages/domain-plugins/lead-to-water-test",
+      "packages/domain-plugins/maintenance-agreement",
+      "packages/domain-plugins/manual-step",
+      "packages/domain-plugins/marketing",
+      "packages/domain-plugins/ops-overview",
+      "packages/domain-plugins/proposal-batch",
+      "packages/domain-plugins/proposal-signature",
+      "packages/domain-plugins/proposal-to-installation",
+      "packages/domain-plugins/quotation",
+      "packages/domain-plugins/route-optimization",
+      "packages/domain-plugins/scheduling",
+      "packages/domain-plugins/service-reminders",
+      "packages/domain-plugins/technician-reports",
+      "packages/domain-plugins/water-domain-knowledge",
+      "packages/domain-plugins/water-test",
+      "packages/domain-plugins/web-research/watch-service.ts",
+      "packages/orchestration/src/dealer-zero-replay.ts",
+      "packages/orchestration/src/training-mode.ts",
+      "packages/read-models/src/churn-risk.ts",
+      "packages/read-models/src/reorder-points.ts",
+      "packages/read-models/src/route-optimizer.ts",
+      "packages/read-models/src/slot-recommender.ts",
+      "packages/shared-types/src/business-world.ts",
+      "packages/shared-types/src/dealer-zero-fixtures.ts",
+      "packages/shared-types/src/dealer-zero-scenarios.ts",
+      "packages/shared-types/src/dealer-zero-time-compression.ts",
+      "packages/tools/src/ads-write.ts",
+      "packages/tools/src/ads.ts",
+      "packages/tools/src/binding-resolution.ts",
+      "packages/tools/src/capabilities/accounting.ts",
+      "packages/tools/src/capabilities/communications.ts",
+      "packages/tools/src/capabilities/crm.ts",
+      "packages/tools/src/capabilities/documents.ts",
+      "packages/tools/src/capabilities/governed-runtime.ts",
+      "packages/tools/src/capabilities/inventory.ts",
+      "packages/tools/src/capabilities/marketing.ts",
+      "packages/tools/src/capabilities/scheduling.ts",
+      "packages/tools/src/compensation-capabilities.ts",
+      "packages/tools/src/docusign.ts",
+      "packages/tools/src/maps.ts",
+      "packages/tools/src/quickbooks.ts",
+      "packages/tools/src/sandbox.ts",
+      "packages/tools/src/stripe.ts",
+      "packages/workflow-runtime/src/capability.ts",
+      "packages/workflow-runtime/src/compensation.ts",
+      "scripts/client-factory.ts",
+      "scripts/client-lifecycle.ts",
+      "scripts/client-manifest.ts",
+      "scripts/client-provisioning.ts",
+      "scripts/eval-planner.ts",
+      "scripts/import-client-data.ts",
+      "scripts/import-synthetic-dealer.ts",
+      "scripts/provision-tenant.ts",
+      "scripts/seed-dealer-zero.ts",
+      "scripts/seed-demo-tenant.ts",
+      "scripts/seed-tenant-policies.ts",
+      "scripts/tenant-bootstrap.ts",
+      "scripts/update-vapi-winback.ts"
+    ],
+    "removedPluginDependencies": "all @finnor/plugin-* packages except computer-task, private-equity, universal-actions, and web-research",
+    "dependencyLock": "regenerated and inspected by PE-DOMAIN-BOUNDARY",
+    "frontendFilesChangedByPhase5": 0,
+    "dealZeroBuilt": false,
+    "broadPeFeaturesAdded": false,
+    "dependencyLockRegenerationRequired": false
+  },
+  "release": {
+    "localCandidate": "PASS",
+    "production": "BLOCKED",
+    "migrationAdded": "0109_atomic_water_runtime_retirement.sql",
+    "permanentGate": "npm run PE-DOMAIN-BOUNDARY",
+    "certificationCommand": "npm run release:pe5",
+    "webhookQuarantineTests": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4637,
+      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
+      "outputLineCount": 32,
+      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+    }
+  },
+  "completionConditions": [
+    {
+      "id": 1,
+      "name": "P0-P4 state verified before cutover",
+      "status": "LOCAL_PASS",
+      "evidence": "prerequisites"
+    },
+    {
+      "id": 2,
+      "name": "PE0 ledger reconciled",
+      "status": "LOCAL_PASS",
+      "evidence": "pe0Ledger"
+    },
+    {
+      "id": 3,
+      "name": "runtime census UNKNOWN=0",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 4,
+      "name": "Water tenants classified",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 5,
+      "name": "no unauthorized production tenant retired",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 6,
+      "name": "in-flight effects resolved",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 7,
+      "name": "no ambiguous external effect abandoned",
+      "status": "PRODUCTION_OBSERVED_PASS",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 8,
+      "name": "no active Water event wait",
+      "status": "PRODUCTION_OBSERVED_PASS",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 9,
+      "name": "no runnable Water queue item",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 10,
+      "name": "no Water DLQ redrive",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 11,
+      "name": "runtime roles cutover-compatible",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 12,
+      "name": "mixed fleet blocks final barrier",
+      "status": "LOCAL_PASS",
+      "evidence": "safety"
+    },
+    {
+      "id": 13,
+      "name": "new Water intake frozen",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 14,
+      "name": "durable Water-retired authority set",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus"
+    },
+    {
+      "id": 15,
+      "name": "Water vertical non-executable",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 16,
+      "name": "Private Equity supported product vertical",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 17,
+      "name": "none limited to Core certification",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 18,
+      "name": "no Water-to-PE tenant conversion",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 19,
+      "name": "no Water action draft",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 20,
+      "name": "no Water action execution",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 21,
+      "name": "no Water query execution",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 22,
+      "name": "no Water canonical resolution for active PE",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 23,
+      "name": "no active Water party",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 24,
+      "name": "no active Water business truth",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 25,
+      "name": "no Water canonical writer",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 26,
+      "name": "no Water import entity",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 27,
+      "name": "no Water source mapping",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 28,
+      "name": "no Water worker handler",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 29,
+      "name": "no Water scheduler",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 30,
+      "name": "no Water read-model registration",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 31,
+      "name": "no Water planner doctrine",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 32,
+      "name": "no Water conversation doctrine",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 33,
+      "name": "no Water policy default",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 34,
+      "name": "no Water provisioning",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 35,
+      "name": "Dealer Zero retired",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary + database.populatedUpgrade"
+    },
+    {
+      "id": 36,
+      "name": "generic reference tenant machinery preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 37,
+      "name": "universal actions preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 38,
+      "name": "computer runtime preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 39,
+      "name": "Work/Objective runtime preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 40,
+      "name": "Authority/Approval preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 41,
+      "name": "BusinessEffect runtime preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 42,
+      "name": "event/wait runtime preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 43,
+      "name": "reconciliation preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 44,
+      "name": "Source Truth engine preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 45,
+      "name": "generic Import engine preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 46,
+      "name": "reusable provider transports preserved",
+      "status": "LOCAL_PASS",
+      "evidence": "coreRegression + retained"
+    },
+    {
+      "id": 47,
+      "name": "Water-only source deleted",
+      "status": "LOCAL_PASS",
+      "evidence": "sourceRetirement + boundary"
+    },
+    {
+      "id": 48,
+      "name": "no stale Water barrel export",
+      "status": "LOCAL_PASS",
+      "evidence": "sourceRetirement + boundary"
+    },
+    {
+      "id": 49,
+      "name": "no Water resurrection flag",
+      "status": "LOCAL_PASS",
+      "evidence": "sourceRetirement + boundary"
+    },
+    {
+      "id": 50,
+      "name": "no PE mutation writes Water tables",
+      "status": "LOCAL_PASS",
+      "evidence": "sourceRetirement + boundary"
+    },
+    {
+      "id": 51,
+      "name": "Water historical tables intact",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 52,
+      "name": "old migrations untouched",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 53,
+      "name": "legacy tables application-write protected",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 54,
+      "name": "Water triggers cannot emit active behavior",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 55,
+      "name": "Water receipts readable",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 56,
+      "name": "Water BusinessEvents readable",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 57,
+      "name": "Water external refs truthful",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 58,
+      "name": "Water causal replay read-only",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 59,
+      "name": "historical action identity unchanged",
+      "status": "LOCAL_PASS",
+      "evidence": "history + database"
+    },
+    {
+      "id": 60,
+      "name": "fresh migration passes",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 61,
+      "name": "populated upgrade passes",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 62,
+      "name": "backup/restore passes",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 63,
+      "name": "restored history stays retired",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 64,
+      "name": "delayed webhook cannot mutate",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 65,
+      "name": "queued Water job cannot mutate",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 66,
+      "name": "DLQ redrive cannot mutate",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 67,
+      "name": "forged Water selection cannot reactivate",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 68,
+      "name": "normal rollback cannot reactivate",
+      "status": "LOCAL_PASS",
+      "evidence": "database fresh/upgrade/restore + safety + webhookTests"
+    },
+    {
+      "id": 69,
+      "name": "PE-DOMAIN-BOUNDARY passes",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary"
+    },
+    {
+      "id": 70,
+      "name": "negative injection fails boundary",
+      "status": "LOCAL_PASS",
+      "evidence": "boundary"
+    },
+    {
+      "id": 71,
+      "name": "P4 representative PE execution passes",
+      "status": "LOCAL_PASS",
+      "evidence": "pe.postCutoverTests"
+    },
+    {
+      "id": 72,
+      "name": "P4 long-lived objective passes",
+      "status": "LOCAL_PASS",
+      "evidence": "pe.postCutoverTests"
+    },
+    {
+      "id": 73,
+      "name": "PE close-safety invariant passes",
+      "status": "LOCAL_PASS",
+      "evidence": "pe.postCutoverTests"
+    },
+    {
+      "id": 74,
+      "name": "Core substrate regression does not increase",
+      "status": "LOCAL_PASS",
+      "evidence": "release + sourceRetirement"
+    },
+    {
+      "id": 75,
+      "name": "release no longer requires Water",
+      "status": "LOCAL_PASS",
+      "evidence": "release + sourceRetirement"
+    },
+    {
+      "id": 76,
+      "name": "no frontend work",
+      "status": "LOCAL_PASS",
+      "evidence": "release + sourceRetirement"
+    },
+    {
+      "id": 77,
+      "name": "no Deal Zero",
+      "status": "LOCAL_PASS",
+      "evidence": "release + sourceRetirement"
+    },
+    {
+      "id": 78,
+      "name": "no broad new PE feature work",
+      "status": "LOCAL_PASS",
+      "evidence": "release + sourceRetirement"
+    },
+    {
+      "id": 79,
+      "name": "ready for Phase 6 certification",
+      "status": "BLOCKED_PRODUCTION",
+      "evidence": "productionCensus + phase6Inputs"
+    }
+  ],
+  "externalDeployment": {
+    "status": "BLOCKED_CUTOVER_UNKNOWN_WATER_TENANTS",
+    "reason": "Read-only production inspection found UNKNOWN Water-associated tenants, unresolved in-flight state, incompatible migration lineage, and incomplete five-role provenance. The safety gate prohibits deployment or mutation.",
+    "productionCutoverBlocked": true
+  },
+  "remainingBlockers": [
+    "Three tenants with legacy Water rows remain UNKNOWN and have no authorized disposition.",
+    "Water-associated active Work, Objective, Action, Approval, BusinessEffect, running job, and DLQ state is not drained or dispositioned.",
+    "Only Worker heartbeats are present; all five required runtime roles do not share one verified cutover-compatible release.",
+    "Production migration lineage conflicts with the candidate Phase 0-5 migration lineage.",
+    "The durable Phase 5 authority and tenant disposition tables are not present in production."
+  ],
+  "phase6Inputs": {
+    "status": "BLOCKED_UNTIL_PRODUCTION_CUTOVER_CERTIFIED",
+    "activeProductVertical": "private_equity",
+    "productEpoch": 6,
+    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "actionCount": 32,
+    "queryCount": 13,
+    "historicalWaterMode": "read_only",
+    "permanentGate": "npm run PE-DOMAIN-BOUNDARY",
+    "certification": "docs/release/generated/pe5-water-retirement-certification.json",
+    "productionCensus": "docs/release/generated/pe5-production-read-only-census.json",
+    "requiredBeforePhase6": [
+      "reconcile candidate migration lineage onto the actual production head",
+      "classify and authorize all Water-associated tenants",
+      "truthfully drain or disposition all consequential in-flight state and DLQ rows",
+      "deploy one cutover-compatible release across all five runtime roles",
+      "execute and certify the production freeze/final barrier sequence"
+    ]
+  }
+}

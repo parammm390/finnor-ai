@@ -1,30 +1,20 @@
 import { documents, documentContents, type Db } from "@finnor/db";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { recordBusinessEvent } from "./events";
 
 export interface CreateDocumentParams {
   tenantId: string;
-  householdId?: string;
   kind: string;
   title: string;
   storageRef?: string;
   provenance?: { sourceSystem: string; externalId?: string; createdBy?: string };
 }
 
-export async function createDocument(db: Db, params: CreateDocumentParams): Promise<{ documentId: string; alreadyExisted: boolean }> {
-  if (params.provenance?.externalId) {
-    const [existing] = await db.select({ id: documents.id }).from(documents).where(and(
-      eq(documents.tenantId, params.tenantId),
-      eq(documents.sourceSystem, params.provenance.sourceSystem),
-      eq(documents.externalId, params.provenance.externalId),
-    )).limit(1);
-    if (existing) return { documentId: existing.id, alreadyExisted: true };
-  }
+export async function createDocument(db: Db, params: CreateDocumentParams): Promise<{ documentId: string }> {
   const [doc] = await db
     .insert(documents)
     .values({
       tenantId: params.tenantId,
-      householdId: params.householdId ?? null,
       kind: params.kind,
       title: params.title,
       storageRef: params.storageRef ?? null,
@@ -40,7 +30,7 @@ export async function createDocument(db: Db, params: CreateDocumentParams): Prom
     eventType: "document_created",
     payload: { kind: params.kind },
   });
-  return { documentId: doc!.id, alreadyExisted: false };
+  return { documentId: doc!.id };
 }
 
 export interface RecordDocumentContentParams {

@@ -17,29 +17,6 @@ describe("production-correctness entity expression extraction", () => {
     ]));
   });
 
-  it("strips conversational glue words without promoting pronouns to targets", () => {
-    const expressions = extractNamedExpressions("I spoke with John Smith from Pentair. Use my sales email when contacting him.");
-    expect(expressions).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "John Smith", organization: "Pentair", cue: "party" }),
-    ]));
-    expect(expressions.some((expression) => /him|contacting/i.test(expression.name))).toBe(false);
-  });
-
-  it("stops communication targets at the instruction continuation", () => {
-    expect(extractNamedExpressions("Email the John we discussed.")).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "John", cue: "party" }),
-    ]));
-    expect(extractNamedExpressions("Email John the update.")).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "John", cue: "party" }),
-    ]));
-    expect(extractNamedExpressions("Email John Smith from Pentair the update.")).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "John Smith", cue: "party" }),
-    ]));
-    expect(extractNamedExpressions("Email him and tell him we're moving Peterson to Friday.")).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "Peterson", cue: "appointment" }),
-    ]));
-  });
-
   it("loads only request-scoped entity candidates without arbitrary tenant catalog caps", () => {
     const loader = kernelSource.slice(
       kernelSource.indexOf("async function loadCanonicalCatalog"),

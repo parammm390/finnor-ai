@@ -13,14 +13,6 @@ type IdentityContext = Omit<TenantContext, "correlationId">;
 type DeltaPage = Awaited<ReturnType<typeof readOperationalDeltas>>;
 
 const HEARTBEAT_MS = 15_000;
-// NOTIFY is only a wake-up hint.  A worker can restart between the initial
-// ledger read and LISTEN, or a managed Postgres connection can drop one
-// notification while the durable row is still committed.  Reconcile the
-// tenant's append-only ledger on a short, bounded cadence so an open SSE
-// connection cannot remain silently stale.  This is deliberately a read-only
-// fallback; canonical state still comes from readOperationalDeltas(), never
-// process memory or the notification payload.
-const RECONCILIATION_POLL_MS = 1_000;
 
 function allowedOrigins(): string[] {
   return (process.env.JARVIS_SSE_ALLOWED_ORIGINS ?? "http://localhost:3000,https://finnorai.com")
@@ -137,11 +129,9 @@ function handleEvents(req: IncomingMessage, res: ServerResponse, url: URL): void
       void drain();
 
       const heartbeat = setInterval(() => res.write(": heartbeat\n\n"), HEARTBEAT_MS);
-      const reconciliationPoll = setInterval(() => void drain(), RECONCILIATION_POLL_MS);
       const cleanup = () => {
         closed = true;
         clearInterval(heartbeat);
-        clearInterval(reconciliationPoll);
         unsubscribe();
       };
       req.on("close", cleanup);
@@ -165,12 +155,6 @@ export function createSseGateway(): http.Server {
     }
     if (req.method === "GET" && url.pathname === "/healthz") {
       const release = getRuntimeReleaseMetadata("finnor-worker");
-      const capabilities = Array.from(new Set([
-        ...(process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health")
-          .split(",").map((value) => value.trim()).filter(Boolean),
-        "realtime",
-        "sse",
-      ]));
       res.writeHead(200, {
         "content-type": "application/json",
         "cache-control": "no-store, max-age=0",
@@ -179,10 +163,7 @@ export function createSseGateway(): http.Server {
         "x-finnor-environment": release.environment,
         "x-finnor-version": release.version,
       });
-      // Health is the deployment contract consumed by the AWS release guard.
-      // Keep the explicit realtime capability here so a worker that only serves
-      // the job loop cannot be mistaken for a ready SSE gateway.
-      res.end(JSON.stringify({ ok: true, realtime: true, capabilities, release }));
+      res.end(JSON.stringify({ ok: true, release }));
       return;
     }
     if (req.method === "GET" && url.pathname === "/events") {

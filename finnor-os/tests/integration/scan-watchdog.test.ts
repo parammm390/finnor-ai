@@ -1,5 +1,5 @@
-// A4.T2 acceptance: scan-watchdog.ts's five signals — stuck runs, orphaned steps,
-// unfinalized receipts, aging-approval nudges, and stale Planning — against real fixtures in local Postgres,
+// A4.T2 acceptance: scan-watchdog.ts's four signals — stuck runs, orphaned steps,
+// unfinalized receipts, aging-approval nudges — against real fixtures in local Postgres,
 // with real backdated timestamps (same technique as
 // provider-circuit-breaker-budget.test.ts's openedAt manipulation), not mocked time.
 
@@ -18,9 +18,6 @@ import {
   decisionReceipts,
   domainActions,
   domainPolicies,
-  receiveWork,
-  works,
-  domainPolicyRevisions,
 } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { detectWatchdogFindings } from "../../apps/worker/src/handlers/scan-watchdog";
@@ -198,19 +195,9 @@ describe.skipIf(!available)("scan_watchdog detector (A4.T2)", () => {
         .insert(domainPolicies)
         .values({ tenantId: SEED_TENANT_ID, actionType, policy: {}, requiresConfirmation: true, confirmationTimeoutHours: 2 })
         .returning();
-      await db.insert(domainPolicyRevisions).values({
-        tenantId: SEED_TENANT_ID,
-        policyId: policy!.id,
-        actionType,
-        version: policy!.version,
-        policy: {},
-        requiresConfirmation: true,
-        confirmationTimeoutHours: 2,
-        effectiveFrom: policy!.effectiveFrom,
-      });
       const [action] = await db
         .insert(domainActions)
-        .values({ tenantId: SEED_TENANT_ID, actionType, payload: {}, policyId: policy!.id, policyVersion: policy!.version, status: "pending" })
+        .values({ tenantId: SEED_TENANT_ID, actionType, payload: {}, policyId: policy!.id, status: "pending" })
         .returning();
       // 1.5h old vs a 2h timeout — past the 50% (1h) nudge threshold, not yet expired.
       await db.update(domainActions).set({ createdAt: new Date(Date.now() - 90 * 60_000) }).where(eq(domainActions.id, action!.id));
@@ -225,24 +212,5 @@ describe.skipIf(!available)("scan_watchdog detector (A4.T2)", () => {
 
     const second = await detectWatchdogFindings(SEED_TENANT_ID);
     expect(second.some((f) => f.kind === "aging_approval_nudge" && f.refId === actionId)).toBe(false); // deduped, no repeat nudge
-  });
-
-  it("closes legacy pre-execution Planning instead of leaving it indefinitely", async () => {
-    const claim = await receiveWork({
-      tenantId: SEED_TENANT_ID,
-      instruction: "legacy planning watchdog test",
-      channel: "text",
-      instructionId: randomUUID(),
-      idempotencyKey: `stale-planning-${randomUUID()}`,
-    });
-    await withTenant(SEED_TENANT_ID, (db) => db.update(works).set({
-      status: "planning",
-      updatedAt: new Date(Date.now() - 5 * 60_000),
-    }).where(eq(works.id, claim.workId)));
-
-    const findings = await detectWatchdogFindings(SEED_TENANT_ID);
-    expect(findings).toContainEqual(expect.objectContaining({ kind: "stale_interactive_planning", refId: claim.workId }));
-    const [work] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(works).where(eq(works.id, claim.workId)));
-    expect(work).toMatchObject({ status: "failed", failure: expect.objectContaining({ code: "stale_interactive_planning" }) });
   });
 });

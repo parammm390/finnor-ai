@@ -6,7 +6,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
-import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
 import { seed, SEED_TENANT_ID } from "../../packages/db/seed";
 import {
@@ -18,15 +17,12 @@ import {
   sandboxOutbox,
   workflowStates,
   communicationsLog,
-  messages,
-  conversations,
   households,
   businessOperations,
   businessOperationTargets,
 } from "@finnor/db";
 import { FinnorOrchestrator } from "@finnor/orchestration";
-import { createDefaultRegistry, commsMode, ToolRegistry } from "@finnor/tools";
-import { registerSandboxComms } from "../../packages/tools/src/sandbox";
+import { createDefaultRegistry, commsMode } from "@finnor/tools";
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { DomainAction } from "@finnor/shared-types";
 import { dispatchBusinessOperation, executeBusinessOperationTarget } from "../../apps/worker/src/handlers/business-operation";
@@ -200,34 +196,5 @@ describe.skipIf(!available)("sandbox mode: the complete workflow is REAL (§99%)
       db.select().from(domainActions).where(eq(domainActions.id, action.id)),
     );
     expect(row!.status).toBe("completed");
-  });
-
-  it("campaign calls link canonical messages by tenant-local phone, never by Vapi externalId", async () => {
-    const phone = `+1319${randomUUID().replace(/\D/g, "").slice(0, 7)}`;
-    const formattedPhone = `  ${phone}  `;
-    const externalId = "22222222-2222-4222-8222-222222222222";
-    const content = `Safety check ${randomUUID()}`;
-    const [household] = await withTenant(SEED_TENANT_ID, (db) => db.insert(households).values({
-      tenantId: SEED_TENANT_ID,
-      address: "88 Campaign Safety Way",
-      contactInfo: { name: "Campaign Safety Household", phone },
-    }).returning({ id: households.id }));
-    const registry = new ToolRegistry();
-    registerSandboxComms(registry);
-    const result = await registry.callWithRuntimeContext("vapi_create_campaign", {
-      tenantId: SEED_TENANT_ID,
-      name: `sandbox-campaign-${randomUUID()}`,
-      schedulePlan: { earliestAt: new Date().toISOString() },
-      assistantId: "sandbox-assistant",
-      customers: [{ number: formattedPhone, name: "Campaign Safety Household", externalId, assistantOverrides: { firstMessage: content, variableValues: {}, metadata: {} } }],
-    }, { tenantId: SEED_TENANT_ID, domainActionId: `campaign-safety:${randomUUID()}` });
-    expect(result.ok).toBe(true);
-    const linked = await withTenant(SEED_TENANT_ID, (db) => db
-      .select({ householdId: conversations.householdId })
-      .from(messages)
-      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-      .where(eq(messages.content, content)));
-    expect(linked).toEqual([{ householdId: household!.id }]);
-    expect(linked[0]!.householdId).not.toBe(externalId);
   });
 });

@@ -53,7 +53,6 @@ export interface DocusignCredentials {
 export interface GhlCredentials {
   apiKey: string;
   locationId?: string;
-  waterTestCalendarId?: string;
 }
 
 export interface GmailCredentials {
@@ -307,7 +306,6 @@ function validateCredentials<P extends TenantCredentialProvider>(provider: P, ra
       credentials = {
         apiKey: stringField(raw, ["apiKey", "GOHIGHLEVEL_API_KEY"])!,
         locationId: stringField(raw, ["locationId", "GHL_LOCATION_ID"], false),
-        waterTestCalendarId: stringField(raw, ["waterTestCalendarId", "GHL_WATER_TEST_CALENDAR_ID"], false),
       };
       break;
     case "gmail":
@@ -361,7 +359,7 @@ function legacyValues(provider: TenantCredentialProvider): Record<string, unknow
     vapi: ["VAPI_API_KEY", "VAPI_PHONE_NUMBER_ID", "VAPI_ASSISTANT_ID", "VAPI_ASSISTANT_IDS", "VAPI_WEBHOOK_SECRET"],
     stripe: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "PAYMENTS_RETURN_URL_BASE"],
     docusign: ["DOCUSIGN_INTEGRATION_KEY", "DOCUSIGN_USER_ID", "DOCUSIGN_ACCOUNT_ID", "DOCUSIGN_PRIVATE_KEY", "DOCUSIGN_BASE_URL", "DOCUSIGN_CONNECT_SECRET"],
-    ghl: ["GOHIGHLEVEL_API_KEY", "GHL_LOCATION_ID", "GHL_WATER_TEST_CALENDAR_ID"],
+    ghl: ["GOHIGHLEVEL_API_KEY", "GHL_LOCATION_ID"],
     gmail: ["GMAIL_USER", "GMAIL_APP_PASSWORD"],
     resend: ["RESEND_API_KEY", "RESEND_FROM_ADDRESS", "RESEND_ALLOWLIST_OWNER_EMAIL"],
     meta_ads: ["META_ADS_ACCESS_TOKEN", "META_ADS_ACCOUNT_ID"],

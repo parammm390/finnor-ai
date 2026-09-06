@@ -6,21 +6,9 @@
 import type { CommandGraph } from "./compiler";
 import type { ReasoningTier } from "@finnor/shared-types";
 
-// A starting guess, not a researched number — same honesty norm as
-// PLACEHOLDER_NEEDS_REAL_VALUE, even though this constant doesn't hard-gate
-// anything, only tiers reasoning depth. Ground truth (repo-wide search): exactly one
-// plugin schema field named amountUsd in any LLM-drafted payload — accounting's
-// create_invoice. The compiledGraph.kind === "workflow" check is the primary lever
-// for "high stakes" in practice, since it covers every vertical-workflow action type
-// regardless of dollar amount; this magnitude check is a narrow, additional signal
-// that today only fires for invoice creation.
+// A conservative magnitude signal in addition to the structural workflow and
+// approval gates. It does not itself authorize execution.
 export const DEFAULT_AMOUNT_USD_THRESHOLD = 500;
-
-// Phase 12 (loop closure): action types where drafting against stock a scan already
-// flagged as low is itself a stakes signal, independent of dollar amount — named and
-// exported so scan-low-inventory.ts and this module agree on the same set without
-// duplicating it.
-export const STOCK_CONSUMING_ACTION_TYPES = new Set(["log_stock_used_on_visit", "start_installation_workflow"]);
 
 export function classifyReasoningTier(input: {
   requiresConfirmation: boolean;
@@ -40,11 +28,7 @@ export function classifyReasoningTier(input: {
 
   const signals = input.openScanSignals ?? [];
   const hasCritical = signals.some((s) => s.severity === "critical");
-  const hasLowInventoryStockConsumption =
-    input.actionType !== undefined &&
-    STOCK_CONSUMING_ACTION_TYPES.has(input.actionType) &&
-    signals.some((s) => s.scanType === "low_inventory");
-  if (hasCritical || hasLowInventoryStockConsumption) return "high";
+  if (hasCritical) return "high";
 
   return "medium";
 }
@@ -59,6 +43,5 @@ export interface CandidateScoreInputs {
 export function scoreCandidate(input: CandidateScoreInputs): number {
   const verifiedBonus = input.groundedPayload.filter((g) => g.status === "verified").length;
   const notFoundPenalty = input.groundedPayload.filter((g) => g.status === "not_found").length * -2;
-  const genericFallbackPenalty = input.actionType === "answer_business_question" ? -1 : 0;
-  return verifiedBonus + notFoundPenalty + genericFallbackPenalty + (input.patternScore ?? 0);
+  return verifiedBonus + notFoundPenalty + (input.patternScore ?? 0);
 }

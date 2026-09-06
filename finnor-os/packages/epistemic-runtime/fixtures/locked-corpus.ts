@@ -9,8 +9,7 @@ import type {
   InformationAction,
   InformationObservation,
   PropositionDefinition,
-  StaticAdmissibilityReasonCode,
-  StaticAdmissibilityResult,
+  StaticAdmissibilityResultLike,
   Uncertainty,
 } from "../src/contracts";
 import { EPISTEMIC_HEURISTIC_VERSION } from "../src/contracts";
@@ -51,8 +50,8 @@ function scope(decisionId = "decision:locked"): EpistemicScope {
 }
 
 function definition(
-  id = "invoice.balance",
-  subject: PropositionDefinition["subject"] = { kind: "entity", type: "invoice", id: "invoice-1" },
+  id = "deal.debt_capacity",
+  subject: PropositionDefinition["subject"] = { kind: "entity", type: "pe_deal", id: "deal-1" },
 ): PropositionDefinition {
   return { id, subject, predicate: { name: id.split(".").at(-1) ?? id, operator: "exists" } };
 }
@@ -156,18 +155,17 @@ function selection(state: EpistemicState, req: DecisionRequirement, actions: Inf
   return selectInformationAction(actions, { state, uncertainties, requirements: [req], budget: budget(), usage: { actions: 0, userInterruptions: 0, latencyMs: 0, costUnits: 0, selectedActionFingerprints: [] }, now: NOW });
 }
 
-const unresolvedP2 = (reasonCode: StaticAdmissibilityReasonCode = "ENTITY_RESOLUTION_UNRESOLVED"): StaticAdmissibilityResult => ({
+const unresolvedP2 = (reasonCode = "ENTITY_RESOLUTION_UNRESOLVED"): StaticAdmissibilityResultLike => ({
   status: "UNRESOLVED",
   reasonCodes: [reasonCode],
   issues: [{
     status: "UNRESOLVED",
     reasonCode,
-    nodeId: "entity:invoice",
-    path: "resolution.entity:invoice",
-    message: "Canonical invoice resolution is incomplete.",
+    nodeId: "entity:pe_deal",
+    path: "resolution.entity:pe_deal",
+    message: "Canonical Deal resolution is incomplete.",
     detail: { resolutionReasonCode: "ENTITY_REFERENCE_UNRESOLVED" },
   }],
-  informationFlows: [],
 });
 
 class FixtureExecutor implements InformationActionExecutor {
@@ -197,25 +195,25 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
     case "canonical_fact_already_known": {
       const initial = stateFor();
       const next = appendEvidenceAndRecompute(initial, [evidence({ state: initial, id: "canonical:balance", value: 100, kind: "CANONICAL_DB" })], NOW);
-      return result(entry, propositionById(next, "invoice.balance")?.status ?? "missing", ["canonical evidence selected", "provenance retained"]);
+      return result(entry, propositionById(next, "deal.debt_capacity")?.status ?? "missing", ["canonical evidence selected", "provenance retained"]);
     }
     case "missing_canonical_fact": {
       const initial = stateFor();
-      const category = uncertaintyFor(initial, requirement("invoice.balance", [option("READ", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER")])).category;
+      const category = uncertaintyFor(initial, requirement("deal.debt_capacity", [option("READ", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER")])).category;
       return result(entry, category, ["missing is explicit"]);
     }
     case "stale_memory": {
       const initial = stateFor();
-      const next = appendEvidenceAndRecompute(initial, [evidence({ state: initial, id: "memory:old", value: "unpaid", kind: "MEMORY", observedAt: "2026-08-29T00:00:00.000Z", maxAgeMs: 60_000 })], NOW);
-      return result(entry, propositionById(next, "invoice.balance")?.status ?? "missing", ["fixed clock", "freshness window elapsed"]);
+      const next = appendEvidenceAndRecompute(initial, [evidence({ state: initial, id: "memory:old", value: "insufficient", kind: "MEMORY", observedAt: "2026-08-29T00:00:00.000Z", maxAgeMs: 60_000 })], NOW);
+      return result(entry, propositionById(next, "deal.debt_capacity")?.status ?? "missing", ["fixed clock", "freshness window elapsed"]);
     }
     case "conflicting_memory_canonical_data": {
       const initial = stateFor();
       const next = appendEvidenceAndRecompute(initial, [
-        evidence({ state: initial, id: "memory:unpaid", value: "unpaid", kind: "MEMORY" }),
-        evidence({ state: initial, id: "canonical:paid", value: "paid", kind: "CANONICAL_DB" }),
+        evidence({ state: initial, id: "memory:insufficient", value: "insufficient", kind: "MEMORY" }),
+        evidence({ state: initial, id: "canonical:committed", value: "committed", kind: "CANONICAL_DB" }),
       ], NOW);
-      const canonicalWins = propositionById(next, "invoice.balance")?.evidenceRefs.includes("canonical:paid")
+      const canonicalWins = propositionById(next, "deal.debt_capacity")?.evidenceRefs.includes("canonical:committed")
         && next.conflicts.some((conflict) => conflict.resolution === "HIGHER_AUTHORITY_WINS");
       return result(entry, canonicalWins ? "CANONICAL_WINS" : "FAILED", ["lower memory preserved as contradicting evidence"]);
     }
@@ -225,14 +223,14 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
     }
     case "cross_tenant_candidate": {
       const initial = stateFor();
-      const observation: InformationObservation = { actionId: "a", adapterId: "CANONICAL_OPERATIONAL_QUERY", tenantId: OTHER_TENANT, observedAt: NOW, evidence: [], propositionIds: ["invoice.balance"], outcome: "NO_RESULT" };
+      const observation: InformationObservation = { actionId: "a", adapterId: "CANONICAL_OPERATIONAL_QUERY", tenantId: OTHER_TENANT, observedAt: NOW, evidence: [], propositionIds: ["deal.debt_capacity"], outcome: "NO_RESULT" };
       let rejected = false;
       try { applyInformationObservation(initial, observation); } catch { rejected = true; }
       return result(entry, rejected ? "REJECTED" : "ACCEPTED", ["trusted tenant mismatch rejected"]);
     }
     case "missing_field_classification": {
-      const initial = stateFor(definition("customer.phone.classification"));
-      const category = uncertaintyFor(initial, requirement("customer.phone.classification", [option("READ", "OPERATING_CONTEXT_READ", "CANONICAL_OWNER")])).category;
+      const initial = stateFor(definition("deal_party.contact_classification"));
+      const category = uncertaintyFor(initial, requirement("deal_party.contact_classification", [option("READ", "OPERATING_CONTEXT_READ", "CANONICAL_OWNER")])).category;
       return result(entry, category, ["unclassified field is not assumed safe"]);
     }
     case "external_outcome_unknown": {
@@ -282,7 +280,7 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
     case "unnecessary_retrieval_avoidance": {
       const initial = stateFor();
       const known = appendEvidenceAndRecompute(initial, [evidence({ state: initial, id: "canonical:known", value: true, kind: "CANONICAL_DB" })], NOW);
-      const req = requirement("invoice.balance", [option("RETRIEVE", "HYBRID_RETRIEVAL", "SEMANTIC_MEMORY")]);
+      const req = requirement("deal.debt_capacity", [option("RETRIEVE", "HYBRID_RETRIEVAL", "SEMANTIC_MEMORY")]);
       const uncertainties = analyzeUncertainty(known, [req]);
       const stop = decideAcquisitionStop(known, [req], [], [], budget(), { actions: 0, userInterruptions: 0, latencyMs: 0, costUnits: 0, selectedActionFingerprints: [] }, NOW);
       return result(entry, uncertainties.length === 0 && stop.stop ? "NO_ACQUISITION" : "RETRIEVED", ["canonical fact already satisfies requirement"]);
@@ -296,8 +294,8 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
       return result(entry, chosen.action ? "SELECTED" : "REJECTED", ["non-positive uncertainty reduction"]);
     }
     case "privacy_sensitive_acquisition_rejected": {
-      const initial = stateFor(definition("customer.identity"));
-      const req = requirement("customer.identity", [option("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
+      const initial = stateFor(definition("deal_party.identity"));
+      const req = requirement("deal_party.identity", [option("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
       const u = uncertaintyFor(initial, req);
       const action = createInformationAction(initial.scope, u, req.acquisitionOptions[0]!, { sensitivity: ["PII"] });
       const chosen = selection(initial, req, [action]);
@@ -306,10 +304,10 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
     case "conflicting_sources": {
       const initial = stateFor();
       const next = appendEvidenceAndRecompute(initial, [
-        evidence({ state: initial, id: "work:a", value: "paid", kind: "ACTIVE_WORK" }),
-        evidence({ state: initial, id: "work:b", value: "unpaid", kind: "ACTIVE_WORK" }),
+        evidence({ state: initial, id: "work:a", value: "sufficient", kind: "ACTIVE_WORK" }),
+        evidence({ state: initial, id: "work:b", value: "insufficient", kind: "ACTIVE_WORK" }),
       ], NOW);
-      return result(entry, propositionById(next, "invoice.balance")?.status ?? "missing", ["equal-authority conflict remains explicit"]);
+      return result(entry, propositionById(next, "deal.debt_capacity")?.status ?? "missing", ["equal-authority conflict remains explicit"]);
     }
     case "unresolved_high_risk_proposition": {
       const initial = stateFor(definition("legal.permission"));
@@ -320,7 +318,7 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
     }
     case "acquisition_budget_exhaustion": {
       const initial = stateFor();
-      const req = requirement("invoice.balance", [option("READ", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER")]);
+      const req = requirement("deal.debt_capacity", [option("READ", "CANONICAL_OPERATIONAL_QUERY", "CANONICAL_OWNER")]);
       const stop = decideAcquisitionStop(initial, [req], [], [], budget({ maxActions: 0 }), { actions: 0, userInterruptions: 0, latencyMs: 0, costUnits: 0, selectedActionFingerprints: [] }, NOW);
       return result(entry, stop.reason, ["maxActions is a hard bound"]);
     }
@@ -335,13 +333,13 @@ export async function runLockedCorpusCase(entry: LockedCorpusCase): Promise<Lock
         executor: new FixtureExecutor(resolved ? "CANONICAL" : "NO_RESULT"),
         now: () => NOW,
         rerunP2: async (next) => resolved && next.propositions.some((proposition) => proposition.status === "KNOWN")
-          ? { status: "ADMISSIBLE", reasonCodes: [], issues: [], informationFlows: [] }
+          ? { status: "ADMISSIBLE", reasonCodes: [], issues: [] }
           : unresolvedP2(),
       });
       return result(entry, handoff.status, ["P2 rerun required after belief update", "bounded loop"]);
     }
     case "p2_rejected_remains_rejected": {
-      const rejected: StaticAdmissibilityResult = { status: "REJECTED", reasonCodes: ["FORBIDDEN_INFORMATION_FLOW"], issues: [{ status: "REJECTED", reasonCode: "FORBIDDEN_INFORMATION_FLOW", nodeId: "effect", path: "effect", message: "forbidden" }], informationFlows: [] };
+      const rejected: StaticAdmissibilityResultLike = { status: "REJECTED", reasonCodes: ["FORBIDDEN_INFORMATION_FLOW"], issues: [{ status: "REJECTED", reasonCode: "FORBIDDEN_INFORMATION_FLOW", nodeId: "effect", path: "effect", message: "forbidden" }] };
       const handoff = await resolveP2WithInformation({
         initialP2: rejected,
         state: createEpistemicState({ scope: scope("decision:p2-rejected"), asOf: NOW, propositions: [] }),

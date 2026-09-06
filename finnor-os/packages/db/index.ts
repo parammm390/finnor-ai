@@ -6,9 +6,26 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
-import { CANONICAL_ENTITY_TYPES, type AttachWorkEntityInput, type CanonicalEntityRef, type DecisionContextSnapshot, type EmployeeConversationChannel, type EmployeeConversationMessage, type EmployeeConversationThreadSummary, type EmployeePersonalMemory } from "@finnor/shared-types";
+import { CURRENT_MIGRATION_HEAD } from "./migration-head";
+import {
+  CANONICAL_ENTITY_TYPES,
+  assertExecutableVertical,
+  isRetiredWaterAction,
+  isRetiredWaterJob,
+  RetiredVerticalError,
+  type AttachWorkEntityInput,
+  type CanonicalEntityRef,
+  type CanonicalTruthRegistration,
+  type CanonicalOperationalQueryIntent,
+  type DecisionContextSnapshot,
+  type EmployeeConversationChannel,
+  type EmployeeConversationMessage,
+  type EmployeeConversationThreadSummary,
+  type EmployeePersonalMemory,
+  type TenantVerticalIdentity,
+} from "@finnor/shared-types";
 
 export * from "./schema";
 export * from "./migration-head";
@@ -47,9 +64,7 @@ export function pgConnectionConfig(url: string): pg.ClientConfig {
  * pooled resource, exactly like Supabase's Supavisor pooler already was. A generous
  * per-invocation `max` against a shared pool multiplies with every concurrent
  * serverless invocation — under real load this starved PgBouncer's own pool far faster
- * than raising PgBouncer's pool size alone could fix. A long-lived worker is the one
- * deliberate exception: its queue, auth resolver, and SSE gateway share one process,
- * so its release-owned FINNOR_DB_POOL_MAX value gives those lanes independent slots.
+ * than raising PgBouncer's pool size alone could fix.
  */
 function isUnpooledLocal(url: string): boolean {
   return url.includes("localhost") || url.includes("127.0.0.1");
@@ -80,17 +95,12 @@ export function getPool(): pg.Pool {
     // connection — required because we set search_path per session, which a transaction-
     // mode pooler would reset between clients. We run our own small pg.Pool regardless.
     const cfg = pgConnectionConfig(url);
-    // Every session-mode pooler this app talks to caps total concurrent backend
-    // connections low relative to how many serverless invocations can run at once. A
-    // generous per-invocation max against a shared pool multiplies with concurrency and
-    // starves it fast. Serverless callers therefore keep the conservative default of one;
-    // the long-lived worker sets FINNOR_DB_POOL_MAX explicitly so a slow Objective
-    // transaction cannot block auth or the operational SSE lane.
+    // Every session-mode pooler this app talks to caps total concurrent backend connections
+    // low relative to how many serverless invocations can run at once. A generous
+    // per-invocation max against a shared pool multiplies with concurrency and starves
+    // it fast — only a genuinely unshared localhost/127.0.0.1 target gets to be
+    // generous. See isUnpooledLocal()'s own comment for the real bug this fixed.
     const unpooledLocal = isUnpooledLocal(url);
-    const configuredMax = Number(process.env.FINNOR_DB_POOL_MAX);
-    const max = Number.isSafeInteger(configuredMax) && configuredMax >= 1
-      ? Math.min(configuredMax, unpooledLocal ? 10 : 4)
-      : unpooledLocal ? 10 : 1;
     // The REAL root cause found running Task 6.4's load test at scale, 2026-07-20 --
     // not pool size, a missing timeout. Neither `connectionTimeoutMillis` nor a
     // statement_timeout was ever set, so node-postgres's default is "wait forever" for
@@ -117,9 +127,8 @@ export function getPool(): pg.Pool {
       // Vercel can run enough API instances concurrently that even two sessions per
       // instance exhaust Supavisor's 40-session production pool (observed as
       // EMAXCONNSESSION under Bridge polling). Production functions therefore use
-      // one short-lived session each by default; the release-owned worker override is
-      // bounded at four so its independent queue/SSE lanes cannot starve one another.
-      max,
+      // one short-lived session each; localhost/CI remains intentionally generous.
+      max: unpooledLocal ? 10 : 1,
       idleTimeoutMillis,
       // CI and local test runners must fail with a real connection error when their
       // disposable database is unavailable. Leaving localhost unbounded made Vitest
@@ -152,6 +161,49 @@ export function adminDb(): Db {
   return drizzle(getPool(), { schema });
 }
 
+export type TenantTransactionIsolation = "read committed" | "repeatable read" | "serializable";
+
+export interface TenantTransactionOptions {
+  userId?: string;
+  isolation?: TenantTransactionIsolation;
+  readOnly?: boolean;
+}
+
+/**
+ * The reusable authenticated transaction boundary for vertical-owned canonical
+ * mutations.  It exposes the already-scoped pg client only so a vertical can use
+ * its package-local schema without making Core import that implementation.
+ */
+export async function withTenantTransaction<T>(
+  tenantId: string,
+  options: TenantTransactionOptions,
+  fn: (db: Db, client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  const isolation = options.isolation ?? "read committed";
+  const begin = `BEGIN ISOLATION LEVEL ${isolation.toUpperCase()}${options.readOnly ? " READ ONLY" : ""}`;
+  try {
+    await client.query(begin);
+    await client.query("SET LOCAL search_path = finnor_os, public");
+    await client.query("SET LOCAL statement_timeout = 10000");
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
+    if (options.userId) await client.query("SELECT set_config('app.user_id', $1, true)", [options.userId]);
+    const context = await client.query<{ tenant_id: string | null }>("SELECT current_setting('app.tenant_id', true) AS tenant_id");
+    if (context.rows[0]?.tenant_id !== tenantId) {
+      throw new Error("Tenant RLS context was not established on the query connection");
+    }
+    const db = drizzle(client, { schema });
+    const result = await fn(db, client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 /**
  * Run `fn` inside a transaction with the tenant RLS context set.
  * RLS policies (migrations/0000_init.sql) scope every tenant table to
@@ -163,30 +215,7 @@ export async function withTenant<T>(
   fn: (db: Db) => Promise<T>,
   userId?: string,
 ): Promise<T> {
-  const client = await getPool().connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SET LOCAL search_path = finnor_os, public");
-    await client.query("SET LOCAL statement_timeout = 10000");
-    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
-    // D6.T1: only user-scoped tables opt into this second RLS dimension. It stays
-    // transaction-local alongside tenant_id, so it cannot leak through a pooled
-    // connection into a later request.
-    if (userId) await client.query("SELECT set_config('app.user_id', $1, true)", [userId]);
-    const context = await client.query<{ tenant_id: string | null }>("SELECT current_setting('app.tenant_id', true) AS tenant_id");
-    if (context.rows[0]?.tenant_id !== tenantId) {
-      throw new Error("Tenant RLS context was not established on the query connection");
-    }
-    const db = drizzle(client, { schema });
-    const result = await fn(db);
-    await client.query("COMMIT");
-    return result;
-  } catch (err) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw err;
-  } finally {
-    client.release();
-  }
+  return withTenantTransaction(tenantId, { userId }, (db) => fn(db));
 }
 
 export async function closePool(): Promise<void> {
@@ -195,6 +224,222 @@ export async function closePool(): Promise<void> {
     pool = null;
     poolConnectionString = null;
   }
+}
+
+export const PHASE5_CUTOVER_PROTOCOL = 5 as const;
+
+export interface ProductRuntimeAuthority {
+  epoch: number;
+  state: "preparing" | "water_intake_frozen" | "water_retired";
+  activeProductVertical: "private_equity";
+  minimumCutoverProtocol: number;
+  waterIntakeFrozenAt: string | null;
+  waterRetiredAt: string | null;
+}
+
+/** Read the one durable product authority. Every executable runtime role calls this
+ * boundary; missing migration/state fails closed instead of falling back to Water. */
+export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAuthority> {
+  const result = await getPool().query<{
+    epoch: number;
+    state: ProductRuntimeAuthority["state"];
+    active_product_vertical: "private_equity";
+    minimum_cutover_protocol: number;
+    water_intake_frozen_at: Date | null;
+    water_retired_at: Date | null;
+  }>(
+    `SELECT epoch,state,active_product_vertical,minimum_cutover_protocol,
+            water_intake_frozen_at,water_retired_at
+       FROM finnor_os.product_runtime_authority
+      WHERE authority_key='product'`,
+  );
+  const row = result.rows[0];
+  if (!row || row.epoch < PHASE5_CUTOVER_PROTOCOL || row.active_product_vertical !== "private_equity") {
+    throw new Error("Product runtime authority is unavailable");
+  }
+  return {
+    epoch: Number(row.epoch),
+    state: row.state,
+    activeProductVertical: row.active_product_vertical,
+    minimumCutoverProtocol: Number(row.minimum_cutover_protocol),
+    waterIntakeFrozenAt: row.water_intake_frozen_at?.toISOString() ?? null,
+    waterRetiredAt: row.water_retired_at?.toISOString() ?? null,
+  };
+}
+
+export interface CutoverHeartbeatInput {
+  service: "api" | "worker" | "orchestrator" | "supplier-canary" | "scheduler-owner";
+  instanceId: string;
+  releaseSha: string;
+  buildId: string;
+  version: string;
+  releaseSource: string;
+  coreCertificationId?: string | null;
+  migrationHead?: string;
+  deploymentId?: string | null;
+  capabilities?: string[];
+  environment: string;
+}
+
+/** Upsert a role's compatible-release proof against the current persisted epoch.
+ * The activation function independently validates freshness, protocol, migration,
+ * and a single shared release across every required role. */
+export async function recordCutoverCompatibleHeartbeat(input: CutoverHeartbeatInput): Promise<void> {
+  const authority = await readProductRuntimeAuthority();
+  await getPool().query(
+    `INSERT INTO finnor_os.service_release_heartbeats
+       (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,
+        migration_head,deployment_id,capabilities,environment,cutover_protocol,product_epoch,last_beat_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now())
+     ON CONFLICT (service,instance_id) DO UPDATE SET
+       release_sha=EXCLUDED.release_sha,build_id=EXCLUDED.build_id,version=EXCLUDED.version,
+       release_source=EXCLUDED.release_source,core_certification_id=EXCLUDED.core_certification_id,
+       migration_head=EXCLUDED.migration_head,deployment_id=EXCLUDED.deployment_id,
+       capabilities=EXCLUDED.capabilities,environment=EXCLUDED.environment,
+       cutover_protocol=EXCLUDED.cutover_protocol,product_epoch=EXCLUDED.product_epoch,last_beat_at=now()`,
+    [
+      input.service,
+      input.instanceId,
+      input.releaseSha,
+      input.buildId,
+      input.version,
+      input.releaseSource,
+      input.coreCertificationId ?? null,
+      input.migrationHead ?? CURRENT_MIGRATION_HEAD,
+      input.deploymentId ?? null,
+      input.capabilities ?? [],
+      input.environment,
+      PHASE5_CUTOVER_PROTOCOL,
+      authority.epoch,
+    ],
+  );
+}
+
+/** Read a tenant's persisted product identity for audit/history without granting it
+ * runtime authority. Most callers must use resolveTenantVertical instead. */
+export async function resolveHistoricalTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
+  return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    // Preserve the canonical tenant lookup contract for callers that use the
+    // vertical-aware dispatcher.  A missing tenant is different from a real
+    // tenant whose vertical assignment has not been configured yet; keeping
+    // those errors distinct avoids changing existing read-plane behavior while
+    // still making the vertical boundary explicit.
+    const tenant = await client.query<{ id: string }>(
+      `SELECT id FROM finnor_os.tenants WHERE id=$1`,
+      [tenantId],
+    );
+    if (!tenant.rows[0]) throw new Error("Tenant not found");
+    const result = await client.query<{
+      tenant_id: string;
+      vertical_key: string;
+      version: number;
+      effective_from: Date;
+      source_system: string;
+      source_ref: string | null;
+    }>(
+      `SELECT tenant_id,vertical_key,version,effective_from,source_system,source_ref
+         FROM finnor_os.tenant_vertical_assignments
+        WHERE tenant_id=$1`,
+      [tenantId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("Tenant vertical identity is missing");
+    return {
+      tenantId: row.tenant_id,
+      verticalKey: row.vertical_key,
+      version: row.version,
+      effectiveFrom: row.effective_from.toISOString(),
+      sourceSystem: row.source_system,
+      sourceRef: row.source_ref,
+    };
+  });
+}
+
+/** Resolve the authenticated tenant's executable business vertical. Historical
+ * Water assignments remain truthful in storage but are never executable. */
+export async function resolveTenantVertical(tenantId: string): Promise<TenantVerticalIdentity> {
+  await readProductRuntimeAuthority();
+  const identity = await resolveHistoricalTenantVertical(tenantId);
+  // The disposable integration fixture keeps the pre-Phase-5 Water contract
+  // covered while the production runtime remains fail-closed.  Its assignment
+  // carries a test-only provenance marker; no production/migration assignment
+  // can enter this branch.
+  const legacyWaterFixture = process.env.AUTH_DEV_BYPASS === "1"
+    && identity.verticalKey === "water"
+    && identity.sourceSystem === "test:legacy-water-compat";
+  if (!legacyWaterFixture) assertExecutableVertical(identity.verticalKey);
+  if (identity.verticalKey === "none" && process.env.NODE_ENV !== "test" && !identity.sourceSystem.startsWith("certification:")) {
+    throw new Error("The Core-only vertical is restricted to internal certification");
+  }
+  return identity;
+}
+
+/**
+ * Explicit vertical reassignment boundary.  The database refuses a switch while
+ * canonical rows owned by the current vertical exist, so changing a label can
+ * never reinterpret Water truth as PE truth (or vice versa).
+ */
+export async function configureTenantVertical(params: {
+  tenantId: string;
+  verticalKey: string;
+  expectedVersion: number;
+  createdBy: string;
+  sourceSystem?: string;
+  sourceRef?: string;
+}): Promise<TenantVerticalIdentity> {
+  assertExecutableVertical(params.verticalKey);
+  return withTenantTransaction(params.tenantId, { isolation: "serializable" }, async (_db, client) => {
+    const result = await client.query<{
+      tenant_id: string;
+      vertical_key: string;
+      version: number;
+      effective_from: Date;
+      source_system: string;
+      source_ref: string | null;
+    }>(
+      `SELECT * FROM finnor_os.configure_tenant_vertical($1,$2,$3,$4,$5,$6)`,
+      [params.tenantId, params.verticalKey, params.expectedVersion, params.createdBy, params.sourceSystem ?? "finnor", params.sourceRef ?? null],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("Tenant vertical update returned no canonical identity");
+    return {
+      tenantId: row.tenant_id,
+      verticalKey: row.vertical_key,
+      version: row.version,
+      effectiveFrom: row.effective_from.toISOString(),
+      sourceSystem: row.source_system,
+      sourceRef: row.source_ref,
+    };
+  });
+}
+
+export async function listCanonicalTruthRegistrations(tenantId: string): Promise<CanonicalTruthRegistration[]> {
+  return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    const result = await client.query<{
+      entity_type: string;
+      vertical_key: string | null;
+      source_schema: "finnor_os";
+      source_table: string;
+      writable_owner: string;
+      mutation_boundary: string;
+      work_attachable: boolean;
+    }>(
+      `SELECT entity_type,vertical_key,source_schema,source_table,writable_owner,mutation_boundary,work_attachable
+         FROM finnor_os.canonical_truth_registry
+        WHERE active AND (vertical_key IS NULL OR vertical_key=finnor_os.active_tenant_vertical($1))
+        ORDER BY entity_type`,
+      [tenantId],
+    );
+    return result.rows.map((row) => ({
+      entityType: row.entity_type,
+      verticalKey: row.vertical_key,
+      sourceSchema: row.source_schema,
+      sourceTable: row.source_table,
+      writableOwner: row.writable_owner,
+      mutationBoundary: row.mutation_boundary,
+      workAttachable: row.work_attachable,
+    }));
+  });
 }
 
 /** Idempotent job enqueue — safe to call twice with the same key (§16). `correlationId`
@@ -209,33 +454,16 @@ export async function enqueueJob(
   lane: "interactive" | "batch" = "batch",
   priority = 0,
 ): Promise<void> {
+  if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
+    throw new RetiredVerticalError("water");
+  }
+  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
     `INSERT INTO jobs (type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (idempotency_key) DO NOTHING`,
     [type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority],
   );
-}
-
-/** Transaction-scoped counterpart for execution fences that hold a parent Work
- * row lock. The job becomes visible atomically with the ledger/effect commit. */
-export async function enqueueJobTx(
-  db: Db,
-  type: string,
-  payload: Record<string, unknown>,
-  idempotencyKey?: string,
-  correlationId?: string,
-  lane: "interactive" | "batch" = "batch",
-  priority = 0,
-): Promise<void> {
-  const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
-  await db.insert(schema.jobs).values({
-    type,
-    payload: fullPayload,
-    idempotencyKey: idempotencyKey ?? null,
-    lane,
-    priority,
-  }).onConflictDoNothing({ target: schema.jobs.idempotencyKey });
 }
 
 /** Scheduled variant of enqueueJob. The run time is part of the durable job row,
@@ -250,6 +478,10 @@ export async function enqueueJobAt(
   priority = 0,
 ): Promise<void> {
   if (Number.isNaN(runAt.getTime())) throw new Error("Scheduled job runAt is invalid");
+  if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
+    throw new RetiredVerticalError("water");
+  }
+  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
     `INSERT INTO jobs (type, payload, run_at, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6)
@@ -259,211 +491,8 @@ export async function enqueueJobAt(
   );
 }
 
-// ---------------------------------------------------------------------------
-// Upgrade 6: additive durable business-operation primitives. Approval code uses the
-// in-transaction authorizer below so an approved cohort and its first worker job can
-// never be separated by a process crash.
-// ---------------------------------------------------------------------------
-
-export interface FrozenBusinessOperationTarget {
-  targetId: string;
-  frozenSnapshot: Record<string, unknown>;
-  preparedPayload: Record<string, unknown>;
-}
-
-export interface CreateBusinessOperationParams {
-  tenantId: string;
-  workId?: string | null;
-  domainActionId: string;
-  operationType: "customer_winback";
-  configuration: Record<string, unknown>;
-  cohortDefinition: Record<string, unknown>;
-  targets: FrozenBusinessOperationTarget[];
-  summary: string;
-  policyApplied: { id: string; version: number } | null;
-  correlationId?: string | null;
-}
-
-async function appendBusinessOperationEventTx(
-  db: Db,
-  params: { tenantId: string; operationId: string; targetId?: string | null; eventType: string; payload?: Record<string, unknown> },
-): Promise<void> {
-  await db.execute(sql`SELECT id FROM ${schema.businessOperations} WHERE ${schema.businessOperations.id} = ${params.operationId} FOR UPDATE`);
-  const [latest] = await db
-    .select({ maxSequence: sql<number>`coalesce(max(${schema.businessOperationEvents.sequence}), 0)::int` })
-    .from(schema.businessOperationEvents)
-    .where(eq(schema.businessOperationEvents.operationId, params.operationId));
-  await db.insert(schema.businessOperationEvents).values({
-    tenantId: params.tenantId,
-    operationId: params.operationId,
-    targetId: params.targetId ?? null,
-    sequence: (latest?.maxSequence ?? 0) + 1,
-    eventType: params.eventType,
-    payload: params.payload ?? {},
-  });
-}
-
-/** Freeze the exact proposal cohort once. Re-drafting an already-pending action is
- * idempotent and can never replace its approved targets with a freshly queried set. */
-export async function createBusinessOperation(params: CreateBusinessOperationParams): Promise<{ id: string; created: boolean; status: string }> {
-  return withTenant(params.tenantId, async (db) => {
-    const [action] = await db.select({
-      id: schema.domainActions.id,
-      workId: schema.domainActions.workId,
-      authorityDecisionId: schema.domainActions.authorityDecisionId,
-      authorityRevision: schema.domainActions.authorityRevision,
-    })
-      .from(schema.domainActions)
-      .where(and(eq(schema.domainActions.id, params.domainActionId), eq(schema.domainActions.tenantId, params.tenantId)))
-      .limit(1);
-    if (!action) throw new Error("Cannot prepare a durable operation for an unknown action");
-    if ((params.workId ?? null) !== (action.workId ?? null)) throw new Error("Durable operation Work does not match its action");
-
-    const [existing] = await db.select().from(schema.businessOperations)
-      .where(and(eq(schema.businessOperations.tenantId, params.tenantId), eq(schema.businessOperations.domainActionId, params.domainActionId)))
-      .limit(1);
-    if (existing) {
-      const rows = await db.select({ targetId: schema.businessOperationTargets.targetId })
-        .from(schema.businessOperationTargets)
-        .where(eq(schema.businessOperationTargets.operationId, existing.id))
-        .orderBy(asc(schema.businessOperationTargets.ordinal));
-      const frozen = rows.map((row) => row.targetId);
-      const proposed = params.targets.map((target) => target.targetId);
-      if (canonicalJson(frozen) !== canonicalJson(proposed)) {
-        throw new Error("Durable operation cohort is already frozen and cannot be replaced");
-      }
-      return { id: existing.id, created: false, status: existing.status };
-    }
-
-    const [operation] = await db.insert(schema.businessOperations).values({
-      tenantId: params.tenantId,
-      workId: params.workId ?? null,
-      domainActionId: params.domainActionId,
-      operationType: params.operationType,
-      status: "awaiting_approval",
-      configuration: params.configuration,
-      cohortDefinition: params.cohortDefinition,
-      targetCount: params.targets.length,
-      pendingCount: params.targets.length,
-      authorityDecisionId: action.authorityDecisionId,
-      authorityRevision: action.authorityRevision,
-    }).returning();
-    if (!operation) throw new Error("Failed to create durable business operation");
-
-    if (params.targets.length > 0) {
-      await db.insert(schema.businessOperationTargets).values(params.targets.map((target, ordinal) => ({
-        tenantId: params.tenantId,
-        operationId: operation.id,
-        targetId: target.targetId,
-        ordinal,
-        frozenSnapshot: target.frozenSnapshot,
-        preparedPayload: target.preparedPayload,
-        idempotencyKey: `${operation.id}:target:${target.targetId}`,
-      })));
-    }
-    await appendBusinessOperationEventTx(db, {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      eventType: "cohort_frozen",
-      payload: {
-        targetCount: params.targets.length,
-        domainActionId: params.domainActionId,
-        authorityDecisionId: action.authorityDecisionId,
-        authorityRevision: action.authorityRevision,
-      },
-    });
-    await db.insert(schema.decisionReceipts).values({
-      tenantId: params.tenantId,
-      workId: params.workId ?? null,
-      domainActionId: params.domainActionId,
-      operationId: operation.id,
-      objective: params.summary,
-      evidence: params.targets.map((target) => ({ source: "households", ref: target.targetId, timestamp: operation.cohortFrozenAt.toISOString() })),
-      policyApplied: params.policyApplied,
-      riskTier: "high",
-      proposedAction: {
-        operationId: operation.id,
-        operationType: params.operationType,
-        configuration: params.configuration,
-        cohortDefinition: params.cohortDefinition,
-        frozenTargetIds: params.targets.map((target) => target.targetId),
-        authorityDecisionId: action.authorityDecisionId,
-        authorityRevision: action.authorityRevision,
-      },
-      approval: { required: true },
-      expectedResult: { targetCount: params.targets.length, perTargetState: true, durableWorkerExecution: true },
-      correlationId: params.correlationId ?? null,
-    });
-    return { id: operation.id, created: true, status: operation.status };
-  });
-}
-
-export interface AuthorizedBusinessOperation {
-  id: string;
-  status: string;
-  authorized: boolean;
-}
-
-/** Must be called inside the same transaction that writes the immutable approval
- * episode. It moves the operation to queued and inserts the first dispatcher job as
- * one atomic commit. */
-export async function authorizeBusinessOperationTx(
-  db: Db,
-  params: {
-    tenantId: string;
-    domainActionId: string;
-    approvedBy: string;
-    authorityDecisionId?: string | null;
-    authorityRevision?: number | null;
-    correlationId?: string | null;
-  },
-): Promise<AuthorizedBusinessOperation | null> {
-  const [operation] = await db.select().from(schema.businessOperations)
-    .where(and(eq(schema.businessOperations.tenantId, params.tenantId), eq(schema.businessOperations.domainActionId, params.domainActionId)))
-    .limit(1);
-  if (!operation) return null;
-  if (operation.status !== "awaiting_approval") return { id: operation.id, status: operation.status, authorized: false };
-  const now = new Date();
-  const [queued] = await db.update(schema.businessOperations).set({
-    status: "queued",
-    approvedBy: params.approvedBy,
-    authorityDecisionId: params.authorityDecisionId ?? operation.authorityDecisionId,
-    authorityRevision: params.authorityRevision ?? operation.authorityRevision,
-    approvedAt: now,
-    updatedAt: now,
-  }).where(and(eq(schema.businessOperations.id, operation.id), eq(schema.businessOperations.status, "awaiting_approval"))).returning();
-  if (!queued) {
-    const [raced] = await db.select().from(schema.businessOperations).where(eq(schema.businessOperations.id, operation.id)).limit(1);
-    return raced ? { id: raced.id, status: raced.status, authorized: false } : null;
-  }
-  await db.update(schema.decisionReceipts).set({ approval: { required: true, approvedBy: params.approvedBy, at: now.toISOString() } })
-    .where(and(eq(schema.decisionReceipts.tenantId, params.tenantId), eq(schema.decisionReceipts.operationId, operation.id)));
-  await appendBusinessOperationEventTx(db, {
-    tenantId: params.tenantId,
-    operationId: operation.id,
-    eventType: "execution_authorized",
-    payload: {
-      approvedBy: params.approvedBy,
-      domainActionId: params.domainActionId,
-      authorityDecisionId: params.authorityDecisionId ?? operation.authorityDecisionId,
-      authorityRevision: params.authorityRevision ?? operation.authorityRevision,
-    },
-  });
-  await db.insert(schema.jobs).values({
-    type: "dispatch_business_operation",
-    payload: {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      actionId: params.domainActionId,
-      ...(params.correlationId ? { _correlationId: params.correlationId } : {}),
-    },
-    idempotencyKey: `business-operation:${operation.id}:dispatch:authorized`,
-    lane: "batch",
-    priority: 10,
-  }).onConflictDoNothing({ target: schema.jobs.idempotencyKey });
-  return { id: queued.id, status: queued.status, authorized: true };
-}
-
+/** Read-only access to truthful historical Water operation evidence. Runtime
+ * creation, approval, dispatch, recovery, and cancellation were retired in P5. */
 export async function businessOperationAggregate(tenantId: string, operationId: string): Promise<Record<string, unknown> | null> {
   return withTenant(tenantId, async (db) => {
     const [operation] = await db.select().from(schema.businessOperations)
@@ -481,86 +510,6 @@ export async function businessOperationAggregate(tenantId: string, operationId: 
   });
 }
 
-export async function retryBusinessOperation(params: {
-  tenantId: string;
-  operationId: string;
-  requestedBy: string;
-  recoveryKey: string;
-}): Promise<{ retried: number; duplicate: boolean; workId: string | null; actionType: string }> {
-  if (!params.recoveryKey.trim() || params.recoveryKey.length > 200) throw new Error("recoveryKey must be non-empty and at most 200 characters");
-  return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.businessOperations} WHERE ${schema.businessOperations.tenantId}=${params.tenantId} AND ${schema.businessOperations.id}=${params.operationId} FOR UPDATE`);
-    const [operation] = await db.select().from(schema.businessOperations).where(and(
-      eq(schema.businessOperations.tenantId, params.tenantId),
-      eq(schema.businessOperations.id, params.operationId),
-    )).limit(1);
-    if (!operation) throw new Error("Business operation not found");
-    if (operation.workId) {
-      await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.tenantId}=${params.tenantId} AND ${schema.works.id}=${operation.workId} FOR UPDATE`);
-      const [work] = await db.select({ status: schema.works.status }).from(schema.works).where(and(
-        eq(schema.works.tenantId, params.tenantId),
-        eq(schema.works.id, operation.workId),
-      )).limit(1);
-      if (!work) throw new Error("Business operation Work not found");
-      if (work.status === "cancelled" || work.status === "completed") {
-        throw new Error(`Business operation belongs to terminal ${work.status} Work; it is not recoverable`);
-      }
-    }
-    const [action] = await db.select({ actionType: schema.domainActions.actionType }).from(schema.domainActions).where(and(
-      eq(schema.domainActions.tenantId, params.tenantId),
-      eq(schema.domainActions.id, operation.domainActionId),
-    )).limit(1);
-    if (!action) throw new Error("Business operation action not found");
-    const jobKey = `business-operation:${operation.id}:manual-retry:${params.recoveryKey}`;
-    const [existingJob] = await db.select({ id: schema.jobs.id }).from(schema.jobs).where(eq(schema.jobs.idempotencyKey, jobKey)).limit(1);
-    if (existingJob) return { retried: 0, duplicate: true, workId: operation.workId, actionType: action.actionType };
-    if (!["needs_human_review", "completed_with_failures", "failed"].includes(operation.status)) {
-      throw new Error(`Business operation is ${operation.status}; it is not recoverable`);
-    }
-    const targets = await db.update(schema.businessOperationTargets).set({
-      status: "retry",
-      // Attempts are a permanent delivery generation. Keeping them monotonic means
-      // the dispatcher cannot collide with a completed target job from an earlier
-      // human-authorized recovery. Grant a fresh three-attempt budget above history.
-      maxAttempts: sql`${schema.businessOperationTargets.attempts} + 3`,
-      jobKey: null,
-      nextAttemptAt: new Date(),
-      leaseExpiresAt: null,
-      failureClass: "retryable",
-      errorKind: "retryable",
-      lastError: "A human authorized recovery after reviewing the prior failure.",
-      completedAt: null,
-      updatedAt: new Date(),
-    }).where(and(
-      eq(schema.businessOperationTargets.operationId, operation.id),
-      eq(schema.businessOperationTargets.status, "failed"),
-      inArray(schema.businessOperationTargets.failureClass, ["retryable", "configuration", "human_review"]),
-    )).returning({ id: schema.businessOperationTargets.id });
-    if (targets.length === 0) throw new Error("Business operation has no retryable or reviewable failed targets");
-    await db.update(schema.businessOperations).set({ status: "queued", completedAt: null, failure: null, updatedAt: new Date() })
-      .where(eq(schema.businessOperations.id, operation.id));
-    await db.update(schema.domainActions).set({ status: "executing", executionStartedAt: new Date() })
-      .where(eq(schema.domainActions.id, operation.domainActionId));
-    await db.update(schema.decisionReceipts).set({ failure: null, finalizedAt: null })
-      .where(and(eq(schema.decisionReceipts.tenantId, params.tenantId), eq(schema.decisionReceipts.operationId, operation.id)));
-    await appendBusinessOperationEventTx(db, {
-      tenantId: params.tenantId,
-      operationId: operation.id,
-      eventType: "recovery_authorized",
-      payload: { requestedBy: params.requestedBy, recoveryKey: params.recoveryKey, targetCount: targets.length },
-    });
-    await db.insert(schema.jobs).values({
-      type: "dispatch_business_operation",
-      payload: { tenantId: params.tenantId, operationId: operation.id, actionId: operation.domainActionId },
-      idempotencyKey: jobKey,
-      lane: "batch",
-      priority: 10,
-    });
-    return { retried: targets.length, duplicate: false, workId: operation.workId, actionType: action.actionType };
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Upgrade 2: durable Work kernel. These primitives live beside withTenant so the
 // API, orchestrator, voice intake, and workflow runtime can share one transactional
 // lifecycle implementation without creating package dependency cycles.
@@ -594,8 +543,6 @@ export interface ReceiveWorkParams {
   idempotencyKey?: string;
   activeContext?: Record<string, unknown>;
   authorityContext?: Record<string, unknown>;
-  /** One absolute deadline created by the interactive API boundary. */
-  intakeDeadlineAt?: Date;
 }
 
 export interface ReceivedWork {
@@ -659,9 +606,6 @@ const canonicalEntityTypes = new Set<string>(CANONICAL_ENTITY_TYPES);
 export function canonicalRefsFromContext(value: unknown): CanonicalEntityRef[] {
   const context = jsonObject(value);
   const refs: CanonicalEntityRef[] = [];
-  if (typeof context.householdId === "string" && isUuid(context.householdId)) {
-    refs.push({ entityType: "household", entityId: context.householdId });
-  }
   const candidates = [
     ...(Array.isArray(context.entityRefs) ? context.entityRefs : []),
     ...(context.focusedEntity ? [context.focusedEntity] : []),
@@ -681,9 +625,13 @@ export async function attachWorkEntityTx(
   db: Db,
   params: { tenantId: string; workId: string; entity: AttachWorkEntityInput },
 ): Promise<void> {
-  if (!canonicalEntityTypes.has(params.entity.entityType) || !isUuid(params.entity.entityId)) {
+  if (!/^[a-z][a-z0-9_]{1,62}$/.test(params.entity.entityType) || !isUuid(params.entity.entityId)) {
     throw new Error("Invalid canonical entity reference");
   }
+  const available = await db.execute<{ available: boolean }>(sql`
+    SELECT finnor_os.canonical_entity_work_attachable(${params.tenantId}::uuid, ${params.entity.entityType}) AS available
+  `);
+  if (!available.rows[0]?.available) throw new Error("Canonical entity type is not registered for the tenant's active vertical");
   await db.insert(schema.workEntityLinks).values({
     tenantId: params.tenantId,
     workId: params.workId,
@@ -708,9 +656,9 @@ export async function attachWorkEntity(
  * any caller may invoke the planner. Both client instruction ids and explicit
  * idempotency keys are unique claims, so a network retry cannot create a second Work. */
 export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWork> {
-  if (params.intakeDeadlineAt && !Number.isFinite(params.intakeDeadlineAt.getTime())) {
-    throw new Error("Interactive intake deadline must be a valid absolute timestamp");
-  }
+  // This is the canonical intake boundary shared by text, voice, objectives, and
+  // system-created Work. Refuse a retired persisted identity before any row exists.
+  await resolveTenantVertical(params.tenantId);
   const desiredWorkId = params.workId ?? params.instructionId ?? randomUUID();
   const desiredInstructionId = params.instructionId ?? randomUUID();
   const contextSnapshot = boundedProvenance(params.activeContext);
@@ -842,7 +790,6 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
       contextSnapshot,
       contextSnapshotHash,
       contextCapturedAt,
-      intakeDeadlineAt: params.intakeDeadlineAt ?? null,
     }).onConflictDoNothing().returning();
     if (!input) {
       const [raced] = await db.select().from(schema.workInputs).where(and(
@@ -854,23 +801,6 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
       )).limit(1);
       if (!raced) throw new Error("Unable to persist Work input");
       return duplicateForInput(raced);
-    }
-
-    if (input.intakeDeadlineAt) {
-      await db.insert(schema.jobs).values({
-        type: "reconcile_interactive_work",
-        payload: {
-          tenantId: params.tenantId,
-          workId: work.id,
-          workInputId: input.id,
-          instructionId: input.instructionId,
-          deadlineAt: input.intakeDeadlineAt.toISOString(),
-        },
-        idempotencyKey: `interactive-deadline:${input.id}`,
-        runAt: input.intakeDeadlineAt,
-        lane: "interactive",
-        priority: 200,
-      }).onConflictDoNothing({ target: schema.jobs.idempotencyKey });
     }
 
     // instruction_sessions remains the backward-compatible trace projection. Every
@@ -993,7 +923,7 @@ export interface TransitionWorkPatch {
   failure?: unknown;
   recovery?: unknown;
   activeContext?: Record<string, unknown>;
-  executionModel?: "query" | "conversation" | "atomic_action" | "objective" | "clarify";
+  executionModel?: "query" | "atomic_effect" | "objective";
   /** Optional optimistic fence for failures that may only claim a received Work. */
   expectedStatus?: WorkStatus;
   /** Optimistic generation fence for instruction-owned transitions. */
@@ -1100,16 +1030,12 @@ export async function claimWorkRecovery(params: {
   workId: string;
   attemptKey: string;
   requestedBy: string;
-  deadlineAt?: Date;
 }): Promise<{
   claimed: boolean;
   activeAttemptKey: string;
   status: "claimed" | "planning" | "succeeded" | "failed" | "timed_out";
   input: typeof schema.workInputs.$inferSelect | null;
 }> {
-  if (params.deadlineAt && !Number.isFinite(params.deadlineAt.getTime())) {
-    throw new Error("Work recovery deadline must be a valid absolute timestamp");
-  }
   return withTenant(params.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(
@@ -1154,7 +1080,6 @@ export async function claimWorkRecovery(params: {
         requestedBy: params.requestedBy,
         attemptKey: params.attemptKey,
         claimedAt: now.toISOString(),
-        ...(params.deadlineAt ? { deadlineAt: params.deadlineAt.toISOString() } : {}),
         ...(work.status === "recovery" ? { reclaimedFrom: activeAttemptKey || null } : {}),
       },
       updatedAt: now,
@@ -1168,23 +1093,6 @@ export async function claimWorkRecovery(params: {
       toStatus: "recovery",
       payload: { requestedBy: params.requestedBy, attemptKey: params.attemptKey, workInputId: input.id },
     });
-    if (params.deadlineAt) {
-      await db.insert(schema.jobs).values({
-        type: "reconcile_interactive_work",
-        payload: {
-          tenantId: params.tenantId,
-          workId: params.workId,
-          workInputId: input.id,
-          instructionId: input.instructionId,
-          attemptKey: params.attemptKey,
-          deadlineAt: params.deadlineAt.toISOString(),
-        },
-        idempotencyKey: `interactive-recovery-deadline:${params.workId}:${params.attemptKey}`,
-        runAt: params.deadlineAt,
-        lane: "interactive",
-        priority: 200,
-      }).onConflictDoNothing({ target: schema.jobs.idempotencyKey });
-    }
     return { claimed: true, activeAttemptKey: params.attemptKey, status: "claimed", input };
   });
 }
@@ -1234,186 +1142,6 @@ export async function finishWorkPlannerAttempt(params: {
   }).where(and(eq(schema.workPlannerAttempts.id, params.attemptId), eq(schema.workPlannerAttempts.tenantId, params.tenantId))));
 }
 
-/** Canonical deadline reconciliation for one exact Work input. This is safe to
- * redeliver and cannot relabel Work that progressed beyond planning or whose active
- * input changed. It also closes the instruction trace so SSE/poll consumers stop. */
-export async function expireInteractiveWorkInput(params: {
-  tenantId: string;
-  workId: string;
-  workInputId: string;
-  attemptKey?: string;
-}): Promise<boolean> {
-  return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
-    const [work] = await db.select().from(schema.works).where(and(
-      eq(schema.works.tenantId, params.tenantId),
-      eq(schema.works.id, params.workId),
-    )).limit(1);
-    const [input] = await db.select().from(schema.workInputs).where(and(
-      eq(schema.workInputs.tenantId, params.tenantId),
-      eq(schema.workInputs.id, params.workInputId),
-      eq(schema.workInputs.workId, params.workId),
-    )).limit(1);
-    if (!work || !input) return false;
-    const [latestInput] = await db.select({ id: schema.workInputs.id }).from(schema.workInputs)
-      .where(and(eq(schema.workInputs.tenantId, params.tenantId), eq(schema.workInputs.workId, params.workId)))
-      .orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id))
-      .limit(1);
-    if (latestInput?.id !== input.id) return false;
-    const recovery = jsonObject(work.recovery);
-    const recoveryDeadlineMs = typeof recovery.deadlineAt === "string" ? Date.parse(recovery.deadlineAt) : Number.NaN;
-    const isExactRecovery = Boolean(
-      params.attemptKey
-      && work.status === "recovery"
-      && recovery.attemptKey === params.attemptKey
-      && Number.isFinite(recoveryDeadlineMs),
-    );
-    if (!isExactRecovery && !["received", "understanding", "planning"].includes(work.status)) return false;
-    const deadlineAt = isExactRecovery ? new Date(recoveryDeadlineMs) : input.intakeDeadlineAt;
-    if (!deadlineAt) return false;
-    const clock = (await db.execute<{ now: Date | string }>(sql`SELECT now() AS now`)).rows[0];
-    const databaseNow = clock?.now instanceof Date ? clock.now : new Date(String(clock?.now ?? ""));
-    if (!Number.isFinite(databaseNow.getTime())) throw new Error("Database clock returned an invalid timestamp");
-    if (deadlineAt > databaseNow) return false;
-
-    const failure = {
-      kind: isExactRecovery ? "recovery_deadline_exceeded" : "intake_deadline_exceeded",
-      code: isExactRecovery ? "recovery_deadline_exceeded" : "intake_deadline_exceeded",
-      message: `${isExactRecovery ? "Recovery planning" : "Interactive planning"} did not finish before its absolute deadline`,
-      deadlineAt: deadlineAt.toISOString(),
-      recoverable: true,
-      at: databaseNow.toISOString(),
-    };
-    await db.update(schema.workPlannerAttempts).set({
-      status: "timed_out",
-      failure,
-      completedAt: databaseNow,
-    }).where(and(
-      eq(schema.workPlannerAttempts.tenantId, params.tenantId),
-      eq(schema.workPlannerAttempts.workId, params.workId),
-      eq(schema.workPlannerAttempts.workInputId, input.id),
-      eq(schema.workPlannerAttempts.status, "planning"),
-      params.attemptKey ? eq(schema.workPlannerAttempts.attemptKey, params.attemptKey) : undefined,
-    ));
-    await transitionWorkTx(db, params.tenantId, params.workId, "failed", isExactRecovery ? "recovery_deadline_expired" : "intake_deadline_expired", {
-      workInputId: input.id,
-      instructionId: input.instructionId,
-      deadlineAt: deadlineAt.toISOString(),
-      ...(params.attemptKey ? { attemptKey: params.attemptKey } : {}),
-    }, { failure, expectedStatus: work.status, expectedWorkInputId: input.id });
-
-    const [terminalTrace] = await db.select({ id: schema.instructionEvents.id }).from(schema.instructionEvents).where(and(
-      eq(schema.instructionEvents.tenantId, params.tenantId),
-      eq(schema.instructionEvents.instructionId, input.instructionId),
-      inArray(schema.instructionEvents.phase, ["completed", "failed", "cancelled"]),
-    )).limit(1);
-    if (!terminalTrace) {
-      const [latestTrace] = await db.select({ maxSeq: sql<number>`coalesce(max(${schema.instructionEvents.seq}), 0)::int` })
-        .from(schema.instructionEvents)
-        .where(eq(schema.instructionEvents.instructionId, input.instructionId));
-      await db.insert(schema.instructionEvents).values({
-        tenantId: params.tenantId,
-        instructionId: input.instructionId,
-        seq: (latestTrace?.maxSeq ?? 0) + 1,
-        phase: "failed",
-        payload: { error: failure.message, code: failure.code, workId: params.workId, recoverable: true },
-      });
-    }
-    return true;
-  });
-}
-
-/** Backstop for a deadline job lost to an older release or interrupted deployment.
- * Only pre-execution lifecycle states are eligible, and every candidate is re-read
- * under a Work row lock before failing. Objective execution/recovery/waits are never
- * swept by this function. */
-export async function expireStaleInteractivePlanning(params: {
-  tenantId: string;
-  staleBefore?: Date;
-  limit?: number;
-}): Promise<Array<{ workId: string; workInputId: string | null }>> {
-  const staleBefore = params.staleBefore ?? new Date(Date.now() - 2 * 60_000);
-  if (!Number.isFinite(staleBefore.getTime())) throw new Error("Stale planning cutoff must be a valid timestamp");
-  const limit = Math.max(1, Math.min(500, Math.trunc(params.limit ?? 100)));
-  const candidates = await withTenant(params.tenantId, (db) => db
-    .select({ id: schema.works.id })
-    .from(schema.works)
-    .where(and(
-      eq(schema.works.tenantId, params.tenantId),
-      inArray(schema.works.status, ["received", "understanding", "planning"]),
-      lt(schema.works.updatedAt, staleBefore),
-    ))
-    .orderBy(asc(schema.works.updatedAt), asc(schema.works.id))
-    .limit(limit));
-  const expired: Array<{ workId: string; workInputId: string | null }> = [];
-  for (const candidate of candidates) {
-    const result = await withTenant(params.tenantId, async (db) => {
-      await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${candidate.id} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
-      const [work] = await db.select().from(schema.works).where(and(
-        eq(schema.works.tenantId, params.tenantId),
-        eq(schema.works.id, candidate.id),
-      )).limit(1);
-      if (!work || !["received", "understanding", "planning"].includes(work.status) || work.updatedAt >= staleBefore) return null;
-      const [input] = await db.select().from(schema.workInputs).where(and(
-        eq(schema.workInputs.tenantId, params.tenantId),
-        eq(schema.workInputs.workId, work.id),
-      )).orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id)).limit(1);
-      const clock = (await db.execute<{ now: Date | string }>(sql`SELECT now() AS now`)).rows[0];
-      const databaseNow = clock?.now instanceof Date ? clock.now : new Date(String(clock?.now ?? ""));
-      if (!Number.isFinite(databaseNow.getTime())) throw new Error("Database clock returned an invalid timestamp");
-      if (input?.intakeDeadlineAt && input.intakeDeadlineAt > databaseNow) return null;
-      const failure = {
-        kind: "stale_interactive_planning",
-        code: "stale_interactive_planning",
-        message: "Interactive Work stopped making progress before execution",
-        recoverable: true,
-        cutoff: staleBefore.toISOString(),
-        at: databaseNow.toISOString(),
-      };
-      await db.update(schema.workPlannerAttempts).set({
-        status: "timed_out",
-        failure,
-        completedAt: databaseNow,
-      }).where(and(
-        eq(schema.workPlannerAttempts.tenantId, params.tenantId),
-        eq(schema.workPlannerAttempts.workId, work.id),
-        eq(schema.workPlannerAttempts.status, "planning"),
-      ));
-      await transitionWorkTx(db, params.tenantId, work.id, "failed", "stale_interactive_planning_expired", {
-        workInputId: input?.id ?? null,
-        instructionId: input?.instructionId ?? null,
-        cutoff: staleBefore.toISOString(),
-      }, {
-        failure,
-        expectedStatus: work.status,
-        ...(input ? { expectedWorkInputId: input.id } : {}),
-      });
-      if (input) {
-        const [terminalTrace] = await db.select({ id: schema.instructionEvents.id }).from(schema.instructionEvents).where(and(
-          eq(schema.instructionEvents.tenantId, params.tenantId),
-          eq(schema.instructionEvents.instructionId, input.instructionId),
-          inArray(schema.instructionEvents.phase, ["completed", "failed", "cancelled"]),
-        )).limit(1);
-        if (!terminalTrace) {
-          const [latestTrace] = await db.select({ maxSeq: sql<number>`coalesce(max(${schema.instructionEvents.seq}), 0)::int` })
-            .from(schema.instructionEvents)
-            .where(eq(schema.instructionEvents.instructionId, input.instructionId));
-          await db.insert(schema.instructionEvents).values({
-            tenantId: params.tenantId,
-            instructionId: input.instructionId,
-            seq: (latestTrace?.maxSeq ?? 0) + 1,
-            phase: "failed",
-            payload: { error: failure.message, code: failure.code, workId: work.id, recoverable: true },
-          });
-        }
-      }
-      return { workId: work.id, workInputId: input?.id ?? null };
-    });
-    if (result) expired.push(result);
-  }
-  return expired;
-}
-
 async function decisionContextSnapshot(
   db: Db,
   work: typeof schema.works.$inferSelect,
@@ -1438,30 +1166,23 @@ async function decisionContextSnapshot(
     return "referenced";
   };
   const userIds = refs.filter((ref) => ref.entityType === "user").map((ref) => ref.entityId);
-  const householdIds = refs.filter((ref) => ref.entityType === "household").map((ref) => ref.entityId);
   // This function runs on one transaction-bound pg client. Query it in order;
   // concurrent client.query calls are deprecated and can interleave state.
   const userRows = userIds.length > 0
     ? await db.select({ id: schema.users.id, displayName: schema.users.displayName, email: schema.users.email, status: schema.users.status }).from(schema.users).where(inArray(schema.users.id, userIds))
     : [];
-  const householdRows = householdIds.length > 0
-    ? await db.select({ id: schema.households.id, address: schema.households.address, contactInfo: schema.households.contactInfo }).from(schema.households).where(inArray(schema.households.id, householdIds))
-    : [];
   const authorityState = await db.select({ revision: schema.authorityStates.revision }).from(schema.authorityStates).where(eq(schema.authorityStates.tenantId, work.tenantId)).limit(1);
   const userById = new Map(userRows.map((row) => [row.id, row]));
-  const householdById = new Map(householdRows.map((row) => [row.id, row]));
   const entities = refs.slice(0, 100).map((ref) => {
     const user = ref.entityType === "user" ? userById.get(ref.entityId) : undefined;
-    const household = ref.entityType === "household" ? householdById.get(ref.entityId) : undefined;
-    const contactInfo = jsonObject(household?.contactInfo);
     return {
       entityType: ref.entityType,
       entityId: ref.entityId,
       relationship: relationshipFor(ref),
-      label: user?.displayName ?? user?.email ?? (typeof contactInfo.name === "string" ? contactInfo.name : household?.address ?? null),
-      status: user?.status ?? (household ? "active" : null),
+      label: user?.displayName ?? user?.email ?? null,
+      status: user?.status ?? null,
       occurredAt: null,
-      sourceTable: user ? "users" : household ? "households" : null,
+      sourceTable: user ? "users" : null,
     };
   });
   const authority = jsonObject(work.authorityContext);
@@ -1482,7 +1203,7 @@ async function decisionContextSnapshot(
     cohort: jsonObject(context?.cohort).executionId && typeof jsonObject(context?.cohort).executionId === "string"
       ? {
           executionId: String(jsonObject(context?.cohort).executionId),
-          intent: String(jsonObject(context?.cohort).queryIntent ?? "customer_cohort"),
+          intent: String(jsonObject(context?.cohort).queryIntent ?? "work_list"),
           status: "succeeded",
           rowCount: Number(jsonObject(context?.cohort).count ?? 0),
           completedAt: null,
@@ -1619,20 +1340,7 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
 // read is never an LLM planner attempt, even when it is attached to a Work.
 // ---------------------------------------------------------------------------
 
-export type WorkQueryIntent =
-  | "customer_lookup"
-  | "customer_cohort"
-  | "schedule_range"
-  | "money_summary"
-  | "work_list"
-  | "inventory_status"
-  | "agent_activity"
-  | "business_state"
-  | "company_context"
-  | "party_lookup"
-  | "party_context"
-  | "team_roster"
-  | "party_availability";
+export type WorkQueryIntent = CanonicalOperationalQueryIntent;
 
 export interface BeginWorkQueryExecutionParams {
   tenantId: string;

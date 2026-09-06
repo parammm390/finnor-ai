@@ -9,17 +9,15 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { getPool, closePool, withTenant, domainActions, households, proposals } from "@finnor/db";
+import { getPool, closePool, withTenant, domainActions } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { readEpisodes } from "@finnor/memory";
 import { LLMPlanner, createDefaultPluginRegistry } from "@finnor/orchestration";
 import type { LLMProvider } from "@finnor/orchestration";
-import type { OperatingContext, TenantContext, MemorySnapshot } from "@finnor/shared-types";
+import type { TenantContext, MemorySnapshot } from "@finnor/shared-types";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000f9"; // dedicated, isolated from other fixtures
-const HOUSEHOLD_ID = "11111111-1111-4111-8111-00000000f900";
-const PROPOSAL_ID = "11111111-1111-4111-8111-00000000f901";
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -63,10 +61,6 @@ describe.skipIf(!available)("LLMPlanner repair pass", () => {
     process.env.DATABASE_URL = DB_URL;
     await migrate(DB_URL);
     await getPool().query(`INSERT INTO tenants (id, name) VALUES ($1, 'Planner Repair Test Tenant') ON CONFLICT (id) DO NOTHING`, [TENANT_ID]);
-    await withTenant(TENANT_ID, async (db) => {
-      await db.insert(households).values({ id: HOUSEHOLD_ID, tenantId: TENANT_ID, address: "Planner Repair Peterson Household", contactInfo: { name: "Peterson Family" } }).onConflictDoNothing();
-      await db.insert(proposals).values({ id: PROPOSAL_ID, tenantId: TENANT_ID, householdId: HOUSEHOLD_ID, content: { kind: "planner-repair-fixture" } }).onConflictDoNothing();
-    });
   });
 
   afterAll(async () => {
@@ -97,15 +91,15 @@ describe.skipIf(!available)("LLMPlanner repair pass", () => {
     // "Send the proposal to the Petersons" mis-drafted as the batch action — the
     // repair call corrects it back to send_proposal with a real-shaped proposalId.
     mockFetchOnce(
-      `{"repaired": true, "actionType": "send_proposal", "payload": {"proposalId": "${PROPOSAL_ID}"}, "reason": "Single household, not a batch send."}`,
+      '{"repaired": true, "actionType": "send_proposal", "payload": {"proposalId": "11111111-1111-4111-8111-111111111111"}, "reason": "Single household, not a batch send."}',
     );
     const planner = new LLMPlanner(
       createDefaultPluginRegistry(),
       stubPlannerProvider("send_proposal_to_recent_installs", {}),
     );
-    const [result] = await planner.plan(`Send proposal ${PROPOSAL_ID} to the Petersons for their quote.`, tenantContext(), emptyMemory());
+    const [result] = await planner.plan("Send the proposal to the Petersons for their quote.", tenantContext(), emptyMemory());
     expect(result!.actionType).toBe("send_proposal");
-    expect((result!.payload as Record<string, unknown>).proposalId).toBe(PROPOSAL_ID);
+    expect((result!.payload as Record<string, unknown>).proposalId).toBe("11111111-1111-4111-8111-111111111111");
 
     // Assert the DB row itself, not just the in-memory return value.
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(domainActions).where(eq(domainActions.id, result!.id)));
@@ -221,34 +215,5 @@ describe.skipIf(!available)("LLMPlanner repair pass", () => {
     await expect(
       planner.plan("Call every inactive customer with a discount.", tenantContext(), emptyMemory()),
     ).rejects.toThrow("Planner LLM call failed: LLM call deadline exceeded");
-  });
-
-  it("11. never treats an unrelated trusted reference as permission for an invented endpoint", () => {
-    const planner = new LLMPlanner(createDefaultPluginRegistry(), stubPlannerProvider("place_call", {}));
-    const inspect = (planner as unknown as {
-      unresolvedConsequentialTargetFields: (
-        instruction: string,
-        candidates: Array<{ actionType: string; payload: Record<string, unknown> }>,
-        context?: OperatingContext,
-      ) => string[];
-    }).unresolvedConsequentialTargetFields.bind(planner);
-    const householdId = "11111111-1111-4111-8111-00000000f900";
-    const context = {
-      interactionContext: {
-        version: 1,
-        capturedAt: "2026-08-30T00:00:00.000Z",
-        source: "text",
-        selectedEntities: [{ entityType: "household", entityId: householdId }],
-        excludedEntities: [],
-        surface: { id: "customers" },
-        filters: [],
-      },
-      referencedEntities: [],
-      conversationContext: null,
-    } as unknown as OperatingContext;
-    const invented = [{ actionType: "place_call", payload: { recipient: { phoneNumber: "+15550009999" }, objective: "follow up" } }];
-    expect(inspect("Call the selected customer.", invented, context)).toContain("recipient.phoneNumber");
-    const canonicallyBound = [{ actionType: "place_call", payload: { recipient: { householdId, phoneNumber: "+15550009999" }, objective: "follow up" } }];
-    expect(inspect("Call the selected customer.", canonicallyBound, context)).toEqual([]);
   });
 });

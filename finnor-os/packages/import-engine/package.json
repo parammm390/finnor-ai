@@ -6,8 +6,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
-    "@finnor/data-platform": "*",
     "@finnor/db": "*",
+    "@finnor/shared-types": "*",
     "drizzle-orm": "^0.45.2",
     "zod": "^3.23.8"
   }

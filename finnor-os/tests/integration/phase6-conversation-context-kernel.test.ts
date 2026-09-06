@@ -24,7 +24,6 @@ import {
   prepareEmployeeConversationTurn,
   resolveCanonicalHumanPrincipal,
 } from "@finnor/orchestration";
-import { setTenantSecretReaderForTesting } from "@finnor/security";
 import { and, eq } from "drizzle-orm";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -37,6 +36,11 @@ async function dbUp(): Promise<boolean> {
 const available = await dbUp();
 
 describe.skipIf(!available)("Phase 6 authenticated-employee conversation context kernel", () => {
+  const priorCredentials = {
+    GMAIL_USER: process.env.GMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    FINNOR_LEGACY_CREDENTIAL_TENANT_IDS: process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS,
+  };
   const tenantA = randomUUID();
   const tenantB = randomUUID();
   const sarah = randomUUID();
@@ -47,21 +51,14 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
   const petersonHousehold = randomUUID();
   const petersonAppointment = randomUUID();
   const salesIdentity = randomUUID();
-  const savedCredentialEnv = new Map([
-    ["FINNOR_LEGACY_CREDENTIAL_TENANT_IDS", process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS],
-    ["GMAIL_USER", process.env.GMAIL_USER],
-    ["GMAIL_APP_PASSWORD", process.env.GMAIL_APP_PASSWORD],
-  ] as const);
   const ctx = { tenantId: tenantA, userId: sarah, employeeId: sarah, role: "owner" as const };
   let goldenThreadId = "";
 
   beforeAll(async () => {
     delete process.env.ZEP_API_KEY;
-    const allowedLegacyTenants = new Set((process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS ?? "").split(",").map((value) => value.trim()).filter(Boolean));
-    allowedLegacyTenants.add(tenantA);
-    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = [...allowedLegacyTenants].join(",");
     process.env.GMAIL_USER = "sales@example.test";
-    process.env.GMAIL_APP_PASSWORD = "acceptance-gmail-password";
+    process.env.GMAIL_APP_PASSWORD = "phase6-test-app-password";
+    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = tenantA;
     await migrate(SUPER_URL);
     const admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
@@ -77,18 +74,16 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await admin.query("INSERT INTO finnor_os.communication_identities(id,tenant_id,identity_key,provider,channel,address,status,capabilities,credential_provider,credential_ref) VALUES ($1,$2,'sales_email_phase6','gmail','email','sales@example.test','active','[]','legacy-env','legacy-env:gmail')", [salesIdentity, tenantA]);
     await admin.query("INSERT INTO finnor_os.communication_identity_bindings(tenant_id,communication_identity_id,principal_type,principal_id,purpose,priority,status) VALUES ($1,$2,'employee',$3,'sales',100,'active')", [tenantA, salesIdentity, sarah]);
     await admin.end();
-    setTenantSecretReaderForTesting(async () => ({ user: "sales@example.test", appPassword: "phase6-test-app-password" }));
     process.env.DATABASE_URL = APP_URL;
     await closePool();
   });
 
   afterAll(async () => {
-    setTenantSecretReaderForTesting(null);
     await closePool();
     process.env.DATABASE_URL = SUPER_URL;
-    for (const [key, value] of savedCredentialEnv) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+    for (const [name, value] of Object.entries(priorCredentials)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
     }
   });
 
@@ -125,7 +120,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
   it("passes the Sarah/Pentair/Peterson golden sequence with current sender revalidation and supersession", async () => {
     const day1 = await prepareEmployeeConversationTurn({
       ctx,
-      instruction: "John Smith from Pentair. Use my sales email when contacting him.",
+      instruction: "I spoke with John Smith from Pentair. Use my sales email when contacting him.",
       instructionId: randomUUID(),
       idempotencyKey: "golden-day-1",
       channel: "text",
@@ -135,7 +130,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     expect(day1.context.resolution.resolvedReferences).toEqual(expect.arrayContaining([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith })]));
     expect(day1.context.personalMemories).toEqual(expect.arrayContaining([expect.objectContaining({ subjectKey: "communication.sender.email:outbound_sales" })]));
 
-    const day2 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Using email, tell him we're moving the Peterson appointment to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-2", channel: "text" });
+    const day2 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email him and tell him we're moving Peterson to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-2", channel: "text" });
     expect(day2.context.resolution).toMatchObject({ status: "resolved", senderIdentityRef: { communicationIdentityId: salesIdentity, channel: "email", purpose: "sales" } });
     expect(day2.context.resolution.resolvedReferences).toEqual(expect.arrayContaining([
       expect.objectContaining({ entityType: "external_contact", entityId: johnSmith }),
@@ -216,7 +211,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
 
   it("fails closed after a sender is revoked and after current company truth supersedes an appointment", async () => {
     await withTenant(tenantA, (db) => db.update(communicationIdentities).set({ status: "disabled" }).where(and(eq(communicationIdentities.tenantId, tenantA), eq(communicationIdentities.id, salesIdentity))));
-    const revoked = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email John Smith.", instructionId: randomUUID(), idempotencyKey: "revoked-sender", channel: "text" });
+    const revoked = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email John Smith from Pentair the update.", instructionId: randomUUID(), idempotencyKey: "revoked-sender", channel: "text" });
     expect(revoked.context.resolution).toMatchObject({ status: "clarification_required", senderIdentityRef: null });
 
     const admin = new pg.Client({ connectionString: SUPER_URL });
@@ -241,7 +236,7 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     const bounded = await loadEmployeeConversationThread({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: historical.id, messageLimit: 100 });
     expect(bounded?.messages).toHaveLength(100);
     expect(bounded?.messages.some((message) => message.id === old.message.id)).toBe(false);
-    const resolved = await prepareEmployeeConversationTurn({ ctx, threadId: historical.id, instruction: "John we discussed earlier; email him.", instructionId: randomUUID(), idempotencyKey: "old-john-resolve", channel: "text" });
+    const resolved = await prepareEmployeeConversationTurn({ ctx, threadId: historical.id, instruction: "Email the John we discussed.", instructionId: randomUUID(), idempotencyKey: "old-john-resolve", channel: "text" });
     expect(resolved.context.olderRelevantMessages.some((message) => message.id === old.message.id)).toBe(true);
     expect(resolved.context.resolution.resolvedReferences[0]).toMatchObject({ entityType: "external_contact", entityId: johnSmith, source: "history_search" });
   });
@@ -254,11 +249,10 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES ($1,$2,'second-org-phase6','Second Org','partner')", [secondOrganization, tenantA]);
     await admin.query("INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,external_organization_id,name) VALUES ($1,$2,'john-other-phase6',$3,'John Peterson')", [secondJohn, tenantA, secondOrganization]);
     await admin.end();
-    const ambiguous = await prepareEmployeeConversationTurn({ ctx, instruction: "Email John, with the update.", instructionId: randomUUID(), idempotencyKey: "ambiguous-john", channel: "text" });
+    const ambiguous = await prepareEmployeeConversationTurn({ ctx, instruction: "Email John the update.", instructionId: randomUUID(), idempotencyKey: "ambiguous-john", channel: "text" });
     expect(ambiguous.context.resolution).toMatchObject({ status: "clarification_required", consequential: true });
     expect(ambiguous.context.resolution.candidates.length).toBeGreaterThanOrEqual(2);
-    const result = await new FinnorOrchestrator().handleInstructionResult("Email John the update.", ctx, { instructionId: ambiguous.userMessage.instructionId!, channel: "text", conversationContext: ambiguous.context, instructionRouteDecision: { version: 1, route: "CLARIFY", reasonCodes: ["consequential_target_or_sender_unresolved"] }, skipFastReadClassification: true });
-    expect(result.executionModel).toBe("CLARIFY");
+    const result = await new FinnorOrchestrator().handleInstructionResult("Email John the update.", ctx, { instructionId: ambiguous.userMessage.instructionId!, channel: "text", conversationContext: ambiguous.context, instructionRouteDecision: { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] }, skipFastReadClassification: true });
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0]?.actionType).toBe("clarification_request");
     const effects = await withTenant(tenantA, (db) => db

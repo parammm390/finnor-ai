@@ -7,9 +7,7 @@ import { wrappedCall, DEFAULT_RETRY } from "./wrap";
 import { createHash } from "node:crypto";
 import { ensureSecretsLoaded, minimizeExternalInput } from "@finnor/security";
 import { claimExternalOperation, recordExternalOperationResult, awaitExternalOperationResolution, markExternalOperationUnknown } from "./idempotent-call";
-import { resolveCapabilityBindingsForTenant } from "./binding-resolution";
 import { initObservability, Sentry } from "./observability";
-import type { Db } from "@finnor/db";
 
 /** Trusted execution metadata injected by an action/workflow boundary. It is never
  * parsed from planner/tool input and never forwarded to an external provider. */
@@ -24,10 +22,6 @@ export interface ToolRuntimeContext {
    * providers cannot replace it through their payload. */
   businessEffectId?: string;
   businessEffectHash?: string;
-  /** Existing transaction for sandbox/native effects that must commit with the
-   * durable operation fence. This is internal execution context and is never
-   * forwarded to an external provider. */
-  db?: Db;
 }
 
 export interface Tool {
@@ -38,7 +32,7 @@ export interface Tool {
   retryPolicy?: RetryPolicy;
   /** Fields actually forwarded to this external provider. Omitted = today's
    *  pass-through behavior (opt-in per tool). Every builtin tool schema uses
-   *  .passthrough(), so without this a stray field (household notes, an SSN some
+   *  .passthrough(), so without this a stray field (deal notes, an SSN some
    *  future planner payload attaches) flows straight to the external adapter. */
   piiAllowlist?: readonly string[];
   run(input: Record<string, unknown>, runtime?: Readonly<ToolRuntimeContext>): Promise<Record<string, unknown>>;
@@ -135,8 +129,6 @@ export interface ToolCallContext {
   authProfileRef?: string;
   businessEffectId?: string;
   businessEffectHash?: string;
-  /** Existing transaction for execution paths that hold a parent Work lock. */
-  db?: Db;
   /** Deterministic namespace for independently queued targets/batches of one action. */
   operationKeyPrefix?: string;
 }
@@ -197,7 +189,6 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.authProfileRef ? { authProfileRef: this.ctx.authProfileRef } : {}),
       ...(this.ctx.businessEffectId ? { businessEffectId: this.ctx.businessEffectId } : {}),
       ...(this.ctx.businessEffectHash ? { businessEffectHash: this.ctx.businessEffectHash } : {}),
-      ...(this.ctx.db ? { db: this.ctx.db } : {}),
     });
   }
 
@@ -215,11 +206,7 @@ export class ScopedToolRegistry extends ToolRegistry {
   private async callForOperation(name: string, input: Record<string, unknown>, operationKey: string): Promise<ToolCallResult> {
     const requestHash = hashInput(input);
     const declaredProvider = this.base.integrationFor(name) ?? undefined;
-    const provider = declaredProvider === "tenant-routed"
-      ? name.startsWith("vapi_")
-        ? (await resolveCapabilityBindingsForTenant(this.ctx.tenantId)).communications.mode
-        : (await resolveCapabilityBindingsForTenant(this.ctx.tenantId)).crm.mode
-      : declaredProvider;
+    const provider = declaredProvider;
     const claim = await claimExternalOperation(
       this.ctx.tenantId,
       this.ctx.domainActionId,
@@ -228,7 +215,6 @@ export class ScopedToolRegistry extends ToolRegistry {
       provider,
       this.ctx.businessEffectId,
       this.ctx.authProfileRef,
-      this.ctx.db,
     );
     if (!claim.claimed) {
       if (claim.existing.requestHash !== requestHash) {
@@ -265,7 +251,6 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.authProfileRef ? { authProfileRef: this.ctx.authProfileRef } : {}),
       ...(this.ctx.businessEffectId ? { businessEffectId: this.ctx.businessEffectId } : {}),
       ...(this.ctx.businessEffectHash ? { businessEffectHash: this.ctx.businessEffectHash } : {}),
-      ...(this.ctx.db ? { db: this.ctx.db } : {}),
     });
     const operation = await recordExternalOperationResult(
       this.ctx.tenantId,
@@ -273,14 +258,14 @@ export class ScopedToolRegistry extends ToolRegistry {
       operationKey,
       result.ok ? "succeeded" : result.errorKind === "unknown_outcome" ? "unknown" : "failed",
       result.ok ? result.output : { ...result.output, ...(result.error ? { error: result.error } : {}), ...(result.errorKind ? { errorKind: result.errorKind } : {}) },
-      this.ctx.db,
     );
     if (result.ok && operation?.verificationStatus === "awaiting_observation" && this.ctx.businessEffectId) {
-      const { enqueueJob, enqueueJobTx } = await import("@finnor/db");
-      const payload = { tenantId: this.ctx.tenantId, externalOperationKey: operation.operationKey, domainActionId: this.ctx.domainActionId, attempt: 1 };
-      const idempotencyKey = `observe-effect:${this.ctx.tenantId}:${this.ctx.domainActionId}:${operation.operationKey}:1`;
-      if (this.ctx.db) await enqueueJobTx(this.ctx.db, "observe_external_effect", payload, idempotencyKey);
-      else await enqueueJob("observe_external_effect", payload, idempotencyKey);
+      const { enqueueJob } = await import("@finnor/db");
+      await enqueueJob(
+        "observe_external_effect",
+        { tenantId: this.ctx.tenantId, externalOperationKey: operation.operationKey, domainActionId: this.ctx.domainActionId, attempt: 1 },
+        `observe-effect:${this.ctx.tenantId}:${this.ctx.domainActionId}:${operation.operationKey}:1`,
+      );
     }
     return result;
   }

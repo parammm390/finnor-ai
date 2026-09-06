@@ -10,14 +10,10 @@ import {
   domainActions,
   employeeRoleAssignments,
   employeeRoles,
-  households,
   roleAuthorityGrants,
   rolePermissions,
-  serviceVisits,
-  technicians,
   users,
   withTenant,
-  workOrders,
   works,
   type Db,
 } from "@finnor/db";
@@ -98,26 +94,11 @@ function normalizeResources(request: AuthorityRequest): AuthorityResource[] {
 }
 
 async function isAssigned(db: Db, tenantId: string, employeeId: string, resource: AuthorityResource): Promise<boolean> {
-  const [employee] = await db.select({ technicianId: users.technicianId }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.id, employeeId))).limit(1);
-  if (!employee) return false;
   if (resource.type === "user" || resource.type === "employee") return resource.id === employeeId;
-  if (resource.type === "technician") return Boolean(resource.id && resource.id === employee.technicianId);
-  if (!resource.id || !employee.technicianId) return false;
+  if (!resource.id) return false;
   if (resource.type === "work") {
     const [row] = await db.select({ id: works.id }).from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, resource.id), or(eq(works.assignedTo, employeeId), eq(works.currentOwnerId, employeeId)))).limit(1);
     return Boolean(row);
-  }
-  if (resource.type === "work_order") {
-    const [row] = await db.select({ id: workOrders.id }).from(workOrders).where(and(eq(workOrders.tenantId, tenantId), eq(workOrders.id, resource.id), eq(workOrders.technicianId, employee.technicianId))).limit(1);
-    return Boolean(row);
-  }
-  if (resource.type === "household" || resource.type === "customer") {
-    const [visit] = await db.select({ id: serviceVisits.id }).from(serviceVisits)
-      .innerJoin(households, eq(households.id, serviceVisits.householdId))
-      .where(and(eq(households.tenantId, tenantId), eq(households.id, resource.id), eq(serviceVisits.technicianId, employee.technicianId))).limit(1);
-    if (visit) return true;
-    const [order] = await db.select({ id: workOrders.id }).from(workOrders).where(and(eq(workOrders.tenantId, tenantId), eq(workOrders.householdId, resource.id), eq(workOrders.technicianId, employee.technicianId))).limit(1);
-    return Boolean(order);
   }
   return false;
 }
@@ -131,9 +112,7 @@ async function scopeAllows(db: Db, tenantId: string, employeeId: string, assignm
   }
   if (assignment.scope.kind === "self") {
     if (!resource.id) return false;
-    if (resource.type === "user" || resource.type === "employee") return resource.id === employeeId;
-    const [employee] = await db.select({ technicianId: users.technicianId }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.id, employeeId))).limit(1);
-    return resource.type === "technician" && resource.id === employee?.technicianId;
+    return (resource.type === "user" || resource.type === "employee") && resource.id === employeeId;
   }
   return isAssigned(db, tenantId, employeeId, resource);
 }
@@ -187,7 +166,7 @@ async function loadAuthorities(db: Db, tenantId: string, employeeIds: string[]):
     const employeeRoleIds = new Set(assignments.map((assignment) => assignment.roleId));
     return [employeeId, {
       revision: state?.revision ?? 1,
-      employee: employee ? { id: employee.id, status: employee.status, role: employee.role } : null,
+      employee: employee?.role === "owner" ? { id: employee.id, status: employee.status, role: "owner" as const } : null,
       assignments,
       grants: grants.filter((grant) => employeeRoleIds.has(grant.roleId)),
     }] as const;
