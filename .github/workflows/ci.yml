@@ -75,13 +75,13 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:planner-evals
       - run: npm run db:migrate
+      - run: npm run db:seed
       # The setup file is also loaded by Vitest, but a fresh database does not have
       # the target table at module-load time. Install the disposable legacy-fixture
       # seam explicitly after migrations so pre-Phase-5 generic fixtures get their
       # test-only Water identity; production code remains fail-closed.
       - name: Install disposable legacy fixture seam
         run: npx tsx scripts/install-vertical-fixture-seam.ts
-      - run: npm run db:seed
       # A truly fresh runner database needs the LangGraph schema explicitly; local dev
       # often hides this because its embedded Postgres data directory persists.
       - run: npm run setup:langgraph
