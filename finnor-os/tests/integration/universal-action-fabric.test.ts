@@ -60,6 +60,7 @@ const MARIO_A = randomUUID();
 const MARIO_B = randomUUID();
 const SARAH = randomUUID();
 const SUSPENDED = randomUUID();
+const SUSPENDED_OWNER = randomUUID();
 const ROGUE = randomUUID();
 const DENY_ASSIGN_TASK_ROLE = randomUUID();
 const TENANT_B_EMPLOYEE = randomUUID();
@@ -200,6 +201,11 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
           `sarah-${TENANT_A}@example.test`, `suspended-${TENANT_A}@example.test`, `rogue-${TENANT_A}@example.test`,
           TENANT_B, `employee-${TENANT_B}@example.test`,
         ],
+      );
+      await admin.query(
+        `INSERT INTO finnor_os.users(id,tenant_id,email,role,display_name,phone_number,status)
+         VALUES ($1,$2,$3,'owner','Suspended Owner','+15550000008','suspended')`,
+        [SUSPENDED_OWNER, TENANT_A, `suspended-owner-${TENANT_A}@example.test`],
       );
       await admin.query(
         `INSERT INTO finnor_os.org_units(id,tenant_id,unit_key,name,kind)
@@ -718,14 +724,14 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     ]));
   });
 
-  it("denies a suspended employee's task assignment before mutation or provider effect", async () => {
+  it("denies a suspended owner task assignment before mutation or provider effect", async () => {
     const [targetTask] = await withTenant(TENANT_A, (db) => db.select().from(tasks).limit(1));
     const [row] = await withTenant(TENANT_A, (db) => db.insert(domainActions).values({
       tenantId: TENANT_A,
       actionType: "assign_task",
       payload: { taskRef: { taskId: targetTask!.id }, assigneeRef: { partyType: "employee", partyId: MARIO_A } },
       status: "draft",
-      initiatedBy: SUSPENDED,
+      initiatedBy: SUSPENDED_OWNER,
     }).returning());
     const action = { ...row!, createdAt: row!.createdAt.toISOString(), payload: row!.payload as Record<string, unknown> } as DomainAction;
     const before = (await withTenant(TENANT_A, (db) => db.select().from(tasks).where(eq(tasks.id, targetTask!.id))))[0];

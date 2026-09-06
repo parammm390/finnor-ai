@@ -88,7 +88,7 @@ describe.skipIf(!available)("Upgrade 2 durable Work kernel", () => {
     expect((aggregate!.work as { status: string; sessionId: string; activeContext: Record<string, unknown> })).toMatchObject({
       status: "recovery",
       sessionId: "shared-session",
-      activeContext: { dealId: "deal-a", workstream: "financial" },
+      activeContext: { dealId: "deal-a" },
     });
     expect((aggregate!.events as Array<{ seq: number; eventType: string }>).map((event) => event.seq)).toEqual([1, 2, 3]);
     expect((aggregate!.events as Array<{ eventType: string }>).at(-1)?.eventType).toBe("recovery_input_received");

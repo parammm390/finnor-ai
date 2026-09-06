@@ -77,6 +77,6 @@ describe.skipIf(!available)("POST /api/webhooks/vapi — caller identity resolve
   it("an unrecognized number still gets the handoff (identity resolution is real, not bypassed)", async () => {
     const res = await POST(toolCallsRequest(`call-identity-test-${randomUUID()}`, "+15559990000"));
     const body = (await res.json()) as { results: Array<{ toolCallId: string; result: string }> };
-    expect(body.results[0]!.result).toMatch(/can't verify this line/);
+    expect(body.results[0]!.result).toMatch(/cannot verify an active employee on this line/);
   });
 });

@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, domainActions, pendingConfirmations, handoffs } from "@finnor/db";
+import { withTenant, closePool, tenants, users, domainActions, pendingConfirmations, handoffs } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import {
   resolveVoiceIdentity,
@@ -23,6 +23,7 @@ const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5
 // before this suite's `onConflictDoNothing()` insert; the owner-line assertion then
 // depended on test scheduling. Keep the fixture tenant exclusive to Voice OS.
 const TENANT_ID = "b8c6a2df-1f23-4e45-8a67-2ce8e46089b1";
+const OWNER_ID = "b8c6a2df-1f23-4e45-8a67-2ce8e46089b2";
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -52,6 +53,17 @@ describe.skipIf(!available)("voice OS", () => {
         .insert(tenants)
         .values({ id: TENANT_ID, name: "Voice OS Test Fund", ownerPhone: "+15555550200" })
         .onConflictDoUpdate({ target: tenants.id, set: { ownerPhone: "+15555550200" } }),
+    );
+    await withTenant(TENANT_ID, (db) =>
+      db.insert(users).values({
+        id: OWNER_ID,
+        tenantId: TENANT_ID,
+        email: `voice-owner-${TENANT_ID}@example.test`,
+        role: "owner",
+        displayName: "Voice Owner",
+        phoneNumber: "+15555550200",
+        status: "active",
+      }).onConflictDoNothing(),
     );
   });
   afterAll(async () => {
