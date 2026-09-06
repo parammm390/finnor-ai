@@ -130,7 +130,7 @@ jobs:
         working-directory: finnor-os
 
       - name: Install disposable legacy fixture seam
-        run: npx tsx tests/vertical-fixture-setup.ts
+        run: npx tsx scripts/install-vertical-fixture-seam.ts
         working-directory: finnor-os
 
       - name: Phase 5 type, security, runtime, and regression suite

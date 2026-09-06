@@ -80,7 +80,7 @@ jobs:
       # seam explicitly after migrations so pre-Phase-5 generic fixtures get their
       # test-only Water identity; production code remains fail-closed.
       - name: Install disposable legacy fixture seam
-        run: npx tsx tests/vertical-fixture-setup.ts
+        run: npx tsx scripts/install-vertical-fixture-seam.ts
       - run: npm run db:seed
       # A truly fresh runner database needs the LangGraph schema explicitly; local dev
       # often hides this because its embedded Postgres data directory persists.
