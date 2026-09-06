@@ -68,6 +68,7 @@ const WORK_A = randomUUID();
 const WORK_B = randomUUID();
 const DOCUMENT_A = randomUUID();
 const HOUSEHOLD_A = randomUUID();
+const EXTERNAL_CONTACT_A = randomUUID();
 const EMAIL_IDENTITY = randomUUID();
 const SMS_IDENTITY = randomUUID();
 const VOICE_IDENTITY = randomUUID();
@@ -227,6 +228,11 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
         [HOUSEHOLD_A, TENANT_A],
       );
       await admin.query(
+        `INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,name,business_email)
+         VALUES ($1,$2,'external-contact-a','External Contact','external-contact@example.test')`,
+        [EXTERNAL_CONTACT_A, TENANT_A],
+      );
+      await admin.query(
         `INSERT INTO finnor_os.communication_identities
           (id,tenant_id,identity_key,provider,channel,address,status,capabilities,credential_provider,credential_ref)
          VALUES
@@ -286,7 +292,7 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     }
   });
 
-  it("resolves ambiguity before execution and sends one canonical SMS with a durable receipt", async () => {
+  it("resolves ambiguity before execution and sends one canonical email with a durable receipt", async () => {
     const before = await withTenant(TENANT_A, (db) => db.select().from(communicationDeliveries));
     const ambiguous = await resolveParty(TENANT_A, { query: "Mario" }, { requesterEmployeeId: OWNER });
     expect(ambiguous.status).toBe("ambiguous");
@@ -296,28 +302,29 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     const calls: Array<{ tool: string; input: Record<string, unknown> }> = [];
     const payload = {
       recipient: { partyType: "employee", partyId: MARIO_A },
-      channel: "sms",
+      channel: "email",
+      subject: "Peterson installation update",
       body: "The Peterson install moved to 2 PM.",
       purpose: "installation_update",
-      communicationIdentityRef: { communicationIdentityId: SMS_IDENTITY },
+      communicationIdentityRef: { communicationIdentityId: EMAIL_IDENTITY },
       workRef: { workId: WORK_A },
     };
     const { action, result } = await executeAction({
       actionType: "send_message",
       payload,
       tools: communicationTools(calls),
-      communicationIdentityId: SMS_IDENTITY,
+      communicationIdentityId: EMAIL_IDENTITY,
       workId: WORK_A,
     });
     expect(result.status).toBe("success");
     expect(calls).toHaveLength(1);
-    expect(calls[0]).toMatchObject({ tool: "send_sms_to_number", input: { phoneNumber: "+15550000002" } });
+    expect(calls[0]).toMatchObject({ tool: "send_email", input: { to: `mario-a-${TENANT_A}@example.test` } });
     const deliveries = await withTenant(TENANT_A, (db) => db.select().from(communicationDeliveries).where(eq(communicationDeliveries.domainActionId, action.id)));
     expect(deliveries).toHaveLength(1);
-    expect(deliveries[0]).toMatchObject({ recipientType: "employee", recipientId: MARIO_A, channel: "sms", status: "sent", communicationIdentityId: SMS_IDENTITY });
+    expect(deliveries[0]).toMatchObject({ recipientType: "employee", recipientId: MARIO_A, channel: "email", status: "sent", communicationIdentityId: EMAIL_IDENTITY });
     const events = await withTenant(TENANT_A, (db) => db.select().from(universalActionEvents).where(eq(universalActionEvents.domainActionId, action.id)));
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ actorId: OWNER, communicationIdentityId: SMS_IDENTITY, route: expect.stringMatching(/native|api/) });
+    expect(events[0]).toMatchObject({ actorId: OWNER, communicationIdentityId: EMAIL_IDENTITY, route: expect.stringMatching(/native|api/) });
   });
 
   it("places one governed call through the explicitly permitted voice identity", async () => {
@@ -572,7 +579,7 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
 
     const external = await executeAction({
       actionType: "share_document",
-      payload: { documentRef: { documentId: DOCUMENT_A }, recipient: { partyType: "household", partyId: HOUSEHOLD_A }, accessLevel: "view" },
+      payload: { documentRef: { documentId: DOCUMENT_A }, recipient: { partyType: "external_contact", partyId: EXTERNAL_CONTACT_A }, accessLevel: "view" },
     });
     expect(external.result.status).toBe("integration_unavailable");
     expect(external.result.output.route).toMatchObject({ route: "manual", executable: false, reasonCode: "external_sharing_disallowed" });
@@ -711,14 +718,14 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     ]));
   });
 
-  it("denies an out-of-authority task assignment before mutation or provider effect", async () => {
+  it("denies a suspended employee's task assignment before mutation or provider effect", async () => {
     const [targetTask] = await withTenant(TENANT_A, (db) => db.select().from(tasks).limit(1));
     const [row] = await withTenant(TENANT_A, (db) => db.insert(domainActions).values({
       tenantId: TENANT_A,
       actionType: "assign_task",
       payload: { taskRef: { taskId: targetTask!.id }, assigneeRef: { partyType: "employee", partyId: MARIO_A } },
       status: "draft",
-      initiatedBy: ROGUE,
+      initiatedBy: SUSPENDED,
     }).returning());
     const action = { ...row!, createdAt: row!.createdAt.toISOString(), payload: row!.payload as Record<string, unknown> } as DomainAction;
     const before = (await withTenant(TENANT_A, (db) => db.select().from(tasks).where(eq(tasks.id, targetTask!.id))))[0];
