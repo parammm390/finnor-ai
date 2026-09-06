@@ -58,6 +58,10 @@ jobs:
           npm run setup:langgraph
         working-directory: finnor-os
 
+      - name: Seed canonical Private Equity fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
       - name: Verify canonical traversal and tenant isolation
         run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts
         working-directory: finnor-os
