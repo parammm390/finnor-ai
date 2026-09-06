@@ -15,10 +15,6 @@ const supportedReads: Array<[string, string]> = [
   ["Show agent activity for today", "agent_activity"],
   ["What is the current business state?", "business_state"],
   ["Show the complete customer history for Alice Johnson", "company_context"],
-  ["Who is my manager?", "party_lookup"],
-  ["Show me the full context for our membrane supplier", "party_context"],
-  ["Who is on the installation team?", "team_roster"],
-  ["When is Mario Singh available next Friday?", "party_availability"],
 ];
 
 describe("Upgrade 3 deterministic operational-query classification", () => {
@@ -66,6 +62,7 @@ describe("Upgrade 3 deterministic operational-query classification", () => {
     "Should we reorder the low-stock items?",
     "Why did revenue fall last month?",
     "Forecast next month's collections",
+    "Show appointments sometime next week",
     "Show the customer record for Alex",
     "hi",
     "Good morning",
@@ -103,14 +100,6 @@ describe("Upgrade 3 deterministic operational-query classification", () => {
     expect(validateOperationalQueryRequest({ intent: "party_lookup", query: "Ada", tenantId: "other" }).success).toBe(false);
     expect(validateOperationalQueryRequest({ intent: "party_context", query: "Ada", includeInactive: true }).success).toBe(false);
     expect(validateOperationalQueryRequest({ intent: "team_roster", teamRef: ref }).success).toBe(false);
-  });
-
-  it.each([
-    ["Show the schedule next Friday", { startDate: "next_friday" }],
-    ["Show the schedule this week", { startDate: "this_week_start", endDate: "this_week_end" }],
-    ["Show the schedule next week", { startDate: "next_week_start", endDate: "next_week_end" }],
-  ])("preserves tenant-local relative dates without server-locale guessing: %s", (question, localDateRange) => {
-    expect(interpretOperationalQuery(question)).toMatchObject({ route: "fast_read", request: { intent: "schedule_range", localDateRange } });
   });
 
   it("accepts both canonical and PartyRef company-context anchors", () => {

@@ -83,7 +83,7 @@ Every variable is documented inline in [.env.example](.env.example). Values mark
 ## Deploying
 
 - **Frontend + API** → the Vercel projects named in [`../infra/deployment/production.contract.json`](../infra/deployment/production.contract.json).
-- **Worker + embedded orchestrator** → the ECS Fargate service and task family named in that same contract, behind the HTTPS realtime ALB. The worker, orchestrator, job loop, and SSE gateway remain one persistent process and are deployed by the guarded production workflow.
+- **Worker + embedded orchestrator** → the Azure VM and systemd unit named in that same contract. They hold persistent loops and are deployed by the guarded production workflow.
 - **Database** → the production database endpoint and required migration head in the contract. Production migration is allowed only after the full runtime preflight succeeds.
 - **Release rule** → `.github/workflows/production-release.yml` is the only production path; it accepts only the exact `origin/main` SHA and must verify DB/API/frontend/worker/orchestrator parity before PASS.
 - **Webhooks** → point Vapi's server URL at `https://<api-domain>/api/webhooks/vapi` (set `VAPI_WEBHOOK_SECRET` on both sides) and GHL webhooks at `/api/webhooks/ghl`.

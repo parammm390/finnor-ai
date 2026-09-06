@@ -5,7 +5,7 @@
 // worker died). Every process has its own row so rolling releases and multi-worker
 // fleets can be verified without pretending that one fixed process is the fleet.
 
-import { CURRENT_MIGRATION_HEAD, adminDb, serviceReleaseHeartbeats, workerHeartbeat } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, adminDb, recordCutoverCompatibleHeartbeat, workerHeartbeat } from "@finnor/db";
 import { getLogger, getRuntimeReleaseMetadata } from "@finnor/tools";
 import { hostname } from "node:os";
 
@@ -19,11 +19,11 @@ async function beat(): Promise<void> {
   const meta = {
     ...release,
     instanceId: WORKER_HEARTBEAT_ID,
-    capabilities: (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse")
+    capabilities: (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health")
       .split(",").map((value) => value.trim()).filter(Boolean),
     releaseSha: release.commitSha,
     coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
-    deploymentId: process.env.FINNOR_WORKER_DEPLOYMENT_ID ?? null,
+    deploymentId: process.env.FINNOR_WORKER_DEPLOYMENT_ID ?? process.env.RAILWAY_DEPLOYMENT_ID ?? null,
     environment: release.environment,
     source: release.source,
   };
@@ -32,37 +32,29 @@ async function beat(): Promise<void> {
     .values({ id: WORKER_HEARTBEAT_ID, lastBeatAt: now, meta })
     .onConflictDoUpdate({ target: workerHeartbeat.id, set: { lastBeatAt: now, meta } });
   const releaseSha = String(meta.releaseSha ?? "unknown");
-  await adminDb()
-    .insert(serviceReleaseHeartbeats)
-    .values({
-      service: "worker",
-      instanceId: WORKER_HEARTBEAT_ID,
-      releaseSha,
-      buildId: release.buildId,
-      version: release.version,
-      releaseSource: release.source,
-      coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
-      migrationHead: CURRENT_MIGRATION_HEAD,
-      deploymentId: meta.deploymentId,
-      capabilities: meta.capabilities,
-      environment: String(meta.environment ?? process.env.NODE_ENV ?? "unknown"),
-      lastBeatAt: now,
-    })
-    .onConflictDoUpdate({
-      target: [serviceReleaseHeartbeats.service, serviceReleaseHeartbeats.instanceId],
-      set: {
-        releaseSha,
-        buildId: release.buildId,
-        version: release.version,
-        releaseSource: release.source,
-        coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
-        migrationHead: CURRENT_MIGRATION_HEAD,
-        deploymentId: meta.deploymentId,
-        capabilities: meta.capabilities,
-        environment: String(meta.environment ?? process.env.NODE_ENV ?? "unknown"),
-        lastBeatAt: now,
-      },
-    });
+  const common = {
+    instanceId: WORKER_HEARTBEAT_ID,
+    releaseSha,
+    buildId: release.buildId,
+    version: release.version,
+    releaseSource: release.source,
+    coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
+    migrationHead: CURRENT_MIGRATION_HEAD,
+    deploymentId: meta.deploymentId,
+    environment: String(meta.environment ?? process.env.NODE_ENV ?? "unknown"),
+  };
+  await recordCutoverCompatibleHeartbeat({
+    ...common,
+    service: "worker",
+    capabilities: meta.capabilities,
+  });
+  // The scheduler is co-owned by this persistent process today, but has a separate
+  // provenance row so a future topology split cannot silently bypass the cutover.
+  await recordCutoverCompatibleHeartbeat({
+    ...common,
+    service: "scheduler-owner",
+    capabilities: ["scheduler", ...meta.capabilities],
+  });
 
   const pingUrl = process.env.HEALTHCHECK_PING_URL;
   if (!pingUrl) return; // ⏸ PARAM signup pending (see JARVIS-CREDENTIALS-LEDGER.md) — no-op, not a fake ping

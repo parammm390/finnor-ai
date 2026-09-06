@@ -23,7 +23,7 @@ describe("bounded epistemic controller", () => {
     };
     const run = await runEpistemicController({
       state: testState(),
-      requirements: [testRequirement("invoice.balance", [testOption()])],
+      requirements: [testRequirement("deal.debt_capacity", [testOption()])],
       budget,
       executor: { execute },
       clock: { now: () => TEST_NOW },
@@ -82,30 +82,5 @@ describe("bounded epistemic controller", () => {
     });
     expect(execute).toHaveBeenCalledTimes(1);
     expect(run.usage.userInterruptions).toBe(0);
-  });
-
-  it("never scores or executes an adapter denied by the acquisition policy", async () => {
-    const execute = vi.fn();
-    const run = await runEpistemicController({
-      state: testState(),
-      requirements: [testRequirement()],
-      budget: {
-        maxActions: 2,
-        maxUserInterruptions: 1,
-        maxLatencyMs: 10_000,
-        maxCostUnits: 10,
-        deadline: "2026-09-01T00:00:00.000Z",
-      },
-      executor: { execute },
-      acquisitionPolicy: { deniedAdapters: ["CANONICAL_OPERATIONAL_QUERY"] },
-      clock: { now: () => TEST_NOW },
-    });
-    expect(execute).not.toHaveBeenCalled();
-    expect(run.rounds[0]?.uncertainties[0]).toMatchObject({
-      category: "PERMISSION_BLOCKED",
-      possibleAcquisitionActions: [],
-    });
-    expect(run.rounds[0]?.candidates).toEqual([]);
-    expect(run.finalStop.reason).toBe("NO_LEGAL_ACTION");
   });
 });

@@ -8,6 +8,7 @@ import {
   calls,
   closePool,
   commands,
+  communicationsLog,
   contacts,
   contactMethods,
   domainActions,
@@ -34,8 +35,7 @@ import {
   workAggregate,
   withTenant,
 } from "@finnor/db";
-import { recordCustomerMessage } from "@finnor/data-platform";
-import { executeOperationalQuery, resolveTenantRange } from "@finnor/read-models";
+import { executeOperationalQuery } from "@finnor/read-models";
 import type { OperationalQueryRequest } from "@finnor/shared-types";
 import { createFastReadOnlyRouter } from "@finnor/orchestration";
 import { FinnorOrchestrator, type Planner } from "@finnor/orchestration";
@@ -118,8 +118,10 @@ async function insertFixture(): Promise<void> {
     ]);
     await db.insert(contacts).values({ id: CONTACT_A, tenantId: TENANT_A, householdId: HOUSEHOLD_QUALIFYING, name: "No Consent Household", role: "primary" });
     await db.insert(contactMethods).values({ id: CONTACT_METHOD_A, tenantId: TENANT_A, contactId: CONTACT_A, methodType: "email", value: "no-consent@example.invalid", consent: false });
-    await recordCustomerMessage(db, { tenantId: TENANT_A, householdId: HOUSEHOLD_QUALIFYING, channel: "email", direction: "inbound", content: "old interaction", sentAt: new Date("2025-01-01T00:00:00.000Z") });
-    await recordCustomerMessage(db, { tenantId: TENANT_A, householdId: HOUSEHOLD_ACTIVE, channel: "email", direction: "inbound", content: "recent interaction", sentAt: RECENT_ACTIVITY_AT });
+    await db.insert(communicationsLog).values([
+      { id: randomUUID(), householdId: HOUSEHOLD_QUALIFYING, channel: "email", direction: "inbound", content: "old interaction", timestamp: new Date("2025-01-01T00:00:00.000Z") },
+      { id: randomUUID(), householdId: HOUSEHOLD_ACTIVE, channel: "email", direction: "inbound", content: "recent interaction", timestamp: RECENT_ACTIVITY_AT },
+    ]);
     await db.insert(serviceVisits).values([
       { id: randomUUID(), householdId: HOUSEHOLD_QUALIFYING, technicianId: TECH_A, type: "maintenance", scheduledAt: new Date("2025-01-02T00:00:00.000Z"), completedAt: new Date("2025-01-02T01:00:00.000Z"), notes: null },
       { id: VISIT_A, householdId: HOUSEHOLD_QUALIFYING, technicianId: TECH_A, type: "spring_service", scheduledAt: new Date("2026-03-09T14:00:00.000Z"), completedAt: null, notes: null },
@@ -292,15 +294,6 @@ describe.skipIf(!available)("Upgrade 3 operational query plane against migrated 
     expect(rows.some((row) => row.kind === "work_order" && row.id === WORK_ORDER_A)).toBe(true);
     expect(rows.every((row) => row.scheduledAt >= DST_RANGE.start && row.scheduledAt < DST_RANGE.end)).toBe(true);
     expect(rows.some((row) => row.scheduledAt === DST_RANGE.end)).toBe(false);
-  });
-
-  it("resolves next-week weekdays inside the following Monday-Sunday week", async () => {
-    const resolved = await withTenant(TENANT_A, (db) => resolveTenantRange(db, TENANT_A, {
-      localDateRange: { startDate: "next_monday", endDate: "next_sunday" },
-    }, "2026-08-12T16:00:00.000Z"));
-    expect(resolved.localDateRange).toEqual({ startDate: "next_monday", endDate: "next_sunday" });
-    expect(resolved.range.start).toBe("2026-08-17T04:00:00.000Z");
-    expect(resolved.range.end).toBe("2026-08-24T04:00:00.000Z");
   });
 
   it("routes today-through-tomorrow through the tenant timezone/DST resolver and records one Work query receipt without planning", async () => {

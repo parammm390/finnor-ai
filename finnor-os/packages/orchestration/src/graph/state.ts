@@ -14,6 +14,7 @@ export const GateStateAnnotation = Annotation.Root({
   alreadyApproved: Annotation<boolean>,
   validation: Annotation<ValidationResult | undefined>,
   draft: Annotation<DraftAction | undefined>,
+  groundingError: Annotation<{ code: string; message: string; details: Record<string, unknown> } | undefined>,
   decision: Annotation<"approve" | "reject" | undefined>,
   result: Annotation<ExecutionResult | undefined>,
   // Phase 16(e): threaded from DomainAction.correlationId at invoke time (see
@@ -21,7 +22,9 @@ export const GateStateAnnotation = Annotation.Root({
   // enqueues can tag it too — optional, so existing checkpointed runs without it
   // (started before this field existed) simply resume with it undefined.
   correlationId: Annotation<string | undefined>,
+  workId: Annotation<string | undefined>,
   initiatedBy: Annotation<string | undefined>,
+  approvedBy: Annotation<string | undefined>,
   authorityOutcome: Annotation<"allowed" | "denied" | "approval_required" | undefined>,
   authorityDecisionId: Annotation<string | undefined>,
   authorityReasonCode: Annotation<string | undefined>,

@@ -9,8 +9,8 @@ export type VapiCredentialContext = TenantCredentialContext<"vapi">;
 
 export interface OutboundCallOpts {
   tenantId: string;
-  /** E.164 number to call (the dealer owner, or a customer). */
-  customerNumber: string;
+  /** E.164 employee or governed business-party destination. */
+  destinationNumber: string;
   /** What the assistant says the moment the call connects. */
   firstMessage: string;
   /** Carried on the call object; comes back in the end-of-call webhook. */
@@ -37,7 +37,9 @@ export async function placeVapiCall(opts: OutboundCallOpts, context: VapiCredent
       body: JSON.stringify({
         assistantId,
         phoneNumberId,
-        customer: { number: opts.customerNumber },
+        // `customer.number` is Vapi's wire-field name; FINNOR models this as a
+        // governed destination rather than a legacy product-domain party.
+        customer: { number: opts.destinationNumber },
         metadata: { ...(opts.metadata ?? {}), tenantId: opts.tenantId },
         assistantOverrides: {
           firstMessage: opts.firstMessage,
@@ -96,97 +98,4 @@ export async function listVapiCalls(
       ? (payload as Record<string, unknown>).results as unknown[]
       : [];
   return candidates.filter((row): row is VapiCallRecord => Boolean(row) && typeof row === "object" && typeof (row as { id?: unknown }).id === "string");
-}
-
-export interface VapiCampaignCustomer {
-  number: string;
-  name: string;
-  externalId: string;
-  assistantOverrides: {
-    firstMessage: string;
-    variableValues: Record<string, string>;
-    metadata: Record<string, unknown>;
-    analysisPlan?: Record<string, unknown>;
-  };
-}
-
-export interface CreateVapiCampaignOpts {
-  tenantId: string;
-  /** Deterministic per-domain-action name. Used as provider-side idempotency key. */
-  name: string;
-  assistantId: string;
-  customers: VapiCampaignCustomer[];
-  schedulePlan: { earliestAt: string; latestAt?: string };
-}
-
-type VapiCampaignRecord = Record<string, unknown> & { id?: string; name?: string };
-
-function campaignArray(value: unknown): VapiCampaignRecord[] {
-  if (Array.isArray(value)) return value.filter((row): row is VapiCampaignRecord => Boolean(row) && typeof row === "object");
-  if (value && typeof value === "object") {
-    const source = value as Record<string, unknown>;
-    for (const key of ["results", "campaigns", "data"]) {
-      if (Array.isArray(source[key])) return campaignArray(source[key]);
-    }
-  }
-  return [];
-}
-
-async function findCampaignByName(context: VapiCredentialContext, name: string): Promise<VapiCampaignRecord | null> {
-  const createdAtGe = new Date(Date.now() - 35 * 86_400_000).toISOString();
-  const query = new URLSearchParams({ limit: "100", createdAtGe });
-  const response = await fetch(`https://api.vapi.ai/campaign?${query.toString()}`, {
-    headers: { authorization: `Bearer ${context.credentials.apiKey}` },
-  });
-  if (!response.ok) {
-    throw new IntegrationError("vapi", `list campaigns failed (${response.status})`, response.status >= 500);
-  }
-  const rows = campaignArray(await response.json());
-  return rows.find((row) => row.name === name) ?? null;
-}
-
-/** Creates a provider-managed outbound campaign. The deterministic name is checked
- * before POST and again after a 5xx so a lost response cannot fan out duplicate calls
- * when the workflow retries. The ToolRegistry provides the outer retry/idempotency
- * ledger; this adapter intentionally makes only one create attempt per invocation. */
-export async function createVapiCampaign(opts: CreateVapiCampaignOpts, context: VapiCredentialContext): Promise<ToolCallResult> {
-  return wrappedCall(
-    "vapi",
-    async () => {
-      if (context.tenantId !== opts.tenantId) throw new IntegrationError("vapi", "Vapi credential context tenant mismatch", false);
-      const { apiKey, phoneNumberId } = context.credentials;
-      const allowedAssistantIds = new Set([context.credentials.assistantId, ...Object.values(context.credentials.assistantIds ?? {})]);
-      if (!allowedAssistantIds.has(opts.assistantId)) {
-        throw new IntegrationError("vapi", "Requested campaign assistant is not part of the tenant credential context", false);
-      }
-      if (!opts.assistantId) throw new IntegrationError("vapi", "A campaign assistantId is required", false);
-      if (opts.customers.length === 0) throw new IntegrationError("vapi", "A campaign needs at least one customer", false);
-
-      const existing = await findCampaignByName(context, opts.name);
-      if (existing) return { ...existing, idempotentReplay: true };
-
-      const response = await fetch("https://api.vapi.ai/campaign", {
-        method: "POST",
-        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({
-          name: opts.name,
-          assistantId: opts.assistantId,
-          phoneNumberId,
-          customers: opts.customers,
-          schedulePlan: opts.schedulePlan,
-        }),
-      });
-      if (!response.ok) {
-        // A provider can accept the write and still lose the HTTP response. Reconcile
-        // once before surfacing the error; outer retries will perform the same check.
-        if (response.status >= 500) {
-          const reconciled = await findCampaignByName(context, opts.name).catch(() => null);
-          if (reconciled) return { ...reconciled, reconciledAfterProviderError: true };
-        }
-        throw new IntegrationError("vapi", `create campaign failed (${response.status})`, response.status >= 500);
-      }
-      return (await response.json()) as Record<string, unknown>;
-    },
-    { attempts: 1, baseDelayMs: 0, timeoutMs: 20_000 },
-  );
 }

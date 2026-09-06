@@ -7,15 +7,13 @@
 // re-generate different values and duplicate. Fixed by deriving every random value from
 // a pure hash of (seed, entity kind, index, slot) — this test proves that holds.
 
-import { describe, it, expect, beforeAll, afterAll, onTestFinished } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { seed } from "../../packages/db/seed";
-import { withTenant, closePool, households, equipment, serviceVisits, maintenanceAgreements, leads, technicians, domainPolicies, priceBookItems, tenantSettings, conversations, messages, inventoryItems, users, tenantLocations, orgUnits, orgUnitMemberships, communicationIdentities, communicationIdentityBindings, employeeRoleAssignments } from "@finnor/db";
-import { adjustInventoryItem } from "@finnor/data-platform";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { withTenant, closePool, households, equipment, serviceVisits, maintenanceAgreements, leads, technicians, domainPolicies, priceBookItems, tenantSettings } from "@finnor/db";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { seedDealerZero, DEALER_ZERO_TENANT_ID } from "../../scripts/seed-dealer-zero";
-import { reconcileDealerZeroStatic } from "../../scripts/dealer-zero/static-reconciler";
 import { seedTenantPolicies } from "../../scripts/seed-tenant-policies";
 import { createDefaultPluginRegistry } from "@finnor/orchestration";
 
@@ -44,32 +42,6 @@ async function counts() {
     const leadRows = await db.select().from(leads).where(eq(leads.tenantId, DEALER_ZERO_TENANT_ID));
     return { households: hh.length, equipment: eqRows.length, serviceVisits: svRows.length, amcs: amcRows.length, technicians: techRows.length, leads: leadRows.length };
   });
-}
-
-async function evolvingSnapshot() {
-  return withTenant(DEALER_ZERO_TENANT_ID, async (db) => ({
-    households: await db.select().from(households).where(eq(households.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(households.id)),
-    leads: await db.select().from(leads).where(eq(leads.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(leads.id)),
-    equipment: await db.select().from(equipment).where(eq(equipment.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(equipment.id)),
-    serviceVisits: await db.select().from(serviceVisits).where(eq(serviceVisits.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(serviceVisits.id)),
-    maintenanceAgreements: await db.select().from(maintenanceAgreements).where(eq(maintenanceAgreements.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(maintenanceAgreements.id)),
-    conversations: await db.select().from(conversations).where(eq(conversations.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(conversations.id)),
-    messages: await db.select().from(messages).where(eq(messages.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(messages.id)),
-    inventoryItems: await db.select().from(inventoryItems).where(eq(inventoryItems.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(inventoryItems.id)),
-  }));
-}
-
-async function staticSnapshot() {
-  return withTenant(DEALER_ZERO_TENANT_ID, async (db) => ({
-    settings: await db.select({ tenantId: tenantSettings.tenantId, isDealerZero: tenantSettings.isDealerZero, simulatorEnabled: tenantSettings.simulatorEnabled, workspaceConfig: tenantSettings.workspaceConfig }).from(tenantSettings).where(eq(tenantSettings.tenantId, DEALER_ZERO_TENANT_ID)),
-    locations: await db.select({ id: tenantLocations.id, locationKey: tenantLocations.locationKey, name: tenantLocations.name, address: tenantLocations.address, timezone: tenantLocations.timezone, active: tenantLocations.active }).from(tenantLocations).where(eq(tenantLocations.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(tenantLocations.id)),
-    teams: await db.select({ id: orgUnits.id, unitKey: orgUnits.unitKey, name: orgUnits.name, kind: orgUnits.kind, description: orgUnits.description, locationId: orgUnits.locationId, managedBy: orgUnits.managedBy, active: orgUnits.active }).from(orgUnits).where(eq(orgUnits.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(orgUnits.id)),
-    employees: await db.select().from(users).where(eq(users.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(users.id)),
-    memberships: await db.select({ id: orgUnitMemberships.id, orgUnitId: orgUnitMemberships.orgUnitId, employeeId: orgUnitMemberships.employeeId, membershipRole: orgUnitMemberships.membershipRole, isPrimary: orgUnitMemberships.isPrimary, managedBy: orgUnitMemberships.managedBy, active: orgUnitMemberships.active }).from(orgUnitMemberships).where(eq(orgUnitMemberships.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(orgUnitMemberships.id)),
-    authority: await db.select().from(employeeRoleAssignments).where(eq(employeeRoleAssignments.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(employeeRoleAssignments.id)),
-    identities: await db.select({ id: communicationIdentities.id, identityKey: communicationIdentities.identityKey, provider: communicationIdentities.provider, channel: communicationIdentities.channel, address: communicationIdentities.address, status: communicationIdentities.status, capabilities: communicationIdentities.capabilities, managedBy: communicationIdentities.managedBy }).from(communicationIdentities).where(eq(communicationIdentities.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(communicationIdentities.id)),
-    bindings: await db.select({ id: communicationIdentityBindings.id, communicationIdentityId: communicationIdentityBindings.communicationIdentityId, principalType: communicationIdentityBindings.principalType, principalId: communicationIdentityBindings.principalId, purpose: communicationIdentityBindings.purpose, priority: communicationIdentityBindings.priority, status: communicationIdentityBindings.status, managedBy: communicationIdentityBindings.managedBy }).from(communicationIdentityBindings).where(eq(communicationIdentityBindings.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(communicationIdentityBindings.id)),
-  }));
 }
 
 describe.skipIf(!available)("Dealer Zero seeding (§3.2/§3.6)", () => {
@@ -121,46 +93,6 @@ describe.skipIf(!available)("Dealer Zero seeding (§3.2/§3.6)", () => {
     await seedDealerZero();
     const after3 = await counts();
     expect(after3).toEqual(after1);
-  }, 60_000);
-
-  it("static reconciliation is idempotent and cannot reset evolving business state", async () => {
-    const [item] = await withTenant(DEALER_ZERO_TENANT_ID, (db) => db.select().from(inventoryItems)
-      .where(eq(inventoryItems.tenantId, DEALER_ZERO_TENANT_ID)).orderBy(asc(inventoryItems.id)).limit(1));
-    let probeApplied = false;
-    let restored = false;
-    onTestFinished(async () => {
-      if (!item || !probeApplied || restored) return;
-      await withTenant(DEALER_ZERO_TENANT_ID, (db) => adjustInventoryItem(db, {
-        tenantId: DEALER_ZERO_TENANT_ID,
-        inventoryItemId: item.id,
-        delta: -17,
-        eventType: "dealer_zero_static_reconciler_probe_restored",
-      }));
-      restored = true;
-    });
-    expect(item).toBeTruthy();
-    await withTenant(DEALER_ZERO_TENANT_ID, (db) => adjustInventoryItem(db, {
-      tenantId: DEALER_ZERO_TENANT_ID,
-      inventoryItemId: item!.id,
-      delta: 17,
-      eventType: "dealer_zero_static_reconciler_non_reset_probe",
-    }));
-    probeApplied = true;
-    const evolvingBefore = await evolvingSnapshot();
-    const staticBefore = await staticSnapshot();
-    const result = await reconcileDealerZeroStatic();
-    expect(result).toMatchObject({ employeeCount: 5, teamCount: 2, locationCount: 1, communicationIdentityCount: 3 });
-    expect(await evolvingSnapshot()).toEqual(evolvingBefore);
-    expect(await staticSnapshot()).toEqual(staticBefore);
-    await reconcileDealerZeroStatic();
-    expect(await staticSnapshot()).toEqual(staticBefore);
-    await withTenant(DEALER_ZERO_TENANT_ID, (db) => adjustInventoryItem(db, {
-      tenantId: DEALER_ZERO_TENANT_ID,
-      inventoryItemId: item!.id,
-      delta: -17,
-      eventType: "dealer_zero_static_reconciler_probe_restored",
-    }));
-    restored = true;
   }, 60_000);
 
   it("seedTenantPolicies covers all 41 registered action types + the pricing_catalog row for Dealer Zero, zero placeholders", async () => {

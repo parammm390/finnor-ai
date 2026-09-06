@@ -5,7 +5,7 @@ import { closePool } from "@finnor/db";
 import { ensureTenantUser, type TenantUserRole } from "./tenant-user";
 
 const DEFAULT_TENANT_ID = "00000000-0000-4000-8000-000000000001";
-const VALID_ROLES: TenantUserRole[] = ["owner", "dispatcher", "technician"];
+const VALID_ROLES: TenantUserRole[] = ["owner"];
 
 function parseArgs(): { email: string; role: TenantUserRole; tenantId: string; resetPassword: boolean } {
   const args = Object.fromEntries(process.argv.slice(2).map((arg) => {

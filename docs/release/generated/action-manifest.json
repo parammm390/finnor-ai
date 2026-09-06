@@ -1,39 +1,7 @@
 {
-  "generatedAt": "2026-08-31T03:36:26.500Z",
-  "actionCount": 59,
+  "generatedAt": "2026-09-06T16:52:01.783Z",
+  "actionCount": 32,
   "actions": [
-    {
-      "plugin": "ops-overview",
-      "actionType": "answer_business_question",
-      "sourcePath": "finnor-os/packages/domain-plugins/ops-overview/index.ts",
-      "sourceLine": 332,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/ops-overview/index.ts",
-      "schemaSourceLine": 333
-    },
-    {
-      "plugin": "customer-comm",
-      "actionType": "answer_customer_question",
-      "sourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "sourceLine": 43,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "schemaSourceLine": 44
-    },
-    {
-      "plugin": "water-domain-knowledge",
-      "actionType": "answer_water_question",
-      "sourcePath": "finnor-os/packages/domain-plugins/water-domain-knowledge/index.ts",
-      "sourceLine": 53,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/water-domain-knowledge/index.ts",
-      "schemaSourceLine": 54
-    },
-    {
-      "plugin": "crm",
-      "actionType": "assign_lead_to_technician",
-      "sourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "schemaSourceLine": 58
-    },
     {
       "plugin": "universal-actions",
       "actionType": "assign_task",
@@ -43,68 +11,12 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "scheduling",
-      "actionType": "assign_technician_to_visit",
-      "sourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "sourceLine": 46,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "schemaSourceLine": 47
-    },
-    {
-      "plugin": "bulk-notify",
-      "actionType": "bulk_notify_existing_customers",
-      "sourcePath": "finnor-os/packages/domain-plugins/bulk-notify/index.ts",
-      "sourceLine": 477,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/bulk-notify/index.ts",
-      "schemaSourceLine": 478
-    },
-    {
-      "plugin": "accounting",
-      "actionType": "call_overdue_invoices",
-      "sourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "sourceLine": 42,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "schemaSourceLine": 43
-    },
-    {
       "plugin": "universal-actions",
       "actionType": "cancel_delegation",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
       "sourceLine": 50,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
       "schemaSourceLine": 66
-    },
-    {
-      "plugin": "web-research",
-      "actionType": "check_business_reviews",
-      "sourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "sourceLine": 261,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "schemaSourceLine": 262
-    },
-    {
-      "plugin": "service-reminders",
-      "actionType": "check_reminder_due",
-      "sourcePath": "finnor-os/packages/domain-plugins/service-reminders/index.ts",
-      "sourceLine": 54,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/service-reminders/index.ts",
-      "schemaSourceLine": 55
-    },
-    {
-      "plugin": "inventory",
-      "actionType": "check_stock_level",
-      "sourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "sourceLine": 36,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "schemaSourceLine": 37
-    },
-    {
-      "plugin": "scheduling",
-      "actionType": "check_technician_availability",
-      "sourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "sourceLine": 46,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "schemaSourceLine": 47
     },
     {
       "plugin": "clarification",
@@ -123,28 +35,20 @@
       "schemaSourceLine": 41
     },
     {
-      "plugin": "accounting",
-      "actionType": "create_invoice",
-      "sourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "sourceLine": 42,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "schemaSourceLine": 43
+      "plugin": "private-equity",
+      "actionType": "create_closing_condition",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "crm",
-      "actionType": "create_lead",
-      "sourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "schemaSourceLine": 58
-    },
-    {
-      "plugin": "marketing",
-      "actionType": "create_review_request",
-      "sourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "schemaSourceLine": 58
+      "plugin": "private-equity",
+      "actionType": "create_deal_request",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -153,6 +57,14 @@
       "sourceLine": 50,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
       "schemaSourceLine": 66
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "declare_deal_closed",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -171,46 +83,6 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "inventory",
-      "actionType": "flag_reorder_needed",
-      "sourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "sourceLine": 36,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "schemaSourceLine": 37
-    },
-    {
-      "plugin": "technician-reports",
-      "actionType": "flag_visit_issue",
-      "sourcePath": "finnor-os/packages/domain-plugins/technician-reports/index.ts",
-      "sourceLine": 25,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/technician-reports/index.ts",
-      "schemaSourceLine": 26
-    },
-    {
-      "plugin": "compliance-documentation",
-      "actionType": "generate_compliance_summary",
-      "sourcePath": "finnor-os/packages/domain-plugins/compliance-documentation/index.ts",
-      "sourceLine": 47,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/compliance-documentation/index.ts",
-      "schemaSourceLine": 48
-    },
-    {
-      "plugin": "quotation",
-      "actionType": "generate_quote",
-      "sourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "sourceLine": 66,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "schemaSourceLine": 67
-    },
-    {
-      "plugin": "ops-overview",
-      "actionType": "get_business_overview",
-      "sourcePath": "finnor-os/packages/domain-plugins/ops-overview/index.ts",
-      "sourceLine": 332,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/ops-overview/index.ts",
-      "schemaSourceLine": 333
-    },
-    {
       "plugin": "universal-actions",
       "actionType": "handoff_work",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
@@ -219,44 +91,20 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "marketing",
-      "actionType": "launch_ad_campaign",
-      "sourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "schemaSourceLine": 58
+      "plugin": "private-equity",
+      "actionType": "link_deal_dependency",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "crm",
-      "actionType": "log_interaction",
-      "sourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "schemaSourceLine": 58
-    },
-    {
-      "plugin": "inventory",
-      "actionType": "log_stock_used_on_visit",
-      "sourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "sourceLine": 36,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/inventory/index.ts",
-      "schemaSourceLine": 37
-    },
-    {
-      "plugin": "technician-reports",
-      "actionType": "log_visit_report",
-      "sourcePath": "finnor-os/packages/domain-plugins/technician-reports/index.ts",
-      "sourceLine": 25,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/technician-reports/index.ts",
-      "schemaSourceLine": 26
-    },
-    {
-      "plugin": "manual-step",
-      "actionType": "manual_step_suggestion",
-      "sourcePath": "finnor-os/packages/domain-plugins/manual-step/index.ts",
-      "sourceLine": 19,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/manual-step/index.ts",
-      "schemaSourceLine": 20
+      "plugin": "private-equity",
+      "actionType": "mark_dependency_resolved",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -267,6 +115,14 @@
       "schemaSourceLine": 66
     },
     {
+      "plugin": "private-equity",
+      "actionType": "open_workstream",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
+    },
+    {
       "plugin": "universal-actions",
       "actionType": "place_call",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
@@ -275,20 +131,20 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "accounting",
-      "actionType": "record_payment",
-      "sourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "sourceLine": 42,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "schemaSourceLine": 43
+      "plugin": "private-equity",
+      "actionType": "raise_deal_risk",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "maintenance-agreement",
-      "actionType": "renew_maintenance_agreement",
-      "sourcePath": "finnor-os/packages/domain-plugins/maintenance-agreement/index.ts",
-      "sourceLine": 15,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/maintenance-agreement/index.ts",
-      "schemaSourceLine": 16
+      "plugin": "private-equity",
+      "actionType": "record_finding",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -299,14 +155,6 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "proposal-signature",
-      "actionType": "request_proposal_signature",
-      "sourcePath": "finnor-os/packages/domain-plugins/proposal-signature/index.ts",
-      "sourceLine": 37,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/proposal-signature/index.ts",
-      "schemaSourceLine": 38
-    },
-    {
       "plugin": "universal-actions",
       "actionType": "reschedule_internal_event",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
@@ -315,28 +163,28 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "scheduling",
-      "actionType": "reschedule_visit",
-      "sourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "sourceLine": 46,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/scheduling/index.ts",
-      "schemaSourceLine": 47
+      "plugin": "private-equity",
+      "actionType": "resolve_deal_risk",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "route-optimization",
-      "actionType": "route_suggestion",
-      "sourcePath": "finnor-os/packages/domain-plugins/route-optimization/index.ts",
-      "sourceLine": 25,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/route-optimization/index.ts",
-      "schemaSourceLine": 26
+      "plugin": "private-equity",
+      "actionType": "resolve_finding",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "web-research",
-      "actionType": "scan_competitors",
-      "sourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "sourceLine": 261,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "schemaSourceLine": 262
+      "plugin": "private-equity",
+      "actionType": "satisfy_closing_condition",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -347,36 +195,12 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "water-test",
-      "actionType": "schedule_water_test",
-      "sourcePath": "finnor-os/packages/domain-plugins/water-test/index.ts",
-      "sourceLine": 15,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/water-test/index.ts",
-      "schemaSourceLine": 16
-    },
-    {
       "plugin": "web-research",
       "actionType": "search_web",
       "sourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "sourceLine": 261,
+      "sourceLine": 244,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/web-research/index.ts",
-      "schemaSourceLine": 262
-    },
-    {
-      "plugin": "customer-comm",
-      "actionType": "send_customer_message",
-      "sourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "sourceLine": 43,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "schemaSourceLine": 44
-    },
-    {
-      "plugin": "customer-comm",
-      "actionType": "send_follow_up",
-      "sourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "sourceLine": 43,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/customer-comm/index.ts",
-      "schemaSourceLine": 44
+      "schemaSourceLine": 245
     },
     {
       "plugin": "universal-actions",
@@ -387,30 +211,6 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "accounting",
-      "actionType": "send_payment_reminder",
-      "sourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "sourceLine": 42,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/accounting/index.ts",
-      "schemaSourceLine": 43
-    },
-    {
-      "plugin": "quotation",
-      "actionType": "send_proposal",
-      "sourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "sourceLine": 66,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "schemaSourceLine": 67
-    },
-    {
-      "plugin": "proposal-batch",
-      "actionType": "send_proposal_to_recent_installs",
-      "sourcePath": "finnor-os/packages/domain-plugins/proposal-batch/index.ts",
-      "sourceLine": 76,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/proposal-batch/index.ts",
-      "schemaSourceLine": 77
-    },
-    {
       "plugin": "universal-actions",
       "actionType": "share_document",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
@@ -419,52 +219,20 @@
       "schemaSourceLine": 66
     },
     {
-      "plugin": "quotation",
-      "actionType": "size_equipment_for_household",
-      "sourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "sourceLine": 66,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/quotation/index.ts",
-      "schemaSourceLine": 67
+      "plugin": "private-equity",
+      "actionType": "submit_condition_evidence",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
-      "plugin": "proposal-to-installation",
-      "actionType": "start_installation_workflow",
-      "sourcePath": "finnor-os/packages/domain-plugins/proposal-to-installation/index.ts",
-      "sourceLine": 35,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/proposal-to-installation/index.ts",
-      "schemaSourceLine": 36
-    },
-    {
-      "plugin": "invoice-to-cash",
-      "actionType": "start_invoice_to_cash_workflow",
-      "sourcePath": "finnor-os/packages/domain-plugins/invoice-to-cash/index.ts",
-      "sourceLine": 31,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/invoice-to-cash/index.ts",
-      "schemaSourceLine": 32
-    },
-    {
-      "plugin": "lead-to-water-test",
-      "actionType": "start_water_test_workflow",
-      "sourcePath": "finnor-os/packages/domain-plugins/lead-to-water-test/index.ts",
-      "sourceLine": 34,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/lead-to-water-test/index.ts",
-      "schemaSourceLine": 35
-    },
-    {
-      "plugin": "marketing",
-      "actionType": "summarize_ad_performance",
-      "sourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/marketing/index.ts",
-      "schemaSourceLine": 58
-    },
-    {
-      "plugin": "crm",
-      "actionType": "update_lead_status",
-      "sourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "sourceLine": 57,
-      "schemaSourcePath": "finnor-os/packages/domain-plugins/crm/index.ts",
-      "schemaSourceLine": 58
+      "plugin": "private-equity",
+      "actionType": "submit_deliverable",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     },
     {
       "plugin": "universal-actions",
@@ -473,6 +241,22 @@
       "sourceLine": 50,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
       "schemaSourceLine": 66
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "verify_closing_item",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "waive_closing_condition",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 521,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 538
     }
   ]
 }

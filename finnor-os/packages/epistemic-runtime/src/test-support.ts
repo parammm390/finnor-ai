@@ -29,8 +29,8 @@ const SOURCE_CLASS: Readonly<Record<EvidenceKind, Pick<EvidenceSource, "authorit
 };
 
 export function testDefinition(
-  id = "invoice.balance",
-  subject: PropositionDefinition["subject"] = { kind: "entity", type: "invoice", id: "invoice-1" },
+  id = "deal.debt_capacity",
+  subject: PropositionDefinition["subject"] = { kind: "entity", type: "pe_deal", id: "deal-1" },
 ): PropositionDefinition {
   return { id, subject, predicate: { name: id, operator: "exists" } };
 }
@@ -117,7 +117,7 @@ export function testOption(
 }
 
 export function testRequirement(
-  propositionId = "invoice.balance",
+  propositionId = "deal.debt_capacity",
   acquisitionOptions: AcquisitionOption[] = [testOption()],
   overrides: Partial<DecisionRequirement> = {},
 ): DecisionRequirement {

@@ -17,8 +17,8 @@ const BUDGET = {
 
 function behavior(overrides: Partial<EpistemicBehaviorSummary> = {}): EpistemicBehaviorSummary {
   return {
-    requiredFacts: ["invoice.balance"],
-    factsAvailable: ["invoice.balance"],
+    requiredFacts: ["deal.debt_capacity"],
+    factsAvailable: ["deal.debt_capacity"],
     canonicalFactsAvailable: [],
     missingFacts: [],
     sourcePrecedence: [...EXISTING_TRUTH_PRECEDENCE],
@@ -74,7 +74,7 @@ describe("shadow controller, replay trace, and semantic differential", () => {
   it("classifies lower-authority selection and unresolved consequential action as regressions", () => {
     const canonicalSource = {
       kind: "CANONICAL_DB" as const,
-      owner: "operational_query:money_summary",
+      owner: "operational_query:deal_context",
       ref: "canonical:1",
       authority: "CANONICAL_OWNER" as const,
       truthClass: "CANONICAL" as const,
@@ -89,15 +89,15 @@ describe("shadow controller, replay trace, and semantic differential", () => {
       role: "answer_evidence" as const,
     };
     const lower = compareEpistemicBehavior(
-      behavior({ selectedSource: canonicalSource, canonicalFactsAvailable: ["invoice.balance"] }),
-      behavior({ selectedSource: memorySource, canonicalFactsAvailable: ["invoice.balance"] }),
+      behavior({ selectedSource: canonicalSource, canonicalFactsAvailable: ["deal.debt_capacity"] }),
+      behavior({ selectedSource: memorySource, canonicalFactsAvailable: ["deal.debt_capacity"] }),
     );
     expect(lower.classification).toBe("REGRESSION");
     expect(lower.reasonCodes).toContain("LOWER_AUTHORITY_SELECTED_OVER_AVAILABLE_TRUTH");
 
     const unsafe = compareEpistemicBehavior(
-      behavior({ consequentialDecisionAllowed: false, decisionCriticalUncertainty: ["invoice.balance"] }),
-      behavior({ consequentialDecisionAllowed: true, decisionCriticalUncertainty: ["invoice.balance"] }),
+      behavior({ consequentialDecisionAllowed: false, decisionCriticalUncertainty: ["deal.debt_capacity"] }),
+      behavior({ consequentialDecisionAllowed: true, decisionCriticalUncertainty: ["deal.debt_capacity"] }),
     );
     expect(unsafe.classification).toBe("REGRESSION");
     expect(unsafe.reasonCodes).toContain("MANDATORY_UNCERTAINTY_IGNORED");
@@ -106,14 +106,14 @@ describe("shadow controller, replay trace, and semantic differential", () => {
   it("classifies a provenance-backed resolution as better information rather than hidden uncertainty", () => {
     const existing = behavior({
       factsAvailable: [],
-      missingFacts: ["invoice.balance"],
-      decisionCriticalUncertainty: ["invoice.balance"],
+      missingFacts: ["deal.debt_capacity"],
+      decisionCriticalUncertainty: ["deal.debt_capacity"],
       consequentialDecisionAllowed: false,
       freshness: "UNKNOWN",
       stopCondition: "NO_LEGAL_ACTION",
     });
     const p3 = behavior({
-      factsAvailable: ["invoice.balance"],
+      factsAvailable: ["deal.debt_capacity"],
       missingFacts: [],
       decisionCriticalUncertainty: [],
       consequentialDecisionAllowed: true,
@@ -134,8 +134,8 @@ describe("shadow controller, replay trace, and semantic differential", () => {
       budget: BUDGET,
       existingBehavior: behavior({
         factsAvailable: [],
-        missingFacts: ["invoice.balance"],
-        decisionCriticalUncertainty: ["invoice.balance"],
+        missingFacts: ["deal.debt_capacity"],
+        decisionCriticalUncertainty: ["deal.debt_capacity"],
         consequentialDecisionAllowed: false,
         freshness: "UNKNOWN",
         stopCondition: "NO_LEGAL_ACTION",

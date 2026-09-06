@@ -22,7 +22,7 @@ describe("planner replay evals (B2.T7)", () => {
     const verdicts = await Promise.all(
       CRITIC_GOLDENS.map((fixture) =>
         reviewAction(
-          { instruction: "replay fixture", actionType: "create_invoice", payload: {}, summary: "replay fixture" },
+          { instruction: "replay fixture", actionType: "record_finding", payload: {}, summary: "replay fixture" },
           { name: "replay-critic", complete: async () => JSON.stringify(fixture.response) },
         ),
       ),

@@ -7,8 +7,8 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, contacts, contactMethods, tenants, leads, households, integrationEvents, tenantIntegrations } from "@finnor/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { withTenant, closePool, tenants, leads, households, integrationEvents, tenantIntegrations } from "@finnor/db";
+import { eq } from "drizzle-orm";
 import { POST as marketingWebhook } from "../../apps/api/app/api/webhooks/marketing/route";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -92,20 +92,7 @@ describe.skipIf(!available)("Phase 4: marketing webhook requires a real shared s
       expect(events[0]).toMatchObject({ trustClass: "untrusted_external", contentTreatment: "untrusted_evidence", instructionEligible: false });
       await db.delete(integrationEvents).where(eq(integrationEvents.id, body.eventId));
       await db.delete(leads).where(eq(leads.id, body.leadId));
-      if (lead?.householdId) {
-        const leadContacts = await db.select({ id: contacts.id }).from(contacts).where(and(
-          eq(contacts.tenantId, TENANT_ID),
-          eq(contacts.householdId, lead.householdId),
-        ));
-        if (leadContacts.length > 0) {
-          await db.delete(contactMethods).where(and(
-            eq(contactMethods.tenantId, TENANT_ID),
-            inArray(contactMethods.contactId, leadContacts.map((contact) => contact.id)),
-          ));
-        }
-        await db.delete(contacts).where(and(eq(contacts.tenantId, TENANT_ID), eq(contacts.householdId, lead.householdId)));
-        await db.delete(households).where(and(eq(households.tenantId, TENANT_ID), eq(households.id, lead.householdId)));
-      }
+      if (lead?.householdId) await db.delete(households).where(eq(households.id, lead.householdId));
     });
   });
 

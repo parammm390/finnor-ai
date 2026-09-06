@@ -6,18 +6,39 @@ import "dotenv/config";
 import { createServer } from "node:http";
 import { FinnorOrchestrator } from "@finnor/orchestration";
 import { getRuntimeReleaseMetadata } from "@finnor/tools";
+import { CURRENT_MIGRATION_HEAD, recordCutoverCompatibleHeartbeat } from "@finnor/db";
 import { z } from "zod";
+import { hostname } from "node:os";
 
 const BodySchema = z.object({
   instruction: z.string().min(1),
   tenantId: z.string().uuid(),
   userId: z.string().uuid(),
-  role: z.enum(["owner", "dispatcher", "technician"]),
+  role: z.literal("owner"),
   sessionId: z.string().optional(),
 });
 
 const orchestrator = new FinnorOrchestrator();
 const port = Number(process.env.ORCHESTRATOR_PORT ?? 3200);
+const instanceId = process.env.FINNOR_ORCHESTRATOR_INSTANCE_ID?.trim()
+  || `orchestrator:${hostname()}:${process.pid}`;
+
+async function beat(): Promise<void> {
+  const release = getRuntimeReleaseMetadata("finnor-orchestrator");
+  await recordCutoverCompatibleHeartbeat({
+    service: "orchestrator",
+    instanceId,
+    releaseSha: release.commitSha,
+    buildId: release.buildId,
+    version: release.version,
+    releaseSource: release.source,
+    coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
+    migrationHead: CURRENT_MIGRATION_HEAD,
+    deploymentId: process.env.FINNOR_ORCHESTRATOR_DEPLOYMENT_ID ?? null,
+    capabilities: ["planning", "authority", "private-equity"],
+    environment: release.environment,
+  });
+}
 
 const server = createServer(async (req, res) => {
   const send = (status: number, body: unknown) => {
@@ -61,6 +82,11 @@ const server = createServer(async (req, res) => {
 
 const isMain = process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("index.js");
 if (isMain) {
+  void beat().catch((error) => console.error("[orchestrator] cutover heartbeat failed", error));
+  const heartbeat = setInterval(() => {
+    void beat().catch((error) => console.error("[orchestrator] cutover heartbeat failed", error));
+  }, 30_000);
+  server.on("close", () => clearInterval(heartbeat));
   server.listen(port, () => console.log(`[orchestrator] listening on :${port}`));
 }
 

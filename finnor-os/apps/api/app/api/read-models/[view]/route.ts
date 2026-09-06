@@ -5,14 +5,6 @@
 
 import { requireContext, errorResponse, AuthError } from "../../../../lib/auth";
 import {
-  technicianLoad,
-  stockRisk,
-  cashCollections,
-  serviceDue,
-  slaBreaches,
-  followUpDebt,
-  dataQuality,
-  household360,
   reliability,
   readinessTrend,
   readinessSloScorecard,
@@ -27,26 +19,13 @@ const VIEWS: Record<string, (tenantId: string, searchParams: URLSearchParams) =>
   // recomputed on every request — see packages/projections. windowDays on reliability
   // is ignored by the cached path (the cache is always the default 1-day window);
   // pass windowDays to opt into a live, uncached computation instead.
-  "pipeline-health": (tenantId) => getProjection(tenantId, "pipeline-health"),
   "activity-snapshot": (tenantId) => getProjection(tenantId, "activity-snapshot"),
-  "technician-load": (tenantId) => technicianLoad(tenantId),
-  "stock-risk": (tenantId) => stockRisk(tenantId),
-  "cash-collections": (tenantId) => cashCollections(tenantId),
-  "service-due": (tenantId) => serviceDue(tenantId),
-  "sla-breaches": (tenantId) => slaBreaches(tenantId),
-  "follow-up-debt": (tenantId) => followUpDebt(tenantId),
-  "data-quality": (tenantId) => dataQuality(tenantId),
   "reliability": (tenantId, searchParams) => {
     const windowDays = Number(searchParams.get("windowDays") ?? 1);
     if (searchParams.has("windowDays") && Number.isFinite(windowDays) && windowDays > 0 && windowDays !== 1) {
       return reliability(tenantId, windowDays);
     }
     return getProjection(tenantId, "reliability");
-  },
-  "household-360": (tenantId, searchParams) => {
-    const householdId = searchParams.get("householdId");
-    if (!householdId) throw new AuthError("householdId query param required", 400);
-    return household360(tenantId, householdId);
   },
   // Backward-compatible registry entry; GET special-cases this view below to expose
   // its truthful bounded-page metadata alongside the unchanged data array.
@@ -73,17 +52,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ view: st
     if (view === "work-cases") {
       const rawLimit = searchParams.get("limit");
       const limit = rawLimit === null ? undefined : Number(rawLimit);
-      const result = await workCasesPage(ctx.tenantId, {
-        limit,
-        cursor: searchParams.get("cursor") ?? undefined,
-        workId: searchParams.get("workId") ?? undefined,
-      });
+      const result = await workCasesPage(ctx.tenantId, { limit, cursor: searchParams.get("cursor") ?? undefined });
       return Response.json({ view, data: result.items, page: result.page });
     }
     const data = await fn(ctx.tenantId, searchParams);
-    if (data === null) {
-      return Response.json({ error: "No such household" }, { status: 404 });
-    }
     return Response.json({ view, data });
   } catch (err) {
     return errorResponse(err);

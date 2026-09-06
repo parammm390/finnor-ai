@@ -1,29 +1,22 @@
-// Voice OS (Phase 5, docs/jarvis-90-execution-blueprint.md §5): real caller
-// identity + session/turn history + confirmations bound to a specific action.
-// Consumed by apps/api/app/api/webhooks/vapi/route.ts, replacing its hardcoded
-// owner userId/role and its "confirm the newest pending domain_actions" heuristic.
+// Core employee voice identity, session history, and action-bound confirmations.
 
-import { withTenant, voiceIdentities, voiceSessions, voiceTurns, pendingConfirmations, handoffs, tenants, users } from "@finnor/db";
+import { withTenant, voiceIdentities, voiceSessions, voiceTurns, pendingConfirmations, handoffs, users } from "@finnor/db";
 import { and, desc, eq, asc } from "drizzle-orm";
-import { findHousehold } from "../../domain-plugins/shared/db-helpers";
 import { ingestMemory } from "@finnor/memory";
 
-export type VoiceRole = "owner" | "dispatcher" | "technician" | "customer" | "unknown";
+export type VoiceRole = "owner" | "unknown";
 
 export interface VoiceIdentity {
   id: string;
   tenantId: string;
   phoneNumber: string;
-  matchedHouseholdId: string | null;
   matchedUserId: string | null;
   role: VoiceRole;
 }
 
 /**
- * Looks up an existing voice_identities row by phone; if absent, attempts a match
- * against households.contactInfo the same way findHousehold() already does for
- * text/voice instructions, else creates an `unknown`-role row. Bumps last_seen_at
- * on every call — never silently defaults an unresolved caller to owner trust.
+ * Resolves only an active owner identity. Historical Water caller associations stay
+ * stored for replay, but they never confer active authority.
  */
 export async function resolveVoiceIdentity(tenantId: string, phoneNumber: string): Promise<VoiceIdentity> {
   return withTenant(tenantId, async (db) => {
@@ -35,35 +28,32 @@ export async function resolveVoiceIdentity(tenantId: string, phoneNumber: string
       const [matchedEmployee] = existing.matchedUserId
         ? await db.select({ id: users.id, role: users.role, status: users.status }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.id, existing.matchedUserId))).limit(1)
         : [];
-      const liveRole: VoiceRole = matchedEmployee?.status === "active"
-        ? matchedEmployee.role
-        : existing.matchedUserId
-          ? "unknown"
-          : existing.role as VoiceRole;
+      const activeOwner = matchedEmployee?.status === "active" && matchedEmployee.role === "owner";
       await db.update(voiceIdentities).set({ lastSeenAt: new Date() }).where(eq(voiceIdentities.id, existing.id));
       return {
         id: existing.id,
         tenantId,
         phoneNumber,
-        matchedHouseholdId: existing.matchedHouseholdId,
-        matchedUserId: matchedEmployee?.status === "active" ? matchedEmployee.id : null,
-        role: liveRole,
+        matchedUserId: activeOwner ? matchedEmployee.id : null,
+        role: activeOwner ? "owner" : "unknown",
       };
     }
 
-    const [phoneEmployee] = await db.select({ id: users.id, role: users.role }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.phoneNumber, phoneNumber), eq(users.status, "active"))).limit(1);
-    const [tenant] = await db.select({ ownerPhone: tenants.ownerPhone }).from(tenants).where(eq(tenants.id, tenantId));
-    const isOwnerLine = Boolean(tenant?.ownerPhone) && tenant!.ownerPhone === phoneNumber;
-    let matchedUserId: string | null = phoneEmployee?.id ?? null;
-    if (!matchedUserId && isOwnerLine) {
-      const [ownerUser] = await db.select({ id: users.id }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.role, "owner"))).limit(1);
-      matchedUserId = ownerUser?.id ?? null;
-    }
-    const household = matchedUserId || isOwnerLine ? null : await findHousehold(tenantId, { phone: phoneNumber });
-    const role: VoiceRole = phoneEmployee?.role ?? (isOwnerLine ? "owner" : household ? "customer" : "unknown");
+    const [phoneEmployee] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(
+        eq(users.tenantId, tenantId),
+        eq(users.phoneNumber, phoneNumber),
+        eq(users.status, "active"),
+        eq(users.role, "owner"),
+      ))
+      .limit(1);
+    const matchedUserId = phoneEmployee?.id ?? null;
+    const role: VoiceRole = matchedUserId ? "owner" : "unknown";
     const [created] = await db
       .insert(voiceIdentities)
-      .values({ tenantId, phoneNumber, matchedHouseholdId: household?.id ?? null, matchedUserId, role })
+      .values({ tenantId, phoneNumber, matchedUserId, role })
       .onConflictDoNothing({ target: [voiceIdentities.tenantId, voiceIdentities.phoneNumber] })
       .returning();
     if (created) {
@@ -71,9 +61,8 @@ export async function resolveVoiceIdentity(tenantId: string, phoneNumber: string
         id: created.id,
         tenantId,
         phoneNumber,
-        matchedHouseholdId: created.matchedHouseholdId,
         matchedUserId: created.matchedUserId,
-        role: created.role as VoiceRole,
+        role,
       };
     }
     // Lost an insert race to a concurrent call from the same number — re-select.
@@ -85,9 +74,8 @@ export async function resolveVoiceIdentity(tenantId: string, phoneNumber: string
       id: raced!.id,
       tenantId,
       phoneNumber,
-      matchedHouseholdId: raced!.matchedHouseholdId,
-      matchedUserId: raced!.matchedUserId,
-      role: raced!.role as VoiceRole,
+      matchedUserId: raced!.role === "owner" ? raced!.matchedUserId : null,
+      role: raced!.role === "owner" ? "owner" : "unknown",
     };
   });
 }
@@ -139,8 +127,8 @@ export async function closeVoiceSession(tenantId: string, sessionId: string): Pr
  *  transcript is naturally a per-call unit, not per-turn (chunkText still splits it
  *  further if it runs long). Best-effort: a memory-layer failure must never affect the
  *  call itself, which has already ended by the time this runs. Exported (not just
- *  called from closeVoiceSession) so scripts/backfill-embeddings.ts can re-ingest
- *  historical, already-ended sessions without duplicating this logic. */
+ *  called from closeVoiceSession) so controlled history tooling can re-ingest
+ *  already-ended sessions without duplicating this logic. */
 export async function ingestCallTranscript(tenantId: string, sessionId: string): Promise<number> {
   const turns = await withTenant(tenantId, (db) =>
     db

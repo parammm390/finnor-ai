@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { getPool, closePool, withTenant, domainPolicies, domainPolicyRevisions, households, invoices } from "@finnor/db";
+import { getPool, closePool, withTenant, domainPolicies, domainPolicyRevisions } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import { readEpisodes } from "@finnor/memory";
 import { LLMPlanner, createDefaultPluginRegistry } from "@finnor/orchestration";
@@ -17,8 +17,6 @@ import type { TenantContext, MemorySnapshot } from "@finnor/shared-types";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000fa"; // dedicated, isolated from other fixtures
-const HOUSEHOLD_ID = "11111111-1111-4111-8111-00000000fa00";
-const INVOICE_ID = "11111111-1111-4111-8111-00000000fa01";
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -130,10 +128,6 @@ describe.skipIf(!available)("LLMPlanner reasoning tier", () => {
     process.env.DATABASE_URL = DB_URL;
     await migrate(DB_URL);
     await getPool().query(`INSERT INTO tenants (id, name) VALUES ($1, 'Reasoning Tier Test Tenant') ON CONFLICT (id) DO NOTHING`, [TENANT_ID]);
-    await withTenant(TENANT_ID, async (db) => {
-      await db.insert(households).values({ id: HOUSEHOLD_ID, tenantId: TENANT_ID, address: "Reasoning Tier Henderson Household", contactInfo: { name: "Henderson Family" } }).onConflictDoNothing();
-      await db.insert(invoices).values({ id: INVOICE_ID, tenantId: TENANT_ID, householdId: HOUSEHOLD_ID, amountUsd: "125.00", status: "sent" }).onConflictDoNothing();
-    });
   });
 
   afterAll(async () => {
@@ -209,15 +203,15 @@ describe.skipIf(!available)("LLMPlanner reasoning tier", () => {
     await setPolicy("start_invoice_to_cash_workflow", true);
     process.env.AWS_BEDROCK_API_KEY = "test-key";
     mockFetchOnce(
-      `{"repaired": false, "actionType": "start_invoice_to_cash_workflow", "payload": {"invoiceId": "${INVOICE_ID}"}, "reason": "Matches."}`,
+      '{"repaired": false, "actionType": "start_invoice_to_cash_workflow", "payload": {"invoiceId": "11111111-1111-4111-8111-111111111111"}, "reason": "Matches."}',
     );
     const planner = new LLMPlanner(
       createDefaultPluginRegistry(),
-      stubPlannerProvider("start_invoice_to_cash_workflow", { invoiceId: INVOICE_ID }),
+      stubPlannerProvider("start_invoice_to_cash_workflow", { invoiceId: "11111111-1111-4111-8111-111111111111" }),
       // Malformed JSON — proves "candidate B simply does not exist, scoring picks A" degrades cleanly.
       { name: "malformed", async complete() { return "not json"; } },
     );
-    const [result] = await planner.plan(`Get the Hendersons' invoice ${INVOICE_ID} paid — send them a payment link.`, tenantContext(), emptyMemory());
+    const [result] = await planner.plan("Get the Hendersons' invoice paid — send them a payment link.", tenantContext(), emptyMemory());
     expect(result!.actionType).toBe("start_invoice_to_cash_workflow");
 
     const episodes = await readEpisodes(TENANT_ID, { domainActionId: result!.id });

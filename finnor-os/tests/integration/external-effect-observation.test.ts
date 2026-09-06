@@ -6,7 +6,6 @@ import {
   businessEffects,
   closePool,
   commands,
-  decisionReceipts,
   domainActions,
   integrationOperations,
   integrationEvents,
@@ -17,7 +16,7 @@ import {
   withTenant,
 } from "@finnor/db";
 import { settleExternalEffectObservation } from "@finnor/orchestration";
-import { openReceiptTx } from "@finnor/workflow-runtime";
+import { openReceipt } from "@finnor/workflow-runtime";
 import type { ExternalObservationClassification } from "@finnor/shared-types";
 import { migrate } from "../../packages/db/migrate";
 
@@ -57,26 +56,27 @@ async function waitingScenario(label: string) {
       id: stepId, tenantId, workflowRunId: runId, stepType: "execute_authorized_effect", sequence: 1,
       status: "waiting_observation", executionState: "awaiting_observation", idempotencyKey: `observe:${label}`, domainActionId: actionId, businessEffectId: effectId,
     });
-    await openReceiptTx(db, {
-      tenantId,
-      workflowRunId: runId,
-      workflowStepId: stepId,
-      domainActionId: actionId,
-      businessEffectId: effectId,
-      objective: `external_test: ${label}`,
-      evidence: [{ source: "workflow_step", ref: stepId, timestamp: new Date().toISOString() }],
-      policyApplied: null,
-      riskTier: "medium",
-      proposedAction: { external: true, label },
-      approval: { required: true },
-      intendedEffectHash: semanticHash,
-      authorizedEffectHash: semanticHash,
-    });
     await db.insert(integrationOperations).values({
       id: operationId, tenantId, workflowStepId: stepId, operationKey: `provider:${label}`, capability: "accounting",
       provider: "quickbooks", integrationId, businessEffectId: effectId, requestHash: semanticHash, status: "succeeded",
       response: { externalInvoiceId: `qbo-${label}` }, providerAcknowledgedAt: new Date(), verificationStatus: "awaiting_observation",
     });
+  });
+  await openReceipt({
+    tenantId,
+    workflowRunId: runId,
+    workflowStepId: stepId,
+    domainActionId: actionId,
+    businessEffectId: effectId,
+    intendedEffectHash: semanticHash,
+    authorizedEffectHash: semanticHash,
+    objective: `Observe external effect ${label}`,
+    evidence: [{ source: "workflow_step", ref: stepId, timestamp: new Date().toISOString() }],
+    policyApplied: null,
+    riskTier: "medium",
+    proposedAction: { actionType: "external_test", businessEffectId: effectId },
+    approval: { required: false },
+    expectedResult: { amountUsd: 125 },
   });
   return { actionId, effectId, commandId, runId, stepId, operationId, semanticHash };
 }

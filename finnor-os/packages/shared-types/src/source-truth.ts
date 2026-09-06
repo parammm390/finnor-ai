@@ -62,6 +62,10 @@ export interface CanonicalSourceRecord {
   provenance?: Record<string, unknown>;
   /** Correlates a read-back/event to the immutable Phase 1 effect. */
   businessEffectId?: string;
+  /** `observe_only` retains Source Truth ordering/dedupe/tombstone semantics but
+   * deliberately never invokes a canonical import writer. PE uses this for
+   * assertions about an already-resolved Deal entity: evidence is not state. */
+  materialization?: "governed" | "observe_only";
 }
 
 export interface SourceSyncCursor {

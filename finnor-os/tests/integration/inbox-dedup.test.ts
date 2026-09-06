@@ -57,10 +57,9 @@ describe.skipIf(!available)("inbox event dedup + matching", () => {
 
   it("sending the same (provider, event_id) twice applies the business effect once and marks the replay duplicate", async () => {
     const { stepId } = await newStep();
-    // A provider callback can settle a step only after the worker has opened its
-    // leased/observation boundary. Model that production lifecycle explicitly;
-    // receiveInboxEvent itself remains an idempotent transport claim.
-    expect(await claimStep(TENANT_ID, stepId)).not.toBeNull();
+    // An inbound provider event settles an open execution, so the durable step
+    // must be leased before the event can finalize it.
+    expect(await claimStep(TENANT_ID, stepId)).toBeTruthy();
     let appliedCount = 0;
 
     async function deliver() {

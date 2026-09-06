@@ -11,7 +11,6 @@ describe("rate-limit degradation ladder", () => {
     expect(expire).toHaveBeenCalledTimes(1);
   });
   it("survives a Redis outage with an alerting in-memory fallback", async () => {
-    vi.stubEnv("FINNOR_ENVIRONMENT", "test");
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     setRateLimitRedisForTesting({ incr: async () => { throw new Error("down"); }, pexpire: async () => undefined });
     await expect(checkRateLimit(`fallback-${Date.now()}`, 1)).resolves.toBe(true);

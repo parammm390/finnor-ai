@@ -8,7 +8,7 @@ import type {
   InformationAdapterId,
   InformationObservation,
   RedactedEpistemicTrace,
-  StaticAdmissibilityResult,
+  StaticAdmissibilityResultLike,
 } from "./contracts";
 import {
   controllerMutationCount,
@@ -79,7 +79,7 @@ export class ShadowInformationExecutor implements InformationActionExecutor {
 function behaviorFromRun(
   run: EpistemicControllerRun,
   requirements: readonly DecisionRequirement[],
-  p2?: StaticAdmissibilityResult,
+  p2?: StaticAdmissibilityResultLike,
 ): EpistemicBehaviorSummary {
   const unresolved = requirements.filter((requirement) => !requirementResolved(run.finalState, requirement));
   const known = run.finalState.propositions.filter((proposition) => proposition.status === "KNOWN");
@@ -116,7 +116,7 @@ export interface RunEpistemicShadowInput<T> {
   executor?: InformationActionExecutor;
   allowedAdapters?: readonly InformationAdapterId[];
   clock?: EpistemicControllerClock;
-  p2?: StaticAdmissibilityResult;
+  p2?: StaticAdmissibilityResultLike;
 }
 
 export interface EpistemicShadowResult<T> {

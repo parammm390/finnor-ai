@@ -32,16 +32,15 @@ import {
   externalOperations,
   compensationCases,
   decisionReceipts,
+  reconciliationCases,
   households,
   maintenanceAgreements,
   domainActions,
   businessEffects,
   domainPolicies,
-  domainPolicyRevisions,
   jobs,
-  reconciliationCases,
 } from "@finnor/db";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   submitCommand,
   claimStep,
@@ -145,9 +144,8 @@ const probeContract: CapabilityContract<ProbeInput, ProbeOutput> = {
   retryPolicy: { attempts: 3, baseDelayMs: 20, timeoutMs: 2_000 },
   requiredPermission: "communications:chaos_probe",
   piiAllowlist: [],
-  // This probe intentionally exercises bounded retry after an ambiguous
-  // provider failure. Production capabilities opt out when replay is unsafe;
-  // this test contract must opt in to the behavior it asserts.
+  // This probe deliberately models a retryable provider failure. The hard-fail
+  // probe below sets retryable=false and covers the non-retryable branch.
   retryOnUnknown: true,
 };
 function makeFlakyBinding(failTimes: number): { binding: CapabilityBinding<ProbeInput, ProbeOutput>; callCount: () => number } {
@@ -188,14 +186,13 @@ async function newRun(steps: Array<{ stepType: string; payload: Record<string, u
 }
 
 async function cleanupRun(runId: string, commandId: string, stepIds: string[]): Promise<void> {
-  await withTenant(SEED_TENANT_ID, async (db) => {
-    await db.delete(compensationCases).where(eq(compensationCases.workflowStepId, stepIds[0]!));
-    await db.delete(reconciliationCases).where(inArray(reconciliationCases.relatedStepId, stepIds));
-    for (const id of stepIds) {
-      await db.delete(integrationOperations).where(eq(integrationOperations.workflowStepId, id));
+    await withTenant(SEED_TENANT_ID, async (db) => {
+      await db.delete(compensationCases).where(eq(compensationCases.workflowStepId, stepIds[0]!));
+      for (const id of stepIds) {
+        await db.delete(reconciliationCases).where(eq(reconciliationCases.relatedStepId, id));
+        await db.delete(integrationOperations).where(eq(integrationOperations.workflowStepId, id));
       await db.delete(decisionReceipts).where(eq(decisionReceipts.workflowStepId, id));
     }
-    await db.delete(reconciliationCases).where(inArray(reconciliationCases.relatedStepId, stepIds));
     // A run-level receipt may intentionally have no workflow_step_id. Remove those
     // before their parent run so cleanup observes the same FK contract as production.
     await db.delete(decisionReceipts).where(eq(decisionReceipts.workflowRunId, runId));
@@ -717,35 +714,26 @@ describe.skipIf(!available)("chaos matrix (§2.8)", () => {
   // =========================================================================
   describe("approval expiry (closes the chaos matrix's 6th failure mode)", () => {
     async function makePendingAction(actionType: string, timeoutHours: number | null, ageHours: number): Promise<{ actionId: string; policyId: string }> {
-      const createdAt = new Date(Date.now() - ageHours * 3600 * 1000);
-      return withTenant(SEED_TENANT_ID, async (db) => {
-        const [policy] = await db
+      const [policy] = await withTenant(SEED_TENANT_ID, (db) =>
+        db
           .insert(domainPolicies)
           .values({ tenantId: SEED_TENANT_ID, actionType, policy: {}, requiresConfirmation: true, confirmationTimeoutHours: timeoutHours })
-          .returning();
-        await db.insert(domainPolicyRevisions).values({
-          tenantId: SEED_TENANT_ID,
-          policyId: policy!.id,
-          actionType,
-          version: policy!.version,
-          policy: {},
-          requiresConfirmation: true,
-          confirmationTimeoutHours: timeoutHours,
-          effectiveFrom: policy!.effectiveFrom,
-        });
-        const [action] = await db
+          .returning(),
+      );
+      const createdAt = new Date(Date.now() - ageHours * 3600 * 1000);
+      const [action] = await withTenant(SEED_TENANT_ID, (db) =>
+        db
           .insert(domainActions)
-          .values({ tenantId: SEED_TENANT_ID, actionType, payload: {}, policyId: policy!.id, policyVersion: policy!.version, status: "pending", summary: "chaos test pending action", createdAt })
-          .returning();
-        return { actionId: action!.id, policyId: policy!.id };
-      });
+          .values({ tenantId: SEED_TENANT_ID, actionType, payload: {}, policyId: policy!.id, status: "pending", summary: "chaos test pending action", createdAt })
+          .returning(),
+      );
+      return { actionId: action!.id, policyId: policy!.id };
     }
 
     async function cleanup(actionId: string, policyId: string): Promise<void> {
       await withTenant(SEED_TENANT_ID, async (db) => {
         await db.delete(jobs).where(eq(jobs.idempotencyKey, `approval-expiry:${actionId}`));
         await db.delete(domainActions).where(eq(domainActions.id, actionId));
-        await db.delete(domainPolicyRevisions).where(eq(domainPolicyRevisions.policyId, policyId));
         await db.delete(domainPolicies).where(eq(domainPolicies.id, policyId));
       });
     }

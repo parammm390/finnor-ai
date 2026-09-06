@@ -10,7 +10,7 @@ import {
 import { materializeSourceRecord, observeExternalEffect } from "@finnor/data-platform";
 import { createSourceAdapterRegistry, IntegrationError } from "@finnor/tools";
 import { settleExternalEffectObservation } from "@finnor/orchestration";
-import type { BusinessEffectSet, CanonicalSourceRecord, ExternalEffectObservation } from "@finnor/shared-types";
+import type { BusinessEffectSet, ExternalEffectObservation } from "@finnor/shared-types";
 import { and, eq, ne, sql } from "drizzle-orm";
 import type { JobHandler } from "../queue";
 import { loadSourceCredentialContext } from "./sync-source";
@@ -19,82 +19,6 @@ function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
-interface ReadTarget {
-  objectType: string;
-  externalId: string;
-  expected: Record<string, unknown>;
-}
-
-function readTarget(provider: string, output: Record<string, unknown>, effect: BusinessEffectSet): ReadTarget | null {
-  const values = effect.delta.values;
-  if (provider === "quickbooks" && typeof output.externalInvoiceId === "string") {
-    return {
-      objectType: "invoice",
-      externalId: output.externalInvoiceId,
-      expected: {
-        ...(typeof values.amountUsd === "number" ? { amountUsd: values.amountUsd } : {}),
-        ...(typeof values.memo === "string" ? { memo: values.memo } : {}),
-      },
-    };
-  }
-  if (provider === "stripe" && typeof output.linkId === "string") {
-    return {
-      objectType: "checkout_session",
-      externalId: output.linkId,
-      expected: typeof values.invoiceId === "string" ? { metadata: { invoiceId: values.invoiceId } } : {},
-    };
-  }
-  if (provider === "ghl") {
-    const messageId = typeof output.messageId === "string" ? output.messageId : undefined;
-    if (messageId) {
-      return {
-        objectType: "message",
-        externalId: messageId,
-        expected: {
-          ...(typeof output.contactId === "string" ? { contactId: output.contactId } : {}),
-          ...(typeof values.message === "string" ? { body: values.message } : {}),
-          direction: "outbound",
-          deliverySucceeded: true,
-        },
-      };
-    }
-    const contactId = typeof output.contactId === "string" ? output.contactId : undefined;
-    if (contactId) {
-      return {
-        objectType: "contact",
-        externalId: contactId,
-        expected: {
-          ...(typeof values.phone === "string" ? { phone: values.phone } : {}),
-          ...(typeof values.firstName === "string" ? { firstName: values.firstName } : {}),
-        },
-      };
-    }
-    const appointmentId = typeof output.visitId === "string" ? output.visitId
-      : typeof output.appointmentId === "string" ? output.appointmentId : undefined;
-    if (appointmentId) {
-      const start = typeof values.startTime === "string" ? values.startTime : typeof values.scheduledAt === "string" ? values.scheduledAt : undefined;
-      return { objectType: "appointment", externalId: appointmentId, expected: start ? { scheduledAt: new Date(start).toISOString() } : {} };
-    }
-  }
-  if (provider === "vapi" && typeof output.callId === "string") {
-    return { objectType: "call", externalId: output.callId, expected: {} };
-  }
-  return null;
-}
-
-function terminalVapi(record: CanonicalSourceRecord): boolean {
-  if (record.provider !== "vapi") return true;
-  const status = String(record.data.status ?? "").toLowerCase();
-  return ["ended", "completed", "failed", "busy", "no-answer", "cancelled", "canceled"].includes(status);
-}
-
-function terminalProviderRecord(record: CanonicalSourceRecord): boolean {
-  if (!terminalVapi(record)) return false;
-  if (record.provider === "ghl" && record.externalObjectType === "message") {
-    return typeof record.data.deliverySucceeded === "boolean";
-  }
-  return true;
-}
 
 async function reschedule(
   payload: Record<string, unknown>,
@@ -207,7 +131,11 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
     await settleExternalEffectObservation(prior, { integrationOperationId, domainActionId, externalOperationKey });
     return;
   }
-  if (!["ghl", "quickbooks", "stripe", "vapi"].includes(integration.binding)) {
+  const registry = createSourceAdapterRegistry();
+  let adapter;
+  try {
+    adapter = registry.get(integration.binding);
+  } catch (error) {
     if (attempt < 5) return reschedule(payload, tenantId, integrationOperationId ?? `${domainActionId}:${externalOperationKey}`, attempt);
     await settleExternalEffectObservation({
       tenantId,
@@ -224,7 +152,7 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
   }
 
   const effect = effectRow.effect as BusinessEffectSet;
-  const target = readTarget(integration.binding, object(operation.response), effect);
+  const target = adapter.observationTarget?.(object(operation.response), effect) ?? null;
   if (!target) {
     if (attempt < 5) return reschedule(payload, tenantId, integrationOperationId ?? `${domainActionId}:${externalOperationKey}`, attempt);
     await settleExternalEffectObservation({
@@ -240,16 +168,15 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
       ...integration,
       binding: integration.binding,
     } as Parameters<typeof loadSourceCredentialContext>[1]);
-    const adapter = createSourceAdapterRegistry().get(integration.binding);
     let record = await adapter.readObject(target.objectType, target.externalId, {
       tenantId, integrationId: integration.id, config: object(integration.config), credentialContext,
     });
-    if ((!record || !terminalProviderRecord(record)) && attempt < (integration.binding === "vapi" || target.objectType === "message" ? 10 : 5)) {
+    if ((!record || (adapter.isTerminalObservation && !adapter.isTerminalObservation(record))) && attempt < 8) {
       return reschedule(payload, tenantId, integrationOperationId ?? `${domainActionId}:${externalOperationKey}`, attempt);
     }
     if (record) {
       record = { ...record, businessEffectId: operation.businessEffectId };
-      if (!["stripe", "vapi"].includes(integration.binding) && record.canonicalEntity !== "message") {
+      if (record.materialization === "observe_only") {
         await withTenant(tenantId, (db) => materializeSourceRecord(db, record!));
       }
     }

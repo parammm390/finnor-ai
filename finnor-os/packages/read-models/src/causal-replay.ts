@@ -335,7 +335,7 @@ export async function causalReplayProjection(
           selectedCount: Array.isArray(context.selectedEntities) ? context.selectedEntities.length : 0,
           excludedCount: Array.isArray(context.excludedEntities) ? context.excludedEntities.length : 0,
           surface: context.surface ?? null,
-          filters: viewer.role === "technician" ? `[${Array.isArray(context.filters) ? context.filters.length : 0} restricted filters]` : context.filters ?? [],
+          filters: context.filters ?? [],
           timeContext: context.timeContext ?? null,
           cohort: context.cohort ?? null,
         }, viewer.role) as Record<string, unknown>,
@@ -777,9 +777,9 @@ export async function causalReplayProjection(
   for (const artifact of extra.artifactRowsPlus.slice(0, ARTIFACT_LIMIT)) {
     const available = artifact.content !== null || artifact.storageRef !== null;
     const expired = !available && !extra.artifactRetention?.legalHold && artifact.createdAt.getTime() < cutoff;
-    const availability: CausalEvidenceAvailability = viewer.role === "technician" ? "restricted" : available ? "available" : expired ? "expired" : "unavailable";
+    const availability: CausalEvidenceAvailability = available ? "available" : expired ? "expired" : "unavailable";
     const id = `computer-artifact:${artifact.id}`;
-    addNode({ id, stage: "evidence", title: `${humanize(artifact.kind)} evidence`, summary: `${artifact.mimeType} · ${artifact.sizeBytes} bytes · ${statusForAvailability(availability)}`, status: statusForAvailability(availability), occurredAt: iso(artifact.createdAt), sourceRefs: [sourceRef("computer_artifacts", artifact.id)], evidence: [evidence("computer_artifacts", viewer.role === "technician" ? null : artifact.id, iso(artifact.createdAt), availability, artifact.sha256)], facts: sanitizeExecutionValue({ kind: artifact.kind, mimeType: artifact.mimeType, sizeBytes: artifact.sizeBytes, sha256: artifact.sha256, metadata: artifact.metadata, retentionDays, legalHold: extra.artifactRetention?.legalHold ?? false }, viewer.role) as Record<string, unknown>, entityRefs: [] });
+    addNode({ id, stage: "evidence", title: `${humanize(artifact.kind)} evidence`, summary: `${artifact.mimeType} · ${artifact.sizeBytes} bytes · ${statusForAvailability(availability)}`, status: statusForAvailability(availability), occurredAt: iso(artifact.createdAt), sourceRefs: [sourceRef("computer_artifacts", artifact.id)], evidence: [evidence("computer_artifacts", artifact.id, iso(artifact.createdAt), availability, artifact.sha256)], facts: sanitizeExecutionValue({ kind: artifact.kind, mimeType: artifact.mimeType, sizeBytes: artifact.sizeBytes, sha256: artifact.sha256, metadata: artifact.metadata, retentionDays, legalHold: extra.artifactRetention?.legalHold ?? false }, viewer.role) as Record<string, unknown>, entityRefs: [] });
     const run = `computer-run:${artifact.runId}`;
     if (nodeIds.has(run)) addEdge({ from: run, to: id, relation: "produced_evidence", evidenceRefs: [`${sourceRef("computer_artifacts", artifact.id)}.run_id`], explanation: "Artifact metadata remains linked to the exact computer run even when retained content expires." });
   }
@@ -832,7 +832,7 @@ export async function causalReplayProjection(
     work: {
       id: work.id,
       status: work.status,
-      executionModel: work.executionModel === "atomic_effect" ? "atomic_action" : work.executionModel,
+      executionModel: work.executionModel,
       objective: objectiveLoop?.objective ?? work.initialInstruction,
       objectiveState: objectiveLoop?.state ?? null,
       successCondition: objectiveLoop?.successCondition ?? null,
@@ -854,7 +854,7 @@ export async function causalReplayProjection(
       gaps: uniqueMissing,
     },
     completeness: { status: uniqueMissing.length === 0 ? "complete" : legacyIncomplete ? "legacy_incomplete" : "partial", provenEdges, missingEdges, missing: uniqueMissing },
-    viewer: { role: viewer.role, evidenceVisibility: viewer.role === "technician" ? "restricted" : "full" },
+    viewer: { role: viewer.role, evidenceVisibility: "full" },
     readOnlyGuarantee: { source: "durable_projection", method: "GET", mutationControlsIncluded: false, sideEffectsPossible: false },
     limits: { nodes: NODE_LIMIT, edges: EDGE_LIMIT, actionEvents: ACTION_EVENT_LIMIT, computerArtifacts: ARTIFACT_LIMIT },
     truncated: { nodes: nodesTruncated, edges: edgesTruncated, actionEvents: actionEventsTruncated, computerArtifacts: artifactsTruncated },

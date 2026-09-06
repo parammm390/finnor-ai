@@ -24,11 +24,5 @@ describe("production-correctness objective iteration delivery", () => {
     expect(start).toContain("await scheduleIterationTx(db, created");
     expect(start).not.toContain("await transitionWork(");
     expect(objectiveRouteSource.match(/await ensureObjectiveIterationDelivery/g)).toHaveLength(2);
-    const delivery = objectiveLoopSource.slice(
-      objectiveLoopSource.indexOf("async function scheduleIterationTx"),
-      objectiveLoopSource.indexOf("async function scheduleIteration("),
-    );
-    expect(delivery).toContain('lane: "batch"');
-    expect(delivery).not.toContain('lane: "interactive"');
   });
 });

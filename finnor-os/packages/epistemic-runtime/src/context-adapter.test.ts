@@ -15,7 +15,7 @@ function context(tenantId = TEST_TENANT): OperatingContext {
       companyName: "Fixture Co",
       timezone: "UTC",
       profile: {
-        industry: "water",
+        industry: "private_equity",
         niche: null,
         description: null,
         primaryGeographies: [],
@@ -49,17 +49,17 @@ function context(tenantId = TEST_TENANT): OperatingContext {
     identityAccess: { communicationIdentities: [], applicationAccounts: [], authProfiles: [] },
     referencedEntities: [],
     canonicalSummaries: [{
-      name: "business_state",
+      name: "deal_context",
       asOf: TEST_NOW,
       source: "canonical_postgres",
-      data: { overdueInvoices: 4 },
+      data: { openRequests: 4 },
     }],
     memory: { conversation: null, semantic: [], episodic: [] },
     integrationHealth: {},
     authority: { principal: "user-1", employeeId: null, revision: null, roles: [] },
     sources: [{
       kind: "CANONICAL",
-      source: "operational_query:business_state",
+      source: "operational_query:deal_context",
       ref: "query:1",
       asOf: TEST_NOW,
       role: "context_only",
@@ -75,17 +75,17 @@ describe("existing operating-context adapter", () => {
       context: context(),
       scope: { tenantId: TEST_TENANT, principalId: "user-1", decisionId: "decision:context" },
       bindings: [{
-        proposition: testDefinition("business.overdue_invoice_count", { kind: "system", type: "business_state" }),
-        path: "canonicalSummaries.0.data.overdueInvoices",
+        proposition: testDefinition("deal.open_request_count", { kind: "system", type: "deal_context" }),
+        path: "canonicalSummaries.0.data.openRequests",
       }],
     });
-    expect(propositionById(state, "business.overdue_invoice_count")?.status).toBe("KNOWN");
-    expect(propositionById(state, "business.overdue_invoice_count")?.source).toMatchObject({
+    expect(propositionById(state, "deal.open_request_count")?.status).toBe("KNOWN");
+    expect(propositionById(state, "deal.open_request_count")?.source).toMatchObject({
       kind: "CANONICAL_DB",
-      owner: "operational_query:business_state",
+      owner: "operational_query:deal_context",
       role: "context_only",
     });
-    expect(consequentialProvenanceSatisfied(state, "business.overdue_invoice_count")).toBe(false);
+    expect(consequentialProvenanceSatisfied(state, "deal.open_request_count")).toBe(false);
   });
 
   it("rejects an OperatingContext from another tenant", () => {

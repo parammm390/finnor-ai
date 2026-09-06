@@ -89,11 +89,19 @@ function lineFor(source: ts.SourceFile, node: ts.Node): number {
 }
 
 async function pluginIndexFiles(): Promise<string[]> {
+  const activePluginDirectories = [
+    "clarification",
+    "computer-task",
+    "private-equity",
+    "universal-actions",
+    "web-research",
+  ] as const;
   const entries = await readdir(pluginRoot, { withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isDirectory() && entry.name !== "shared")
-    .map((entry) => join(pluginRoot, entry.name, "index.ts"))
-    .sort();
+  const directories = new Set(entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name));
+  for (const plugin of activePluginDirectories) {
+    if (!directories.has(plugin)) throw new Error(`Active plugin directory is missing: ${plugin}`);
+  }
+  return activePluginDirectories.map((entry) => join(pluginRoot, entry, "index.ts")).sort();
 }
 
 export async function discoverActionRegistry(): Promise<DiscoveredAction[]> {

@@ -4,7 +4,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
-import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
 import {
   withTenant,
@@ -33,10 +32,8 @@ import { eq, and, sql } from "drizzle-orm";
 import {
   createLead,
   convertLeadToOpportunity,
-  updateLeadStatus,
   createTask,
   createAppointment,
-  updateAppointmentStatus,
   createWorkOrder,
   upsertPriceBookItem,
   createQuote,
@@ -122,11 +119,6 @@ describe.skipIf(!available)("@finnor/data-platform repository layer", () => {
     expect(second.alreadyExisted).toBe(true);
     expect(second.leadId).toBe(first.leadId);
     expect(second.householdId).toBe(first.householdId);
-    const [household] = await withTenant(TENANT_ID, (db) => db
-      .select({ address: households.address })
-      .from(households)
-      .where(eq(households.id, first.householdId)));
-    expect(household?.address).toBe("(address pending — lead intake)");
     expect(await eventCountFor("lead", first.leadId)).toBe(1);
   });
 
@@ -148,36 +140,6 @@ describe.skipIf(!available)("@finnor/data-platform repository layer", () => {
     expect(noop.opportunityId).toBeNull();
   });
 
-  it("updates authoritative lead status idempotently through the tenant-safe boundary", async () => {
-    const lead = await withTenant(TENANT_ID, (db) =>
-      createLead(db, { tenantId: TENANT_ID, name: "Status Test Lead", phone: "+13195558803" }),
-    );
-    const first = await withTenant(TENANT_ID, (db) =>
-      updateLeadStatus(db, { tenantId: TENANT_ID, leadId: lead.leadId, status: "qualified", source: "test" }),
-    );
-    expect(first).toMatchObject({ previousStatus: "new", status: "qualified", changed: true });
-    const replay = await withTenant(TENANT_ID, (db) =>
-      updateLeadStatus(db, { tenantId: TENANT_ID, leadId: lead.leadId, status: "qualified", source: "test" }),
-    );
-    expect(replay).toMatchObject({ status: "qualified", changed: false });
-    expect(await eventCountFor("lead", lead.leadId)).toBe(2); // lead_created + one status change
-  });
-
-  it("records at most one status event when identical lead updates race", async () => {
-    const lead = await withTenant(TENANT_ID, (db) => createLead(db, {
-      tenantId: TENANT_ID,
-      name: "Concurrent Status Lead",
-      phone: `+1319${randomUUID().replace(/\D/g, "").slice(0, 7)}`,
-    }));
-    const results = await Promise.all([
-      withTenant(TENANT_ID, (db) => updateLeadStatus(db, { tenantId: TENANT_ID, leadId: lead.leadId, status: "qualified", source: "race-test" })),
-      withTenant(TENANT_ID, (db) => updateLeadStatus(db, { tenantId: TENANT_ID, leadId: lead.leadId, status: "qualified", source: "race-test" })),
-    ]);
-    expect(results.filter((result) => result?.changed)).toHaveLength(1);
-    expect(results.filter((result) => result && !result.changed)).toHaveLength(1);
-    expect(await eventCountFor("lead", lead.leadId)).toBe(2);
-  });
-
   it("createTask and createAppointment each record their entity + one business event", async () => {
     const task = await withTenant(TENANT_ID, (db) =>
       createTask(db, { tenantId: TENANT_ID, subjectType: "test_subject", subjectId: TENANT_ID, title: "Follow up" }),
@@ -188,16 +150,6 @@ describe.skipIf(!available)("@finnor/data-platform repository layer", () => {
       createAppointment(db, { tenantId: TENANT_ID, subjectType: "test_subject", subjectId: TENANT_ID, scheduledAt: new Date() }),
     );
     expect(await eventCountFor("appointment", appt.appointmentId)).toBe(1);
-  });
-
-  it("does not emit a status event when the appointment belongs to no current row", async () => {
-    const missingId = randomUUID();
-    await expect(withTenant(TENANT_ID, (db) => updateAppointmentStatus(db, {
-      tenantId: TENANT_ID,
-      appointmentId: missingId,
-      status: "confirmed",
-    }))).resolves.toBe(false);
-    expect(await eventCountFor("appointment", missingId)).toBe(0);
   });
 
   it("createWorkOrder records the entity + one business event", async () => {
@@ -256,13 +208,12 @@ describe.skipIf(!available)("@finnor/data-platform repository layer", () => {
   });
 
   it("persistCall is idempotent by (tenant, source, external id) and links to a conversation", async () => {
-    const runId = randomUUID();
     const first = await withTenant(TENANT_ID, (db) =>
-      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: `repo-call-1-${runId}` }, direction: "inbound", transcript: "hello" }),
+      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: "repo-call-1" }, direction: "inbound", transcript: "hello" }),
     );
     expect(first.alreadyExisted).toBe(false);
     const second = await withTenant(TENANT_ID, (db) =>
-      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: `repo-call-1-${runId}` }, direction: "inbound", transcript: "hello again" }),
+      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: "repo-call-1" }, direction: "inbound", transcript: "hello again" }),
     );
     expect(second.alreadyExisted).toBe(true);
     expect(second.callId).toBe(first.callId);
@@ -272,63 +223,6 @@ describe.skipIf(!available)("@finnor/data-platform repository layer", () => {
       persistMessage(db, { tenantId: TENANT_ID, conversationId: first.conversationId, direction: "outbound", channel: "sms", content: "confirmed" }),
     );
     expect(await eventCountFor("message", msg.messageId)).toBe(1);
-  });
-
-  it("persistMessage never moves conversation activity backwards for delayed provider events", async () => {
-    const runId = randomUUID();
-    const call = await withTenant(TENANT_ID, (db) =>
-      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: `repo-call-monotonic-activity-${runId}` }, direction: "inbound" }),
-    );
-    const newest = new Date("2099-01-02T12:00:00.000Z");
-    const delayed = new Date("2099-01-01T12:00:00.000Z");
-    await withTenant(TENANT_ID, (db) => persistMessage(db, {
-      tenantId: TENANT_ID,
-      conversationId: call.conversationId,
-      direction: "inbound",
-      channel: "sms",
-      content: "newest provider event",
-      sentAt: newest,
-      provenance: { sourceSystem: "provider-monotonic", externalId: `newest-${runId}` },
-    }));
-    const afterNewest = (await withTenant(TENANT_ID, (db) => db
-      .select({ lastActivityAt: conversations.lastActivityAt })
-      .from(conversations)
-      .where(eq(conversations.id, call.conversationId))))[0]!.lastActivityAt;
-    await withTenant(TENANT_ID, (db) => persistMessage(db, {
-      tenantId: TENANT_ID,
-      conversationId: call.conversationId,
-      direction: "inbound",
-      channel: "sms",
-      content: "delayed provider event",
-      sentAt: delayed,
-      provenance: { sourceSystem: "provider-monotonic", externalId: `delayed-${runId}` },
-    }));
-    const afterDelayed = (await withTenant(TENANT_ID, (db) => db
-      .select({ lastActivityAt: conversations.lastActivityAt })
-      .from(conversations)
-      .where(eq(conversations.id, call.conversationId))))[0]!.lastActivityAt;
-    expect(afterNewest?.toISOString()).toBe(newest.toISOString());
-    expect(afterDelayed?.toISOString()).toBe(newest.toISOString());
-  });
-
-  it("atomically claims message provenance under concurrent retries", async () => {
-    const runId = randomUUID();
-    const call = await withTenant(TENANT_ID, (db) =>
-      persistCall(db, { tenantId: TENANT_ID, provenance: { sourceSystem: "test", externalId: `repo-call-message-race-${runId}` }, direction: "inbound" }),
-    );
-    const results = await Promise.all(Array.from({ length: 6 }, () => withTenant(TENANT_ID, (db) =>
-      persistMessage(db, {
-        tenantId: TENANT_ID,
-        conversationId: call.conversationId,
-        direction: "outbound",
-        channel: "sms",
-        content: "one canonical fact",
-        provenance: { sourceSystem: "provider-retry-test", externalId: `same-provider-message-${runId}` },
-      }),
-    )));
-    expect(new Set(results.map((result) => result.messageId)).size).toBe(1);
-    expect(results.filter((result) => !result.alreadyExisted)).toHaveLength(1);
-    expect(await eventCountFor("message", results[0]!.messageId)).toBe(1);
   });
 
   it("createContact + addContactMethod is idempotent by (contact, method type, value)", async () => {

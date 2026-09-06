@@ -3,7 +3,7 @@ import type { CanonicalEntityRef } from "./company-graph";
 export type EmployeeConversationRole = "user" | "assistant";
 export type EmployeeConversationChannel = "voice" | "text" | "console";
 
-export interface ConversationReference extends CanonicalEntityRef {
+export interface ConversationReference extends CanonicalEntityRef<string> {
   label: string;
   source: "explicit_context" | "thread" | "work" | "recent_message" | "history_search" | "company_twin";
   sourceMessageId?: string;

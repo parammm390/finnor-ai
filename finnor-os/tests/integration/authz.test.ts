@@ -92,7 +92,6 @@ describe.skipIf(!available)("authz — dev-bypass hardening, rate limiting, webh
     const ip = `203.0.113.${Math.floor(Math.random() * 255)}`; // unique per run, avoids bucket collision
     const garbageReq = () =>
       new Request("http://localhost/api/test", {
-        method: "POST",
         headers: { authorization: "Bearer garbage-token-not-real", "x-forwarded-for": ip },
       });
 
