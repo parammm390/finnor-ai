@@ -133,6 +133,10 @@ jobs:
           npm run setup:langgraph
         working-directory: finnor-os
 
+      - name: Seed Phase 5 certification fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
       - name: Install disposable legacy fixture seam
         run: npx tsx scripts/install-vertical-fixture-seam.ts
         working-directory: finnor-os
