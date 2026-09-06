@@ -1,0 +1,2529 @@
+{
+  "title": "PE0 -> P1 -> P5 WATER DISPOSITION LEDGER",
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T19:32:30.814Z",
+  "unknown": 0,
+  "counts": {
+    "retiredActions": 42,
+    "retiredQueries": 7,
+    "retiredCanonicalEntities": 19,
+    "retiredImportEntities": 12,
+    "retiredParties": 3,
+    "retiredJobs": 15,
+    "retiredWorkflows": 6,
+    "retiredReadModels": 8,
+    "retiredDoctrineSurfaces": 9,
+    "retiredImplementationPaths": 102,
+    "total": 250,
+    "byP5Action": {
+      "REMOVE_RUNTIME": 102,
+      "DELETE_SOURCE": 102,
+      "QUARANTINE_HISTORY": 27,
+      "RETAIN_CORE": 12,
+      "RETAIN_PROVIDER_TRANSPORT": 7
+    },
+    "unknown": 0
+  },
+  "rows": [
+    {
+      "id": "action:schedule_water_test",
+      "category": "action",
+      "artifact": "schedule_water_test",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:renew_maintenance_agreement",
+      "category": "action",
+      "artifact": "renew_maintenance_agreement",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:create_lead",
+      "category": "action",
+      "artifact": "create_lead",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:update_lead_status",
+      "category": "action",
+      "artifact": "update_lead_status",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:log_interaction",
+      "category": "action",
+      "artifact": "log_interaction",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:assign_lead_to_technician",
+      "category": "action",
+      "artifact": "assign_lead_to_technician",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:check_stock_level",
+      "category": "action",
+      "artifact": "check_stock_level",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:flag_reorder_needed",
+      "category": "action",
+      "artifact": "flag_reorder_needed",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:log_stock_used_on_visit",
+      "category": "action",
+      "artifact": "log_stock_used_on_visit",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:assign_technician_to_visit",
+      "category": "action",
+      "artifact": "assign_technician_to_visit",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:check_technician_availability",
+      "category": "action",
+      "artifact": "check_technician_availability",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:reschedule_visit",
+      "category": "action",
+      "artifact": "reschedule_visit",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:generate_quote",
+      "category": "action",
+      "artifact": "generate_quote",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:size_equipment_for_household",
+      "category": "action",
+      "artifact": "size_equipment_for_household",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:send_proposal",
+      "category": "action",
+      "artifact": "send_proposal",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:create_invoice",
+      "category": "action",
+      "artifact": "create_invoice",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:send_payment_reminder",
+      "category": "action",
+      "artifact": "send_payment_reminder",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:record_payment",
+      "category": "action",
+      "artifact": "record_payment",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:call_overdue_invoices",
+      "category": "action",
+      "artifact": "call_overdue_invoices",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:summarize_ad_performance",
+      "category": "action",
+      "artifact": "summarize_ad_performance",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:launch_ad_campaign",
+      "category": "action",
+      "artifact": "launch_ad_campaign",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:create_review_request",
+      "category": "action",
+      "artifact": "create_review_request",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:answer_customer_question",
+      "category": "action",
+      "artifact": "answer_customer_question",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:send_customer_message",
+      "category": "action",
+      "artifact": "send_customer_message",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:send_follow_up",
+      "category": "action",
+      "artifact": "send_follow_up",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:answer_water_question",
+      "category": "action",
+      "artifact": "answer_water_question",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:send_proposal_to_recent_installs",
+      "category": "action",
+      "artifact": "send_proposal_to_recent_installs",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:bulk_notify_existing_customers",
+      "category": "action",
+      "artifact": "bulk_notify_existing_customers",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:log_visit_report",
+      "category": "action",
+      "artifact": "log_visit_report",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:flag_visit_issue",
+      "category": "action",
+      "artifact": "flag_visit_issue",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:check_reminder_due",
+      "category": "action",
+      "artifact": "check_reminder_due",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:generate_compliance_summary",
+      "category": "action",
+      "artifact": "generate_compliance_summary",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:scan_competitors",
+      "category": "action",
+      "artifact": "scan_competitors",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:check_business_reviews",
+      "category": "action",
+      "artifact": "check_business_reviews",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:get_business_overview",
+      "category": "action",
+      "artifact": "get_business_overview",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:answer_business_question",
+      "category": "action",
+      "artifact": "answer_business_question",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:start_water_test_workflow",
+      "category": "action",
+      "artifact": "start_water_test_workflow",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:request_proposal_signature",
+      "category": "action",
+      "artifact": "request_proposal_signature",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:start_installation_workflow",
+      "category": "action",
+      "artifact": "start_installation_workflow",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:start_invoice_to_cash_workflow",
+      "category": "action",
+      "artifact": "start_invoice_to_cash_workflow",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:manual_step_suggestion",
+      "category": "action",
+      "artifact": "manual_step_suggestion",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "action:route_suggestion",
+      "category": "action",
+      "artifact": "route_suggestion",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active action discovery + policy/known-action/DB retirement guards"
+    },
+    {
+      "id": "query:customer_lookup",
+      "category": "query",
+      "artifact": "customer_lookup",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:customer_cohort",
+      "category": "query",
+      "artifact": "customer_cohort",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:schedule_range",
+      "category": "query",
+      "artifact": "schedule_range",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:money_summary",
+      "category": "query",
+      "artifact": "money_summary",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:inventory_status",
+      "category": "query",
+      "artifact": "inventory_status",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:business_state",
+      "category": "query",
+      "artifact": "business_state",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "query:party_availability",
+      "category": "query",
+      "artifact": "party_availability",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "OPERATIONAL_QUERY_INTENTS contains Core + PE only"
+    },
+    {
+      "id": "canonical_entity:household",
+      "category": "canonical_entity",
+      "artifact": "household",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:contact",
+      "category": "canonical_entity",
+      "artifact": "contact",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:technician",
+      "category": "canonical_entity",
+      "artifact": "technician",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:equipment",
+      "category": "canonical_entity",
+      "artifact": "equipment",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:service_visit",
+      "category": "canonical_entity",
+      "artifact": "service_visit",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:maintenance_agreement",
+      "category": "canonical_entity",
+      "artifact": "maintenance_agreement",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:lead",
+      "category": "canonical_entity",
+      "artifact": "lead",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:opportunity",
+      "category": "canonical_entity",
+      "artifact": "opportunity",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:quote",
+      "category": "canonical_entity",
+      "artifact": "quote",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:proposal",
+      "category": "canonical_entity",
+      "artifact": "proposal",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:work_order",
+      "category": "canonical_entity",
+      "artifact": "work_order",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:appointment",
+      "category": "canonical_entity",
+      "artifact": "appointment",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:invoice",
+      "category": "canonical_entity",
+      "artifact": "invoice",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:payment",
+      "category": "canonical_entity",
+      "artifact": "payment",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:conversation",
+      "category": "canonical_entity",
+      "artifact": "conversation",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:call",
+      "category": "canonical_entity",
+      "artifact": "call",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:message",
+      "category": "canonical_entity",
+      "artifact": "message",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:communication",
+      "category": "canonical_entity",
+      "artifact": "communication",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "canonical_entity:inventory_item",
+      "category": "canonical_entity",
+      "artifact": "inventory_item",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "canonical truth registrations inactive; legacy tables protected by migration 0108"
+    },
+    {
+      "id": "import_entity:customer",
+      "category": "import_entity",
+      "artifact": "customer",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:lead",
+      "category": "import_entity",
+      "artifact": "lead",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:appointment",
+      "category": "import_entity",
+      "artifact": "appointment",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:service_visit",
+      "category": "import_entity",
+      "artifact": "service_visit",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:equipment",
+      "category": "import_entity",
+      "artifact": "equipment",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:work_order",
+      "category": "import_entity",
+      "artifact": "work_order",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:quote",
+      "category": "import_entity",
+      "artifact": "quote",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:proposal",
+      "category": "import_entity",
+      "artifact": "proposal",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:invoice",
+      "category": "import_entity",
+      "artifact": "invoice",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:payment",
+      "category": "import_entity",
+      "artifact": "payment",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:inventory_item",
+      "category": "import_entity",
+      "artifact": "inventory_item",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "import_entity:technician",
+      "category": "import_entity",
+      "artifact": "technician",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active import definition and canonical writer registries are empty"
+    },
+    {
+      "id": "party:household",
+      "category": "party",
+      "artifact": "household",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active PartyRef contract excludes the Water extension"
+    },
+    {
+      "id": "party:contact",
+      "category": "party",
+      "artifact": "contact",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active PartyRef contract excludes the Water extension"
+    },
+    {
+      "id": "party:technician",
+      "category": "party",
+      "artifact": "technician",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active PartyRef contract excludes the Water extension"
+    },
+    {
+      "id": "job:scheduled_reminder",
+      "category": "job",
+      "artifact": "scheduled_reminder",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_cold_leads",
+      "category": "job",
+      "artifact": "scan_cold_leads",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_low_inventory",
+      "category": "job",
+      "artifact": "scan_low_inventory",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_service_due",
+      "category": "job",
+      "artifact": "scan_service_due",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_appointment_no_shows",
+      "category": "job",
+      "artifact": "scan_appointment_no_shows",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:simulator_tick",
+      "category": "job",
+      "artifact": "simulator_tick",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:owner_digest",
+      "category": "job",
+      "artifact": "owner_digest",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:suggest_daily_routes",
+      "category": "job",
+      "artifact": "suggest_daily_routes",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_ewma_reorder",
+      "category": "job",
+      "artifact": "scan_ewma_reorder",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:scan_data_quality",
+      "category": "job",
+      "artifact": "scan_data_quality",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:quickbooks_sync",
+      "category": "job",
+      "artifact": "quickbooks_sync",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:dispatch_business_operation",
+      "category": "job",
+      "artifact": "dispatch_business_operation",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:execute_business_operation_target",
+      "category": "job",
+      "artifact": "execute_business_operation_target",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:execute_business_operation_call_batch",
+      "category": "job",
+      "artifact": "execute_business_operation_call_batch",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "job:run_client_factory",
+      "category": "job",
+      "artifact": "run_client_factory",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "worker registry/scheduler inspection + persisted queue guard"
+    },
+    {
+      "id": "workflow:lead_to_water_test",
+      "category": "workflow",
+      "artifact": "lead_to_water_test",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "workflow:maintenance_agreement",
+      "category": "workflow",
+      "artifact": "maintenance_agreement",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "workflow:maintenance_agreement_renewal",
+      "category": "workflow",
+      "artifact": "maintenance_agreement_renewal",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "workflow:proposal_signature",
+      "category": "workflow",
+      "artifact": "proposal_signature",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "workflow:proposal_to_installation",
+      "category": "workflow",
+      "artifact": "proposal_to_installation",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "workflow:invoice_to_cash",
+      "category": "workflow",
+      "artifact": "invoice_to_cash",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "workflow registration removed; historical workflow rows remain readable"
+    },
+    {
+      "id": "read_model:household-360",
+      "category": "read_model",
+      "artifact": "household-360",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:technician-load",
+      "category": "read_model",
+      "artifact": "technician-load",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:water-pipeline",
+      "category": "read_model",
+      "artifact": "water-pipeline",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:quote-proposal-pipeline",
+      "category": "read_model",
+      "artifact": "quote-proposal-pipeline",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:service-due",
+      "category": "read_model",
+      "artifact": "service-due",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:route-savings",
+      "category": "read_model",
+      "artifact": "route-savings",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:inventory-stock",
+      "category": "read_model",
+      "artifact": "inventory-stock",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "read_model:water-operational-scorecard",
+      "category": "read_model",
+      "artifact": "water-operational-scorecard",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active read-model and operational-query barrels contain Core + PE only"
+    },
+    {
+      "id": "doctrine:planner-water-examples",
+      "category": "doctrine",
+      "artifact": "planner-water-examples",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:conversation-water-doctrine",
+      "category": "doctrine",
+      "artifact": "conversation-water-doctrine",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:objective-loop-water-context",
+      "category": "doctrine",
+      "artifact": "objective-loop-water-context",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:water-capability-descriptions",
+      "category": "doctrine",
+      "artifact": "water-capability-descriptions",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:water-critic-repair-examples",
+      "category": "doctrine",
+      "artifact": "water-critic-repair-examples",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:water-current-eval-corpus",
+      "category": "doctrine",
+      "artifact": "water-current-eval-corpus",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:water-policy-defaults",
+      "category": "doctrine",
+      "artifact": "water-policy-defaults",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:water-provisioning-defaults",
+      "category": "doctrine",
+      "artifact": "water-provisioning-defaults",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "doctrine:dealer-zero-reference-product",
+      "category": "doctrine",
+      "artifact": "dealer-zero-reference-product",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "REMOVE_RUNTIME",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "active cognition/eval/provisioning/policy surfaces scanned by permanent boundary"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/business-world",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/business-world",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/comms",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/comms",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/data-quality/findings",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/data-quality/findings",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/dealer-zero",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/dealer-zero",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/dispatch",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/dispatch",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/operations/[id]/retry/route.ts",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/operations/[id]/retry/route.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/overview",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/overview",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/price-book",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/price-book",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/resources",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/resources",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/stats",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/stats",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/technician",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/technician",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "category": "source_implementation",
+      "artifact": "apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/api/lib/price-book-provenance.ts",
+      "category": "source_implementation",
+      "artifact": "apps/api/lib/price-book-provenance.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/simulator",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/simulator",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/business-operation.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/business-operation.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/owner-digest.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/owner-digest.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/quickbooks-sync.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/quickbooks-sync.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/run-client-factory.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/run-client-factory.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-appointment-no-shows.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-appointment-no-shows.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-cold-leads.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-cold-leads.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-data-quality.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-data-quality.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-ewma-reorder.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-ewma-reorder.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-low-inventory.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-low-inventory.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scan-service-due.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scan-service-due.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/scheduled-reminder.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/scheduled-reminder.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/simulator-tick.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/simulator-tick.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:apps/worker/src/handlers/suggest-daily-routes.ts",
+      "category": "source_implementation",
+      "artifact": "apps/worker/src/handlers/suggest-daily-routes.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/appointments.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/appointments.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/contacts.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/contacts.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/conversations.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/conversations.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/import-writes.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/import-writes.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/leads.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/leads.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/payments.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/payments.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/price-book.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/price-book.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/quotes.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/quotes.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/data-platform/src/work-orders.ts",
+      "category": "source_implementation",
+      "artifact": "packages/data-platform/src/work-orders.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/db/seed-scale.ts",
+      "category": "source_implementation",
+      "artifact": "packages/db/seed-scale.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/accounting",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/accounting",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/bulk-notify",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/bulk-notify",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/compliance-documentation",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/compliance-documentation",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/crm",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/crm",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/customer-comm",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/customer-comm",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/inventory",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/inventory",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/invoice-to-cash",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/invoice-to-cash",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/lead-to-water-test",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/lead-to-water-test",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/maintenance-agreement",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/maintenance-agreement",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/manual-step",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/manual-step",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/marketing",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/marketing",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/ops-overview",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/ops-overview",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/proposal-batch",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/proposal-batch",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/proposal-signature",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/proposal-signature",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/proposal-to-installation",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/proposal-to-installation",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/quotation",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/quotation",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/route-optimization",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/route-optimization",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/scheduling",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/scheduling",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/service-reminders",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/service-reminders",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/technician-reports",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/technician-reports",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/water-domain-knowledge",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/water-domain-knowledge",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/water-test",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/water-test",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/domain-plugins/web-research/watch-service.ts",
+      "category": "source_implementation",
+      "artifact": "packages/domain-plugins/web-research/watch-service.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/orchestration/src/dealer-zero-replay.ts",
+      "category": "source_implementation",
+      "artifact": "packages/orchestration/src/dealer-zero-replay.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/orchestration/src/training-mode.ts",
+      "category": "source_implementation",
+      "artifact": "packages/orchestration/src/training-mode.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/read-models/src/churn-risk.ts",
+      "category": "source_implementation",
+      "artifact": "packages/read-models/src/churn-risk.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/read-models/src/reorder-points.ts",
+      "category": "source_implementation",
+      "artifact": "packages/read-models/src/reorder-points.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/read-models/src/route-optimizer.ts",
+      "category": "source_implementation",
+      "artifact": "packages/read-models/src/route-optimizer.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/read-models/src/slot-recommender.ts",
+      "category": "source_implementation",
+      "artifact": "packages/read-models/src/slot-recommender.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/shared-types/src/business-world.ts",
+      "category": "source_implementation",
+      "artifact": "packages/shared-types/src/business-world.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/shared-types/src/dealer-zero-fixtures.ts",
+      "category": "source_implementation",
+      "artifact": "packages/shared-types/src/dealer-zero-fixtures.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/shared-types/src/dealer-zero-scenarios.ts",
+      "category": "source_implementation",
+      "artifact": "packages/shared-types/src/dealer-zero-scenarios.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/shared-types/src/dealer-zero-time-compression.ts",
+      "category": "source_implementation",
+      "artifact": "packages/shared-types/src/dealer-zero-time-compression.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/ads-write.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/ads-write.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/ads.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/ads.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/binding-resolution.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/binding-resolution.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/accounting.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/accounting.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/communications.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/communications.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/crm.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/crm.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/documents.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/documents.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/governed-runtime.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/governed-runtime.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/inventory.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/inventory.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/marketing.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/marketing.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/capabilities/scheduling.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/capabilities/scheduling.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/compensation-capabilities.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/compensation-capabilities.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/docusign.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/docusign.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/maps.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/maps.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/quickbooks.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/quickbooks.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/sandbox.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/sandbox.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/tools/src/stripe.ts",
+      "category": "source_implementation",
+      "artifact": "packages/tools/src/stripe.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/workflow-runtime/src/capability.ts",
+      "category": "source_implementation",
+      "artifact": "packages/workflow-runtime/src/capability.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:packages/workflow-runtime/src/compensation.ts",
+      "category": "source_implementation",
+      "artifact": "packages/workflow-runtime/src/compensation.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/client-factory.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/client-factory.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/client-lifecycle.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/client-lifecycle.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/client-manifest.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/client-manifest.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/client-provisioning.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/client-provisioning.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/eval-planner.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/eval-planner.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/import-client-data.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/import-client-data.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/import-synthetic-dealer.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/import-synthetic-dealer.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/provision-tenant.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/provision-tenant.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/seed-dealer-zero.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/seed-dealer-zero.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/seed-demo-tenant.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/seed-demo-tenant.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/seed-tenant-policies.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/seed-tenant-policies.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/tenant-bootstrap.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/tenant-bootstrap.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "source_implementation:scripts/update-vapi-winback.ts",
+      "category": "source_implementation",
+      "artifact": "scripts/update-vapi-winback.ts",
+      "pe0Disposition": "WATER_RETIRE",
+      "p1ExtractionResult": "NOT_REQUIRED",
+      "p5Action": "DELETE_SOURCE",
+      "postCutoverReachability": "ABSENT_FROM_ACTIVE_RUNTIME",
+      "evidence": "path absence asserted by PE-DOMAIN-BOUNDARY"
+    },
+    {
+      "id": "core_extraction:work-objective-runtime",
+      "category": "core_extraction",
+      "artifact": "work-objective-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:authority-approval-runtime",
+      "category": "core_extraction",
+      "artifact": "authority-approval-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:business-effect-runtime",
+      "category": "core_extraction",
+      "artifact": "business-effect-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:event-wait-runtime",
+      "category": "core_extraction",
+      "artifact": "event-wait-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:reconciliation-runtime",
+      "category": "core_extraction",
+      "artifact": "reconciliation-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:universal-actions",
+      "category": "core_extraction",
+      "artifact": "universal-actions",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:computer-runtime",
+      "category": "core_extraction",
+      "artifact": "computer-runtime",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "core_extraction:generic-reference-tenant-machinery",
+      "category": "core_extraction",
+      "artifact": "generic-reference-tenant-machinery",
+      "pe0Disposition": "CORE_EXTRACT",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "CORE_ONLY",
+      "evidence": "P1 boundary and post-cutover Core/PE regression suite"
+    },
+    {
+      "id": "pe_reuse:source-truth-engine",
+      "category": "pe_reuse",
+      "artifact": "source-truth-engine",
+      "pe0Disposition": "PE_REUSE",
+      "p1ExtractionResult": "OWNED_BY_PRIVATE_EQUITY",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "PRIVATE_EQUITY_ONLY",
+      "evidence": "PE package boundary and post-cutover P2/P3/P4 certification"
+    },
+    {
+      "id": "pe_reuse:generic-import-engine",
+      "category": "pe_reuse",
+      "artifact": "generic-import-engine",
+      "pe0Disposition": "PE_REUSE",
+      "p1ExtractionResult": "OWNED_BY_PRIVATE_EQUITY",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "PRIVATE_EQUITY_ONLY",
+      "evidence": "PE package boundary and post-cutover P2/P3/P4 certification"
+    },
+    {
+      "id": "pe_reuse:canonical-company-graph",
+      "category": "pe_reuse",
+      "artifact": "canonical-company-graph",
+      "pe0Disposition": "PE_REUSE",
+      "p1ExtractionResult": "OWNED_BY_PRIVATE_EQUITY",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "PRIVATE_EQUITY_ONLY",
+      "evidence": "PE package boundary and post-cutover P2/P3/P4 certification"
+    },
+    {
+      "id": "pe_reuse:operational-query-plane",
+      "category": "pe_reuse",
+      "artifact": "operational-query-plane",
+      "pe0Disposition": "PE_REUSE",
+      "p1ExtractionResult": "OWNED_BY_PRIVATE_EQUITY",
+      "p5Action": "RETAIN_CORE",
+      "postCutoverReachability": "PRIVATE_EQUITY_ONLY",
+      "evidence": "PE package boundary and post-cutover P2/P3/P4 certification"
+    },
+    {
+      "id": "provider_transport:email-gmail-resend",
+      "category": "provider_transport",
+      "artifact": "email-gmail-resend",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:vapi-employee-voice",
+      "category": "provider_transport",
+      "artifact": "vapi-employee-voice",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:exa-firecrawl-research",
+      "category": "provider_transport",
+      "artifact": "exa-firecrawl-research",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:docusign-transport",
+      "category": "provider_transport",
+      "artifact": "docusign-transport",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:quickbooks-transport",
+      "category": "provider_transport",
+      "artifact": "quickbooks-transport",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:stripe-transport",
+      "category": "provider_transport",
+      "artifact": "stripe-transport",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "provider_transport:ghl-transport",
+      "category": "provider_transport",
+      "artifact": "ghl-transport",
+      "pe0Disposition": "CORE_KEEP",
+      "p1ExtractionResult": "EXTRACTED_TO_CORE",
+      "p5Action": "RETAIN_PROVIDER_TRANSPORT",
+      "postCutoverReachability": "PROVIDER_TRANSPORT_ONLY",
+      "evidence": "transport retained without active Water mapper/action/provider binding"
+    },
+    {
+      "id": "history:old-forward-migrations",
+      "category": "history",
+      "artifact": "old-forward-migrations",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:legacy-water-tables",
+      "category": "history",
+      "artifact": "legacy-water-tables",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:historical-work",
+      "category": "history",
+      "artifact": "historical-work",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:historical-domain-actions",
+      "category": "history",
+      "artifact": "historical-domain-actions",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:decision-receipts",
+      "category": "history",
+      "artifact": "decision-receipts",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:business-events",
+      "category": "history",
+      "artifact": "business-events",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:external-refs",
+      "category": "history",
+      "artifact": "external-refs",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    },
+    {
+      "id": "history:causal-replay",
+      "category": "history",
+      "artifact": "causal-replay",
+      "pe0Disposition": "HISTORY_ONLY",
+      "p1ExtractionResult": "PRESERVED_AS_HISTORY",
+      "p5Action": "QUARANTINE_HISTORY",
+      "postCutoverReachability": "HISTORICAL_READ_ONLY",
+      "evidence": "fresh/upgrade/restore/fingerprint/replay acceptance suite"
+    }
+  ]
+}

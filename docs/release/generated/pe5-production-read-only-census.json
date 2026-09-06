@@ -16,7 +16,7 @@
   },
   "candidate": {
     "branch": "codex/p3-epistemic-runtime",
-    "commit": "1ca9a60418fb81c489b36542c6b1209ee0d4a12e",
+    "commit": "b5f36a9129ff2a40edc0926da29f3250a9976d13",
     "originMainCommit": "4cc85c5534988f2b9f4b5938f0e4b6758985206c",
     "mergeBase": "c95720496b5c42391a8c6ef796170f4a365232ca",
     "candidateOnlyCommits": 11,
@@ -33,6 +33,31 @@
       "product_runtime_authority",
       "water_tenant_retirement_dispositions"
     ]
+  },
+  "lineage": {
+    "status": "DIVERGENT_FORWARD_REPAIR_REQUIRED",
+    "productionRecordedNotPresentInCandidate": [
+      "0108_operating_product_closure.sql"
+    ],
+    "candidateMissingFromProduction": [
+      "0109_atomic_water_runtime_retirement.sql"
+    ],
+    "divergentCandidateMigrations": [
+      "0104_core_vertical_runtime_boundary.sql",
+      "0105_private_equity_execution_graph.sql",
+      "0106_private_equity_truth_and_cognition.sql",
+      "0107_private_equity_execution_semantics.sql"
+    ],
+    "appliedNotRecorded": {
+      "migrations": [],
+      "status": "NONE_CONFIRMED_BY_READ_ONLY_SCHEMA_AUDIT"
+    },
+    "appliedAndRecorded": {
+      "status": "NOT_ASSERTED_FROM_NAME_ONLY_LEDGER"
+    },
+    "evidence": "Production records 0108_operating_product_closure.sql while the candidate PE/core authority objects and 0109 are absent from the live schema; no historical migration row was rewritten.",
+    "repairStrategy": "Apply the idempotent 0109 forward repair after backup/snapshot; historical migrations remain immutable and production 0108 remains untouched.",
+    "mutationPerformed": false
   },
   "tenantClassification": {
     "totalTenants": 4,
@@ -94,6 +119,26 @@
     "freshWorkerReleases": 2,
     "allRequiredRolesPresent": false,
     "singleCompatibleRelease": false
+  },
+  "topologyEvidence": {
+    "contractWorkerProvider": "azure-vm",
+    "repositoryReleaseMechanism": "GitHub Actions Azure OIDC plus deploy-azure-worker.mjs",
+    "contractResources": [
+      "finnor-jarvis-worker",
+      "finnor-production-rg",
+      "northcentralus"
+    ],
+    "runtimeHeartbeatDeploymentLabel": "ecs:finnor-production:finnor-worker:<sha>",
+    "runtimeHeartbeatLabelSource": "application-provided FINNOR_WORKER_DEPLOYMENT_ID/RAILWAY_DEPLOYMENT_ID",
+    "awsControlPlaneEvidence": "ECS list-clusters was not authorized; no ECS task or service control-plane evidence was obtained.",
+    "decision": "KEEP_AZURE_CONTRACT_AUTHORITATIVE_ECS_LABEL_UNVERIFIED",
+    "logicalRoleOwners": {
+      "api": "Vercel API project api",
+      "worker": "Azure VM finnor-jarvis-worker",
+      "orchestrator": "embedded worker process (no independent production heartbeat observed)",
+      "supplier-canary": "finnor-os/apps/supplier-canary source; deployed production owner not proven",
+      "scheduler-owner": "embedded worker scheduler-owner heartbeat; no separate production heartbeat observed"
+    }
   },
   "cutoverDecision": "BLOCKED_CUTOVER_UNKNOWN_WATER_TENANTS",
   "blockers": [
