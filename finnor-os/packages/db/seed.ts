@@ -37,7 +37,7 @@ export async function seed(databaseUrl = process.env.DATABASE_URL): Promise<void
     await client.query(
       `INSERT INTO users (tenant_id,email,role,status,display_name)
        VALUES ($1,$2,'owner','active','Development Owner')
-       ON CONFLICT (tenant_id,email) DO UPDATE SET status='active',role='owner'`,
+       ON CONFLICT (email) DO UPDATE SET status='active',role='owner'`,
       [SEED_TENANT_ID, SEED_OWNER_EMAIL],
     );
     await client.query("COMMIT");
