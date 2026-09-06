@@ -29,8 +29,8 @@ describe.skipIf(!available)("API dependency readiness", () => {
     });
 
     await getPool().query(`INSERT INTO service_release_heartbeats
-      (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,migration_head,deployment_id,capabilities,environment,last_beat_at)
-      VALUES ('worker','ready-worker','test-sha','test-build','test-version','test','corecert-test',$1,'ecs:ready-worker',ARRAY['jobs','orchestration','realtime','sse'],'production',now())`,
+      (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,migration_head,capabilities,environment,last_beat_at)
+      VALUES ('worker','ready-worker','test-sha','test-build','test-version','test','corecert-test',$1,ARRAY['jobs','orchestration'],'test',now())`,
       [CURRENT_MIGRATION_HEAD],
     );
     const ready = await readiness();

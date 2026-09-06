@@ -7,11 +7,12 @@
 // execution) so "who paused this and when" is answerable the same way any other
 // consequential action in this system is.
 
-import { actionLog, businessEffects, commands, domainActions, reconciliationCases, withTenant, workflowRuns, workflowSteps, reconcileWorkStatus } from "@finnor/db";
+import { actionLog, businessEffects, commands, domainActions, reconciliationCases, withTenant, workflowRuns, workflowSteps, reconcileWorkStatus, resolveTenantVertical } from "@finnor/db";
 import type { Db } from "@finnor/db";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { redriveNextPendingStepTx } from "./steps";
 import { openReceiptTx, finalizeReceiptTx } from "./receipts";
+import { isRetiredWaterWorkflow, RetiredVerticalError } from "@finnor/shared-types";
 
 export type RunControlVerb = "pause" | "resume" | "cancel" | "retry" | "escalate";
 
@@ -35,6 +36,15 @@ const TRANSITIONS: Record<RunControlVerb, TransitionSpec> = {
   retry: { verb: "retry", fromStatuses: ["failed"], toStatus: "running" },
   escalate: { verb: "escalate", fromStatuses: ["running", "failed"], toStatus: "escalated" },
 };
+
+async function assertActiveRun(tenantId: string, runId: string): Promise<void> {
+  await resolveTenantVertical(tenantId);
+  const [run] = await withTenant(tenantId, (db) => db.select({ workflowType: workflowRuns.workflowType }).from(workflowRuns).where(and(
+    eq(workflowRuns.tenantId, tenantId),
+    eq(workflowRuns.id, runId),
+  )).limit(1));
+  if (run && isRetiredWaterWorkflow(run.workflowType)) throw new RetiredVerticalError("water");
+}
 
 async function recordRunControlReceiptTx(
   db: Db,
@@ -67,6 +77,7 @@ async function applyTransition(
   requestedBy: string,
   afterTransition?: (db: Db, run: typeof workflowRuns.$inferSelect) => Promise<void>,
 ): Promise<RunControlResult> {
+  await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
     const [row] = await db
       .update(workflowRuns)
@@ -120,6 +131,7 @@ export async function resumeRun(tenantId: string, runId: string, expectedVersion
 }
 
 export async function cancelRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+  await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
     const [run] = await db.update(workflowRuns).set({ status: "cancelled", version: sql`${workflowRuns.version} + 1`, updatedAt: new Date() })
       .where(and(
@@ -212,6 +224,7 @@ export async function cancelRun(tenantId: string, runId: string, expectedVersion
  *  completion already calls. Never resets a step that's genuinely still in flight
  *  ('leased') — only ones that terminally failed. */
 export async function retryRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+  await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
     const steps = await db.select().from(workflowSteps).where(and(
       eq(workflowSteps.tenantId, tenantId),
@@ -297,5 +310,6 @@ export async function retryRun(tenantId: string, runId: string, expectedVersion:
 }
 
 export async function escalateRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+  await assertActiveRun(tenantId, runId);
   return applyTransition(tenantId, runId, expectedVersion, TRANSITIONS.escalate, requestedBy);
 }

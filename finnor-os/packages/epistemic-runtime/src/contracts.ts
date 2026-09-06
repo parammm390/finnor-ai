@@ -1,12 +1,3 @@
-import type { StaticAdmissibilityResult } from "@finnor/operational-ir";
-
-export type {
-  StaticAdmissibilityIssue,
-  StaticAdmissibilityReasonCode,
-  StaticAdmissibilityResult,
-  StaticAdmissibilityStatus,
-} from "@finnor/operational-ir";
-
 /**
  * P3 is a planning-time, read-only epistemic layer. These contracts describe what
  * FINNOR knows and which observations would improve a decision. They are never a
@@ -95,7 +86,7 @@ export type PropositionValue =
 
 export interface EvidenceSource {
   kind: EvidenceKind;
-  /** Actual audited owner/capability name, for example operational_query:money_summary. */
+  /** Actual audited owner/capability name, for example operational_query:closing_readiness. */
   owner: string;
   ref: string;
   authority: SourceAuthority;
@@ -462,6 +453,21 @@ export interface BeliefTransition {
   reasonCode: string;
 }
 
+export interface StaticAdmissibilityIssueLike {
+  status: "REJECTED" | "UNRESOLVED";
+  reasonCode: string;
+  nodeId: string;
+  path: string;
+  message: string;
+  detail?: Record<string, unknown>;
+}
+
+export interface StaticAdmissibilityResultLike {
+  status: "ADMISSIBLE" | "REJECTED" | "UNRESOLVED";
+  reasonCodes: string[];
+  issues: StaticAdmissibilityIssueLike[];
+}
+
 export type SemanticDiffClassification = "EQUIVALENT" | "STRICTER_SAFE" | "BETTER_INFORMATION" | "REGRESSION" | "UNSUPPORTED" | "FIXTURE_INVALID";
 
 export interface EpistemicBehaviorSummary {
@@ -478,7 +484,7 @@ export interface EpistemicBehaviorSummary {
   decisionCriticalUncertainty: string[];
   stopCondition: StopReason;
   consequentialDecisionAllowed: boolean;
-  p2Status?: StaticAdmissibilityResult["status"];
+  p2Status?: StaticAdmissibilityResultLike["status"];
 }
 
 export interface EpistemicSemanticDiff {
@@ -511,7 +517,7 @@ export interface RedactedEpistemicTrace {
   beliefUpdates: BeliefTransition[];
   stopDecisions: StopDecision[];
   finalPropositions: Array<{ id: string; status: PropositionStatus; evidenceCount: number }>;
-  p2Statuses: StaticAdmissibilityResult["status"][];
+  p2Statuses: StaticAdmissibilityResultLike["status"][];
   semanticDiff?: EpistemicSemanticDiff;
   /** Proves this trace intentionally excludes values, prompts, credentials and CoT. */
   redaction: "STRUCTURED_DECISIONS_ONLY";

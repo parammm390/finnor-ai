@@ -28,10 +28,6 @@ const AUTH_TARGETS = ["STAGING_JWT_ALPHA", "STAGING_JWT_BRAVO", "STAGING_JWT_CHA
 
 const EXTERNAL_BINDINGS = [
   ["COMMUNICATIONS_BINDING", ["emulator"]],
-  ["ESIGN_BINDING", ["emulator"]],
-  ["ACCOUNTING_BINDING", ["emulator"]],
-  ["PAYMENTS_BINDING", ["emulator"]],
-  ["MARKETING_BINDING", ["emulator", "dry_run"]],
 ] as const;
 
 function present(name: string): boolean {
@@ -124,10 +120,6 @@ export function evaluateStagingGuards(mode: StagingGuardMode): StagingGuardRepor
     for (const [name, allowed] of EXTERNAL_BINDINGS) {
       const value = process.env[name];
       if (value && !allowed.includes(value as never)) failures.push(`${name} must remain an emulator-safe binding`);
-    }
-    if (process.env.COMMS_MODE && !["emulator", "dry_run"].includes(process.env.COMMS_MODE)) failures.push("COMMS_MODE must remain emulator-safe");
-    for (const name of ["META_ADS_WRITE_ENABLED", "GOOGLE_ADS_WRITE_ENABLED"] as const) {
-      if (process.env[name] === "1") failures.push(`${name}=1 would permit external spend during the core staging run`);
     }
   }
 

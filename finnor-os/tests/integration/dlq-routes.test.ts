@@ -106,7 +106,7 @@ describe.skipIf(!available)("DLQ routes (§2.3)", () => {
   });
 
   it("a non-owner role is forbidden from listing the DLQ", async () => {
-    const res = await listDlq(req("/api/dlq", { role: "technician" }));
+    const res = await listDlq(req("/api/dlq", { role: "analyst" }));
     expect(res.status).toBe(403);
   });
 

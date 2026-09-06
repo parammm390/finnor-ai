@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { StaticAdmissibilityResult } from "@finnor/operational-ir";
+import type { StaticAdmissibilityResultLike } from "./contracts";
 import { requirementsFromP2Unresolved } from "./uncertainty";
 import { resolveP2WithInformation } from "./p2-handoff";
 import { isRedactedEpistemicTrace, redactP2HandoffTrace } from "./trace";
@@ -13,7 +13,7 @@ const BUDGET = {
   deadline: "2026-09-01T00:00:00.000Z",
 } as const;
 
-const REJECTED: StaticAdmissibilityResult = {
+const REJECTED: StaticAdmissibilityResultLike = {
   status: "REJECTED",
   reasonCodes: ["FORBIDDEN_INFORMATION_FLOW"],
   issues: [{
@@ -23,21 +23,19 @@ const REJECTED: StaticAdmissibilityResult = {
     path: "effects.0",
     message: "Forbidden flow",
   }],
-  informationFlows: [],
 };
 
-const UNRESOLVED: StaticAdmissibilityResult = {
+const UNRESOLVED: StaticAdmissibilityResultLike = {
   status: "UNRESOLVED",
   reasonCodes: ["ENTITY_RESOLUTION_UNRESOLVED"],
   issues: [{
     status: "UNRESOLVED",
     reasonCode: "ENTITY_RESOLUTION_UNRESOLVED",
-    nodeId: "entity:invoice",
-    path: "resolution.entity:invoice",
-    message: "Invoice identity unresolved",
+    nodeId: "entity:pe_deal",
+    path: "resolution.entity:pe_deal",
+    message: "Deal identity unresolved",
     detail: { resolutionReasonCode: "ENTITY_REFERENCE_UNRESOLVED" },
   }],
-  informationFlows: [],
 };
 
 describe("P2 to P3 handoff", () => {
@@ -67,25 +65,24 @@ describe("P2 to P3 handoff", () => {
   it("maps actual P2 resolution reason codes to typed mandatory propositions", () => {
     const result = requirementsFromP2Unresolved(UNRESOLVED, "decision:test");
     expect(result.propositions).toEqual([
-      expect.objectContaining({ id: "p2:entity:invoice:ENTITY_REFERENCE_UNRESOLVED" }),
+      expect.objectContaining({ id: "p2:entity:pe_deal:ENTITY_REFERENCE_UNRESOLVED" }),
     ]);
     expect(result.requirements[0]).toMatchObject({ mandatory: true, acceptableStatuses: ["KNOWN"] });
     expect(result.requirements[0]?.acquisitionOptions[0]).toMatchObject({ kind: "READ", adapterId: "CANONICAL_OPERATIONAL_QUERY" });
   });
 
   it("preserves the exact upstream uncertainty category and traces a zero-action budget stop", async () => {
-    const ambiguous: StaticAdmissibilityResult = {
+    const ambiguous: StaticAdmissibilityResultLike = {
       status: "UNRESOLVED",
       reasonCodes: ["ENTITY_RESOLUTION_UNRESOLVED"],
       issues: [{
         status: "UNRESOLVED",
         reasonCode: "ENTITY_RESOLUTION_UNRESOLVED",
-        nodeId: "entity:customer",
-        path: "resolution.entity:customer",
-        message: "Customer identity is ambiguous",
+        nodeId: "entity:deal_party",
+        path: "resolution.entity:deal_party",
+        message: "Deal-party identity is ambiguous",
         detail: { resolutionReasonCode: "ENTITY_REFERENCE_AMBIGUOUS" },
       }],
-      informationFlows: [],
     };
     const execute = vi.fn();
     const handoff = await resolveP2WithInformation({
@@ -108,7 +105,7 @@ describe("P2 to P3 handoff", () => {
   it("does not acquire or rerun P2 when P2 is already admissible", async () => {
     const execute = vi.fn();
     const rerunP2 = vi.fn();
-    const admissible: StaticAdmissibilityResult = { status: "ADMISSIBLE", reasonCodes: [], issues: [], informationFlows: [] };
+    const admissible: StaticAdmissibilityResultLike = { status: "ADMISSIBLE", reasonCodes: [], issues: [] };
     const handoff = await resolveP2WithInformation({
       initialP2: admissible,
       state: testState([]),

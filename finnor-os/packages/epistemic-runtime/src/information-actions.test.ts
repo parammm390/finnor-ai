@@ -38,8 +38,8 @@ describe("information-action contracts and deterministic scoring", () => {
   });
 
   it("rejects fabricated authorization references for sensitive acquisition", () => {
-    const state = testState([testDefinition("external.customer", { kind: "external", type: "customer" })]);
-    const requirement = testRequirement("external.customer", [testOption("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
+    const state = testState([testDefinition("external.company", { kind: "external", type: "company" })]);
+    const requirement = testRequirement("external.company", [testOption("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
     const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
     const action = createInformationAction(state.scope, uncertainty, requirement.acquisitionOptions[0]!, {
       sensitivity: ["PII"],

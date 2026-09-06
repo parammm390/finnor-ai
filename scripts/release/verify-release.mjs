@@ -1,19 +1,9 @@
 import { execFileSync } from "node:child_process"
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i
-const GENERATED_RELEASE_PATHS = [
-  "docs/release/generated/",
-  "docs/release/action-contract-results.md",
-  "finnor-os/openapi.json",
-  "src/components/jarvis/ui/renderers/backend-action-types.generated.ts",
-]
 
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim()
-}
-
-function isGeneratedReleasePath(path) {
-  return GENERATED_RELEASE_PATHS.some((prefix) => path === prefix || path.startsWith(prefix))
 }
 
 // `git status --untracked-files=all` recursively walks large evidence/database
@@ -22,12 +12,11 @@ function isGeneratedReleasePath(path) {
 // clean-worktree invariant while keeping the release gate bounded in evidence-heavy
 // worktrees.
 function worktreeStatus() {
-  const paths = [
+  return [
     git(["diff-files", "--name-only", "-z", "--"]),
     git(["diff", "--cached", "--name-only", "-z", "--"]),
     git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
-  ].flatMap((output) => output.split("\0").filter(Boolean))
-  return [...new Set(paths)].filter((path) => !isGeneratedReleasePath(path)).join("\n")
+  ].filter(Boolean).join("\n")
 }
 
 function fail(message) {

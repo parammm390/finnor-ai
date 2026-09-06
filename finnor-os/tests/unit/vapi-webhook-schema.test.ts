@@ -17,7 +17,7 @@ describe("VapiWebhookSchema (call-object field preservation)", () => {
         phoneNumber: { number: "+15559998888" },
         metadata: { pendingActionId: "action-1" },
       },
-      toolCallList: [{ id: "tc-1", function: { name: "finnor_instruct", arguments: { instruction: "book a visit" } } }],
+      toolCallList: [{ id: "tc-1", function: { name: "finnor_instruct", arguments: { instruction: "review the closing condition" } } }],
     },
   };
 
@@ -55,20 +55,20 @@ describe("VapiWebhookSchema (call-object field preservation)", () => {
           id: "call-causal-1",
           metadata: {
             direction: "outbound",
-            agentKey: "payment-collector",
+            agentKey: "deal-diligence",
             domainActionId: "action-causal-1",
-            householdId: "household-causal-1",
-            invoiceId: "invoice-causal-1",
+            dealId: "deal-causal-1",
+            requestId: "request-causal-1",
           },
         },
       },
     });
     expect(parsed.message.call?.metadata).toEqual({
       direction: "outbound",
-      agentKey: "payment-collector",
+      agentKey: "deal-diligence",
       domainActionId: "action-causal-1",
-      householdId: "household-causal-1",
-      invoiceId: "invoice-causal-1",
+      dealId: "deal-causal-1",
+      requestId: "request-causal-1",
     });
   });
 

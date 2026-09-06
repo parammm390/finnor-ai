@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -15,14 +15,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "playwright",
-      "vitest/globals"
-    ],
+    "jsx": "preserve",
+    "types": ["node", "react", "react-dom", "playwright", "vitest/globals"],
     "incremental": true,
     "plugins": [
       {
@@ -40,8 +34,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "e2e/**/*.ts",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "finnor-os",

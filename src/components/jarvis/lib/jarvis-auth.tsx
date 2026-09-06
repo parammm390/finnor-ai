@@ -8,7 +8,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import type { Session } from "@supabase/supabase-js"
-import { getSupabaseBrowser, isSupabaseConfigured, isSupabaseTestMode } from "@/lib/jarvis/supabase-browser"
+import { getSupabaseBrowser } from "@/lib/jarvis/supabase-browser"
 import { jarvisGet } from "./api"
 
 // Phase 7 (§7.4, role-aware views): the backend already resolves a real role per
@@ -90,26 +90,6 @@ export function JarvisAuthProvider({ children }: { children: React.ReactNode }) 
     setAuthError(null)
     void (async () => {
       try {
-        // The deterministic browser fixture intercepts the same Supabase REST
-        // calls as production. Outside that labelled harness, no credentials
-        // means an intentional signed-out preview rather than an auth error.
-        const fixtureAuthPath = typeof window !== "undefined" && (/^\/jarvis\/(login|reset-password)\/?$/).test(window.location.pathname)
-        const hasPersistedFixtureSession = typeof window !== "undefined" && (() => {
-          try {
-            return Object.keys(window.localStorage).some((key) => key.startsWith("sb-") && key.endsWith("-auth-token"))
-          } catch {
-            return false
-          }
-        })()
-        if (!isSupabaseConfigured && (!isSupabaseTestMode || (!fixtureAuthPath && !hasPersistedFixtureSession))) {
-          // A missing public Supabase configuration is a signed-out preview
-          // posture, not a restore failure. Private API calls remain disabled
-          // because session is explicitly null; the login form reports its own
-          // configuration error if the user chooses that path.
-          currentSession = null
-          setSession(null)
-          return
-        }
         const supabaseBrowser = await withTimeout(getSupabaseBrowser())
         if (!active) return
         const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
@@ -128,11 +108,7 @@ export function JarvisAuthProvider({ children }: { children: React.ReactNode }) 
         if (!active) return
         currentSession = null
         setSession(null)
-        // A test-mode client uses a loopback placeholder when no real project
-        // credentials are present. If no fixture intercepted the request, keep
-        // the public preview readable and do not turn that expected local
-        // absence into a user-facing restore failure.
-        setAuthError(!isSupabaseConfigured && isSupabaseTestMode ? null : error instanceof Error ? error.message : "Authentication could not be restored.")
+        setAuthError(error instanceof Error ? error.message : "Authentication could not be restored.")
       } finally {
         if (active) setLoading(false)
       }

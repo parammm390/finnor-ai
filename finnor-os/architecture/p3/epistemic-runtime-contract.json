@@ -3,23 +3,10 @@
   "p3BaselineSha": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
   "p2LocalCertifiedShaAtStart": "856c0cc370adc35490b18f9dc1d7244bcf46266f",
   "p2ClosureStatusAtStart": "RUNNING_NO_P2_CLOSURE_PASS",
-  "p2ClosureSha": "5cc95730babeee99055b5cb00c88b7d66dff8ab8",
-  "p2ClosureStatus": "P2_CLOSURE_PASS",
-  "lineageReconciliation": {
-    "p3BaselineSha": "8fcd8a1cebcf92791047777c0d9c70e95fc7aad2",
-    "p2ClosureSha": "5cc95730babeee99055b5cb00c88b7d66dff8ab8",
-    "p2PullRequest": 45,
-    "p2ClosureBranch": "codex/p2-operational-effect-system-closure",
-    "p3ClosureBranch": "codex/p3-epistemic-runtime-closure",
-    "p2CertificationStatus": "PASS",
-    "reconciled": true
-  },
   "responsibilityBoundary": {
     "owns": ["epistemic state", "uncertainty classification", "read-only information-action contracts", "deterministic selection", "belief recomputation", "structured redacted trace", "semantic differential"],
     "doesNotOwn": ["OperatingContext", "canonical truth", "memory", "operational query execution", "provider source truth", "BusinessEffect", "Authority", "Work", "Objective", "computer mutation", "CausalReplay persistence"],
     "productionMode": "SHADOW_ONLY",
-    "productionEligibility": "completed deterministic Operational Query Plane requests",
-    "productionHook": "observeOperationalQueryP3EpistemicShadow",
     "consequentialMutations": 0,
     "plannerCallsAdded": 0
   },
@@ -75,7 +62,6 @@
     "historicalEvidenceMutated": false
   },
   "p2Handoff": {
-    "actualContract": "@finnor/operational-ir StaticAdmissibilityResult",
     "ADMISSIBLE": "continue existing governed path without acquisition",
     "REJECTED": "return rejection without acquisition or rerun",
     "UNRESOLVED": "derive mandatory propositions, select legal information action, append observation, rerun P2",
@@ -97,20 +83,6 @@
     "records": ["initial proposition statuses", "uncertainties", "candidate action scores/reason codes", "selected action outcomes", "belief transitions", "stop decisions", "final proposition statuses", "P2 statuses", "semantic diff"],
     "excludes": ["proposition values", "prompts", "credentials", "raw provider payloads", "chain-of-thought"],
     "causalReplayAdapter": "epistemicTraceToCausalReplayNodes"
-  },
-  "productionShadow": {
-    "input": ["already assembled OperatingContext", "already completed canonical OperationalQueryExecution", "actual P2 StaticAdmissibilityResult"],
-    "authoritativeResultPreservedByIdentity": true,
-    "simulatedAcquisitionsOnly": true,
-    "newPlannerCalls": 0,
-    "consequentialMutations": 0,
-    "persistenceWrites": 0,
-    "authorityDecisions": 0,
-    "approvalRequests": 0,
-    "providerOperations": 0,
-    "computerRuns": 0,
-    "workTransitions": 0,
-    "recording": "existing logWithTrace plus CausalReplay-compatible redacted nodes; no new store"
   },
   "semanticDifferential": {
     "fields": ["required facts", "facts available", "missing facts", "source precedence", "clarification necessity", "selected source", "freshness", "conflicts", "decision-critical uncertainty", "stop condition"],

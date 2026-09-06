@@ -37,18 +37,17 @@ const mocks = vi.hoisted(() => {
   const interpretOperationalQuery = vi.fn((instruction: string) => instruction.startsWith("Find")
     ? {
         route: "fast_read" as const,
-        intent: "customer_lookup" as const,
+        intent: "company_context" as const,
         confidence: "high" as const,
-        request: { intent: "customer_lookup" as const, query: "Contract Household" },
+        request: { intent: "company_context" as const, query: "Apex Holdings" },
       }
     : { route: "planner" as const, reason: "mutation_or_advice" as const });
   const handleInstructionResult = vi.fn(async (_instruction: string, _ctx: unknown, options: Record<string, unknown>) => ({
-    executionModel: options.fastReadDecision && (options.fastReadDecision as { route?: string }).route === "fast_read" ? "QUERY" as const : "ATOMIC_ACTION" as const,
     actions: options.fastReadDecision && (options.fastReadDecision as { route?: string }).route === "planner"
       ? [{ id: "planner-action" }]
       : [],
     query: options.fastReadDecision && (options.fastReadDecision as { route?: string }).route === "fast_read"
-      ? { metadata: { queryId: "query-1", durationMs: 1 }, request: { intent: "customer_lookup" }, result: { intent: "customer_lookup", asOf: "2026-08-25T00:00:00.000Z" } }
+      ? { metadata: { queryId: "query-1", durationMs: 1 }, request: { intent: "company_context" }, result: { intent: "company_context", asOf: "2026-08-25T00:00:00.000Z" } }
       : undefined,
   }));
   const getOrchestrator = vi.fn(() => ({ handleInstructionResult }));
@@ -87,9 +86,9 @@ vi.mock("@finnor/db", () => ({
 }));
 vi.mock("@finnor/orchestration", () => ({
   interpretOperationalQuery: mocks.interpretOperationalQuery,
-  compileHumanInstructionRoute: vi.fn(({ fastReadDecision }: { fastReadDecision: { route: string } }) => fastReadDecision.route === "fast_read"
+  classifyInstructionRoute: vi.fn(({ fastReadDecision }: { fastReadDecision: { route: string } }) => fastReadDecision.route === "fast_read"
     ? { version: 1, route: "QUERY", reasonCodes: ["deterministic_canonical_read"], queryDecision: fastReadDecision }
-    : { version: 1, route: "ATOMIC_ACTION", reasonCodes: ["strict_single_action_candidate"] }),
+    : { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["strict_single_effect_candidate"] }),
   isConversationalTurn: vi.fn(() => false),
   resolveOperatingInteractionContext: vi.fn(async ({ context }: { context?: unknown }) => context),
   interactionAwareOperationalDecision: vi.fn((decision: unknown) => decision),
@@ -116,35 +115,35 @@ describe("POST /api/actions deterministic-vs-planner controls", () => {
   });
 
   it("passes a supported read to the fast path without planner-only gates", async () => {
-    const response = await actionsPOST(request("Find the customer record for Contract Household"));
+    const response = await actionsPOST(request("Find company context for Apex Holdings"));
     expect(response.status).toBe(201);
-    expect(mocks.interpretOperationalQuery).toHaveBeenCalledWith("Find the customer record for Contract Household");
+    expect(mocks.interpretOperationalQuery).toHaveBeenCalledWith("Find company context for Apex Holdings");
     expect(mocks.enforceRouteRateLimit).not.toHaveBeenCalled();
     expect(mocks.enforceBatchBackpressure).not.toHaveBeenCalled();
     expect(mocks.handleInstructionResult).toHaveBeenCalledWith(
-      "Find the customer record for Contract Household",
+      "Find company context for Apex Holdings",
       expect.objectContaining({ tenantId: "00000000-0000-4000-8000-0000000000a1" }),
       expect.objectContaining({
         fastReadDecision: expect.objectContaining({ route: "fast_read" }),
         skipFastReadClassification: true,
       }),
     );
-    expect(await response.json()).toMatchObject({ executionModel: "QUERY", actions: [], query: { result: { intent: "customer_lookup" } } });
+    expect((await response.json()).query).toMatchObject({ result: { intent: "company_context" } });
   });
 
   it("keeps mutation/advice instructions on the ordinary planner path with both planner gates", async () => {
-    const response = await actionsPOST(request("Create a work order for Contract Household"));
+    const response = await actionsPOST(request("Record a diligence finding for the Apex deal"));
     expect(response.status).toBe(201);
     expect(mocks.enforceRouteRateLimit).toHaveBeenCalledTimes(1);
     expect(mocks.enforceBatchBackpressure).toHaveBeenCalledTimes(1);
     expect(mocks.handleInstructionResult).toHaveBeenCalledWith(
-      "Create a work order for Contract Household",
+      "Record a diligence finding for the Apex deal",
       expect.anything(),
       expect.objectContaining({
         fastReadDecision: expect.objectContaining({ route: "planner" }),
         skipFastReadClassification: true,
       }),
     );
-    expect(await response.json()).toMatchObject({ executionModel: "ATOMIC_ACTION", actions: [{ id: "planner-action" }] });
+    expect((await response.json()).planned).toEqual([{ id: "planner-action" }]);
   });
 });

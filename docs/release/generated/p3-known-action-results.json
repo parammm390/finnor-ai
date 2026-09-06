@@ -1,35 +1,42 @@
 {
   "phase": "P3",
   "gate": "known-action-e2e",
-  "status": "FAIL",
+  "status": "BLOCKED-CONFIG",
   "pass": false,
   "productionEgress": false,
   "plannerInvocations": 0,
-  "failingRowPreflight": null,
+  "failingRowPreflight": {
+    "path": "docs/release/generated/p3-t5-failing-rows-before-known-action.json",
+    "rowCount": 44,
+    "failCount": 44
+  },
   "guard": {
     "mode": "e2e",
-    "status": "PASS",
+    "status": "BLOCKED-CONFIG",
     "productionEgress": false,
     "targetHosts": {
-      "api": "finnor-p3-api-staging-jx9i7rqam-bloodride2-3212s-projects.vercel.app",
-      "frontend": "finnor-p3-console-staging-pjg3wqn01-bloodride2-3212s-projects.vercel.app",
-      "worker": "finnor-worker-staging.up.railway.app",
-      "orchestrator": "finnor-orchestrator-staging.up.railway.app",
-      "database": "aws-0-ap-southeast-1.pooler.supabase.com",
-      "redis": "redis.railway.internal"
+      "api": "finnor-p3-api-staging-hcehrs13a-bloodride2-3212s-projects.vercel.app",
+      "frontend": "finnor-p3-console-staging.vercel.app",
+      "worker": "finnor-client-factory-staging-worker.northcentralus.cloudapp.azure.com",
+      "orchestrator": "finnor-client-factory-staging-worker.northcentralus.cloudapp.azure.com"
     },
-    "missing": [],
+    "missing": [
+      "STAGING_DATABASE_URL",
+      "STAGING_REDIS_URL",
+      "STAGING_JWT_ALPHA",
+      "STAGING_JWT_BRAVO",
+      "STAGING_JWT_CHARLIE"
+    ],
     "failures": [],
     "observations": [
       "productionEgress=false",
       "secretValuesPrinted=false",
       "providerPayloadsPrinted=false",
-      "targets=6/6",
-      "targetHosts=api:finnor-p3-api-staging-jx9i7rqam-bloodride2-3212s-projects.vercel.app,frontend:finnor-p3-console-staging-pjg3wqn01-bloodride2-3212s-projects.vercel.app,worker:finnor-worker-staging.up.railway.app,orchestrator:finnor-orchestrator-staging.up.railway.app,database:aws-0-ap-southeast-1.pooler.supabase.com,redis:redis.railway.internal",
+      "targets=4/6",
+      "targetHosts=api:finnor-p3-api-staging-hcehrs13a-bloodride2-3212s-projects.vercel.app,frontend:finnor-p3-console-staging.vercel.app,worker:finnor-client-factory-staging-worker.northcentralus.cloudapp.azure.com,orchestrator:finnor-client-factory-staging-worker.northcentralus.cloudapp.azure.com",
       "externalBindings=emulator-safe-required"
     ]
   },
   "rows": [],
-  "error": "Auth is not configured SUPABASE_URL  key missing",
   "evidence": "docs/release/generated/p3-known-action-results.json"
 }

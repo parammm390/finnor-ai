@@ -1,9 +1,34 @@
+import { RetiredVerticalError, isRetiredWaterImportEntity } from "@finnor/shared-types";
 import { z } from "zod";
 
-export const ImportEntitySchema = z.enum([
-  "customer", "lead", "appointment", "service_visit", "equipment", "work_order",
-  "quote", "proposal", "invoice", "payment", "inventory_item", "technician",
-]);
+export interface ImportEntityDefinition {
+  entity: string;
+  fields: readonly string[];
+  relationships: readonly string[];
+  requiredRelationships?: readonly string[];
+}
+
+const activeDefinitions = new Map<string, ImportEntityDefinition>();
+
+/** Vertical packages may explicitly register an import contract. Phase 5 ships no
+ * PE import pack; the generic engine therefore remains present with an empty active
+ * entity registry. */
+export function registerImportEntityDefinition(definition: ImportEntityDefinition): void {
+  if (isRetiredWaterImportEntity(definition.entity)) throw new RetiredVerticalError("water");
+  if (!/^[a-z][a-z0-9_]{1,62}$/.test(definition.entity)) throw new Error("Import entity type is invalid");
+  if (activeDefinitions.has(definition.entity)) throw new Error(`Import entity ${definition.entity} is already registered`);
+  activeDefinitions.set(definition.entity, Object.freeze({ ...definition }));
+}
+
+export function activeImportEntityTypes(): string[] {
+  return [...activeDefinitions.keys()].sort();
+}
+
+export function activeImportEntityDefinition(entity: string): ImportEntityDefinition | undefined {
+  return activeDefinitions.get(entity);
+}
+
+export const ImportEntitySchema = z.string().regex(/^[a-z][a-z0-9_]{1,62}$/);
 
 export const NormalizationSchema = z.enum([
   "trim", "lowercase", "uppercase", "title_case", "digits_only", "phone_e164", "empty_to_null",
@@ -48,38 +73,26 @@ const DeclarativeImportBodyObjectSchema = z.object({
 });
 
 function validateDefinition(definition: z.infer<typeof DeclarativeImportBodyObjectSchema>, ctx: z.RefinementCtx): void {
-  const allowedFields: Record<z.infer<typeof ImportEntitySchema>, readonly string[]> = {
-    customer: ["name", "firstName", "lastName", "phone", "email", "address", "role", "marketingConsent"],
-    lead: ["name", "phone", "email", "address", "notes", "source", "status"],
-    appointment: ["scheduledAt", "status", "durationMinutes", "notes"],
-    service_visit: ["type", "scheduledAt", "completedAt", "notes"],
-    equipment: ["type", "model", "installDate", "source"],
-    work_order: ["type", "status", "depositAmountUsd", "scheduledAt", "completedAt"],
-    quote: ["status", "validUntil", "lineItems"],
-    proposal: ["status", "content", "sentAt"],
-    invoice: ["amountUsd", "status", "memo", "dueDate"],
-    payment: ["amountUsd", "method", "status", "receivedAt"],
-    inventory_item: ["sku", "name", "quantity", "reorderThreshold", "unitCostUsd"],
-    technician: ["name", "contactInfo", "availability"],
-  };
-  const allowedRelationships: Record<z.infer<typeof ImportEntitySchema>, readonly string[]> = {
-    customer: [], lead: ["householdId"], appointment: ["householdId", "technicianId"],
-    service_visit: ["householdId", "technicianId"], equipment: ["householdId"],
-    work_order: ["householdId", "quoteId", "technicianId"], quote: ["householdId"], proposal: ["householdId", "quoteId"],
-    invoice: ["householdId"], payment: ["invoiceId"], inventory_item: [], technician: [],
-  };
+  if (isRetiredWaterImportEntity(definition.entity)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["entity"], message: "RETIRED_VERTICAL: Water import entities are historical and unavailable" });
+    return;
+  }
+  const contract = activeDefinitions.get(definition.entity);
+  if (!contract) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["entity"], message: `Unsupported active import entity: ${definition.entity}` });
+    return;
+  }
   for (const field of Object.keys(definition.fields)) {
-    if (!allowedFields[definition.entity].includes(field)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", field], message: `${field} is not a supported canonical field for ${definition.entity}` });
+    if (!contract.fields.includes(field)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", field], message: `${field} is not a registered canonical field for ${definition.entity}` });
   }
-  for (const field of Object.keys(definition.relationships)) {
-    if (!allowedRelationships[definition.entity].includes(field)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", field], message: `${field} is not a supported relationship for ${definition.entity}` });
+  for (const [field, relationship] of Object.entries(definition.relationships)) {
+    if (!contract.relationships.includes(field)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", field], message: `${field} is not a registered relationship for ${definition.entity}` });
+    if (isRetiredWaterImportEntity(relationship.entity)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", field, "entity"], message: "RETIRED_VERTICAL: Water relationship entity is unavailable" });
+    else if (!activeDefinitions.has(relationship.entity)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", field, "entity"], message: `Unsupported relationship entity: ${relationship.entity}` });
   }
-  const requiredRelationship: Partial<Record<z.infer<typeof ImportEntitySchema>, string>> = {
-    appointment: "householdId", service_visit: "householdId", equipment: "householdId", work_order: "householdId",
-    quote: "householdId", proposal: "householdId", invoice: "householdId", payment: "invoiceId",
-  };
-  const required = requiredRelationship[definition.entity];
-  if (required && !definition.relationships[required]) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", required], message: `${definition.entity} requires a ${required} relationship` });
+  for (const required of contract.requiredRelationships ?? []) {
+    if (!definition.relationships[required]) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["relationships", required], message: `${definition.entity} requires a ${required} relationship` });
+  }
   if (!definition.externalId && definition.identity.length === 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["identity"], message: "externalId or at least one deterministic identity rule is required" });
   }
@@ -92,7 +105,6 @@ function validateDefinition(definition: z.infer<typeof DeclarativeImportBodyObje
 }
 
 export const DeclarativeImportBodySchema = DeclarativeImportBodyObjectSchema.superRefine(validateDefinition);
-
 export const DeclarativeImportDefinitionSchema = DeclarativeImportBodyObjectSchema.extend({
   key: z.string().trim().regex(/^[a-z0-9][a-z0-9_-]{1,62}[a-z0-9]$/),
   format: z.enum(["csv", "json", "jsonl"]),
@@ -104,5 +116,11 @@ export type DeclarativeImportBody = z.infer<typeof DeclarativeImportBodySchema>;
 export type DeclarativeImportDefinition = z.infer<typeof DeclarativeImportDefinitionSchema>;
 
 export function parseImportDefinition(value: unknown): DeclarativeImportDefinition {
-  return DeclarativeImportDefinitionSchema.parse(value);
+  try {
+    return DeclarativeImportDefinitionSchema.parse(value);
+  } catch (error) {
+    const entity = value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>).entity : null;
+    if (typeof entity === "string" && isRetiredWaterImportEntity(entity)) throw new RetiredVerticalError("water");
+    throw error;
+  }
 }

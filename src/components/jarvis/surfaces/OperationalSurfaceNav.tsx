@@ -15,7 +15,6 @@ import { orderedWorkspaceItems } from "../lib/workspace-config"
 import { useJarvisAuth } from "../lib/jarvis-auth"
 import { TenantBrandMark } from "../experience/TenantBrandMark"
 import type { ExperienceRole } from "../lib/workspace-config"
-import { useOperatingInteraction } from "../kernel/operating-interaction"
 
 export type { HouseholdContext, OperationalSurface } from "./surface-routes"
 export { MOBILE_SURFACES, SURFACES, withHouseholdContext, withOperationalContext } from "./surface-routes"
@@ -23,7 +22,6 @@ export { MOBILE_SURFACES, SURFACES, withHouseholdContext, withOperationalContext
 export function OperationalSurfaceNav({ active, context, workCaseId, roleOverride }: { active: OperationalSurface; context?: HouseholdContext; workCaseId?: string | null; roleOverride?: ExperienceRole }) {
   const { config } = useWorkspaceConfig()
   const { role } = useJarvisAuth()
-  const interaction = useOperatingInteraction()
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const moreCloseRef = useRef<HTMLButtonElement>(null)
@@ -31,14 +29,6 @@ export function OperationalSurfaceNav({ active, context, workCaseId, roleOverrid
   const surfaces = orderedWorkspaceItems(SURFACES, config, roleOverride ?? role ?? undefined)
   const mobileSurfaces = surfaces.filter((surface) => surface.key !== "customers" && surface.key !== "agents")
   const moreSurfaces = surfaces.filter((surface) => surface.key === "customers" || surface.key === "agents")
-  const contextualHousehold = interaction.focusedEntity?.entityType === "household"
-    ? interaction.focusedEntity
-    : interaction.selectedEntities.find((entity) => entity.entityType === "household")
-  const resolvedContext = context ?? (contextualHousehold ? {
-    id: contextualHousehold.entityId,
-    label: interaction.labels[`household:${contextualHousehold.entityId}`] ?? `Customer ${contextualHousehold.entityId.slice(0, 8)}…`,
-  } : undefined)
-  const resolvedWorkCaseId = workCaseId ?? interaction.activeWorkId
 
   useEffect(() => {
     if (!moreOpen) return
@@ -58,14 +48,14 @@ export function OperationalSurfaceNav({ active, context, workCaseId, roleOverrid
 
   return (
     <header className="jarvis-surface-nav" data-jarvis-surface-nav data-more-open={moreOpen ? "true" : "false"}>
-      <Link className="jarvis-surface-nav__brand" href={withOperationalContext("/jarvis", resolvedContext, resolvedWorkCaseId)} prefetch={false} aria-label="FINNOR JARVIS home">
+      <Link className="jarvis-surface-nav__brand" href={withOperationalContext("/jarvis", context, workCaseId)} prefetch={false} aria-label="FINNOR JARVIS home">
         <b><TenantBrandMark size={24} /></b> FINNOR <span>JARVIS</span>
       </Link>
       <nav className="jarvis-surface-nav__links" aria-label="Operational surfaces">
         {surfaces.map((surface) => (
           <Link
             key={surface.key}
-            href={withOperationalContext(surface.href, resolvedContext, resolvedWorkCaseId)}
+            href={withOperationalContext(surface.href, context, workCaseId)}
             prefetch={false}
             className="jarvis-surface-nav__link"
             data-active={active === surface.key ? "true" : "false"}
@@ -79,7 +69,7 @@ export function OperationalSurfaceNav({ active, context, workCaseId, roleOverrid
         {mobileSurfaces.map((surface) => (
           <Link
             key={surface.key}
-            href={withOperationalContext(surface.href, resolvedContext, resolvedWorkCaseId)}
+            href={withOperationalContext(surface.href, context, workCaseId)}
             prefetch={false}
             className="jarvis-surface-nav__mobile-link"
             data-active={active === surface.key ? "true" : "false"}
@@ -97,16 +87,16 @@ export function OperationalSurfaceNav({ active, context, workCaseId, roleOverrid
       {moreOpen ? (
         <div id="jarvis-more-surfaces" className="jarvis-surface-nav__more-sheet" role="dialog" aria-label="More JARVIS surfaces">
           <div className="jarvis-surface-nav__more-heading"><span>MORE</span><button ref={moreCloseRef} type="button" onClick={() => setMoreOpen(false)} aria-label="Close more surfaces"><X size={15} /></button></div>
-          {moreSurfaces.map((surface) => <Link key={surface.key} href={withOperationalContext(surface.href, resolvedContext, resolvedWorkCaseId)} prefetch={false} onClick={() => setMoreOpen(false)}>{config.terminology[surface.key]}</Link>)}
-          <Link href={withOperationalContext("/jarvis#jarvis-diagnostics", resolvedContext, resolvedWorkCaseId)} prefetch={false} onClick={() => setMoreOpen(false)}>Diagnostics</Link>
+          {moreSurfaces.map((surface) => <Link key={surface.key} href={withOperationalContext(surface.href, context, workCaseId)} prefetch={false} onClick={() => setMoreOpen(false)}>{config.terminology[surface.key]}</Link>)}
+          <Link href={withOperationalContext("/jarvis#jarvis-diagnostics", context, workCaseId)} prefetch={false} onClick={() => setMoreOpen(false)}>Diagnostics</Link>
         </div>
       ) : null}
       <WorkspaceSettingsButton compact />
-      {resolvedContext ? (
-        <span className="jarvis-context-capsule" data-jarvis-context-capsule data-context-household-id={resolvedContext.id}>
+      {context ? (
+        <span className="jarvis-context-capsule" data-jarvis-context-capsule data-context-household-id={context.id}>
           <span className="jarvis-context-capsule__eyebrow">Context</span>
-          <span className="jarvis-context-capsule__label">{resolvedContext.label}</span>
-          <span className="jarvis-context-capsule__id">{resolvedContext.id.slice(0, 8)}…</span>
+          <span className="jarvis-context-capsule__label">{context.label}</span>
+          <span className="jarvis-context-capsule__id">{context.id.slice(0, 8)}…</span>
         </span>
       ) : null}
     </header>

@@ -30,7 +30,6 @@ import {
 } from "@finnor/tools";
 import { assembleOperatingContext, createDefaultPluginRegistry, GatedExecutor, groundEntitiesWithDb } from "@finnor/orchestration";
 import { resolveParty } from "@finnor/read-models";
-import { setTenantSecretReaderForTesting } from "@finnor/security";
 import { migrate } from "../../packages/db/migrate";
 import universalActionsPlugin, {
   acceptDelegation,
@@ -73,17 +72,6 @@ const EMAIL_IDENTITY = randomUUID();
 const SMS_IDENTITY = randomUUID();
 const VOICE_IDENTITY = randomUUID();
 const UNAUTHORIZED_IDENTITY = randomUUID();
-
-const CREDENTIAL_ENV_KEYS = [
-  "FINNOR_LEGACY_CREDENTIAL_TENANT_IDS",
-  "GMAIL_USER",
-  "GMAIL_APP_PASSWORD",
-  "GOHIGHLEVEL_API_KEY",
-  "VAPI_API_KEY",
-  "VAPI_PHONE_NUMBER_ID",
-  "VAPI_ASSISTANT_ID",
-] as const;
-const savedCredentialEnv = new Map(CREDENTIAL_ENV_KEYS.map((key) => [key, process.env[key]]));
 
 const policy = (actionType: string, requiresConfirmation = true): DomainPolicy => ({
   id: randomUUID(),
@@ -163,16 +151,24 @@ function communicationTools(calls: Array<{ tool: string; input: Record<string, u
 }
 
 describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () => {
+  const priorCredentials = {
+    GOHIGHLEVEL_API_KEY: process.env.GOHIGHLEVEL_API_KEY,
+    VAPI_API_KEY: process.env.VAPI_API_KEY,
+    VAPI_PHONE_NUMBER_ID: process.env.VAPI_PHONE_NUMBER_ID,
+    VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
+    GMAIL_USER: process.env.GMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    FINNOR_LEGACY_CREDENTIAL_TENANT_IDS: process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS,
+  };
+
   beforeAll(async () => {
-    const allowedLegacyTenants = new Set((process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS ?? "").split(",").map((value) => value.trim()).filter(Boolean));
-    allowedLegacyTenants.add(TENANT_A);
-    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = [...allowedLegacyTenants].join(",");
+    process.env.GOHIGHLEVEL_API_KEY = "pe4-test-ghl-key";
+    process.env.VAPI_API_KEY = "pe4-test-vapi-key";
+    process.env.VAPI_PHONE_NUMBER_ID = "pe4-test-phone-number";
+    process.env.VAPI_ASSISTANT_ID = "pe4-test-assistant";
     process.env.GMAIL_USER = "owner@example.test";
-    process.env.GMAIL_APP_PASSWORD = "acceptance-gmail-password";
-    process.env.GOHIGHLEVEL_API_KEY = "acceptance-ghl-key";
-    process.env.VAPI_API_KEY = "acceptance-vapi-key";
-    process.env.VAPI_PHONE_NUMBER_ID = "+15551110002";
-    process.env.VAPI_ASSISTANT_ID = "acceptance-vapi-assistant";
+    process.env.GMAIL_APP_PASSWORD = "pe4-test-app-password";
+    process.env.FINNOR_LEGACY_CREDENTIAL_TENANT_IDS = TENANT_A;
     process.env.DATABASE_URL = SUPER_URL;
     await migrate(SUPER_URL);
     const admin = new pg.Client({ connectionString: SUPER_URL });
@@ -277,23 +273,16 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     } finally {
       await admin.end();
     }
-    setTenantSecretReaderForTesting(async (reference): Promise<Record<string, string>> => {
-      if (reference.includes("/gmail/")) return { user: "owner@example.test", appPassword: "universal-action-test-app-password" };
-      if (reference.includes("/vapi/")) return { apiKey: "universal-action-vapi-key", phoneNumberId: "universal-action-phone", assistantId: "universal-action-assistant" };
-      if (reference.includes("/ghl/")) return { apiKey: "universal-action-ghl-key", locationId: "universal-action-location" };
-      throw new Error(`Unexpected test credential reference: ${reference}`);
-    });
     process.env.DATABASE_URL = APP_URL;
     await closePool();
   }, 30_000);
 
   afterAll(async () => {
-    setTenantSecretReaderForTesting(null);
     await closePool();
     process.env.DATABASE_URL = SUPER_URL;
-    for (const [key, value] of savedCredentialEnv) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+    for (const [name, value] of Object.entries(priorCredentials)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
     }
   });
 
@@ -560,8 +549,8 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     expect(await withTenant(TENANT_A, (db) => db.select().from(internalEventEvents).where(eq(internalEventEvents.internalEventId, eventId)))).toHaveLength(2);
 
     const assembled = await assembleOperatingContext(
-      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "dispatcher", authorityRoles: ["dispatcher"] },
-      { instruction: "Coordinate the Peterson installation", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
+      { tenantId: TENANT_A, userId: SARAH, employeeId: SARAH, role: "owner", authorityRoles: ["owner"] },
+      { instruction: "Coordinate the diligence review", workId: WORK_A, includeMemory: false, includeCanonicalBusinessState: false },
     );
     expect(assembled.context.universalActions?.capabilities).toMatchObject({ browserExecutable: false, computerExecutable: false });
     expect(assembled.context.universalActions?.upcomingInternalEvents).toContainEqual(expect.objectContaining({

@@ -102,7 +102,6 @@ export class LLMComputerDecisionEngine implements ComputerDecisionEngine {
       tenantId: this.binding.tenantId,
       actionId: this.binding.actionId,
       traceId: this.binding.traceId,
-      deadlineAt: context.deadlineAt,
     });
     const decoded = parseJson(raw);
     const directPrimitive = primitiveSchema.safeParse(decoded);

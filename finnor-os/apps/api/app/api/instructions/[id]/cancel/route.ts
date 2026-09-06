@@ -1,4 +1,4 @@
-import { actionLog, businessOperations, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
+import { actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
 import { and, eq, inArray } from "drizzle-orm";
 import { emitInstructionEvent } from "@finnor/orchestration";
@@ -57,33 +57,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           eq(domainActions.tenantId, ctx.tenantId),
           instruction.workId ? eq(domainActions.workId, instruction.workId) : eq(domainActions.instructionId, id),
         ));
-      const activeOperations = instruction.workId ? await db
-        .select({ id: businessOperations.id, status: businessOperations.status })
-        .from(businessOperations)
-        .where(and(
-          eq(businessOperations.tenantId, ctx.tenantId),
-          eq(businessOperations.workId, instruction.workId),
-          inArray(businessOperations.status, ["awaiting_approval", "queued", "running", "needs_human_review"]),
-        )) : [];
-      if (activeOperations.length > 0) {
-        const reconciliationRequired = activeOperations.some((operation) => operation.status === "running");
-        await db.update(businessOperations).set({
-          status: "cancelled",
-          completedAt: new Date(),
-          finalOutcome: {
-            kind: "cancelled",
-            instructionId: id,
-            requestedBy: ctx.userId,
-            reconciliationRequired,
-          },
-          updatedAt: new Date(),
-        }).where(and(
-          eq(businessOperations.tenantId, ctx.tenantId),
-          inArray(businessOperations.id, activeOperations.map((operation) => operation.id)),
-          inArray(businessOperations.status, ["awaiting_approval", "queued", "running", "needs_human_review"]),
-        ));
-      }
-      return { instruction, actions, activeOperations };
+      return { instruction, actions };
     });
 
     const rejectableIds = snapshot.actions.filter((action) => action.status === "draft" || action.status === "approved").map((action) => action.id);
@@ -140,10 +114,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           eq(domainActions.workId, snapshot.instruction.workId!),
           inArray(domainActions.status, ["executing", "needs_human_review"]),
         )));
-      const unresolvedOperationIds = snapshot.activeOperations
-        .filter((operation) => operation.status === "running")
-        .map((operation) => operation.id);
-      const reconciliationRequired = unresolvedActions.length > 0 || unresolvedOperationIds.length > 0 || runResults.some((result) => !result.ok);
+      const reconciliationRequired = unresolvedActions.length > 0 || runResults.some((result) => !result.ok);
       await transitionWork(ctx.tenantId, snapshot.instruction.workId, "cancelled", "cancelled", {
         instructionId: id,
         requestedBy: ctx.userId,
@@ -152,14 +123,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         inFlightActions,
         reconciliationRequired,
         unresolvedActionIds: unresolvedActions.map((action) => action.id),
-        unresolvedOperationIds,
       }, {
         finalOutcome: {
           kind: "cancelled",
           requestedBy: ctx.userId,
           reconciliationRequired,
           unresolvedActionIds: unresolvedActions.map((action) => action.id),
-          unresolvedOperationIds,
         },
       });
 
@@ -192,7 +161,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       status: "cancelled",
       rejectedActions: rejectableIds.length + pendingIds.length,
       cancelledRuns: runResults.filter((result) => result.ok).length,
-      cancelledOperations: snapshot.activeOperations.length,
       inFlightActions,
     });
   } catch (error) {

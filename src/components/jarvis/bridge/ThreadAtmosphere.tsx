@@ -74,12 +74,6 @@ function stateTone(state: InstructionState | null, transport: TransportHealth): 
       return { tone: "amber", opacity: 0.9 }
     case "executing":
       return { tone: "cyan", opacity: 0.96 }
-    case "waiting":
-      return { tone: "teal", opacity: 0.78 }
-    case "blocked":
-      return { tone: "red", opacity: 0.86 }
-    case "recovering":
-      return { tone: "amber", opacity: 0.9 }
     case "verifying":
       return { tone: "teal", opacity: 0.96 }
     case "completed":

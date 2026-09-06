@@ -129,9 +129,6 @@ function isAllowedPost(segments: string[]): boolean {
   // D8: owner/Dealer-Zero authorization remains entirely in finnor-os; this proxy
   // only exposes the one existing, read-only time-compression route.
   if (segments.length === 2 && a === "dealer-zero" && b === "time-compression") return true
-  // Product Truth deployed certification fixtures are fail-closed in finnor-os;
-  // this proxy entry only forwards the explicitly keyed, authenticated route.
-  if (segments.length === 2 && a === "certification" && b === "product-truth") return true
   return false
 }
 
@@ -231,9 +228,6 @@ async function doForward(
     method,
     headers: {
       ...(authorization ? { authorization } : {}),
-      ...(process.env.JARVIS_UPSTREAM_VERCEL_BYPASS_SECRET
-        ? { "x-vercel-protection-bypass": process.env.JARVIS_UPSTREAM_VERCEL_BYPASS_SECRET }
-        : {}),
       "content-type": "application/json",
     },
     cache: "no-store",
@@ -248,13 +242,11 @@ async function doForward(
     // Keep this byte-preserving: the allowlist includes the tenant-scoped
     // documents endpoint, whose response is a PDF rather than JSON.
     const body = await upstream.arrayBuffer();
-    const retryAfter = upstream.headers.get("retry-after");
     return new Response(body, {
       status: upstream.status,
       headers: {
         "content-type": upstream.headers.get("content-type") ?? "application/json",
         "cache-control": "no-store",
-        ...(retryAfter ? { "retry-after": retryAfter } : {}),
       },
     });
   } catch (error) {
@@ -297,8 +289,8 @@ async function forwardTest(req: NextRequest, segments: string[], method: "GET" |
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }): Promise<Response> {
-  const segments = (await params).path;
+export async function GET(req: NextRequest, { params }: { params: { path: string[] } }): Promise<Response> {
+  const segments = params.path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedGet(segments)) return proxyError("Not found", 404);
 
@@ -318,8 +310,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
   return doForward(req, segments, "GET", auth);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }): Promise<Response> {
-  const segments = (await params).path;
+export async function POST(req: NextRequest, { params }: { params: { path: string[] } }): Promise<Response> {
+  const segments = params.path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedPost(segments)) return proxyError("Not found", 404);
 
@@ -339,8 +331,8 @@ function isAllowedPut(segments: string[]): boolean {
   return isUserPrefs(segments) || (segments.length === 1 && segments[0] === "workspace-config") || (segments.length === 3 && segments[0] === "policies") || (segments.length === 2 && segments[0] === "price-book");
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }): Promise<Response> {
-  const segments = (await params).path;
+export async function PUT(req: NextRequest, { params }: { params: { path: string[] } }): Promise<Response> {
+  const segments = params.path;
   if (!validSegments(segments) || !validQuery(req.nextUrl) || !isAllowedPut(segments)) return proxyError("Not found", 404);
   if (hasTestKey(req)) return forwardTest(req, segments, "PUT");
   const auth = hasBearer(req);
@@ -348,8 +340,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ path
   return doForward(req, segments, "PUT", auth);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }): Promise<Response> {
-  const segments = (await params).path;
+export async function DELETE(req: NextRequest, { params }: { params: { path: string[] } }): Promise<Response> {
+  const segments = params.path;
   if (!validSegments(segments) || !validQuery(req.nextUrl) || !isUserPrefs(segments)) return proxyError("Not found", 404);
   if (hasTestKey(req)) return forwardTest(req, segments, "DELETE");
   const auth = hasBearer(req);

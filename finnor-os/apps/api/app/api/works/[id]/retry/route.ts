@@ -2,7 +2,6 @@ import { claimWorkRecovery, WorkTransitionConflictError, workAggregate } from "@
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
-import { createInteractiveIntakeDeadline, requireInteractiveIntakeTime } from "../../../../../lib/intake-deadline";
 
 const RetryWorkSchema = z.object({ idempotencyKey: z.string().min(1).max(200) });
 
@@ -19,13 +18,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const body = RetryWorkSchema.safeParse(await req.json().catch(() => ({})));
     if (!body.success) return Response.json({ error: body.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
     const attemptKey = `retry:${body.data.idempotencyKey}`;
-    const intakeDeadlineAt = createInteractiveIntakeDeadline("text");
     const claim = await claimWorkRecovery({
       tenantId: ctx.tenantId,
       workId: id,
       requestedBy: ctx.userId,
       attemptKey,
-      deadlineAt: new Date(intakeDeadlineAt),
     });
     if (!claim.claimed) return Response.json({
       work: await workAggregate(ctx.tenantId, id),
@@ -33,7 +30,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       activeAttemptKey: claim.activeAttemptKey,
     }, { status: claim.status === "planning" ? 202 : 200 });
     const input = claim.input!;
-    requireInteractiveIntakeTime(intakeDeadlineAt);
     const result = await getOrchestrator().handleInstructionResult(input.instructionText, ctx, {
       workId: id,
       workInputId: input.id,
@@ -41,8 +37,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       sessionId: input.sessionId ?? undefined,
       channel: input.channel,
       plannerAttemptKey: attemptKey,
-      signal: req.signal,
-      deadlineAt: intakeDeadlineAt,
     });
     return Response.json({
       planned: result.actions,

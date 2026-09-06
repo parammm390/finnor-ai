@@ -1,0 +1,9 @@
+
+> finnor-os@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.10 /Users/paramdave/Desktop/FINNOR/finnor-os
+
+
+[terminated after 67 seconds without collection]

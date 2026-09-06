@@ -34,7 +34,6 @@ import { receiptCopyText, receiptHash } from "../lib/receipt-nav"
 import { executionProgressForActions, runsForActionIds, type ActionExecutionState } from "../kernel/execution-presentation"
 import type { LiveFrameIntentLaunch } from "../kernel/liveframe"
 import { registerAnchor } from "../lib/pulse-bus"
-import { jarvisClient } from "@/lib/jarvis-client"
 
 // These surfaces are only reachable once an instruction is executing or has a
 // receipt. Keep their existing implementations out of the initial Thread load.
@@ -379,11 +378,6 @@ export function ThreadPlan({ thread, reducedMotion, restored = false }: { thread
   if (initialEdgeKeysRef.current === null) initialEdgeKeysRef.current = new Set(edges.map((edge) => edge.key))
   const enteringNodeIds = new Set(thread.nodes.map((node) => node.id).filter((id) => !initialNodeIdsRef.current?.has(id)))
   const enteringEdgeKeys = new Set(edges.map((edge) => edge.key).filter((key) => !initialEdgeKeysRef.current?.has(key)))
-  const objective = thread.executionModel === "OBJECTIVE" ? thread.objectiveProjection : null
-  const successCondition = objective?.successCondition && typeof objective.successCondition === "object" && !Array.isArray(objective.successCondition)
-    ? objective.successCondition as Record<string, unknown>
-    : null
-  const successStatement = typeof successCondition?.statement === "string" ? successCondition.statement : null
 
   useEffect(() => {
     thread.nodes.forEach((node) => initialNodeIdsRef.current?.add(node.id))
@@ -414,9 +408,7 @@ export function ThreadPlan({ thread, reducedMotion, restored = false }: { thread
       <div className="j-label mb-2">What I&rsquo;ll do</div>
       {state === "planning" && (
         <ThreadSignal>
-          {thread.executionModel === "OBJECTIVE"
-            ? "Durable Work accepted this Objective. Canonical Work now owns its current state and next bounded step."
-            : thread.traceGating.expectedCount !== null
+          {thread.traceGating.expectedCount !== null
             ? `${thread.nodes.length} of ${thread.traceGating.expectedCount} action${thread.traceGating.expectedCount === 1 ? "" : "s"} received from the live plan.`
             : thread.nodes.length > 0
               ? `${thread.nodes.length} action${thread.nodes.length === 1 ? "" : "s"} received. The plan is still growing.`
@@ -424,13 +416,6 @@ export function ThreadPlan({ thread, reducedMotion, restored = false }: { thread
         </ThreadSignal>
       )}
       {state === "awaiting_approval" && <ThreadSignal tone="amber">The plan is ready. Review the real actions before anything is sent.</ThreadSignal>}
-      {thread.executionModel === "OBJECTIVE" && <div className="mb-3 rounded-xl border border-cyan-200/15 bg-cyan-200/[.035] p-3" data-jarvis-objective-plan>
-        <p className="j-fs-base font-semibold text-[color:var(--j-text)]">Objective accepted</p>
-        <p className="mt-1 j-fs-sm text-[color:var(--j-text-dim)]">Desired outcome · {objective?.objective ?? thread.instructionText}</p>
-        <p className="mt-1 j-fs-sm text-[color:var(--j-text-dim)]">Verified context · {thread.contextChips.length > 0 ? `${thread.contextChips.length} canonical context reference${thread.contextChips.length === 1 ? "" : "s"}` : "No additional context reference was required"}</p>
-        <p className="mt-1 j-fs-sm text-[color:var(--j-text-dim)]">Success condition · {successStatement ?? "Awaiting the canonical Objective success condition"}</p>
-        {objective && <p className="mt-1 j-fs-micro text-[color:var(--j-text-faint)]">Bounded budget · {objective.budget.steps}/{objective.budget.maxSteps} steps · {objective.budget.actions}/{objective.budget.maxActions} actions · {objective.budget.queries}/{objective.budget.maxQueries} queries</p>}
-      </div>}
       <div className="space-y-2" data-jarvis-plan-graph>
         {thread.nodes.map((n) => {
           const inbound = edges.filter((edge) => edge.target.id === n.id)
@@ -733,46 +718,7 @@ export function ThreadApprovalCockpit({ thread, onClose, reducedMotion, escalate
 // ---------------------------------------------------------------------------
 export type ExecutionWeavePlacement = "document" | "side"
 
-function ObjectiveThreadControls({ thread, onCancel }: { thread: Thread; onCancel: () => void }) {
-  const [busy, setBusy] = useState<"continue" | "interrupt" | "redirect" | null>(null)
-  const [redirect, setRedirect] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  if (thread.executionModel !== "OBJECTIVE" || !thread.workId || !thread.objectiveLoopId) return null
-  const state = thread.machine.instructionState
-  const terminal = ["completed", "partial", "failed", "cancelled"].includes(state)
-  const control = async (command: "continue" | "interrupt" | "redirect") => {
-    if (busy) return
-    setBusy(command)
-    setError(null)
-    try {
-      await jarvisClient.controlObjective(thread.workId!, command === "redirect"
-        ? { command, objective: redirect.trim(), channel: "text", idempotencyKey: `thread-redirect:${crypto.randomUUID()}` }
-        : { command })
-      if (command === "redirect") setRedirect("")
-    } catch (controlError) {
-      setError(controlError instanceof Error ? controlError.message : "The Objective control did not reach canonical Work.")
-    } finally {
-      setBusy(null)
-    }
-  }
-  return (
-    <div className="mt-3 space-y-2" data-jarvis-objective-controls>
-      <div className="flex flex-wrap gap-2">
-        {(state === "waiting" || state === "blocked") && <button type="button" className="j-chip min-h-11" disabled={busy !== null} onClick={() => void control("continue")}>{busy === "continue" ? "Continuing…" : "Continue"}</button>}
-        {(state === "executing" || state === "waiting" || state === "awaiting_approval") && <button type="button" className="j-chip min-h-11" disabled={busy !== null} onClick={() => void control("interrupt")}>{busy === "interrupt" ? "Interrupting…" : "Interrupt"}</button>}
-        {!terminal && <button type="button" className="j-chip min-h-11" disabled={busy !== null} onClick={onCancel}>Cancel future execution</button>}
-      </div>
-      {!terminal && <form className="flex flex-col gap-2 sm:flex-row" onSubmit={(event) => { event.preventDefault(); if (redirect.trim()) void control("redirect") }}>
-        <label className="sr-only" htmlFor={`thread-objective-redirect-${thread.id}`}>Redirect this Objective</label>
-        <input id={`thread-objective-redirect-${thread.id}`} className="min-h-11 min-w-0 flex-1 rounded-lg border border-white/10 bg-black/20 px-3 j-fs-sm" value={redirect} onChange={(event) => setRedirect(event.target.value)} placeholder="Redirect this same Objective" maxLength={10_000} />
-        <button type="submit" className="j-chip min-h-11" disabled={busy !== null || !redirect.trim()}>{busy === "redirect" ? "Redirecting…" : "Redirect"}</button>
-      </form>}
-      {error && <ThreadSignal tone="red" role="alert">{error}</ThreadSignal>}
-    </div>
-  )
-}
-
-export function ThreadExecution({ thread, restored = false, executionWeavePlacement = "document", energy = 0, onCancel }: { thread: Thread; restored?: boolean; executionWeavePlacement?: ExecutionWeavePlacement; energy?: number; onCancel: () => void }) {
+export function ThreadExecution({ thread, restored = false, executionWeavePlacement = "document", energy = 0 }: { thread: Thread; restored?: boolean; executionWeavePlacement?: ExecutionWeavePlacement; energy?: number }) {
   // §4.7's "one fact, one selector" bans `useJarvis()` outside `kernel/` — this
   // isn't a displayed fact, just sound-cue bookkeeping, but the rule is a
   // blanket ban with no such carve-out. `kernel.selectorInput.runs` is the
@@ -801,27 +747,6 @@ export function ThreadExecution({ thread, restored = false, executionWeavePlacem
       <div>
         <div className="j-label mb-2">Execution paused</div>
         <ThreadSignal tone="amber" role="status">A real execution signal asked for human review. The thread is paused here until the decision above is resolved.</ThreadSignal>
-        <ObjectiveThreadControls thread={thread} onCancel={onCancel} />
-      </div>
-    )
-  }
-  if (state === "waiting" || state === "blocked" || state === "recovering") {
-    const posture = thread.workPosture
-    const label = state === "waiting" ? "Waiting on a condition" : state === "blocked" ? "Work blocked" : "Recovery in progress"
-    const fallback = state === "waiting"
-      ? "This Work is durably waiting. No execution is being implied while the recorded condition remains unmet."
-      : state === "blocked"
-        ? "This Work is explicitly blocked. No success or hidden progress is being implied."
-        : "This Work is in its recorded recovery path. Earlier failure evidence remains attached."
-    return (
-      <div data-jarvis-work-posture={state}>
-        <div className="j-label mb-2">{label}</div>
-        <ThreadSignal tone={state === "blocked" ? "red" : "amber"} role="status">
-          {posture?.reason ?? fallback}
-        </ThreadSignal>
-        {posture?.nextStep && <p className="mt-2 j-fs-sm text-[color:var(--j-text-dim)]">Next: {posture.nextStep}</p>}
-        {posture?.nextRunAt && <p className="mt-1 j-fs-micro text-[color:var(--j-text-faint)]">Recorded next check: {new Date(posture.nextRunAt).toLocaleString()}</p>}
-        <ObjectiveThreadControls thread={thread} onCancel={onCancel} />
       </div>
     )
   }
@@ -838,7 +763,6 @@ export function ThreadExecution({ thread, restored = false, executionWeavePlacem
               ? `${linkedRuns.length} real workflow run${linkedRuns.length === 1 ? "" : "s"} reported for this instruction.`
               : "Approval landed. Waiting for the connected workflow lane to report a real run."}
       </ThreadSignal>
-      <ObjectiveThreadControls thread={thread} onCancel={onCancel} />
       {executionWeavePlacement === "document" && (
         <WorkflowTheater
           actionIds={actionIds}

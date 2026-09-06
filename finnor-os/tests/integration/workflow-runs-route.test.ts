@@ -68,11 +68,11 @@ describe.skipIf(!available)("GET /api/workflows/runs (Phase 10)", () => {
 
       const [cmd1] = await db
         .insert(commands)
-        .values({ tenantId: SEED_TENANT_ID, commandType: "start_water_test_workflow", payload: {}, idempotencyKey: "wf-runs-test-1" })
+        .values({ tenantId: SEED_TENANT_ID, commandType: "record_finding", payload: {}, idempotencyKey: "wf-runs-test-1" })
         .returning();
       const [runningRun] = await db
         .insert(workflowRuns)
-        .values({ tenantId: SEED_TENANT_ID, commandId: cmd1!.id, workflowType: "water_test_workflow", status: "running" })
+        .values({ tenantId: SEED_TENANT_ID, commandId: cmd1!.id, workflowType: "private_equity_diligence", status: "running" })
         .returning();
       runningRunId = runningRun!.id;
       await db.insert(workflowSteps).values([
@@ -82,11 +82,11 @@ describe.skipIf(!available)("GET /api/workflows/runs (Phase 10)", () => {
 
       const [cmd2] = await db
         .insert(commands)
-        .values({ tenantId: SEED_TENANT_ID, commandType: "start_water_test_workflow", payload: {}, idempotencyKey: "wf-runs-test-2" })
+        .values({ tenantId: SEED_TENANT_ID, commandType: "record_finding", payload: {}, idempotencyKey: "wf-runs-test-2" })
         .returning();
       const [completedRun] = await db
         .insert(workflowRuns)
-        .values({ tenantId: SEED_TENANT_ID, commandId: cmd2!.id, workflowType: "water_test_workflow", status: "completed" })
+        .values({ tenantId: SEED_TENANT_ID, commandId: cmd2!.id, workflowType: "private_equity_diligence", status: "completed" })
         .returning();
       completedRunId = completedRun!.id;
       await db.insert(workflowSteps).values([
@@ -95,7 +95,7 @@ describe.skipIf(!available)("GET /api/workflows/runs (Phase 10)", () => {
 
       const [cmd3] = await db
         .insert(commands)
-        .values({ tenantId: SEED_TENANT_ID, commandType: "start_water_test_workflow", payload: {}, idempotencyKey: "wf-runs-test-stuck" })
+        .values({ tenantId: SEED_TENANT_ID, commandType: "record_finding", payload: {}, idempotencyKey: "wf-runs-test-stuck" })
         .returning();
       const [stuckRun] = await db
         .insert(workflowRuns)

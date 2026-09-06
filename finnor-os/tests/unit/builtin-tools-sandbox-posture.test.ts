@@ -40,11 +40,11 @@ describe("builtin outbound-call registration", () => {
     registerBuiltinTools(registry);
 
     const callTool = registry.registered.find((tool) => tool.name === "vapi_place_call");
-    expect(callTool?.integration).toBe("tenant-routed");
-    expect(callTool?.description).toMatch(/^Tenant-routed/);
+    expect(callTool?.integration).toBe("vapi");
+    expect(callTool?.description).toMatch(/governed employee or business-party call/i);
   });
 
-  it("registers the real campaign adapter from operating mode even before managed secrets are loaded", () => {
+  it("registers only the governed single-call adapter before managed secrets are loaded", () => {
     setEnv("COMMS_MODE", "real");
     setEnv("GOHIGHLEVEL_API_KEY", undefined);
     setEnv("VAPI_API_KEY", undefined);
@@ -55,7 +55,7 @@ describe("builtin outbound-call registration", () => {
     registerBuiltinTools(registry);
 
     expect(registry.has("vapi_place_call")).toBe(true);
-    expect(registry.has("vapi_create_campaign")).toBe(true);
+    expect(registry.has("vapi_create_campaign")).toBe(false);
     expect(registry.registered.filter((tool) => tool.name === "vapi_place_call")).toHaveLength(1);
   });
 });

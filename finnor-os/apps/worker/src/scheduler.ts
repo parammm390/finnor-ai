@@ -12,8 +12,9 @@
 // window" atomic and safe under multiple ticker instances — never a separate
 // read-last-run-then-write-last-run pair, which would race.
 
-import { enqueueJob, getPool } from "@finnor/db";
+import { enqueueJob, getPool, readProductRuntimeAuthority } from "@finnor/db";
 import { getLogger } from "@finnor/tools";
+import { RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
 
 export interface ScheduledScan {
   /** Job type — must be registered as a handler in apps/worker/src/index.ts. */
@@ -34,13 +35,25 @@ function dateBucket(intervalHours: number): string {
 }
 
 async function activeTenantIds(): Promise<string[]> {
-  const { rows } = await getPool().query("SELECT id FROM tenants");
+  await readProductRuntimeAuthority();
+  const { rows } = await getPool().query(
+    `SELECT t.id
+       FROM tenants t
+       JOIN tenant_vertical_assignments a ON a.tenant_id=t.id
+       JOIN vertical_definitions v ON v.key=a.vertical_key
+      WHERE v.active AND (
+        a.vertical_key='private_equity'
+        OR (a.vertical_key='none' AND a.source_system LIKE 'certification:%')
+      )`,
+  );
   return rows.map((r) => String(r.id));
 }
 
 /** One tick: for every tenant, try to enqueue every scan. Idempotent per (scan,
  *  tenant, window) — safe to call as often as you like, cheap to call redundantly. */
 export async function scheduleTick(scans: ScheduledScan[]): Promise<void> {
+  const retired = scans.find((scan) => isRetiredWaterJob(scan.type));
+  if (retired) throw new RetiredVerticalError("water");
   const tenantIds = await activeTenantIds();
   for (const tenantId of tenantIds) {
     for (const scan of scans) {

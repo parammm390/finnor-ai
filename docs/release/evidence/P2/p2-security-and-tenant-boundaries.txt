@@ -1,61 +1,65 @@
 
- RUN  v4.1.10 /private/tmp/finnor-p2-closure/finnor-os
+ RUN  v4.1.10 /Users/paramdave/Desktop/FINNOR/finnor-os
 
- ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > merges the payment fact into actualResult without touching prior fields, and appends a real amount comparison to predictionDiff 61ms
- ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > records a real mismatch honestly when the amount paid differs from the prediction — never silently matched 34ms
- ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > a duplicate delivery of the same providerEventId is a no-op — dedup, not a second update 39ms
- ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > a duplicate payment repairs missing post-commit receipt and prediction convergence 41ms
- ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > a payment for an invoice this plugin never touched is a real, honest no-op — never guesses a receipt to update 15ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > the RLS-subject role really is subject to RLS 20ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > tenant B cannot read tenant A's households (empty result, not an error) 28ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > tenant B cannot write a row claiming to belong to tenant A 4ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > the canonical Work root is invisible across tenants and rejects forged tenant writes 21ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > semantic memory round-trips within a tenant and never leaks across (§32.4, §32.9) 15ms
+ ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > episodic memory is tenant-scoped too 8ms
+ ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > accepts the signed emulator shape outside production through a tenant-bound route 22ms
+ ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects an unsigned emulator shape in every environment 4ms
+ ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects a caller-supplied tenant selector even when the emulator signature is valid 1ms
+ ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects a real stripe-signature header with the wrong secret, in any environment 5ms
+ ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > accepts a correctly-signed real stripe event once a secret is configured, in production 29ms
+[18:30:00] [33mWARN[39m: [36mrejected emulator webhook: bad x-payment-signature[39m
+    [35mroute[39m: "webhooks/payment"
+    [35mevent[39m: "webhook_signature_rejected"
+    [35mprovider[39m: "payment_emulator"
+ ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > merges the payment fact into actualResult without touching prior fields, and appends a real amount comparison to predictionDiff 48ms
+ ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > records a real mismatch honestly when the amount paid differs from the prediction — never silently matched 28ms
+ ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > a duplicate delivery of the same providerEventId is a no-op — dedup, not a second update 20ms
+ ✓ tests/integration/payment-webhook-receipt.test.ts > applyPaymentWebhookEvent — receipt updates in place (P4.T4) > a payment for an invoice this plugin never touched is a real, honest no-op — never guesses a receipt to update 12ms
  ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > dev-bypass headers are accepted outside production 25ms
  ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > dev-bypass headers are REJECTED when NODE_ENV=production, even with AUTH_DEV_BYPASS=1 1ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > rate limit trips after the configured number of requests in a window, then blocks further ones 4ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > enforces one durable tenant/provider budget across concurrent worker-like callers 51ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > rate limit trips after the configured number of requests in a window, then blocks further ones 2ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > enforces one durable tenant/provider budget across concurrent worker-like callers 44ms
  ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > secondsUntilWindowReset returns a sane value within the 60s fixed window 0ms
  ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > A4.T5: an invalid bearer token is IP-throttled BEFORE auth verification even runs, with 429 + Retry-After 2ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > A4.T5: POST /api/actions enforces its own tighter intake bucket, independent of the generic tenant bucket 5ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > A4.T5: POST /api/actions enforces its own tighter intake bucket, independent of the generic tenant bucket 4ms
  ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > a replayed webhook payload is rejected the second time it's posted 1ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove defaults to deny for a role with no configured permission on an action type 17ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove defaults to allow for the owner role even with no configured row 6ms
- ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove honors an explicit grant row over the default 12ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > daily_scorecard writes a real row from the real reliability() read-model, and re-running upserts instead of duplicating 37ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove defaults to deny for a role with no configured permission on an action type 14ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove defaults to allow for the owner role even with no configured row 3ms
+ ✓ tests/integration/authz.test.ts > authz — dev-bypass hardening, rate limiting, webhook replay, RBAC > canApprove honors an explicit grant row over the default 10ms
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > daily_scorecard writes a real row from the real reliability() read-model, and re-running upserts instead of duplicating 26ms
  ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > readiness_log RLS: a decoy tenant sees zero of another tenant's rows 2ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > readiness SLO payload derives values, 30-day trend, and burn from the durable scorecard 8ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > GET /api/read-models/readiness requires auth and is tenant-scoped 10ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > GET /api/read-models/readiness-slo exposes the full honest SLO payload only to its tenant 10ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > failure_injections: real row insert, RLS-isolated, and readable via the route 14ms
- ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > calendar v2 covers the five scheduled drills and their outcomes remain visible through the existing read model 5ms
- ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > accepts the signed emulator shape outside production through a tenant-bound route 27ms
- ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects an unsigned emulator shape in every environment 6ms
- ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects a caller-supplied tenant selector even when the emulator signature is valid 1ms
- ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > rejects a real stripe-signature header with the wrong secret, in any environment 6ms
- ✓ tests/integration/payment-webhook-auth.test.ts > POST /api/webhooks/payment (A3.T6) > accepts a correctly-signed real stripe event once a secret is configured, in production 38ms
-[03:29:51] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > readiness SLO payload derives values, 30-day trend, and burn from the durable scorecard 7ms
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > GET /api/read-models/readiness requires auth and is tenant-scoped 7ms
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > GET /api/read-models/readiness-slo exposes the full honest SLO payload only to its tenant 6ms
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > failure_injections: real row insert, RLS-isolated, and readable via the route 7ms
+ ✓ tests/integration/readiness-and-failure-injections.test.ts > readiness_log + failure_injections (Phase 8) > calendar v2 covers the five scheduled drills and their outcomes remain visible through the existing read model 3ms
+[18:30:05] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
     [35mroute[39m: "webhooks/marketing"
     [35mevent[39m: "webhook_signature_rejected"
     [35mprovider[39m: "marketing_conversion"
-[03:29:51] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
+[18:30:05] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
     [35mroute[39m: "webhooks/marketing"
     [35mevent[39m: "webhook_signature_rejected"
     [35mprovider[39m: "marketing_conversion"
- ✓ tests/integration/marketing-webhook-auth.test.ts > Phase 4: marketing webhook requires a real shared secret > with a configured secret: wrong or missing secret is rejected with 401, real key is accepted 74ms
+ ✓ tests/integration/marketing-webhook-auth.test.ts > Phase 4: marketing webhook requires a real shared secret > with a configured secret: wrong or missing secret is rejected with 401, real key is accepted 52ms
  ✓ tests/integration/marketing-webhook-auth.test.ts > Phase 4: marketing webhook requires a real shared secret > rejects caller-supplied tenant identity and an unmapped route 2ms
  ✓ tests/integration/marketing-webhook-auth.test.ts > Phase 4: marketing webhook requires a real shared secret > a mismatched-length secret is rejected without throwing (timingSafeEqual guard) 0ms
-[03:29:51] [33mWARN[39m: [36mrejected marketing webhook: route mapping was not unique[39m
+[18:30:05] [33mWARN[39m: [36mrejected marketing webhook: route mapping was not unique[39m
     [35mroute[39m: "webhooks/marketing"
     [35mevent[39m: "webhook_tenant_unresolved"
     [35mprovider[39m: "marketing_conversion"
-[03:29:51] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
+[18:30:05] [33mWARN[39m: [36mrejected webhook: bad or missing x-webhook-secret[39m
     [35mroute[39m: "webhooks/marketing"
     [35mevent[39m: "webhook_signature_rejected"
     [35mprovider[39m: "marketing_conversion"
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > the RLS-subject role really is subject to RLS 25ms
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > tenant B cannot read tenant A's households (empty result, not an error) 41ms
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > tenant B cannot write a row claiming to belong to tenant A 8ms
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > the canonical Work root is invisible across tenants and rejects forged tenant writes 26ms
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > semantic memory round-trips within a tenant and never leaks across (§32.4, §32.9) 25ms
- ✓ tests/integration/tenant-isolation.test.ts > tenant isolation via RLS (§32.2, §32.4, §32.9) > episodic memory is tenant-scoped too 19ms
 
  Test Files  6 passed (6)
-      Tests  37 passed (37)
-   Start at  08:59:44
-   Duration  8.24s (transform 1.66s, setup 0ms, import 6.39s, tests 1.34s, environment 0ms)
+      Tests  36 passed (36)
+   Start at  23:59:58
+   Duration  6.86s (transform 1.04s, setup 0ms, import 4.98s, tests 1.43s, environment 0ms)
+

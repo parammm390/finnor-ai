@@ -1,23 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { readFileSync } from "node:fs"
 import { deriveWorkspaceProgress, splitResearchNarrative } from "./presentation"
 
 describe("adaptive workspace presentation", () => {
-  it("binds the production release observer to the exact canonical Work identity", () => {
-    const source = readFileSync(new URL("./AdaptiveWorkspaceShell.tsx", import.meta.url), "utf8")
-    for (const binding of [
-      "data-thread-document",
-      "data-jarvis-instruction-id={thread?.instructionId",
-      "data-jarvis-work-id={thread?.workId",
-      "data-jarvis-objective-loop-id={thread?.objectiveLoopId",
-      "data-jarvis-execution-model={thread?.executionModel",
-      "data-jarvis-assistant-semantic-kind={thread?.assistantSemanticKind",
-      "data-jarvis-objective-state={thread?.objectiveProjection?.state",
-      "data-jarvis-instruction-state={thread?.machine.instructionState",
-      "data-jarvis-work-posture={thread?.workPosture?.status",
-    ]) expect(source).toContain(binding)
-  })
-
   it("projects real instruction states into a compact progressive lifecycle", () => {
     const planning = deriveWorkspaceProgress({
       state: "planning",

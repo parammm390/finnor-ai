@@ -28,7 +28,11 @@ export interface TenantSourceTruthReport {
 }
 
 export async function tenantSourceTruthReport(tenantId: string, now = new Date()): Promise<TenantSourceTruthReport> {
-  const rows = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(eq(tenantIntegrations.tenantId, tenantId)));
+  const historicalRows = await withTenant(tenantId, (db) => db.select().from(tenantIntegrations).where(eq(tenantIntegrations.tenantId, tenantId)));
+  // tenant_integrations also contains immutable-era Water configuration. It is
+  // retained for audit, but only explicitly PE-owned source scopes participate in
+  // active source-truth readiness after the cutover.
+  const rows = historicalRows.filter((row) => String(row.capability) === "private_equity_source");
   const sources = rows.map((row): TenantSourceTruthEntry => {
     const policy = object(row.freshnessPolicy);
     const sourcePolicy = object(row.sourcePolicy);

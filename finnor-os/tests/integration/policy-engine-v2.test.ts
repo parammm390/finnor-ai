@@ -21,16 +21,16 @@ describe.skipIf(!available)("B6 policy engine v2", () => {
     const policyId = randomUUID();
     const now = new Date();
     await withTenant(TENANT_ID, async (db) => {
-      await db.insert(domainPolicies).values({ id: policyId, tenantId: TENANT_ID, actionType: "check_stock_level", policy: { threshold: 1 }, requiresConfirmation: true, version: 1, effectiveFrom: now });
-      await db.insert(domainPolicyRevisions).values({ tenantId: TENANT_ID, policyId, actionType: "check_stock_level", version: 1, policy: { threshold: 1 }, requiresConfirmation: true, effectiveFrom: now });
-      const [action] = await db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "check_stock_level", payload: {}, policyId, policyVersion: 1, status: "pending" }).returning();
-      await db.insert(decisionReceipts).values({ tenantId: TENANT_ID, domainActionId: action!.id, objective: "historic stock check", evidence: [], riskTier: "low", proposedAction: { actionType: "check_stock_level" }, approval: { required: true } });
+      await db.insert(domainPolicies).values({ id: policyId, tenantId: TENANT_ID, actionType: "record_finding", policy: { threshold: 1 }, requiresConfirmation: true, version: 1, effectiveFrom: now });
+      await db.insert(domainPolicyRevisions).values({ tenantId: TENANT_ID, policyId, actionType: "record_finding", version: 1, policy: { threshold: 1 }, requiresConfirmation: true, effectiveFrom: now });
+      const [action] = await db.insert(domainActions).values({ tenantId: TENANT_ID, actionType: "record_finding", payload: {}, policyId, policyVersion: 1, status: "pending" }).returning();
+      await db.insert(decisionReceipts).values({ tenantId: TENANT_ID, domainActionId: action!.id, objective: "historic diligence check", evidence: [], riskTier: "low", proposedAction: { actionType: "record_finding" }, approval: { required: true } });
     });
-    const report = await simulatePolicy(TENANT_ID, "check_stock_level", { requiresConfirmation: false });
+    const report = await simulatePolicy(TENANT_ID, "record_finding", { requiresConfirmation: false });
     expect(report).toMatchObject({ evaluatedReceipts: 1, historicalGated: 1, candidateGated: 0, gateDelta: -1, simulated: true });
     await withTenant(TENANT_ID, async (db) => {
       await db.update(domainPolicies).set({ version: 2, policy: { threshold: 2 }, effectiveFrom: new Date() }).where(eq(domainPolicies.id, policyId));
-      await db.insert(domainPolicyRevisions).values({ tenantId: TENANT_ID, policyId, actionType: "check_stock_level", version: 2, policy: { threshold: 2 }, requiresConfirmation: true, effectiveFrom: new Date() });
+      await db.insert(domainPolicyRevisions).values({ tenantId: TENANT_ID, policyId, actionType: "record_finding", version: 2, policy: { threshold: 2 }, requiresConfirmation: true, effectiveFrom: new Date() });
     });
     const executor: Executor = { execute: async () => ({ status: "success", output: {} }) };
     const reflection: Reflection = { evaluate: async () => ({ decision: "accept", matched: true, detail: "test" }) };

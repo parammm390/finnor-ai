@@ -9,7 +9,7 @@ import { migrate } from "../../packages/db/migrate";
 import { seed, SEED_TENANT_ID } from "../../packages/db/seed";
 import { closePool } from "@finnor/db";
 import { writeSemantic, querySemantic, appendEpisode, readEpisodes, DeterministicLocalEmbedder } from "@finnor/memory";
-import { withTenant, households, domainActions, receiveWork, works } from "@finnor/db";
+import { withTenant, domainActions, receiveWork, works } from "@finnor/db";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 // Swap credentials for the RLS-subject role created by migration 0001 (local/CI only).
@@ -61,20 +61,13 @@ describe.skipIf(!available)("tenant isolation via RLS (§32.2, §32.4, §32.9)",
     expect(rows[0].rolbypassrls).toBe(false);
   });
 
-  it("tenant B cannot read tenant A's households (empty result, not an error)", async () => {
-    const asA = await withTenant(SEED_TENANT_ID, (db) => db.select().from(households));
-    expect(asA.length).toBeGreaterThan(0);
-    const asB = await withTenant(TENANT_B, (db) => db.select().from(households));
-    expect(asB).toHaveLength(0);
-  });
-
   it("tenant B cannot write a row claiming to belong to tenant A", async () => {
     let rejected: unknown;
     try {
       await withTenant(TENANT_B, (db) =>
         db.insert(domainActions).values({
           tenantId: SEED_TENANT_ID, // forged tenant id
-          actionType: "schedule_water_test",
+          actionType: "record_finding",
           payload: {},
           status: "draft",
         }),
@@ -113,15 +106,15 @@ describe.skipIf(!available)("tenant isolation via RLS (§32.2, §32.4, §32.9)",
     const embedder = new DeterministicLocalEmbedder();
     await writeSemantic(
       SEED_TENANT_ID,
-      "sop-water-test",
-      ["Our water test SOP: always collect a raw water sample before the softener."],
+      "diligence-source-verification",
+      ["Our diligence SOP: verify every material claim against a versioned source."],
       embedder,
     );
-    const hitsA = await querySemantic(SEED_TENANT_ID, "water test SOP raw sample", 3, embedder);
+    const hitsA = await querySemantic(SEED_TENANT_ID, "diligence SOP versioned source", 3, embedder);
     expect(hitsA.length).toBeGreaterThan(0);
-    expect(hitsA[0]!.chunk).toContain("raw water sample");
+    expect(hitsA[0]!.chunk).toContain("versioned source");
 
-    const hitsB = await querySemantic(TENANT_B, "water test SOP raw sample", 3, embedder);
+    const hitsB = await querySemantic(TENANT_B, "diligence SOP versioned source", 3, embedder);
     expect(hitsB).toHaveLength(0);
   });
 
@@ -129,7 +122,7 @@ describe.skipIf(!available)("tenant isolation via RLS (§32.2, §32.4, §32.9)",
     const [action] = await withTenant(SEED_TENANT_ID, (db) =>
       db
         .insert(domainActions)
-        .values({ tenantId: SEED_TENANT_ID, actionType: "schedule_water_test", payload: {}, status: "draft" })
+        .values({ tenantId: SEED_TENANT_ID, actionType: "record_finding", payload: {}, status: "draft" })
         .returning(),
     );
     await appendEpisode(SEED_TENANT_ID, action!.id, "iso_test", {}, {});

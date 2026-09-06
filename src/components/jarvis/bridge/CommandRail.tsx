@@ -41,9 +41,6 @@ function railBusy(state: InstructionState | null): { disabled: boolean; placehol
       return { disabled: false, placeholder: "Answer above, or ask something else", cancelable: true }
     case "awaiting_approval":
     case "executing":
-    case "waiting":
-    case "blocked":
-    case "recovering":
     case "verifying":
       return { disabled: true, cancelable: true }
     default:

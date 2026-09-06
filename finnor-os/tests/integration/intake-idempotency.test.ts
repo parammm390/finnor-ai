@@ -7,7 +7,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
-import { closePool, expireInteractiveWorkInput, getPool, receiveWork, recordWorkResponse, tenants, withTenant } from "@finnor/db";
+import { closePool, receiveWork, recordWorkResponse, tenants, withTenant } from "@finnor/db";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000f2";
@@ -50,37 +50,6 @@ describe.skipIf(!available)("intake idempotency (A4.T6)", () => {
     expect(result.workInputId).toBeTruthy();
   });
 
-  it("persists one deadline job and idempotently closes overdue pre-execution Work", async () => {
-    const instructionId = randomUUID();
-    const deadlineAt = new Date(Date.now() - 1_000);
-    const claim = await receiveWork({
-      tenantId: TENANT_ID,
-      instruction: "deadline reconciliation test",
-      channel: "text",
-      instructionId,
-      idempotencyKey: `deadline-${randomUUID()}`,
-      intakeDeadlineAt: deadlineAt,
-    });
-    const scheduled = await getPool().query(
-      "SELECT lane,priority,payload->>'workId' AS work_id FROM jobs WHERE idempotency_key=$1",
-      [`interactive-deadline:${claim.workInputId}`],
-    );
-    expect(scheduled.rows).toEqual([{ lane: "interactive", priority: 200, work_id: claim.workId }]);
-
-    expect(await expireInteractiveWorkInput({ tenantId: TENANT_ID, workId: claim.workId, workInputId: claim.workInputId })).toBe(true);
-    expect(await expireInteractiveWorkInput({ tenantId: TENANT_ID, workId: claim.workId, workInputId: claim.workInputId })).toBe(false);
-    const persisted = await getPool().query(
-      "SELECT status,failure->>'code' AS code FROM works WHERE id=$1",
-      [claim.workId],
-    );
-    expect(persisted.rows).toEqual([{ status: "failed", code: "intake_deadline_exceeded" }]);
-    const trace = await getPool().query(
-      "SELECT phase,payload->>'code' AS code FROM instruction_events WHERE instruction_id=$1 ORDER BY seq DESC LIMIT 1",
-      [instructionId],
-    );
-    expect(trace.rows).toEqual([{ phase: "failed", code: "intake_deadline_exceeded" }]);
-  });
-
   it("concurrent submissions with the SAME key resolve to one canonical Work", async () => {
     const key = `test-${randomUUID()}`;
     const [first, second] = await Promise.all([
@@ -96,7 +65,7 @@ describe.skipIf(!available)("intake idempotency (A4.T6)", () => {
     const key = `test-${randomUUID()}`;
     const instructionId = randomUUID();
     const claim = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
-    const realResponse = { planned: [{ actionType: "schedule_water_test", payload: {} }] };
+    const realResponse = { planned: [{ actionType: "record_finding", payload: {} }] };
     await recordWorkResponse(TENANT_ID, claim.workId, realResponse);
 
     const repeat = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });

@@ -10,12 +10,10 @@ import { motion } from "framer-motion"
 import { Check, CreditCard, FileSignature, KeyRound, Loader2, Phone, PhoneOff, Play, Search, Send, Server, ShieldCheck, X } from "lucide-react"
 import { Glass } from "./atmosphere"
 import { sfx } from "./sound"
-import { jarvisGet, JarvisApiError } from "./lib/api"
-import { jarvisClient } from "@/lib/jarvis-client"
+import { jarvisGet, jarvisPost, JarvisApiError } from "./lib/api"
 import { useJarvis, ageLabel, type BindingResolution } from "./lib/data-core"
 import { useBusinessProjection } from "./lib/business-projections"
 import { businessProjections } from "./lib/projection-definitions"
-import { submitInstruction as submitCanonicalInstruction } from "./kernel/instruction"
 
 type Row = Record<string, unknown>
 
@@ -31,11 +29,9 @@ function useResource(kind: string, sample: Row[]): { rows: Row[]; live: boolean;
 /** Run an instruction through the real planner pipeline; returns a speakable outcome. */
 async function instruct(instruction: string): Promise<string> {
   try {
-    const result = await submitCanonicalInstruction(instruction, { source: "typed" })
-    if (result.executionModel === "OBJECTIVE") return "Started durable Work for this objective. Progress will follow verified outcomes."
-    if (result.executionModel === "QUERY" || result.executionModel === "CONVERSATION") return result.answer?.spokenSummary ?? result.assistantMessage.originalText
-    const n = result.actions.length
-    return n === 0 ? result.assistantMessage.originalText : `Planned ${n} action${n === 1 ? "" : "s"} — consequential ones are waiting in the Command Center queue.`
+    const body = await jarvisPost<{ planned?: Array<{ id: string; actionType: string }> }>("actions", { instruction })
+    const n = body.planned?.length ?? 0
+    return n === 0 ? "Couldn't map that to an action — add more detail." : `Planned ${n} action${n === 1 ? "" : "s"} — consequential ones are waiting in the Command Center queue.`
   } catch (e) {
     if (e instanceof JarvisApiError && e.status === 401) throw new Error("Enter the owner key in the Command Center to run write actions.")
     throw e
@@ -696,7 +692,7 @@ export function ResearchView() {
           ? `Check recent reviews of ${query}`
           : `Search the web for: ${query}`
     try {
-      await submitCanonicalInstruction(instruction, { source: "typed" })
+      await jarvisPost("actions", { instruction })
       // research actions are ungated — the result lands in the audit log; pull it
       await new Promise((r) => setTimeout(r, 1600))
       const audit = await jarvisGet<{

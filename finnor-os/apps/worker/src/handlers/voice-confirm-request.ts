@@ -24,7 +24,7 @@ export const voiceConfirmRequest: JobHandler = async (payload) => {
 
   const result = await placeVapiCall({
     tenantId,
-    customerNumber: approver.phoneNumber,
+    destinationNumber: approver.phoneNumber,
     firstMessage: `Hi, this is Finnor with something that needs your approval. ${script}`,
     metadata: { pendingActionId: actionId, tenantId, approverEmployeeId: approver.id },
   }, await resolveCredentialContext(tenantId, "system:approval-request", "vapi", "voice_confirmation", { channel: "voice" }));

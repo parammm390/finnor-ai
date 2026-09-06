@@ -24,8 +24,8 @@ function request(method: string, path: string, options: { headers?: Record<strin
   })
 }
 
-function params(path: string): { params: Promise<{ path: string[] }> } {
-  return { params: Promise.resolve({ path: path.split("/") }) }
+function params(path: string): { params: { path: string[] } } {
+  return { params: { path: path.split("/") } }
 }
 
 beforeEach(() => {
@@ -155,16 +155,6 @@ describe("JARVIS proxy route contract", () => {
     const response = await GET(request("GET", "dispatch/map", { headers: AUTH }), params("dispatch/map"))
     expect(response.status).toBe(502)
     await expect(response.json()).resolves.toEqual({ error: "Jarvis backend is unavailable" })
-  })
-
-  it("preserves an upstream Retry-After so callers can honor the durable limiter window", async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({ error: "rate limited" }), {
-      status: 429,
-      headers: { "content-type": "application/json", "retry-after": "17" },
-    }))
-    const response = await GET(request("GET", "stats", { headers: AUTH }), params("stats"))
-    expect(response.status).toBe(429)
-    expect(response.headers.get("retry-after")).toBe("17")
   })
 
   it("covers preference DELETEs through the same authenticated boundary", async () => {

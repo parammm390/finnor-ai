@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, households, domainActions, pendingConfirmations, handoffs, voiceIdentities } from "@finnor/db";
+import { withTenant, closePool, tenants, domainActions, pendingConfirmations, handoffs } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import {
   resolveVoiceIdentity,
@@ -50,7 +50,7 @@ describe.skipIf(!available)("voice OS", () => {
     await withTenant(TENANT_ID, (db) =>
       db
         .insert(tenants)
-        .values({ id: TENANT_ID, name: "Voice OS Test Dealer", ownerPhone: "+15555550200" })
+        .values({ id: TENANT_ID, name: "Voice OS Test Fund", ownerPhone: "+15555550200" })
         .onConflictDoUpdate({ target: tenants.id, set: { ownerPhone: "+15555550200" } }),
     );
   });
@@ -64,26 +64,6 @@ describe.skipIf(!available)("voice OS", () => {
     // Idempotent: a second call for the same number returns the same identity row.
     const again = await resolveVoiceIdentity(TENANT_ID, "+15555550200");
     expect(again.id).toBe(identity.id);
-  });
-
-  it("resolves a known household's phone to role 'customer'", async () => {
-    const [hh] = await withTenant(TENANT_ID, (db) =>
-      db.insert(households).values({ tenantId: TENANT_ID, address: "1 Voice OS Ln", contactInfo: { phone: "+15555550201" } }).returning(),
-    );
-    try {
-      const identity = await resolveVoiceIdentity(TENANT_ID, "+15555550201");
-      expect(identity.role).toBe("customer");
-      expect(identity.matchedHouseholdId).toBe(hh!.id);
-    } finally {
-      // Always clean up, even on assertion failure — a leftover row with this same
-      // phone number would make the next run of this test nondeterministic (findHousehold
-      // has no ORDER BY, so an old + new row sharing a phone can resolve to either).
-      // voice_identities.matched_household_id FKs into households — clear first.
-      await withTenant(TENANT_ID, async (db) => {
-        await db.delete(voiceIdentities).where(eq(voiceIdentities.matchedHouseholdId, hh!.id));
-        await db.delete(households).where(eq(households.id, hh!.id));
-      });
-    }
   });
 
   it("an unrecognized number resolves to role 'unknown' — never silently owner", async () => {

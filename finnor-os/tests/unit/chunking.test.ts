@@ -14,7 +14,7 @@ describe("chunkText", () => {
   });
 
   it("a short text stays as one chunk", () => {
-    const text = "Hard water at 14 gpg. The customer wants a softener quote.";
+    const text = "Net leverage is 4.2x. The deal team needs lender evidence.";
     expect(chunkText(text)).toEqual([text]);
   });
 
@@ -58,8 +58,8 @@ describe("chunkText", () => {
 describe("chunkSource", () => {
   it("stamps every chunk with the source's entityRefs and occurredAt", () => {
     const occurredAt = new Date("2026-01-15T00:00:00Z");
-    const result = chunkSource({ text: "A short document.", entityRefs: [{ type: "household", id: "hh-1" }], occurredAt });
-    expect(result).toEqual([{ chunk: "A short document.", entityRefs: [{ type: "household", id: "hh-1" }], occurredAt }]);
+    const result = chunkSource({ text: "A short document.", entityRefs: [{ type: "pe_deal", id: "deal-1" }], occurredAt });
+    expect(result).toEqual([{ chunk: "A short document.", entityRefs: [{ type: "pe_deal", id: "deal-1" }], occurredAt }]);
   });
 
   it("defaults entityRefs to [] when not given", () => {

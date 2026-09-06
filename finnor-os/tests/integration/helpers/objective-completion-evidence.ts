@@ -28,8 +28,8 @@ export function citeObservedObjectiveEvidence(
   // than trusting the scripted planner's prose or outcome object.
   evidence.push({
     kind: "canonical_query",
-    request: { intent: "business_state" },
-    assertion: { path: ["operations", "lowStockItems"], operator: "gte", expected: 0 },
+    request: { intent: "work_list", openOnly: true },
+    assertion: { path: ["rows"], operator: "exists" },
   });
   return { ...decision, evidence };
 }

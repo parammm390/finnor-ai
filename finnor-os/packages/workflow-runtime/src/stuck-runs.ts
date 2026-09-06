@@ -3,10 +3,6 @@
 // would let the UI claim a run was healthy when the watchdog has already flagged it.
 
 export const STUCK_RUN_DEADLINE_HOURS: Readonly<Record<string, number>> = {
-  lead_to_water_test: 48,
-  proposal_signature: 72,
-  proposal_to_installation: 72,
-  invoice_to_cash: 72,
   single_action: 0.25,
 };
 

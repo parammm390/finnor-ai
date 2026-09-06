@@ -1274,12 +1274,7 @@ function ThreadGate() {
   if (fixtureKey === "signature-journey") return <FixtureJourneyHarness signature />
   if (fixtureKey) return <ThreadFixtureHarness fixtureKey={fixtureKey} restored={fixtureRestored} />
 
-  // The signed-out preview is safe while Supabase restores a session: it uses
-  // no private facts and lets the public route paint immediately instead of
-  // making the auth bootstrap request the largest-contentful-paint boundary.
-  // Once restoration resolves, the same gate swaps to the owner/role surface
-  // without changing the backend authorization boundary.
-  if (auth.loading) return <PreviewThread />
+  if (auth.loading) return <LoadingGate />
   if (auth.authError) return <AuthErrorGate message={auth.authError} onRetry={auth.retryAuth} />
   if (!auth.session) return <PreviewThread />
   if (auth.roleError) return <RoleErrorGate message={auth.roleError} onRetry={auth.retryRole} />

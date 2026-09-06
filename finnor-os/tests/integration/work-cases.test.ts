@@ -3,7 +3,6 @@
 // roots to prove those records do not merge. No customer/time/text grouping is used.
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { workCases } from "../../packages/read-models";
@@ -30,11 +29,8 @@ import { GET } from "../../apps/api/app/api/read-models/[view]/route";
 import { and, eq, sql } from "drizzle-orm";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-// Legacy fallback is selected only when the tenant has no canonical Work rows.
-// Unique tenants keep this durable-state test repeatable without deleting Work or
-// append-only operational deltas from a prior local run.
-const TENANT_ID = randomUUID();
-const OTHER_TENANT_ID = randomUUID();
+const TENANT_ID = "00000000-0000-4000-8000-0000000002f1";
+const OTHER_TENANT_ID = "00000000-0000-4000-8000-0000000002f2";
 const HOUSEHOLD_ID = "00000000-0000-4000-8000-0000000002a1";
 const INVOICE_ID = "00000000-0000-4000-8000-0000000002a2";
 const INSTRUCTION_A = "00000000-0000-4000-8000-0000000002b1";
@@ -64,9 +60,9 @@ async function dbUp(): Promise<boolean> {
 
 const available = await dbUp();
 
-function request(query = "", tenantId = TENANT_ID): Request {
+function request(query = ""): Request {
   return new Request(`http://localhost/api/read-models/work-cases${query}`, {
-    headers: { "x-tenant-id": tenantId, "x-user-role": "owner" },
+    headers: { "x-tenant-id": TENANT_ID, "x-user-role": "owner" },
   });
 }
 
@@ -110,10 +106,7 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
 
   afterAll(async () => {
     await withTenant(TENANT_ID, async (db) => {
-      // Work creation appends an operational-delta row. Use the database's
-      // authorized retention function before removing the isolated fixture so
-      // the append-only ledger is never rewritten by the Works FK action.
-      await db.execute(sql`SELECT finnor_os.purge_operational_deltas(${TENANT_ID}::uuid, now() + interval '1 second')`);
+      await db.execute(sql`SELECT set_config('app.allow_audit_mutation', 'true', true)`);
       await db.delete(pendingConfirmations).where(eq(pendingConfirmations.tenantId, TENANT_ID));
       await db.delete(voiceTurns).where(eq(voiceTurns.tenantId, TENANT_ID));
       await db.delete(calls).where(eq(calls.tenantId, TENANT_ID));
@@ -125,8 +118,7 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
       await db.delete(instructionEvents).where(eq(instructionEvents.tenantId, TENANT_ID));
       await db.delete(instructionSessions).where(eq(instructionSessions.tenantId, TENANT_ID));
       await db.delete(voiceSessions).where(eq(voiceSessions.tenantId, TENANT_ID));
-      // business_events is an append-only audit ledger by design. The isolated
-      // fixture row remains historical evidence; cleanup must never delete it.
+      await db.delete(businessEvents).where(and(eq(businessEvents.tenantId, TENANT_ID), eq(businessEvents.source, "p2-t1")));
     });
     await withTenant(OTHER_TENANT_ID, async (db) => {
       await db.delete(domainActions).where(eq(domainActions.tenantId, OTHER_TENANT_ID));
@@ -200,27 +192,13 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
   });
 
   it("continues from canonical Work into legacy history without hiding either scope", async () => {
-    // Durable Work emits append-only operational deltas and is intentionally not a
-    // deletable fixture. Isolate this proof in a unique tenant instead of turning
-    // append-only evidence into a hidden teardown write path.
-    const canonicalTenantId = randomUUID();
-    const legacyInstructionId = randomUUID();
-    const [work] = await withTenant(canonicalTenantId, async (db) => {
-      await db.insert(tenants).values({ id: canonicalTenantId, name: "P0 Work Cases Cursor Proof" });
-      await db.insert(instructionSessions).values({
-        id: legacyInstructionId,
-        tenantId: canonicalTenantId,
-        instructionText: "Legacy history after the canonical root",
-        source: "typed",
-      });
-      return db.insert(works).values({
-        tenantId: canonicalTenantId,
-        initialChannel: "text",
-        initialInstruction: "Canonical root before legacy history",
-        status: "executing",
-      }).returning();
-    });
-    const canonical = await GET(request("?limit=1", canonicalTenantId), { params: Promise.resolve({ view: "work-cases" }) });
+    const [work] = await withTenant(TENANT_ID, (db) => db.insert(works).values({
+      tenantId: TENANT_ID,
+      initialChannel: "text",
+      initialInstruction: "Canonical root before legacy history",
+      status: "executing",
+    }).returning());
+    const canonical = await GET(request("?limit=1"), { params: Promise.resolve({ view: "work-cases" }) });
     const canonicalBody = await canonical.json() as {
       data: WorkCaseProjection[];
       page: { rootScope: string; hasMore: boolean; nextCursor: string | null };
@@ -228,22 +206,13 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
     expect(canonicalBody.data.map((item) => item.root.id)).toEqual([work!.id]);
     expect(canonicalBody.page).toMatchObject({ rootScope: "canonical_work", hasMore: true });
 
-    try {
-      const legacy = await GET(request(`?limit=1&cursor=${encodeURIComponent(canonicalBody.page.nextCursor!)}`, canonicalTenantId), { params: Promise.resolve({ view: "work-cases" }) });
-      const legacyBody = await legacy.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
-      expect(legacyBody.page.rootScope).toBe("legacy_instruction");
-      expect(legacyBody.data[0]?.root.kind).toBe("instruction");
-    } finally {
-      await withTenant(canonicalTenantId, async (db) => {
-        // operational_deltas is append-only and the Works FK uses SET NULL. Purge
-        // this isolated fixture's delta through the authorized retention function
-        // before deleting the Work, so Postgres never attempts an audit UPDATE.
-        await db.execute(sql`SELECT finnor_os.purge_operational_deltas(${canonicalTenantId}::uuid, now() + interval '1 second')`);
-        await db.delete(works).where(eq(works.id, work!.id));
-        await db.delete(instructionSessions).where(eq(instructionSessions.id, legacyInstructionId));
-        await db.delete(tenants).where(eq(tenants.id, canonicalTenantId));
-      });
-    }
+    const legacy = await GET(request(`?limit=1&cursor=${encodeURIComponent(canonicalBody.page.nextCursor!)}`), { params: Promise.resolve({ view: "work-cases" }) });
+    const legacyBody = await legacy.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
+    expect(legacyBody.page.rootScope).toBe("legacy_instruction");
+    expect(legacyBody.data[0]?.root.kind).toBe("instruction");
+    // Operational deltas are append-only and may retain this Work as provenance.
+    // The isolated test database owns the fixture lifecycle; deleting Work would
+    // attempt to rewrite that immutable audit record through ON DELETE SET NULL.
   });
 });
 

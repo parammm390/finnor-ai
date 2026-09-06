@@ -20,7 +20,7 @@ export const voiceNotifyFailure: JobHandler = async (payload) => {
   }
   const result = await placeVapiCall({
     tenantId,
-    customerNumber: ownerPhone,
+    destinationNumber: ownerPhone,
     firstMessage: script,
     metadata: { notification: "integration_failure", tenantId },
   }, await resolveCredentialContext(tenantId, "system:integration-failure", "vapi", "integration_failure", { channel: "voice" }));

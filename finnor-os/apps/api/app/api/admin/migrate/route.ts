@@ -35,8 +35,7 @@ export async function POST(req: Request): Promise<Response> {
     // graph/setup.ts's own header says "run once in CI right after db:migrate", but
     // that was only ever wired into CI's ephemeral test Postgres (.github/workflows/
     // ci.yml), never staging or prod. Every graph-routed action type
-    // (schedule_water_test, start_water_test_workflow, request_proposal_signature,
-    // start_installation_workflow, start_invoice_to_cash_workflow) crashed with
+    // legacy action/workflow rows crashed with
     // `relation "finnor_langgraph.checkpoints" does not exist` the moment it was
     // actually invoked. Runs against the SAME migrations-capable connection as
     // migrate() above (a dedicated pool, not the shared getPool()/DATABASE_URL,

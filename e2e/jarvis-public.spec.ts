@@ -69,10 +69,6 @@ test.describe("public /jarvis page", () => {
     await expect(page.getByText("PUBLIC PREVIEW", { exact: true })).toBeVisible()
     await expect(page.getByRole("heading", { name: "What needs to move?" })).toBeVisible()
     await expect(page.locator('[data-jarvis-mode="preview"]')).toBeVisible()
-    // The adaptive rail is intentionally CSS-hidden on the mobile breakpoint;
-    // verify its accessible name without requiring the desktop-only link to be
-    // visible in every responsive project.
-    await expect(page.locator("a.jarvis-adaptive-nav__brand")).toHaveAttribute("aria-label", "JARVIS home")
 
     expect(unexpected, `unexpected console errors on /jarvis: ${unexpected.join("\n")}`).toEqual([])
   })

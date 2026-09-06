@@ -54,10 +54,7 @@ export function projectThreadWorkspace(thread: Thread): WorkspaceProjection {
   let kind: WorkspaceKind
   if (thread.answerResult?.query) kind = queryWorkspace(thread.answerResult.query.result.intent)
   else if (thread.answerResult) kind = actionTypes.some((type) => RESEARCH_ACTIONS.has(type)) ? "research" : "answer"
-  else if (state === "recovering" || (state === "failed" && thread.everExecuted)) kind = "recovery"
-  // An infrastructure/intake failure before any execution is a visible failed
-  // receipt, not an invented recovery workspace with execution affordances.
-  else if (state === "failed") kind = "receipt"
+  else if (state === "failed") kind = "recovery"
   else if (state === "completed" || state === "partial" || state === "cancelled") kind = "receipt"
   else if (state === "executing" || state === "verifying" || (state === "awaiting_approval" && thread.everExecuted)) kind = "execution"
   else kind = actionWorkspace(actionTypes)

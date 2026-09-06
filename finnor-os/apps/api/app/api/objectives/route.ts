@@ -5,7 +5,6 @@ import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
 import { receiveWork, recordWorkResponse, transitionWork, workAggregate } from "@finnor/db";
 import { ensureObjectiveIterationDelivery, linkEmployeeConversationTurnToWork, OperatingInteractionContextError, parseObjectiveSuccessCondition, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
-import { createInteractiveIntakeDeadline, requireInteractiveIntakeTime } from "../../../lib/intake-deadline";
 
 function intakeAuthorityContext(ctx: {
   userId: string;
@@ -36,8 +35,7 @@ async function recoverableWorkError(
   extra: Record<string, unknown> = {},
 ): Promise<Response> {
   const message = error instanceof Error ? error.message : "Objective processing failed";
-  const code = typeof extra.code === "string" ? extra.code : "intake_pre_orchestration_failed";
-  const failure = { kind: code, code, message, recoverable: true, at: new Date().toISOString() };
+  const failure = { message, recoverable: true, at: new Date().toISOString() };
   // Only a Work that is still at the intake boundary may be failed here. The
   // expected status prevents a late setup error from relabelling a Work whose
   // objective orchestration already committed progress.
@@ -106,7 +104,6 @@ export async function POST(req: Request): Promise<Response> {
     const ctx = await requireContext(req);
     const parsed = StartObjectiveSchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
-    const intakeDeadlineAt = createInteractiveIntakeDeadline(parsed.data.channel);
     const instructionId = parsed.data.instructionId ?? randomUUID();
     // Claim durable Work and its first input immediately after auth/schema
     // validation. Context, conversation, authority, and objective setup follow it.
@@ -123,7 +120,6 @@ export async function POST(req: Request): Promise<Response> {
       // after this claim; the initial Work row must not store unverified refs.
       activeContext: undefined,
       authorityContext: intakeAuthorityContext(ctx),
-      intakeDeadlineAt: new Date(intakeDeadlineAt),
     });
     if (received.duplicate) {
       // Replays must not create another conversation turn or re-enter objective
@@ -227,10 +223,8 @@ export async function POST(req: Request): Promise<Response> {
           idempotencyKey: parsed.data.idempotencyKey,
           activeContext,
           conversationContext: prepared.context,
-          instructionRouteDecision: { version: 1, route: "CLARIFY", reasonCodes: ["consequential_target_or_sender_unresolved"] },
+          instructionRouteDecision: { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] },
           skipFastReadClassification: true,
-          signal: req.signal,
-          deadlineAt: intakeDeadlineAt,
         });
       } catch (error) {
         return await recoverableWorkError(error, ctx.tenantId, received);
@@ -261,7 +255,6 @@ export async function POST(req: Request): Promise<Response> {
     const budgets = parsed.data.budgets;
     let result;
     try {
-      requireInteractiveIntakeTime(intakeDeadlineAt);
       result = await getOrchestrator().startObjective(parsed.data.objective, humanCtx, {
         channel: parsed.data.channel,
         sessionId: parsed.data.sessionId,
@@ -277,7 +270,6 @@ export async function POST(req: Request): Promise<Response> {
         maxPlannerFailures: budgets?.maxPlannerFailures,
         maxConsecutiveNoProgress: budgets?.maxConsecutiveNoProgress,
         deadlineAt: budgets?.deadlineAt ? new Date(budgets.deadlineAt) : undefined,
-        intakeDeadlineAt: new Date(intakeDeadlineAt),
       });
     } catch (error) {
       return await recoverableWorkError(error, ctx.tenantId, received);

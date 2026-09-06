@@ -83,19 +83,19 @@ describe("parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam
 
 describe("diagnoseFailure (spoken failure diagnosis)", () => {
   it("names the failing integration and asks for the fix on credential errors", () => {
-    const s = diagnoseFailure("Could not reach the CRM: [ghl] GOHIGHLEVEL_API_KEY is not set", "schedule_water_test");
-    expect(s).toContain("GoHighLevel");
+    const s = diagnoseFailure("Could not reach voice transport: [vapi] VAPI_API_KEY is not set", "place_call");
+    expect(s).toContain("Vapi");
     expect(s.toLowerCase()).toContain("key");
-    expect(s).toContain("schedule water test");
+    expect(s).toContain("place call");
   });
   it("names the integration on outage errors without asking for a key", () => {
-    const s = diagnoseFailure("[vapi] timed out after 15000ms", "bulk_notify_existing_customers");
-    expect(s).toContain("Vapi");
+    const s = diagnoseFailure("[resend] timed out after 15000ms", "send_message");
+    expect(s).toContain("notification sender");
     expect(s.toLowerCase()).toContain("review queue");
   });
   it("degrades gracefully with no integration tag", () => {
-    const s = diagnoseFailure(undefined, "create_invoice");
-    expect(s).toContain("create invoice");
+    const s = diagnoseFailure(undefined, "record_finding");
+    expect(s).toContain("record finding");
   });
 });
 

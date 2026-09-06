@@ -8,7 +8,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0108_operating_product_closure.sql",
+    "requiredMigrationHead": "0109_atomic_water_runtime_retirement.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -43,48 +43,21 @@
       "readinessPath": "/api/ready"
     },
     "worker": {
-      "provider": "aws-ecs-fargate",
-      "accountId": "601804670058",
-      "region": "us-east-1",
-      "stackName": "finnor-production",
-      "vpcId": "vpc-0d7e56436d2d05193",
-      "publicSubnetIds": [
-        "subnet-014251451583c1b79",
-        "subnet-07c14e3fee9606ce0"
-      ],
-      "clusterName": "finnor-production",
-      "serviceName": "finnor-worker",
-      "taskFamily": "finnor-worker",
-      "containerName": "finnor-worker",
-      "containerPort": 8090,
-      "ecrRepository": "finnor-worker",
-      "loadBalancerName": "finnor-production-realtime",
-      "targetGroupName": "finnor-worker",
-      "httpListenerPort": 80,
-      "httpsListenerPort": 443,
-      "executionRoleName": "finnor-ecs-execution",
-      "taskRoleName": "finnor-worker-task",
-      "githubActionsRoleName": "finnor-github-actions-deploy",
-      "logGroupName": "/ecs/finnor-worker",
-      "logRetentionDays": 7,
-      "desiredCount": 1,
-      "cpu": 512,
-      "memory": 1024,
-      "autoscaling": false,
-      "fargateSpot": false,
-      "natGateway": false,
-      "secretMap": {
-        "DATABASE_URL": "finnor/prod/database-url",
-        "GROQ_API_KEY": "finnor/prod/groq-api-key",
-        "REDIS_URL": "finnor/prod/redis-url",
-        "SENTRY_DSN": "finnor/prod/sentry-dsn",
-        "SUPABASE_SERVICE_ROLE_KEY": "finnor/prod/supabase-service-role-key",
-        "VAPI_API_KEY": "finnor/prod/vapi-api-key",
-        "VAPI_WEBHOOK_SECRET": "finnor/prod/vapi-webhook-secret"
-      },
-      "sseGatewayEnabled": true,
-      "sseGatewayPort": 8090,
-      "sseGatewayUrl": "https://realtime.finnorai.com"
+      "provider": "azure-vm",
+      "tenantId": "c2e90e65-2dc0-43aa-80b9-e3091e8e499a",
+      "subscriptionId": "899ba394-2364-46c2-bac6-d88b4b4efec1",
+      "resourceGroup": "finnor-production-rg",
+      "resourceName": "finnor-jarvis-worker",
+      "resourceType": "Microsoft.Compute/virtualMachines",
+      "resourceId": "/subscriptions/899ba394-2364-46c2-bac6-d88b4b4efec1/resourceGroups/finnor-production-rg/providers/Microsoft.Compute/virtualMachines/finnor-jarvis-worker",
+      "vmId": "ff867b16-58da-460d-a73f-4fe81cd0246d",
+      "location": "northcentralus",
+      "adminUsername": "finnor",
+      "systemdUnit": "finnor-jarvis-worker.service",
+      "releaseRoot": "/srv/finnor/releases",
+      "currentSymlink": "/srv/finnor/current",
+      "secretEnvironmentFile": "/etc/finnor/jarvis-worker.env",
+      "releaseEnvironmentFile": "/etc/finnor/release.env"
     },
     "orchestrator": {
       "mode": "embedded-worker",
@@ -95,10 +68,9 @@
     "database": {
       "provider": "supabase-postgres",
       "host": "aws-1-ap-northeast-1.pooler.supabase.com",
-      "supabaseUrl": "https://kpxrnonhnhexutvdywbh.supabase.co",
       "schema": "finnor_os",
       "migrationTable": "_migrations"
     }
   },
-  "forbiddenActiveProviders": ["railway", "render", "azure"]
+  "forbiddenActiveProviders": ["railway", "render"]
 }

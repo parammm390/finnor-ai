@@ -20,18 +20,18 @@ import { LLMPlanner } from "../../packages/orchestration/src/planner";
 import { COMPUTER_ACTION_HARDENING_SPEC, TOTAL_ACTION_COUNT } from "../../scripts/release/action-hardening-spec";
 
 const readTask = {
-  application: "supplier_portal",
-  authProfileRef: "supplier-west",
-  task: "Find the current ETA for order WS-48",
-  target: { kind: "supplier_order", identifier: "WS-48" },
+  application: "diligence_portal",
+  authProfileRef: "diligence-readonly",
+  task: "Find the current status for diligence record DD-48",
+  target: { kind: "diligence_record", identifier: "DD-48" },
   mode: "READ_ONLY" as const,
-  successCriteria: ["The order is identified and an ETA is observed"],
+  successCriteria: ["The record is identified and its current evidence status is observed"],
 };
 
 const effect = {
-  operation: "update_delivery_note",
-  target: { kind: "supplier_order", identifier: "WS-48" },
-  changes: { deliveryNote: "Call warehouse before delivery" },
+  operation: "update_diligence_note",
+  target: { kind: "diligence_record", identifier: "DD-48" },
+  changes: { note: "Counsel review requested" },
 };
 
 describe("computer_task planner contract", () => {
@@ -53,7 +53,7 @@ describe("computer_task planner contract", () => {
     expect(ComputerTaskSchema.safeParse({ ...readTask, mode: "WRITE", authorizedEffect: { ...effect, target: { ...effect.target, identifier: "WS-49" } } }).success).toBe(false);
   });
 
-  it("registers the 59th hardened action without changing the P0-P2 counts", () => {
+  it("registers one computer action in the active fixed catalog", () => {
     const registry = createDefaultPluginRegistry();
     expect(registry.actionTypes()).toHaveLength(TOTAL_ACTION_COUNT);
     expect(registry.resolve("computer_task")?.name).toBe("computer-task");
@@ -64,9 +64,9 @@ describe("computer_task planner contract", () => {
     const registry = createDefaultPluginRegistry();
     const planner = new LLMPlanner(registry, { name: "unused", async complete() { return '{"actions":[]}'; } });
     const prompt = (planner as unknown as { systemPrompt(): string }).systemPrompt();
-    expect(prompt.indexOf("canonical FINNOR query/data first")).toBeLessThan(prompt.indexOf("computer_task browser/CDP fourth"));
-    expect(prompt).toContain("Never create a browser session for work an existing query or action can do");
-    expect(prompt).toContain("If target or profile is ambiguous, emit clarification_request before computer execution");
+    expect(prompt).toContain("Use computer_task only when no reliable canonical/native/API capability can complete the task");
+    expect(prompt).toContain("a governed auth profile is available");
+    expect(prompt).toContain("Never invent identifiers");
     expect(ComputerTaskSchema.safeParse({ ...readTask, target: undefined }).success).toBe(false);
   });
 });
@@ -97,7 +97,7 @@ describe("provider-neutral broker and Steel adapter", () => {
       runId: "run-a",
       auth: { profileId: "credential-sensitive-profile" },
       mode: "READ_ONLY",
-      origins: { homeUrl: "https://supplier.example/orders", allowedOrigins: ["https://supplier.example"], authOrigins: [] },
+      origins: { homeUrl: "https://diligence.example/records", allowedOrigins: ["https://diligence.example"], authOrigins: [] },
       limits: { maxSteps: 5, timeoutMs: 60_000, maxProviderCredits: 2, maxScreenshots: 1, maxArtifacts: 2, maxDownloadBytes: 1024, maxUploadBytes: 0, maxOutputBytes: 4096 },
     });
     expect(session).toEqual({ sessionRef: "session-1", cdpUrl: expect.any(String), liveViewUrl: expect.any(String), executionMode: "READ_ONLY", downloadLimitBytes: 1024 });
@@ -111,31 +111,31 @@ describe("provider-neutral broker and Steel adapter", () => {
 describe("origin, effect, evidence, and redaction boundaries", () => {
   it("derives origins only from governed configuration and lets restrictions narrow", () => {
     const policy = deriveComputerOriginPolicy(
-      { homeUrl: "https://supplier.example/orders", allowedOrigins: ["https://supplier.example", "https://cdn.example"], authOrigins: ["https://login.example"] },
-      { allowedOrigins: ["https://supplier.example"], allowedAuthOrigins: ["https://login.example"] },
+      { homeUrl: "https://diligence.example/records", allowedOrigins: ["https://diligence.example", "https://cdn.example"], authOrigins: ["https://login.example"] },
+      { allowedOrigins: ["https://diligence.example"], allowedAuthOrigins: ["https://login.example"] },
     );
-    expect(policy.allowedOrigins).toEqual(["https://supplier.example"]);
+    expect(policy.allowedOrigins).toEqual(["https://diligence.example"]);
     expect(assertAllowedUrl("https://login.example/sso/callback?code=hidden", policy)).toContain("login.example");
     expect(() => assertAllowedUrl("https://evil.example/redirect", policy)).toThrow(ComputerOriginError);
-    expect(safePageUrl("https://supplier.example/order?id=secret#fragment")).toBe("https://supplier.example/order");
+    expect(safePageUrl("https://diligence.example/record?id=secret#fragment")).toBe("https://diligence.example/record");
   });
 
   it("compares semantic effects exactly, including every changed field", () => {
-    expect(effectsExactlyEqual(effect, { ...effect, changes: { deliveryNote: "Call warehouse before delivery" } })).toBe(true);
-    expect(effectsExactlyEqual(effect, { ...effect, changes: { deliveryNote: "Call warehouse before delivery", priority: true } })).toBe(false);
+    expect(effectsExactlyEqual(effect, { ...effect, changes: { note: "Counsel review requested" } })).toBe(true);
+    expect(effectsExactlyEqual(effect, { ...effect, changes: { note: "Counsel review requested", priority: true } })).toBe(false);
     expect(authorizedEffectHash(effect)).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("blocks non-idempotent application traffic in read-only mode without relying on labels", () => {
-    const origins = { homeUrl: "https://supplier.example", allowedOrigins: ["https://supplier.example"], authOrigins: [] };
-    expect(readOnlyRequestWouldMutate("READ_ONLY", "POST", "fetch", "https://supplier.example/orders/WS-48", origins)).toBe(true);
-    expect(readOnlyRequestWouldMutate("READ_ONLY", "GET", "document", "https://supplier.example/orders/WS-48", origins)).toBe(false);
-    expect(readOnlyRequestWouldMutate("WRITE", "POST", "fetch", "https://supplier.example/orders/WS-48", origins)).toBe(false);
+    const origins = { homeUrl: "https://diligence.example", allowedOrigins: ["https://diligence.example"], authOrigins: [] };
+    expect(readOnlyRequestWouldMutate("READ_ONLY", "POST", "fetch", "https://diligence.example/records/DD-48", origins)).toBe(true);
+    expect(readOnlyRequestWouldMutate("READ_ONLY", "GET", "document", "https://diligence.example/records/DD-48", origins)).toBe(false);
+    expect(readOnlyRequestWouldMutate("WRITE", "POST", "fetch", "https://diligence.example/records/DD-48", origins)).toBe(false);
   });
 
   it("requires literal post-state evidence for a write", () => {
-    expect(observationVerifiesEffect({ url: "https://supplier.example/orders/WS-48", title: "Order WS-48", text: "Delivery note: Call warehouse before delivery", elements: [], openPageUrls: [] }, effect)).toBe(true);
-    expect(observationVerifiesEffect({ url: "https://supplier.example/orders/WS-48", title: "Order WS-48", text: "Saved", elements: [], openPageUrls: [] }, effect)).toBe(false);
+    expect(observationVerifiesEffect({ url: "https://diligence.example/records/DD-48", title: "Diligence DD-48", text: "Note: Counsel review requested", elements: [], openPageUrls: [] }, effect)).toBe(true);
+    expect(observationVerifiesEffect({ url: "https://diligence.example/records/DD-48", title: "Diligence DD-48", text: "Saved", elements: [], openPageUrls: [] }, effect)).toBe(false);
   });
 
   it("redacts secret-shaped state and sensitive values before persistence", () => {

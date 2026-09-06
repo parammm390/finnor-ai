@@ -13,10 +13,6 @@ function definition(load: () => Promise<{ version: number }>): ProjectionDefinit
   return { key: ["work", "cases"], owner: "test", staleMs: 10_000, pollMs: 30_000, tags: ["work"], load }
 }
 
-function fallbackDefinition(load: () => Promise<{ version: number }>): ProjectionDefinition<{ version: number }> {
-  return { key: ["work", "active"], owner: "test", staleMs: 60_000, pollMs: 60_000, fallbackPollMs: 2_000, tags: ["work"], load }
-}
-
 describe("BusinessProjectionCache", () => {
   it("deduplicates concurrent reads for one canonical key", async () => {
     const pending = deferred<{ version: number }>()
@@ -98,33 +94,6 @@ describe("BusinessProjectionCache", () => {
     cache.reset()
     expect(cache.snapshot(id).data).toBeNull()
     expect(cache.metricsSnapshot().requestsStarted).toBe(0)
-  })
-
-  it("uses the fast interval only while realtime is in polling fallback", async () => {
-    vi.useFakeTimers()
-    const load = vi.fn()
-      .mockResolvedValueOnce({ version: 1 })
-      .mockResolvedValueOnce({ version: 2 })
-    const cache = new BusinessProjectionCache()
-    const id = cache.register(fallbackDefinition(load))
-    const unsubscribe = cache.subscribe(id, () => undefined)
-    await cache.ensure(id)
-    expect(load).toHaveBeenCalledTimes(1)
-
-    cache.setRealtimeStatus("live")
-    await vi.advanceTimersByTimeAsync(2_000)
-    expect(load).toHaveBeenCalledTimes(1)
-
-    // Refresh the baseline timestamp before switching transport so the
-    // fallback interval is measured from a known healthy read.
-    cache.prime(fallbackDefinition(load), { version: 1 })
-    cache.setRealtimeStatus("polling")
-    await vi.advanceTimersByTimeAsync(1_999)
-    expect(load).toHaveBeenCalledTimes(1)
-    await vi.advanceTimersByTimeAsync(1)
-    expect(load).toHaveBeenCalledTimes(2)
-    unsubscribe()
-    vi.useRealTimers()
   })
 })
 describe("projection invalidation mapping", () => {

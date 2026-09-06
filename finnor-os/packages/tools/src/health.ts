@@ -46,14 +46,3 @@ export async function testVapiAssistants(context: TenantCredentialContext<"vapi"
     return [{ agentKey: "jarvis", personaKey: "main", configured: true, healthy: false, error: "Assistant verification request failed" }];
   }
 }
-
-export async function testGhlConnection(context: TenantCredentialContext<"ghl">): Promise<HealthEntry> {
-  try {
-    const { connectGhl } = await import("./mcp-client");
-    const connection = await connectGhl(context);
-    await connection.close().catch(() => undefined);
-    return { configured: true, healthy: true };
-  } catch {
-    return { configured: true, healthy: false, error: "GHL authenticated connection failed" };
-  }
-}

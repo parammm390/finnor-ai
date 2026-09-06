@@ -40,15 +40,18 @@ import {
   outcomePackRuns,
   tenantOutcomePackSettings,
   type Db,
+  resolveTenantVertical,
 } from "@finnor/db";
-import { executeOperationalQuery } from "@finnor/read-models";
+import { attachWorkToDealGraph, resolvePrivateEquityDealReference } from "@finnor/private-equity";
 import { evaluateAuthority } from "@finnor/authority";
 import { listAvailableIdentityAccess } from "@finnor/security";
 import type { LLMChannel, LLMProvider } from "./llm";
 import { resolveProviderForPurpose } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
+import { plannerActionTypesForVertical } from "./plugin-registry";
 import { queryAuthorityRequest } from "./authority-runtime";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
+import { executeTenantOperationalQuery } from "./operational-query-runtime";
 import { ingestIntegrationEvent, markObjectiveWakeConsumed, objectiveWakeContext, recoverDueWorkEventWaits } from "./event-waits";
 import { resolveOperatingInteractionContext } from "./interaction-context";
 import {
@@ -58,10 +61,25 @@ import {
   ObjectiveCompletionEvidenceSchema,
   parseObjectiveCompletionEvidence,
   parseObjectiveSuccessCondition,
+  privateEquityObjectiveSuccessCondition,
 } from "./objective-success";
 
 export const OBJECTIVE_ITERATION_OUTCOMES = ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] as const;
 export type ObjectiveIterationOutcome = (typeof OBJECTIVE_ITERATION_OUTCOMES)[number];
+
+const PE_OBJECTIVE_ENTITY_TYPES = new Set(["pe_deal", "pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"]);
+
+function privateEquityRefsFromContext(value: unknown): Array<{ entityType: string; entityId: string }> {
+  if (Array.isArray(value)) return value.flatMap(privateEquityRefsFromContext);
+  if (!value || typeof value !== "object") return [];
+  const row = value as Record<string, unknown>;
+  const own = typeof row.entityType === "string" && PE_OBJECTIVE_ENTITY_TYPES.has(row.entityType)
+    && typeof row.entityId === "string" && /^[0-9a-f-]{36}$/i.test(row.entityId)
+    ? [{ entityType: row.entityType, entityId: row.entityId }]
+    : [];
+  const nested = Object.values(row).flatMap(privateEquityRefsFromContext);
+  return [...new Map([...own, ...nested].map((ref) => [`${ref.entityType}:${ref.entityId}`, ref])).values()];
+}
 
 const OptionalDecisionText = z.preprocess((value) => value === null ? undefined : value, z.string().min(1).max(2000).optional());
 const OptionalDecisionRecord = z.preprocess((value) => value === null ? undefined : value, z.record(z.unknown()).optional());
@@ -172,8 +190,6 @@ export interface StartObjectiveOptions extends ObjectiveBudgets {
   workInputId?: string;
   idempotencyKey?: string;
   activeContext?: OperatingInteractionContext | Record<string, unknown>;
-  /** API request deadline; distinct from the Objective's durable multi-day deadline. */
-  intakeDeadlineAt?: Date;
   successCondition?: ObjectiveSuccessCondition;
   /** Phase 5 binding only. The existing Objective controller remains the runtime. */
   outcomePack?: OutcomePackStartBinding;
@@ -246,7 +262,8 @@ function failureShape(error: unknown): Record<string, unknown> {
 }
 
 function role(value: unknown): Role {
-  return value === "dispatcher" || value === "technician" ? value : "owner";
+  void value;
+  return "owner";
 }
 
 function channel(value: string): LLMChannel {
@@ -315,12 +332,12 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         "Complete only when the persisted business success condition appears true in current canonical state, including when a previously expected action is no longer necessary. Include evidence using exact query/effect/event/delegation/computer ids or a typed canonical query assertion.",
         "Wait only for a future business condition. Use waitFor with exact canonical refs and optionally deadlineAt for 'event X OR deadline Y'. Never correlate by similar names or message text. A timer-only wait may use deadlineAt without waitFor. Block when safe progress requires a human fact/integration. Fail only for a terminal objective failure.",
         `Allowed action types: ${input.allowedActionTypes.join(", ")}`,
-        `Typed operational query intents: customer_lookup, customer_cohort, schedule_range, money_summary, work_list, inventory_status, agent_activity, business_state, company_context.`,
-        'Operational query requests are strict flat objects: inventory_status accepts only {"intent":"inventory_status","sku":"optional exact SKU","lowStockOnly":false,"includeOpenProcurement":true}; it has no order_number field. A supplier order/reference is not an inventory SKU. If canonical state has no supplier-order record or provider API binding and an exact governed supplier application/auth profile is visible, use one READ_ONLY computer_task instead of repeatedly querying inventory.',
+        `Typed operational query intents: work_list, agent_activity, company_context, party_lookup, party_context, team_roster, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness.`,
+        "Deal-scoped operational queries require the exact dealId from canonical state. Never infer a deal, company, fund, party, request, finding, risk, condition, or workstream from a similar label.",
         "Action payload schemas follow. Field names and required fields are strict:",
         input.actionPayloadSpec,
         `Exact governed computer access visible for this decision: ${JSON.stringify(input.inspection.executionAccess)}`,
-        'For a governed supplier-order lookup, computer_task still requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"supplier_order",identifier:<order reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never replace these fields with order_number or browser instructions.',
+        'For governed external diligence evidence, computer_task requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"diligence_record",identifier:<exact reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never invent a URL, account, profile, or reference.',
         'Return one JSON object. query/action/wait may include recoveryMode: retry|replan|recover|compensate|escalate. Shapes: {"kind":"query","request":{"intent":"..."},"reason":"...","nextStep":"..."}; {"kind":"action","actionType":"...","payload":{},"reason":"...","nextStep":"..."}; {"kind":"wait","waitFor":{"eventType":"delegation.acknowledged","delegationId":"exact UUID","subject":{"type":"employee","id":"exact UUID"}},"deadlineAt":"optional ISO","condition":"short label","reason":"..."}; {"kind":"complete","outcome":{},"evidence":[{"kind":"canonical_query","request":{"intent":"..."},"assertion":{"path":["rows"],"operator":"array_contains","expected":{}}}],"reason":"..."}; {"kind":"block","reason":"...","recovery":"..."}; {"kind":"fail","reason":"...","failure":{}}.',
       ].join("\n"),
       user: JSON.stringify({ objective: input.objective, remainingBudget: input.remaining, canonicalInspection: input.inspection }),
@@ -385,9 +402,7 @@ async function scheduleIterationTx(
     payload,
     runAt,
     idempotencyKey: objectiveIterationJobKey(loop.id, loop.revision, nextStep, latestTerminal?.id),
-    // Objective iterations are durable background work. Interactive workflow/action
-    // deliveries own the reserved lane so a slow Objective cannot consume it.
-    lane: "batch",
+    lane: "interactive",
     priority: 100,
   }).onConflictDoNothing({ target: jobs.idempotencyKey }).returning({ id: jobs.id });
   return Boolean(inserted);
@@ -445,7 +460,6 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       // Resolve it after the durable Work/Input claim before persisting it.
       activeContext: undefined,
       authorityContext: intakeAuthorityContext(ctx),
-      intakeDeadlineAt: options.intakeDeadlineAt,
     });
   options = {
     ...options,
@@ -456,9 +470,33 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       workId: input.workId,
     }),
   };
-  const successCondition = options.successCondition
-    ? parseObjectiveSuccessCondition(options.successCondition)
-    : defaultObjectiveSuccessCondition(objective);
+  const vertical = await resolveTenantVertical(ctx.tenantId);
+  const activeRefs = privateEquityRefsFromContext(options.activeContext);
+  const activeDeal = activeRefs.find((ref) => ref.entityType === "pe_deal")?.entityId;
+  const resolution = vertical.verticalKey === "private_equity" && !activeDeal
+    ? await resolvePrivateEquityDealReference(ctx.tenantId, objective, { workId: input.workId, userId: ctx.userId })
+    : null;
+  const dealId = activeDeal ?? (resolution?.status === "resolved" ? resolution.dealId : null);
+  if (vertical.verticalKey === "private_equity" && dealId) {
+    await attachWorkToDealGraph({ auth: ctx }, {
+      dealId,
+      workId: input.workId,
+      entities: [{ entityType: "pe_deal", entityId: dealId, relationship: "about" }],
+    });
+  }
+  let successCondition: ObjectiveSuccessCondition;
+  if (options.successCondition) {
+    successCondition = parseObjectiveSuccessCondition(options.successCondition);
+  } else {
+    const subject = activeRefs.find((ref) => ["pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"].includes(ref.entityType));
+    successCondition = vertical.verticalKey === "private_equity" && dealId
+      ? privateEquityObjectiveSuccessCondition({
+          objective,
+          dealId,
+          ...(subject ? { subject: subject as { entityType: "pe_request" | "pe_finding" | "pe_deal_risk" | "pe_closing_condition" | "pe_closing_item"; entityId: string } } : {}),
+        })
+      : defaultObjectiveSuccessCondition(objective);
+  }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR UPDATE`);
     const [currentWork] = await db.select().from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId))).limit(1);
@@ -489,7 +527,28 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
           throw new Error("Work is already bound to a different Outcome Pack contract");
         }
       }
-      if (existing.state === "continue") await scheduleIterationTx(db, existing, new Date(), ctx.correlationId);
+      if (existing.state === "continue") {
+        // A retry re-enters handleInstructionResult through the ordinary
+        // understanding/routing trace before it reaches this idempotent branch.
+        // Restore the durable objective invariant instead of leaving Work in
+        // understanding after a successful objective has already been claimed.
+        if (currentWork.status !== "executing" && !["completed", "cancelled", "failed", "recovery"].includes(currentWork.status)) {
+          const [latestEvent] = await db.select({ maxSeq: sql<number>`coalesce(max(${workEvents.seq}), 0)::int` })
+            .from(workEvents).where(eq(workEvents.workId, input.workId));
+          await db.update(works).set({ status: "executing", executionModel: "objective", updatedAt: new Date() })
+            .where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId)));
+          await db.insert(workEvents).values({
+            tenantId: ctx.tenantId,
+            workId: input.workId,
+            seq: (latestEvent?.maxSeq ?? 0) + 1,
+            eventType: "objective_replayed",
+            fromStatus: currentWork.status,
+            toStatus: "executing",
+            payload: { objectiveLoopId: existing.id, duplicate: true },
+          });
+        }
+        await scheduleIterationTx(db, existing, new Date(), ctx.correlationId);
+      }
       return { loop: existing, created: false } as const;
     }
     if (options.outcomePack) {
@@ -624,40 +683,27 @@ async function currentIterationState(tenantId: string, loopId: string, stepId: s
   });
 }
 
-function latestHouseholdId(aggregate: Awaited<ReturnType<typeof workAggregate>>): string | null {
-  if (!aggregate) return null;
-  const links = aggregate.entityLinks as Array<{ entityType: string; entityId: string }>;
-  const linked = links.find((link) => link.entityType === "household")?.entityId;
-  if (linked) return linked;
-  const activeContext = isRecord((aggregate.work as { activeContext?: unknown }).activeContext) ? (aggregate.work as { activeContext: Record<string, unknown> }).activeContext : {};
-  if (typeof activeContext.householdId === "string") return activeContext.householdId;
-  return canonicalRefsFromContext(activeContext).find((ref) => ref.entityType === "household")?.entityId ?? null;
-}
-
 async function inspectCanonicalState(tenantId: string, workId: string, loop: typeof workObjectiveLoops.$inferSelect, step: typeof workObjectiveSteps.$inferSelect, ctx: TenantContext): Promise<{ inspection: ObjectiveInspection; inspectionHash: string }> {
   const aggregate = await workAggregate(tenantId, workId);
   if (!aggregate) throw new Error("Objective Work aggregate not found");
-  const businessRequest: OperationalQueryRequest = { intent: "business_state" };
+  const vertical = await resolveTenantVertical(tenantId);
+  let businessRequest: OperationalQueryRequest;
+  if (vertical.verticalKey === "private_equity") {
+    const resolution = await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
+    if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
+    // The close-readiness composition includes PE2 eligibility plus P3 decision
+    // readiness/acquisition options. Other bounded PE reads remain available as
+    // one-step query decisions when the objective needs requests/workstreams.
+    businessRequest = { intent: "closing_readiness", dealId: resolution.dealId };
+  } else {
+    businessRequest = { intent: "work_list", recordId: workId };
+  }
   const businessAuthority = await evaluateAuthority(ctx, queryAuthorityRequest(businessRequest, workId));
   if (businessAuthority.outcome !== "allowed") throw new Error(`Authority denied canonical objective inspection: ${businessAuthority.reasonCode}`);
-  const businessState = await executeOperationalQuery(tenantId, businessRequest, {
+  const businessState = await executeTenantOperationalQuery(tenantId, businessRequest, {
     workId,
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
-  const householdId = latestHouseholdId(aggregate);
-  let companyContext: unknown;
-  let companyAuthorityId: string | null = null;
-  if (householdId) {
-    const companyRequest: OperationalQueryRequest = { intent: "company_context", householdId };
-    const authority = await evaluateAuthority(ctx, queryAuthorityRequest(companyRequest, workId));
-    companyAuthorityId = authority.id;
-    if (authority.outcome === "allowed") {
-      companyContext = await executeOperationalQuery(tenantId, companyRequest, {
-        workId,
-        executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:company-context`,
-      });
-    }
-  }
   const objectiveSteps = aggregate.objectiveSteps as Array<typeof workObjectiveSteps.$inferSelect>;
   const actorId = ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null);
   const [identityAccess, computerConfig, computerRunRows, delegationRows, acknowledgementRows, eventWake] = await Promise.all([
@@ -771,7 +817,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
         maxConsecutiveNoProgress: loop.maxConsecutiveNoProgress, deadlineAt: loop.deadlineAt.toISOString(),
       },
     },
-    companyGraph: { householdId, entityLinks: aggregate.entityLinks },
+    companyGraph: { entityLinks: aggregate.entityLinks },
     executionAccess: { identityAccess, computerTask: computerConfig },
     computerRuns: computerRunInspection,
     delegations: delegationRows.map((row) => ({
@@ -802,7 +848,6 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
       trustClass: event.trustClass,
     })),
     businessState: bounded(businessState, 40_000),
-    ...(companyContext === undefined ? {} : { companyContext: bounded(companyContext, 40_000) }),
     actions,
     businessEffects: effectRows.map((effect) => ({
       ...effect,
@@ -815,7 +860,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
       stepNumber: item.stepNumber, decisionKind: item.decisionKind, decisionReason: item.decisionReason,
       outcome: item.iterationOutcome, observation: bounded(item.observation, 8_000), progressMade: item.progressMade,
     })),
-    inspectionAuthority: { businessState: businessAuthority.id, companyContext: companyAuthorityId },
+    inspectionAuthority: { businessState: businessAuthority.id, companyContext: null },
   };
   return { inspection, inspectionHash: hash(inspection) };
 }
@@ -1084,13 +1129,16 @@ export class ObjectiveLoopRuntime {
     }
 
     const attempt = await beginPlannerAttempt(params.tenantId, loop.id, step.id, inspectionHash);
+    const vertical = await resolveTenantVertical(params.tenantId);
+    const allowedActionTypes = plannerActionTypesForVertical(this.plugins, vertical.verticalKey);
+    const allowedActionSet = new Set(allowedActionTypes);
     let decision: ObjectiveDecision;
     try {
       decision = await this.planner.decide({
         objective: loop.objective,
         inspection,
-        allowedActionTypes: this.plugins.actionTypes(),
-        actionPayloadSpec: this.plugins.payloadSpecJson(),
+        allowedActionTypes,
+        actionPayloadSpec: this.plugins.payloadSpecJson(allowedActionTypes),
         remaining: { steps: Math.max(0, loop.maxSteps - loop.stepCount), actions: Math.max(0, loop.maxActions - loop.actionCount), queries: Math.max(0, loop.maxQueries - loop.queryCount) },
         tenantId: params.tenantId,
         workId: params.workId,
@@ -1103,6 +1151,9 @@ export class ObjectiveLoopRuntime {
         if (!validated.success) throw new Error(`Objective decision failed semantic validation: ${validated.error}`);
       }
       if (decision.kind === "action") {
+        if (!allowedActionSet.has(decision.actionType)) {
+          throw new Error(`Objective decision failed semantic validation: ${decision.actionType} is unavailable for active vertical ${vertical.verticalKey}`);
+        }
         const plugin = this.plugins.resolve(decision.actionType);
         if (!plugin) throw new Error(`Objective decision failed semantic validation: unregistered action type ${decision.actionType}`);
         const schema = plugin.payloadSchemas?.[decision.actionType];
@@ -1234,7 +1285,7 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Authority denied the selected query: ${authority.reasonCode}`, decision, authorityDecisionId: authority.id, observation: { authority }, progressMade: false })).outcome;
       }
       try {
-        const result = await executeOperationalQuery(params.tenantId, validated.request, {
+        const result = await executeTenantOperationalQuery(params.tenantId, validated.request, {
           workId: params.workId,
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });

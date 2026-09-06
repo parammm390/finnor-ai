@@ -651,7 +651,7 @@ function WorkspaceBody({ projection, thread, role, reducedMotion, liveframe, onI
   if (projection.kind === "answer") return <AnswerWorkspace projection={projection} onInspect={onInspect} />
   if (projection.kind === "execution") {
     if (projection.query) return <QueryOperationsWorkspace projection={projection} onInspect={onInspect} />
-    return <div className="jarvis-execution-workspace"><WorkspaceProgress thread={thread} liveframe={liveframe} /><ThreadExecution thread={thread} restored={false} executionWeavePlacement="document" energy={0.7} onCancel={onCancel} /></div>
+    return <div className="jarvis-execution-workspace"><WorkspaceProgress thread={thread} liveframe={liveframe} /><ThreadExecution thread={thread} restored={false} executionWeavePlacement="document" energy={0.7} /></div>
   }
   if (projection.kind === "receipt") return <div className="jarvis-receipt-workspace"><ThreadReceipt thread={thread} reducedMotion={reducedMotion} onRetry={onRetry} restored={false} /></div>
   if (projection.kind === "recovery") return <div className="jarvis-recovery-workspace"><div className="jarvis-recovery-workspace__lead"><ShieldAlert size={22} /><div><strong>Work stopped safely</strong><p>{thread.submitError ?? "The durable Work record is available for retry and inspection. No unverified success is being shown."}</p></div></div><ThreadReceipt thread={thread} reducedMotion={reducedMotion} onRetry={onRetry} restored={false} /></div>
@@ -776,17 +776,9 @@ export function AdaptiveWorkspaceShell({
       data-inspector-state={inspectorOpen ? "open" : "closed"}
       data-active-workspace={projection?.kind ?? "ready"}
       data-thread-document
-      data-jarvis-action-spine-document
       data-thread-restored={threadRestored ? "true" : "false"}
       data-jarvis-restored-event-count={threadRestored ? restoredTraceEventCount : undefined}
       data-jarvis-instruction-id={thread?.instructionId ?? undefined}
-      data-jarvis-work-id={thread?.workId ?? undefined}
-      data-jarvis-objective-loop-id={thread?.objectiveLoopId ?? undefined}
-      data-jarvis-execution-model={thread?.executionModel ?? undefined}
-      data-jarvis-assistant-semantic-kind={thread?.assistantSemanticKind ?? undefined}
-      data-jarvis-objective-state={thread?.objectiveProjection?.state ?? undefined}
-      data-jarvis-instruction-state={thread?.machine.instructionState ?? undefined}
-      data-jarvis-work-posture={thread?.workPosture?.status ?? undefined}
       data-source={fixtureLabel ? "fixture.adaptiveWorkspace" : undefined}
       data-experience-scene={scene}
       data-experience-detail={configuredScene.detail}
@@ -796,7 +788,7 @@ export function AdaptiveWorkspaceShell({
       {fixtureLabel && <div className="fixed left-1/2 top-2 z-[100] -translate-x-1/2"><span className="j-chip border border-violet-300/40 bg-violet-400/15 text-violet-200">FIXTURE · {fixtureLabel}</span></div>}
       {publicPreview && <div className="fixed left-1/2 top-2 z-[100] -translate-x-1/2"><span className="j-chip border border-cyan-300/30 bg-cyan-300/10 text-cyan-100">PUBLIC PREVIEW</span></div>}
       <aside className="jarvis-adaptive-nav" aria-label="JARVIS navigation">
-        <Link href={withOperationalContext("/jarvis", undefined, projection?.workId)} className="jarvis-adaptive-nav__brand" aria-label="JARVIS home"><span><TenantBrandMark size={24} /></span><strong>JARVIS</strong></Link>
+        <Link href={withOperationalContext("/jarvis", undefined, projection?.workId)} className="jarvis-adaptive-nav__brand"><span><TenantBrandMark size={24} /></span><strong>JARVIS</strong></Link>
         <nav>{navItems.map(({ key, href, icon: Icon }) => <Link key={href} href={withOperationalContext(href, undefined, projection?.workId)} aria-current={href === "/jarvis" ? "page" : undefined} title={workspaceConfig.terminology[key]}><Icon size={17} /><span>{workspaceConfig.terminology[key]}</span></Link>)}</nav>
         <div className="jarvis-adaptive-nav__status" data-state={liveframe.mode}><i /><span>{stateLabel(projection?.state ?? "idle")}</span></div>
       </aside>

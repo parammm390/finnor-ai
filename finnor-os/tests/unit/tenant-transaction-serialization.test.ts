@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 
 const transactionModules = [
   "../../packages/authority/src/index.ts",
-  "../../apps/api/app/api/technician/my-day/route.ts",
   "../../packages/computer/src/repository.ts",
   "../../packages/orchestration/src/autonomy.ts",
   "../../packages/orchestration/src/durable-execution.ts",

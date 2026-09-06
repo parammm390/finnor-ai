@@ -114,7 +114,7 @@ function retryAfterMs(response: Response): number | null {
 
 /**
  * Real Voyage AI embedder — plain fetch, no SDK dependency (matches this repo's
- * stripe.ts/quickbooks.ts convention). §5.1's exact model name/output_dimension
+ * provider wrappers' convention). §5.1's exact model name/output_dimension
  * parameter should be reconfirmed against Voyage's live docs at signup time (see
  * docs/owner-actions.md) — this implementation follows Voyage's documented
  * Matryoshka output_dimension option for voyage-3.5 as of this writing, but has never

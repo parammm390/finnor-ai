@@ -17,23 +17,23 @@ describe("deterministic belief updates", () => {
     const uncertain = appendEvidenceAndRecompute(initial, [
       testEvidence({ state: initial, id: "memory:low", value: "unpaid", confidence: "LOW" }),
     ], TEST_NOW);
-    expect(propositionById(uncertain, "invoice.balance")?.status).toBe("UNCERTAIN");
+    expect(propositionById(uncertain, "deal.debt_capacity")?.status).toBe("UNCERTAIN");
 
     const known = appendEvidenceAndRecompute(uncertain, [
       testEvidence({ state: initial, id: "memory:fresh", value: "paid", observedAt: "2026-08-31T00:01:00.000Z" }),
     ], "2026-08-31T00:01:00.000Z");
-    expect(propositionById(known, "invoice.balance")?.status).toBe("KNOWN");
+    expect(propositionById(known, "deal.debt_capacity")?.status).toBe("KNOWN");
     expect(known.evidence.map((record) => record.id)).toEqual(["memory:fresh", "memory:low"]);
 
     const stale = advanceEpistemicClock(appendEvidenceAndRecompute(initial, [
       testEvidence({ state: initial, id: "memory:expiring", value: "paid", maxAgeMs: 1_000 }),
     ], TEST_NOW), "2026-08-31T00:00:02.000Z");
-    expect(propositionById(stale, "invoice.balance")?.status).toBe("STALE");
+    expect(propositionById(stale, "deal.debt_capacity")?.status).toBe("STALE");
     expect(stale.transitions.at(-1)).toMatchObject({ from: "KNOWN", to: "STALE" });
     const refreshed = appendEvidenceAndRecompute(stale, [
       testEvidence({ state: initial, id: "memory:refreshed", value: "paid", observedAt: "2026-08-31T00:00:03.000Z", maxAgeMs: 1_000 }),
     ], "2026-08-31T00:00:03.000Z");
-    expect(propositionById(refreshed, "invoice.balance")?.status).toBe("KNOWN");
+    expect(propositionById(refreshed, "deal.debt_capacity")?.status).toBe("KNOWN");
     expect(refreshed.transitions.at(-1)).toMatchObject({ from: "STALE", to: "KNOWN" });
 
     const conflictBase = testState();
@@ -41,7 +41,7 @@ describe("deterministic belief updates", () => {
       testEvidence({ state: conflictBase, id: "work:a", value: "paid", kind: "ACTIVE_WORK" }),
       testEvidence({ state: conflictBase, id: "work:b", value: "unpaid", kind: "ACTIVE_WORK" }),
     ], TEST_NOW);
-    expect(propositionById(conflicting, "invoice.balance")?.status).toBe("CONFLICTING");
+    expect(propositionById(conflicting, "deal.debt_capacity")?.status).toBe("CONFLICTING");
 
     const resolved = appendEvidenceAndRecompute(conflicting, [
       testEvidence({
@@ -53,7 +53,7 @@ describe("deterministic belief updates", () => {
         supersedesEvidenceRefs: ["work:a", "work:b"],
       }),
     ], "2026-08-31T00:02:00.000Z");
-    expect(propositionById(resolved, "invoice.balance")?.status).toBe("KNOWN");
+    expect(propositionById(resolved, "deal.debt_capacity")?.status).toBe("KNOWN");
     expect(resolved.conflicts.some((item) => item.resolution === "EXPLICIT_SUPERSESSION")).toBe(true);
     expect(resolved.evidence).toHaveLength(3);
 
@@ -63,7 +63,7 @@ describe("deterministic belief updates", () => {
     const knownToConflict = appendEvidenceAndRecompute(knownBase, [
       testEvidence({ state: initial, id: "work:contradiction", value: "unpaid", kind: "ACTIVE_WORK" }),
     ], TEST_NOW);
-    expect(propositionById(knownToConflict, "invoice.balance")?.status).toBe("CONFLICTING");
+    expect(propositionById(knownToConflict, "deal.debt_capacity")?.status).toBe("CONFLICTING");
     expect(knownToConflict.transitions.at(-1)).toMatchObject({ from: "KNOWN", to: "CONFLICTING" });
   });
 
@@ -73,7 +73,7 @@ describe("deterministic belief updates", () => {
       testEvidence({ state: initial, id: "memory:newer", value: "unpaid", observedAt: "2026-08-31T00:10:00.000Z" }),
       testEvidence({ state: initial, id: "canonical:balance", value: "paid", kind: "CANONICAL_DB", observedAt: "2026-08-30T00:00:00.000Z" }),
     ], "2026-08-31T00:10:00.000Z");
-    const proposition = propositionById(next, "invoice.balance");
+    const proposition = propositionById(next, "deal.debt_capacity");
     expect(proposition?.value).toEqual({ kind: "DETERMINISTIC", value: "paid" });
     expect(proposition?.evidenceRefs).toEqual(["canonical:balance"]);
     expect(proposition?.contradictingEvidenceRefs).toContain("memory:newer");
@@ -86,10 +86,10 @@ describe("deterministic belief updates", () => {
     const contextOnly = appendEvidenceAndRecompute(initial, [
       testEvidence({ state: initial, id: "context:memory", value: true, role: "context_only" }),
     ], TEST_NOW);
-    expect(propositionById(contextOnly, "invoice.balance")?.status).toBe("KNOWN");
-    expect(consequentialProvenanceSatisfied(contextOnly, "invoice.balance")).toBe(false);
+    expect(propositionById(contextOnly, "deal.debt_capacity")?.status).toBe("KNOWN");
+    expect(consequentialProvenanceSatisfied(contextOnly, "deal.debt_capacity")).toBe(false);
     expect(requirementResolved(contextOnly, testRequirement())).toBe(false);
-    expect(requirementResolved(contextOnly, testRequirement("invoice.balance", [], {
+    expect(requirementResolved(contextOnly, testRequirement("deal.debt_capacity", [], {
       criticality: "INFORMATIONAL",
       consequenceIfUnresolved: "The informational answer remains incomplete",
     }))).toBe(true);
@@ -103,7 +103,7 @@ describe("deterministic belief updates", () => {
       tenantId: "22222222-2222-4222-8222-222222222222",
       observedAt: TEST_NOW,
       evidence: [],
-      propositionIds: ["invoice.balance"],
+      propositionIds: ["deal.debt_capacity"],
       outcome: "NO_RESULT",
     })).toThrow(/Cross-tenant/);
 
