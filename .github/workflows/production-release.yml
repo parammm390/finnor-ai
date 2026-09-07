@@ -156,13 +156,23 @@ jobs:
   release:
     needs: [canonical-graph-gate, phase5-readiness]
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
     environment: production
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AWS_ROLE_ARN: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
+      AWS_REGION: us-east-1
       FINNOR_RELEASE_SOURCE: github-actions
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
@@ -180,7 +190,7 @@ jobs:
 
       - name: Require production credentials before any mutation
         run: |
-          for name in VERCEL_TOKEN AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+          for name in VERCEL_TOKEN AWS_ROLE_ARN; do
             test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
           done
 
@@ -213,21 +223,20 @@ jobs:
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
           echo "FINNOR_ENVIRONMENT=production" >> "$GITHUB_ENV"
 
-      - name: Require production credentials before any mutation
-        run: |
-          for name in VERCEL_TOKEN AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
-            test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
-          done
-
       - name: Verify clean canonical Git source
         run: node scripts/release/verify-release.mjs
 
-      - name: Authenticate exact Azure subscription with GitHub OIDC
-        uses: azure/login@v2
+      - name: Authenticate exact AWS account with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify exact AWS account and region
+        run: |
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          test "$account" = "601804670058"
+          test "$AWS_REGION" = "us-east-1"
 
       - name: Frontend quality gate
         run: |
@@ -240,6 +249,55 @@ jobs:
         run: npm run typecheck
         working-directory: finnor-os
 
+      - name: Build, smoke-test, and push exact worker image to ECR
+        run: |
+          set -euo pipefail
+          image="finnor-worker:${FINNOR_COMMIT_SHA}"
+          container_id=""
+          cleanup() { if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null 2>&1 || true; fi; }
+          trap cleanup EXIT
+          docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
+          for attempt in $(seq 1 30); do
+            pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
+            sleep 2
+          done
+          pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
+          container_id="$(docker run --detach --network host \
+            --env NODE_ENV=test \
+            --env FINNOR_ENVIRONMENT=production \
+            --env FINNOR_RELEASE_SOURCE=github-actions \
+            --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+            --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" \
+            --env FINNOR_VERSION="$FINNOR_VERSION" \
+            --env FINNOR_WORKER_DEPLOYMENT_ID=ecs:container-smoke \
+            --env FINNOR_WORKER_CAPABILITIES=jobs,orchestration,computer,event-wake,connection-health,realtime,sse \
+            --env SECRETS_PROVIDER=env \
+            --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
+            --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
+            --env SUPABASE_URL=https://kpxrnonhnhexutvdywbh.supabase.co \
+            --env JARVIS_SSE_ALLOWED_ORIGINS=https://finnorai.com \
+            --env WORKER_CONCURRENCY=2 \
+            --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=1 \
+            --env FINNOR_DB_POOL_MAX=4 \
+            "$image")"
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | node -e 'const fs=require("node:fs"); const body=JSON.parse(fs.readFileSync(0,"utf8")); if(body.ok!==true || body.realtime!==true || body.release?.commitSha!==process.env.FINNOR_COMMIT_SHA || body.release?.buildId!==process.env.FINNOR_BUILD_ID || body.release?.version!==process.env.FINNOR_VERSION || !body.capabilities?.includes("orchestration") || !body.capabilities?.includes("sse")) process.exit(1)'; then ready=1; break; fi
+            sleep 2
+          done
+          if test "$ready" != 1; then docker logs "$container_id" || true; echo "::error::worker container smoke test did not expose /healthz"; exit 1; fi
+          docker stop --time 30 "$container_id" >/dev/null
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$container_id")" = "0"
+          container_id=""
+          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+          docker tag "$image" "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+          docker push "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+          digest="$(aws ecr describe-images --repository-name finnor-worker --image-ids imageTag="$FINNOR_COMMIT_SHA" --query 'imageDetails[0].imageDigest' --output text)"
+          test "$digest" != "None" -a -n "$digest"
+          echo "FINNOR_ECR_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
+          echo "FINNOR_ECR_IMAGE_URI=$registry/finnor-worker@$digest" >> "$GITHUB_ENV"
+
       - name: Pull protected production database configuration
         run: |
           VERCEL_ORG_ID="$(node -p "require('../../../infra/deployment/production.contract.json').topology.api.organizationId")"
@@ -248,12 +306,16 @@ jobs:
           vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
         working-directory: finnor-os/apps/api
 
-      - name: Preflight every production target before mutation
+      - name: Preflight every AWS, Vercel, and database production target
         run: |
           node scripts/release/preflight-production.mjs \
             --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --image-digest "$FINNOR_ECR_IMAGE_DIGEST" \
             --output-file "$RUNNER_TEMP/production-preflight.json"
           echo "FINNOR_PREFLIGHT_EVIDENCE=$RUNNER_TEMP/production-preflight.json" >> "$GITHUB_ENV"
+
+      - name: Bind canonical realtime gateway into Vercel production
+        run: node scripts/release/configure-vercel-realtime.mjs --apply
 
       - name: Build commit-locked production artifacts before database mutation
         run: |
@@ -293,8 +355,12 @@ jobs:
           node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
           node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
 
-      - name: Deploy Azure worker and embedded orchestrator
-        run: node scripts/release/deploy-azure-worker.mjs --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE"
+      - name: Deploy AWS ECS worker and embedded orchestrator
+        run: |
+          node scripts/release/deploy-aws-worker.mjs \
+            --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
 
       - name: Verify cross-runtime release and migration parity
         run: node scripts/release/verify-production-parity.mjs --database-env finnor-os/apps/api/.vercel/.env.production.local

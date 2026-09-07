@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.*
+.vercel
+coverage
+dist
+build
+*.log
+*.pem
+*.key
+evidence

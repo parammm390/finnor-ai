@@ -33,11 +33,28 @@ async function main(): Promise<void> {
     commitSha?: string;
     remoteMain?: string;
     contractSha256?: string;
-    azure?: { resourceId?: string };
+    aws?: {
+      accountId?: string;
+      region?: string;
+      clusterName?: string;
+      serviceName?: string;
+      taskFamily?: string;
+      ecrRepository?: string;
+    };
     database?: { host?: string };
   };
   const contract = JSON.parse(contractRaw.toString("utf8")) as {
-    topology: { worker: { resourceId: string }; database: { host: string } };
+    topology: {
+      worker: {
+        accountId: string;
+        region: string;
+        clusterName: string;
+        serviceName: string;
+        taskFamily: string;
+        ecrRepository: string;
+      };
+      database: { host: string };
+    };
   };
   const evidenceAge = Date.now() - Date.parse(evidence.checkedAt ?? "");
   const contractHash = createHash("sha256").update(contractRaw).digest("hex");
@@ -46,7 +63,12 @@ async function main(): Promise<void> {
     evidence.commitSha !== commitSha ||
     evidence.remoteMain !== commitSha ||
     evidence.contractSha256 !== contractHash ||
-    evidence.azure?.resourceId?.toLowerCase() !== contract.topology.worker.resourceId.toLowerCase() ||
+    evidence.aws?.accountId !== contract.topology.worker.accountId ||
+    evidence.aws?.region !== contract.topology.worker.region ||
+    evidence.aws?.clusterName !== contract.topology.worker.clusterName ||
+    evidence.aws?.serviceName !== contract.topology.worker.serviceName ||
+    evidence.aws?.taskFamily !== contract.topology.worker.taskFamily ||
+    evidence.aws?.ecrRepository !== contract.topology.worker.ecrRepository ||
     evidence.database?.host !== contract.topology.database.host ||
     !Number.isFinite(evidenceAge) || evidenceAge < 0 || evidenceAge > 60 * 60 * 1000
   ) {

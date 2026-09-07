@@ -1,0 +1,28 @@
+FROM node:22-bookworm-slim
+
+WORKDIR /app
+
+# The worker is an npm workspace entrypoint. Keep the lockfile and every workspace
+# available so the existing embedded orchestrator, handlers, projections, and SSE
+# gateway run from the same process without a source rewrite.
+COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+
+RUN npm ci --no-audit --no-fund
+
+ENV NODE_ENV=production \
+    PORT=8090 \
+    SSE_PORT=8090
+
+EXPOSE 8090
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+# tsx is intentionally available from the locked workspace install: the audited
+# production worker entrypoint is TypeScript and retains its current signal handling.
+# Invoke the binary directly so the worker receives ECS SIGTERM as PID 1 instead
+# of placing npm/npx between the runtime and the container signal.
+CMD ["node_modules/.bin/tsx", "apps/worker/src/index.ts"]

@@ -23,7 +23,7 @@ async function beat(): Promise<void> {
       .split(",").map((value) => value.trim()).filter(Boolean),
     releaseSha: release.commitSha,
     coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
-    deploymentId: process.env.FINNOR_WORKER_DEPLOYMENT_ID ?? process.env.RAILWAY_DEPLOYMENT_ID ?? null,
+    deploymentId: process.env.FINNOR_WORKER_DEPLOYMENT_ID ?? null,
     environment: release.environment,
     source: release.source,
   };

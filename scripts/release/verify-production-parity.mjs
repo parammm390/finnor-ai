@@ -1,7 +1,6 @@
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { runManagedAzureCommand } from "./azure-managed-run-command.mjs"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -46,7 +45,7 @@ try {
              migration_head,deployment_id,capabilities,environment,
              extract(epoch FROM (now()-last_beat_at))::int AS age_seconds
         FROM finnor_os.service_release_heartbeats
-       WHERE service='worker'
+       WHERE service='worker' AND deployment_id LIKE 'ecs:%'
        ORDER BY last_beat_at DESC
        LIMIT 1
     `)
@@ -80,22 +79,31 @@ try {
   await client.end()
 }
 
+// The AWS deployer already proves the exact immutable image, ECS task revision,
+// ALB target health, and public HTTPS health contract before returning success.
+// Post-promotion parity uses two independent runtime signals: the durable worker
+// heartbeat and the public HTTPS gateway health contract.
 const worker = contract.topology.worker
-const azureVerifyScript = `set -eu
-systemctl is-active --quiet '${worker.systemdUnit}'
-test "$(readlink -f '${worker.currentSymlink}')" = '${worker.releaseRoot}/${expected.commitSha}'
-test "$(sudo -u finnor git -C '${worker.currentSymlink}' rev-parse HEAD)" = '${expected.commitSha}'
-grep -qx 'FINNOR_COMMIT_SHA=${expected.commitSha}' '${worker.releaseEnvironmentFile}'
-echo FINNOR_AZURE_PARITY_OK`
-const azureResult = runManagedAzureCommand({
-  stage: "parity",
-  commitSha: expected.commitSha,
-  script: azureVerifyScript,
-  timeoutSeconds: 5 * 60,
-  worker,
+const gatewayResponse = await fetch(`${worker.sseGatewayUrl}/healthz`, {
+  headers: { accept: "application/json", "cache-control": "no-cache" },
+  signal: AbortSignal.timeout(20_000),
 })
-const azureMessage = azureResult.output
-if (!azureMessage.includes("FINNOR_AZURE_PARITY_OK")) throw new Error(`Azure source/service parity verification failed:\n${azureMessage}`)
+const gateway = await gatewayResponse.json().catch(() => null)
+if (!gatewayResponse.ok || gateway?.ok !== true || gateway?.realtime !== true || gateway?.release?.commitSha !== expected.commitSha) {
+  throw new Error(`worker SSE gateway parity failed with HTTP ${gatewayResponse.status}`)
+}
+for (const [field, value] of [
+  ["buildId", expected.buildId],
+  ["version", expected.version],
+  ["environment", expected.environment],
+]) {
+  if (gateway?.release?.[field] !== value) {
+    throw new Error(`worker SSE gateway ${field} mismatch: expected ${value}, observed ${gateway?.release?.[field] ?? "<missing>"}`)
+  }
+}
+for (const capability of ["jobs", "orchestration", "realtime", "sse"]) {
+  if (!gateway.capabilities?.includes(capability)) throw new Error(`worker SSE gateway is missing ${capability} capability`)
+}
 
 const observed = { frontend, api, worker: workerRelease, migrationHead }
 assertRuntimeParity(contract, expected, observed)
@@ -105,6 +113,7 @@ console.log(JSON.stringify({
   frontend: { service: frontend.service, commitSha: frontend.commitSha, deploymentId: frontend.deploymentId },
   api: { service: api.service, commitSha: api.commitSha, deploymentId: api.deploymentId },
   worker: { commitSha: workerRelease.commitSha, heartbeatAgeSeconds, capabilities: workerRelease.capabilities },
+  realtimeGateway: { url: worker.sseGatewayUrl, commitSha: gateway.release.commitSha, capabilities: gateway.capabilities },
   orchestrator: { mode: contract.topology.orchestrator.mode, releaseIdentity: contract.topology.orchestrator.releaseIdentity },
   migrationHead,
 }, null, 2))
