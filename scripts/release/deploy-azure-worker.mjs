@@ -1,8 +1,8 @@
-import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { runManagedAzureCommand } from "./azure-managed-run-command.mjs"
 import { assertCanonicalRelease, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -42,13 +42,19 @@ let script = readFileSync(resolve(repoRoot, "scripts/release/azure/deploy-worker
 for (const [placeholder, value] of Object.entries(replacements)) script = script.replaceAll(placeholder, value)
 if (/__FINNOR_[A-Z_]+__/.test(script)) throw new Error("Azure deployment script contains an unresolved placeholder")
 
-const output = execFileSync(process.env.AZURE_CLI || "az", [
-  "vm", "run-command", "invoke", "--resource-group", worker.resourceGroup,
-  "--name", worker.resourceName, "--command-id", "RunShellScript", "--scripts", script,
-  "--only-show-errors", "-o", "json",
-], { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, timeout: 30 * 60 * 1000 })
-const result = JSON.parse(output)
-const message = (result.value ?? []).map((entry) => entry.message ?? "").join("\n")
+let result
+try {
+  result = runManagedAzureCommand({
+    stage: "deploy",
+    commitSha: expected.commitSha,
+    script,
+    timeoutSeconds: 30 * 60,
+    worker,
+  })
+} catch (error) {
+  throw new Error(`Azure worker deployment command failed:\n${error instanceof Error ? error.message : String(error)}`, { cause: error })
+}
+const message = result.output
 if (!message.includes(`FINNOR_AZURE_DEPLOY_OK ${expected.commitSha}`)) {
   throw new Error(`Azure worker deployment did not return its success marker:\n${message}`)
 }
