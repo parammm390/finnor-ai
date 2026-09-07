@@ -1,22 +1,10 @@
 import { execFileSync } from "node:child_process"
+import { worktreeStatus } from "./worktree-state.mjs"
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i
 
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim()
-}
-
-// `git status --untracked-files=all` recursively walks large evidence/database
-// trees before it reports the source changes that make a release ineligible. Use
-// Git's tracked diff plus directory-level untracked entries: this preserves the
-// clean-worktree invariant while keeping the release gate bounded in evidence-heavy
-// worktrees.
-function worktreeStatus() {
-  return [
-    git(["diff-files", "--name-only", "-z", "--"]),
-    git(["diff", "--cached", "--name-only", "-z", "--"]),
-    git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
-  ].filter(Boolean).join("\n")
 }
 
 function fail(message) {

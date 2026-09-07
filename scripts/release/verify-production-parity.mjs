@@ -16,7 +16,11 @@ const expected = expectedRelease(gitRelease.head, process.env.FINNOR_RELEASE_SOU
 async function fetchRelease(component) {
   const target = contract.topology[component]
   const response = await fetch(`${target.productionUrl}${target.releasePath}`, {
-    headers: { accept: "application/json", "cache-control": "no-cache" },
+    headers: {
+      accept: "application/json", "cache-control": "no-cache",
+      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
+        ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET.trim() } : {}),
+    },
     signal: AbortSignal.timeout(20_000),
   })
   const body = await response.json().catch(() => null)

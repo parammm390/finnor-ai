@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "types": ["node", "react", "react-dom", "playwright", "vitest/globals"],
     "incremental": true,
     "plugins": [
@@ -34,7 +34,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "e2e/**/*.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "finnor-os",

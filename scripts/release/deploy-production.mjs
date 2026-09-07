@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process"
 import { readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { worktreeStatus } from "./worktree-state.mjs"
 
 const appName = process.argv[2]
 const prepareOnly = process.argv.includes("--prepare-only")
@@ -52,11 +53,7 @@ function run(command, args, cwd, env) {
 }
 
 const commitSha = git(["rev-parse", "HEAD"]).toLowerCase()
-const dirty = [
-  git(["diff-files", "--name-only", "-z", "--"]),
-  git(["diff", "--cached", "--name-only", "-z", "--"]),
-  git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
-].filter(Boolean).join("\n")
+const dirty = worktreeStatus(repoRoot)
 const remoteMain = git(["ls-remote", "origin", "refs/heads/main"]).split(/\s+/)[0]
 const buildId = process.env.FINNOR_BUILD_ID || `finnor-${commitSha.slice(0, 12)}`
 const version = process.env.FINNOR_VERSION || `0.1.0+${commitSha.slice(0, 12)}`
@@ -89,6 +86,8 @@ if (!deployOnly) {
   const localConfig = join(appDir, ".vercel", "finnor-release.vercel.json")
   writeFileSync(localConfig, `${JSON.stringify({ installCommand: app.installCommand }, null, 2)}\n`)
   run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig, ...tokenArgs], appDir, env)
+  const buildChanges = worktreeStatus(repoRoot)
+  if (buildChanges) throw new Error(`The ${appName} build changed release source:\n${buildChanges}`)
 }
 if (prepareOnly) {
   console.log(JSON.stringify({ ok: true, app: appName, prepared: true, commitSha, buildId, version, environment, source }, null, 2))

@@ -35,3 +35,23 @@ must still execute its own gates and live deployment verification.
 
 This is a release-path audit and verified repair, not certification that the entire
 application or every repository setting is defect-free.
+
+## Run 133 follow-up
+
+Run 133 passed canonical/history rehearsal, full Phase 5 readiness, image smoke,
+and production preflight. The frontend artifact built successfully, but API
+preparation rejected changes left by the frontend build. Next 16 required
+`react-jsx`, dev type inclusion, and updated generated declaration imports.
+Those generated settings are now committed in their production-build form.
+
+The earlier raw `diff-files` scan also reports stale index stat information after
+build tools touch assets. All release consumers now share `git status` with
+`--untracked-files=normal`, which refreshes stat information and groups untracked
+directories. A real temporary-repository regression proves that timestamp-only
+changes pass while content edits, staged edits, and untracked directories fail.
+Each Vercel preparation checks source cleanliness immediately after building.
+
+Both frontend and API optimized production builds passed locally. No API config
+changes were required. The final parity fetch now carries the same Vercel
+automation bypass header as the earlier release verifier. Live deployment state
+and production data remain subject to the workflow's verification.

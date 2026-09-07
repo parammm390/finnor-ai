@@ -1,5 +1,9 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { readFileSync, mkdtempSync, writeFileSync, utimesSync, mkdirSync, rmSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { worktreeStatus } from "./worktree-state.mjs"
 import test from "node:test"
 import {
   assertAlbTargetsHealthy,
@@ -20,6 +24,28 @@ import {
 const contract = loadContract()
 const sha = "a".repeat(40)
 const expected = expectedRelease(sha)
+
+test("source checks ignore timestamp-only build changes but reject real edits and untracked directories", () => {
+  const directory = mkdtempSync(join(tmpdir(), "finnor-git-regression-"))
+  const git = (...args) => execFileSync("git", args, { cwd: directory, encoding: "utf8" })
+  try {
+    git("init", "--quiet")
+    writeFileSync(join(directory, "asset.txt"), "original\n")
+    git("add", ".")
+    git("-c", "user.name=Release Test", "-c", "user.email=release@test.invalid", "commit", "-qm", "fixture")
+    const later = new Date(Date.now() + 60_000)
+    utimesSync(join(directory, "asset.txt"), later, later)
+    assert.equal(worktreeStatus(directory), "")
+    writeFileSync(join(directory, "asset.txt"), "modified\n")
+    assert.match(worktreeStatus(directory), /asset\.txt/)
+    git("add", "asset.txt")
+    assert.match(worktreeStatus(directory), /asset\.txt/)
+    mkdirSync(join(directory, "evidence"))
+    writeFileSync(join(directory, "evidence", "sample.txt"), "fixture")
+    assert.match(worktreeStatus(directory), /\?\? evidence\//)
+    assert.doesNotMatch(worktreeStatus(directory), /sample\.txt/)
+  } finally { rmSync(directory, { recursive: true, force: true }) }
+})
 
 test("production history is accepted only with forward repair; unknown and newer migrations fail", () => {
   const head = "0109_atomic_water_runtime_retirement.sql"
