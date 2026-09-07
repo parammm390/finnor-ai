@@ -59,14 +59,9 @@ test("production release installs both locked dependency trees with npm ci", () 
   assert.equal((productionWorkflow.match(/run: npm ci --no-audit --no-fund/g) ?? []).length, 2)
 })
 
-test("production preparation consumes the exact commit core-certification artifact", () => {
-  const produce = productionWorkflow.indexOf("Produce commit-locked FINNOR core certification")
-  const upload = productionWorkflow.indexOf("Export core certification to the release job")
-  const download = productionWorkflow.indexOf("Download commit-locked FINNOR core certification")
-  const bind = productionWorkflow.indexOf("FINNOR_CORE_CERTIFICATION_FILE=")
+test("Phase 5 production preparation uses its own release gates without Phase 6 certification", () => {
   const prepare = productionWorkflow.indexOf("deploy-production.mjs frontend --prepare-only")
-  assert.ok(produce > -1 && upload > produce)
-  assert.ok(download > upload && bind > download && prepare > bind)
-  assert.match(productionWorkflow, /release:certify -- core --core-sha="\$RELEASE_COMMIT_SHA"/)
-  assert.match(productionWorkflow, /artifact\.canonicalCoreSha!==process\.env\.RELEASE_COMMIT_SHA/)
+  assert.ok(prepare > -1)
+  assert.equal(productionWorkflow.includes("release:certify -- core"), false)
+  assert.equal(productionWorkflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), false)
 })

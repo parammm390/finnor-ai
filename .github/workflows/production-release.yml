@@ -153,24 +153,6 @@ jobs:
           npm run release:pe-domain-boundary
         working-directory: finnor-os
 
-      - name: Produce commit-locked FINNOR core certification
-        id: core-certification
-        run: |
-          store="$RUNNER_TEMP/core-certifications"
-          npm run release:certify -- core --core-sha="$RELEASE_COMMIT_SHA" --store="$store"
-          mapfile -t artifacts < <(find "$store/core" -maxdepth 1 -type f -name 'corecert-*.json' -print)
-          test "${#artifacts[@]}" -eq 1
-          echo "path=${artifacts[0]}" >> "$GITHUB_OUTPUT"
-        working-directory: finnor-os
-
-      - name: Export core certification to the release job
-        uses: actions/upload-artifact@v4
-        with:
-          name: finnor-core-certification-${{ github.sha }}
-          path: ${{ steps.core-certification.outputs.path }}
-          if-no-files-found: error
-          retention-days: 7
-
   release:
     needs: [canonical-graph-gate, phase5-readiness]
     runs-on: ubuntu-latest
@@ -257,19 +239,6 @@ jobs:
       - name: API typecheck gate
         run: npm run typecheck
         working-directory: finnor-os
-
-      - name: Download commit-locked FINNOR core certification
-        uses: actions/download-artifact@v4
-        with:
-          name: finnor-core-certification-${{ github.sha }}
-          path: ${{ runner.temp }}/finnor-core-certification
-
-      - name: Bind core certification to production preparation
-        run: |
-          mapfile -t artifacts < <(find "$RUNNER_TEMP/finnor-core-certification" -type f -name 'corecert-*.json' -print)
-          test "${#artifacts[@]}" -eq 1
-          node -e 'const fs=require("node:fs"); const artifact=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(artifact.status!=="PASS" || artifact.canonicalCoreSha!==process.env.RELEASE_COMMIT_SHA) process.exit(1)' "${artifacts[0]}"
-          echo "FINNOR_CORE_CERTIFICATION_FILE=${artifacts[0]}" >> "$GITHUB_ENV"
 
       - name: Pull protected production database configuration
         run: |
