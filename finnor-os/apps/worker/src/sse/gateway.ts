@@ -14,6 +14,13 @@ type DeltaPage = Awaited<ReturnType<typeof readOperationalDeltas>>;
 
 const HEARTBEAT_MS = 15_000;
 
+function workerCapabilities(): string[] {
+  return (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function allowedOrigins(): string[] {
   return (process.env.JARVIS_SSE_ALLOWED_ORIGINS ?? "http://localhost:3000,https://finnorai.com")
     .split(",")
@@ -155,6 +162,7 @@ export function createSseGateway(): http.Server {
     }
     if (req.method === "GET" && url.pathname === "/healthz") {
       const release = getRuntimeReleaseMetadata("finnor-worker");
+      const capabilities = workerCapabilities();
       res.writeHead(200, {
         "content-type": "application/json",
         "cache-control": "no-store, max-age=0",
@@ -163,7 +171,7 @@ export function createSseGateway(): http.Server {
         "x-finnor-environment": release.environment,
         "x-finnor-version": release.version,
       });
-      res.end(JSON.stringify({ ok: true, release }));
+      res.end(JSON.stringify({ ok: true, realtime: true, capabilities, release }));
       return;
     }
     if (req.method === "GET" && url.pathname === "/events") {
