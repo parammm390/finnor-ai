@@ -5,6 +5,7 @@ const EXTENSION_RESET_TIMEOUT_MS = 5 * 60_000
 const GUEST_AGENT_SETTLE_MS = 20_000
 const RUNCOMMAND_EXTENSION_NAME = "RunCommandLinux"
 const DELETE_RETRYABLE = /(?:ResourceNotFound|could not be found|was not found|does not exist|AnotherOperationInProgress|OperationPreempted|Conflict|HTTP\s+409|operation.*in progress|marked for deletion)/i
+const EXTENSION_DELETE_AUTHORIZATION = /AuthorizationFailed[\s\S]*virtualMachines\/extensions\/delete/i
 const WEDGED_RUNCOMMAND_EXTENSION = /OperationNotAllowed[\s\S]*?RunCommandLinux[\s\S]*?marked for deletion/i
 
 function defaultSleep(ms) {
@@ -23,6 +24,14 @@ export function isWedgedRunCommandExtensionError(error) {
 
 function runAzure(exec, az, args, timeout = EXTENSION_RESET_TIMEOUT_MS) {
   return exec(az, [...args, "--only-show-errors", "-o", "json"], {
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+    timeout,
+  })
+}
+
+function runRawAzure(exec, az, args, timeout = EXTENSION_RESET_TIMEOUT_MS) {
+  return exec(az, args, {
     encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
     timeout,
@@ -89,6 +98,28 @@ export function resetRunCommandLinuxExtension({ worker, az = process.env.AZURE_C
   return { extensionNames: names }
 }
 
+export function restartAzureGuestAgentOverSsh({ worker, az = process.env.AZURE_CLI || "az" }, {
+  exec = execFileSync,
+} = {}) {
+  // This is the least-privilege fallback for identities that can invoke
+  // RunCommand but are intentionally denied extension-delete permission. It
+  // only restarts the Azure guest agent; it does not restart the VM or mutate
+  // application files. The next guarded RunCommand invocation reinstalls the
+  // extension after Azure finishes its pending deletion.
+  runRawAzure(exec, az, ["extension", "add", "--name", "ssh", "--yes", "--only-show-errors"], EXTENSION_RESET_TIMEOUT_MS)
+  runRawAzure(exec, az, [
+    "ssh", "vm",
+    "--resource-group", worker.resourceGroup,
+    "--name", worker.resourceName,
+    "--resource-type", worker.resourceType || "Microsoft.Compute/virtualMachines",
+    "--yes-without-prompt",
+    "--",
+    "-o", "BatchMode=yes",
+    "-o", "ConnectTimeout=30",
+    "sudo sh -c 'systemctl restart walinuxagent.service || systemctl restart waagent.service'",
+  ], EXTENSION_RESET_TIMEOUT_MS)
+}
+
 export function invokeAzureRunCommand({ worker, commandId, scripts, az = process.env.AZURE_CLI || "az" }, {
   exec = execFileSync,
   sleep = defaultSleep,
@@ -106,7 +137,13 @@ export function invokeAzureRunCommand({ worker, commandId, scripts, az = process
     return azJson(exec, az, args)
   } catch (error) {
     if (!isWedgedRunCommandExtensionError(error)) throw error
-    resetRunCommandLinuxExtension({ worker, az }, { exec, sleep, now })
+    try {
+      resetRunCommandLinuxExtension({ worker, az }, { exec, sleep, now })
+    } catch (resetError) {
+      if (!EXTENSION_DELETE_AUTHORIZATION.test(diagnostic(resetError))) throw resetError
+      restartAzureGuestAgentOverSsh({ worker, az }, { exec })
+      sleep(GUEST_AGENT_SETTLE_MS)
+    }
     return azJson(exec, az, args)
   }
 }
