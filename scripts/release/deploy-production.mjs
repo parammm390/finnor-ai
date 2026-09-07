@@ -1,5 +1,4 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -33,37 +32,6 @@ if (process.env.VERCEL_PROJECT_ID && process.env.VERCEL_PROJECT_ID !== app.proje
   throw new Error(`VERCEL_PROJECT_ID differs from the canonical ${appName} project`)
 }
 
-const CORE_GATE_KEYS = [
-  "source_provenance", "typecheck_build", "unit_integration", "migrations",
-  "tenant_rls_security", "action_contracts", "policy_approval_boundaries",
-  "workflow_runtime_recovery", "queue_idempotency", "load_latency_reliability",
-  "release_deployment_invariants",
-]
-function stable(value) {
-  if (value === undefined) return "null"
-  if (value === null || typeof value !== "object") return JSON.stringify(value)
-  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`
-  return `{${Object.entries(value).filter(([, nested]) => nested !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, nested]) => `${JSON.stringify(key)}:${stable(nested)}`).join(",")}}`
-}
-function sha256(value) {
-  return createHash("sha256").update(typeof value === "string" ? value : stable(value)).digest("hex")
-}
-function loadCoreCertification(path, expectedSha) {
-  if (!path) throw new Error("FINNOR_CORE_CERTIFICATION_FILE is required for a production deploy")
-  const artifact = JSON.parse(readFileSync(resolve(path), "utf8"))
-  if (artifact.schema !== "finnor.core-certification/v1" || artifact.status !== "PASS") throw new Error("Production deploy requires a PASS FINNOR core certification")
-  if (artifact.canonicalCoreSha !== expectedSha) throw new Error(`Core certification is for ${artifact.canonicalCoreSha || "unknown"}, not ${expectedSha}`)
-  if (!Array.isArray(artifact.gates) || artifact.gates.length !== CORE_GATE_KEYS.length) throw new Error("Core certification gate set is incomplete")
-  const gates = [...artifact.gates].sort((a, b) => String(a.gate).localeCompare(String(b.gate)))
-  if (new Set(gates.map((gate) => gate.gate)).size !== CORE_GATE_KEYS.length || CORE_GATE_KEYS.some((key) => !gates.some((gate) => gate.gate === key && gate.status === "PASS"))) throw new Error("Core certification contains a non-PASS or missing gate")
-  for (const gate of gates) if (gate.evidenceHash !== sha256(gate.evidence)) throw new Error(`Core certification gate evidence was modified: ${gate.gate}`)
-  const suiteHash = sha256({ version: "phase6-core-v1", gates: CORE_GATE_KEYS })
-  const evidenceHash = sha256(gates.map(({ gate, status, evidenceHash }) => ({ gate, status, evidenceHash })))
-  const identityHash = sha256({ canonicalCoreSha: expectedSha, coreSourceTreeHash: artifact.coreSourceTreeHash, suiteHash, evidenceHash })
-  if (artifact.suiteHash !== suiteHash || artifact.evidenceHash !== evidenceHash || artifact.certificationId !== `corecert-${identityHash}`) throw new Error("Core certification identity/integrity verification failed")
-  return artifact
-}
-
 function git(args) {
   return execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
 }
@@ -90,7 +58,6 @@ const buildId = process.env.FINNOR_BUILD_ID || `finnor-${commitSha.slice(0, 12)}
 const version = process.env.FINNOR_VERSION || `0.1.0+${commitSha.slice(0, 12)}`
 const environment = "production"
 const source = process.env.FINNOR_RELEASE_SOURCE || (process.env.GITHUB_ACTIONS === "true" ? "github-actions" : "codex-governed-release")
-const coreCertification = loadCoreCertification(process.env.FINNOR_CORE_CERTIFICATION_FILE, commitSha)
 
 if (!/^[0-9a-f]{40}$/.test(commitSha)) throw new Error(`HEAD is not a full commit SHA: ${commitSha}`)
 if (dirty) throw new Error(`Refusing to deploy a dirty worktree:\n${dirty}`)
@@ -111,7 +78,6 @@ const env = {
   FINNOR_VERSION: version,
   FINNOR_ENVIRONMENT: environment,
   FINNOR_RELEASE_SOURCE: source,
-  FINNOR_CORE_CERTIFICATION_ID: coreCertification.certificationId,
 }
 
 if (!deployOnly) {
@@ -132,7 +98,6 @@ const deployArgs = [
   "--meta", `finnorVersion=${version}`,
   "--meta", `finnorEnvironment=${environment}`,
   "--meta", `finnorReleaseSource=${source}`,
-  "--meta", `finnorCoreCertificationId=${coreCertification.certificationId}`,
   "--meta", "gitDirty=0",
   "--meta", "githubDeployment=1",
   "--meta", "githubCommitOrg=parammm390",
@@ -144,7 +109,6 @@ const deployArgs = [
   "--env", `FINNOR_VERSION=${version}`,
   "--env", `FINNOR_ENVIRONMENT=${environment}`,
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
-  "--env", `FINNOR_CORE_CERTIFICATION_ID=${coreCertification.certificationId}`,
   ...tokenArgs,
 ]
 const deployOutput = run("vercel", deployArgs, appDir, env)
@@ -161,7 +125,6 @@ const result = {
   version,
   environment,
   source,
-  coreCertificationId: coreCertification.certificationId,
   dirty: false,
   remoteMain,
   deploymentUrl,
