@@ -56,7 +56,14 @@ describe.skipIf(!available)("worker heartbeat", () => {
     await new Promise((r) => setTimeout(r, 90));
     controller2.abort();
 
-    const rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+    let rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+    // Abort stops future interval ticks but cannot cancel a beat already in flight.
+    // Poll briefly for that committed write instead of racing it at millisecond
+    // precision and making the release gate flaky.
+    for (let attempt = 0; attempt < 10 && rows2[0]!.lastBeatAt.getTime() <= firstBeat; attempt++) {
+      await new Promise((r) => setTimeout(r, 25));
+      rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+    }
     expect(rows2).toHaveLength(1); // still exactly one row — upsert, not insert
     expect(rows2[0]!.lastBeatAt.getTime()).toBeGreaterThan(firstBeat);
     expect(rows2[0]!.meta).toMatchObject({
