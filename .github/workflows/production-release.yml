@@ -249,6 +249,16 @@ jobs:
         run: npm run typecheck
         working-directory: finnor-os
 
+      - name: Prepare disposable worker smoke database
+        run: |
+          npm run db:bundle
+          git diff --exit-code -- packages/db/migrations-bundle.ts
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+        env:
+          DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
+
       - name: Build, smoke-test, and push exact worker image to ECR
         run: |
           set -euo pipefail
