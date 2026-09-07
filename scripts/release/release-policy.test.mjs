@@ -9,6 +9,8 @@ import {
   assertEcsDeploymentStable,
   assertFreshAwsPreflight,
   assertImmutableEcrRelease,
+  assertMigrationLineage,
+  HISTORICAL_PRODUCTION_MIGRATIONS,
   assertRuntimeParity,
   assertWorkerHeartbeat,
   expectedRelease,
@@ -18,6 +20,17 @@ import {
 const contract = loadContract()
 const sha = "a".repeat(40)
 const expected = expectedRelease(sha)
+
+test("production history is accepted only with forward repair; unknown and newer migrations fail", () => {
+  const head = "0109_atomic_water_runtime_retirement.sql"
+  const repo = ["0104_core_vertical_runtime_boundary.sql", head]
+  assert.doesNotThrow(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, repo, head))
+  assert.doesNotThrow(() => assertMigrationLineage(repo, repo, head))
+  assert.throws(() => assertMigrationLineage(["0108_unknown.sql"], repo, head), /absent/)
+  assert.throws(() => assertMigrationLineage(["0110_future.sql"], [...repo, "0110_future.sql"], head), /head/)
+  assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0108_candidate.sql"], "0108_candidate.sql"), /newer|forward repair/)
+  assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0110_future.sql"], "0110_future.sql"), /forward repair/)
+})
 
 test("the Phase 5 production contract is AWS ECS with no active Azure target", () => {
   const worker = contract.topology.worker

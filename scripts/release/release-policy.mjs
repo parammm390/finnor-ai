@@ -6,6 +6,30 @@ import { fileURLToPath } from "node:url"
 export const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/
 export const CONTRACT_PATH = resolve(fileURLToPath(new URL("../../infra/deployment/production.contract.json", import.meta.url)))
 
+// Verified against the previously deployed f40526617c7e22258c12a2b669975ddaaf33e7fc.
+// These are independent historical migrations, not aliases for the PE migrations.
+// 0109 supplies the forward repair; retain the original production ledger rows.
+export const HISTORICAL_PRODUCTION_MIGRATIONS = Object.freeze([
+  "0102_product_truth_objective_realtime.sql",
+  "0104_product_truth_objective_realtime.sql",
+  "0105_human_operating_compiler.sql",
+  "0106_interactive_runtime_closure.sql",
+  "0107_business_truth_registry.sql",
+  "0108_operating_product_closure.sql",
+])
+
+export function assertMigrationLineage(applied, repository, requiredHead) {
+  const repo = new Set(repository)
+  const historical = new Set(HISTORICAL_PRODUCTION_MIGRATIONS)
+  const unknown = applied.filter((name) => !repo.has(name) && !historical.has(name))
+  if (unknown.length) throw new Error(`production database contains migrations absent from the release: ${unknown.join(", ")}`)
+  if ([...repository].sort().at(-1) !== requiredHead) throw new Error("repository migration head differs from contract")
+  if (applied.some((name) => name > requiredHead)) throw new Error("production migration head is newer than this release")
+  if (applied.some((name) => historical.has(name)) && !repo.has("0109_atomic_water_runtime_retirement.sql")) {
+    throw new Error("historical production lineage requires the 0109 forward repair")
+  }
+}
+
 export function loadContract(path = CONTRACT_PATH) {
   return JSON.parse(readFileSync(path, "utf8"))
 }
@@ -134,7 +158,11 @@ export function assertRuntimeParity(contract, expected, observed) {
 export function readGitRelease(repoRoot = process.cwd(), contract = loadContract()) {
   const git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
   const head = git(["rev-parse", "HEAD"]).toLowerCase()
-  const dirty = git(["status", "--porcelain=v1", "--untracked-files=all"])
+  const dirty = [
+    git(["diff-files", "--name-only", "-z", "--"]),
+    git(["diff", "--cached", "--name-only", "-z", "--"]),
+    git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
+  ].filter(Boolean).join("\n")
   const { remote, branch } = contract.canonicalGit
   const remoteMain = git(["ls-remote", remote, `refs/heads/${branch}`]).split(/\s+/)[0]?.toLowerCase() ?? ""
   return { head, remoteMain, dirty }

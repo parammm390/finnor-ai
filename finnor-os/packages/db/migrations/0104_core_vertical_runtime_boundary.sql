@@ -263,6 +263,13 @@ BEGIN
     'leads','opportunities','quotes','proposals','work_orders','appointments','invoices','payments',
     'conversations','calls','messages','communications_log','inventory_items'
   ] LOOP
+    -- Historical production projects communications_log from messages as a view.
+    -- Row BEFORE triggers belong on physical tables; messages is guarded above.
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='finnor_os' AND c.relname=table_name AND c.relkind IN ('r','p')
+    ) THEN CONTINUE; END IF;
     EXECUTE format('DROP TRIGGER IF EXISTS registered_vertical_scope ON finnor_os.%I',table_name);
     EXECUTE format(
       'CREATE TRIGGER registered_vertical_scope BEFORE INSERT OR UPDATE ON finnor_os.%I '

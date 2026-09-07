@@ -52,7 +52,11 @@ function run(command, args, cwd, env) {
 }
 
 const commitSha = git(["rev-parse", "HEAD"]).toLowerCase()
-const dirty = git(["status", "--porcelain=v1", "--untracked-files=all"])
+const dirty = [
+  git(["diff-files", "--name-only", "-z", "--"]),
+  git(["diff", "--cached", "--name-only", "-z", "--"]),
+  git(["ls-files", "--others", "--exclude-standard", "--directory", "-z"]),
+].filter(Boolean).join("\n")
 const remoteMain = git(["ls-remote", "origin", "refs/heads/main"]).split(/\s+/)[0]
 const buildId = process.env.FINNOR_BUILD_ID || `finnor-${commitSha.slice(0, 12)}`
 const version = process.env.FINNOR_VERSION || `0.1.0+${commitSha.slice(0, 12)}`

@@ -5,7 +5,7 @@ import { promises as dns } from "node:dns"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
+import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -202,11 +202,7 @@ try {
   const applied = migrations.rows.map((row) => row.name)
   migrationHead = applied.at(-1)
   const repoMigrations = readdirSync(resolve(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort()
-  const knownLegacyMigrationAliases = new Set(["0102_product_truth_objective_realtime.sql"])
-  const unknown = applied.filter((name) => !repoMigrations.includes(name) && !knownLegacyMigrationAliases.has(name))
-  if (unknown.length) throw new Error(`production database contains migrations absent from the release: ${unknown.join(", ")}`)
-  if (repoMigrations.at(-1) !== contract.release.requiredMigrationHead) throw new Error(`repository migration head ${repoMigrations.at(-1)} differs from contract ${contract.release.requiredMigrationHead}`)
-  if (migrationHead && migrationHead > contract.release.requiredMigrationHead) throw new Error(`production migration head ${migrationHead} is newer than this release`)
+  assertMigrationLineage(applied, repoMigrations, contract.release.requiredMigrationHead)
   if (migrationHead && migrationHead >= "0080_declarative_client_imports.sql") {
     const shape = await client.query(`
       SELECT

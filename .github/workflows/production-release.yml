@@ -52,6 +52,11 @@ jobs:
           git diff --exit-code packages/db/migrations-bundle.ts
         working-directory: finnor-os
 
+      - name: Rehearse historical production database upgrade
+        timeout-minutes: 5
+        run: npx tsx scripts/release/rehearse-historical-upgrade.ts
+        working-directory: finnor-os
+
       - name: Apply schema and checkpointer migrations
         run: |
           npm run db:migrate
@@ -266,7 +271,16 @@ jobs:
           container_id=""
           cleanup() { if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null 2>&1 || true; fi; }
           trap cleanup EXIT
-          docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
+          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+          existing_digest="$(aws ecr describe-images --repository-name finnor-worker --query "imageDetails[?contains(imageTags || \`[]\`, '${FINNOR_COMMIT_SHA}')].imageDigest | [0]" --output text)"
+          if test "$existing_digest" != "None" -a -n "$existing_digest"; then
+            # A rerun must use the already published immutable image for this SHA.
+            docker pull "$registry/finnor-worker@$existing_digest"
+            docker tag "$registry/finnor-worker@$existing_digest" "$image"
+          else
+            docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
+          fi
           for attempt in $(seq 1 30); do
             pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
             sleep 2
@@ -299,10 +313,10 @@ jobs:
           docker stop --time 30 "$container_id" >/dev/null
           test "$(docker inspect --format '{{.State.ExitCode}}' "$container_id")" = "0"
           container_id=""
-          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
-          docker tag "$image" "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
-          docker push "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+          if test "$existing_digest" = "None" -o -z "$existing_digest"; then
+            docker tag "$image" "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+            docker push "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+          fi
           digest="$(aws ecr describe-images --repository-name finnor-worker --image-ids imageTag="$FINNOR_COMMIT_SHA" --query 'imageDetails[0].imageDigest' --output text)"
           test "$digest" != "None" -a -n "$digest"
           echo "FINNOR_ECR_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
