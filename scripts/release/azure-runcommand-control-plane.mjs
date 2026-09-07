@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process"
 const POLL_INTERVAL_MS = 5_000
 const EXTENSION_RESET_TIMEOUT_MS = 5 * 60_000
 const GUEST_AGENT_SETTLE_MS = 20_000
+const RUNCOMMAND_EXTENSION_NAME = "RunCommandLinux"
+const DELETE_RETRYABLE = /(?:ResourceNotFound|could not be found|was not found|does not exist|AnotherOperationInProgress|OperationPreempted|Conflict|HTTP\s+409|operation.*in progress|marked for deletion)/i
 const WEDGED_RUNCOMMAND_EXTENSION = /OperationNotAllowed[\s\S]*?RunCommandLinux[\s\S]*?marked for deletion/i
 
 function defaultSleep(ms) {
@@ -54,17 +56,23 @@ export function resetRunCommandLinuxExtension({ worker, az = process.env.AZURE_C
   sleep = defaultSleep,
   now = Date.now,
 } = {}) {
-  const names = runCommandExtensionNames(exec, az, worker)
-  if (!names.length) throw new Error("Azure RunCommandLinux VM extension was not found for control-plane recovery")
+  // Azure can omit an extension from `vm extension list` while its delete
+  // operation is still propagating. The canonical name is safe to target
+  // directly and is exactly the extension named by the guarded error.
+  const names = [...new Set([...runCommandExtensionNames(exec, az, worker), RUNCOMMAND_EXTENSION_NAME])]
 
   for (const name of names) {
-    runAzure(exec, az, [
-      "vm", "extension", "delete",
-      "--resource-group", worker.resourceGroup,
-      "--vm-name", worker.resourceName,
-      "--name", name,
-      "--no-wait",
-    ], EXTENSION_RESET_TIMEOUT_MS)
+    try {
+      runAzure(exec, az, [
+        "vm", "extension", "delete",
+        "--resource-group", worker.resourceGroup,
+        "--vm-name", worker.resourceName,
+        "--name", name,
+        "--no-wait",
+      ], EXTENSION_RESET_TIMEOUT_MS)
+    } catch (error) {
+      if (!DELETE_RETRYABLE.test(diagnostic(error))) throw error
+    }
   }
 
   const deadline = now() + EXTENSION_RESET_TIMEOUT_MS
