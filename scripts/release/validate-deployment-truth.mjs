@@ -67,6 +67,9 @@ for (const entry of scanRoots) scan(join(repoRoot, entry))
 const workflow = readFileSync(join(repoRoot, ".github/workflows/production-release.yml"), "utf8")
 const vercelDeployScript = readFileSync(join(repoRoot, "scripts/release/deploy-production.mjs"), "utf8")
 const azureDeployScript = readFileSync(join(repoRoot, "scripts/release/azure/deploy-worker.sh"), "utf8")
+const managedRunCommand = readFileSync(join(repoRoot, "scripts/release/azure-managed-run-command.mjs"), "utf8")
+const workerDeployClient = readFileSync(join(repoRoot, "scripts/release/deploy-azure-worker.mjs"), "utf8")
+const preflightScript = readFileSync(join(repoRoot, "scripts/release/preflight-production.mjs"), "utf8")
 const parityScript = readFileSync(join(repoRoot, "scripts/release/verify-production-parity.mjs"), "utf8")
 for (const invariant of [
   'sudo -u finnor git -C "$staging_dir" rev-parse HEAD',
@@ -78,6 +81,23 @@ for (const invariant of [
 }
 if (!parityScript.includes("sudo -u finnor git -C '${worker.currentSymlink}' rev-parse HEAD")) {
   fail("Azure parity verification must inspect the runtime-owned checkout as finnor")
+}
+for (const [label, source] of [["preflight", preflightScript], ["worker deploy", workerDeployClient], ["parity", parityScript]]) {
+  if (!source.includes("runManagedAzureCommand")) fail(`Azure ${label} must use managed RunCommand`)
+  if (/("run-command",\s*"invoke")/.test(source)) fail(`Azure ${label} still uses the legacy single-active action RunCommand`)
+}
+for (const invariant of [
+  '"run-command", "create"',
+  '"--async-execution", "false"',
+  '"--no-wait"',
+  '"--timeout-in-seconds"',
+  '"run-command", "show"',
+  '"--instance-view"',
+  "TRANSIENT_CONTROL_PLANE",
+  '"run-command", "delete"',
+  "finally",
+]) {
+  if (!managedRunCommand.includes(invariant)) fail(`managed RunCommand lost bounded cleanup invariant: ${invariant}`)
 }
 if (!parityScript.includes("heartbeatDeadline = Date.now() + 120_000") || !parityScript.includes("observedCommit === expected.commitSha")) {
   fail("runtime parity must wait for a fresh heartbeat carrying the canonical release SHA")

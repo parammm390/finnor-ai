@@ -4,7 +4,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { invokeAzureRunCommand } from "./azure-runcommand-control-plane.mjs"
+import { runManagedAzureCommand } from "./azure-managed-run-command.mjs"
 import { assertCanonicalRelease, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -78,9 +78,21 @@ if (!frontendProductionEnvNames.has("JARVIS_SSE_GATEWAY_URL")) {
 }
 
 const az = process.env.AZURE_CLI || "az"
+const AZURE_COMMAND_TIMEOUT_MS = 5 * 60 * 1000
 function azJson(args) {
-  const output = execFileSync(az, [...args, "--only-show-errors", "-o", "json"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 })
-  return JSON.parse(output)
+  try {
+    const output = execFileSync(az, [...args, "--only-show-errors", "-o", "json"], {
+      encoding: "utf8",
+      maxBuffer: 16 * 1024 * 1024,
+      timeout: AZURE_COMMAND_TIMEOUT_MS,
+    })
+    return JSON.parse(output)
+  } catch (error) {
+    const stdout = typeof error?.stdout === "string" ? error.stdout.trim() : ""
+    const stderr = typeof error?.stderr === "string" ? error.stderr.trim() : ""
+    const diagnostic = [stdout, stderr].filter(Boolean).join("\n") || (error instanceof Error ? error.message : String(error))
+    throw new Error(`Azure preflight command failed:\n${diagnostic}`, { cause: error })
+  }
 }
 
 const worker = contract.topology.worker
@@ -128,13 +140,15 @@ grep -Eq '^FINNOR_SECRET_IDS=.+$' '${worker.secretEnvironmentFile}' || { echo "w
 git ls-remote https://github.com/${contract.canonicalGit.repository}.git refs/heads/${contract.canonicalGit.branch} | grep -q '^${gitRelease.head}'
 test "$(df -Pk /srv/finnor | awk 'NR==2 {print $4}')" -gt 524288
 echo FINNOR_AZURE_PREFLIGHT_OK`
-const runCommand = invokeAzureRunCommand({
+const runCommand = runManagedAzureCommand({
+  stage: "preflight",
+  commitSha: expected.commitSha,
+  script: remotePreflight,
+  timeoutSeconds: 5 * 60,
   worker,
-  commandId: "RunShellScript",
-  scripts: remotePreflight,
   az,
 })
-const runOutput = (runCommand.value ?? []).map((entry) => entry.message ?? "").join("\n")
+const runOutput = runCommand.output
 if (!runOutput.includes("FINNOR_AZURE_PREFLIGHT_OK")) throw new Error("Azure worker runtime preflight did not return its success marker")
 
 process.loadEnvFile(resolve(databaseEnvPath))

@@ -16,7 +16,7 @@
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
     "release:p0-p4-lineage": "node scripts/release/verify-p0-p4-lineage.mjs",
     "release:p0-p6-lineage": "npm run p6:lineage --prefix finnor-os",
-    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/azure-runcommand-control-plane.test.mjs scripts/release/release-policy.test.mjs scripts/release/product-truth-golden-matrix.test.mjs scripts/release/human-operability-matrix.test.mjs scripts/release/verify-consecutive-human-certifications.test.mjs"
+    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/azure-managed-run-command.test.mjs scripts/release/release-policy.test.mjs scripts/release/product-truth-golden-matrix.test.mjs scripts/release/human-operability-matrix.test.mjs scripts/release/verify-consecutive-human-certifications.test.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
