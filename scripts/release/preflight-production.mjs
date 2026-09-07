@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { invokeAzureRunCommand } from "./azure-runcommand-control-plane.mjs"
 import { assertCanonicalRelease, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -127,13 +128,12 @@ grep -Eq '^FINNOR_SECRET_IDS=.+$' '${worker.secretEnvironmentFile}' || { echo "w
 git ls-remote https://github.com/${contract.canonicalGit.repository}.git refs/heads/${contract.canonicalGit.branch} | grep -q '^${gitRelease.head}'
 test "$(df -Pk /srv/finnor | awk 'NR==2 {print $4}')" -gt 524288
 echo FINNOR_AZURE_PREFLIGHT_OK`
-const runCommand = azJson([
-  "vm", "run-command", "invoke",
-  "--resource-group", worker.resourceGroup,
-  "--name", worker.resourceName,
-  "--command-id", "RunShellScript",
-  "--scripts", remotePreflight,
-])
+const runCommand = invokeAzureRunCommand({
+  worker,
+  commandId: "RunShellScript",
+  scripts: remotePreflight,
+  az,
+})
 const runOutput = (runCommand.value ?? []).map((entry) => entry.message ?? "").join("\n")
 if (!runOutput.includes("FINNOR_AZURE_PREFLIGHT_OK")) throw new Error("Azure worker runtime preflight did not return its success marker")
 
