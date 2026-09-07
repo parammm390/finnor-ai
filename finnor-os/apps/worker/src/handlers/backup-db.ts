@@ -16,8 +16,11 @@ import type { JobHandler } from "../queue";
 export const backupDb: JobHandler = async () => {
   const cfg = backupStorageConfig();
   if (!cfg) {
-    getLogger().error({ verdict: "BLOCKED-CONFIG" }, "[backup_db] managed backup storage is not configured");
-    throw new Error("BLOCKED-CONFIG: BACKUP_GITHUB_TOKEN/BACKUP_GITHUB_REPO are required for the supplementary backup job");
+    // Backup storage is an optional supplementary integration. Treat its absent
+    // credentials as a successful no-op so the proactive scheduler does not poison
+    // the queue with a job that cannot ever succeed. The verdict stays visible.
+    getLogger().warn({ verdict: "BLOCKED-CONFIG" }, "[backup_db] managed backup storage is not configured; skipping");
+    return;
   }
 
   const databaseUrl = process.env.DATABASE_URL;

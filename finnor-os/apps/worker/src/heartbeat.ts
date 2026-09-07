@@ -19,7 +19,7 @@ async function beat(): Promise<void> {
   const meta = {
     ...release,
     instanceId: WORKER_HEARTBEAT_ID,
-    capabilities: (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health")
+    capabilities: (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse")
       .split(",").map((value) => value.trim()).filter(Boolean),
     releaseSha: release.commitSha,
     coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,

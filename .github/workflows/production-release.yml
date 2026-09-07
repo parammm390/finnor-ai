@@ -356,7 +356,7 @@ jobs:
         run: |
           set -o pipefail
           node scripts/release/deploy-production.mjs frontend --deploy-only --output-file "$RUNNER_TEMP/frontend-release.json" | tee "$RUNNER_TEMP/frontend-deploy.log"
-          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/frontend-deploy.log" | tail -n 1)"
+          url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/frontend-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
@@ -370,7 +370,7 @@ jobs:
         run: |
           set -o pipefail
           node scripts/release/deploy-production.mjs api --deploy-only --output-file "$RUNNER_TEMP/api-release.json" | tee "$RUNNER_TEMP/api-deploy.log"
-          url="$(sed -n 's/^FINNOR_DEPLOYMENT_URL=//p' "$RUNNER_TEMP/api-deploy.log" | tail -n 1)"
+          url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/api-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 

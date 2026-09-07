@@ -116,8 +116,10 @@ const deployArgs = [
 ]
 const deployOutput = run("vercel", deployArgs, appDir, env)
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
-const deploymentUrl = urls.at(-1)
+const productionUrls = [...deployOutput.matchAll(/^\s*Production:\s+(https:\/\/[^\s)]+)/gm)].map((match) => match[1].replace(/[.,]+$/, ""))
+const deploymentUrl = productionUrls.at(-1) ?? urls.findLast((url) => url.includes(".vercel.app"))
 if (!deploymentUrl) throw new Error("Vercel did not return a deployment URL")
+if (new URL(deploymentUrl).protocol !== "https:") throw new Error("Vercel returned a non-HTTPS deployment URL")
 
 const result = {
   app: appName,
@@ -135,5 +137,5 @@ const result = {
 if (outputFile) {
   writeFileSync(resolve(outputFile), `${JSON.stringify(result, null, 2)}\n`)
 }
-console.log(`FINNOR_DEPLOYMENT_URL=${deploymentUrl}`)
+process.stdout.write(`\nFINNOR_DEPLOYMENT_URL=${deploymentUrl}\n`)
 console.log(JSON.stringify(result, null, 2))

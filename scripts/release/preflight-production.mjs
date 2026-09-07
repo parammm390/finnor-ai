@@ -129,7 +129,17 @@ if (!taskDefinition || taskDefinition.family !== worker.taskFamily) throw new Er
 const container = taskDefinition.containerDefinitions?.find((entry) => entry.name === worker.containerName)
 if (!container || !container.portMappings?.some((entry) => entry.containerPort === worker.containerPort)) throw new Error("ECS task definition does not expose the canonical worker port")
 const taskEnv = Object.fromEntries((container.environment ?? []).map((entry) => [entry.name, entry.value]))
-for (const [name, value] of Object.entries({ SECRETS_PROVIDER: "aws-secrets-manager", SUPABASE_URL: contract.topology.database.supabaseUrl, PORT: "8090", SSE_PORT: "8090", WORKER_CONCURRENCY: "2", WORKER_INTERACTIVE_RESERVED_CONCURRENCY: "1", FINNOR_DB_POOL_MAX: "4" })) {
+for (const [name, value] of Object.entries({
+  SECRETS_PROVIDER: "aws-secrets-manager",
+  SUPABASE_URL: contract.topology.database.supabaseUrl,
+  FINNOR_WORKER_CAPABILITIES: "jobs,orchestration,computer,event-wake,connection-health,realtime,sse",
+  JARVIS_SSE_ALLOWED_ORIGINS: "https://finnorai.com",
+  PORT: "8090",
+  SSE_PORT: "8090",
+  WORKER_CONCURRENCY: "2",
+  WORKER_INTERACTIVE_RESERVED_CONCURRENCY: "1",
+  FINNOR_DB_POOL_MAX: "4",
+})) {
   if (taskEnv[name] !== value) throw new Error(`ECS task definition ${name} is ${taskEnv[name] ?? "<missing>"}, expected ${value}`)
 }
 if ("AWS_ACCESS_KEY_ID" in taskEnv || "AWS_SECRET_ACCESS_KEY" in taskEnv) throw new Error("ECS task definition contains static AWS credentials")
