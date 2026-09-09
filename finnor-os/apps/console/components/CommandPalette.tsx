@@ -35,6 +35,7 @@ export default function CommandPalette() {
   const commands: Command[] = useMemo(
     () => [
       { id: "nav-home", label: "Go to Mission Control", hint: "home", run: () => router.push("/") },
+      { id: "nav-underwriting", label: "Go to Underwriting", hint: "models, runs, returns", run: () => router.push("/underwriting") },
       { id: "nav-confirm", label: "Go to Confirmation Queue", hint: "confirm", run: () => router.push("/confirm") },
       { id: "nav-customers", label: "Go to Customers", hint: "customers", run: () => router.push("/customers") },
       { id: "nav-audit", label: "Go to Audit Log", hint: "audit", run: () => router.push("/audit") },

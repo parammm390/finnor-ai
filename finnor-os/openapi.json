@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FINNOR Private Equity API",
-    "version": "5.0.0",
-    "description": "Private Equity is the only active product vertical. Historical Water payloads are receipt-only quarantine inputs."
+    "version": "5.3.0",
+    "description": "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase and Assumption truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 adds deterministic, decimal-string underwriting without using Excel or an LLM as the calculation authority. Historical Water payloads remain receipt-only quarantine inputs."
   },
   "components": {
     "securitySchemes": {
@@ -15,6 +15,1410 @@
     }
   },
   "paths": {
+    "/api/investment-cases": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant-scoped P1 InvestmentCases with P4 model/run counts"
+          }
+        }
+      }
+    },
+    "/api/investment-cases/{id}/underwriting": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Truthful Underwriting Workspace projection for one exact P1 InvestmentCase"
+          },
+          "404": {
+            "description": "InvestmentCase not found in the authenticated tenant"
+          }
+        }
+      }
+    },
+    "/api/underwriting/models": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "investmentCaseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "modelKey": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_.:-]{0,99}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "investmentCaseId",
+                  "modelKey",
+                  "name"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Logical deterministic model attached to the canonical P1 InvestmentCase"
+          }
+        }
+      }
+    },
+    "/api/underwriting/models/{id}/versions": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "definition": {
+                    "type": "object",
+                    "properties": {
+                      "schemaVersion": {
+                        "type": "string",
+                        "const": "underwriting-model-ir.v1"
+                      },
+                      "modelKey": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_.:-]{0,99}$"
+                      },
+                      "modelVersion": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      "financialConventionVersion": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "minimumEngineVersion": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "periodDefinition": {
+                        "type": "object",
+                        "properties": {
+                          "frequency": {
+                            "type": "string",
+                            "enum": [
+                              "annual",
+                              "quarterly",
+                              "monthly"
+                            ]
+                          },
+                          "forecastStart": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 240
+                          },
+                          "fiscalYearStartMonth": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12
+                          }
+                        },
+                        "required": [
+                          "frequency",
+                          "forecastStart",
+                          "count"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "nodes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_.:-]{0,199}$"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "input",
+                                "constant",
+                                "expression",
+                                "series",
+                                "schedule",
+                                "aggregate",
+                                "check",
+                                "output"
+                              ]
+                            },
+                            "valueType": {
+                              "type": "string",
+                              "enum": [
+                                "decimal",
+                                "date",
+                                "boolean",
+                                "text"
+                              ]
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "money",
+                                "rate",
+                                "multiple",
+                                "ratio",
+                                "count",
+                                "date",
+                                "period",
+                                "boolean",
+                                "text"
+                              ]
+                            },
+                            "currency": {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "scalar",
+                                "series"
+                              ]
+                            },
+                            "dependencies": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "maxItems": 10000
+                            },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "p1_assumption",
+                                    "evidence_version",
+                                    "artifact_anchor",
+                                    "explicit",
+                                    "model_parameter"
+                                  ]
+                                },
+                                "assumptionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "evidenceVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "documentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "documentVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "anchorId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2048
+                                },
+                                "anchorHash": {
+                                  "type": "string",
+                                  "pattern": "^[0-9a-f]{64}$"
+                                },
+                                "valuePath": {
+                                  "type": "string",
+                                  "pattern": "^[A-Za-z0-9_.-]{1,240}$"
+                                },
+                                "valueSelector": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 240
+                                },
+                                "staleAfterDays": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 36500
+                                }
+                              },
+                              "required": [
+                                "kind"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "valueType",
+                            "unit",
+                            "shape",
+                            "dependencies"
+                          ],
+                          "additionalProperties": true
+                        },
+                        "minItems": 1,
+                        "maxItems": 10000
+                      },
+                      "circularBlocks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "nodeIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "minItems": 2,
+                              "maxItems": 10000
+                            },
+                            "iterationOrder": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "minItems": 2,
+                              "maxItems": 10000
+                            },
+                            "settings": {
+                              "type": "object",
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string",
+                                  "const": "fixed_point"
+                                },
+                                "initialState": {
+                                  "type": "string",
+                                  "enum": [
+                                    "opening_balance",
+                                    "zero"
+                                  ]
+                                },
+                                "absoluteTolerance": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128,
+                                  "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"
+                                },
+                                "relativeTolerance": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128,
+                                  "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"
+                                },
+                                "maxIterations": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 200
+                                }
+                              },
+                              "required": [
+                                "algorithm",
+                                "initialState",
+                                "absoluteTolerance",
+                                "relativeTolerance",
+                                "maxIterations"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nodeIds",
+                            "iterationOrder",
+                            "settings"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 100
+                      },
+                      "runtime": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "metadata": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "schemaVersion",
+                      "modelKey",
+                      "modelVersion",
+                      "financialConventionVersion",
+                      "minimumEngineVersion",
+                      "periodDefinition",
+                      "nodes",
+                      "circularBlocks"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "parentVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "definition"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Immutable compiled ModelIR version created"
+          },
+          "409": {
+            "description": "Model version identity conflict"
+          }
+        }
+      }
+    },
+    "/api/underwriting/scenarios": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "investmentCaseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "modelVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "parentScenarioId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "scenario": {
+                    "type": "object",
+                    "properties": {
+                      "schemaVersion": {
+                        "type": "string",
+                        "const": "underwriting-scenario.v1"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      },
+                      "parentScenarioId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "overrides": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "nodeId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 4096
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            "reason": {
+                              "type": "string",
+                              "maxLength": 1000
+                            }
+                          },
+                          "required": [
+                            "nodeId",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 100
+                      },
+                      "semanticHash": {
+                        "type": "string",
+                        "pattern": "^sha256:[0-9a-f]{64}$"
+                      }
+                    },
+                    "required": [
+                      "schemaVersion",
+                      "name",
+                      "overrides"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "investmentCaseId",
+                  "modelVersionId",
+                  "scenario"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Immutable explicit scenario override set created without mutating P1 Assumptions"
+          }
+        }
+      }
+    },
+    "/api/underwriting/runs": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "investmentCaseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "modelVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "worldAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "scenarioId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "explicitInputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 4096
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "truthClass": {
+                          "type": "string",
+                          "enum": [
+                            "OBSERVED_FACT",
+                            "CANONICAL_ASSUMPTION",
+                            "MODEL_PARAMETER"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "KNOWN",
+                            "UNKNOWN",
+                            "STALE",
+                            "CONFLICTING",
+                            "UNSUPPORTED"
+                          ]
+                        },
+                        "provenance": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "p1_assumption",
+                                  "evidence_version",
+                                  "model_parameter",
+                                  "human_input",
+                                  "artifact_anchor"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048
+                              },
+                              "versionId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048
+                              },
+                              "anchorId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048
+                              },
+                              "semanticHash": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 160
+                              },
+                              "effectiveAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "observedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "retrievedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 32
+                        },
+                        "reason": {
+                          "type": "string",
+                          "maxLength": 1000
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "truthClass"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "investmentCaseId",
+                  "modelVersionId",
+                  "worldAt",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Idempotent replay returned the exact prior Run"
+          },
+          "201": {
+            "description": "Immutable deterministic UnderwritingRun completed"
+          },
+          "422": {
+            "description": "Required input is unknown, stale, conflicting, missing, or non-convergent"
+          }
+        }
+      }
+    },
+    "/api/underwriting/runs/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact historical Run, InputSnapshot, checks, outputs, engine version, and hashes"
+          },
+          "404": {
+            "description": "Run not found in the authenticated tenant"
+          }
+        }
+      }
+    },
+    "/api/underwriting/runs/{id}/explain": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "nodeId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deterministic recursive calculation and exact source lineage"
+          }
+        }
+      }
+    },
+    "/api/underwriting/runs/diff": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "left",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "right",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deterministic Run/input/output/check diff with dependency-graph attribution"
+          }
+        }
+      }
+    },
+    "/api/underwriting/model-versions/{id}/affected": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "nodeId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact downstream dependency impact for one ModelVersion node"
+          }
+        }
+      }
+    },
+    "/api/underwriting/model-versions/diff": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "left",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "right",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Semantic ModelIR node/version diff"
+          }
+        }
+      }
+    },
+    "/api/underwriting/sensitivities": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "baseRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 180
+                  },
+                  "definition": {
+                    "type": "object",
+                    "properties": {
+                      "schemaVersion": {
+                        "type": "string",
+                        "const": "underwriting-sensitivity.v1"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      },
+                      "rowAxis": {
+                        "type": "object",
+                        "properties": {
+                          "nodeId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 4096
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            "minItems": 1,
+                            "maxItems": 2500
+                          },
+                          "label": {
+                            "type": "string",
+                            "maxLength": 240
+                          }
+                        },
+                        "required": [
+                          "nodeId",
+                          "values"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "columnAxis": {
+                        "type": "object",
+                        "properties": {
+                          "nodeId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 4096
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            "minItems": 1,
+                            "maxItems": 2500
+                          },
+                          "label": {
+                            "type": "string",
+                            "maxLength": 240
+                          }
+                        },
+                        "required": [
+                          "nodeId",
+                          "values"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "outputNodeIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                      }
+                    },
+                    "required": [
+                      "schemaVersion",
+                      "name",
+                      "rowAxis",
+                      "outputNodeIds"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "baseRunId",
+                  "idempotencyKey",
+                  "definition"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Idempotent sensitivity replay"
+          },
+          "201": {
+            "description": "Bounded deterministic sensitivity with an immutable Run per cell"
+          }
+        }
+      }
+    },
+    "/api/underwriting/sensitivities/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact sensitivity definition and provenance-retaining cell Runs"
+          }
+        }
+      }
+    },
+    "/api/underwriting/artifact-bindings": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "investmentCaseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "modelVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "input",
+                      "output"
+                    ]
+                  },
+                  "bindingMode": {
+                    "type": "string",
+                    "enum": [
+                      "read_only",
+                      "write_and_compare",
+                      "compare_only"
+                    ]
+                  },
+                  "modelNodeId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "anchorId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "anchorHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "valueSelector": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "comparisonPolicy": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "const": "EXACT_DECIMAL"
+                          }
+                        },
+                        "required": [
+                          "mode"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "const": "DECLARED_ROUNDED_VALUE"
+                          },
+                          "decimalPlaces": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 34
+                          }
+                        },
+                        "required": [
+                          "mode",
+                          "decimalPlaces"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "const": "EXPLICIT_ABSOLUTE_TOLERANCE"
+                          },
+                          "tolerance": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"
+                          }
+                        },
+                        "required": [
+                          "mode",
+                          "tolerance"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "const": "EXPLICIT_RELATIVE_TOLERANCE"
+                          },
+                          "tolerance": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"
+                          }
+                        },
+                        "required": [
+                          "mode",
+                          "tolerance"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "supersedesBindingId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "investmentCaseId",
+                  "modelVersionId",
+                  "documentId",
+                  "documentVersionId",
+                  "direction",
+                  "bindingMode",
+                  "modelNodeId",
+                  "anchorId",
+                  "anchorHash"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Thin exact P4 node to P3 SpreadsheetIR anchor binding created"
+          },
+          "409": {
+            "description": "Artifact anchor/version conflict"
+          }
+        }
+      }
+    },
+    "/api/underwriting/projections": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "baseVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "runId",
+                  "documentId",
+                  "baseVersionId",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Idempotent projection replay"
+          },
+          "201": {
+            "description": "Outputs projected through a P3 typed patch into a new local DocumentVersion"
+          },
+          "409": {
+            "description": "P3 version or anchor conflict"
+          }
+        }
+      }
+    },
+    "/api/underwriting/comparisons": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "runId",
+                  "documentId",
+                  "documentVersionId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Independent P4 decimal outputs compared with exact P3/Excel values under declared policies"
+          }
+        }
+      }
+    },
     "/api/instructions": {
       "post": {
         "security": [
@@ -1787,18 +3191,26 @@
                                   "domain_action",
                                   "workflow_run",
                                   "workflow_step",
-                                  "pe_fund",
-                                  "pe_portfolio_company",
+                                  "pe_strategy",
+                                  "pe_opportunity",
                                   "pe_deal",
+                                  "pe_investment_case",
+                                  "pe_thesis",
+                                  "pe_assumption",
+                                  "pe_decision",
                                   "pe_deal_party",
                                   "pe_workstream",
                                   "pe_request",
                                   "pe_deliverable",
                                   "pe_finding",
                                   "pe_deal_risk",
+                                  "pe_dependency",
+                                  "pe_milestone",
                                   "pe_closing_condition",
                                   "pe_closing_item",
-                                  "pe_deal_dependency"
+                                  "pe_document_link",
+                                  "pe_evidence_link",
+                                  "pe_finding_risk_link"
                                 ]
                               },
                               "entityId": {
@@ -2062,6 +3474,60 @@
                     },
                     "required": [
                       "intent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "intent": {
+                        "type": "string",
+                        "const": "pe_world_state"
+                      },
+                      "workId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "executionKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "root": {
+                        "type": "object",
+                        "properties": {
+                          "entityType": {
+                            "type": "string",
+                            "enum": [
+                              "pe_strategy",
+                              "pe_opportunity",
+                              "pe_deal"
+                            ]
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "entityType",
+                          "entityId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "intent",
+                      "root"
                     ],
                     "additionalProperties": false
                   },
@@ -2794,6 +4260,1737 @@
         "responses": {
           "410": {
             "description": "Authenticated historical payload quarantined; never executed"
+          }
+        }
+      }
+    },
+    "/api/connections/microsoft-graph/start": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "directoryTenantId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "applicationClientId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "requestedPermissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "minItems": 1,
+                    "maxItems": 32
+                  },
+                  "auth": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "federated_workload"
+                          },
+                          "awsRegion": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "federationAudience": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 512
+                          },
+                          "federationConfigId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "signingAlgorithm": {
+                            "type": "string",
+                            "enum": [
+                              "ES384",
+                              "RS256"
+                            ]
+                          },
+                          "identityTokenDurationSeconds": {
+                            "type": "integer",
+                            "minimum": 60,
+                            "maximum": 3600
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "awsRegion",
+                          "federationAudience",
+                          "federationConfigId",
+                          "signingAlgorithm"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "managed_certificate"
+                          },
+                          "credentialRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1024
+                          },
+                          "credentialVersion": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "certificateFallbackAcknowledged": {
+                            "type": "boolean",
+                            "const": true
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "credentialRef",
+                          "certificateFallbackAcknowledged"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "redirectUri": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "directoryTenantId",
+                  "applicationClientId",
+                  "requestedPermissions",
+                  "auth"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "One-time Microsoft app-only admin-consent configuration started"
+          },
+          "403": {
+            "description": "Integration administration denied"
+          },
+          "409": {
+            "description": "Connection or capability conflict"
+          }
+        }
+      }
+    },
+    "/api/connections/microsoft-graph/callback": {
+      "get": {
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "admin_consent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "One-time consent state consumed and browser redirected to connection status"
+          }
+        }
+      }
+    },
+    "/api/connections/microsoft-graph/status": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Microsoft app identity, consent, permission, capability, and health status"
+          }
+        }
+      }
+    },
+    "/api/integrations/microsoft-graph/source-scopes": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configured Microsoft source scopes with coverage and freshness"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceKind": {
+                    "type": "string",
+                    "enum": [
+                      "outlook_mail_folder",
+                      "outlook_calendar_view",
+                      "teams_channel",
+                      "teams_chat",
+                      "teams_user_chat_feed",
+                      "teams_transcript_organizer",
+                      "sharepoint_drive",
+                      "sharepoint_list"
+                    ]
+                  },
+                  "permissionMode": {
+                    "type": "string",
+                    "enum": [
+                      "SCOPED",
+                      "BROAD"
+                    ]
+                  },
+                  "configuration": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "negativeProbeConfiguration": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acknowledgeBroadAccess": {
+                    "type": "boolean"
+                  },
+                  "rootBinding": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "pe_strategy",
+                              "pe_opportunity",
+                              "pe_deal"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "freshnessPolicy": {
+                    "type": "object",
+                    "properties": {
+                      "maxAgeSeconds": {
+                        "type": "integer",
+                        "minimum": 60,
+                        "maximum": 604800
+                      },
+                      "criticality": {
+                        "type": "string",
+                        "enum": [
+                          "informational",
+                          "operational",
+                          "consequential"
+                        ]
+                      },
+                      "staleBehavior": {
+                        "type": "string",
+                        "enum": [
+                          "allow_with_warning",
+                          "refresh_then_degrade",
+                          "refresh_then_block"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "maxAgeSeconds",
+                      "criticality",
+                      "staleBehavior"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "sourceKind",
+                  "permissionMode",
+                  "configuration"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Exact source scope verified; subscription-first baseline queued"
+          },
+          "403": {
+            "description": "Coverage administration denied"
+          },
+          "409": {
+            "description": "Effective access not verified or broad access not acknowledged"
+          }
+        }
+      }
+    },
+    "/api/integrations/microsoft-graph/source-scopes/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact source-scope status"
+          },
+          "404": {
+            "description": "Source scope not found in the authenticated tenant"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Source disabled; observations, evidence, and coverage history retained"
+          },
+          "403": {
+            "description": "Coverage administration denied"
+          }
+        }
+      }
+    },
+    "/api/integrations/microsoft-graph/coverage": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "As-of provider coverage, freshness, recovery, unresolved counts, and integration health"
+          }
+        }
+      }
+    },
+    "/api/webhooks/microsoft-graph": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "subscriptionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 512
+                        },
+                        "clientState": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "tenantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "resource": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "changeType": {
+                          "type": "string",
+                          "enum": [
+                            "created",
+                            "updated",
+                            "deleted"
+                          ]
+                        },
+                        "lifecycleEvent": {
+                          "type": "string",
+                          "enum": [
+                            "reauthorizationRequired",
+                            "subscriptionRemoved",
+                            "missed"
+                          ]
+                        },
+                        "subscriptionExpirationDateTime": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "subscriptionId",
+                        "clientState",
+                        "tenantId"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  }
+                },
+                "required": [
+                  "value"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation token echoed exactly as text/plain"
+          },
+          "202": {
+            "description": "Authenticated notifications durably enqueued before acknowledgement"
+          },
+          "400": {
+            "description": "Malformed notification envelope"
+          },
+          "401": {
+            "description": "clientState, directory, or resource mismatch"
+          },
+          "503": {
+            "description": "Durable enqueue failed; no false success"
+          }
+        }
+      }
+    },
+    "/api/artifacts": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "xlsx",
+                      "docx",
+                      "pptx"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "kind",
+                  "title"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Core Document and first immutable local DocumentVersion created"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artifact summary, immutable version timeline, distinct heads, semantic status, and pinned context"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/versions/{versionId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact immutable version metadata and semantic status"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/ir/{versionId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "sheetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "dependencyOf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "dependentOf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded semantic IR slice; never a fabricated Office rendering"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/diff": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "left",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "right",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Semantic diff between two immutable versions"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/drafts": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "baseVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "baseVersionId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Actor-owned local draft head created from an exact version"
+          },
+          "409": {
+            "description": "Stale version or head"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/patches": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "baseVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "draftKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "operations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "minItems": 1,
+                    "maxItems": 1000
+                  },
+                  "expectedSemanticHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "baseVersionId",
+                  "draftKey",
+                  "operations"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Atomic typed patch appended one immutable version"
+          },
+          "409": {
+            "description": "Stale head or anchor precondition"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/comments": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version-pinned artifact comments"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "versionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "anchorId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "anchorHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "parentCommentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "versionId",
+                  "anchorId",
+                  "anchorHash",
+                  "body"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Version and anchor-pinned comment created"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/reviews": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version-pinned editorial review history"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "versionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "requested",
+                      "approved",
+                      "changes_requested",
+                      "withdrawn",
+                      "comment_resolved"
+                    ]
+                  },
+                  "commentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "versionId",
+                  "state"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Editorial review event recorded; it grants no execution authority"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/bindings": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact version and anchor bindings"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "versionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "anchorId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "anchorHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "targetKind": {
+                    "type": "string",
+                    "enum": [
+                      "evidence_version",
+                      "canonical_entity",
+                      "document_version"
+                    ]
+                  },
+                  "targetId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "targetEntityType": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "targetAnchor": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "versionId",
+                  "anchorId",
+                  "anchorHash",
+                  "targetKind",
+                  "targetId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Version-specific Evidence, entity, or DocumentVersion binding created"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/lineage": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artifact version lineage"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "targetVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "relation": {
+                    "type": "string",
+                    "enum": [
+                      "supersedes",
+                      "derived_from",
+                      "copied_from",
+                      "template_instantiation",
+                      "rendered_from",
+                      "merged_from"
+                    ]
+                  }
+                },
+                "required": [
+                  "sourceVersionId",
+                  "targetVersionId",
+                  "relation"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Exact cross-version lineage edge created"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/publish": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "localVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "baseVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "APP_ONLY_FILE_REPLACE",
+                      "DELEGATED_FILE_REPLACE"
+                    ]
+                  }
+                },
+                "required": [
+                  "localVersionId",
+                  "baseVersionId",
+                  "mode"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conditional Microsoft replace read back and semantically verified"
+          },
+          "409": {
+            "description": "Provider head conflict; no blind overwrite"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/publish-new": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "localVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "integrationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sourceScopeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "driveId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "parentItemId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "APP_ONLY_FILE_CREATE",
+                      "DELEGATED_FILE_CREATE"
+                    ]
+                  },
+                  "conflictBehavior": {
+                    "type": "string",
+                    "const": "fail"
+                  }
+                },
+                "required": [
+                  "localVersionId",
+                  "integrationId",
+                  "sourceScopeId",
+                  "driveId",
+                  "parentItemId",
+                  "name",
+                  "mode",
+                  "conflictBehavior"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New Microsoft file created at explicit target, read back, and semantically verified"
+          },
+          "409": {
+            "description": "Name conflict under mandatory fail policy"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/publications/{publicationId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "publicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Truthful replacement publication state"
+          },
+          "404": {
+            "description": "Publication not found"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/provider-creations/{creationId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Truthful provider-create state"
+          },
+          "404": {
+            "description": "Provider creation not found"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/context": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version-pinned comments, review, bindings, lineage, remaps, and external operation state"
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/artifact/recalculate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "versionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "ranges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "worksheetId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 512
+                        },
+                        "address": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 512
+                        }
+                      },
+                      "required": [
+                        "worksheetId",
+                        "address"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100
+                  }
+                },
+                "required": [
+                  "versionId",
+                  "ranges"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Delegated Excel calculation requested and required ranges read back"
+          },
+          "409": {
+            "description": "Provider or authorization precondition failed; calculation remains stale"
+          }
+        }
+      }
+    },
+    "/api/artifact-templates": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active immutable artifact templates"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "versionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "templateKey": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9_-]{1,158}[a-z0-9]$"
+                  }
+                },
+                "required": [
+                  "documentId",
+                  "versionId",
+                  "templateKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Exact DocumentVersion registered as a template"
+          }
+        }
+      }
+    },
+    "/api/artifact-templates/{key}/instantiate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 160
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "title"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New Core Document and first immutable version instantiated with lineage"
           }
         }
       }

@@ -1,6 +1,23 @@
 import type { PeLifecycleName, PeLifecycleState } from "./types";
 
 export const PE_TRANSITIONS: Readonly<Record<PeLifecycleName, Readonly<Record<string, readonly string[]>>>> = {
+  strategy: { draft: ["active"], active: ["retired"], retired: [] },
+  opportunity: {
+    identified: ["screening", "rejected"],
+    screening: ["qualified", "rejected"],
+    qualified: ["promoted", "rejected"],
+    promoted: [],
+    rejected: [],
+  },
+  investment_case: {
+    draft: ["active", "archived"],
+    active: ["superseded", "archived"],
+    superseded: ["archived"],
+    archived: [],
+  },
+  thesis: { draft: ["active", "retired"], active: ["superseded", "retired"], superseded: ["retired"], retired: [] },
+  assumption: { active: ["superseded", "invalidated"], superseded: [], invalidated: [] },
+  decision: { draft: ["final"], final: ["superseded"], superseded: [] },
   deal: { active: ["closed", "terminated"], closed: [], terminated: [] },
   deal_party: { active: ["removed"], removed: [] },
   workstream: { not_started: ["active", "cancelled"], active: ["complete", "cancelled"], complete: [], cancelled: [] },

@@ -1,0 +1,208 @@
+import type { Microsoft365SourceKind } from "@finnor/shared-types";
+import type { Microsoft365SourceCapability, Microsoft365SourceScope } from "./types";
+
+const MINUTE = 60;
+
+function value(scope: Microsoft365SourceScope, key: string): string {
+  const item = scope.configuration[key];
+  if (typeof item !== "string" || !item.trim()) throw new Error(`Microsoft source scope ${scope.scopeKey} requires ${key}`);
+  return encodeURIComponent(item.trim());
+}
+
+const descriptors: Record<Microsoft365SourceKind, Microsoft365SourceCapability> = {
+  outlook_mail_folder: {
+    sourceKind: "outlook_mail_folder",
+    family: "outlook_mail",
+    coverageUnit: ["directoryTenantId", "mailboxId", "folderId"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "mailbox folder",
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: true,
+    supportsLifecycleMissed: true,
+    supportsProviderDeletes: true,
+    supportsImmutableId: true,
+    historyLimit: { kind: "none" },
+    recoveryStrength: "EXACT_DELTA",
+    permissionProfiles: { SCOPED: ["Mail.Read"], BROAD: ["Mail.Read"] },
+    providerRestriction: { SCOPED: "Exchange Online Application RBAC", BROAD: "Entra application permission tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "outlook_mail_folder", maxAgeSeconds: 15 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+    maxSubscriptionMinutes: 10_080,
+    subscriptionResource: (scope) => `/users/${value(scope, "mailboxId")}/mailFolders/${value(scope, "folderId")}/messages`,
+  },
+  outlook_calendar_view: {
+    sourceKind: "outlook_calendar_view",
+    family: "outlook_calendar",
+    coverageUnit: ["directoryTenantId", "mailboxId", "calendarId", "windowStart", "windowEnd"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "bounded calendar view",
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: true,
+    supportsLifecycleMissed: true,
+    supportsProviderDeletes: true,
+    supportsImmutableId: true,
+    historyLimit: { kind: "configured_window" },
+    recoveryStrength: "EXACT_DELTA",
+    permissionProfiles: { SCOPED: ["Calendars.Read"], BROAD: ["Calendars.Read"] },
+    providerRestriction: { SCOPED: "Exchange Online Application RBAC", BROAD: "Entra application permission tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "outlook_calendar_view", maxAgeSeconds: 15 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+    maxSubscriptionMinutes: 10_080,
+    subscriptionResource: (scope) => `/users/${value(scope, "mailboxId")}/events`,
+  },
+  teams_channel: {
+    sourceKind: "teams_channel",
+    family: "teams_channel",
+    coverageUnit: ["directoryTenantId", "teamId", "channelId"],
+    supportsInitialEnumeration: true,
+    supportsDelta: false,
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: true,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: true,
+    supportsImmutableId: false,
+    historyLimit: { kind: "provider_availability" },
+    recoveryStrength: "BOUNDED_RECONCILIATION",
+    permissionProfiles: { SCOPED: ["ChannelMessage.Read.Group"], BROAD: ["ChannelMessage.Read.All"] },
+    providerRestriction: { SCOPED: "Teams resource-specific consent on the configured Team", BROAD: "ChannelMessage.Read.All tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "teams_channel", maxAgeSeconds: 30 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+    maxSubscriptionMinutes: 4_320,
+    subscriptionResource: (scope) => `/teams/${value(scope, "teamId")}/channels/${value(scope, "channelId")}/messages`,
+  },
+  teams_chat: {
+    sourceKind: "teams_chat",
+    family: "teams_chat",
+    coverageUnit: ["directoryTenantId", "chatId"],
+    supportsInitialEnumeration: true,
+    supportsDelta: false,
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: true,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: true,
+    supportsImmutableId: false,
+    historyLimit: { kind: "provider_availability" },
+    recoveryStrength: "BOUNDED_RECONCILIATION",
+    permissionProfiles: { SCOPED: ["ChatMessage.Read.Chat"], BROAD: ["Chat.Read.All"] },
+    providerRestriction: { SCOPED: "Teams chat resource-specific consent where stable subscription support is available", BROAD: "Chat.Read.All tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "teams_chat", maxAgeSeconds: 30 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+    maxSubscriptionMinutes: 4_320,
+    subscriptionResource: (scope) => `/chats/${value(scope, "chatId")}/messages`,
+  },
+  teams_user_chat_feed: {
+    sourceKind: "teams_user_chat_feed",
+    family: "teams_chat",
+    coverageUnit: ["directoryTenantId", "userId", "rollingEightMonthHistory"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "all chats for configured user; rolling eight-month provider horizon",
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: true,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: true,
+    supportsImmutableId: false,
+    historyLimit: { kind: "rolling_months", months: 8 },
+    recoveryStrength: "EXACT_DELTA",
+    permissionProfiles: { SCOPED: null, BROAD: ["Chat.Read.All"] },
+    providerRestriction: { SCOPED: "unsupported", BROAD: "Chat.Read.All is application-wide; FINNOR filters to the configured user after retrieval" },
+    defaultFreshnessPolicy: { scope: "teams_user_chat_feed", maxAgeSeconds: 30 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+    maxSubscriptionMinutes: 4_320,
+    subscriptionResource: (scope) => `/users/${value(scope, "userId")}/chats/getAllMessages`,
+  },
+  teams_transcript_organizer: {
+    sourceKind: "teams_transcript_organizer",
+    family: "teams_transcript",
+    coverageUnit: ["directoryTenantId", "organizerUserId", "startDateTime", "providerTranscriptAvailability"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "meeting organizer transcript view",
+    supportsExactRead: true,
+    supportsChangeNotifications: false,
+    supportsLifecycleReauthorization: false,
+    supportsLifecycleSubscriptionRemoved: false,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: false,
+    supportsImmutableId: false,
+    historyLimit: { kind: "provider_availability" },
+    recoveryStrength: "EXACT_DELTA",
+    // The stable organizer-wide transcript delta API requires
+    // OnlineMeetingTranscript.Read.All. The RSC Read.Chat permission applies to
+    // an individual scheduled private-chat meeting and cannot certify this
+    // organizer delta surface. OnlineMeetings.Read.All is additionally required
+    // to resolve the returned meeting ID to the exact joinWebUrl shared by the
+    // Outlook calendar event; an organizer-scoped application access policy is
+    // what makes SCOPED mode narrow in practice.
+    permissionProfiles: {
+      SCOPED: ["OnlineMeetingTranscript.Read.All", "OnlineMeetings.Read.All"],
+      BROAD: ["OnlineMeetingTranscript.Read.All", "OnlineMeetings.Read.All"],
+    },
+    providerRestriction: {
+      SCOPED: "Teams application access policy assigned to the configured organizer",
+      BROAD: "Tenant-wide Teams application access policy and application permission blast radius",
+    },
+    defaultFreshnessPolicy: { scope: "teams_transcript_organizer", maxAgeSeconds: 60 * MINUTE, criticality: "operational", staleBehavior: "refresh_then_degrade" },
+  },
+  sharepoint_drive: {
+    sourceKind: "sharepoint_drive",
+    family: "sharepoint_drive",
+    coverageUnit: ["directoryTenantId", "siteOrUser", "driveId", "optionalRootItemId"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "drive or configured drive subtree",
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: false,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: true,
+    supportsImmutableId: false,
+    historyLimit: { kind: "none" },
+    recoveryStrength: "EXACT_DELTA",
+    permissionProfiles: { SCOPED: ["Sites.Selected", "Files.SelectedOperations.Selected"], BROAD: ["Files.Read.All", "Sites.Read.All"] },
+    providerRestriction: { SCOPED: "SharePoint Selected permission plus explicit resource assignment", BROAD: "Files.Read.All/Sites.Read.All tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "sharepoint_drive", maxAgeSeconds: 30 * MINUTE, criticality: "informational", staleBehavior: "allow_with_warning" },
+    maxSubscriptionMinutes: 42_300,
+    subscriptionResource: (scope) => `/drives/${value(scope, "driveId")}/root`,
+  },
+  sharepoint_list: {
+    sourceKind: "sharepoint_list",
+    family: "sharepoint_list",
+    coverageUnit: ["directoryTenantId", "siteId", "listId"],
+    supportsInitialEnumeration: true,
+    supportsDelta: true,
+    deltaScope: "SharePoint list",
+    supportsExactRead: true,
+    supportsChangeNotifications: true,
+    supportsLifecycleReauthorization: true,
+    supportsLifecycleSubscriptionRemoved: false,
+    supportsLifecycleMissed: false,
+    supportsProviderDeletes: true,
+    supportsImmutableId: false,
+    historyLimit: { kind: "none" },
+    recoveryStrength: "EXACT_DELTA",
+    permissionProfiles: { SCOPED: ["Lists.SelectedOperations.Selected"], BROAD: ["Sites.Read.All"] },
+    providerRestriction: { SCOPED: "SharePoint Selected permission plus explicit list assignment", BROAD: "Sites.Read.All tenant blast radius" },
+    defaultFreshnessPolicy: { scope: "sharepoint_list", maxAgeSeconds: 30 * MINUTE, criticality: "informational", staleBehavior: "allow_with_warning" },
+    maxSubscriptionMinutes: 42_300,
+    subscriptionResource: (scope) => `/sites/${value(scope, "siteId")}/lists/${value(scope, "listId")}`,
+  },
+};
+
+export const MICROSOFT365_SOURCE_CAPABILITIES = Object.freeze(descriptors);
+
+export function microsoft365SourceCapability(sourceKind: Microsoft365SourceKind): Microsoft365SourceCapability {
+  return descriptors[sourceKind];
+}
+
+export function allMicrosoft365SourceCapabilities(): Microsoft365SourceCapability[] {
+  return Object.values(descriptors);
+}

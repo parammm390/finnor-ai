@@ -10,6 +10,8 @@ import { chunkSource } from "./chunking";
 export interface IngestMemoryParams {
   tenantId: string;
   sourceDocId: string;
+  documentId?: string;
+  documentVersionId?: string;
   text: string;
   entityRefs?: unknown[];
   occurredAt?: Date;
@@ -27,6 +29,8 @@ export async function ingestMemory(params: IngestMemoryParams): Promise<number> 
     const chunks = chunkSource({ text: params.text, entityRefs: params.entityRefs, occurredAt: params.occurredAt }).map((chunk) => ({
       ...chunk,
       sourceKind: params.sourceKind ?? "runtime_artifact",
+      documentId: params.documentId,
+      documentVersionId: params.documentVersionId,
       provenance: { sourceDocId: params.sourceDocId, ...(params.provenance ?? {}) },
     }));
     if (chunks.length === 0) return 0;

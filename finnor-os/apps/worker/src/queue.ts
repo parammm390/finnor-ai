@@ -11,6 +11,18 @@ import { RETIRED_WATER_JOB_TYPES, RetiredVerticalError, isRetiredWaterJob } from
 export type JobHandler = (payload: Record<string, unknown>) => Promise<void>;
 export type JobLane = "interactive" | "batch";
 
+/** Provider-neutral durable retry hint. Handlers never sleep while holding a worker
+ * slot; the queue persists the next eligible run time. */
+export class RetryableJobError extends Error {
+  readonly retryAfterMs: number;
+
+  constructor(message: string, retryAfterMs: number, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "RetryableJobError";
+    this.retryAfterMs = Math.max(1_000, Math.min(24 * 60 * 60_000, Math.ceil(retryAfterMs)));
+  }
+}
+
 /** A process-level cap: the database claim remains the cross-process boundary. */
 export function workerConcurrency(value = process.env.WORKER_CONCURRENCY): number {
   const parsed = Number.parseInt(value ?? "1", 10);
@@ -196,11 +208,14 @@ export class JobQueue {
       const max = Number(job.maxAttempts ?? 3);
       const dead = attempts >= max;
       const errDetail = err instanceof Error ? (err.stack ?? err.message) : String(err);
+      const retryDelayMs = err instanceof RetryableJobError
+        ? err.retryAfterMs
+        : 30_000 * 2 ** attempts;
       await getPool().query(
-        `UPDATE jobs SET status=$3,last_error=$4,run_at=now()+($5 || ' seconds')::interval,
+        `UPDATE jobs SET status=$3,last_error=$4,run_at=now()+($5 || ' milliseconds')::interval,
                          started_at=NULL,lease_owner=NULL,lease_expires_at=NULL,lease_heartbeat_at=NULL
           WHERE id=$1 AND status='running' AND lease_owner=$2`,
-        [job.id, this.instanceId, dead ? "dead_letter" : "queued", errDetail, String(30 * 2 ** attempts)],
+        [job.id, this.instanceId, dead ? "dead_letter" : "queued", errDetail, String(retryDelayMs)],
       );
     } finally {
       clearInterval(renewal);

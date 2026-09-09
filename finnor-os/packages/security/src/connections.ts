@@ -494,6 +494,10 @@ async function verifyProfileHealth(tenantId: string, profile: Awaited<ReturnType
         return { authProfileRef: profile.ref, status: "provider_unavailable" as const, usable: false, reasonCode: "provider_health_failed" };
       }
     } else if (profile.authMethod === "browser_profile") {
+      if ((profile.credentialProvider !== "aws-secrets-manager" && profile.credentialProvider !== "os-keychain") || !profile.credentialRef) {
+        await recordHealth(profile, tenantId, "misconfigured", "browser_profile_reference_missing");
+        return { authProfileRef: profile.ref, status: "misconfigured" as const, usable: false, reasonCode: "browser_profile_reference_missing" };
+      }
       const bundle = await resolveTenantBoundSecretBundle(tenantId, {
         credentialProvider: profile.credentialProvider,
         credentialRef: profile.credentialRef,

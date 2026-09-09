@@ -41,6 +41,10 @@
     "tenant:data-inventory": "tsx scripts/tenant-data-inventory.ts",
     "PE-DOMAIN-BOUNDARY": "tsx scripts/release/verify-pe-domain-boundary.ts",
     "release:pe-domain-boundary": "npm run PE-DOMAIN-BOUNDARY",
+    "release:pe-p1": "tsx scripts/release/run-pe-p1-world-truth-certification.ts",
+    "release:pe-p2": "tsx scripts/release/run-pe-p2-m365-nervous-system-certification.ts",
+    "release:pe-p3": "tsx scripts/release/run-pe-p3-artifact-os-certification.ts",
+    "release:pe-p4-underwriting": "tsx scripts/release/run-pe-p4-underwriting-certification.ts",
     "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts"
   },
   "dependencies": {

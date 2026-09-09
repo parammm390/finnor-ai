@@ -1,0 +1,507 @@
+{
+  "schema": "finnor.pe-p3-starting-audit.v1",
+  "recordedAt": "2026-09-08T00:12:24.672327+00:00",
+  "status": "BLOCKED_PREREQUISITES",
+  "startingBranch": "codex/p3-epistemic-runtime",
+  "startingHeadSha": "80f617d321965b8694de18940ff23b005dedcdb7",
+  "startingTreeSha": "f38b551d99952986527e4986e3ba77891a3c10ef",
+  "treeShaEvidence": "Fresh git cat-file -p HEAD; this is the committed tree, not the populated working directory.",
+  "startingMigrationHead": "0114_microsoft_subscription_current_scope.sql",
+  "gitStatus": "UNVERIFIED: git status stalled; no clean-tree claim",
+  "freshMain": {
+    "headSha": "35a31ac18267e4b0fcffd189e9b70bafe0d4f65c",
+    "treeSha": "1d688539cf205e8d5df1b58c28bd220b4def4d5f",
+    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "evidence": "Fresh isolated shallow clone of origin/main, git log and source search; no P1 Strategy/Opportunity/InvestmentCase/Thesis/Assumption/Decision, temporal state_at or P2 Microsoft provider equivalents found."
+  },
+  "prerequisites": {
+    "p1": "LOCAL_IMPLEMENTATION_PRESENT; absent on fresh main; current populated-upgrade regression fails due obsolete migration-list assertion; certification pins obsolete 0111 head",
+    "p2": "LOCAL_PARTIAL; absent on fresh main; source/admin configuration API and dedicated P2 certification absent",
+    "liveOffice": "NOT_RUN; no live credential check or provider certification claimed"
+  },
+  "auditMap": {
+    "EXISTS": [
+      "Core documents/document_contents",
+      "Core Evidence/EvidenceVersion",
+      "Core Work/BusinessEvent/Authority/DecisionReceipt",
+      "P1 world/temporal local code",
+      "P2 file metadata observations, evidence-before-root mapping, delta and subscription local code"
+    ],
+    "PARTIAL": [
+      "P2 admin configuration and certification",
+      "provider transport: app-only JSON/text; no binary file round-trip",
+      "artifact memory provenance: documentId/contentHash only",
+      "PDF extraction: public reference text without version/page anchors"
+    ],
+    "WRONG": [
+      "Existing byte writer overwrites document_contents in place for historical artifact truth",
+      "Document download filename is always .pdf",
+      "P1 certification assumes latest migration remains 0111 after P2 adds migrations"
+    ],
+    "MISSING": [
+      "P1/P2 merged prerequisite implementations on current main",
+      "P2 source/admin configuration API",
+      "P2 mandatory 180-case certification",
+      "immutable DocumentVersion/IR/lineage/patch/publication/workspace/fidelity corpus P3 system"
+    ],
+    "REUSE": [
+      "Core Document sole canonical identity",
+      "P1 world roots and PE links",
+      "Source Truth external_refs/provider-observation ledger",
+      "existing memory, auth_profiles/application_accounts, Authority, DecisionReceipt, jobs"
+    ],
+    "DELETE": [
+      "No source deletions authorized or necessary for this prerequisite audit"
+    ]
+  },
+  "scopeNote": "Pre-implementation audit stopped at the explicit P1/P2 hard prerequisite gate. This is not the exhaustive P3 implementation audit or a P3 PASS.",
+  "sourceEvidence": [
+    {
+      "path": "finnor-os/packages/private-equity/src/world-repository.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "1c58a0b910703f622b782476667c3e47433fdbc71c7df1e263425dc425f59ceb"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/world-state.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "72fa062bf6307b5965a40e24d44f7053a0f09ee6cad92dd287f9aa173f3bf328"
+    },
+    {
+      "path": "finnor-os/packages/provider-microsoft365/src/index.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "62e8e7b77be93fd84181d62efd350bc279da8a5392ee3ecb94d3eb731d63b150"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0110_canonical_temporal_truth.sql",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "65cabde406571c562c638e8f6a8883b35f14ff1f5f6f44b1b16874dfb69dbe0c"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0111_pe_world_truth.sql",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "7dcb13f4f36ece10033d466a3b741099b323bd80ccc9806498a9cea09a760462"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0112_pe_microsoft365_nervous_system.sql",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "482cc7b972df5b7c2be229b13d3661a7e19ef8b05bfbb3c504e2d1a952081c5b"
+    },
+    {
+      "path": "finnor-os/packages/data-platform/src/documents.ts",
+      "localExists": true,
+      "mainExists": true,
+      "localSha256": "3690d29b01036f37e318abb0f84a0b06f8d3ba33788264573a74125ad0125632"
+    },
+    {
+      "path": "finnor-os/packages/memory/src/reference-corpus.ts",
+      "localExists": true,
+      "mainExists": true,
+      "localSha256": "bb674a2a8a83d2010ce97e620732e83700836b6fc13d1b39ebe960e8cacb8bf6"
+    },
+    {
+      "path": "finnor-os/packages/memory/src/semantic.ts",
+      "localExists": true,
+      "mainExists": true,
+      "localSha256": "9a9c680cec8fc72a8ab8a5bb50b53eeea69229351c0a7501345b04e59c81795c"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/microsoft365-mapping.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "ed9fa3081d55aa393a76a759fab9a6d55c7a0cdd5eb500c02576473108c4e4e4"
+    },
+    {
+      "path": "finnor-os/scripts/release/run-pe-p1-world-truth-certification.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "638771d7334d443d61d909a019d02ad84c92d1001421eed376539d70b05f7ef5"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-p1-upgrade.test.ts",
+      "localExists": true,
+      "mainExists": false,
+      "localSha256": "04b3b540f60120ed3bcdf90c54ca5a51f66e8f7c6f39da4566063b1ff9029063"
+    }
+  ],
+  "packageGraph": [
+    {
+      "path": "finnor-os/package.json",
+      "name": "finnor-os",
+      "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.1086.0",
+        "@getzep/zep-cloud": "^3.28.0",
+        "@langchain/core": "^1.2.3",
+        "@langchain/langgraph": "^1.4.8",
+        "@langchain/langgraph-checkpoint-postgres": "^1.0.4",
+        "@modelcontextprotocol/sdk": "^1.12.0",
+        "@sentry/node": "^10.65.0",
+        "@supabase/supabase-js": "^2.45.1",
+        "@vapi-ai/web": "^2.6.1",
+        "dotenv": "^17.4.2",
+        "drizzle-orm": "^0.45.2",
+        "groq-sdk": "^0.9.1",
+        "ioredis": "^5.4.1",
+        "next": "^15.5.21",
+        "nodemailer": "^9.0.3",
+        "pdf-parse": "^2.4.5",
+        "pg": "^8.13.1",
+        "react": "^18",
+        "react-dom": "^18",
+        "zod": "^3.23.8",
+        "zod-to-json-schema": "^3.23.5"
+      }
+    },
+    {
+      "path": "finnor-os/apps/api/package.json",
+      "name": "@finnor/api",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/computer": "*",
+        "@finnor/data-platform": "*",
+        "@finnor/db": "*",
+        "@finnor/memory": "*",
+        "@finnor/orchestration": "*",
+        "@finnor/policy-schema": "*",
+        "@finnor/projections": "*",
+        "@finnor/provider-microsoft365": "*",
+        "@finnor/read-models": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "@finnor/voice-os": "*",
+        "@finnor/workflow-runtime": "*",
+        "@langchain/langgraph-checkpoint-postgres": "^1.0.4",
+        "@modelcontextprotocol/sdk": "^1.12.0",
+        "@supabase/supabase-js": "^2.45.1",
+        "drizzle-orm": "^0.45.2",
+        "groq-sdk": "^0.9.1",
+        "ioredis": "^5.4.1",
+        "next": "^15.5.21",
+        "nodemailer": "^9.0.3",
+        "pg": "^8.13.1",
+        "react": "^18",
+        "react-dom": "^18",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/package.json",
+      "name": "@finnor/supplier-canary",
+      "dependencies": {}
+    },
+    {
+      "path": "finnor-os/apps/worker/package.json",
+      "name": "@finnor/worker",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/computer": "*",
+        "@finnor/data-platform": "*",
+        "@finnor/db": "*",
+        "@finnor/memory": "*",
+        "@finnor/orchestration": "*",
+        "@finnor/private-equity": "*",
+        "@finnor/projections": "*",
+        "@finnor/provider-microsoft365": "*",
+        "@finnor/read-models": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "@finnor/workflow-runtime": "*",
+        "dotenv": "^17.4.2",
+        "drizzle-orm": "^0.45.2",
+        "pg": "^8.13.1",
+        "web-push": "^3.6.7"
+      }
+    },
+    {
+      "path": "finnor-os/apps/orchestrator/package.json",
+      "name": "@finnor/orchestrator",
+      "dependencies": {
+        "@finnor/orchestration": "*",
+        "@finnor/tools": "*",
+        "dotenv": "^17.4.2",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/apps/console/package.json",
+      "name": "@finnor/console",
+      "dependencies": {
+        "@finnor/policy-schema": "*",
+        "@finnor/shared-types": "*",
+        "@vapi-ai/web": "^2.5.2",
+        "next": "^15.5.21",
+        "react": "^18",
+        "react-dom": "^18"
+      }
+    },
+    {
+      "path": "finnor-os/packages/private-equity/package.json",
+      "name": "@finnor/private-equity",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/data-platform": "*",
+        "@finnor/db": "*",
+        "@finnor/epistemic-runtime": "*",
+        "@finnor/memory": "*",
+        "@finnor/read-models": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2",
+        "pg": "^8.13.1"
+      }
+    },
+    {
+      "path": "finnor-os/packages/provider-microsoft365/package.json",
+      "name": "@finnor/provider-microsoft365",
+      "dependencies": {
+        "@aws-sdk/client-sts": "^3.1086.0",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*"
+      }
+    },
+    {
+      "path": "finnor-os/packages/voice-os/package.json",
+      "name": "@finnor/voice-os",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/memory": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/tools/package.json",
+      "name": "@finnor/tools",
+      "dependencies": {
+        "@axiomhq/pino": "^1.8.0",
+        "@finnor/data-platform": "*",
+        "@finnor/db": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/workflow-runtime": "*",
+        "@modelcontextprotocol/sdk": "^1.12.0",
+        "@sentry/node": "^10.65.0",
+        "drizzle-orm": "^0.45.2",
+        "groq-sdk": "^0.9.1",
+        "nodemailer": "^9.0.3",
+        "pdf-lib": "^1.17.1",
+        "pino": "^10.3.1",
+        "pino-pretty": "^13.1.3",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/memory/package.json",
+      "name": "@finnor/memory",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "@getzep/zep-cloud": "^3.28.0",
+        "drizzle-orm": "^0.45.2",
+        "ioredis": "^5.4.1",
+        "pdf-parse": "^2.4.5"
+      }
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/package.json",
+      "name": "@finnor/epistemic-runtime",
+      "dependencies": {
+        "@finnor/shared-types": "*"
+      }
+    },
+    {
+      "path": "finnor-os/packages/shared-types/package.json",
+      "name": "@finnor/shared-types",
+      "dependencies": {}
+    },
+    {
+      "path": "finnor-os/packages/security/package.json",
+      "name": "@finnor/security",
+      "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.1086.0",
+        "@finnor/authority": "*",
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "@supabase/supabase-js": "^2.45.1"
+      }
+    },
+    {
+      "path": "finnor-os/packages/policy-schema/package.json",
+      "name": "@finnor/policy-schema",
+      "dependencies": {
+        "@finnor/shared-types": "*",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/read-models/package.json",
+      "name": "@finnor/read-models",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/projections/package.json",
+      "name": "@finnor/projections",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/read-models": "*",
+        "@finnor/tools": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/import-engine/package.json",
+      "name": "@finnor/import-engine",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/orchestration/package.json",
+      "name": "@finnor/orchestration",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/db": "*",
+        "@finnor/memory": "*",
+        "@finnor/policy-schema": "*",
+        "@finnor/plugins-shared": "*",
+        "@finnor/private-equity": "*",
+        "@finnor/read-models": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "@finnor/workflow-runtime": "*",
+        "@langchain/core": "^1.2.3",
+        "@langchain/langgraph": "^1.4.8",
+        "@langchain/langgraph-checkpoint-postgres": "^1.0.4",
+        "drizzle-orm": "^0.45.2",
+        "zod": "^3.23.8",
+        "zod-to-json-schema": "^3.23.5"
+      }
+    },
+    {
+      "path": "finnor-os/packages/db/package.json",
+      "name": "@finnor/db",
+      "dependencies": {
+        "@finnor/shared-types": "*",
+        "drizzle-kit": "^0.31.10",
+        "drizzle-orm": "^0.45.2",
+        "pg": "^8.13.1"
+      }
+    },
+    {
+      "path": "finnor-os/packages/workflow-runtime/package.json",
+      "name": "@finnor/workflow-runtime",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/db": "*",
+        "@finnor/memory": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/data-platform/package.json",
+      "name": "@finnor/data-platform",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/authority/package.json",
+      "name": "@finnor/authority",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "drizzle-orm": "^0.45.2"
+      }
+    },
+    {
+      "path": "finnor-os/packages/computer/package.json",
+      "name": "@finnor/computer",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/db": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "@finnor/workflow-runtime": "*",
+        "drizzle-orm": "^0.45.2",
+        "playwright-core": "^1.62.1",
+        "steel-sdk": "^0.18.0",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/universal-actions/package.json",
+      "name": "@finnor/plugin-universal-actions",
+      "dependencies": {
+        "@finnor/authority": "*",
+        "@finnor/db": "*",
+        "@finnor/read-models": "*",
+        "@finnor/security": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "drizzle-orm": "^0.45.2",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/private-equity/package.json",
+      "name": "@finnor/plugin-private-equity",
+      "dependencies": {
+        "@finnor/db": "*",
+        "@finnor/private-equity": "*",
+        "@finnor/read-models": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "drizzle-orm": "^0.45.2",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/shared/package.json",
+      "name": "@finnor/plugins-shared",
+      "dependencies": {
+        "@finnor/data-platform": "*",
+        "@finnor/db": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "drizzle-orm": "^0.45.2",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/computer-task/package.json",
+      "name": "@finnor/plugin-computer-task",
+      "dependencies": {
+        "@finnor/computer": "*",
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "zod": "^3.23.8"
+      }
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/web-research/package.json",
+      "name": "@finnor/plugin-web-research",
+      "dependencies": {
+        "@finnor/shared-types": "*",
+        "@finnor/tools": "*",
+        "zod": "^3.23.8"
+      }
+    }
+  ]
+}

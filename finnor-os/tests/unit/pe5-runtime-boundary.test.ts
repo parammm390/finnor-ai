@@ -21,7 +21,7 @@ import { scheduleTick } from "../../apps/worker/src/scheduler";
 describe("Phase 5 executable runtime boundary", () => {
   it("composes only Core/none and Private Equity contracts", () => {
     expect(EXECUTABLE_VERTICALS).toEqual(["none", "private_equity"]);
-    expect(OPERATIONAL_QUERY_INTENTS).toHaveLength(13);
+    expect(OPERATIONAL_QUERY_INTENTS).toHaveLength(14);
     expect(PARTY_TYPES).toEqual(["employee", "team", "location", "external_organization", "external_contact"]);
     expect([...CANONICAL_ENTITY_TYPES, ...PE_ENTITY_TYPES])
       .not.toEqual(expect.arrayContaining([...RETIRED_WATER_CANONICAL_ENTITY_TYPES]));

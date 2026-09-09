@@ -24,6 +24,10 @@ const EXPLICIT_BOUNDARIES: Record<string, RegExp> = {
   // OAuth redirects cannot carry the console JWT. The one-time, tenant-bound state
   // plus the HttpOnly PKCE cookie are consumed atomically by completeGoogleConnection.
   "connections/google/callback/route.ts": /completeGoogleConnection/,
+  // Microsoft admin-consent callbacks carry one-time, tenant/profile-bound state;
+  // completion atomically consumes it and verifies the returned directory before
+  // any tenant work. No browser/query tenant identifier is used as authority.
+  "connections/microsoft-graph/callback/route.ts": /completeMicrosoftGraphAdminConsent/,
   // Deployment readiness exposes aggregate component status only, never tenant data.
   "ready/route.ts": /MIGRATION_HEAD/,
   // Public deployment metadata only; contains no tenant or user data.
@@ -31,6 +35,10 @@ const EXPLICIT_BOUNDARIES: Record<string, RegExp> = {
   "webhooks/esign/route.ts": /verifyDocusignSignature/,
   "webhooks/ghl/route.ts": /verifyGhlSignature/,
   "webhooks/marketing/route.ts": /verifySharedSecret/,
+  // Graph sends no console JWT. The handler verifies the subscription secret
+  // against the stored hash and matches directory/resource before tenant work.
+  // microsoft365-webhook.test.ts exercises forged and cross-tenant envelopes.
+  "webhooks/microsoft-graph/route.ts": /verifySubscriptionClientState\(notification\.clientState, row\.client_state_hash\)/,
   "webhooks/payment/route.ts": /verifyPaymentSignature/,
   "webhooks/vapi/route.ts": /verifyTimestampedHmacSignature/,
   "workflows/runs/\[id\]/cancel/route.ts": /makeRunControlRoute/,

@@ -70,6 +70,8 @@ function snapshot(assertions: Parameters<typeof buildPrivateEquityEpistemicSnaps
 describe("Private Equity Phase 3 epistemic runtime", () => {
   it("publishes the bounded proposition catalog exactly", () => {
     expect(PE_PROPOSITION_PREDICATES).toEqual([
+      "strategy.state", "opportunity.state", "investment_case.state", "thesis.current",
+      "assumption.current", "decision.current",
       "deal.exists", "deal.loi_signed", "deal.target_close_at", "deal.lifecycle_state", "workstream.state",
       "request.acknowledged", "request.fulfilled", "request.overdue", "deliverable.received", "deliverable.accepted",
       "finding.current", "deal_risk.current", "dependency.resolved", "milestone.achieved", "closing_condition.state",
@@ -130,6 +132,23 @@ describe("Private Equity Phase 3 epistemic runtime", () => {
     });
     expect(stale.state.propositions.find((candidate) => candidate.id === propositionId)?.status).toBe("STALE");
     expect(snapshot().state.propositions.find((candidate) => candidate.id === propositionId)?.status).toBe("UNKNOWN");
+  });
+
+  it("proves UNKNOWN to KNOWN to STALE and KNOWN to CONFLICTING relative to state_at", () => {
+    const propositionId = pePropositionId(dealId, "pe_closing_condition", conditionId, "closing_condition.evidence_sufficient");
+    const status = (assertions: Parameters<typeof snapshot>[0]) => snapshot(assertions)
+      .state.propositions.find((candidate) => candidate.id === propositionId)?.status;
+    const current = { propositionId, kind: "provider_observation" as const, value: true, ref: "provider:current", observedAt: now };
+    expect(status([])).toBe("UNKNOWN");
+    expect(status([current])).toBe("KNOWN");
+    expect(status([{
+      ...current,
+      ref: "provider:old",
+      observedAt: "2026-09-01T00:00:00.000Z",
+      maximumAgeMs: 1_000,
+      freshnessPolicyRef: "policy:p1-transition-test",
+    }])).toBe("STALE");
+    expect(status([current, { ...current, value: false, ref: "provider:conflict" }])).toBe("CONFLICTING");
   });
 
   it("does not admit memory or web as proof of internal Deal state", () => {

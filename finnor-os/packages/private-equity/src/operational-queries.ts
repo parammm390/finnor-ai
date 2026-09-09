@@ -18,6 +18,7 @@ import {
   type OpenDealRisksResult,
   type OpenFindingsResult,
   type OpenRequestsResult,
+  type PeWorldStateResult,
   type OperationalQueryExecutionRef,
   type OperationalQueryPageInfo,
   type OperationalQueryResultFor,
@@ -27,12 +28,15 @@ import {
 } from "@finnor/shared-types";
 import { buildPrivateEquityEpistemicSnapshot } from "./epistemic";
 import { evaluateDealCloseEligibility, loadDealExecutionGraph } from "./repository";
+import { loadPrivateEquityWorldState } from "./world-state";
 import { isPositiveDependencyResolution } from "./state-machines";
 import { loadPrivateEquityAssertions } from "./source-mapping";
 import { PeDomainError, type DealCloseEligibility, type DealExecutionGraph, type PeMutationContext } from "./types";
 
 export type PrivateEquityOperationalQueryRequest = Extract<CanonicalOperationalQueryRequest, { intent: PrivateEquityOperationalQueryIntent }>;
+type DealScopedPrivateEquityOperationalQueryRequest = Exclude<PrivateEquityOperationalQueryRequest, { intent: "pe_world_state" }>;
 export type PrivateEquityOperationalQueryResult =
+  | PeWorldStateResult
   | DealContextResult
   | DealWorkstreamsResult
   | OpenRequestsResult
@@ -101,7 +105,7 @@ function encodeCursor(cursor: PageCursor): string {
   return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
 }
 
-function decodeCursor(value: string | undefined, request: PrivateEquityOperationalQueryRequest, graphVersion: number): number {
+function decodeCursor(value: string | undefined, request: DealScopedPrivateEquityOperationalQueryRequest, graphVersion: number): number {
   if (!value) return 0;
   try {
     const decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as PageCursor;
@@ -115,7 +119,7 @@ function decodeCursor(value: string | undefined, request: PrivateEquityOperation
   }
 }
 
-function pageRows<T>(rows: T[], request: PrivateEquityOperationalQueryRequest, graphVersion: number, options: OperationalQueryOptions): {
+function pageRows<T>(rows: T[], request: DealScopedPrivateEquityOperationalQueryRequest, graphVersion: number, options: OperationalQueryOptions): {
   rows: T[];
   page: OperationalQueryPageInfo;
 } {
@@ -357,6 +361,22 @@ async function runQuery(
   now: Date,
 ): Promise<PrivateEquityOperationalQueryResult> {
   const ctx = authContext(tenantId, options);
+  if (request.intent === "pe_world_state") {
+    const world = await loadPrivateEquityWorldState(ctx, request.root, request.at);
+    const page = resultPage(1, 1, 1, 0, null);
+    return {
+      ...base("pe_world_state", [
+        "canonical_entity_versions", "canonical_history_coverage", "pe_strategies", "pe_opportunities",
+        "pe_deals", "pe_investment_cases", "pe_theses", "pe_assumptions", "pe_decisions",
+        "pe_deal_parties", "pe_workstreams", "pe_requests", "pe_deliverables", "pe_findings",
+        "pe_deal_risks", "pe_dependencies", "pe_milestones", "pe_closing_conditions", "pe_closing_items",
+        "pe_document_links", "pe_evidence_links", "evidence_source_versions", "business_events",
+        "authority_decisions", "decision_receipts", "external_ref_observations",
+        "integration_source_scopes", "integration_source_coverage_history",
+      ], world.stateAt, page),
+      ...world,
+    };
+  }
   const { graph, eligibility } = await consistentDealRead(ctx, request.dealId, now);
   const graphVersion = Number(graph.deal.graphVersion);
   const asOf = now.toISOString();
@@ -496,7 +516,12 @@ export async function executePrivateEquityOperationalQuery<T extends PrivateEqui
       status: "succeeded",
       rowCount: result.count,
       durationMs: Math.max(0, performance.now() - started),
-      resultSummary: { intent: result.intent, returned: result.count, truncated: result.truncated, dealId: request.dealId },
+      resultSummary: {
+        intent: result.intent,
+        returned: result.count,
+        truncated: result.truncated,
+        ...(request.intent === "pe_world_state" ? { root: request.root, stateAt: result.asOf } : { dealId: request.dealId }),
+      },
     });
     const execution: OperationalQueryExecutionRef = {
       id: claim.id,

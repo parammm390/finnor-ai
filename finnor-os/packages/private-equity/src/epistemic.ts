@@ -23,8 +23,15 @@ import type {
 } from "@finnor/shared-types";
 import { isPositiveDependencyResolution } from "./state-machines";
 import type { DealCloseEligibility, DealExecutionGraph, PeEntityType } from "./types";
+import type { PeWorldRootRef, PeWorldState } from "./types";
 
 export const PE_PROPOSITION_PREDICATES = [
+  "strategy.state",
+  "opportunity.state",
+  "investment_case.state",
+  "thesis.current",
+  "assumption.current",
+  "decision.current",
   "deal.exists",
   "deal.loi_signed",
   "deal.target_close_at",
@@ -59,6 +66,12 @@ export interface PePropositionCatalogEntry {
 }
 
 const tableForPredicate = (predicate: PePropositionPredicate): string => {
+  if (predicate.startsWith("strategy.")) return "pe_strategies";
+  if (predicate.startsWith("opportunity.")) return "pe_opportunities";
+  if (predicate.startsWith("investment_case.")) return "pe_investment_cases";
+  if (predicate.startsWith("thesis.")) return "pe_theses";
+  if (predicate.startsWith("assumption.")) return "pe_assumptions";
+  if (predicate.startsWith("decision.")) return "pe_decisions";
   if (predicate.startsWith("deal.")) return "pe_deals";
   if (predicate.startsWith("workstream.")) return "pe_workstreams";
   if (predicate.startsWith("request.")) return "pe_requests";
@@ -103,6 +116,15 @@ export function pePropositionId(
   predicate: PePropositionPredicate,
 ): string {
   return `pe:v1:${dealId}:${entityType}:${entityId}:${predicate}`;
+}
+
+export function peWorldPropositionId(
+  root: PeWorldRootRef,
+  entityType: PeEntityType,
+  entityId: string,
+  predicate: PePropositionPredicate,
+): string {
+  return `pe:v1:${root.entityType}:${root.entityId}:${entityType}:${entityId}:${predicate}`;
 }
 
 export interface PrivateEquityAssertion {
@@ -586,6 +608,75 @@ export function buildPrivateEquityEpistemicSnapshot(input: BuildPrivateEquityEpi
     warnings: privateEquityEpistemicWarnings(state),
     decisions: decisionReadiness(state, requirements),
   };
+}
+
+export interface BuildPrivateEquityWorldEpistemicInput {
+  tenantId: string;
+  principalId: string;
+  root: PeWorldRootRef;
+  world: Pick<PeWorldState, "strategy" | "opportunity" | "investmentCases" | "theses" | "assumptions" | "decisions">;
+  assertions?: readonly PrivateEquityAssertion[];
+  asOf: string;
+}
+
+/** Bounded P1 extension of the existing Epistemic Runtime. Structural lifecycle
+ * stays canonical business truth; these propositions only expose whether the
+ * corresponding current state is known and contradicted by eligible evidence. */
+export function buildPrivateEquityWorldEpistemicSnapshot(
+  input: BuildPrivateEquityWorldEpistemicInput,
+): PrivateEquityEpistemicSnapshot {
+  const rows: DefinitionRow[] = [];
+  const push = (
+    entityType: PeEntityType,
+    row: Record<string, unknown>,
+    predicate: PePropositionPredicate,
+    value: JsonValue,
+  ) => {
+    const entityId = asId(row);
+    const observedAt = asIso(row.updatedAt ?? row.createdAt, input.asOf);
+    rows.push({
+      definition: {
+        id: peWorldPropositionId(input.root, entityType, entityId, predicate),
+        subject: { kind: "entity", type: entityType, id: entityId },
+        predicate: { name: predicate, operator: "eq" },
+        dependencyRefs: [],
+      },
+      table: tableForPredicate(predicate),
+      value,
+      observedAt,
+    });
+  };
+  if (input.world.strategy) push("pe_strategy", input.world.strategy, "strategy.state", json(input.world.strategy.state));
+  if (input.world.opportunity) push("pe_opportunity", input.world.opportunity, "opportunity.state", json(input.world.opportunity.state));
+  for (const row of input.world.investmentCases) push("pe_investment_case", row, "investment_case.state", json(row.state));
+  for (const row of input.world.theses) push("pe_thesis", row, "thesis.current", row.state === "active");
+  for (const row of input.world.assumptions) push("pe_assumption", row, "assumption.current", row.state === "active");
+  for (const row of input.world.decisions) push("pe_decision", row, "decision.current", row.state === "final");
+
+  let state = createEpistemicState({
+    scope: {
+      tenantId: input.tenantId,
+      principalId: input.principalId,
+      decisionId: `pe:decision:world:${input.root.entityType}:${input.root.entityId}`,
+    },
+    asOf: input.asOf,
+    propositions: rows.map((row) => row.definition),
+  });
+  state = appendEvidenceAndRecompute(state, rows.map((row) => canonicalOperationalQueryEvidence({
+    state,
+    propositionId: row.definition.id,
+    value: row.value!,
+    observedAt: row.observedAt,
+    intent: "pe_world_state",
+    tables: [row.table],
+    executionRef: `pe-world:${row.table}:${row.definition.subject.id}:${row.observedAt}`,
+  })), input.asOf);
+  const byId = new Set(rows.map((row) => row.definition.id));
+  const evidence = (input.assertions ?? []).filter((assertion) => byId.has(assertion.propositionId))
+    .map((assertion) => assertionEvidence(state, assertion))
+    .filter((record): record is EvidenceRecord => Boolean(record));
+  state = appendEvidenceAndRecompute(state, evidence, input.asOf);
+  return { state, requirements: [], warnings: privateEquityEpistemicWarnings(state), decisions: [] };
 }
 
 /** Context-only helper proving that web evidence may be retained as research but

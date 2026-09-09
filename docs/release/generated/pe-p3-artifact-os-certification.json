@@ -1,0 +1,3042 @@
+{
+  "schema": "finnor.pe-p3-artifact-os-certification.v1",
+  "generatedAt": "2026-09-09T14:53:13.176Z",
+  "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+  "deterministicResult": "PASS",
+  "deterministicMandatoryCases": {
+    "passed": 190,
+    "required": 190
+  },
+  "startingBaseline": {
+    "branch": "codex/p3-epistemic-runtime",
+    "headSha": "80f617d321965b8694de18940ff23b005dedcdb7",
+    "treeSha": "f38b551d99952986527e4986e3ba77891a3c10ef",
+    "migrationHead": "0111_pe_world_truth.sql"
+  },
+  "p1Prerequisite": {
+    "result": "PASS",
+    "generatedAt": "2026-09-09T14:46:18.911Z",
+    "mandatoryCases": 51,
+    "reportHash": "43d5656a7a839aa3cb8382cb1048f0b2a846d8999019b0795912ea55c578c701"
+  },
+  "p2Prerequisite": {
+    "result": "BLOCKED-EXTERNAL-CERTIFICATION",
+    "deterministicResult": "PASS",
+    "generatedAt": "2026-09-09T14:50:41.479Z",
+    "deterministicMandatoryCases": {
+      "passed": 179,
+      "required": 179
+    },
+    "reportHash": "e91c87dd2806569102e464b8d73218383d74e987faffeaabe24fdb92d7057b65"
+  },
+  "p2MigrationHead": "0118_provider_parent_relationship_lookup.sql",
+  "p3MigrationHead": "0126_pe_underwriting_runtime.sql",
+  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
+  "currentMigrationCount": 124,
+  "hardAuditMap": {
+    "EXISTS": [
+      "Core Document and document_contents",
+      "Core Evidence and EvidenceVersion",
+      "P1 temporal PE world and PE document links",
+      "P2 Microsoft source observations, exact provider bindings, and sync_source",
+      "Core Work, BusinessEvent, Authority, DecisionReceipt, document sharing, computer tasks, memory, and job queue"
+    ],
+    "PARTIAL": [
+      "Core Document had mutable compatibility bytes but no immutable work-product versions",
+      "P2 observed provider file metadata but did not materialize bounded Office bytes into semantic versions",
+      "memory chunks could reference a Document but not an exact DocumentVersion"
+    ],
+    "WRONG": [
+      "historical semantic retrieval fallback used misnumbered SQL parameters and was corrected",
+      "pre-0125 default grants exposed update/delete privileges on new history tables and were revoked by a forward migration"
+    ],
+    "MISSING": [
+      "secure package-preserving OOXML engine and format IRs",
+      "version heads, lineage, bindings, typed operations, review, templates, publication, read-back verification, and Artifact Workspace",
+      "real configured Microsoft Office tenant/database/source/delegated-profile live evidence"
+    ],
+    "REUSE": [
+      "Core Document/document_contents compatibility surface",
+      "P1 PE roots and assumptions",
+      "P2 Microsoft auth, integration, source scope, external_ref, observation and sync engine",
+      "Core Evidence, memory, BusinessEvent, Work, Authority, DecisionReceipt, sharing and queue"
+    ],
+    "DELETE": [
+      "none; no duplicate canonical subsystem was retained"
+    ]
+  },
+  "coreDocumentOwnershipResult": "PASS — @finnor/data-platform remains the sole writable owner of canonical Document; no artifact or pe_artifact owner exists.",
+  "existingDocumentContentsAudit": "document_contents remains the current compatibility projection; populated existing bytes are retained exactly and receive one migration-time baseline version.",
+  "baselineMigration": "0119 creates one baseline only for each existing Document with actual content. Metadata-only and provider metadata-only Documents remain valid without fabricated versions.",
+  "documentVersionImplementation": "Immutable, tenant-bound, ordinal DocumentVersion rows carry parent, exact byte hash, size, format, origin and provider provenance.",
+  "contentBlobImplementation": "document_version_contents provides a bounded postgres/external storage abstraction. P3 uses exact Postgres bytes and leaves the external backend for A3 without adding S3.",
+  "headBranchImplementation": "Separate compare-and-swap current, provider, draft and published heads; only the head projection is mutable.",
+  "ooxmlEngineImplementation": "Bounded ZIP/XML parser, DTD/entity rejection, path and relationship validation, inert opaque parts, direct no-op bytes and targeted package-part replacement.",
+  "libraryBakeoffResult": {
+    "selected": [
+      "saxes 6.0.0 for bounded event-driven XML parsing",
+      "targeted FINNOR ZIP/package preservation for arbitrary existing OOXML edits",
+      "pdf-parse 2.4.5 for bounded read-only PDF text/page truth"
+    ],
+    "fidelityReason": "The selected package-preserving path passes exact no-op bytes and untargeted-part hash tests over the 14-file corpus.",
+    "rejectedAsPrimaryAuthority": [
+      "ExcelJS/SheetJS general workbook reserialization",
+      "docx whole-document generation",
+      "PptxGenJS whole-deck generation"
+    ],
+    "rejectionReason": "No high-level serializer was promoted to arbitrary existing-file authority without proof that unknown, macro, chart, revision, master/layout/theme and embedded parts retain exact hashes. Those libraries were not installed merely to manufacture a bake-off claim."
+  },
+  "formatCapabilityMatrix": {
+    "xlsx": [
+      "semantic read",
+      "typed write",
+      "diff",
+      "lineage",
+      "provider publish/read-back"
+    ],
+    "xlsm": [
+      "certified semantic read",
+      "VBA detection",
+      "permitted non-VBA targeted writes with exact VBA preservation"
+    ],
+    "docx": [
+      "semantic read",
+      "certified typed write",
+      "diff",
+      "lineage",
+      "provider publish/read-back"
+    ],
+    "pptx": [
+      "semantic read",
+      "certified typed write",
+      "diff",
+      "lineage",
+      "provider publish/read-back"
+    ],
+    "pdf": [
+      "read-only semantic text/page anchors",
+      "deterministic diff",
+      "citations",
+      "lineage"
+    ]
+  },
+  "spreadsheetIRImplementation": "Stable workbook/sheet/cell/table/chart/comment/name anchors preserve formula, cached value, style, number format, merge, validation, formatting, visibility and pane truth.",
+  "formulaParserImplementation": "Deterministic tokenizer/parser records formulas without evaluation; unsupported or dynamic syntax is partial and never guessed.",
+  "dependencyGraphImplementation": "Provable cell/range/name/table dependencies, reverse dependents and static cycles; edits mark cached calculation truth stale.",
+  "xlsxFidelityResult": "PASS — real Office and feature-heavy corpus, no-op bytes, targeted semantics, untargeted-part hashes.",
+  "xlsmResult": "PASS — VBA is detected, never executed and retained byte-for-byte through certified edits.",
+  "excelCalculationTruthModel": "FINNOR preserves formulas and cached values separately. Only delegated Microsoft Excel may provide authoritative recalculation; absence/failure stays stale.",
+  "delegatedExcelImplementation": "Employee-linked delegated profile, createSession, workbook-session range read/write, FullRebuild calculation, output readback and session close; P2 app-only auth remains separate.",
+  "documentIRImplementation": "Versioned paragraphs/runs/styles/sections/tables/headers/footers/notes/comments/bookmarks/hyperlinks/images/revisions with guarded text/table/paragraph edits.",
+  "docxFidelityResult": "PASS — tracked changes, field codes, text boxes and untargeted parts are preserved or rejected explicitly.",
+  "presentationIRImplementation": "Stable slides/shapes/tables/notes/charts/groups plus master/layout/theme and unsupported transition preservation with guarded text/table/reorder/template edits.",
+  "pptxFidelityResult": "PASS — real Office and feature-heavy corpus, including embedded workbook, master/layout/theme and untargeted-part fidelity.",
+  "pdfImplementation": "Bounded read-only page/text IR with exact page anchors; image-only pages report unavailable text and never fabricate OCR.",
+  "artifactAnchorImplementation": "Stable format-specific node IDs plus semantic hashes; remaps are exact, stale or ambiguous.",
+  "bindingsCitations": "Bindings pin an exact version and anchor to EvidenceVersion, canonical PE entity/P1 Assumption or DocumentVersion with no-hindsight and same-tenant guards.",
+  "lineage": "Immutable supersedes, derived_from, copied_from, template_instantiation, rendered_from and merged_from edges across same-tenant versions/Documents.",
+  "semanticDiff": "Canonical hashes and deterministic node/opaque-part diffs, including certified base/local/remote overlap classification.",
+  "operations": "Typed patches require exact base/head and anchor hashes, execute atomically, append one result version, and retain succeeded/failed operation evidence.",
+  "comments": "Immutable comments pin exact version/anchor; replies remain on that version.",
+  "editorialReview": "Append-only review events pin exact versions; editorial approval does not create or substitute for an Authority decision.",
+  "templates": "Registered immutable XLSX/XLSM/DOCX/PPTX template versions instantiate new Core Documents with exact lineage.",
+  "providerPublication": "Local draft persists first; existing Authority decides publish; exact provider base/eTag is checked; acknowledgement is followed by mandatory byte readback and semantic verification.",
+  "providerConcurrency": "Preflight provider identity/eTag plus If-Match. Remote changes and HTTP 412 become conflict; ambiguous delivery recovers by readback without blind retry.",
+  "readbackVerification": "Exact semantics become verified; metadata-only provider normalization is explicitly classified; unexpected semantics become verification_failed.",
+  "sensitivityLabelBehavior": "App-only replacement fails closed for sensitivity-labeled content; an authorized delegated path is required.",
+  "p2SelfWriteConvergence": "Verified writes enqueue existing sync_source. Provider observation/version/event uniqueness makes later P2 delivery converge without duplicate truth.",
+  "memoryVersionAwareness": "Artifact chunks persist exact document_version_id; current retrieval excludes superseded-version chunks while explicit historical retrieval can request them.",
+  "artifactWorkspaceFrontend": "Authenticated Artifact Workspace exposes truthful versions/heads, bounded IR/ranges/dependencies, semantic diff, draft patch, bindings/review and publish/recalculation states without fake Office rendering.",
+  "architecture": {
+    "packages": [
+      "packages/ooxml",
+      "packages/spreadsheet-ir",
+      "packages/document-ir",
+      "packages/presentation-ir",
+      "packages/artifacts"
+    ],
+    "expectedFiles": [
+      "apps/api/app/api/artifacts/route.ts",
+      "apps/api/app/api/artifact-templates/route.ts",
+      "apps/api/app/api/artifact-templates/[key]/instantiate/route.ts",
+      "apps/api/app/api/documents/[id]/artifact/route.ts",
+      "apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "apps/console/app/artifacts/[id]/page.tsx",
+      "tests/unit/artifact-os-core.test.ts",
+      "tests/unit/artifact-os-contract.test.ts",
+      "tests/unit/microsoft-artifact-transport.test.ts",
+      "tests/integration/artifact-os.test.ts",
+      "tests/live/microsoft-artifact-os.live.test.ts"
+    ],
+    "importDirection": "PASS",
+    "deterministicIrWithoutLlm": true,
+    "workerJobRegistered": true,
+    "p2MaterializationEnqueue": true,
+    "archivedDocumentCommitGuard": true,
+    "telemetryMetricCount": 19,
+    "telemetryMetrics": [
+      "artifact_materializations_total",
+      "artifact_materialization_latency",
+      "artifact_parse_latency",
+      "artifact_parse_failures",
+      "artifact_bytes",
+      "artifact_ir_bytes",
+      "artifact_unsupported_features",
+      "artifact_versions_created",
+      "artifact_diffs",
+      "artifact_operations",
+      "artifact_operation_failures",
+      "artifact_publish_attempts",
+      "artifact_publish_conflicts",
+      "artifact_publish_verification_failures",
+      "artifact_provider_normalizations",
+      "artifact_excel_recalc_latency",
+      "artifact_excel_recalc_failures",
+      "artifact_stale_calculation_count",
+      "artifact_unresolved_source_binding_count"
+    ]
+  },
+  "artifactLimits": {
+    "bytes": 10485760,
+    "expandedBytes": 67108864,
+    "parts": 4096,
+    "xmlBytes": 8388608,
+    "xmlNodes": 200000,
+    "xmlDepth": 128,
+    "irBytes": 16777216,
+    "pdfPages": 500,
+    "ratio": 1000,
+    "parseMs": 30000
+  },
+  "artifactLimitRationale": "10 MiB source, 64 MiB expanded ZIP, 4,096 parts, 8 MiB XML part, 200,000 XML nodes, depth 128, 16 MiB IR, 500 PDF pages and 30 s parse deadline bound memory/CPU. Golden-corpus timings are recorded rather than invented.",
+  "telemetry": {
+    "stack": "existing logWithTrace structured telemetry",
+    "metrics": [
+      "artifact_materializations_total",
+      "artifact_materialization_latency",
+      "artifact_parse_latency",
+      "artifact_parse_failures",
+      "artifact_bytes",
+      "artifact_ir_bytes",
+      "artifact_unsupported_features",
+      "artifact_versions_created",
+      "artifact_diffs",
+      "artifact_operations",
+      "artifact_operation_failures",
+      "artifact_publish_attempts",
+      "artifact_publish_conflicts",
+      "artifact_publish_verification_failures",
+      "artifact_provider_normalizations",
+      "artifact_excel_recalc_latency",
+      "artifact_excel_recalc_failures",
+      "artifact_stale_calculation_count",
+      "artifact_unresolved_source_binding_count"
+    ],
+    "contentLogged": false
+  },
+  "failureCensus": [
+    {
+      "failure": "malformed ZIP",
+      "status": "PASS",
+      "evidence": "artifact-os-core malformed package test"
+    },
+    {
+      "failure": "ZIP bomb",
+      "status": "PASS",
+      "evidence": "artifact-os-core ZIP expansion bound"
+    },
+    {
+      "failure": "path traversal",
+      "status": "PASS",
+      "evidence": "artifact-os-core reader/writer traversal test"
+    },
+    {
+      "failure": "duplicate ZIP entries",
+      "status": "PASS",
+      "evidence": "artifact-os-core duplicate central/local name test"
+    },
+    {
+      "failure": "DTD/entity expansion",
+      "status": "PASS",
+      "evidence": "artifact-os-core DTD/entity rejection"
+    },
+    {
+      "failure": "remote relationship",
+      "status": "PASS",
+      "evidence": "artifact-os-core non-fetch and malformed internal relationship tests"
+    },
+    {
+      "failure": "unknown OOXML part",
+      "status": "PASS",
+      "evidence": "artifact-os-core opaque-part preservation"
+    },
+    {
+      "failure": "unsupported content type",
+      "status": "PASS",
+      "evidence": "artifact-os-core unsupported main content test"
+    },
+    {
+      "failure": "encrypted workbook",
+      "status": "PASS",
+      "evidence": "artifact-os-core encrypted flag test"
+    },
+    {
+      "failure": "password-protected file",
+      "status": "PASS",
+      "evidence": "encrypted OOXML fails closed"
+    },
+    {
+      "failure": "XLS passed as XLSX",
+      "status": "PASS",
+      "evidence": "artifact-os-core legacy binary mislabel test"
+    },
+    {
+      "failure": "XLSB passed as XLSX",
+      "status": "PASS",
+      "evidence": "artifact-os-core binary mislabel test"
+    },
+    {
+      "failure": "corrupt formula",
+      "status": "PASS",
+      "evidence": "formula fuzz returns explicit partial result"
+    },
+    {
+      "failure": "unsupported formula syntax",
+      "status": "PASS",
+      "evidence": "formula parser explicit partial/no guessed edges"
+    },
+    {
+      "failure": "dynamic INDIRECT dependency",
+      "status": "PASS",
+      "evidence": "formula graph dynamic dependency test"
+    },
+    {
+      "failure": "circular formula",
+      "status": "PASS",
+      "evidence": "formula graph cycle test"
+    },
+    {
+      "failure": "external workbook reference",
+      "status": "PASS",
+      "evidence": "external dependency marked and never fetched"
+    },
+    {
+      "failure": "hidden sheet",
+      "status": "PASS",
+      "evidence": "SpreadsheetIR hidden sheet test"
+    },
+    {
+      "failure": "very hidden sheet",
+      "status": "PASS",
+      "evidence": "SpreadsheetIR veryHidden test"
+    },
+    {
+      "failure": "merged cell target",
+      "status": "PASS",
+      "evidence": "typed-write merged-cell rejection"
+    },
+    {
+      "failure": "protected worksheet",
+      "status": "PASS",
+      "evidence": "typed-write protected worksheet rejection"
+    },
+    {
+      "failure": "XLSM VBA project",
+      "status": "PASS",
+      "evidence": "macro corpus detection"
+    },
+    {
+      "failure": "macro preservation",
+      "status": "PASS",
+      "evidence": "exact vbaProject.bin hash test"
+    },
+    {
+      "failure": "DOCX tracked changes",
+      "status": "PASS",
+      "evidence": "revision preservation and write rejection"
+    },
+    {
+      "failure": "DOCX text box",
+      "status": "PASS",
+      "evidence": "unsupported target rejection"
+    },
+    {
+      "failure": "DOCX field code",
+      "status": "PASS",
+      "evidence": "field-code preservation and write rejection"
+    },
+    {
+      "failure": "PPTX grouped shape",
+      "status": "PASS",
+      "evidence": "grouped-shape rejection"
+    },
+    {
+      "failure": "PPTX animation",
+      "status": "PASS",
+      "evidence": "unsupported transition/animation preservation"
+    },
+    {
+      "failure": "PPTX theme/master",
+      "status": "PASS",
+      "evidence": "untargeted master/layout/theme hashes"
+    },
+    {
+      "failure": "PPTX chart",
+      "status": "PASS",
+      "evidence": "chart discovery/preservation"
+    },
+    {
+      "failure": "PPTX embedded workbook",
+      "status": "PASS",
+      "evidence": "embedded workbook exact-byte preservation"
+    },
+    {
+      "failure": "image-only PDF",
+      "status": "PASS",
+      "evidence": "no fabricated OCR test"
+    },
+    {
+      "failure": "oversized artifact",
+      "status": "PASS",
+      "evidence": "OOXML and DocumentVersion byte bounds"
+    },
+    {
+      "failure": "parser timeout",
+      "status": "PASS",
+      "evidence": "withArtifactDeadline deterministic timeout test"
+    },
+    {
+      "failure": "worker crash mid-parse",
+      "status": "PASS",
+      "evidence": "existing durable queue replay plus parse-outside-commit architecture"
+    },
+    {
+      "failure": "duplicate parse job",
+      "status": "PASS",
+      "evidence": "version identity, provider observation identity, and idempotency key guards"
+    },
+    {
+      "failure": "Document deleted/archived during parse",
+      "status": "PASS",
+      "evidence": "integration commit-boundary archive test and worker live-document predicate"
+    },
+    {
+      "failure": "provider file changes during local edit",
+      "status": "PASS",
+      "evidence": "three-way diff and provider-head preflight"
+    },
+    {
+      "failure": "provider eTag mismatch",
+      "status": "PASS",
+      "evidence": "conditional metadata preflight"
+    },
+    {
+      "failure": "provider 412",
+      "status": "PASS",
+      "evidence": "Microsoft transport and publication conflict tests"
+    },
+    {
+      "failure": "provider 401",
+      "status": "PASS",
+      "evidence": "Microsoft Graph typed auth failure tests"
+    },
+    {
+      "failure": "provider 403",
+      "status": "PASS",
+      "evidence": "Microsoft Graph typed permission failure tests"
+    },
+    {
+      "failure": "provider 429",
+      "status": "PASS",
+      "evidence": "Microsoft Graph retry-after tests"
+    },
+    {
+      "failure": "provider 503",
+      "status": "PASS",
+      "evidence": "unknown-delivery readback recovery test"
+    },
+    {
+      "failure": "sensitivity-label app-only restriction",
+      "status": "PASS",
+      "evidence": "transport label restriction test"
+    },
+    {
+      "failure": "delegated Excel token revoked",
+      "status": "PASS",
+      "evidence": "delegated auth failure becomes stale"
+    },
+    {
+      "failure": "Excel createSession 504/transient",
+      "status": "PASS",
+      "evidence": "typed retryable Graph transport path"
+    },
+    {
+      "failure": "Excel recalculation unavailable",
+      "status": "PASS",
+      "evidence": "stale calculation integration test"
+    },
+    {
+      "failure": "provider write succeeds/read-back fails",
+      "status": "PASS",
+      "evidence": "unknown-delivery/readback recovery state"
+    },
+    {
+      "failure": "provider write succeeds/semantic read-back differs",
+      "status": "PASS",
+      "evidence": "verification_failed integration test"
+    },
+    {
+      "failure": "P2 sees same self-originated write later",
+      "status": "PASS",
+      "evidence": "sync_source convergence enqueue and idempotent observation contract"
+    },
+    {
+      "failure": "cross-tenant DocumentVersion",
+      "status": "PASS",
+      "evidence": "forced-RLS probe and artifact tenant test"
+    },
+    {
+      "failure": "cross-tenant lineage",
+      "status": "PASS",
+      "evidence": "composite tenant foreign keys"
+    },
+    {
+      "failure": "cross-tenant citation",
+      "status": "PASS",
+      "evidence": "binding guard and integration test"
+    },
+    {
+      "failure": "stale anchor",
+      "status": "PASS",
+      "evidence": "typed patch stale-anchor test"
+    },
+    {
+      "failure": "ambiguous anchor",
+      "status": "PASS",
+      "evidence": "anchor remap ambiguity test"
+    },
+    {
+      "failure": "three-way merge overlap",
+      "status": "PASS",
+      "evidence": "deterministic overlap test"
+    },
+    {
+      "failure": "source EvidenceVersion missing",
+      "status": "PASS",
+      "evidence": "binding target visibility integration test"
+    },
+    {
+      "failure": "embedding points to superseded version",
+      "status": "PASS",
+      "evidence": "current versus historical semantic retrieval integration test"
+    }
+  ],
+  "goldenOfficeCorpus": {
+    "status": "PASS",
+    "fixtureCount": 14,
+    "totalBytes": 387539,
+    "maximumParseDurationMs": 1333,
+    "limits": {
+      "bytes": 10485760,
+      "expandedBytes": 67108864,
+      "parts": 4096,
+      "xmlBytes": 8388608,
+      "xmlNodes": 200000,
+      "xmlDepth": 128,
+      "irBytes": 16777216,
+      "pdfPages": 500,
+      "ratio": 1000,
+      "parseMs": 30000
+    },
+    "fixtures": [
+      {
+        "file": "lbo-style.xlsx",
+        "role": "realistic synthetic LBO workbook",
+        "source": "local deterministic certification fixture",
+        "application": null,
+        "byteSha256": "521553d74f08a5ab5cb3c8231e2328e7487a8db7f58e33a579b979ad6fd4a634",
+        "bytes": 11742,
+        "kind": "xlsx",
+        "semanticHash": "cc961e811a761426465bb130535305db66d17067a6179f4c839fc3344b45400e",
+        "nodes": 141,
+        "warnings": [],
+        "irBytes": 75853,
+        "parseDurationMs": 32
+      },
+      {
+        "file": "feature-heavy.xlsx",
+        "role": "feature-heavy workbook",
+        "source": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/ExcelPivotTableSample.xlsx",
+        "application": null,
+        "byteSha256": "f0ef1d61c9f3d8b27b18a876b8e24676314c6450ed64a725a7bfaa603fdd67e3",
+        "bytes": 19460,
+        "kind": "xlsx",
+        "semanticHash": "6c6c90aae25a674f8fade958829af18b211ef5106dfc93104c8f9bb05ac9bcce",
+        "nodes": 58,
+        "warnings": [
+          "OPAQUE_ACTIVE_CONTENT_PRESERVED"
+        ],
+        "irBytes": 27758,
+        "parseDurationMs": 8
+      },
+      {
+        "file": "macro-preservation.xlsm",
+        "role": "harmless macro preservation fixture",
+        "source": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/SimpleMacro.xlsm",
+        "application": null,
+        "byteSha256": "f76c986f4ebc25c2cc57c088b2511a1269f4bd61d6223a2ab58db351da348ba6",
+        "bytes": 13796,
+        "kind": "xlsm",
+        "semanticHash": "db9023e282dde8977b6f3c56ef5888b5bffd585f21f738cc52bf7b9e2e3b55a0",
+        "nodes": 5,
+        "warnings": [
+          "VBA_PRESERVED_NEVER_EXECUTED"
+        ],
+        "irBytes": 3076,
+        "parseDurationMs": 4
+      },
+      {
+        "file": "investment-memo.docx",
+        "role": "synthetic investment committee memo",
+        "source": "local deterministic certification fixture",
+        "application": null,
+        "byteSha256": "0453cc8e39df5c58c3fdecbd4c9410225c4d1d4314ce5d87a5e62f34201068a2",
+        "bytes": 39301,
+        "kind": "docx",
+        "semanticHash": "b21925315c3bfb29840a374141f451a646ec83717a2e73a86b366a1f0cc9575b",
+        "nodes": 105,
+        "warnings": [],
+        "irBytes": 45875,
+        "parseDurationMs": 58
+      },
+      {
+        "file": "tracked-changes.docx",
+        "role": "tracked insertions and deletions fixture",
+        "source": "https://raw.githubusercontent.com/jgardner04/sidedoc/main/tests/fixtures/track_changes_multiauthor.docx",
+        "application": null,
+        "byteSha256": "194bca419d1cc1650e01d6ceab25d15b1254e4219c0b2498cfc1ef25d24714e9",
+        "bytes": 36754,
+        "kind": "docx",
+        "semanticHash": "8622b3a4a8662afc5aaf77deab99e04cffcb20b2a7ba39ebd6371539673ae634",
+        "nodes": 16,
+        "warnings": [
+          "TRACKED_FIELD_OR_OPAQUE_STRUCTURE_PRESERVED"
+        ],
+        "irBytes": 7611,
+        "parseDurationMs": 50
+      },
+      {
+        "file": "ic-style.pptx",
+        "role": "synthetic investment committee deck",
+        "source": "local deterministic certification fixture",
+        "application": null,
+        "byteSha256": "a40046512ab26761253bcb6c720580c1a5b6786afdea180e52c68b3629ea8c1b",
+        "bytes": 22815,
+        "kind": "pptx",
+        "semanticHash": "87cb2bbdbaec2b0d33a8847a9ded89f82030dabe7023b1a951694fd2271a2730",
+        "nodes": 51,
+        "warnings": [],
+        "irBytes": 23160,
+        "parseDurationMs": 12
+      },
+      {
+        "file": "feature-heavy.pptx",
+        "role": "feature-heavy real-world presentation fixture",
+        "source": "https://raw.githubusercontent.com/shbernal/ts-pptx/master/test/read/fixtures/mixed.pptx",
+        "application": null,
+        "byteSha256": "db80910224b01b46cb7e8c29e183b59d128a18fd8e0c651558907230874693b9",
+        "bytes": 105638,
+        "kind": "pptx",
+        "semanticHash": "e21cbd7683a59f823fe992d4e2ed34ccf48dc2f63e548e09e0baddbe92942e63",
+        "nodes": 101,
+        "warnings": [
+          "ANIMATION_TRANSITION_PRESERVED",
+          "GROUP_SHAPE_PRESERVED"
+        ],
+        "irBytes": 46697,
+        "parseDurationMs": 35
+      },
+      {
+        "file": "text-evidence.pdf",
+        "role": "two-page text PDF with exact page anchors",
+        "source": "local deterministic certification fixture",
+        "application": null,
+        "byteSha256": "58fd5b7dd8302303f0e44a8ec97db3794bed29f3a38ac0c8070e0af26a8fb203",
+        "bytes": 2558,
+        "kind": "pdf",
+        "semanticHash": "9d85d7fe98a9a77dfd6e657a7a0a92f7a6d0650b5a3ac92399b9d36340fbbdf0",
+        "nodes": 2,
+        "warnings": [],
+        "irBytes": 982,
+        "parseDurationMs": 1333
+      },
+      {
+        "file": "image-only-evidence.pdf",
+        "role": "image-only PDF without a text layer",
+        "source": "local deterministic certification fixture",
+        "application": null,
+        "byteSha256": "06b71dbf890e9224e8667327ec74333957bb3f1254b51d74529219eeba0ca0cc",
+        "bytes": 29043,
+        "kind": "pdf",
+        "semanticHash": "3c1b2dc1c389489f12318c26f107e7c68deca82925df135e1808da6aac940c94",
+        "nodes": 1,
+        "warnings": [
+          "OCR_REQUIRED"
+        ],
+        "irBytes": 467,
+        "parseDurationMs": 3
+      },
+      {
+        "file": "office-features.xlsx",
+        "role": "Microsoft Excel fidelity reference",
+        "source": "https://raw.githubusercontent.com/exceljs/exceljs/master/spec/integration/data/gold.xlsx",
+        "application": "Microsoft Excel",
+        "byteSha256": "158a7657659b2bfc11389f07c911ebc5215757e960cc11f5a947e1056ce6f6e4",
+        "bytes": 9150,
+        "kind": "xlsx",
+        "semanticHash": "14cb669933bd86dac9955334aea33157046f54e584be260af59b3372acb7e8a5",
+        "nodes": 15,
+        "warnings": [
+          "EXTERNAL_RELATIONSHIP_NOT_FETCHED"
+        ],
+        "irBytes": 7676,
+        "parseDurationMs": 5
+      },
+      {
+        "file": "office-formulas.xlsx",
+        "role": "Microsoft Excel formula reference",
+        "source": "https://raw.githubusercontent.com/exceljs/exceljs/master/spec/integration/data/formulas.xlsx",
+        "application": "Microsoft Macintosh Excel",
+        "byteSha256": "dde85664357d0cb5d517ab2268dcd90e30e42f9105f43f7edf112a3b87e7344b",
+        "bytes": 9571,
+        "kind": "xlsx",
+        "semanticHash": "f034c3113f676f2bd09c22db59ea071801af0b51d228810442e106468ee93fa0",
+        "nodes": 10,
+        "warnings": [
+          "EXTERNAL_RELATIONSHIP_NOT_FETCHED"
+        ],
+        "irBytes": 5400,
+        "parseDurationMs": 4
+      },
+      {
+        "file": "office-document.docx",
+        "role": "Microsoft Word fidelity reference",
+        "source": "https://raw.githubusercontent.com/python-openxml/python-docx/master/tests/test_files/test.docx",
+        "application": "Microsoft Macintosh Word",
+        "byteSha256": "fba1c76b66ff30982e5281941ca1111eaeaeb092abb6dfbe1730bed3774f40b6",
+        "bytes": 31773,
+        "kind": "docx",
+        "semanticHash": "2481fd6fe0f051205cbcaaad9dd1ebf354c66c6c07a4a2e34e6affc9cfa21350",
+        "nodes": 6,
+        "warnings": [],
+        "irBytes": 3894,
+        "parseDurationMs": 7
+      },
+      {
+        "file": "office-header-footer.docx",
+        "role": "Microsoft Word header and footer reference",
+        "source": "https://raw.githubusercontent.com/python-openxml/python-docx/master/features/steps/test_files/hdr-header-footer.docx",
+        "application": "Microsoft Office Word",
+        "byteSha256": "5a4cb270680d1365688073e4816be98c2ab1a7ba2921d86cb3efadca97a72d27",
+        "bytes": 18079,
+        "kind": "docx",
+        "semanticHash": "8ce85c83f8a1d2bb0873b1850d15c34fa64e065d454d640394a4250beea2781e",
+        "nodes": 35,
+        "warnings": [],
+        "irBytes": 26971,
+        "parseDurationMs": 11
+      },
+      {
+        "file": "office-presentation.pptx",
+        "role": "Microsoft PowerPoint fidelity reference",
+        "source": "https://raw.githubusercontent.com/scanny/python-pptx/master/tests/test_files/test.pptx",
+        "application": "Microsoft Macintosh PowerPoint",
+        "byteSha256": "8765677cdf43181ef41657cedf28485b5f2cbf166667218c217af07f8336c96f",
+        "bytes": 37859,
+        "kind": "pptx",
+        "semanticHash": "3b56ee2cfffdb14608529911d5ebb7ec4b3746d5102584af916bf097068bad04",
+        "nodes": 4,
+        "warnings": [],
+        "irBytes": 5235,
+        "parseDurationMs": 6
+      }
+    ]
+  },
+  "databaseInvariants": {
+    "migration": {
+      "count": 124,
+      "head": "0126_pe_underwriting_runtime.sql"
+    },
+    "tables": [
+      "document_versions",
+      "document_version_contents",
+      "document_version_heads",
+      "artifact_ir_snapshots",
+      "artifact_lineage_edges",
+      "artifact_operations",
+      "artifact_bindings",
+      "artifact_anchor_remaps",
+      "artifact_comments",
+      "artifact_reviews",
+      "artifact_templates",
+      "artifact_publications",
+      "artifact_provider_creations"
+    ],
+    "rlsTables": [
+      "artifact_anchor_remaps",
+      "artifact_bindings",
+      "artifact_comments",
+      "artifact_ir_snapshots",
+      "artifact_lineage_edges",
+      "artifact_operations",
+      "artifact_provider_creations",
+      "artifact_publications",
+      "artifact_reviews",
+      "artifact_templates",
+      "document_version_contents",
+      "document_version_heads",
+      "document_versions"
+    ],
+    "immutableHistoryTriggers": [
+      "artifact_anchor_remaps",
+      "artifact_bindings",
+      "artifact_comments",
+      "artifact_ir_snapshots",
+      "artifact_lineage_edges",
+      "artifact_operations",
+      "artifact_reviews",
+      "artifact_templates",
+      "document_version_contents",
+      "document_versions"
+    ],
+    "guardTriggers": [
+      "artifact_binding_guard",
+      "artifact_comment_guard",
+      "artifact_provider_creation_guard",
+      "artifact_publication_guard",
+      "artifact_review_guard",
+      "capture_document_content",
+      "employee_roles_artifact_owner_authority",
+      "version_content_identity"
+    ],
+    "canonicalDocumentOwner": {
+      "writable_owner": "@finnor/data-platform",
+      "source_table": "documents"
+    },
+    "duplicateCanonicalArtifactOwners": 0,
+    "storage": {
+      "backend": true,
+      "bytes": true,
+      "ref": true,
+      "versioned_embedding": true
+    },
+    "privileges": [
+      {
+        "table": "document_versions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "document_version_contents",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "document_version_heads",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_ir_snapshots",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_lineage_edges",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_operations",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_bindings",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_anchor_remaps",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_comments",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_reviews",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_templates",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_publications",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      },
+      {
+        "table": "artifact_provider_creations",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      }
+    ],
+    "foreignKeyCount": 34,
+    "tenantIsolation": {
+      "visibleRowsForTenantA": 1,
+      "crossTenantInsertRejected": true
+    }
+  },
+  "populatedUpgrade": {
+    "preP3MigrationCount": 116,
+    "p3MigrationsApplied": [
+      "0119_document_artifact_versions.sql",
+      "0120_artifact_collaboration_publication.sql",
+      "0121_artifact_publication_recovery.sql",
+      "0122_artifact_provider_creation.sql",
+      "0123_artifact_authority_defaults.sql",
+      "0124_artifact_comment_review_guard.sql",
+      "0125_artifact_history_least_privilege.sql",
+      "0126_pe_underwriting_runtime.sql"
+    ],
+    "tenantId": "6f500ba8-2537-4fe2-97fd-04911d2692d0",
+    "contentDocumentId": "e912ac35-2fac-4b87-83d3-6fbff3f1081b",
+    "metadataDocumentId": "78c1cddc-51ff-4baa-a423-6b2dabe1652e",
+    "providerDocumentId": "7252fc00-b85b-4637-8d19-78818fee4fc3",
+    "exactByteSha256": "521553d74f08a5ab5cb3c8231e2328e7487a8db7f58e33a579b979ad6fd4a634",
+    "exactBytesPreserved": true,
+    "baseline": {
+      "versions": 1,
+      "baseline_versions": 1,
+      "metadata_versions": 0,
+      "provider_versions": 0,
+      "contents": 1,
+      "heads": 1,
+      "embeddings": 1,
+      "embedding_versioned": 0,
+      "links": 1,
+      "shares": 1,
+      "grants": 2,
+      "ordinal": 1,
+      "origin": "baseline",
+      "sha": "521553d74f08a5ab5cb3c8231e2328e7487a8db7f58e33a579b979ad6fd4a634",
+      "size_bytes": 11742
+    }
+  },
+  "commands": {
+    "migrationBundle": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 239,
+      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "outputLineCount": 1,
+      "summary": "bundled 124 migrations"
+    },
+    "openapi": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1650,
+      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "outputLineCount": 1,
+      "summary": "Generated openapi.json with 57 active/quarantine paths."
+    },
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 23031,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "authzMatrix": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 320,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "peBoundary": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1981,
+      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "outputLineCount": 1,
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+    },
+    "p3Unit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/artifact-os-core.test.ts tests/unit/artifact-os-contract.test.ts tests/unit/microsoft-artifact-transport.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 8045,
+      "outputHash": "374489d23c4055034249044766ef4d9badbe91dd8a0dd6a2465344a4e5b988da",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ································································· |  Test Files  3 passed (3) |       Tests  65 passed (65) |    Start at  20:23:17 |    Duration  7.55s (transform 1.13s, setup 120ms, import 2.65s, tests 4.25s, environment 0ms)",
+      "testsPassed": 65,
+      "testFilesPassed": 3
+    },
+    "fullUnit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 82074,
+      "outputHash": "b528badc5e0d42890b1cdd24ebe0af7f7babadf79ad52fc0cb2382d7b5f45698",
+      "outputLineCount": 26,
+      "summary": "  message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:23:17 |    Duration  81.59s (transform 4.31s, setup 1.57s, import 50.08s, tests 19.51s, environment 7ms)",
+      "testsPassed": 520,
+      "testFilesPassed": 95
+    },
+    "p3Integration": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/artifact-os.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4494,
+      "outputHash": "fe3550788346b91ea50c7668506aade88e73d20d783f75a2f0df7d9271f9f169",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ············· |  Test Files  1 passed (1) |       Tests  13 passed (13) |    Start at  20:24:42 |    Duration  4.18s (transform 1.10s, setup 79ms, import 2.13s, tests 1.86s, environment 0ms)",
+      "testsPassed": 13,
+      "testFilesPassed": 1
+    },
+    "p2Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 13141,
+      "outputHash": "3ea34a7ec23e371ea8b981a7ce5d805ac085bd4aeca445a73d30758230a85d70",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  20:24:47 |    Duration  12.85s (transform 1.22s, setup 310ms, import 7.02s, tests 4.93s, environment 0ms)",
+      "testsPassed": 33,
+      "testFilesPassed": 5
+    },
+    "p1AndSourceTruthRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7361,
+      "outputHash": "23bf1f34aa7559a2af9be69a41eab5db8a63b2a99676e4ef4f108c22fa79c140",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:25:00 |    Duration  7.07s (transform 1.19s, setup 188ms, import 3.13s, tests 3.43s, environment 0ms)",
+      "testsPassed": 17,
+      "testFilesPassed": 3
+    },
+    "peGraphRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 17222,
+      "outputHash": "f38949b5f0d8f56a98c0016db626df95719c726709eb4321d88ace67659d0bcc",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  20:25:07 |    Duration  16.88s (transform 1.55s, setup 302ms, import 7.76s, tests 8.28s, environment 0ms)",
+      "testsPassed": 24,
+      "testFilesPassed": 5
+    },
+    "coreRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/actions-pending-receipts.test.ts tests/integration/decision-receipts.test.ts tests/integration/computer-execution-fabric.test.ts tests/integration/evidence-corpus.test.ts tests/integration/work-cases.test.ts tests/integration/queue.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 12130,
+      "outputHash": "5b789800dbc03377a69caef262b52ab8a24588f902ed7e22dccc3860516b7e51",
+      "outputLineCount": 10,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | (node:42560) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ········································· |  Test Files  6 passed (6) |       Tests  41 passed (41) |    Start at  20:25:25 |    Duration  11.79s (transform 1.08s, setup 360ms, import 6.33s, tests 4.42s, environment 0ms)",
+      "testsPassed": 41,
+      "testFilesPassed": 6
+    }
+  },
+  "testResults": {
+    "p3Unit": {
+      "files": 3,
+      "tests": 65
+    },
+    "fullUnit": {
+      "files": 95,
+      "tests": 520
+    },
+    "p3Integration": {
+      "files": 1,
+      "tests": 13
+    },
+    "p2Regression": {
+      "files": 5,
+      "tests": 33
+    },
+    "p1AndSourceTruthRegression": {
+      "files": 3,
+      "tests": 17
+    },
+    "peGraphRegression": {
+      "files": 5,
+      "tests": 24
+    },
+    "coreRegression": {
+      "files": 6,
+      "tests": 41
+    }
+  },
+  "mandatoryCases": [
+    {
+      "number": 1,
+      "name": "Existing Document remains canonical.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "No canonical artifact entity added.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Existing document bytes migrate to one baseline version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Metadata-only Document remains valid.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Version content immutable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "New content creates new version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Same exact retry does not duplicate version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Parent/version lineage correct.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Version SHA-256 deterministic.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Current document API remains compatible.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "XLSX served with correct media type/filename.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "DOCX served correctly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "PPTX served correctly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "PDF served correctly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "databaseInvariants",
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "ZIP bomb rejected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "path traversal rejected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "external entity rejected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "remote external relationship not fetched.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "macro never executed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "OLE never executed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "unknown part preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "malformed relationship rejected safely.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "real Office-generated XLSX parses.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "worksheet order preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "cell values preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 26,
+      "name": "formulas preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 27,
+      "name": "cached values distinguished.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 28,
+      "name": "named ranges parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 29,
+      "name": "tables parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 30,
+      "name": "charts discovered/preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 31,
+      "name": "merged cells preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 32,
+      "name": "styles preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 33,
+      "name": "number formats preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 34,
+      "name": "conditional formatting preserved if unsupported for editing.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 35,
+      "name": "data validation preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 36,
+      "name": "comments/notes preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 37,
+      "name": "external links represented without fetching.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 38,
+      "name": "hidden sheets preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 39,
+      "name": "no-op operation leaves source unchanged.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 40,
+      "name": "target cell edit changes only intended package semantics.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 41,
+      "name": "formula edit changes exact formula.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 42,
+      "name": "untargeted package-part hashes unchanged.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 43,
+      "name": "same-sheet dependency.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 44,
+      "name": "cross-sheet dependency.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 45,
+      "name": "range dependency.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 46,
+      "name": "defined-name dependency.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 47,
+      "name": "structured-table reference.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 48,
+      "name": "external reference marked external.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 49,
+      "name": "INDIRECT marked dynamic/partial.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 50,
+      "name": "unsupported formula does not create guessed edges.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 51,
+      "name": "circular dependency exposed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 52,
+      "name": "formula change invalidates dependent calculation status.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 53,
+      "name": "VBA binary detected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 54,
+      "name": "VBA never executed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 55,
+      "name": "read path works to certified level.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 56,
+      "name": "no-op preserves VBA hash.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 57,
+      "name": "permitted non-VBA edit preserves VBA hash exactly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 58,
+      "name": "unsupported XLSM write fails rather than stripping macro.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 59,
+      "name": "real Office DOCX parses.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 60,
+      "name": "sections.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 61,
+      "name": "paragraphs/runs.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 62,
+      "name": "headings/styles.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 63,
+      "name": "tables.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 64,
+      "name": "headers/footers.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 65,
+      "name": "footnotes/endnotes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 66,
+      "name": "comments.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 67,
+      "name": "bookmarks/hyperlinks.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 68,
+      "name": "tracked changes preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 69,
+      "name": "images preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 70,
+      "name": "supported text replacement.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 71,
+      "name": "table-cell update.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 72,
+      "name": "paragraph insertion.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 73,
+      "name": "no-op fidelity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 74,
+      "name": "untargeted parts preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 75,
+      "name": "unsupported text-box target fails.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 76,
+      "name": "real Office PPTX parses.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 77,
+      "name": "slides stable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 78,
+      "name": "masters/layouts/themes preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 79,
+      "name": "shape IDs stable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 80,
+      "name": "text parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 81,
+      "name": "tables parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 82,
+      "name": "image refs parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 83,
+      "name": "notes parsed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 84,
+      "name": "charts discovered/preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 85,
+      "name": "grouped shape preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 86,
+      "name": "transition/animation parts preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 87,
+      "name": "exact text replacement.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 88,
+      "name": "exact table-cell replacement.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 89,
+      "name": "slide reorder.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 90,
+      "name": "template slide creation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 91,
+      "name": "no-op fidelity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 92,
+      "name": "untargeted parts preserved.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 93,
+      "name": "text PDF parsed with page anchors.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 94,
+      "name": "exact page citation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 95,
+      "name": "image-only PDF reports text unavailable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 96,
+      "name": "no fake OCR.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 97,
+      "name": "PDF remains read-only.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 98,
+      "name": "version supersedes relation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 99,
+      "name": "template instantiation lineage.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 100,
+      "name": "cross-Document derived_from lineage.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 101,
+      "name": "exact node→EvidenceVersion binding.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 102,
+      "name": "exact node→PE entity binding.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 103,
+      "name": "exact node→P1 Assumption binding.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 104,
+      "name": "binding pinned to version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 105,
+      "name": "old version binding not rewritten by new version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 106,
+      "name": "cross-tenant binding rejected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 107,
+      "name": "comment pinned to exact version/anchor.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 108,
+      "name": "resolved comment preserved historically.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 109,
+      "name": "exact anchor remaps across safe edit.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 110,
+      "name": "ambiguous anchor becomes stale.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 111,
+      "name": "editorial review pins version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 112,
+      "name": "editorial approval does not become execution authority.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 113,
+      "name": "patch precondition success.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 114,
+      "name": "stale base version fails.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 115,
+      "name": "stale target hash fails.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 116,
+      "name": "compound patch atomic.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 117,
+      "name": "failed patch creates zero version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 118,
+      "name": "successful patch creates one immutable version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 119,
+      "name": "semantic diff equals expected diff.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 120,
+      "name": "unsupported edit fails.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 121,
+      "name": "app-only file download.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 122,
+      "name": "provider version metadata.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 123,
+      "name": "specific provider version retrieval where available.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 124,
+      "name": "app-only supported file replace.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 125,
+      "name": "eTag precondition.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 126,
+      "name": "412 conflict.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 127,
+      "name": "no blind overwrite.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 128,
+      "name": "large-upload path where supported/configured.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 129,
+      "name": "delegated file replace.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 130,
+      "name": "sensitivity-label blocked app-only path.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 131,
+      "name": "delegated path used only when authorized.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 132,
+      "name": "employee-linked delegated profile.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 133,
+      "name": "P2 app-only connection unaffected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 134,
+      "name": "workbook session created.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 135,
+      "name": "range read.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 136,
+      "name": "range write where used.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 137,
+      "name": "calculation requested.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 138,
+      "name": "required outputs read back.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 139,
+      "name": "revoked token handled.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 140,
+      "name": "no delegated profile → calculations marked stale rather than fabricated.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.p3Integration",
+        "liveOfficeCertification is a separate external gate"
+      ]
+    },
+    {
+      "number": 141,
+      "name": "local draft persists before publish.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 142,
+      "name": "provider base version checked.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 143,
+      "name": "write acknowledged.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 144,
+      "name": "acknowledgement alone not completion.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 145,
+      "name": "provider content read back.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 146,
+      "name": "read-back creates immutable version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 147,
+      "name": "read-back semantic diff expected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 148,
+      "name": "expected effect → VERIFIED.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 149,
+      "name": "unexpected semantic change → verification failure.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 150,
+      "name": "provider normalization explicitly classified.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 151,
+      "name": "P2 later sees write and converges idempotently.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 152,
+      "name": "no duplicate EvidenceVersion/business event.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 153,
+      "name": "remote edit after local base detected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 154,
+      "name": "base/local/remote three-way diff.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 155,
+      "name": "disjoint exact edits may merge only if certified.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 156,
+      "name": "overlapping edits never auto-merge.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 157,
+      "name": "stale provider eTag never overwritten.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.p3Unit"
+      ]
+    },
+    {
+      "number": 158,
+      "name": "artifact-derived embedding records exact DocumentVersion.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 159,
+      "name": "current retrieval does not treat old-version chunk as current.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 160,
+      "name": "historical retrieval can request old version where architecture permits.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 161,
+      "name": "existing public-reference ingestion remains green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Integration",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 162,
+      "name": "authenticated user opens artifact workspace.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 163,
+      "name": "version timeline truthful.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 164,
+      "name": "provider/local head distinction visible.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 165,
+      "name": "spreadsheet formula inspector works.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 166,
+      "name": "dependency inspector works.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 167,
+      "name": "semantic diff works.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 168,
+      "name": "supported edit creates new draft.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 169,
+      "name": "publish status truthful.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 170,
+      "name": "conflict visible.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 171,
+      "name": "unverified calculation visible.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 172,
+      "name": "source/evidence binding visible.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 173,
+      "name": "no fake Office rendering.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p3Unit",
+        "commands.typecheck",
+        "commands.openapi"
+      ]
+    },
+    {
+      "number": 174,
+      "name": "P1 certification green.",
+      "status": "PASS",
+      "evidence": [
+        "p1Prerequisite",
+        "commands.p1AndSourceTruthRegression"
+      ]
+    },
+    {
+      "number": 175,
+      "name": "P2 certification green.",
+      "status": "PASS",
+      "evidence": [
+        "p2Prerequisite",
+        "commands.p2Regression"
+      ]
+    },
+    {
+      "number": 176,
+      "name": "Source Truth green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p1AndSourceTruthRegression"
+      ]
+    },
+    {
+      "number": 177,
+      "name": "PE document links green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p1AndSourceTruthRegression",
+        "commands.p3Integration"
+      ]
+    },
+    {
+      "number": 178,
+      "name": "Evidence green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.p3Integration"
+      ]
+    },
+    {
+      "number": 179,
+      "name": "BusinessEvents green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.peGraphRegression"
+      ]
+    },
+    {
+      "number": 180,
+      "name": "Work green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 181,
+      "name": "Authority green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 182,
+      "name": "DecisionReceipt green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 183,
+      "name": "document sharing green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 184,
+      "name": "computer-task green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 185,
+      "name": "reference corpus PDF ingestion green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.coreRegression",
+        "commands.fullUnit"
+      ]
+    },
+    {
+      "number": 186,
+      "name": "OpenAPI green.",
+      "status": "PASS",
+      "evidence": [
+        "commands.openapi",
+        "commands.typecheck"
+      ]
+    },
+    {
+      "number": 187,
+      "name": "fresh DB migration green.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 188,
+      "name": "populated DB migration green.",
+      "status": "PASS",
+      "evidence": [
+        "populatedUpgrade"
+      ]
+    },
+    {
+      "number": 189,
+      "name": "RLS green.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants.rlsTables",
+        "databaseInvariants.privileges"
+      ]
+    },
+    {
+      "number": 190,
+      "name": "tenant isolation green.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants.tenantIsolation",
+        "commands.p3Integration"
+      ]
+    }
+  ],
+  "gates": {
+    "typecheck": "PASS",
+    "unitTests": "PASS",
+    "integrationTests": "PASS",
+    "freshMigration": "PASS",
+    "populatedMigration": "PASS",
+    "rls": "PASS",
+    "tenantIsolation": "PASS",
+    "documentCanonicalOwnership": "PASS",
+    "immutableVersions": "PASS",
+    "baselineMigration": "PASS",
+    "ooxmlSecurityAndFidelity": "PASS",
+    "formatIRAndDiff": "PASS",
+    "lineageBindingsReview": "PASS",
+    "patchAtomicity": "PASS",
+    "providerConcurrencyAndReadback": "PASS",
+    "delegatedExcel": "PASS",
+    "p2Convergence": "PASS",
+    "memoryVersionAwareness": "PASS",
+    "frontendWorkspace": "PASS",
+    "p1Regression": "PASS",
+    "p2Regression": "PASS",
+    "authorityReceiptShareComputerRegression": "PASS",
+    "liveOffice": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION"
+  },
+  "migrationsAdded": [
+    "0119_document_artifact_versions.sql",
+    "0120_artifact_collaboration_publication.sql",
+    "0121_artifact_publication_recovery.sql",
+    "0122_artifact_provider_creation.sql",
+    "0123_artifact_authority_defaults.sql",
+    "0124_artifact_comment_review_guard.sql",
+    "0125_artifact_history_least_privilege.sql"
+  ],
+  "jobTypesAdded": [
+    "materialize_artifact_version"
+  ],
+  "jobTypesReused": [
+    "sync_source"
+  ],
+  "apiRoutesAdded": [
+    "GET|POST /api/artifacts",
+    "GET|POST /api/artifact-templates",
+    "POST /api/artifact-templates/{key}/instantiate",
+    "GET /api/documents/{id}/artifact",
+    "GET /api/documents/{id}/artifact/ir/{versionId}",
+    "GET /api/documents/{id}/artifact/context",
+    "GET /api/documents/{id}/artifact/diff",
+    "POST /api/documents/{id}/artifact/drafts",
+    "POST /api/documents/{id}/artifact/patches",
+    "GET|POST /api/documents/{id}/artifact/comments",
+    "GET|POST /api/documents/{id}/artifact/reviews",
+    "GET|POST /api/documents/{id}/artifact/bindings",
+    "GET|POST /api/documents/{id}/artifact/lineage",
+    "POST /api/documents/{id}/artifact/publish",
+    "POST /api/documents/{id}/artifact/publish-new",
+    "POST /api/documents/{id}/artifact/recalculate",
+    "GET /api/documents/{id}/artifact/versions/{versionId}",
+    "GET /api/documents/{id}/artifact/publications/{publicationId}",
+    "GET /api/documents/{id}/artifact/provider-creations/{creationId}"
+  ],
+  "packagesCreated": [
+    "@finnor/ooxml",
+    "@finnor/artifacts",
+    "@finnor/spreadsheet-ir",
+    "@finnor/document-ir",
+    "@finnor/presentation-ir"
+  ],
+  "dependenciesAdded": [
+    "saxes@6.0.0"
+  ],
+  "filesMateriallyChanged": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "openapi.json",
+    "packages/db/schema.ts",
+    "packages/db/migration-head.ts",
+    "packages/db/migrations-bundle.ts",
+    "packages/data-platform/src/document-versions.ts",
+    "packages/data-platform/src/index.ts",
+    "packages/memory/src/semantic.ts",
+    "packages/provider-microsoft365/src/artifacts.ts",
+    "packages/provider-microsoft365/src/index.ts",
+    "packages/security/src/provider-auth.ts",
+    "packages/security/src/index.ts",
+    "apps/worker/src/index.ts",
+    "apps/worker/src/handlers/sync-source.ts",
+    "apps/worker/src/handlers/materialize-artifact-version.ts",
+    "apps/api/app/api/documents/[id]/route.ts",
+    "scripts/generate-openapi.ts"
+  ],
+  "resultDetails": {
+    "typecheckResult": "PASS",
+    "unitTestResult": "PASS — no skips; exact counts in testResults",
+    "integrationTestResult": "PASS — no skips; exact counts in testResults",
+    "fuzzPropertyTestResult": "PASS — fast-check covers formulas, A1, sheet names, ZIP/XML inputs, anchors and diff identity",
+    "freshMigrationResult": "PASS — 124 migrations through 0126_pe_underwriting_runtime.sql",
+    "populatedMigrationResult": "PASS — content/metadata/provider Documents, PE link, embedding and share preserved",
+    "rlsResult": "PASS — forced tenant RLS and one tenant policy on all 13 P3 tables",
+    "tenantIsolationResult": "PASS — direct finnor_app RLS probe plus adversarial integration tests",
+    "goldenOfficeCorpusResult": "PASS — 14 exact non-confidential fixtures",
+    "p1RegressionResult": "PASS",
+    "p2RegressionResult": "PASS — deterministic provider/source suites; P2 external live status remains reported separately",
+    "authorityReceiptRegressionResult": "PASS",
+    "microsoftFileLiveCertification": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+    "delegatedExcelLiveCertification": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+    "p3CertificationResult": "DETERMINISTIC PASS; BLOCKED_EXTERNAL_OFFICE_CERTIFICATION"
+  },
+  "liveOfficeCertification": {
+    "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+    "configured": false,
+    "missingEnvironmentNames": [
+      "P3_OFFICE_LIVE_CERTIFICATION=1",
+      "P3_OFFICE_LIVE_DATABASE_URL",
+      "P3_OFFICE_LIVE_TENANT_ID",
+      "P3_OFFICE_LIVE_INTEGRATION_ID",
+      "P3_OFFICE_LIVE_SOURCE_SCOPE_ID",
+      "P3_OFFICE_LIVE_DELEGATED_PRINCIPAL_ID",
+      "P3_OFFICE_LIVE_DRIVE_ID",
+      "P3_OFFICE_LIVE_ITEM_ID",
+      "P3_OFFICE_LIVE_WORKSHEET_ID",
+      "P3_OFFICE_LIVE_RANGE"
+    ],
+    "command": "P3_OFFICE_LIVE_CERTIFICATION=1 npm run release:pe-p3",
+    "productionLiveClaimAllowed": false
+  },
+  "remainingBlockers": [
+    "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION: no complete opt-in real Microsoft tenant/database/source/delegated-profile configuration was available. Deterministic implementation is complete; production must not claim live Office certification until this gate passes.",
+    "VCS cleanliness is not certified because .vercelignore is a macOS dataless file that blocks Git index scans. The immutable starting HEAD and tree are preserved as the audit baseline."
+  ],
+  "documentationEvidence": [
+    "https://learn.microsoft.com/en-us/graph/api/driveitem-get-content?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/driveitem-put-content?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/driveitem-list-versions?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/driveitemversion-get-contents?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/workbook-createsession?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/range-get?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/range-update?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/workbookapplication-calculate?view=graph-rest-1.0"
+  ],
+  "exactHandoffToP4": "P4 can consume SpreadsheetIR, exact DocumentVersion bytes, ArtifactBindings and semantic diffs directly. It must append versions, preserve formula/cached-value truth, keep provider heads separate, use existing Authority for effects, and preserve P1/P2 no-hindsight evidence."
+}

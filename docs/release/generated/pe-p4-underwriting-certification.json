@@ -1,0 +1,3828 @@
+{
+  "schema": "finnor.pe-p4-underwriting-certification.v1",
+  "generatedAt": "2026-09-09T14:55:51.582Z",
+  "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+  "deterministicResult": "PASS",
+  "deterministicMandatoryCases": {
+    "passed": 240,
+    "required": 240,
+    "distribution": {
+      "prerequisite_ownership": 12,
+      "decimal_unit_serialization": 16,
+      "model_ir_compiler": 18,
+      "truth_input_no_hindsight": 18,
+      "transaction_sources_uses": 20,
+      "operating_forecast_fcf": 22,
+      "debt_revolver_interest_circularity": 32,
+      "exit_returns_irr": 16,
+      "scenario_sensitivity": 18,
+      "p3_binding_projection_reconciliation": 16,
+      "rls_security": 12,
+      "durability_idempotency": 12,
+      "api_frontend_contract": 10,
+      "migration_regression": 10,
+      "performance_limits": 8
+    }
+  },
+  "implementationStatus": "DETERMINISTIC P4 COMPLETE; external Microsoft/Excel parity blocked separately",
+  "startingBaseline": {
+    "branch": "codex/p3-epistemic-runtime",
+    "headSha": "80f617d321965b8694de18940ff23b005dedcdb7",
+    "treeSha": "f38b551d99952986527e4986e3ba77891a3c10ef",
+    "migrationHead": "0125_artifact_history_least_privilege.sql"
+  },
+  "gitRemoteFreshnessTruth": "Starting HEAD/tree were recorded exactly. The working tree contains the cumulative uncommitted P1-P4 implementation; no network fetch was performed and remote freshness is not claimed.",
+  "prerequisites": {
+    "p1": {
+      "result": "PASS",
+      "cases": 51,
+      "generatedAt": "2026-09-09T14:46:18.911Z",
+      "reportHash": "43d5656a7a839aa3cb8382cb1048f0b2a846d8999019b0795912ea55c578c701"
+    },
+    "p2": {
+      "result": "BLOCKED-EXTERNAL-CERTIFICATION",
+      "deterministicResult": "PASS",
+      "passed": 179,
+      "generatedAt": "2026-09-09T14:50:41.479Z",
+      "reportHash": "e91c87dd2806569102e464b8d73218383d74e987faffeaabe24fdb92d7057b65"
+    },
+    "p3": {
+      "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+      "deterministicResult": "PASS",
+      "passed": 190,
+      "generatedAt": "2026-09-09T14:53:13.176Z",
+      "reportHash": "7f0a93e3b9128236b4ada9e32cbce2f5af21573f3cc7ea420b7ded5d1c943596"
+    }
+  },
+  "hardAuditMap": {
+    "EXISTS": [
+      "P1 temporal InvestmentCase/Assumption world",
+      "P2 Microsoft Source Truth",
+      "P3 immutable Artifact OS and SpreadsheetIR",
+      "Core Document, Evidence, Work, Event, Authority and DecisionReceipt",
+      "historical action/governance code named Phase 4"
+    ],
+    "PARTIAL": [
+      "Live Microsoft/Excel mapped-workbook parity requires an external configured tenant and delegated profile",
+      "standard LBO debt maturity/refinancing is bounded to mandatory repayment"
+    ],
+    "WRONG": [
+      "fresh databases could install pgcrypto outside public under a persisted role search_path; 0000 now pins the extension to public",
+      "same-client concurrent node-postgres queries in underwriting workspace loading were serialized"
+    ],
+    "MISSING": [
+      "real configured P4 Microsoft/Excel publish, recalculate, read-back and reconciliation evidence"
+    ],
+    "REUSE": [
+      "P1 canonical temporal roots and Assumptions",
+      "P2 provider identities/observations/reconciliation",
+      "P3 DocumentVersion, SpreadsheetIR, ArtifactPatch, publication and read-back",
+      "Core Evidence, Work, BusinessEvent, Authority, DecisionReceipt and queue"
+    ],
+    "DELETE": [
+      "none; no duplicate executable P4 calculation engine was retained"
+    ]
+  },
+  "historicalPhase4NamingCollisionDisposition": "Historical private-equity phase4 action/governance code and tests remain intact. No current release:pe4 package command exists; underwriting uses the unambiguous release:pe-p4-underwriting command so no historical meaning is repurposed.",
+  "ownershipResults": {
+    "investmentCase": "PASS — P1 remains sole canonical owner",
+    "assumption": "PASS — P1 remains sole canonical owner; scenarios never mutate it",
+    "evidence": "PASS — Core Evidence/EvidenceVersion remain sole owners",
+    "artifact": "PASS — Core Document and P3 DocumentVersion/SpreadsheetIR remain sole owners",
+    "workEventAuthorityReceipt": "PASS — Core owners reused; no duplicate subsystem"
+  },
+  "numericDecimalImplementation": {
+    "library": "decimal.js@10.6.x",
+    "policy": {
+      "precision": 34,
+      "rounding": "ROUND_HALF_EVEN",
+      "maxInputCharacters": 128,
+      "maxAbsoluteExponent": 100
+    },
+    "apiAndPersistence": "canonical decimal strings; floats and formatted financial strings rejected"
+  },
+  "financialConventionVersion": "finnor-pe-lbo/1.0.0",
+  "engineVersion": "finnor-underwriting-engine/1.0.0",
+  "modelSchemaVersion": "underwriting-model-ir.v1",
+  "modelPackageImplementation": "Pure @finnor/underwriting package with compiler, executor, schedules, returns, scenarios, sensitivity, lineage, diffs and artifact comparison",
+  "modelIrImplementation": "Versioned bounded typed DAG with stable node IDs, typed values/units/currencies, declared circular blocks and deterministic semantic identity",
+  "compilerImplementation": "Validates nodes, dependencies, types, units, currencies, periods, cycles, solver settings, AST depth and hard limits before deterministic topological execution",
+  "dependencyGraphImplementation": "Stable dependency/dependent graphs support execution, affected-node analysis and structural causal explanations only",
+  "unitCurrencyImplementation": "Typed money/rate/multiple/ratio/count/date/period/boolean/text; money requires exact currency and no implicit FX",
+  "circularityImplementation": "Declared fixed-point blocks with frozen order, initial state, absolute/relative tolerances, maximum iterations and typed NON_CONVERGENT failure",
+  "standardLboV1CapabilityMatrix": {
+    "entry_ev_metric_multiple": "SUPPORTED",
+    "direct_entry_ev": "SUPPORTED",
+    "net_debt_bridge": "SUPPORTED",
+    "transaction_fees": "SUPPORTED",
+    "financing_fees": "SUPPORTED",
+    "sponsor_equity_plug": "SUPPORTED",
+    "rollover": "SUPPORTED",
+    "seller_note": "SUPPORTED",
+    "fixed_rate_debt": "SUPPORTED",
+    "floating_rate_debt": "SUPPORTED",
+    "rate_floor": "SUPPORTED",
+    "cash_interest": "SUPPORTED",
+    "pik": "SUPPORTED",
+    "mandatory_amortization": "SUPPORTED",
+    "revolver": "SUPPORTED",
+    "minimum_cash": "SUPPORTED",
+    "cash_sweep": "SUPPORTED",
+    "average_balance_interest": "SUPPORTED",
+    "circularity": "SUPPORTED",
+    "debt_maturity_refinancing": "PARTIAL",
+    "revenue_growth_model": "SUPPORTED",
+    "ebitda_margin_model": "SUPPORTED",
+    "d_and_a": "SUPPORTED",
+    "cash_taxes": "SUPPORTED",
+    "nol": "UNSUPPORTED",
+    "capex": "SUPPORTED",
+    "nwc": "SUPPORTED",
+    "interim_distributions": "SUPPORTED",
+    "dividend_recap": "UNSUPPORTED",
+    "exit_multiple": "SUPPORTED",
+    "sponsor_ownership": "SUPPORTED",
+    "moic": "SUPPORTED",
+    "periodic_irr": "SUPPORTED",
+    "xirr": "SUPPORTED",
+    "one_way_sensitivity": "SUPPORTED",
+    "two_way_sensitivity": "SUPPORTED",
+    "multi_currency": "UNSUPPORTED",
+    "add_on_acquisitions": "UNSUPPORTED",
+    "management_option_pool": "UNSUPPORTED",
+    "preferred_equity": "UNSUPPORTED",
+    "complex_waterfall": "UNSUPPORTED",
+    "fund_carry": "UNSUPPORTED",
+    "management_fees": "UNSUPPORTED",
+    "lp_returns": "UNSUPPORTED"
+  },
+  "calculationResults": {
+    "sourcesAndUses": "PASS",
+    "operatingForecast": "PASS",
+    "freeCashFlow": "PASS",
+    "debtSchedule": "PASS",
+    "fixedFloatingInterest": "PASS",
+    "cashAndPikInterest": "PASS",
+    "revolver": "PASS",
+    "cashSweep": "PASS",
+    "exitValuation": "PASS",
+    "sponsorCashFlow": "PASS",
+    "moic": "PASS",
+    "irrAndXirr": "PASS",
+    "scenario": "PASS",
+    "sensitivity": "PASS"
+  },
+  "inputSnapshotNoHindsightResult": "PASS — exact P1 history/EvidenceVersion/P3 anchors at worldAt; retrieved-after-worldAt evidence excluded; historical reruns reproduce",
+  "unknownStaleConflictingResult": "PASS — typed failures, no UNKNOWN-to-zero, no guessed replacements",
+  "persistence": {
+    "modelVersion": "immutable append-only ModelIR with semantic hash",
+    "run": "immutable exact ModelVersion/InputSnapshot/worldAt/engine/result/check/hash proof",
+    "scenario": "immutable explicit override revisions",
+    "sensitivity": "immutable parent/cell coordinates with exact Run IDs",
+    "artifactBindingProjection": "append-only binding versions and projection history"
+  },
+  "semanticHashes": "Canonical serialization produces deterministic model, input, scenario, sensitivity and result hashes independent of object insertion order and database identity",
+  "p3InputBindings": "Exact DocumentVersion, SpreadsheetIR node/anchor hash, value selector and Model InputNode",
+  "p3OutputBindings": "Exact DocumentVersion, OutputNode, anchor hash and explicit comparison policy",
+  "artifactProjectionResult": "PASS — compiles P3 typed ArtifactPatch with exact base precondition and crash-idempotent append-only DocumentVersion",
+  "p4ExcelComparisonResult": "PASS for local fixture policies (exact, rounded, absolute/relative tolerance, stale and mismatch); live provider parity is external and blocked separately",
+  "frontendUnderwritingWorkspace": "Authenticated truthful model/run/scenario/sensitivity/lineage/P3 projection/Excel-comparison workspace",
+  "architecture": {
+    "package": "@finnor/underwriting",
+    "onlyRuntimeDependency": "decimal.js@^10.6.0",
+    "importDirection": "PASS",
+    "noDatabaseExcelNetworkLlmOrDynamicCodeInCore": true,
+    "jsNumericUseClassifications": [
+      "Number(match[1..3]) parses bounded YYYY-MM-DD integer fields only",
+      "Number(exponent) parses a bounded decimal exponent only",
+      "Decimal#toFixed canonicalizes arbitrary-precision Decimal values; it is not Number#toFixed"
+    ],
+    "routeAndFrontendFiles": [
+      "apps/api/app/api/investment-cases/[id]/underwriting/route.ts",
+      "apps/api/app/api/underwriting/models/route.ts",
+      "apps/api/app/api/underwriting/models/[id]/versions/route.ts",
+      "apps/api/app/api/underwriting/scenarios/route.ts",
+      "apps/api/app/api/underwriting/runs/route.ts",
+      "apps/api/app/api/underwriting/runs/[id]/route.ts",
+      "apps/api/app/api/underwriting/runs/[id]/explain/route.ts",
+      "apps/api/app/api/underwriting/runs/diff/route.ts",
+      "apps/api/app/api/underwriting/model-versions/[id]/affected/route.ts",
+      "apps/api/app/api/underwriting/model-versions/diff/route.ts",
+      "apps/api/app/api/underwriting/sensitivities/route.ts",
+      "apps/api/app/api/underwriting/sensitivities/[id]/route.ts",
+      "apps/api/app/api/underwriting/artifact-bindings/route.ts",
+      "apps/api/app/api/underwriting/projections/route.ts",
+      "apps/api/app/api/underwriting/comparisons/route.ts",
+      "apps/console/app/underwriting/page.tsx",
+      "apps/console/app/underwriting/[id]/page.tsx",
+      "apps/console/components/underwriting/WorkspaceClient.tsx"
+    ],
+    "telemetryMetricCount": 18,
+    "telemetryMetrics": [
+      "underwriting_runs_total",
+      "underwriting_run_latency",
+      "underwriting_run_failures",
+      "underwriting_invalid_runs",
+      "underwriting_missing_inputs",
+      "underwriting_conflicting_inputs",
+      "underwriting_stale_inputs",
+      "underwriting_model_compile_failures",
+      "underwriting_model_nodes",
+      "underwriting_solver_iterations",
+      "underwriting_solver_nonconvergence",
+      "underwriting_sensitivity_runs",
+      "underwriting_sensitivity_cells",
+      "underwriting_sensitivity_failures",
+      "underwriting_artifact_projections",
+      "underwriting_artifact_mismatches",
+      "underwriting_excel_stale_comparisons",
+      "underwriting_result_hash_mismatches"
+    ]
+  },
+  "packagesCreated": [
+    "@finnor/underwriting"
+  ],
+  "filesMateriallyChanged": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "openapi.json",
+    "packages/db/migration-head.ts",
+    "packages/db/migrations-bundle.ts",
+    "packages/db/schema.ts",
+    "packages/private-equity/src/index.ts",
+    "packages/private-equity/src/underwriting-repository.ts",
+    "packages/private-equity/src/underwriting-artifacts.ts",
+    "packages/private-equity/src/underwriting-telemetry.ts",
+    "scripts/generate-openapi.ts",
+    "apps/api/lib/underwriting.ts",
+    "apps/console/lib/underwriting.ts"
+  ],
+  "migrationsAdded": [
+    "0126_pe_underwriting_runtime.sql"
+  ],
+  "currentMigrationCount": 124,
+  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
+  "jobTypesAdded": [],
+  "jobTypesReused": [
+    "P3 artifact operation/publication and existing durable queue paths"
+  ],
+  "apiRoutesAdded": [
+    "apps/api/app/api/investment-cases/[id]/underwriting/route.ts",
+    "apps/api/app/api/underwriting/models/route.ts",
+    "apps/api/app/api/underwriting/models/[id]/versions/route.ts",
+    "apps/api/app/api/underwriting/scenarios/route.ts",
+    "apps/api/app/api/underwriting/runs/route.ts",
+    "apps/api/app/api/underwriting/runs/[id]/route.ts",
+    "apps/api/app/api/underwriting/runs/[id]/explain/route.ts",
+    "apps/api/app/api/underwriting/runs/diff/route.ts",
+    "apps/api/app/api/underwriting/model-versions/[id]/affected/route.ts",
+    "apps/api/app/api/underwriting/model-versions/diff/route.ts",
+    "apps/api/app/api/underwriting/sensitivities/route.ts",
+    "apps/api/app/api/underwriting/sensitivities/[id]/route.ts",
+    "apps/api/app/api/underwriting/artifact-bindings/route.ts",
+    "apps/api/app/api/underwriting/projections/route.ts",
+    "apps/api/app/api/underwriting/comparisons/route.ts"
+  ],
+  "dependenciesAdded": [
+    "decimal.js@^10.6.0"
+  ],
+  "hardLimits": {
+    "modelNodes": 10000,
+    "forecastPeriods": 240,
+    "debtTranches": 32,
+    "scenarioOverrides": 100,
+    "sensitivityCells": 2500,
+    "solverIterations": 200,
+    "expressionDepth": 64,
+    "modelBytes": 5242880,
+    "resultBytes": 10485760,
+    "provenanceRefsPerInput": 32
+  },
+  "benchmarkRationale": "Release guardrails are deliberately above measured local latencies to catch order-of-magnitude regressions while tolerating CI variance; the exact measurements and thresholds are captured in command evidence.",
+  "goldenCorpus": {
+    "status": "PASS",
+    "independentlyAuthoredCases": 20,
+    "path": "tests/underwriting-corpus/golden-cases.ts",
+    "coveredBy": "commands.p4Unit"
+  },
+  "failureCensus": [
+    {
+      "failure": "missing model",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "missing model version",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "model semantic hash mismatch",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "duplicate node",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "missing dependency",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "unit mismatch",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "currency mismatch",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "undeclared cycle",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "invalid solver block",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "non-convergence",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "missing required input",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "UNKNOWN input",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "STALE forbidden input",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "CONFLICTING input",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "invalid decimal",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "oversized decimal",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "invalid period",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "period explosion",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "divide by zero",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "Sources/Uses imbalance",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "negative impossible debt",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "revolver exhaustion",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "liquidity shortfall",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "debt maturity unsupported",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "ownership mismatch",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "exit metric missing",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "MOIC undefined",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "IRR undefined",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "IRR ambiguous",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "scenario invalid target",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "scenario oversized",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "sensitivity oversized",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "sensitivity partial failure",
+      "status": "PASS",
+      "evidence": "commands.p4Unit + commands.propertyFuzz"
+    },
+    {
+      "failure": "cross-tenant Assumption",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "cross-tenant Evidence",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "cross-tenant ArtifactAnchor",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "stale ArtifactAnchor",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "stale DocumentVersion",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "P3 patch conflict",
+      "status": "PASS",
+      "evidence": "commands.p4Integration + commands.p3Regression"
+    },
+    {
+      "failure": "Excel stale",
+      "status": "PASS",
+      "evidence": "commands.p4Integration + commands.p3Regression"
+    },
+    {
+      "failure": "Excel mismatch",
+      "status": "PASS",
+      "evidence": "commands.p4Integration + commands.p3Regression"
+    },
+    {
+      "failure": "DB crash",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    },
+    {
+      "failure": "queue replay",
+      "status": "NOT_APPLICABLE_DIRECT_EXECUTION",
+      "evidence": "NOT_APPLICABLE_DIRECT_EXECUTION + commands.coreRegression"
+    },
+    {
+      "failure": "duplicate retry",
+      "status": "PASS",
+      "evidence": "commands.p4Integration"
+    }
+  ],
+  "databaseInvariants": {
+    "migration": {
+      "count": 124,
+      "head": "0126_pe_underwriting_runtime.sql"
+    },
+    "tables": [
+      "underwriting_models",
+      "underwriting_model_versions",
+      "underwriting_model_input_bindings",
+      "underwriting_scenarios",
+      "underwriting_runs",
+      "underwriting_sensitivities",
+      "underwriting_sensitivity_cells",
+      "underwriting_artifact_bindings",
+      "underwriting_artifact_projections"
+    ],
+    "rlsTables": [
+      "underwriting_artifact_bindings",
+      "underwriting_artifact_projections",
+      "underwriting_model_input_bindings",
+      "underwriting_model_versions",
+      "underwriting_models",
+      "underwriting_runs",
+      "underwriting_scenarios",
+      "underwriting_sensitivities",
+      "underwriting_sensitivity_cells"
+    ],
+    "immutableHistoryTables": [
+      "underwriting_artifact_bindings",
+      "underwriting_artifact_projections",
+      "underwriting_model_input_bindings",
+      "underwriting_model_versions",
+      "underwriting_models",
+      "underwriting_runs",
+      "underwriting_scenarios",
+      "underwriting_sensitivities",
+      "underwriting_sensitivity_cells"
+    ],
+    "identityGuards": [
+      "underwriting_artifact_binding_guard",
+      "underwriting_input_binding_guard",
+      "underwriting_model_version_guard",
+      "underwriting_projection_guard",
+      "underwriting_run_identity_guard",
+      "underwriting_scenario_identity_guard"
+    ],
+    "privileges": [
+      {
+        "table": "underwriting_models",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_model_versions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_model_input_bindings",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_scenarios",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_runs",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_sensitivities",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_sensitivity_cells",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_artifact_bindings",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "underwriting_artifact_projections",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      }
+    ],
+    "freshRows": [
+      {
+        "table": "underwriting_models",
+        "count": 0
+      },
+      {
+        "table": "underwriting_model_versions",
+        "count": 0
+      },
+      {
+        "table": "underwriting_model_input_bindings",
+        "count": 0
+      },
+      {
+        "table": "underwriting_scenarios",
+        "count": 0
+      },
+      {
+        "table": "underwriting_runs",
+        "count": 0
+      },
+      {
+        "table": "underwriting_sensitivities",
+        "count": 0
+      },
+      {
+        "table": "underwriting_sensitivity_cells",
+        "count": 0
+      },
+      {
+        "table": "underwriting_artifact_bindings",
+        "count": 0
+      },
+      {
+        "table": "underwriting_artifact_projections",
+        "count": 0
+      }
+    ],
+    "duplicateCanonicalOwners": 0,
+    "comments": [
+      {
+        "relname": "underwriting_artifact_bindings",
+        "comment": "Thin P4 model-node to exact P3 SpreadsheetIR anchor mapping; P3 retains artifact ownership."
+      },
+      {
+        "relname": "underwriting_model_versions",
+        "comment": "Immutable executable P4 ModelIR versions; absent from canonical_truth_registry by design."
+      },
+      {
+        "relname": "underwriting_models",
+        "comment": "P4 logical deterministic model attached to the P1 InvestmentCase; not a duplicate canonical case."
+      },
+      {
+        "relname": "underwriting_runs",
+        "comment": "Immutable deterministic calculation proof; not a P1 Decision or Core DecisionReceipt."
+      }
+    ],
+    "foreignKeyCount": 22
+  },
+  "commands": {
+    "migrationBundle": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 233,
+      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "outputLineCount": 1,
+      "summary": "bundled 124 migrations"
+    },
+    "openapi": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1533,
+      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "outputLineCount": 1,
+      "summary": "Generated openapi.json with 57 active/quarantine paths."
+    },
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 23074,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "authzMatrix": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 624,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "releaseBoundary": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4909,
+      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "outputLineCount": 1,
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+    },
+    "p4Unit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-core.test.ts tests/unit/underwriting-golden.test.ts tests/unit/underwriting-failures.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 6547,
+      "outputHash": "3ac609d17e8a4084b205572ede2ab3cd975e55963775d5776e71eb097f15574b",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ········································· |  Test Files  3 passed (3) |       Tests  41 passed (41) |    Start at  20:25:54 |    Duration  5.77s (transform 770ms, setup 150ms, import 1.07s, tests 3.84s, environment 0ms)",
+      "testsPassed": 41,
+      "testFilesPassed": 3
+    },
+    "propertyFuzz": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-property.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 6503,
+      "outputHash": "23810053299c2b62421755044847cc6f5bf1c088432b8bee28b09f0d1dd57587",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ········· |  Test Files  1 passed (1) |       Tests  9 passed (9) |    Start at  20:25:54 |    Duration  5.74s (transform 728ms, setup 83ms, import 830ms, tests 4.53s, environment 0ms)",
+      "testsPassed": 9,
+      "testFilesPassed": 1
+    },
+    "apiFrontendContract": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-api-frontend-contract.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7349,
+      "outputHash": "9c84b58ba8a496a74deeaa8f31a6406e5e006fbae0cf62072f3c8dca48d132a0",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ·········· |  Test Files  1 passed (1) |       Tests  10 passed (10) |    Start at  20:25:54 |    Duration  6.57s (transform 3.29s, setup 84ms, import 6.14s, tests 31ms, environment 0ms)",
+      "testsPassed": 10,
+      "testFilesPassed": 1
+    },
+    "fullUnit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 86031,
+      "outputHash": "f92e0a46cd4baa643c58a0647c7faa0610bc47121ca4e4123ee92c8c6b01be28",
+      "outputLineCount": 26,
+      "summary": "[web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:25:54 |    Duration  85.22s (transform 4.64s, setup 1.62s, import 51.82s, tests 20.91s, environment 9ms)",
+      "testsPassed": 520,
+      "testFilesPassed": 95
+    },
+    "performance": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/performance/underwriting-performance.test.ts --reporter=verbose --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 13329,
+      "outputHash": "e68a9f9c5573a33e75ee417181e1a151956ca2fdd7e5c23ef2352a8076231516",
+      "outputLineCount": 18,
+      "summary": "stdout | tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits | P4_PURE_BENCHMARK {\"metrics\":{\"compileMeanMs\":1.7120146000000005,\"singleRunMeanMs\":4.419425000000001,\"debtScheduleMeanMs\":4.3048832999999975,\"circularSolverMeanMs\":4.843435399999999,\"sensitivity100Ms\":501.183041,\"sensitivity2500Ms\":11806.9675,\"serializationHash100Ms\":67.48579199999949},\"guardrails\":{\"compileMeanMs\":100,\"singleRunMeanMs\":250,\"debtScheduleMeanMs\":250,\"circularSolverMeanMs\":500,\"sensitivity100Ms\":10000,\"sensitivity2500Ms\":60000,\"serializationHash100Ms\":5000}} |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > compiles a standard ModelIR inside the measured release guardrail 1ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes one standard LBO independently of DB, Excel, network or LLM inside the guardrail 1ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the multi-tranche debt schedule inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the bounded average-balance circular solver inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes exactly 100 sensitivity cells inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the exact 2,500-cell maximum inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > canonically serializes and hashes 100 complete results inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > freezes and enforces the certified model, period, debt, scenario, sensitivity, solver and payload ceilings 1ms |  Test Files  1 passed (1) |       Tests  8 passed (8) |    Start at  20:27:19 |    Duration  13.03s (transform 133ms, setup 35ms, import 147ms, tests 12.74s, environment 0ms)",
+      "testsPassed": 8,
+      "testFilesPassed": 1,
+      "benchmark": {
+        "1": {
+          "metrics": {
+            "compileMeanMs": 1.7120146000000005,
+            "singleRunMeanMs": 4.419425000000001,
+            "debtScheduleMeanMs": 4.3048832999999975,
+            "circularSolverMeanMs": 4.843435399999999,
+            "sensitivity100Ms": 501.183041,
+            "sensitivity2500Ms": 11806.9675,
+            "serializationHash100Ms": 67.48579199999949
+          },
+          "guardrails": {
+            "compileMeanMs": 100,
+            "singleRunMeanMs": 250,
+            "debtScheduleMeanMs": 250,
+            "circularSolverMeanMs": 500,
+            "sensitivity100Ms": 10000,
+            "sensitivity2500Ms": 60000,
+            "serializationHash100Ms": 5000
+          }
+        }
+      }
+    },
+    "freshMigration": {
+      "command": "embedded-postgres + migrate(all disk migrations) + inspectFreshDatabase",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 2179,
+      "outputHash": "3c6d28bf81847ab227a4fe6bf586267e5ca5144724d4f2b206940787074f05c1",
+      "outputLineCount": 1,
+      "summary": "124 migrations; 9 forced-RLS immutable P4 tables; zero fabricated rows"
+    },
+    "p4Integration": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-underwriting.test.ts --reporter=verbose --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4455,
+      "outputHash": "4f168a4b47973cbffd111226fe1d3cb9b8072fffcb42f083ca9f4b4034436d67",
+      "outputLineCount": 21,
+      "summary": " ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > reproduces an old world exactly after P1 truth changes and fails closed on an obsolete exact binding 1ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > keeps scenarios and sensitivity cells immutable, coherent, and pinned to exact Runs 8ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > uses exact SpreadsheetIR anchors, exposes mismatch, and recovers a P3-operation/P4-projection crash boundary 0ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces FORCE RLS and tenant isolation on every P4 tenant relation 620ms | stdout | tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows | P4_INTEGRATION_BENCHMARK {\"runServiceLatencyMs\":32.82941699999992,\"persistenceLatencyMs\":7.167374999999993,\"artifactProjectionLatencyMs\":90.29358400000001} |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces database immutability on every P4 relation 6ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows 29ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > provides deterministic explanations, diffs, and bounded audit events 37ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects exact cross-tenant P1 Assumption, EvidenceVersion, and P3 bindings at service/database boundaries 35ms |  Test Files  1 passed (1) |       Tests  11 passed (11) |    Start at  20:27:35 |    Duration  4.15s (transform 1.10s, setup 76ms, import 2.47s, tests 1.50s, environment 0ms)",
+      "testsPassed": 11,
+      "testFilesPassed": 1,
+      "benchmark": {
+        "1": {
+          "runServiceLatencyMs": 32.82941699999992,
+          "persistenceLatencyMs": 7.167374999999993,
+          "artifactProjectionLatencyMs": 90.29358400000001
+        }
+      }
+    },
+    "p4Upgrade": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-upgrade.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 5430,
+      "outputHash": "ca71cae612a9d3a6245ddbc2eef5bb92e95b6be89777e046eae9afdb5ddf8328",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  20:27:39 |    Duration  5.13s (transform 1.28s, setup 76ms, import 2.53s, tests 2.42s, environment 0ms)",
+      "testsPassed": 3,
+      "testFilesPassed": 1
+    },
+    "p3Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/artifact-os.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4513,
+      "outputHash": "5a9797f3095f7763c168b5c67a56e6a6c282c3cfd4eed7dd5b71378f5f3a04f5",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ············· |  Test Files  1 passed (1) |       Tests  13 passed (13) |    Start at  20:27:45 |    Duration  4.21s (transform 1.08s, setup 76ms, import 2.13s, tests 1.89s, environment 0ms)",
+      "testsPassed": 13,
+      "testFilesPassed": 1
+    },
+    "p2Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 9649,
+      "outputHash": "ff94e7e2c2ee0785c08e56c255f58ddf277017f325e1005f5cdfa8ddd994db28",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  20:27:49 |    Duration  9.35s (transform 1.14s, setup 303ms, import 5.40s, tests 3.11s, environment 0ms)",
+      "testsPassed": 33,
+      "testFilesPassed": 5
+    },
+    "p1Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7815,
+      "outputHash": "4fe6f170ed7bdf4d846b1d7460bf5530e4e90fa8ebf072685867173d5072bfb7",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:27:59 |    Duration  7.51s (transform 1.38s, setup 209ms, import 3.64s, tests 3.32s, environment 0ms)",
+      "testsPassed": 17,
+      "testFilesPassed": 3
+    },
+    "historicalPeRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 17451,
+      "outputHash": "61275b59b7029db33ca33a4372e8655f08a9c7880c344f5cf3c0ff384cc3a853",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  20:28:07 |    Duration  17.11s (transform 1.60s, setup 302ms, import 7.92s, tests 8.35s, environment 0ms)",
+      "testsPassed": 24,
+      "testFilesPassed": 5
+    },
+    "coreRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/actions-pending-receipts.test.ts tests/integration/decision-receipts.test.ts tests/integration/computer-execution-fabric.test.ts tests/integration/evidence-corpus.test.ts tests/integration/work-cases.test.ts tests/integration/queue.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 11602,
+      "outputHash": "1f26bca75f16aba17ba96805a930e7fc087f524fe8f146f885e5802a2eedb21f",
+      "outputLineCount": 10,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | (node:43312) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ········································· |  Test Files  6 passed (6) |       Tests  41 passed (41) |    Start at  20:28:24 |    Duration  11.31s (transform 902ms, setup 357ms, import 5.89s, tests 4.42s, environment 0ms)",
+      "testsPassed": 41,
+      "testFilesPassed": 6
+    }
+  },
+  "mandatoryCases": [
+    {
+      "number": 1,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 1,
+      "name": "P1 canonical PE world and three-root ownership remain available.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 2,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 2,
+      "name": "P1 temporal state_at and no-hindsight Evidence semantics remain available.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 3,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 3,
+      "name": "P2 Microsoft source identity, coverage, delta and reconciliation remain one system.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 4,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 4,
+      "name": "P3 immutable DocumentVersion, SpreadsheetIR and publication truth remain available.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 5,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 5,
+      "name": "P1 InvestmentCase remains the sole canonical PE business context.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 6,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 6,
+      "name": "P1 Assumption remains the sole canonical PE business assumption owner.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 7,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 7,
+      "name": "Core Document and P3 DocumentVersion remain the artifact owners.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 8,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 8,
+      "name": "Core Evidence and EvidenceVersion remain the evidence owners.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 9,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 9,
+      "name": "Core Work, BusinessEvent, Authority and DecisionReceipt remain their sole owners.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 10,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 10,
+      "name": "Historical private-equity Phase 4 action/governance code is not underwriting certification.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 11,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 11,
+      "name": "The pure underwriting package obeys its architectural import boundary.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 12,
+      "category": "prerequisite_ownership",
+      "categoryNumber": 12,
+      "name": "No P5 IC semantics, P6 planner actions, P7 workforce or AWS compute expansion was added.",
+      "status": "PASS",
+      "evidence": [
+        "prerequisites",
+        "architecture",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 13,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 1,
+      "name": "Canonical financial values use exact base-10 decimal strings.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 14,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 2,
+      "name": "Locale, currency-symbol, percent-symbol and scaled display strings are rejected by the core.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 15,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 3,
+      "name": "The decimal runtime freezes 34 significant digits.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 16,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 4,
+      "name": "The decimal runtime freezes ROUND_HALF_EVEN.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 17,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 5,
+      "name": "Extreme decimal exponents are bounded and rejected.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 18,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 6,
+      "name": "NaN and positive/negative Infinity cannot enter an InputSnapshot or result.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 19,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 7,
+      "name": "Exact zero remains distinct from missing, null and UNKNOWN.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 20,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 8,
+      "name": "Canonical serialization is independent of object insertion order.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 21,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 9,
+      "name": "Canonical semantic hashing is stable across equivalent object orderings.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 22,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 10,
+      "name": "Money nodes require explicit currency identity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 23,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 11,
+      "name": "Rates are exact fractions and never ambiguous percentages.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 24,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 12,
+      "name": "Multiple, ratio, rate, money, count, date, period, boolean and text units remain distinct.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 25,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 13,
+      "name": "Unit-incompatible arithmetic fails model compilation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 26,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 14,
+      "name": "Currency-incompatible arithmetic fails without silent FX conversion.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 27,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 15,
+      "name": "Series values retain stable exact period IDs and ordering.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 28,
+      "category": "decimal_unit_serialization",
+      "categoryNumber": 16,
+      "name": "Input and result canonical payloads persist exact decimal strings rather than JSON floats.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 29,
+      "category": "model_ir_compiler",
+      "categoryNumber": 1,
+      "name": "UnderwritingModelIR pins schema, model, convention and minimum engine versions.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 30,
+      "category": "model_ir_compiler",
+      "categoryNumber": 2,
+      "name": "Every model node has a stable deterministic ID.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 31,
+      "category": "model_ir_compiler",
+      "categoryNumber": 3,
+      "name": "Input, Constant, Expression, Series, Schedule, Aggregate, Check and Output node kinds are supported.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 32,
+      "category": "model_ir_compiler",
+      "categoryNumber": 4,
+      "name": "Duplicate model node IDs fail compilation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 33,
+      "category": "model_ir_compiler",
+      "categoryNumber": 5,
+      "name": "Every declared dependency must exist.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 34,
+      "category": "model_ir_compiler",
+      "categoryNumber": 6,
+      "name": "Value-type compatibility is validated before execution.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 35,
+      "category": "model_ir_compiler",
+      "categoryNumber": 7,
+      "name": "Unit compatibility is validated before execution.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 36,
+      "category": "model_ir_compiler",
+      "categoryNumber": 8,
+      "name": "Currency compatibility is validated before execution.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 37,
+      "category": "model_ir_compiler",
+      "categoryNumber": 9,
+      "name": "Period and series-shape compatibility are validated before execution.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 38,
+      "category": "model_ir_compiler",
+      "categoryNumber": 10,
+      "name": "Compiler output has a stable deterministic execution order.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 39,
+      "category": "model_ir_compiler",
+      "categoryNumber": 11,
+      "name": "Undeclared ordinary dependency cycles fail compilation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 40,
+      "category": "model_ir_compiler",
+      "categoryNumber": 12,
+      "name": "Declared circular blocks require exact membership and iteration order.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 41,
+      "category": "model_ir_compiler",
+      "categoryNumber": 13,
+      "name": "Circular solver tolerances and iteration ceilings are compile-time validated.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 42,
+      "category": "model_ir_compiler",
+      "categoryNumber": 14,
+      "name": "Expression AST depth and supported operations are bounded.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 43,
+      "category": "model_ir_compiler",
+      "categoryNumber": 15,
+      "name": "Model execution cannot use eval, Function, dynamic import, shell, network or user code.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 44,
+      "category": "model_ir_compiler",
+      "categoryNumber": 16,
+      "name": "Model node count and canonical ModelVersion byte size are enforced.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 45,
+      "category": "model_ir_compiler",
+      "categoryNumber": 17,
+      "name": "Model semantic hash excludes database IDs, timestamps and row order.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 46,
+      "category": "model_ir_compiler",
+      "categoryNumber": 18,
+      "name": "ModelVersion diff reports node, dependency, unit, policy, solver, check and convention changes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "architecture"
+      ]
+    },
+    {
+      "number": 47,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 1,
+      "name": "A model input binds to an exact P1 Assumption ID rather than a fuzzy name.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 48,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 2,
+      "name": "The InputSnapshot pins the exact canonical Assumption history version used.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 49,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 3,
+      "name": "A factual input pins an exact EvidenceVersion and value path.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 50,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 4,
+      "name": "Evidence retrieved after worldAt is excluded even when its asOf predates worldAt.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 51,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 5,
+      "name": "Evidence with eligible asOf and retrievedAt is available at worldAt.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 52,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 6,
+      "name": "A spreadsheet input pins exact DocumentVersion, ArtifactAnchor and anchor hash.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 53,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 7,
+      "name": "Formula/cached spreadsheet inputs obey P3 calculation status rather than becoming facts.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 54,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 8,
+      "name": "Every resolved input carries an explicit financial truth class.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 55,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 9,
+      "name": "A required UNKNOWN input fails closed with UNKNOWN_INPUT.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 56,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 10,
+      "name": "A required STALE input fails closed by default.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 57,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 11,
+      "name": "STALE is allowed only by the exact InputNode policy and remains labeled STALE.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 58,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 12,
+      "name": "A required CONFLICTING input fails closed without choosing a value.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 59,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 13,
+      "name": "Missing input never silently coerces to exact zero.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 60,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 14,
+      "name": "Input policy enforces allowed truth classes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 61,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 15,
+      "name": "Input policy enforces exact range bounds without inventing PE judgment.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 62,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 16,
+      "name": "Every Run distinguishes historical worldAt from current computedAt.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 63,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 17,
+      "name": "An old worldAt Run reproduces exactly after current P1 Assumptions change.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 64,
+      "category": "truth_input_no_hindsight",
+      "categoryNumber": 18,
+      "name": "An obsolete exact Assumption binding fails rather than guessing a replacement revision.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 65,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 1,
+      "name": "Entry valuation date is an explicit typed input.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 66,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 2,
+      "name": "Metric-times-entry-multiple valuation is explicit and deterministic.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 67,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 3,
+      "name": "Direct enterprise-value entry is an explicit alternative method.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 68,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 4,
+      "name": "Entry enterprise value and purchase equity value remain distinct.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 69,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 5,
+      "name": "Cash acquired is included exactly once in the entry equity bridge.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 70,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 6,
+      "name": "Existing debt refinancing is a distinct Use.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 71,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 7,
+      "name": "Other debt-like items are explicit and never hidden in net debt.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 72,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 8,
+      "name": "Transaction fees are explicit Uses.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 73,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 9,
+      "name": "Financing fees are explicit Uses.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 74,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 10,
+      "name": "Minimum-cash funding is an explicit Use.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 75,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 11,
+      "name": "Rollover equity is an explicit Source and sponsor-equity reduction.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 76,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 12,
+      "name": "Seller-note financing is an explicit debt Source when configured.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 77,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 13,
+      "name": "Sponsor equity is a deterministic named plug.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 78,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 14,
+      "name": "Total Uses is the exact sum of declared Use components.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 79,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 15,
+      "name": "Total Sources is the exact sum of debt, rollover and sponsor Sources.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 80,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 16,
+      "name": "Sources equals Uses within the declared exact tolerance.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 81,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 17,
+      "name": "No unexplained miscellaneous Source or Use is created.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 82,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 18,
+      "name": "Underfunded Sources/Uses produces a mandatory failed Check.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 83,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 19,
+      "name": "Overfunded Sources/Uses produces a mandatory failed Check.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 84,
+      "category": "transaction_sources_uses",
+      "categoryNumber": 20,
+      "name": "Transaction and Sources/Uses outputs retain exact dependency lineage.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 85,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 1,
+      "name": "Annual financial periods have stable IDs, dates, ordinals and fiscal labels.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 86,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 2,
+      "name": "Quarterly financial periods have stable IDs, dates, ordinals and fiscal labels.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 87,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 3,
+      "name": "Monthly financial periods have stable IDs, dates, ordinals and fiscal labels.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 88,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 4,
+      "name": "Revenue supports an explicit forecast series.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 89,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 5,
+      "name": "Revenue supports deterministic prior-period growth.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 90,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 6,
+      "name": "Missing required future revenue fails rather than extrapolating or using zero.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 91,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 7,
+      "name": "EBITDA supports an explicit forecast series.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 92,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 8,
+      "name": "EBITDA supports deterministic Revenue-times-margin derivation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 93,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 9,
+      "name": "ModelVersion explicitly chooses EBITDA precedence and never silently accepts both methods.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 94,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 10,
+      "name": "Explicit D&A produces EBIT equal to EBITDA less D&A.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 95,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 11,
+      "name": "The declared EBITDA-equals-EBIT convention omits D&A without fabricating it.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 96,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 12,
+      "name": "Capex supports an explicit series.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 97,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 13,
+      "name": "Capex supports a deterministic percentage-of-revenue driver.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 98,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 14,
+      "name": "Capex cash-use sign convention remains explicit.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 99,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 15,
+      "name": "Working capital supports an explicit NWC series.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 100,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 16,
+      "name": "Working capital supports a deterministic percentage-of-revenue driver.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 101,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 17,
+      "name": "Change in NWC uses an explicit cash-flow sign convention.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 102,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 18,
+      "name": "Cash tax uses positive taxable income and an exact zero floor.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 103,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 19,
+      "name": "Unsupported NOL and complex tax behavior is classified rather than approximated.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 104,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 20,
+      "name": "Unlevered FCF is a distinct deterministic bridge.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 105,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 21,
+      "name": "Levered FCF and cash available for sweep remain distinct outputs.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 106,
+      "category": "operating_forecast_fcf",
+      "categoryNumber": 22,
+      "name": "Operating forecast and FCF outputs retain exact upstream dependency lineage.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 107,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 1,
+      "name": "Each DebtTranche has stable ID, name, seniority and sweep priority.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 108,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 2,
+      "name": "Fixed-rate debt uses its exact declared fixed rate.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 109,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 3,
+      "name": "Floating-rate debt consumes an exact base-rate curve plus spread.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 110,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 4,
+      "name": "Floating-rate floors are applied before adding the spread.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 111,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 5,
+      "name": "Base-rate curves require exact input provenance and are never fetched by the core.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 112,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 6,
+      "name": "Beginning-balance cash-interest basis is supported explicitly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 113,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 7,
+      "name": "Average-balance cash-interest basis is supported explicitly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 114,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 8,
+      "name": "Average-balance interest circularity exists only in a declared solver block.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 115,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 9,
+      "name": "Circular solver initial state is explicit and deterministic.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 116,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 10,
+      "name": "Circular solver iteration order, tolerances and maximum iterations are frozen.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 117,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 11,
+      "name": "Circular non-convergence returns NON_CONVERGENT and never the last iteration as verified.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 118,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 12,
+      "name": "Cash interest and PIK interest remain separate outputs.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 119,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 13,
+      "name": "PIK interest capitalizes into ending principal.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 120,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 14,
+      "name": "Opening plus draws plus PIK less repayments equals ending debt.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 121,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 15,
+      "name": "Mandatory amortization supports percentage of original principal.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 122,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 16,
+      "name": "Mandatory amortization supports an explicit amount series.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 123,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 17,
+      "name": "Applied amortization clamps only to outstanding principal and exposes the applied amount.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 124,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 18,
+      "name": "Ending debt principal cannot be negative.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 125,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 19,
+      "name": "Revolver opening principal and commitment are explicit.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 126,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 20,
+      "name": "Revolver draw restores the declared minimum-cash balance when capacity permits.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 127,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 21,
+      "name": "Revolver paydown is explicit and cannot exceed principal.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 128,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 22,
+      "name": "Ending revolver balance cannot exceed commitment.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 129,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 23,
+      "name": "Required draw above commitment returns LIQUIDITY_SHORTFALL.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 130,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 24,
+      "name": "Revolver overflow is surfaced as an exact typed failure/check.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 131,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 25,
+      "name": "Cash sweep uses only exact available cash above the minimum reserve.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 132,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 26,
+      "name": "Cash sweep percentage is explicit and bounded.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 133,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 27,
+      "name": "Cash sweep follows configured seniority/priority waterfall.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 134,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 28,
+      "name": "No debt paydown exceeds outstanding principal.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 135,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 29,
+      "name": "Debt at maturity follows explicit mandatory-repayment treatment.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 136,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 30,
+      "name": "Unsupported maturity/refinancing behavior fails honestly.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 137,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 31,
+      "name": "Multiple fixed/floating/cash/PIK/revolver tranches coexist deterministically.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 138,
+      "category": "debt_revolver_interest_circularity",
+      "categoryNumber": 32,
+      "name": "Debt roll-forward, capacity, cash, sweep, rate and maturity checks are all mandatory.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 139,
+      "category": "exit_returns_irr",
+      "categoryNumber": 1,
+      "name": "Exit period and its exact date are explicit.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 140,
+      "category": "exit_returns_irr",
+      "categoryNumber": 2,
+      "name": "Exit metric value is an exact deterministic input or derived output.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 141,
+      "category": "exit_returns_irr",
+      "categoryNumber": 3,
+      "name": "Exit multiple is an explicit exact input.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 142,
+      "category": "exit_returns_irr",
+      "categoryNumber": 4,
+      "name": "Exit enterprise value equals exit metric times exit multiple.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 143,
+      "category": "exit_returns_irr",
+      "categoryNumber": 5,
+      "name": "Exit debt uses the exact ending debt schedule.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 144,
+      "category": "exit_returns_irr",
+      "categoryNumber": 6,
+      "name": "Exit cash uses the exact ending cash schedule.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 145,
+      "category": "exit_returns_irr",
+      "categoryNumber": 7,
+      "name": "Exit net debt is distinct from enterprise and equity value.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 146,
+      "category": "exit_returns_irr",
+      "categoryNumber": 8,
+      "name": "Exit adjustments are explicit and source-traceable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 147,
+      "category": "exit_returns_irr",
+      "categoryNumber": 9,
+      "name": "Exit equity value reconciles EV less debt plus cash and adjustments.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 148,
+      "category": "exit_returns_irr",
+      "categoryNumber": 10,
+      "name": "Sponsor proceeds apply exact sponsor ownership rather than assuming 100 percent.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 149,
+      "category": "exit_returns_irr",
+      "categoryNumber": 11,
+      "name": "Modeled ownership must reconcile to 100 percent where required.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 150,
+      "category": "exit_returns_irr",
+      "categoryNumber": 12,
+      "name": "Sponsor cash-flow timeline pins exact amount, date, period and flow type.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 151,
+      "category": "exit_returns_irr",
+      "categoryNumber": 13,
+      "name": "Interim sponsor distributions remain explicit and are not buried in exit proceeds.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 152,
+      "category": "exit_returns_irr",
+      "categoryNumber": 14,
+      "name": "Gross sponsor MOIC equals positive distributions divided by absolute invested capital.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 153,
+      "category": "exit_returns_irr",
+      "categoryNumber": 15,
+      "name": "Periodic IRR uses a bounded deterministic solver with undefined/ambiguous root truth.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 154,
+      "category": "exit_returns_irr",
+      "categoryNumber": 16,
+      "name": "Dated XIRR uses the frozen ACT/365F convention and irregular dates.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.propertyFuzz",
+        "goldenCorpus"
+      ]
+    },
+    {
+      "number": 155,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 1,
+      "name": "Base execution uses zero hidden scenario overrides.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 156,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 2,
+      "name": "Scenario labels have no financial meaning without exact overrides.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 157,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 3,
+      "name": "Scenario definitions are immutable explicit override sets.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 158,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 4,
+      "name": "Scenario semantic hash is deterministic.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 159,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 5,
+      "name": "Scenario revisions preserve explicit parent identity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 160,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 6,
+      "name": "Scenario targets must be eligible exact InputNodes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 161,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 7,
+      "name": "Scenario application never mutates the sealed base InputSnapshot.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 162,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 8,
+      "name": "Scenario Run pins exact scenario and result semantic hashes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 163,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 9,
+      "name": "Run diff reports exact changed inputs, outputs, checks and scenario identity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 164,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 10,
+      "name": "Affected-node analysis traverses deterministic downstream dependencies without rerunning.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 165,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 11,
+      "name": "One-way sensitivities execute exact axis values.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 166,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 12,
+      "name": "Two-way sensitivities execute exact Cartesian coordinates.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 167,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 13,
+      "name": "Sensitivity axes are generic eligible model InputNodes, not hardcoded buttons.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 168,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 14,
+      "name": "Every sensitivity cell retains exact Run semantic and persisted Run identity.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 169,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 15,
+      "name": "Sensitivity cell row/column ordering is stable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 170,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 16,
+      "name": "A failed sensitivity cell remains in place with exact failure status and no interpolation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 171,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 17,
+      "name": "Sensitivity execution rejects more than 2,500 cells.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 172,
+      "category": "scenario_sensitivity",
+      "categoryNumber": 18,
+      "name": "Sensitivity retries converge without duplicate parent or cell rows.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Unit",
+        "commands.p4Integration",
+        "commands.performance"
+      ]
+    },
+    {
+      "number": 173,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 1,
+      "name": "P4 consumes P3 SpreadsheetIR directly and never reparses XLSX ZIP/XML.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 174,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 2,
+      "name": "P4 input bindings pin exact P3 DocumentVersion, node ID and anchor hash.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 175,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 3,
+      "name": "P4 output bindings pin exact P3 DocumentVersion, OutputNode and anchor hash.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 176,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 4,
+      "name": "Template edits require an append-only binding version and revalidation.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 177,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 5,
+      "name": "Stale or missing ArtifactAnchors fail closed.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 178,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 6,
+      "name": "Projection compiles through P3 typed ArtifactPatch rather than direct workbook bytes.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 179,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 7,
+      "name": "Projection uses an exact base DocumentVersion precondition.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 180,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 8,
+      "name": "Successful projection creates a new immutable P3 DocumentVersion.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 181,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 9,
+      "name": "P3-operation-before-P4-row crash replay converges to one projection.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 182,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 10,
+      "name": "Artifact comparison supports exact-decimal policy.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 183,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 11,
+      "name": "Artifact comparison supports declared rounded-value policy.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 184,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 12,
+      "name": "Artifact comparison supports explicit absolute-tolerance policy.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 185,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 13,
+      "name": "Artifact comparison supports explicit relative-tolerance policy.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 186,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 14,
+      "name": "Stale/uncalculated Excel values are never reported as MATCH.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 187,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 15,
+      "name": "P4-versus-Excel mismatch is retained without overwriting either truth.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 188,
+      "category": "p3_binding_projection_reconciliation",
+      "categoryNumber": 16,
+      "name": "Microsoft publication/recalculation remains exclusively in P3 authority and read-back flow.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 189,
+      "category": "rls_security",
+      "categoryNumber": 1,
+      "name": "Every P4 persistence relation carries tenant_id.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 190,
+      "category": "rls_security",
+      "categoryNumber": 2,
+      "name": "RLS is enabled on every P4 tenant relation.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 191,
+      "category": "rls_security",
+      "categoryNumber": 3,
+      "name": "FORCE RLS is enabled on every P4 tenant relation.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 192,
+      "category": "rls_security",
+      "categoryNumber": 4,
+      "name": "The application role receives only required SELECT/INSERT P4 privileges.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 193,
+      "category": "rls_security",
+      "categoryNumber": 5,
+      "name": "The application role cannot UPDATE immutable P4 history.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 194,
+      "category": "rls_security",
+      "categoryNumber": 6,
+      "name": "The application role cannot DELETE immutable P4 history.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 195,
+      "category": "rls_security",
+      "categoryNumber": 7,
+      "name": "UnderwritingModel and InvestmentCase references must share one tenant.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 196,
+      "category": "rls_security",
+      "categoryNumber": 8,
+      "name": "P1 Assumption bindings must share exact tenant and InvestmentCase root.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 197,
+      "category": "rls_security",
+      "categoryNumber": 9,
+      "name": "Cross-tenant EvidenceVersion bindings are rejected.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 198,
+      "category": "rls_security",
+      "categoryNumber": 10,
+      "name": "Cross-tenant DocumentVersion/ArtifactAnchor bindings are rejected.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 199,
+      "category": "rls_security",
+      "categoryNumber": 11,
+      "name": "Run, Scenario, Sensitivity and ModelVersion composite identities cannot cross tenants.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 200,
+      "category": "rls_security",
+      "categoryNumber": 12,
+      "name": "No underwriting row is registered as a duplicate canonical-world owner.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Integration"
+      ]
+    },
+    {
+      "number": 201,
+      "category": "durability_idempotency",
+      "categoryNumber": 1,
+      "name": "UnderwritingModelVersion rows are immutable after insert.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 202,
+      "category": "durability_idempotency",
+      "categoryNumber": 2,
+      "name": "Final UnderwritingRun rows are immutable after insert.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 203,
+      "category": "durability_idempotency",
+      "categoryNumber": 3,
+      "name": "Run InputSnapshot, outputs, checks, engine and hashes cannot change in place.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 204,
+      "category": "durability_idempotency",
+      "categoryNumber": 4,
+      "name": "UnderwritingScenario rows are immutable revisions.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 205,
+      "category": "durability_idempotency",
+      "categoryNumber": 5,
+      "name": "Sensitivity parent and cell results are immutable and retain Run IDs.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 206,
+      "category": "durability_idempotency",
+      "categoryNumber": 6,
+      "name": "Artifact binding corrections append an incremented binding version.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 207,
+      "category": "durability_idempotency",
+      "categoryNumber": 7,
+      "name": "Artifact projection history is immutable.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 208,
+      "category": "durability_idempotency",
+      "categoryNumber": 8,
+      "name": "A tampered prepared result hash is rejected before any Run row commits.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 209,
+      "category": "durability_idempotency",
+      "categoryNumber": 9,
+      "name": "Failure after calculation before DB commit exposes zero partial completed Run rows.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 210,
+      "category": "durability_idempotency",
+      "categoryNumber": 10,
+      "name": "Retry after Run commit returns the same Run and creates no duplicate.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 211,
+      "category": "durability_idempotency",
+      "categoryNumber": 11,
+      "name": "Sensitivity retry creates no duplicate parent or completed cell.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 212,
+      "category": "durability_idempotency",
+      "categoryNumber": 12,
+      "name": "Underwriting BusinessEvents are bounded metadata and use non-canonical calculation entities.",
+      "status": "PASS",
+      "evidence": [
+        "commands.p4Integration",
+        "commands.p4Upgrade"
+      ]
+    },
+    {
+      "number": 213,
+      "category": "api_frontend_contract",
+      "categoryNumber": 1,
+      "name": "API financial values use strict decimal-string contracts.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 214,
+      "category": "api_frontend_contract",
+      "categoryNumber": 2,
+      "name": "Model and ModelVersion APIs accept only bounded structured ModelIR.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 215,
+      "category": "api_frontend_contract",
+      "categoryNumber": 3,
+      "name": "Run API pins exact InvestmentCase, ModelVersion, worldAt and idempotency key.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 216,
+      "category": "api_frontend_contract",
+      "categoryNumber": 4,
+      "name": "Scenario API enforces explicit bounded immutable override definitions.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 217,
+      "category": "api_frontend_contract",
+      "categoryNumber": 5,
+      "name": "Sensitivity API enforces exact axes, outputs and 2,500-cell bound.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 218,
+      "category": "api_frontend_contract",
+      "categoryNumber": 6,
+      "name": "Artifact APIs require exact DocumentVersion and ArtifactAnchor identities.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 219,
+      "category": "api_frontend_contract",
+      "categoryNumber": 7,
+      "name": "OpenAPI publishes every typed underwriting capability route.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 220,
+      "category": "api_frontend_contract",
+      "categoryNumber": 8,
+      "name": "Every underwriting route authenticates and ignores payload tenant/actor spoofing.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 221,
+      "category": "api_frontend_contract",
+      "categoryNumber": 9,
+      "name": "Workspace renders coherent exact Run, ModelVersion, node, unit, currency and period context.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 222,
+      "category": "api_frontend_contract",
+      "categoryNumber": 10,
+      "name": "Workspace distinguishes canonical Assumptions, Scenario overrides, P3 projection and Excel comparison.",
+      "status": "PASS",
+      "evidence": [
+        "commands.apiFrontendContract",
+        "commands.openapi",
+        "architecture"
+      ]
+    },
+    {
+      "number": 223,
+      "category": "migration_regression",
+      "categoryNumber": 1,
+      "name": "P4 is a forward migration from the exact P3 head 0125.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 224,
+      "category": "migration_regression",
+      "categoryNumber": 2,
+      "name": "A fresh database applies all 124 migrations through 0126.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 225,
+      "category": "migration_regression",
+      "categoryNumber": 3,
+      "name": "Generated migration bundle exactly matches every disk migration byte.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 226,
+      "category": "migration_regression",
+      "categoryNumber": 4,
+      "name": "Populated P1 Deal, InvestmentCase, Assumption and canonical history survive P4 upgrade exactly.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 227,
+      "category": "migration_regression",
+      "categoryNumber": 5,
+      "name": "Populated P2 EvidenceVersion, source scope and ExternalRef survive P4 upgrade exactly.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 228,
+      "category": "migration_regression",
+      "categoryNumber": 6,
+      "name": "Populated P3 DocumentVersion bytes and SpreadsheetIR semantic hash survive exactly.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 229,
+      "category": "migration_regression",
+      "categoryNumber": 7,
+      "name": "Populated P3 binding, template and publication rows survive exactly.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 230,
+      "category": "migration_regression",
+      "categoryNumber": 8,
+      "name": "Existing InvestmentCases receive zero fabricated models, scenarios, sensitivities or Runs.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 231,
+      "category": "migration_regression",
+      "categoryNumber": 9,
+      "name": "P4 migration installs same-tenant constraints, RLS and immutable guards idempotently.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 232,
+      "category": "migration_regression",
+      "categoryNumber": 10,
+      "name": "P1, P2, P3, historical PE action/governance and Core regression suites remain green.",
+      "status": "PASS",
+      "evidence": [
+        "databaseInvariants",
+        "commands.p4Upgrade",
+        "commands.p1Regression",
+        "commands.p2Regression",
+        "commands.p3Regression",
+        "commands.historicalPeRegression",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 233,
+      "category": "performance_limits",
+      "categoryNumber": 1,
+      "name": "Measured standard ModelIR compile latency remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 234,
+      "category": "performance_limits",
+      "categoryNumber": 2,
+      "name": "Measured single standard LBO runtime remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 235,
+      "category": "performance_limits",
+      "categoryNumber": 3,
+      "name": "Measured multi-tranche debt-schedule runtime remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 236,
+      "category": "performance_limits",
+      "categoryNumber": 4,
+      "name": "Measured average-balance circular solver remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 237,
+      "category": "performance_limits",
+      "categoryNumber": 5,
+      "name": "Measured 100-cell sensitivity remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 238,
+      "category": "performance_limits",
+      "categoryNumber": 6,
+      "name": "Measured maximum 2,500-cell sensitivity remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 239,
+      "category": "performance_limits",
+      "categoryNumber": 7,
+      "name": "Measured canonical serialization/result-hash latency remains within its release guardrail.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    },
+    {
+      "number": 240,
+      "category": "performance_limits",
+      "categoryNumber": 8,
+      "name": "Model, period, debt, scenario, sensitivity, solver and payload hard limits are enforced in code.",
+      "status": "PASS",
+      "evidence": [
+        "commands.performance",
+        "commands.p4Integration.benchmark"
+      ]
+    }
+  ],
+  "gates": {
+    "typecheck": "PASS",
+    "unitTests": "PASS",
+    "integrationTests": "PASS",
+    "propertyFuzz": "PASS",
+    "freshMigration": "PASS",
+    "populatedMigration": "PASS",
+    "rls": "PASS",
+    "tenantIsolation": "PASS",
+    "p1Regression": "PASS",
+    "p2Regression": "PASS",
+    "p3Regression": "PASS",
+    "canonicalOwnership": "PASS",
+    "modelBoundary": "PASS",
+    "decimalDeterminism": "PASS",
+    "canonicalHashes": "PASS",
+    "immutability": "PASS",
+    "noHindsight": "PASS",
+    "inputFailureTruth": "PASS",
+    "sourcesUses": "PASS",
+    "operatingFcf": "PASS",
+    "debtRevolverSweepCircularity": "PASS",
+    "exitMoicIrrXirr": "PASS",
+    "scenariosSensitivity": "PASS",
+    "goldenCorpus": "PASS",
+    "artifactBindingProjectionComparison": "PASS",
+    "crashReplayIdempotency": "PASS",
+    "hardLimitsPerformance": "PASS",
+    "frontendContract": "PASS",
+    "openapi": "PASS",
+    "releaseBoundary": "PASS",
+    "historicalPhase4NamingCollision": "PASS",
+    "liveOffice": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION"
+  },
+  "explicitStatements": [
+    "P1 InvestmentCase remains the canonical PE business context.",
+    "P1 Assumption remains canonical business assumption truth; scenarios do not mutate it.",
+    "P4 derived outputs are immutable deterministic calculation results, not Evidence, Assumptions, Decisions or Risks.",
+    "P4 owns Private Equity underwriting mathematics independently of Excel and independently of an LLM.",
+    "P3 SpreadsheetIR is consumed directly; P4 does not reparse XLSX or create another Artifact system.",
+    "Excel recalculation is an independent external calculation comparison, not FINNOR's P4 engine.",
+    "Every completed UnderwritingRun pins exact ModelVersion, InputSnapshot, worldAt, engine version, outputs, checks and hashes.",
+    "UNKNOWN/STALE/CONFLICTING required inputs never silently become zero or a guessed assumption.",
+    "Scenario/Sensitivity overrides never rewrite historical canonical Assumptions.",
+    "No separate Document, Evidence, Work, Event, Authority, DecisionReceipt, Source Truth or Reconciliation system was created.",
+    "No IC approval, planner action fabric, autonomous analyst workforce, fund/LP model or AWS compute expansion was smuggled into P4.",
+    "FINNOR can now deterministically underwrite a PE InvestmentCase from exact source-backed inputs through Sources & Uses, forecast, FCF, debt, exit, MOIC/IRR, scenario and sensitivity, then prove exactly how every output was produced and whether the bound Excel artifact agrees."
+  ],
+  "liveOfficeCertification": {
+    "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+    "configured": false,
+    "missingEnvironmentNames": [
+      "P4_OFFICE_LIVE_CERTIFICATION=1",
+      "P3_OFFICE_LIVE_DATABASE_URL",
+      "P3_OFFICE_LIVE_TENANT_ID",
+      "P3_OFFICE_LIVE_INTEGRATION_ID",
+      "P3_OFFICE_LIVE_SOURCE_SCOPE_ID",
+      "P3_OFFICE_LIVE_DELEGATED_PRINCIPAL_ID",
+      "P3_OFFICE_LIVE_DRIVE_ID",
+      "P3_OFFICE_LIVE_ITEM_ID",
+      "P3_OFFICE_LIVE_WORKSHEET_ID",
+      "P3_OFFICE_LIVE_RANGE"
+    ],
+    "command": "P4_OFFICE_LIVE_CERTIFICATION=1 with the P3 Office environment, then run a dedicated P4 mapped-workbook live certification",
+    "productionLiveClaimAllowed": false,
+    "evidence": "No complete opt-in P4 mapped-workbook Microsoft/Excel environment and dedicated live evidence were available; deterministic P4 does not depend on this gate."
+  },
+  "remainingBlockers": [
+    "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION: no complete opt-in real Microsoft tenant/database/source/delegated-profile mapped-workbook evidence was supplied. Deterministic P4 is complete; production must not claim live Excel parity until that separate gate passes.",
+    "Git/remote freshness is not claimed because the cumulative P1-P4 implementation is an intentionally dirty working tree and no network fetch was performed during certification."
+  ],
+  "exactCleanHandoffToP5": "P5 may consume immutable UnderwritingRun outputs, checks, lineage, ModelVersion/InputSnapshot hashes, exact P1/P3 bindings and comparison status. P5 must not recalculate finance, mutate P1 Assumptions, reinterpret UNKNOWN/STALE/CONFLICTING inputs, use Excel as authority, or auto-approve an IC decision."
+}

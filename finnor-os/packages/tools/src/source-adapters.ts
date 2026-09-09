@@ -1,5 +1,11 @@
 import type { TenantCredentialContext } from "@finnor/security";
-import type { BusinessEffectSet, CanonicalSourceRecord, SourceSyncCursor, SourceSyncPage } from "@finnor/shared-types";
+import type {
+  BusinessEffectSet,
+  CanonicalSourceRecord,
+  ProviderObservationSyncPage,
+  SourceSyncCursor,
+  SourceSyncPage,
+} from "@finnor/shared-types";
 import { IntegrationError } from "./errors";
 
 export interface SourceAdapterContext {
@@ -20,6 +26,14 @@ export interface SourceAdapter {
     expected: Record<string, unknown>;
   } | null;
   isTerminalObservation?(record: CanonicalSourceRecord): boolean;
+}
+
+/** Successor boundary for transports whose provider objects may be retained as
+ * evidence before any canonical/root mapping exists. Business/vertical packages
+ * consume these observations; transport adapters never write domain state. */
+export interface ProviderObservationAdapter<TScope, TContext> {
+  readonly provider: string;
+  readObservationPage(scope: TScope, cursor: SourceSyncCursor, context: TContext): Promise<ProviderObservationSyncPage>;
 }
 
 /** Provider transport and business mapping are deliberately separate. The generic

@@ -16,6 +16,7 @@ export const CORE_OPERATIONAL_QUERY_INTENTS = [
 ] as const;
 
 export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
+  "pe_world_state",
   "deal_context",
   "deal_workstreams",
   "open_requests",
@@ -125,6 +126,11 @@ export interface CriticalDependenciesRequest extends DealScopedQueryRequest {
   includeResolved?: boolean;
 }
 export interface ClosingReadinessRequest extends DealScopedQueryRequest { intent: "closing_readiness" }
+export interface PeWorldStateRequest {
+  intent: "pe_world_state";
+  root: { entityType: "pe_strategy" | "pe_opportunity" | "pe_deal"; entityId: string };
+  at?: string;
+}
 
 export type CoreOperationalQueryRequest =
   | WorkListRequest
@@ -136,6 +142,7 @@ export type CoreOperationalQueryRequest =
 
 export type CanonicalOperationalQueryRequest =
   | CoreOperationalQueryRequest
+  | PeWorldStateRequest
   | DealContextRequest
   | DealWorkstreamsRequest
   | OpenRequestsRequest
@@ -340,6 +347,62 @@ export interface ClosingReadinessResult extends OperationalQueryResultBase<"clos
   queryTrace: PrivateEquityOperationalQueryIntent[];
 }
 
+export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world_state"> {
+  root: PeWorldStateRequest["root"];
+  stateAt: string;
+  temporalCompleteness: {
+    status: "complete" | "partial" | "unavailable_before_baseline";
+    baselineAt: string | null;
+    unavailableEntityTypes: string[];
+    reasons: string[];
+  };
+  strategy: Record<string, unknown> | null;
+  opportunity: Record<string, unknown> | null;
+  deal: Record<string, unknown> | null;
+  opportunities: Record<string, unknown>[];
+  deals: Record<string, unknown>[];
+  investmentCases: Record<string, unknown>[];
+  theses: Record<string, unknown>[];
+  assumptions: Record<string, unknown>[];
+  decisions: Record<string, unknown>[];
+  decisionEffectLinks: Record<string, unknown>[];
+  dealParties: Record<string, unknown>[];
+  workstreams: Record<string, unknown>[];
+  requests: Record<string, unknown>[];
+  deliverables: Record<string, unknown>[];
+  findings: Record<string, unknown>[];
+  dealRisks: Record<string, unknown>[];
+  findingRiskLinks: Record<string, unknown>[];
+  dependencies: Record<string, unknown>[];
+  milestones: Record<string, unknown>[];
+  closingConditions: Record<string, unknown>[];
+  closingItems: Record<string, unknown>[];
+  documents: Record<string, unknown>[];
+  evidence: Record<string, unknown>[];
+  observedEvidence: Record<string, unknown>[];
+  sourceCoverage: Record<string, unknown>[];
+  sourceCoverageWarnings: Record<string, unknown>[];
+  unresolvedProviderObservations: number;
+  ambiguousProviderObservations: number;
+  providerFreshnessWarnings: Record<string, unknown>[];
+  providerEvidenceCompleteness: {
+    status: "complete" | "partial" | "not_configured";
+    absenceClaimsPermitted: boolean;
+    reasons: string[];
+  };
+  documentLinks: Record<string, unknown>[];
+  evidenceLinks: Record<string, unknown>[];
+  workLinks: Record<string, unknown>[];
+  taskLinks: Record<string, unknown>[];
+  businessEvents: Record<string, unknown>[];
+  authorityDecisions: Record<string, unknown>[];
+  approvalRequests: Record<string, unknown>[];
+  decisionReceipts: Record<string, unknown>[];
+  conflicts: Record<string, unknown>[];
+  epistemicWarnings: PrivateEquityEpistemicWarning[];
+  provenance: Record<string, unknown>[];
+}
+
 export type OperationalQueryResult =
   | WorkListResult
   | AgentActivityResult
@@ -347,6 +410,7 @@ export type OperationalQueryResult =
   | PartyLookupResult
   | PartyContextResult
   | TeamRosterResult
+  | PeWorldStateResult
   | DealContextResult
   | DealWorkstreamsResult
   | OpenRequestsResult
@@ -364,6 +428,7 @@ export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
         : R extends PartyLookupRequest ? PartyLookupResult
           : R extends PartyContextRequest ? PartyContextResult
             : R extends TeamRosterRequest ? TeamRosterResult
+              : R extends PeWorldStateRequest ? PeWorldStateResult
               : R extends DealContextRequest ? DealContextResult
                 : R extends DealWorkstreamsRequest ? DealWorkstreamsResult
                   : R extends OpenRequestsRequest ? OpenRequestsResult

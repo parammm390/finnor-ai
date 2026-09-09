@@ -11,6 +11,8 @@ export interface SemanticHit {
   id?: string;
   chunk: string;
   sourceDocId: string | null;
+  documentId?: string | null;
+  documentVersionId?: string | null;
   similarity: number;
   relevanceScore?: number;
   contentHash?: string;
@@ -299,6 +301,8 @@ export interface WriteSemanticChunk {
   sourceDocId?: string;
   /** Optional canonical document row for source-backed chunks. */
   documentId?: string;
+  /** Exact immutable artifact version. Required for artifact-derived chunks. */
+  documentVersionId?: string;
   entityRefs?: unknown[];
   occurredAt?: Date;
   /** Stable provenance class, e.g. receipt, voice_transcript, source_document. */
@@ -340,12 +344,12 @@ export async function writeSemantic(
   // duplicate memory rows and misleading duplicate citations.
   const activeBefore = await withTenant(tenantId, (db) =>
     db
-      .select({ id: embeddings.id, sourceDocId: embeddings.sourceDocId, contentHash: embeddings.contentHash })
+      .select({ id: embeddings.id, sourceDocId: embeddings.sourceDocId, contentHash: embeddings.contentHash, documentVersionId: embeddings.documentVersionId })
       .from(embeddings)
       .where(and(eq(embeddings.tenantId, tenantId), inArray(embeddings.sourceDocId, sourceIds), isNull(embeddings.supersededAt))),
   );
-  const activeKeys = new Set(activeBefore.map((row) => `${row.sourceDocId}:${row.contentHash}`));
-  const candidates = prepared.filter((chunk) => !activeKeys.has(`${chunk.effectiveSourceDocId}:${chunk.contentHash}`));
+  const activeKeys = new Set(activeBefore.map((row) => `${row.sourceDocId}:${row.contentHash}:${row.documentVersionId ?? ""}`));
+  const candidates = prepared.filter((chunk) => !activeKeys.has(`${chunk.effectiveSourceDocId}:${chunk.contentHash}:${chunk.documentVersionId ?? ""}`));
   const vectors = await embedManyCached(tenantId, candidates.map((chunk) => chunk.chunk), embedder);
 
   return withTenant(tenantId, async (db) => {
@@ -353,16 +357,16 @@ export async function writeSemantic(
     // idempotency check and insertion. The partial unique index remains the final
     // concurrency guard.
     const active = await db
-      .select({ id: embeddings.id, sourceDocId: embeddings.sourceDocId, contentHash: embeddings.contentHash })
+      .select({ id: embeddings.id, sourceDocId: embeddings.sourceDocId, contentHash: embeddings.contentHash, documentVersionId: embeddings.documentVersionId })
       .from(embeddings)
       .where(and(eq(embeddings.tenantId, tenantId), inArray(embeddings.sourceDocId, sourceIds), isNull(embeddings.supersededAt)));
     const incomingBySource = new Map<string, Set<string>>();
     for (const chunk of prepared) {
       const hashes = incomingBySource.get(chunk.effectiveSourceDocId) ?? new Set<string>();
-      hashes.add(chunk.contentHash);
+      hashes.add(`${chunk.contentHash}:${chunk.documentVersionId ?? ""}`);
       incomingBySource.set(chunk.effectiveSourceDocId, hashes);
     }
-    const obsolete = active.filter((row) => !incomingBySource.get(row.sourceDocId)?.has(row.contentHash));
+    const obsolete = active.filter((row) => !incomingBySource.get(row.sourceDocId)?.has(`${row.contentHash}:${row.documentVersionId ?? ""}`));
     if (obsolete.length > 0) {
       await db
         .update(embeddings)
@@ -370,11 +374,11 @@ export async function writeSemantic(
         .where(inArray(embeddings.id, obsolete.map((row) => row.id)));
     }
 
-    const stillActiveKeys = new Set(active.filter((row) => !obsolete.some((old) => old.id === row.id)).map((row) => `${row.sourceDocId}:${row.contentHash}`));
+    const stillActiveKeys = new Set(active.filter((row) => !obsolete.some((old) => old.id === row.id)).map((row) => `${row.sourceDocId}:${row.contentHash}:${row.documentVersionId ?? ""}`));
     const linkedSources = new Set<string>();
     const values = candidates
       .map((chunk, i) => ({ chunk, vector: vectors[i]! }))
-      .filter(({ chunk }) => !stillActiveKeys.has(`${chunk.effectiveSourceDocId}:${chunk.contentHash}`))
+      .filter(({ chunk }) => !stillActiveKeys.has(`${chunk.effectiveSourceDocId}:${chunk.contentHash}:${chunk.documentVersionId ?? ""}`))
       .map(({ chunk, vector }) => {
         const prior = linkedSources.has(chunk.effectiveSourceDocId)
           ? undefined
@@ -384,6 +388,7 @@ export async function writeSemantic(
           tenantId,
           sourceDocId: chunk.effectiveSourceDocId,
           documentId: chunk.documentId ?? null,
+          documentVersionId: chunk.documentVersionId ?? null,
           chunk: chunk.chunk,
           embedding: vector,
           entityRefs: chunk.entityRefs ?? [],
@@ -432,10 +437,14 @@ export async function querySemantic(
     if (ext.length > 0) {
       // pgvector path (Supabase, CI): ANN search in SQL.
       const { rows } = await client.query(
-        `SELECT id, chunk, source_doc_id, content_hash, source_kind, provenance,
-                entity_refs, occurred_at, 1 - (embedding <=> $2::vector) AS similarity
-         FROM embeddings
-         WHERE tenant_id = $1 AND embedding IS NOT NULL AND superseded_at IS NULL
+        `SELECT e.id,e.chunk,e.source_doc_id,e.document_id,e.document_version_id,e.content_hash,e.source_kind,e.provenance,
+                e.entity_refs,e.occurred_at,1-(e.embedding <=> $2::vector) AS similarity
+         FROM embeddings e
+         WHERE e.tenant_id=$1 AND e.embedding IS NOT NULL AND e.superseded_at IS NULL
+           AND (e.document_version_id IS NULL OR EXISTS (
+             SELECT 1 FROM document_version_heads h WHERE h.tenant_id=e.tenant_id AND h.document_id=e.document_id
+               AND h.kind='current' AND h.head_key='default' AND h.version_id=e.document_version_id
+           ))
          ORDER BY embedding <=> $2::vector
          LIMIT $3`,
         [tenantId, JSON.stringify(qvec), Math.max(limit * 3, limit)],
@@ -444,6 +453,8 @@ export async function querySemantic(
         id: r.id as string,
         chunk: r.chunk as string,
         sourceDocId: (r.source_doc_id as string | null) ?? null,
+        documentId: (r.document_id as string | null) ?? null,
+        documentVersionId: (r.document_version_id as string | null) ?? null,
         similarity: Number(r.similarity),
         contentHash: r.content_hash as string,
         sourceKind: r.source_kind as string,
@@ -455,9 +466,13 @@ export async function querySemantic(
       // jsonb fallback (dev machine without pgvector): cosine similarity in-process.
       // Fine at dev-corpus scale; production always has pgvector.
       const { rows } = await client.query(
-        `SELECT id, chunk, source_doc_id, content_hash, source_kind, provenance,
-                entity_refs, occurred_at, embedding FROM embeddings
-         WHERE tenant_id = $1 AND embedding IS NOT NULL AND superseded_at IS NULL`,
+        `SELECT e.id,e.chunk,e.source_doc_id,e.document_id,e.document_version_id,e.content_hash,e.source_kind,e.provenance,
+                e.entity_refs,e.occurred_at,e.embedding FROM embeddings e
+         WHERE e.tenant_id=$1 AND e.embedding IS NOT NULL AND e.superseded_at IS NULL
+           AND (e.document_version_id IS NULL OR EXISTS (
+             SELECT 1 FROM document_version_heads h WHERE h.tenant_id=e.tenant_id AND h.document_id=e.document_id
+               AND h.kind='current' AND h.head_key='default' AND h.version_id=e.document_version_id
+           ))`,
         [tenantId],
       );
       hits = rows
@@ -468,6 +483,8 @@ export async function querySemantic(
             id: r.id as string,
             chunk: r.chunk as string,
             sourceDocId: (r.source_doc_id as string | null) ?? null,
+            documentId: (r.document_id as string | null) ?? null,
+            documentVersionId: (r.document_version_id as string | null) ?? null,
             similarity: dot, // vectors are normalized, so dot product == cosine
             contentHash: r.content_hash as string,
             sourceKind: r.source_kind as string,
@@ -488,6 +505,78 @@ export async function querySemantic(
   } catch (err) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/** Explicit historical artifact retrieval. General current retrieval above only
+ * admits the current DocumentVersion; callers must name an old version here. */
+export async function querySemanticDocumentVersion(
+  tenantId: string,
+  documentId: string,
+  documentVersionId: string,
+  query: string,
+  limit = 5,
+  embedder: EmbeddingProvider = defaultEmbedder(),
+): Promise<SemanticHit[]> {
+  const [qvec] = await embedManyCached(tenantId, [query], embedder);
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SET LOCAL search_path = finnor_os, public");
+    await client.query("SET LOCAL statement_timeout = 10000");
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantId]);
+    const { rows: ext } = await client.query(`SELECT 1 FROM pg_extension WHERE extname='vector'`);
+    const params = [tenantId, JSON.stringify(qvec), documentId, documentVersionId, Math.max(limit * 3, limit)];
+    const { rows } = ext.length > 0
+      ? await client.query(
+          `SELECT id,chunk,source_doc_id,document_id,document_version_id,content_hash,source_kind,provenance,
+                  entity_refs,occurred_at,1-(embedding <=> $2::vector) AS similarity
+             FROM embeddings
+            WHERE tenant_id=$1 AND document_id=$3 AND document_version_id=$4
+              AND embedding IS NOT NULL
+            ORDER BY embedding <=> $2::vector LIMIT $5`,
+          params,
+        )
+      : await client.query(
+          `SELECT id,chunk,source_doc_id,document_id,document_version_id,content_hash,source_kind,provenance,
+                  entity_refs,occurred_at,embedding
+             FROM embeddings
+            WHERE tenant_id=$1 AND document_id=$2 AND document_version_id=$3
+              AND embedding IS NOT NULL`,
+          [tenantId, documentId, documentVersionId],
+        );
+    await client.query("COMMIT");
+    const hits = rows.map((row) => {
+      const similarity = ext.length > 0
+        ? Number(row.similarity)
+        : qvec!.reduce((sum, value, index) => {
+            const vector = (typeof row.embedding === "string" ? JSON.parse(row.embedding) : row.embedding) as number[];
+            return sum + value * (vector[index] ?? 0);
+          }, 0);
+      return {
+        id: row.id as string,
+        chunk: row.chunk as string,
+        sourceDocId: (row.source_doc_id as string | null) ?? null,
+        documentId: (row.document_id as string | null) ?? null,
+        documentVersionId: (row.document_version_id as string | null) ?? null,
+        similarity,
+        contentHash: row.content_hash as string,
+        sourceKind: row.source_kind as string,
+        provenance: (row.provenance as Record<string, unknown> | null) ?? {},
+        occurredAt: (row.occurred_at as Date | null)?.toISOString?.(),
+        entityRefs: (row.entity_refs as unknown[] | null) ?? [],
+      } satisfies SemanticHit;
+    });
+    return hits
+      .filter((hit) => hit.similarity >= MIN_SEMANTIC_SIMILARITY)
+      .map((hit) => rankSemanticHit(hit, Date.now()))
+      .sort((left, right) => (right.relevanceScore ?? right.similarity) - (left.relevanceScore ?? left.similarity))
+      .slice(0, limit);
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
   } finally {
     client.release();
   }

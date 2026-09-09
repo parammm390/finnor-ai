@@ -43,7 +43,9 @@ import { migrate } from "../../packages/db/migrate";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
-const AS_OF = new Date("2026-09-05T12:00:00.000Z");
+// The no-hindsight contract excludes evidence retrieved after the query clock.
+// Keep the deterministic query just ahead of this test run's actual retrieval.
+const AS_OF = new Date(Date.now() + 60_000);
 
 async function canConnect(url: string): Promise<boolean> {
   const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: 2_000 });
@@ -103,6 +105,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
+    await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
         ($1,$2,'PE3 Atlas Tenant'),($3,$4,'PE3 Foreign Tenant'),($5,$6,'PE3 Retirement Boundary')`,

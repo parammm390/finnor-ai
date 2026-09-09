@@ -24,7 +24,7 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
   it("composes Work metadata into each strict intent branch", () => {
     const schema = openapi.paths["/api/queries"].post.requestBody.content["application/json"].schema;
     expect(schema.allOf).toBeUndefined();
-    expect(schema.anyOf).toHaveLength(13);
+    expect(schema.anyOf).toHaveLength(14);
 
     for (const branch of schema.anyOf ?? []) {
       expect(branch.additionalProperties).toBe(false);
@@ -56,6 +56,7 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
       "open_requests",
       "party_context",
       "party_lookup",
+      "pe_world_state",
       "team_roster",
       "work_list",
     ]);
@@ -72,5 +73,6 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
     expect(byIntent.get("team_roster")).toEqual(expect.objectContaining({ teamRef: expect.any(Object), query: expect.any(Object) }));
     expect(byIntent.get("deal_context")).toEqual(expect.objectContaining({ dealId: expect.any(Object), page: expect.any(Object) }));
     expect(byIntent.get("closing_readiness")).toEqual(expect.objectContaining({ dealId: expect.any(Object), page: expect.any(Object) }));
+    expect(byIntent.get("pe_world_state")).toEqual(expect.objectContaining({ root: expect.any(Object), at: expect.any(Object) }));
   });
 });

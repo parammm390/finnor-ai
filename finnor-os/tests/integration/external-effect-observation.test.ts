@@ -6,6 +6,7 @@ import {
   businessEffects,
   closePool,
   commands,
+  configureTenantVertical,
   domainActions,
   integrationOperations,
   integrationEvents,
@@ -103,8 +104,16 @@ describe.skipIf(!available)("external EffectSet observation settlement", () => {
     await migrate(DB_URL);
     const admin = new pg.Client({ connectionString: DB_URL });
     await admin.connect();
+    await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query("INSERT INTO finnor_os.tenants(id,name) VALUES ($1,'Effect Observation Tenant')", [tenantId]);
     await admin.end();
+    await configureTenantVertical({
+      tenantId,
+      verticalKey: "private_equity",
+      expectedVersion: 0,
+      createdBy: "certification:external-effect-observation",
+      sourceSystem: "test:external-effect-observation",
+    });
     await withTenant(tenantId, (db) => db.insert(tenantIntegrations).values({
       id: integrationId, tenantId, capability: "accounting", binding: "quickbooks", mode: "sandbox",
     }));
@@ -117,14 +126,17 @@ describe.skipIf(!available)("external EffectSet observation settlement", () => {
     const [before] = await withTenant(tenantId, (db) => db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId)));
     expect(before).toMatchObject({ status: "waiting_observation", executionState: "awaiting_observation" });
     await settle(scenario, "present", { amountUsd: 125 });
-    const [effect, action, step, run, command, operation] = await withTenant(tenantId, async (db) => Promise.all([
-      db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId)).then((rows) => rows[0]),
-      db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId)).then((rows) => rows[0]),
-      db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId)).then((rows) => rows[0]),
-      db.select().from(workflowRuns).where(eq(workflowRuns.id, scenario.runId)).then((rows) => rows[0]),
-      db.select().from(commands).where(eq(commands.id, scenario.commandId)).then((rows) => rows[0]),
-      db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId)).then((rows) => rows[0]),
-    ]));
+    const [effect, action, step, run, command, operation] = await withTenant(tenantId, async (db) => {
+      // withTenant owns one pg client; serialize its reads rather than relying on
+      // pg's deprecated concurrent-query queueing behavior.
+      const [effect] = await db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId));
+      const [action] = await db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId));
+      const [step] = await db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId));
+      const [run] = await db.select().from(workflowRuns).where(eq(workflowRuns.id, scenario.runId));
+      const [command] = await db.select().from(commands).where(eq(commands.id, scenario.commandId));
+      const [operation] = await db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId));
+      return [effect, action, step, run, command, operation] as const;
+    });
     expect(effect).toMatchObject({ status: "verified", verification: expect.objectContaining({ state: "verified" }) });
     expect(action?.status).toBe("completed");
     expect(step).toMatchObject({ status: "completed", executionState: "verified" });
@@ -148,13 +160,14 @@ describe.skipIf(!available)("external EffectSet observation settlement", () => {
   it("marks a provider-success/business-state mismatch divergent and routes recovery", async () => {
     const scenario = await waitingScenario("divergent");
     await settle(scenario, "divergent", { amountUsd: 99 });
-    const [effect, action, step, operation, cases] = await withTenant(tenantId, async (db) => Promise.all([
-      db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId)).then((rows) => rows[0]),
-      db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId)).then((rows) => rows[0]),
-      db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId)).then((rows) => rows[0]),
-      db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId)).then((rows) => rows[0]),
-      db.select().from(reconciliationCases).where(eq(reconciliationCases.businessEffectId, scenario.effectId)),
-    ]));
+    const [effect, action, step, operation, cases] = await withTenant(tenantId, async (db) => {
+      const [effect] = await db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId));
+      const [action] = await db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId));
+      const [step] = await db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId));
+      const [operation] = await db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId));
+      const cases = await db.select().from(reconciliationCases).where(eq(reconciliationCases.businessEffectId, scenario.effectId));
+      return [effect, action, step, operation, cases] as const;
+    });
     expect(effect?.status).toBe("divergent");
     expect(action?.status).toBe("needs_human_review");
     expect(step).toMatchObject({ status: "failed", executionState: "reconciling" });
@@ -165,13 +178,14 @@ describe.skipIf(!available)("external EffectSet observation settlement", () => {
   it("keeps an inconclusive outcome unretryable and reconciliation-required", async () => {
     const scenario = await waitingScenario("unknown");
     await settle(scenario, "unknown");
-    const [effect, action, step, operation, cases] = await withTenant(tenantId, async (db) => Promise.all([
-      db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId)).then((rows) => rows[0]),
-      db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId)).then((rows) => rows[0]),
-      db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId)).then((rows) => rows[0]),
-      db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId)).then((rows) => rows[0]),
-      db.select().from(reconciliationCases).where(eq(reconciliationCases.businessEffectId, scenario.effectId)),
-    ]));
+    const [effect, action, step, operation, cases] = await withTenant(tenantId, async (db) => {
+      const [effect] = await db.select().from(businessEffects).where(eq(businessEffects.id, scenario.effectId));
+      const [action] = await db.select().from(domainActions).where(eq(domainActions.id, scenario.actionId));
+      const [step] = await db.select().from(workflowSteps).where(eq(workflowSteps.id, scenario.stepId));
+      const [operation] = await db.select().from(integrationOperations).where(eq(integrationOperations.id, scenario.operationId));
+      const cases = await db.select().from(reconciliationCases).where(eq(reconciliationCases.businessEffectId, scenario.effectId));
+      return [effect, action, step, operation, cases] as const;
+    });
     expect(effect?.status).toBe("reconciliation_required");
     expect(action?.status).toBe("needs_human_review");
     expect(step).toMatchObject({ status: "failed", executionState: "reconciling" });

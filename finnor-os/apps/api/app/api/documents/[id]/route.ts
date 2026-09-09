@@ -5,29 +5,49 @@
 
 import { withTenant, documents } from "@finnor/db";
 import { getDocumentContent } from "@finnor/data-platform";
+import { loadDocumentVersion } from "@finnor/data-platform";
 import { and, eq } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   try {
     const { id } = await params;
+    if (!UUID.test(id)) return Response.json({ error: "Invalid Document ID" }, { status: 400 });
     const ctx = await requireContext(req);
+    const versionId = new URL(req.url).searchParams.get("versionId");
+    if (versionId && !UUID.test(versionId)) return Response.json({ error: "Invalid Document version ID" }, { status: 400 });
     const result = await withTenant(ctx.tenantId, async (db) => {
       const [doc] = await db
         .select()
         .from(documents)
         .where(and(eq(documents.id, id), eq(documents.tenantId, ctx.tenantId)));
       if (!doc) return null;
+      if (versionId) {
+        const loaded = await loadDocumentVersion(db, ctx.tenantId, id, versionId);
+        return { doc, content: loaded ? { bytes: loaded.bytes, contentType: loaded.version.media_type, format: loaded.version.format } : null };
+      }
       const content = await getDocumentContent(db, id);
-      return { doc, content };
+      return { doc, content: content ? { ...content, format: null } : null };
     });
     if (!result || !result.content) return Response.json({ error: "Document not found or has no content yet" }, { status: 404 });
+    const extensionByType: Record<string, string> = {
+      "application/pdf": "pdf",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+      "application/vnd.ms-excel.sheet.macroenabled.12": "xlsm",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    };
+    const extension = result.content.format ?? extensionByType[result.content.contentType.toLowerCase()] ?? "bin";
+    const base = result.doc.title.replace(/[\r\n"\\/]/g, "_").slice(0, 180).replace(/\.[a-z0-9]+$/i, "") || `document-${id}`;
+    const disposition = extension === "pdf" ? "inline" : "attachment";
     return new Response(new Uint8Array(result.content.bytes), {
       status: 200,
       headers: {
         "content-type": result.content.contentType,
-        "content-disposition": `inline; filename="${result.doc.kind}-${id}.pdf"`,
-        "cache-control": "private, max-age=3600",
+        "content-disposition": `${disposition}; filename="${base}.${extension}"`,
+        "cache-control": "private, no-store",
       },
     });
   } catch (err) {

@@ -9,6 +9,7 @@ const nextConfig = {
     "@finnor/shared-types",
     "@finnor/policy-schema",
     "@finnor/db",
+    "@finnor/provider-microsoft365",
     "@finnor/memory",
     "@finnor/tools",
     "@finnor/orchestration",

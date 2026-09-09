@@ -6,6 +6,7 @@ import { closePool, configureTenantVertical, receiveWork, withTenant } from "@fi
 import { migrate } from "../../packages/db/migrate";
 import {
   DealCloseRejectedError,
+  PE_ENTITY_TYPES,
   PeDomainError,
   acceptDealRisk,
   acceptDeliverable,
@@ -114,6 +115,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
+    await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
         ($1,$2,'Atlas PE Tenant'),($3,$4,'Other PE Tenant'),($5,$6,'Retirement Boundary Tenant'),
@@ -447,14 +449,12 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
 
   it("certifies registry ownership, RLS, initial states, immutable close truth, and vertical=none", async () => {
     const peTables = [
+      "pe_strategies", "pe_opportunities",
       "pe_deals", "pe_deal_parties", "pe_workstreams", "pe_requests", "pe_deliverables", "pe_findings",
       "pe_deal_risks", "pe_finding_risk_links", "pe_dependencies", "pe_milestones",
       "pe_closing_conditions", "pe_closing_items", "pe_document_links", "pe_evidence_links",
+      "pe_investment_cases", "pe_theses", "pe_assumptions", "pe_decisions",
     ];
-    const peTypes = peTables.map((table) => table === "pe_deals" ? "pe_deal"
-      : table === "pe_deal_parties" ? "pe_deal_party"
-        : table === "pe_deal_risks" ? "pe_deal_risk"
-          : table.replace(/^pe_/, "pe_").replace(/ies$/, "y").replace(/s$/, ""));
     const rls = await admin.query<{ relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean; policies: number }>(
       `SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,
         (SELECT count(*)::int FROM pg_policies p WHERE p.schemaname='finnor_os' AND p.tablename=c.relname AND p.policyname='tenant_isolation') policies
@@ -470,7 +470,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     );
     expect(registry.rows).toHaveLength(peTables.length);
     expect(registry.rows.every((row) => row.writable_owner === "@finnor/private-equity" && row.mutation_boundary.length > 0)).toBe(true);
-    expect(registry.rows.map((row) => row.entity_type).sort()).toEqual(peTypes.sort());
+    expect(registry.rows.map((row) => row.entity_type).sort()).toEqual([...PE_ENTITY_TYPES].sort());
 
     const none = await admin.query<{ vertical: string; core_available: boolean; water_available: boolean; pe_available: boolean }>(
       `SELECT finnor_os.active_tenant_vertical($1) vertical,
