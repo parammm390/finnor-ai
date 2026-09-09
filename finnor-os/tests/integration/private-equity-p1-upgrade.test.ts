@@ -47,7 +47,7 @@ describe.skipIf(!available)("P1 populated PE database upgrade", () => {
     await source.end();
 
     const preP1 = MIGRATIONS.filter(({ name }) => name < "0110_canonical_temporal_truth.sql");
-    expect(preP1.at(-1)?.name).toBe("0109_atomic_water_runtime_retirement.sql");
+    expect(preP1.at(-1)?.name).toBe("0109b_pgcrypto_digest_compatibility.sql");
     await migrate(targetUrl, preP1);
     client = new pg.Client({ connectionString: targetUrl });
     await client.connect();

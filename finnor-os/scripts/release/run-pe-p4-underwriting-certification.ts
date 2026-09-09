@@ -37,7 +37,7 @@ const P1_REPORT = resolve(OUTPUT_DIR, "pe-p1-world-truth-certification.json");
 const P2_REPORT = resolve(OUTPUT_DIR, "pe-p2-m365-nervous-system-certification.json");
 const P3_REPORT = resolve(OUTPUT_DIR, "pe-p3-artifact-os-certification.json");
 const P4_MIGRATION = "0126_pe_underwriting_runtime.sql";
-const EXPECTED_MIGRATION_COUNT = 124;
+const EXPECTED_MIGRATION_COUNT = 125;
 const STARTING_BASELINE = Object.freeze({
   branch: "codex/p3-epistemic-runtime",
   headSha: "80f617d321965b8694de18940ff23b005dedcdb7",

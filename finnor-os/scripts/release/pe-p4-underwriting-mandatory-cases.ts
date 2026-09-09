@@ -269,7 +269,7 @@ export const P4_MANDATORY_CASE_GROUPS: Readonly<Record<P4MandatoryCaseCategory, 
   ],
   migration_regression: [
     "P4 is a forward migration from the exact P3 head 0125.",
-    "A fresh database applies all 124 migrations through 0126.",
+    "A fresh database applies all 125 migrations through 0126.",
     "Generated migration bundle exactly matches every disk migration byte.",
     "Populated P1 Deal, InvestmentCase, Assumption and canonical history survive P4 upgrade exactly.",
     "Populated P2 EvidenceVersion, source scope and ExternalRef survive P4 upgrade exactly.",
