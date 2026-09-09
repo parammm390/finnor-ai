@@ -103,7 +103,7 @@ test("worker health and heartbeat guards bind the exact Phase 5 release", () => 
 test("active release workflow is AWS-only and Phase 5-only", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
   assert.doesNotMatch(workflow, /azure\/login|AZURE_|deploy-azure|RunCommand|cloudapp\.azure/i)
-  assert.match(workflow, /aws-actions\/configure-aws-credentials@v4/)
+  assert.match(workflow, /aws-actions\/configure-aws-credentials@v6/)
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-worker\.mjs/)

@@ -30,8 +30,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://kpxrnonhnhexutvdywbh.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_pL3At585tx6uLFymhYtjbA_HJvVTeWB
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           # package-lock.json includes @mapbox/jsonlint-lines-primitives@2.0.3,
           # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on

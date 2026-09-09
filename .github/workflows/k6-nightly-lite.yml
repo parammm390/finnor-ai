@@ -20,12 +20,12 @@ jobs:
       APPROVAL_RATE: "5"
       LOAD_DURATION: "60s"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Refuse an unconfigured run
         run: test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$MARKETING_WEBHOOK_SECRET"
       - uses: grafana/setup-k6-action@v1
       - run: k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: k6-nightly-lite-summary

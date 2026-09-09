@@ -67,13 +67,13 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@v4", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "phase5-readiness"]) required(workflow.includes(marker), `production workflow omits AWS/Phase 5 marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@v6", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "phase5-readiness"]) required(workflow.includes(marker), `production workflow omits AWS/Phase 5 marker: ${marker}`)
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
 required(workflow.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "Phase 5 gate must exclude the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")
 required(workflow.includes("production.contract.json').topology.api") && read("scripts/release/deploy-production.mjs").includes("production.contract.json"), "Vercel release stages must consume the canonical deployment contract")
 
-const oidcAt = workflow.indexOf("aws-actions/configure-aws-credentials@v4")
+const oidcAt = workflow.indexOf("aws-actions/configure-aws-credentials@v6")
 const pushAt = workflow.indexOf("docker push")
 const preflightAt = workflow.indexOf("preflight-production.mjs")
 const migrationAt = workflow.indexOf("release:migrate:production")

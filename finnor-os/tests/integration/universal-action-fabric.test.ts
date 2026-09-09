@@ -527,13 +527,20 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
   });
 
   it("schedules and reschedules the same internal event without fabricating an external calendar result", async () => {
+    // The operating-context projection intentionally omits events that have
+    // already ended. Keep this fixture relative to the runner clock so the
+    // assertion remains valid when CI runs after the original calendar dates.
+    const initialStartsAt = new Date(Date.now() + 24 * 60 * 60_000);
+    const initialEndsAt = new Date(initialStartsAt.getTime() + 30 * 60_000);
+    const movedStartsAt = new Date(initialStartsAt.getTime() + 24 * 60 * 60_000);
+    const movedEndsAt = new Date(movedStartsAt.getTime() + 30 * 60_000);
     const scheduled = await executeAction({
       actionType: "schedule_internal_event",
       payload: {
         title: "Peterson installation review",
         purpose: "Coordinate Friday work",
-        startsAt: "2026-09-04T15:00:00.000Z",
-        endsAt: "2026-09-04T15:30:00.000Z",
+        startsAt: initialStartsAt.toISOString(),
+        endsAt: initialEndsAt.toISOString(),
         participants: [
           { partyType: "employee", partyId: SARAH },
           { partyType: "team", partyId: PHOENIX_TEAM },
@@ -549,15 +556,15 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
       actionType: "reschedule_internal_event",
       payload: {
         internalEventRef: { internalEventId: eventId },
-        startsAt: "2026-09-07T15:00:00.000Z",
-        endsAt: "2026-09-07T15:30:00.000Z",
+        startsAt: movedStartsAt.toISOString(),
+        endsAt: movedEndsAt.toISOString(),
         reason: "Move to Monday.",
       },
     });
     expect(moved.result.status).toBe("success");
     const [event] = await withTenant(TENANT_A, (db) => db.select().from(internalEvents).where(eq(internalEvents.id, eventId)));
     expect(event).toMatchObject({ id: eventId, status: "rescheduled", revision: 2 });
-    expect(event?.startsAt.toISOString()).toBe("2026-09-07T15:00:00.000Z");
+    expect(event?.startsAt.toISOString()).toBe(movedStartsAt.toISOString());
     expect(await withTenant(TENANT_A, (db) => db.select().from(internalEvents).where(eq(internalEvents.id, eventId)))).toHaveLength(1);
     expect(await withTenant(TENANT_A, (db) => db.select().from(internalEventEvents).where(eq(internalEventEvents.internalEventId, eventId)))).toHaveLength(2);
 
