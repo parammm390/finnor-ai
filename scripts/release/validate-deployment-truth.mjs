@@ -14,7 +14,7 @@ required(contract.schemaVersion === 2 && contract.environment === "production", 
 required(contract.canonicalGit.remote === "origin" && contract.canonicalGit.branch === "main" && contract.canonicalGit.repository === "parammm390/finnor-ai", "canonical Git target must be origin/main")
 required(contract.canonicalGit.requireCleanWorktree === true, "production contract must require a clean worktree")
 required(contract.release.concurrencyGroup === "finnor-production-release", "production concurrency lock changed")
-required(contract.release.requiredMigrationHead === "0109_atomic_water_runtime_retirement.sql", "Phase 5 migration head is not locked")
+required(contract.release.requiredMigrationHead === "0126_pe_underwriting_runtime.sql", "production migration head is not locked to the published P4 runtime")
 required(contract.release.requiredComponents.includes("worker"), "worker must be required for every production release")
 required(contract.forbiddenActiveProviders.includes("azure"), "Azure must remain forbidden in the active production topology")
 

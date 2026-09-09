@@ -7,6 +7,8 @@
   "types": "src/index.ts",
   "dependencies": {
     "@finnor/db": "*",
+    "@finnor/provider-microsoft365": "*",
+    "@finnor/security": "*",
     "@finnor/shared-types": "*",
     "drizzle-orm": "^0.45.2"
   }

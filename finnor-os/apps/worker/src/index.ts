@@ -35,6 +35,8 @@ import { scanConnectionHealth } from "./handlers/scan-connection-health";
 import { releaseProbe } from "./handlers/release-probe";
 import { syncSource, syncSources } from "./handlers/sync-source";
 import { observeExternalEffectHandler } from "./handlers/observe-external-effect";
+import { maintainIntegrationSubscriptions } from "./handlers/maintain-integration-subscriptions";
+import { materializeArtifactVersion } from "./handlers/materialize-artifact-version";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
@@ -68,6 +70,8 @@ export function createWorker(): JobQueue {
   queue.register("sync_sources", syncSources);
   queue.register("sync_source", syncSource);
   queue.register("observe_external_effect", observeExternalEffectHandler);
+  queue.register("maintain_integration_subscriptions", maintainIntegrationSubscriptions);
+  queue.register("materialize_artifact_version", materializeArtifactVersion);
   return queue;
 }
 
@@ -83,6 +87,10 @@ export const ACTIVE_SCHEDULED_SCANS: ScheduledScan[] = [
   { type: "scan_reliability_alerts", intervalHours: 1, payload: (tenantId) => ({ tenantId }) },
   { type: "scan_integration_health", intervalHours: 1 / 6, payload: (tenantId) => ({ tenantId }) },
   { type: "scan_connection_health", intervalHours: 1 / 4, payload: (tenantId) => ({ tenantId }) },
+  // The 15-minute tick only discovers scopes whose explicit per-scope recovery
+  // cadence is due; actual Graph work remains bounded, leased queue work.
+  { type: "sync_sources", intervalHours: 1 / 4, payload: (tenantId) => ({ tenantId }) },
+  { type: "maintain_integration_subscriptions", intervalHours: 1 / 4, payload: (tenantId) => ({ tenantId }) },
   { type: "scan_watchdog", intervalHours: 1 / 6, payload: (tenantId) => ({ tenantId }) },
   { type: "scan_dlq_triage", intervalHours: 1, payload: (tenantId) => ({ tenantId }) },
   { type: "learning_digest", intervalHours: 24, payload: (tenantId) => ({ tenantId }) },

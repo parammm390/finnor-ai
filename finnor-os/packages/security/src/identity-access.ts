@@ -410,11 +410,11 @@ type AuthCandidate = {
   purpose: string;
   priority: number;
   scope: unknown;
-  credentialProvider: "aws-secrets-manager" | "os-keychain" | "legacy-env" | null;
+  credentialProvider: "aws-secrets-manager" | "aws-iam-federated" | "os-keychain" | "legacy-env" | null;
   credentialRef: string | null;
   credentialVersion: string | null;
   profileStatus: "active" | "disabled" | "suspended";
-  authMethod: "managed_secret" | "oauth2" | "browser_profile";
+  authMethod: "managed_secret" | "oauth2" | "browser_profile" | "workload_identity";
   connectionStatus: string;
   requiredScopes: unknown;
   grantedScopes: unknown;
@@ -480,6 +480,19 @@ function accountMetadata(provider: TenantCredentialProvider, row: AuthCandidate)
 
 async function authProfileCredentialAvailable(tenantId: string, row: AuthCandidate): Promise<boolean> {
   try {
+    if (row.credentialProvider === "aws-iam-federated") {
+      const scope = object(row.scope);
+      const account = object(row.accountMetadata);
+      return row.authMethod === "workload_identity"
+        && row.credentialRef === null
+        && row.credentialVersion === null
+        && typeof scope.awsRegion === "string"
+        && typeof scope.federationAudience === "string"
+        && typeof scope.federationConfigId === "string"
+        && ["ES384", "RS256"].includes(String(scope.signingAlgorithm))
+        && typeof account.directoryTenantId === "string"
+        && typeof account.applicationClientId === "string";
+    }
     if (row.authMethod === "browser_profile" || row.credentialProvider === "os-keychain") {
       const bundle = await resolveTenantBoundSecretBundle(tenantId, {
         credentialProvider: row.credentialProvider,
@@ -582,6 +595,9 @@ async function resolveApplication<P extends TenantCredentialProvider>(params: {
   const selected = await selectApplicationAccess(params);
   if (selected) {
     const row = selected.row;
+    if (row.credentialProvider === "aws-iam-federated" || row.authMethod === "workload_identity") {
+      throw new IdentityAccessError("no_valid_auth_profile", "Secretless provider auth must use its tenant-bound provider auth resolver");
+    }
     if (row.credentialProvider === "os-keychain") {
       throw new IdentityAccessError("no_valid_auth_profile", "OS Keychain auth profiles are restricted to governed computer execution");
     }
@@ -753,6 +769,35 @@ export async function authorizeAuthProfileConnection(
   };
 }
 
+/** Authorize a consequential integration-configuration mutation before an
+ * application account exists (or when the mutation addresses the tenant-wide
+ * integration surface rather than one credential profile). The decision is
+ * durable in Employee Authority and is returned for the caller's audit record. */
+export async function authorizeIntegrationAdministration(
+  tenantId: string,
+  actorId: string,
+  integrationId?: string,
+): Promise<{ authorityDecisionId: string; authorityRevision: number }> {
+  const actor = await loadActorScope(tenantId, actorId);
+  const decision = await evaluateAuthority({
+    tenantId,
+    userId: actor.actorId,
+    ...(actor.employeeId ? { employeeId: actor.employeeId } : {}),
+    role: actor.role,
+  }, {
+    operation: "execution",
+    capability: "action:manage_integrations",
+    resource: integrationId
+      ? { type: "tenant_integration", id: integrationId }
+      : { type: "tenant", id: tenantId },
+    risk: "high",
+  });
+  if (decision.outcome !== "allowed") {
+    throw new IdentityAccessError("authority_denied", "The actor is not authorized to change integration coverage");
+  }
+  return { authorityDecisionId: decision.id, authorityRevision: decision.authorityRevision };
+}
+
 export interface ResolvedComputerAuthProfile {
   profileId: string;
   authProfileRef: string;
@@ -783,6 +828,9 @@ export async function resolveComputerAuthProfile(
   const selected = await selectApplicationAccess({ tenantId, actor, application, purpose, authProfileRef });
   if (!selected) throw new IdentityAccessError("no_valid_auth_profile", "No governed auth profile is configured for this application and purpose");
   const row = selected.row;
+  if (row.credentialProvider === "aws-iam-federated" || row.authMethod === "workload_identity") {
+    throw new IdentityAccessError("no_valid_auth_profile", "A workload-identity profile cannot be used for governed browser execution");
+  }
   const bundle = await resolveTenantBoundSecretBundle(tenantId, {
     credentialProvider: row.credentialProvider,
     credentialRef: row.credentialRef,

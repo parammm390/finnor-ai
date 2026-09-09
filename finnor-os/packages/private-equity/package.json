@@ -7,12 +7,16 @@
   "types": "src/index.ts",
   "dependencies": {
     "@finnor/authority": "*",
+    "@finnor/artifacts": "*",
     "@finnor/data-platform": "*",
     "@finnor/db": "*",
     "@finnor/epistemic-runtime": "*",
     "@finnor/memory": "*",
     "@finnor/read-models": "*",
     "@finnor/shared-types": "*",
+    "@finnor/spreadsheet-ir": "*",
+    "@finnor/tools": "*",
+    "@finnor/underwriting": "*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.13.1"
   }

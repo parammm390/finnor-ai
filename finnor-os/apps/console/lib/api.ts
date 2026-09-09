@@ -23,6 +23,23 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body;
 }
 
+export async function downloadArtifact(documentId: string, versionId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/documents/${encodeURIComponent(documentId)}?versionId=${encodeURIComponent(versionId)}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`Download failed (${response.status})`);
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `artifact-${versionId}`;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function allPendingActions<T>(filter: "pending" | "blocked" = "pending"): Promise<{ actions: T[]; complete: true }> {
   const actions: T[] = [];
   let cursor: string | undefined;

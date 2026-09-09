@@ -8,7 +8,7 @@ export interface IdentityPrincipalRef {
 export type CommunicationChannel = "email" | "sms" | "voice" | "chat" | "calendar";
 export type GovernedAccessStatus = "active" | "disabled" | "suspended";
 export type ConnectionStatus = "disconnected" | "connecting" | "active" | "degraded" | "expired" | "reauth_required" | "revoked" | "disabled" | "misconfigured" | "provider_unavailable";
-export type AuthMethod = "managed_secret" | "oauth2" | "browser_profile";
+export type AuthMethod = "managed_secret" | "oauth2" | "browser_profile" | "workload_identity";
 
 /** Safe, planner-visible metadata. Credential providers, references, versions, and
  * resolved secret values are intentionally absent from every type in this file. */

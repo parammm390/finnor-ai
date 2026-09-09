@@ -165,6 +165,15 @@ export function interpretOperationalQuery(instruction: string): OperationalQuery
   if (!text || !QUESTION.test(text)) return { route: "planner", reason: "not_question" };
   if (MUTATION.test(text)) return { route: "planner", reason: "mutation_or_advice" };
 
+  if (/\b(?:pe\s+)?world\s+state\b/i.test(text)) {
+    const entityId = text.match(UUID)?.[0];
+    const entityType = /\bstrategy\b/i.test(text) ? "pe_strategy" as const
+      : /\bopportunity\b/i.test(text) ? "pe_opportunity" as const
+        : /\bdeal\b/i.test(text) ? "pe_deal" as const : null;
+    if (!entityId || !entityType) return { route: "planner", reason: "external_or_ambiguous" };
+    return { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType, entityId } } };
+  }
+
   if (/\bclosing\s+readiness\b/i.test(text)) return dealRequest(text, "closing_readiness");
   if (/\bcritical\s+dependenc(?:y|ies)\b/i.test(text)) return dealRequest(text, "critical_dependencies");
   if (/\b(?:open\s+)?deal\s+risks?\b/i.test(text)) return dealRequest(text, "open_deal_risks");
@@ -209,7 +218,16 @@ export function validateOperationalQueryRequest(
   if (isRetiredWaterQuery(intent)) return { success: false, error: "Operational query intent belongs to the retired Water vertical" };
   if (!ACTIVE_INTENTS.has(intent)) return { success: false, error: "Unsupported operational query intent" };
 
-  if (PE_INTENTS.has(intent)) {
+  if (intent === "pe_world_state") {
+    const root = object(value?.root);
+    if (!root || !["pe_strategy", "pe_opportunity", "pe_deal"].includes(String(root.entityType))
+        || typeof root.entityId !== "string" || !UUID.test(root.entityId)) {
+      return { success: false, error: "PE world-state queries require a valid Strategy, Opportunity, or Deal root" };
+    }
+    if (value?.at !== undefined && (typeof value.at !== "string" || !Number.isFinite(Date.parse(value.at)))) {
+      return { success: false, error: "PE world-state at must be an ISO timestamp" };
+    }
+  } else if (PE_INTENTS.has(intent)) {
     if (typeof value?.dealId !== "string" || !UUID.test(value.dealId)) {
       return { success: false, error: "Private Equity operational queries require a valid dealId" };
     }
@@ -257,6 +275,10 @@ function answerOperationalQuery(execution: OperationalQueryExecution): AnswerEnv
     summary = result.eligible
       ? "The deal is currently eligible to close under the verified controls."
       : `The deal is not ready to close; ${result.blockingConditions.length} blocking conditions remain.`;
+  } else if (result.intent === "pe_world_state") {
+    facts.push({ label: "Temporal completeness", value: result.temporalCompleteness.status });
+    facts.push({ label: "State at", value: result.stateAt });
+    summary = `PE world state is ${result.temporalCompleteness.status} at ${result.stateAt}.`;
   } else if ("resolution" in result) {
     facts.push({ label: "Resolution", value: String(result.resolution) });
   }

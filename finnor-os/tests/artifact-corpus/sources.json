@@ -1,0 +1,124 @@
+[
+  {
+    "file": "lbo-style.xlsx",
+    "role": "realistic synthetic LBO workbook",
+    "source": "local deterministic certification fixture",
+    "authoring": "@oai/artifact-tool export, recalculated and saved by bundled LibreOffice",
+    "sha256": "521553d74f08a5ab5cb3c8231e2328e7487a8db7f58e33a579b979ad6fd4a634",
+    "bytes": 11742,
+    "confidentialData": false
+  },
+  {
+    "file": "feature-heavy.xlsx",
+    "role": "feature-heavy workbook",
+    "source": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/ExcelPivotTableSample.xlsx",
+    "sha256": "f0ef1d61c9f3d8b27b18a876b8e24676314c6450ed64a725a7bfaa603fdd67e3",
+    "bytes": 19460,
+    "confidentialData": false
+  },
+  {
+    "file": "macro-preservation.xlsm",
+    "role": "harmless macro preservation fixture",
+    "source": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/SimpleMacro.xlsm",
+    "sha256": "f76c986f4ebc25c2cc57c088b2511a1269f4bd61d6223a2ab58db351da348ba6",
+    "bytes": 13796,
+    "confidentialData": false
+  },
+  {
+    "file": "investment-memo.docx",
+    "role": "synthetic investment committee memo",
+    "source": "local deterministic certification fixture",
+    "authoring": "bundled python-docx; rendered with bundled LibreOffice and visually inspected",
+    "sha256": "0453cc8e39df5c58c3fdecbd4c9410225c4d1d4314ce5d87a5e62f34201068a2",
+    "bytes": 39301,
+    "confidentialData": false
+  },
+  {
+    "file": "tracked-changes.docx",
+    "role": "tracked insertions and deletions fixture",
+    "source": "https://raw.githubusercontent.com/jgardner04/sidedoc/main/tests/fixtures/track_changes_multiauthor.docx",
+    "sha256": "194bca419d1cc1650e01d6ceab25d15b1254e4219c0b2498cfc1ef25d24714e9",
+    "bytes": 36754,
+    "confidentialData": false
+  },
+  {
+    "file": "ic-style.pptx",
+    "role": "synthetic investment committee deck",
+    "source": "local deterministic certification fixture",
+    "authoring": "@oai/artifact-tool export; four rendered slides visually inspected",
+    "sha256": "a40046512ab26761253bcb6c720580c1a5b6786afdea180e52c68b3629ea8c1b",
+    "bytes": 22815,
+    "confidentialData": false
+  },
+  {
+    "file": "feature-heavy.pptx",
+    "role": "feature-heavy real-world presentation fixture",
+    "source": "https://raw.githubusercontent.com/shbernal/ts-pptx/master/test/read/fixtures/mixed.pptx",
+    "sha256": "db80910224b01b46cb7e8c29e183b59d128a18fd8e0c651558907230874693b9",
+    "bytes": 105638,
+    "confidentialData": false
+  },
+  {
+    "file": "text-evidence.pdf",
+    "role": "two-page text PDF with exact page anchors",
+    "source": "local deterministic certification fixture",
+    "authoring": "bundled ReportLab; rendered with bundled Poppler and visually inspected",
+    "sha256": "58fd5b7dd8302303f0e44a8ec97db3794bed29f3a38ac0c8070e0af26a8fb203",
+    "bytes": 2558,
+    "confidentialData": false
+  },
+  {
+    "file": "image-only-evidence.pdf",
+    "role": "image-only PDF without a text layer",
+    "source": "local deterministic certification fixture",
+    "authoring": "raster page embedded by bundled ReportLab; rendered with bundled Poppler and visually inspected",
+    "sha256": "06b71dbf890e9224e8667327ec74333957bb3f1254b51d74529219eeba0ca0cc",
+    "bytes": 29043,
+    "confidentialData": false
+  },
+  {
+    "file": "office-features.xlsx",
+    "role": "Microsoft Excel fidelity reference",
+    "source": "https://raw.githubusercontent.com/exceljs/exceljs/master/spec/integration/data/gold.xlsx",
+    "sha256": "158a7657659b2bfc11389f07c911ebc5215757e960cc11f5a947e1056ce6f6e4",
+    "bytes": 9150,
+    "application": "Microsoft Excel",
+    "confidentialData": false
+  },
+  {
+    "file": "office-formulas.xlsx",
+    "role": "Microsoft Excel formula reference",
+    "source": "https://raw.githubusercontent.com/exceljs/exceljs/master/spec/integration/data/formulas.xlsx",
+    "sha256": "dde85664357d0cb5d517ab2268dcd90e30e42f9105f43f7edf112a3b87e7344b",
+    "bytes": 9571,
+    "application": "Microsoft Macintosh Excel",
+    "confidentialData": false
+  },
+  {
+    "file": "office-document.docx",
+    "role": "Microsoft Word fidelity reference",
+    "source": "https://raw.githubusercontent.com/python-openxml/python-docx/master/tests/test_files/test.docx",
+    "sha256": "fba1c76b66ff30982e5281941ca1111eaeaeb092abb6dfbe1730bed3774f40b6",
+    "bytes": 31773,
+    "application": "Microsoft Macintosh Word",
+    "confidentialData": false
+  },
+  {
+    "file": "office-header-footer.docx",
+    "role": "Microsoft Word header and footer reference",
+    "source": "https://raw.githubusercontent.com/python-openxml/python-docx/master/features/steps/test_files/hdr-header-footer.docx",
+    "sha256": "5a4cb270680d1365688073e4816be98c2ab1a7ba2921d86cb3efadca97a72d27",
+    "bytes": 18079,
+    "application": "Microsoft Office Word",
+    "confidentialData": false
+  },
+  {
+    "file": "office-presentation.pptx",
+    "role": "Microsoft PowerPoint fidelity reference",
+    "source": "https://raw.githubusercontent.com/scanny/python-pptx/master/tests/test_files/test.pptx",
+    "sha256": "8765677cdf43181ef41657cedf28485b5f2cbf166667218c217af07f8336c96f",
+    "bytes": 37859,
+    "application": "Microsoft Macintosh PowerPoint",
+    "confidentialData": false
+  }
+]

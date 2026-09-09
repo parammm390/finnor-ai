@@ -680,7 +680,7 @@ async function prerequisites(migrations: MigrationFile[]): Promise<Record<string
   assert(PHASE5_DISPOSITION_LEDGER_VERSION === 2 && PHASE5_DISPOSITION_LEDGER.length === PHASE5_DISPOSITION_COUNTS.total,
     "PE0 -> P1 -> P5 disposition ledger is incomplete");
   assert(EXECUTABLE_VERTICALS.join(",") === "none,private_equity", "PE1 executable vertical boundary is wrong");
-  assert(OPERATIONAL_QUERY_INTENTS.length === 13, "PE3 query contract is incomplete");
+  assert(OPERATIONAL_QUERY_INTENTS.length === 14, "PE3 query contract is incomplete");
   return {
     status: "PASS",
     pe0: {
@@ -753,7 +753,9 @@ function markdown(report: Record<string, any>): string {
 async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const migrations = await loadMigrations();
-  assert(migrations.at(-1)?.name === MIGRATION_HEAD, `migration head is ${migrations.at(-1)?.name ?? "missing"}`);
+  const currentMigrationHead = migrations.at(-1)?.name;
+  assert(currentMigrationHead, "migration catalog is empty");
+  assert(migrations.some((migration) => migration.name === MIGRATION_HEAD), `Phase-5 migration ${MIGRATION_HEAD} is missing`);
   const prerequisiteEvidence = await prerequisites(migrations);
   const boundary = await verifyPeDomainBoundary();
   const typecheck = await runCommand(resolve(ROOT, "node_modules/.bin/tsc"), ["-p", "tsconfig.json", "--pretty", "false"]);
@@ -802,14 +804,18 @@ async function main(): Promise<void> {
 
     const preCutoverMigrations = migrations.filter((migration) => migration.name < MIGRATION_HEAD);
     const preApplied = await migrate(upgradeUrl, preCutoverMigrations);
-    assert(preApplied.length === preCutoverMigrations.length, "populated upgrade fixture did not reach 0107 cleanly");
+    assert(preApplied.length === preCutoverMigrations.length, "populated upgrade fixture did not reach the Phase-5 cutover boundary cleanly");
     const seedClient = new pg.Client({ connectionString: upgradeUrl });
     await seedClient.connect();
     ids = await seedPopulatedHistory(seedClient);
     historyBefore = await historyFingerprint(seedClient, ids);
     await seedClient.end();
     const appliedUpgrade = await migrate(upgradeUrl, migrations);
-    assert(appliedUpgrade.length === 1 && appliedUpgrade[0] === MIGRATION_HEAD, `populated upgrade applied ${appliedUpgrade.join(",")}`);
+    assert(
+      appliedUpgrade[0] === MIGRATION_HEAD && appliedUpgrade.at(-1) === currentMigrationHead
+        && appliedUpgrade.length === migrations.length - preCutoverMigrations.length,
+      `populated upgrade applied ${appliedUpgrade.join(",")}`,
+    );
     cutover = await cutoverPopulatedDatabase(upgradeUrl, ids, historyBefore);
     restore = await restoreHistoricalBackup(upgradeUrl, restoreUrl, ids, migrations);
 
@@ -859,15 +865,11 @@ async function main(): Promise<void> {
 
   const gitBranch = (await runCommand("git", ["branch", "--show-current"])).summary;
   const gitSha = (await runCommand("git", ["rev-parse", "HEAD"])).summary;
-  // `git status` traverses the shallow boundary on some local APFS checkouts and
-  // can block indefinitely while reading a cloud-only `.git/shallow`.  The
-  // certification only needs a deterministic changed-path fingerprint here; the
-  // release gate performs the authoritative clean-worktree check on CI.
-  // Compare the index to HEAD rather than refreshing every worktree entry.  This
-  // keeps the evidence deterministic on developer checkouts containing cloud-only
-  // duplicate files; the canonical release gate still performs the full worktree
-  // cleanliness check before publication.
-  const tree = await runCommand("git", ["diff", "--cached", "--name-only", "--no-ext-diff", "HEAD"]);
+  // This checkout is a partial clone whose missing shallow-boundary object can
+  // make even an index-only diff block indefinitely.  Worktree cleanliness is a
+  // publication concern, not a Phase-5 behavior assertion; record the limitation
+  // explicitly instead of manufacturing a clean result.
+  const treeInspection = "NOT_EVALUATED_PARTIAL_CLONE_GIT_DIFF_BLOCKS";
   const blockedProductionConditions = new Set([3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 79]);
   const productionObservedConditions = new Set([7, 8]);
   const evidenceForCondition = (id: number): string => {
@@ -916,11 +918,11 @@ async function main(): Promise<void> {
       branch: gitBranch,
       sha: gitSha,
       tree: {
-        changedPaths: tree.outputLineCount,
-        porcelainSha256: tree.outputHash,
-        summaryTail: tree.summary || "clean",
+        changedPaths: null,
+        porcelainSha256: hash(treeInspection),
+        summaryTail: treeInspection,
       },
-      implementationTreeDirty: tree.outputLineCount > 0,
+      implementationTreeDirty: true,
     },
     prerequisites: prerequisiteEvidence,
     pe0Ledger: {
@@ -988,7 +990,7 @@ async function main(): Promise<void> {
     ],
     database: {
       engine: "embedded PostgreSQL",
-      migrationHead: MIGRATION_HEAD,
+      migrationHead: currentMigrationHead,
       migrationCount: migrations.length,
       migrationNamesHash: hash(migrations.map((migration) => migration.name).join("\n")),
       fresh: freshEvidence!,
@@ -1063,7 +1065,7 @@ async function main(): Promise<void> {
       status: "BLOCKED_UNTIL_PRODUCTION_CUTOVER_CERTIFIED",
       activeProductVertical: "private_equity",
       productEpoch: 6,
-      migrationHead: MIGRATION_HEAD,
+      migrationHead: currentMigrationHead,
       actionCount: EXECUTABLE_ACTION_COUNT,
       queryCount: OPERATIONAL_QUERY_INTENTS.length,
       historicalWaterMode: "read_only",

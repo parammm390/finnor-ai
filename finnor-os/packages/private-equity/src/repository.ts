@@ -29,13 +29,15 @@ import {
   type PeMutationContext,
   type PeMutationResult,
   type PePartyRef,
+  type PeWorldRootRef,
   type RequestState,
   type WorkstreamKind,
   type WorkstreamState,
 } from "./types";
 
-type SqlRow = Record<string, unknown>;
-type Client = pg.PoolClient;
+export type SqlRow = Record<string, unknown>;
+export type PeClient = pg.PoolClient;
+type Client = PeClient;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[a-z][a-z0-9_]{1,62}$/;
@@ -55,11 +57,11 @@ const LIFECYCLE_TABLES = {
   closing_item: "pe_closing_items",
 } as const;
 
-function assertUuid(value: string, label: string): void {
+export function assertPeUuid(value: string, label: string): void {
   if (!UUID.test(value)) throw new PeDomainError("PE_INVALID_REFERENCE", `${label} must be a UUID`, { value });
 }
 
-function assertText(value: string, label: string): void {
+export function assertPeText(value: string, label: string): void {
   if (!value.trim()) throw new PeDomainError("PE_INVALID_INPUT", `${label} is required`);
 }
 
@@ -67,18 +69,18 @@ function camelKey(key: string): string {
   return key.replace(/_([a-z])/g, (_match, letter: string) => letter.toUpperCase());
 }
 
-function shapeRow(row: SqlRow): Record<string, unknown> {
+export function shapePeRow(row: SqlRow): Record<string, unknown> {
   return Object.fromEntries(Object.entries(row).map(([key, value]) => [camelKey(key), value]));
 }
 
-function provenance(ctx: PeMutationContext): {
+export function peProvenance(ctx: PeMutationContext): {
   sourceSystem: string;
   externalId: string | null;
   createdBy: string;
   observedAt: Date | null;
 } {
   const createdBy = ctx.provenance?.createdBy ?? ctx.auth.employeeId ?? ctx.auth.userId;
-  assertText(createdBy, "createdBy");
+  assertPeText(createdBy, "createdBy");
   return {
     sourceSystem: ctx.provenance?.sourceSystem?.trim() || "@finnor/private-equity",
     externalId: ctx.provenance?.externalId?.trim() || null,
@@ -93,12 +95,12 @@ function pgCode(error: unknown): string | undefined {
     : undefined;
 }
 
-async function peTransaction<T>(
+export async function peTransaction<T>(
   ctx: PeMutationContext,
   fn: (db: Db, client: Client) => Promise<T>,
   options: { readOnly?: boolean; isolation?: "repeatable read" | "serializable" } = {},
 ): Promise<T> {
-  const source = provenance(ctx);
+  const source = peProvenance(ctx);
   const maxAttempts = options.readOnly ? 1 : 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -137,7 +139,7 @@ function quotedIdentifier(value: string): string {
   return `"${value}"`;
 }
 
-async function insertRow(client: Client, table: string, values: Record<string, unknown>): Promise<SqlRow> {
+export async function insertPeRow(client: Client, table: string, values: Record<string, unknown>): Promise<SqlRow> {
   const entries = Object.entries(values).filter(([, value]) => value !== undefined);
   const columns = entries.map(([column]) => quotedIdentifier(column)).join(",");
   const placeholders = entries.map((_entry, index) => `$${index + 1}`).join(",");
@@ -150,8 +152,8 @@ async function insertRow(client: Client, table: string, values: Record<string, u
   return row;
 }
 
-async function lockDeal(client: Client, tenantId: string, dealId: string): Promise<SqlRow> {
-  assertUuid(dealId, "dealId");
+export async function lockPeDeal(client: Client, tenantId: string, dealId: string): Promise<SqlRow> {
+  assertPeUuid(dealId, "dealId");
   const result = await client.query<SqlRow>(
     "SELECT * FROM finnor_os.pe_deals WHERE tenant_id=$1::uuid AND id=$2::uuid FOR UPDATE",
     [tenantId, dealId],
@@ -161,7 +163,7 @@ async function lockDeal(client: Client, tenantId: string, dealId: string): Promi
   return row;
 }
 
-function requireActiveDeal(row: SqlRow): void {
+export function requireActivePeDeal(row: SqlRow): void {
   if (row.status !== "active") {
     throw new PeDomainError("PE_DEAL_TERMINAL", "A closed or terminated Deal graph is immutable", { status: row.status });
   }
@@ -173,14 +175,14 @@ async function getLifecycleRowForUpdate(
   table: string,
   id: string,
 ): Promise<SqlRow> {
-  assertUuid(id, "entityId");
+  assertPeUuid(id, "entityId");
   const first = await client.query<{ deal_id: string }>(
     `SELECT deal_id FROM finnor_os.${quotedIdentifier(table)} WHERE tenant_id=$1::uuid AND id=$2::uuid`,
     [tenantId, id],
   );
   const dealId = first.rows[0]?.deal_id;
   if (!dealId) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE entity was not found in the authenticated tenant");
-  requireActiveDeal(await lockDeal(client, tenantId, dealId));
+  requireActivePeDeal(await lockPeDeal(client, tenantId, dealId));
   const locked = await client.query<SqlRow>(
     `SELECT * FROM finnor_os.${quotedIdentifier(table)} WHERE tenant_id=$1::uuid AND id=$2::uuid FOR UPDATE`,
     [tenantId, id],
@@ -193,7 +195,7 @@ async function getLifecycleRowForUpdate(
 async function transitionTx(params: {
   client: Client;
   ctx: PeMutationContext;
-  lifecycle: Exclude<PeLifecycleName, "deal">;
+  lifecycle: keyof typeof LIFECYCLE_TABLES;
   id: string;
   expectedVersion: number;
   targetState: string;
@@ -203,7 +205,7 @@ async function transitionTx(params: {
   const row = await getLifecycleRowForUpdate(params.client, params.ctx.auth.tenantId, table, params.id);
   const currentState = String(row.state);
   if (currentState === params.targetState) {
-    return { row: shapeRow(row), changed: false, idempotent: true };
+    return { row: shapePeRow(row), changed: false, idempotent: true };
   }
   if (Number(row.version) !== params.expectedVersion) {
     throw new PeDomainError("PE_STALE_VERSION", "PE entity changed since it was read", {
@@ -227,7 +229,7 @@ async function transitionTx(params: {
   );
   const updated = result.rows[0];
   if (!updated) throw new PeDomainError("PE_STALE_VERSION", "PE entity changed concurrently");
-  return { row: shapeRow(updated), changed: true, idempotent: false };
+  return { row: shapePeRow(updated), changed: true, idempotent: false };
 }
 
 async function transition(params: Omit<Parameters<typeof transitionTx>[0], "client">): Promise<PeMutationResult> {
@@ -241,9 +243,9 @@ async function createChild(
   values: Record<string, unknown>,
 ): Promise<PeMutationResult> {
   return peTransaction(ctx, async (_db, client) => {
-    requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, dealId));
-    const source = provenance(ctx);
-    const row = await insertRow(client, table, {
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, dealId));
+    const source = peProvenance(ctx);
+    const row = await insertPeRow(client, table, {
       id: values.id ?? randomUUID(),
       tenant_id: ctx.auth.tenantId,
       deal_id: dealId,
@@ -253,7 +255,7 @@ async function createChild(
       created_by: source.createdBy,
       observed_at: source.observedAt,
     });
-    return { row: shapeRow(row), changed: true, idempotent: false };
+    return { row: shapePeRow(row), changed: true, idempotent: false };
   });
 }
 
@@ -271,26 +273,34 @@ async function ensureParty(ctx: PeMutationContext, ref: PartyRef, allowed: reado
   }
 }
 
-async function attachDocumentTx(client: Client, ctx: PeMutationContext, params: {
-  dealId: string;
+export async function attachDocumentTx(client: Client, ctx: PeMutationContext, params: {
+  dealId: string | null;
+  worldRoot?: PeWorldRootRef;
   entity: PeEntityRef;
   documentId: string;
   linkRole: "source" | "submission" | "accepted" | "rejected" | "superseded" | "governing" | "verification";
   supersedesLinkId?: string;
 }): Promise<PeMutationResult> {
-  requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, params.dealId));
-  assertUuid(params.documentId, "documentId");
-  const source = provenance(ctx);
+  const worldRoot = params.worldRoot ?? (params.dealId ? { entityType: "pe_deal", entityId: params.dealId } as const : null);
+  if (!worldRoot) throw new PeDomainError("PE_WORLD_ROOT_REQUIRED", "A PE Document link requires an explicit world root");
+  if (worldRoot.entityType === "pe_deal") {
+    if (params.dealId !== worldRoot.entityId) throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Deal link root must equal dealId");
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, params.dealId));
+  } else if (params.dealId !== null) {
+    throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Pre-Deal link roots cannot carry a synthetic dealId");
+  }
+  assertPeUuid(params.documentId, "documentId");
+  const source = peProvenance(ctx);
   const result = await client.query<SqlRow>(
     `INSERT INTO finnor_os.pe_document_links
-      (id,tenant_id,deal_id,entity_type,entity_id,document_id,link_role,supersedes_link_id,source_system,external_id,created_by,observed_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      (id,tenant_id,deal_id,world_root_type,world_root_id,entity_type,entity_id,document_id,link_role,supersedes_link_id,source_system,external_id,created_by,observed_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      ON CONFLICT (entity_type,entity_id,document_id,link_role) DO NOTHING RETURNING *`,
-    [randomUUID(), ctx.auth.tenantId, params.dealId, params.entity.entityType, params.entity.entityId,
-      params.documentId, params.linkRole, params.supersedesLinkId ?? null, source.sourceSystem,
+    [randomUUID(), ctx.auth.tenantId, params.dealId, worldRoot.entityType, worldRoot.entityId,
+      params.entity.entityType, params.entity.entityId, params.documentId, params.linkRole, params.supersedesLinkId ?? null, source.sourceSystem,
       source.externalId, source.createdBy, source.observedAt],
   );
-  if (result.rows[0]) return { row: shapeRow(result.rows[0]), changed: true, idempotent: false };
+  if (result.rows[0]) return { row: shapePeRow(result.rows[0]), changed: true, idempotent: false };
   const existing = await client.query<SqlRow>(
     `SELECT * FROM finnor_os.pe_document_links
       WHERE tenant_id=$1 AND entity_type=$2 AND entity_id=$3 AND document_id=$4 AND link_role=$5`,
@@ -298,19 +308,31 @@ async function attachDocumentTx(client: Client, ctx: PeMutationContext, params: 
   );
   const row = existing.rows[0];
   if (!row) throw new PeDomainError("PE_DOCUMENT_LINK_FAILED", "Canonical Document link was not persisted");
-  return { row: shapeRow(row), changed: false, idempotent: true };
+  if (row.world_root_type !== worldRoot.entityType || row.world_root_id !== worldRoot.entityId
+      || (row.deal_id ?? null) !== params.dealId) {
+    throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Existing PE Document link belongs to a different world root");
+  }
+  return { row: shapePeRow(row), changed: false, idempotent: true };
 }
 
-async function attachEvidenceTx(client: Client, ctx: PeMutationContext, params: {
-  dealId: string;
+export async function attachEvidenceTx(client: Client, ctx: PeMutationContext, params: {
+  dealId: string | null;
+  worldRoot?: PeWorldRootRef;
   entity: PeEntityRef;
   evidenceSourceId: string;
   evidenceVersionId?: string;
   relationship: "supports" | "verifies" | "authorizes";
 }): Promise<PeMutationResult> {
-  requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, params.dealId));
-  assertUuid(params.evidenceSourceId, "evidenceSourceId");
-  if (params.evidenceVersionId) assertUuid(params.evidenceVersionId, "evidenceVersionId");
+  const worldRoot = params.worldRoot ?? (params.dealId ? { entityType: "pe_deal", entityId: params.dealId } as const : null);
+  if (!worldRoot) throw new PeDomainError("PE_WORLD_ROOT_REQUIRED", "A PE Evidence link requires an explicit world root");
+  if (worldRoot.entityType === "pe_deal") {
+    if (params.dealId !== worldRoot.entityId) throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Deal link root must equal dealId");
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, params.dealId));
+  } else if (params.dealId !== null) {
+    throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Pre-Deal link roots cannot carry a synthetic dealId");
+  }
+  assertPeUuid(params.evidenceSourceId, "evidenceSourceId");
+  if (params.evidenceVersionId) assertPeUuid(params.evidenceVersionId, "evidenceVersionId");
   const existing = await client.query<SqlRow>(
     `SELECT * FROM finnor_os.pe_evidence_links
       WHERE tenant_id=$1 AND entity_type=$2 AND entity_id=$3 AND evidence_source_id=$4
@@ -318,16 +340,24 @@ async function attachEvidenceTx(client: Client, ctx: PeMutationContext, params: 
     [ctx.auth.tenantId, params.entity.entityType, params.entity.entityId, params.evidenceSourceId,
       params.evidenceVersionId ?? null, params.relationship],
   );
-  if (existing.rows[0]) return { row: shapeRow(existing.rows[0]), changed: false, idempotent: true };
-  const source = provenance(ctx);
-  const row = await insertRow(client, "pe_evidence_links", {
+  if (existing.rows[0]) {
+    const row = existing.rows[0];
+    if (row.world_root_type !== worldRoot.entityType || row.world_root_id !== worldRoot.entityId
+        || (row.deal_id ?? null) !== params.dealId) {
+      throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "Existing PE Evidence link belongs to a different world root");
+    }
+    return { row: shapePeRow(row), changed: false, idempotent: true };
+  }
+  const source = peProvenance(ctx);
+  const row = await insertPeRow(client, "pe_evidence_links", {
     id: randomUUID(), tenant_id: ctx.auth.tenantId, deal_id: params.dealId,
+    world_root_type: worldRoot.entityType, world_root_id: worldRoot.entityId,
     entity_type: params.entity.entityType, entity_id: params.entity.entityId,
     evidence_source_id: params.evidenceSourceId, evidence_version_id: params.evidenceVersionId ?? null,
     relationship: params.relationship, source_system: source.sourceSystem, external_id: source.externalId,
     created_by: source.createdBy, observed_at: source.observedAt,
   });
-  return { row: shapeRow(row), changed: true, idempotent: false };
+  return { row: shapePeRow(row), changed: true, idempotent: false };
 }
 
 async function governanceProof(ctx: PeMutationContext, params: {
@@ -338,8 +368,8 @@ async function governanceProof(ctx: PeMutationContext, params: {
   policyRequiresApproval?: boolean;
 }): Promise<GovernanceProof> {
   if (params.supplied) {
-    assertUuid(params.supplied.authorityDecisionId, "authorityDecisionId");
-    if (params.supplied.decisionReceiptId) assertUuid(params.supplied.decisionReceiptId, "decisionReceiptId");
+    assertPeUuid(params.supplied.authorityDecisionId, "authorityDecisionId");
+    if (params.supplied.decisionReceiptId) assertPeUuid(params.supplied.decisionReceiptId, "decisionReceiptId");
     return params.supplied;
   }
   const decision = await evaluateAuthority(ctx.auth, {
@@ -362,7 +392,7 @@ async function governanceProof(ctx: PeMutationContext, params: {
   return { authorityDecisionId: decision.id };
 }
 
-export async function createDeal(ctx: PeMutationContext, input: {
+export interface CreateDealInput {
   id?: string;
   targetOrganizationId: string;
   name: string;
@@ -371,29 +401,38 @@ export async function createDeal(ctx: PeMutationContext, input: {
   signedLoiAt: Date;
   signedLoiDocumentId?: string;
   targetClosingAt: Date;
-}): Promise<PeMutationResult> {
-  assertText(input.name, "Deal name");
+}
+
+export async function createDealTx(
+  client: Client,
+  ctx: PeMutationContext,
+  input: CreateDealInput & { opportunityId?: string },
+): Promise<PeMutationResult> {
+  const source = peProvenance(ctx);
+  const row = await insertPeRow(client, "pe_deals", {
+    id: input.id ?? randomUUID(), tenant_id: ctx.auth.tenantId,
+    opportunity_id: input.opportunityId ?? null,
+    target_organization_id: input.targetOrganizationId, name: input.name.trim(),
+    code_name: input.codeName?.trim() || null, deal_lead_employee_id: input.dealLeadEmployeeId,
+    signed_loi_at: input.signedLoiAt, signed_loi_document_id: input.signedLoiDocumentId ?? null,
+    target_closing_at: input.targetClosingAt, source_system: source.sourceSystem,
+    external_id: source.externalId, created_by: source.createdBy, observed_at: source.observedAt,
+  });
+  if (input.signedLoiDocumentId) {
+    await attachDocumentTx(client, ctx, {
+      dealId: String(row.id), entity: { entityType: "pe_deal", entityId: String(row.id) },
+      documentId: input.signedLoiDocumentId, linkRole: "governing",
+    });
+  }
+  const refreshed = await client.query<SqlRow>("SELECT * FROM finnor_os.pe_deals WHERE id=$1", [row.id]);
+  return { row: shapePeRow(refreshed.rows[0] ?? row), changed: true, idempotent: false };
+}
+
+export async function createDeal(ctx: PeMutationContext, input: CreateDealInput): Promise<PeMutationResult> {
+  assertPeText(input.name, "Deal name");
   await ensureParty(ctx, { partyType: "external_organization", partyId: input.targetOrganizationId }, ["external_organization"]);
   await ensureParty(ctx, { partyType: "employee", partyId: input.dealLeadEmployeeId }, ["employee"]);
-  return peTransaction(ctx, async (_db, client) => {
-    const source = provenance(ctx);
-    const row = await insertRow(client, "pe_deals", {
-      id: input.id ?? randomUUID(), tenant_id: ctx.auth.tenantId,
-      target_organization_id: input.targetOrganizationId, name: input.name.trim(),
-      code_name: input.codeName?.trim() || null, deal_lead_employee_id: input.dealLeadEmployeeId,
-      signed_loi_at: input.signedLoiAt, signed_loi_document_id: input.signedLoiDocumentId ?? null,
-      target_closing_at: input.targetClosingAt, source_system: source.sourceSystem,
-      external_id: source.externalId, created_by: source.createdBy, observed_at: source.observedAt,
-    });
-    if (input.signedLoiDocumentId) {
-      await attachDocumentTx(client, ctx, {
-        dealId: String(row.id), entity: { entityType: "pe_deal", entityId: String(row.id) },
-        documentId: input.signedLoiDocumentId, linkRole: "governing",
-      });
-    }
-    const refreshed = await client.query<SqlRow>("SELECT * FROM finnor_os.pe_deals WHERE id=$1", [row.id]);
-    return { row: shapeRow(refreshed.rows[0] ?? row), changed: true, idempotent: false };
-  });
+  return peTransaction(ctx, async (_db, client) => createDealTx(client, ctx, input));
 }
 
 export async function addDealParty(ctx: PeMutationContext, input: {
@@ -415,7 +454,7 @@ export async function createWorkstream(ctx: PeMutationContext, input: {
   id?: string; dealId: string; kind: WorkstreamKind; name: string; owner: InternalPartyRef;
 }): Promise<PeMutationResult> {
   if (!WORKSTREAM_KIND_SET.has(input.kind)) throw new PeDomainError("PE_INVALID_WORKSTREAM_KIND", `Unsupported Workstream kind ${input.kind}`);
-  assertText(input.name, "Workstream name");
+  assertPeText(input.name, "Workstream name");
   return createChild(ctx, "pe_workstreams", input.dealId, {
     id: input.id, kind: input.kind, name: input.name.trim(),
     owner_party_type: input.owner.partyType, owner_party_id: input.owner.partyId,
@@ -436,7 +475,7 @@ export async function createRequest(ctx: PeMutationContext, input: {
   owner: InternalPartyRef; requestText: string; requestedAt?: Date; dueAt?: Date;
   requiresAcceptedDeliverable?: boolean;
 }): Promise<PeMutationResult> {
-  assertText(input.requestText, "Request text");
+  assertPeText(input.requestText, "Request text");
   return createChild(ctx, "pe_requests", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, requested_from_deal_party_id: input.requestedFromDealPartyId,
     owner_party_type: input.owner.partyType, owner_party_id: input.owner.partyId,
@@ -452,7 +491,7 @@ export const fulfillRequest = (ctx: PeMutationContext, input: { requestId: strin
   transition({ ctx, lifecycle: "request", id: input.requestId, expectedVersion: input.expectedVersion,
     targetState: "fulfilled", updates: { fulfilled_at: new Date() } });
 export const cancelRequest = (ctx: PeMutationContext, input: { requestId: string; expectedVersion: number; reason: string }) => {
-  assertText(input.reason, "Request cancellation reason");
+  assertPeText(input.reason, "Request cancellation reason");
   return transition({ ctx, lifecycle: "request", id: input.requestId, expectedVersion: input.expectedVersion,
     targetState: "cancelled", updates: { cancelled_at: new Date(), cancellation_reason: input.reason.trim() } });
 };
@@ -462,8 +501,8 @@ export async function createDeliverable(ctx: PeMutationContext, input: {
   responsibleDealPartyId: string; description: string; kind: string; dueAt?: Date;
   requiresDocument?: boolean; requiredForWorkstreamCompletion?: boolean;
 }): Promise<PeMutationResult> {
-  assertText(input.description, "Deliverable description");
-  assertText(input.kind, "Deliverable kind");
+  assertPeText(input.description, "Deliverable description");
+  assertPeText(input.kind, "Deliverable kind");
   return createChild(ctx, "pe_deliverables", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, request_id: input.requestId ?? null,
     responsible_deal_party_id: input.responsibleDealPartyId, description: input.description.trim(),
@@ -477,7 +516,7 @@ export async function receiveDeliverable(ctx: PeMutationContext, input: {
 }): Promise<PeMutationResult> {
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_deliverables", input.deliverableId);
-    if (current.state === "received") return { row: shapeRow(current), changed: false, idempotent: true };
+    if (current.state === "received") return { row: shapePeRow(current), changed: false, idempotent: true };
     if (current.requires_document && !input.documentId) {
       throw new PeDomainError("PE_DELIVERABLE_DOCUMENT_REQUIRED", "This Deliverable requires a canonical Document before receipt");
     }
@@ -496,7 +535,7 @@ export async function acceptDeliverable(ctx: PeMutationContext, input: {
 }): Promise<PeMutationResult> {
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_deliverables", input.deliverableId);
-    if (current.state === "accepted") return { row: shapeRow(current), changed: false, idempotent: true };
+    if (current.state === "accepted") return { row: shapePeRow(current), changed: false, idempotent: true };
     if (current.requires_document && !input.documentId) {
       throw new PeDomainError("PE_DELIVERABLE_DOCUMENT_REQUIRED", "This Deliverable requires an accepted canonical Document link");
     }
@@ -512,7 +551,7 @@ export async function acceptDeliverable(ctx: PeMutationContext, input: {
 }
 
 export const rejectDeliverable = (ctx: PeMutationContext, input: { deliverableId: string; expectedVersion: number; reason: string }) => {
-  assertText(input.reason, "Deliverable rejection reason");
+  assertPeText(input.reason, "Deliverable rejection reason");
   return transition({ ctx, lifecycle: "deliverable", id: input.deliverableId, expectedVersion: input.expectedVersion,
     targetState: "rejected", updates: { rejected_at: new Date(), rejection_reason: input.reason.trim() } });
 };
@@ -520,7 +559,7 @@ export const supersedeDeliverable = (ctx: PeMutationContext, input: { deliverabl
   transition({ ctx, lifecycle: "deliverable", id: input.deliverableId, expectedVersion: input.expectedVersion,
     targetState: "superseded", updates: { superseded_at: new Date() } });
 export const cancelDeliverable = (ctx: PeMutationContext, input: { deliverableId: string; expectedVersion: number; reason: string }) => {
-  assertText(input.reason, "Deliverable cancellation reason");
+  assertPeText(input.reason, "Deliverable cancellation reason");
   return transition({ ctx, lifecycle: "deliverable", id: input.deliverableId, expectedVersion: input.expectedVersion,
     targetState: "cancelled", updates: { cancelled_at: new Date(), cancellation_reason: input.reason.trim() } });
 };
@@ -531,7 +570,7 @@ export async function createFinding(ctx: PeMutationContext, input: {
   materiality: "immaterial" | "non_material" | "material" | "critical"; owner: InternalPartyRef;
   requiredForWorkstreamCompletion?: boolean;
 }): Promise<PeMutationResult> {
-  assertText(input.statement, "Finding statement");
+  assertPeText(input.statement, "Finding statement");
   return createChild(ctx, "pe_findings", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, related_request_id: input.relatedRequestId ?? null,
     related_deliverable_id: input.relatedDeliverableId ?? null, statement: input.statement.trim(),
@@ -542,7 +581,7 @@ export async function createFinding(ctx: PeMutationContext, input: {
 }
 
 function findingDisposition(ctx: PeMutationContext, input: { findingId: string; expectedVersion: number; disposition: string }, targetState: FindingState) {
-  assertText(input.disposition, "Finding disposition");
+  assertPeText(input.disposition, "Finding disposition");
   const timeColumn = targetState === "resolved" ? "resolved_at" : targetState === "accepted" ? "accepted_at" : "superseded_at";
   return transition({ ctx, lifecycle: "finding", id: input.findingId, expectedVersion: input.expectedVersion,
     targetState, updates: { disposition: input.disposition.trim(), [timeColumn]: new Date() } });
@@ -559,11 +598,11 @@ export async function createDealRisk(ctx: PeMutationContext, input: {
   severity: "low" | "medium" | "high" | "critical"; owner: InternalPartyRef;
   response?: string; requiredForWorkstreamCompletion?: boolean; originatingFindingIds?: string[];
 }): Promise<PeMutationResult> {
-  assertText(input.statement, "Deal Risk statement");
+  assertPeText(input.statement, "Deal Risk statement");
   return peTransaction(ctx, async (_db, client) => {
-    requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, input.dealId));
-    const source = provenance(ctx);
-    const row = await insertRow(client, "pe_deal_risks", {
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, input.dealId));
+    const source = peProvenance(ctx);
+    const row = await insertPeRow(client, "pe_deal_risks", {
       id: input.id ?? randomUUID(), tenant_id: ctx.auth.tenantId, deal_id: input.dealId,
       workstream_id: input.workstreamId, statement: input.statement.trim(), severity: input.severity,
       owner_party_type: input.owner.partyType, owner_party_id: input.owner.partyId,
@@ -573,13 +612,13 @@ export async function createDealRisk(ctx: PeMutationContext, input: {
       created_by: source.createdBy, observed_at: source.observedAt,
     });
     for (const findingId of input.originatingFindingIds ?? []) {
-      await insertRow(client, "pe_finding_risk_links", {
+      await insertPeRow(client, "pe_finding_risk_links", {
         id: randomUUID(), tenant_id: ctx.auth.tenantId, deal_id: input.dealId,
         finding_id: findingId, deal_risk_id: row.id, source_system: source.sourceSystem,
         external_id: source.externalId, created_by: source.createdBy, observed_at: source.observedAt,
       });
     }
-    return { row: shapeRow(row), changed: true, idempotent: false };
+    return { row: shapePeRow(row), changed: true, idempotent: false };
   });
 }
 
@@ -587,7 +626,7 @@ export const startMitigatingDealRisk = (ctx: PeMutationContext, input: { dealRis
   transition({ ctx, lifecycle: "deal_risk", id: input.dealRiskId, expectedVersion: input.expectedVersion,
     targetState: "mitigating", updates: { mitigating_at: new Date(), response: input.response?.trim() || null } });
 function disposeDealRisk(ctx: PeMutationContext, input: { dealRiskId: string; expectedVersion: number; response: string }, targetState: "resolved" | "accepted") {
-  assertText(input.response, "Deal Risk response");
+  assertPeText(input.response, "Deal Risk response");
   return transition({ ctx, lifecycle: "deal_risk", id: input.dealRiskId, expectedVersion: input.expectedVersion,
     targetState, updates: { response: input.response.trim(), [targetState === "resolved" ? "resolved_at" : "accepted_at"]: new Date() } });
 }
@@ -611,8 +650,8 @@ export async function createDependency(ctx: PeMutationContext, input: {
     throw new PeDomainError("PE_DEPENDENCY_TYPE_UNSUPPORTED", "Dependency endpoints must be bounded PE execution objects");
   }
   return peTransaction(ctx, async (_db, client) => {
-    requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, input.dealId));
-    const source = provenance(ctx);
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, input.dealId));
+    const source = peProvenance(ctx);
     const result = await client.query<SqlRow>(
       `INSERT INTO finnor_os.pe_dependencies
         (id,tenant_id,deal_id,blocker_type,blocker_id,blocked_type,blocked_id,relation,source_system,external_id,created_by,observed_at)
@@ -623,7 +662,7 @@ export async function createDependency(ctx: PeMutationContext, input: {
         input.blocker.entityId, input.blocked.entityType, input.blocked.entityId,
         source.sourceSystem, source.externalId, source.createdBy, source.observedAt],
     );
-    if (result.rows[0]) return { row: shapeRow(result.rows[0]), changed: true, idempotent: false };
+    if (result.rows[0]) return { row: shapePeRow(result.rows[0]), changed: true, idempotent: false };
     const existing = await client.query<SqlRow>(
       `SELECT * FROM finnor_os.pe_dependencies WHERE deal_id=$1 AND blocker_type=$2 AND blocker_id=$3
         AND blocked_type=$4 AND blocked_id=$5 AND removed_at IS NULL`,
@@ -631,19 +670,19 @@ export async function createDependency(ctx: PeMutationContext, input: {
     );
     const row = existing.rows[0];
     if (!row) throw new PeDomainError("PE_DEPENDENCY_WRITE_FAILED", "Dependency was not persisted");
-    return { row: shapeRow(row), changed: false, idempotent: true };
+    return { row: shapePeRow(row), changed: false, idempotent: true };
   });
 }
 
 export async function removeDependency(ctx: PeMutationContext, input: {
   dependencyId: string; expectedVersion: number; reason: string;
 }): Promise<PeMutationResult> {
-  assertText(input.reason, "Dependency removal reason");
+  assertPeText(input.reason, "Dependency removal reason");
   return peTransaction(ctx, async (_db, client) => {
     const row = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_dependencies", input.dependencyId);
-    if (row.removed_at) return { row: shapeRow(row), changed: false, idempotent: true };
+    if (row.removed_at) return { row: shapePeRow(row), changed: false, idempotent: true };
     if (Number(row.version) !== input.expectedVersion) throw new PeDomainError("PE_STALE_VERSION", "Dependency changed concurrently");
-    const source = provenance(ctx);
+    const source = peProvenance(ctx);
     const result = await client.query<SqlRow>(
       `UPDATE finnor_os.pe_dependencies SET removed_at=now(),removed_by=$3,removal_reason=$4,
         version=version+1,updated_at=now() WHERE tenant_id=$1 AND id=$2 AND version=$5 RETURNING *`,
@@ -651,14 +690,14 @@ export async function removeDependency(ctx: PeMutationContext, input: {
     );
     const updated = result.rows[0];
     if (!updated) throw new PeDomainError("PE_STALE_VERSION", "Dependency changed concurrently");
-    return { row: shapeRow(updated), changed: true, idempotent: false };
+    return { row: shapePeRow(updated), changed: true, idempotent: false };
   });
 }
 
 export async function createMilestone(ctx: PeMutationContext, input: {
   id?: string; dealId: string; name: string; kind: string; owner: InternalPartyRef; targetAt: Date;
 }): Promise<PeMutationResult> {
-  assertText(input.name, "Milestone name"); assertText(input.kind, "Milestone kind");
+  assertPeText(input.name, "Milestone name"); assertPeText(input.kind, "Milestone kind");
   return createChild(ctx, "pe_milestones", input.dealId, {
     id: input.id, name: input.name.trim(), kind: input.kind.trim(),
     owner_party_type: input.owner.partyType, owner_party_id: input.owner.partyId, target_at: input.targetAt,
@@ -676,7 +715,7 @@ export async function createClosingCondition(ctx: PeMutationContext, input: {
   requiredForClose?: boolean; evidenceRequired?: boolean; waiverRequiresApproval?: boolean;
   owner: InternalPartyRef; responsibleDealPartyId?: string; dueAt?: Date;
 }): Promise<PeMutationResult> {
-  assertText(input.conditionText, "Closing Condition"); assertText(input.category, "Closing Condition category");
+  assertPeText(input.conditionText, "Closing Condition"); assertPeText(input.category, "Closing Condition category");
   return createChild(ctx, "pe_closing_conditions", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, condition_text: input.conditionText.trim(),
     category: input.category.trim(), required_for_close: input.requiredForClose ?? true,
@@ -696,7 +735,7 @@ export async function satisfyClosingCondition(ctx: PeMutationContext, input: {
 }): Promise<PeMutationResult> {
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_closing_conditions", input.closingConditionId);
-    if (current.state === "satisfied") return { row: shapeRow(current), changed: false, idempotent: true };
+    if (current.state === "satisfied") return { row: shapePeRow(current), changed: false, idempotent: true };
     if (current.evidence_required && !input.documentId && !input.evidenceSourceId) {
       throw new PeDomainError("PE_EVIDENCE_REQUIRED", "Closing Condition satisfaction requires canonical Document or Evidence support");
     }
@@ -716,7 +755,7 @@ export async function satisfyClosingCondition(ctx: PeMutationContext, input: {
 export async function waiveClosingCondition(ctx: PeMutationContext, input: {
   closingConditionId: string; expectedVersion: number; reason: string; governance?: GovernanceProof;
 }): Promise<PeMutationResult> {
-  assertText(input.reason, "Waiver reason");
+  assertPeText(input.reason, "Waiver reason");
   const current = await getPeEntity(ctx, "pe_closing_conditions", input.closingConditionId);
   if (current.state === "waived") return { row: current, changed: false, idempotent: true };
   const proof = await governanceProof(ctx, {
@@ -732,7 +771,7 @@ export async function waiveClosingCondition(ctx: PeMutationContext, input: {
 }
 
 export const failClosingCondition = (ctx: PeMutationContext, input: { closingConditionId: string; expectedVersion: number; reason: string }) => {
-  assertText(input.reason, "Closing Condition failure reason");
+  assertPeText(input.reason, "Closing Condition failure reason");
   return transition({ ctx, lifecycle: "closing_condition", id: input.closingConditionId,
     expectedVersion: input.expectedVersion, targetState: "failed",
     updates: { failed_at: new Date(), failure_reason: input.reason.trim() } });
@@ -743,7 +782,7 @@ export async function createClosingItem(ctx: PeMutationContext, input: {
   requiredForClose?: boolean; verificationEvidenceRequired?: boolean; owner: InternalPartyRef;
   responsibleDealPartyId?: string; dueAt?: Date;
 }): Promise<PeMutationResult> {
-  assertText(input.itemText, "Closing Item"); assertText(input.category, "Closing Item category");
+  assertPeText(input.itemText, "Closing Item"); assertPeText(input.category, "Closing Item category");
   return createChild(ctx, "pe_closing_items", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, item_text: input.itemText.trim(), category: input.category.trim(),
     required_for_close: input.requiredForClose ?? true,
@@ -765,7 +804,7 @@ export async function verifyClosingItem(ctx: PeMutationContext, input: {
   }
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_closing_items", input.closingItemId);
-    if (current.state === "verified") return { row: shapeRow(current), changed: false, idempotent: true };
+    if (current.state === "verified") return { row: shapePeRow(current), changed: false, idempotent: true };
     if (current.verification_evidence_required && !input.documentId && !input.evidenceSourceId) {
       throw new PeDomainError("PE_EVIDENCE_REQUIRED", "Closing Item verification requires canonical Document or Evidence support");
     }
@@ -786,7 +825,7 @@ export async function verifyClosingItem(ctx: PeMutationContext, input: {
 }
 
 export const cancelClosingItem = (ctx: PeMutationContext, input: { closingItemId: string; expectedVersion: number; reason: string }) => {
-  assertText(input.reason, "Closing Item cancellation reason");
+  assertPeText(input.reason, "Closing Item cancellation reason");
   return transition({ ctx, lifecycle: "closing_item", id: input.closingItemId, expectedVersion: input.expectedVersion,
     targetState: "cancelled", updates: { cancelled_at: new Date(), cancellation_reason: input.reason.trim() } });
 };
@@ -806,13 +845,33 @@ export async function attachCanonicalEvidence(ctx: PeMutationContext, input: {
   return peTransaction(ctx, (_db, client) => attachEvidenceTx(client, ctx, input));
 }
 
+export async function attachCanonicalDocumentToWorld(ctx: PeMutationContext, input: {
+  worldRoot: Exclude<PeWorldRootRef, { entityType: "pe_deal" }>;
+  entity: PeEntityRef;
+  documentId: string;
+  linkRole: "source" | "submission" | "accepted" | "rejected" | "superseded" | "governing" | "verification";
+  supersedesLinkId?: string;
+}): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => attachDocumentTx(client, ctx, { ...input, dealId: null }));
+}
+
+export async function attachCanonicalEvidenceToWorld(ctx: PeMutationContext, input: {
+  worldRoot: Exclude<PeWorldRootRef, { entityType: "pe_deal" }>;
+  entity: PeEntityRef;
+  evidenceSourceId: string;
+  evidenceVersionId?: string;
+  relationship: "supports" | "verifies" | "authorizes";
+}): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => attachEvidenceTx(client, ctx, { ...input, dealId: null }));
+}
+
 export async function attachWorkToDealGraph(ctx: PeMutationContext, input: {
   dealId: string; workId: string;
   entities: Array<PeEntityRef & { relationship?: "about" | "target" | "result" }>;
 }): Promise<void> {
   if (input.entities.length === 0) throw new PeDomainError("PE_WORK_LINK_EMPTY", "At least one PE Work attachment is required");
   await peTransaction(ctx, async (db, client) => {
-    requireActiveDeal(await lockDeal(client, ctx.auth.tenantId, input.dealId));
+    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, input.dealId));
     const work = await client.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, input.workId]);
     if (!work.rows[0]) throw new PeDomainError("PE_WORK_NOT_FOUND", "Work was not found in the authenticated tenant");
     for (const entity of input.entities) {
@@ -826,7 +885,7 @@ export async function attachWorkToDealGraph(ctx: PeMutationContext, input: {
       await attachWorkEntityTx(db, {
         tenantId: ctx.auth.tenantId, workId: input.workId,
         entity: { entityType: entity.entityType, entityId: entity.entityId,
-          relationship: entity.relationship ?? "about", source: provenance(ctx).sourceSystem },
+          relationship: entity.relationship ?? "about", source: peProvenance(ctx).sourceSystem },
       });
     }
   });
@@ -874,21 +933,21 @@ export async function declareDealClosed(ctx: PeMutationContext, input: {
       `SELECT finnor_os.pe_declare_deal_closed($1::uuid,$2::uuid,$3,$4,$5::uuid,$6::uuid,$7,$8) AS result`,
       [ctx.auth.tenantId, input.dealId, input.expectedVersion ?? eligibility.dealVersion,
         input.expectedGraphVersion ?? eligibility.graphVersion, proof.authorityDecisionId,
-        proof.decisionReceiptId ?? null, provenance(ctx).sourceSystem, provenance(ctx).createdBy],
+        proof.decisionReceiptId ?? null, peProvenance(ctx).sourceSystem, peProvenance(ctx).createdBy],
     );
     const value = result.rows[0]?.result;
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new PeDomainError("PE_CLOSE_INVALID_RESULT", "Close boundary returned no result");
     const shaped = value as { changed: boolean; idempotent: boolean; rejected?: boolean; row: SqlRow; eligibility: unknown };
     const currentEligibility = eligibilityShape(shaped.eligibility);
     if (shaped.rejected) throw new DealCloseRejectedError(currentEligibility);
-    return { row: shapeRow(shaped.row), changed: shaped.changed, idempotent: shaped.idempotent, eligibility: currentEligibility };
+    return { row: shapePeRow(shaped.row), changed: shaped.changed, idempotent: shaped.idempotent, eligibility: currentEligibility };
   });
 }
 
 export async function terminateDeal(ctx: PeMutationContext, input: {
   dealId: string; expectedVersion: number; reason: string; governance?: GovernanceProof;
 }): Promise<PeMutationResult> {
-  assertText(input.reason, "Deal termination reason");
+  assertPeText(input.reason, "Deal termination reason");
   const before = await getDeal(ctx, input.dealId);
   if (before.status === "terminated") return { row: before, changed: false, idempotent: true };
   const proof = await governanceProof(ctx, {
@@ -896,7 +955,7 @@ export async function terminateDeal(ctx: PeMutationContext, input: {
     supplied: input.governance,
   });
   return peTransaction(ctx, async (_db, client) => {
-    const source = provenance(ctx);
+    const source = peProvenance(ctx);
     const result = await client.query<{ result: unknown }>(
       "SELECT finnor_os.pe_terminate_deal($1::uuid,$2::uuid,$3,$4,$5::uuid,$6::uuid,$7,$8) AS result",
       [ctx.auth.tenantId, input.dealId, input.expectedVersion, input.reason.trim(), proof.authorityDecisionId,
@@ -905,7 +964,7 @@ export async function terminateDeal(ctx: PeMutationContext, input: {
     const value = result.rows[0]?.result;
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new PeDomainError("PE_TERMINATE_INVALID_RESULT", "Termination boundary returned no result");
     const shaped = value as { changed: boolean; idempotent: boolean; row: SqlRow };
-    return { row: shapeRow(shaped.row), changed: shaped.changed, idempotent: shaped.idempotent };
+    return { row: shapePeRow(shaped.row), changed: shaped.changed, idempotent: shaped.idempotent };
   });
 }
 
@@ -917,7 +976,7 @@ async function getPeEntity(ctx: PeMutationContext, table: string, id: string): P
     );
     const row = result.rows[0];
     if (!row) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE entity was not found in the authenticated tenant");
-    return shapeRow(row);
+    return shapePeRow(row);
   }, { readOnly: true });
 }
 
@@ -930,7 +989,7 @@ export async function loadDealExecutionGraph(ctx: PeMutationContext, dealId: str
     if (!deal) throw new PeDomainError("PE_DEAL_NOT_FOUND", "Deal was not found in the authenticated tenant");
     const table = async (name: string): Promise<Record<string, unknown>[]> => {
       const result = await client.query<SqlRow>(`SELECT * FROM finnor_os.${quotedIdentifier(name)} WHERE tenant_id=$1 AND deal_id=$2 ORDER BY created_at,id`, [ctx.auth.tenantId, dealId]);
-      return result.rows.map(shapeRow);
+      return result.rows.map(shapePeRow);
     };
     const dealParties = await table("pe_deal_parties");
     const workstreams = await table("pe_workstreams");
@@ -1021,16 +1080,16 @@ export async function loadDealExecutionGraph(ctx: PeMutationContext, dealId: str
     );
     const clock = await client.query<{ as_of: Date }>("SELECT transaction_timestamp() AS as_of");
     return {
-      deal: shapeRow(deal), dealParties, workstreams,
+      deal: shapePeRow(deal), dealParties, workstreams,
       requests: requestsRaw.map((row) => ({ ...row, overdue: isRequestOverdue({ state: String(row.state), dueAt: row.dueAt as Date | null }, now) })),
       deliverables, findings, dealRisks, findingRiskLinks, dependencies,
       milestones: milestonesRaw.map((row) => ({ ...row, late: isMilestoneLate({ state: String(row.state), targetAt: row.targetAt as Date }, now) })),
       closingConditions, closingItems, documentLinks, evidenceLinks,
-      workLinks: work.rows.map(shapeRow), taskLinks: tasks.rows.map(shapeRow),
-      businessEvents: businessEvents.rows.map(shapeRow),
-      authorityDecisions: authorityDecisions.rows.map(shapeRow),
-      approvalRequests: approvalRequests.rows.map(shapeRow),
-      decisionReceipts: decisionReceipts.rows.map(shapeRow),
+      workLinks: work.rows.map(shapePeRow), taskLinks: tasks.rows.map(shapePeRow),
+      businessEvents: businessEvents.rows.map(shapePeRow),
+      authorityDecisions: authorityDecisions.rows.map(shapePeRow),
+      approvalRequests: approvalRequests.rows.map(shapePeRow),
+      decisionReceipts: decisionReceipts.rows.map(shapePeRow),
       asOf: (clock.rows[0]?.as_of ?? now).toISOString(),
     };
   }, { readOnly: true });
@@ -1045,7 +1104,7 @@ export async function listDealHistory(ctx: PeMutationContext, dealId: string): P
        WHERE tenant_id=$1 AND ((entity_type='pe_deal' AND entity_id=$2::uuid) OR payload->>'dealId'=$2::text)
        ORDER BY occurred_at,id`, [ctx.auth.tenantId, dealId],
     );
-    return result.rows.map(shapeRow);
+    return result.rows.map(shapePeRow);
   }, { readOnly: true });
 }
 

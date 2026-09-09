@@ -53,18 +53,18 @@ function finish(query: string | null, method: PartyResolutionMethod | null, cand
 
 async function directory(tenantId: string): Promise<PartyCandidate[]> {
   return withTenant(tenantId, async (db) => {
-    const [employeeRows, teamRows, locationRows, organizationRows, contactRows] = await Promise.all([
-      db.select({ id: users.id, name: users.displayName, status: users.status, role: users.role })
-        .from(users).where(eq(users.tenantId, tenantId)).limit(DIRECTORY_CAP),
-      db.select({ id: orgUnits.id, name: orgUnits.name, active: orgUnits.active, description: orgUnits.description })
-        .from(orgUnits).where(eq(orgUnits.tenantId, tenantId)).limit(DIRECTORY_CAP),
-      db.select({ id: tenantLocations.id, name: tenantLocations.name, active: tenantLocations.active, address: tenantLocations.address })
-        .from(tenantLocations).where(eq(tenantLocations.tenantId, tenantId)).limit(DIRECTORY_CAP),
-      db.select({ id: externalOrganizations.id, name: externalOrganizations.name, active: externalOrganizations.active, kind: externalOrganizations.kind })
-        .from(externalOrganizations).where(eq(externalOrganizations.tenantId, tenantId)).limit(DIRECTORY_CAP),
-      db.select({ id: externalContacts.id, name: externalContacts.name, active: externalContacts.active, title: externalContacts.title })
-        .from(externalContacts).where(eq(externalContacts.tenantId, tenantId)).limit(DIRECTORY_CAP),
-    ]);
+    // withTenant provides one transaction client; pg does not support concurrent
+    // queries on that client and pg@9 removes the deprecated implicit queue.
+    const employeeRows = await db.select({ id: users.id, name: users.displayName, status: users.status, role: users.role })
+      .from(users).where(eq(users.tenantId, tenantId)).limit(DIRECTORY_CAP);
+    const teamRows = await db.select({ id: orgUnits.id, name: orgUnits.name, active: orgUnits.active, description: orgUnits.description })
+      .from(orgUnits).where(eq(orgUnits.tenantId, tenantId)).limit(DIRECTORY_CAP);
+    const locationRows = await db.select({ id: tenantLocations.id, name: tenantLocations.name, active: tenantLocations.active, address: tenantLocations.address })
+      .from(tenantLocations).where(eq(tenantLocations.tenantId, tenantId)).limit(DIRECTORY_CAP);
+    const organizationRows = await db.select({ id: externalOrganizations.id, name: externalOrganizations.name, active: externalOrganizations.active, kind: externalOrganizations.kind })
+      .from(externalOrganizations).where(eq(externalOrganizations.tenantId, tenantId)).limit(DIRECTORY_CAP);
+    const contactRows = await db.select({ id: externalContacts.id, name: externalContacts.name, active: externalContacts.active, title: externalContacts.title })
+      .from(externalContacts).where(eq(externalContacts.tenantId, tenantId)).limit(DIRECTORY_CAP);
     return [
       ...employeeRows.map((row): PartyCandidate => ({
         ref: { partyType: "employee", partyId: row.id },

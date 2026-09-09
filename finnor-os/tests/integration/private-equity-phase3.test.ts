@@ -43,7 +43,9 @@ import { migrate } from "../../packages/db/migrate";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
-const AS_OF = new Date("2026-09-05T12:00:00.000Z");
+// The no-hindsight contract excludes evidence retrieved after the query clock.
+// Keep the deterministic query just ahead of this test run's actual retrieval.
+const AS_OF = new Date(Date.now() + 60_000);
 
 async function canConnect(url: string): Promise<boolean> {
   const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: 2_000 });

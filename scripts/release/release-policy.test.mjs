@@ -48,12 +48,12 @@ test("source checks ignore timestamp-only build changes but reject real edits an
 })
 
 test("production history is accepted only with forward repair; unknown and newer migrations fail", () => {
-  const head = "0109_atomic_water_runtime_retirement.sql"
-  const repo = ["0104_core_vertical_runtime_boundary.sql", head]
+  const head = "0126_pe_underwriting_runtime.sql"
+  const repo = ["0104_core_vertical_runtime_boundary.sql", "0109_atomic_water_runtime_retirement.sql", head]
   assert.doesNotThrow(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, repo, head))
   assert.doesNotThrow(() => assertMigrationLineage(repo, repo, head))
   assert.throws(() => assertMigrationLineage(["0108_unknown.sql"], repo, head), /absent/)
-  assert.throws(() => assertMigrationLineage(["0110_future.sql"], [...repo, "0110_future.sql"], head), /head/)
+  assert.throws(() => assertMigrationLineage(["0127_future.sql"], [...repo, "0127_future.sql"], head), /head/)
   assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0108_candidate.sql"], "0108_candidate.sql"), /newer|forward repair/)
   assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0110_future.sql"], "0110_future.sql"), /forward repair/)
 })
@@ -95,9 +95,9 @@ test("worker health and heartbeat guards bind the exact Phase 5 release", () => 
   const body = { ok: true, realtime: true, capabilities: ["jobs", "orchestration", "realtime", "sse"], release: expected }
   assert.doesNotThrow(() => assertAwsWorkerHealth({ status: 200, body, expected }))
   assert.throws(() => assertAwsWorkerHealth({ status: 200, body: { ...body, release: { ...expected, commitSha: "b".repeat(40) } }, expected }), /exact release/)
-  const heartbeat = { releaseSha: sha, buildId: expected.buildId, version: expected.version, releaseSource: expected.source, environment: expected.environment, migrationHead: "0109_atomic_water_runtime_retirement.sql", deploymentId: `ecs:finnor-production:finnor-worker:${sha}`, capabilities: body.capabilities, ageSeconds: 10 }
-  assert.doesNotThrow(() => assertWorkerHeartbeat(heartbeat, expected, "0109_atomic_water_runtime_retirement.sql"))
-  assert.throws(() => assertWorkerHeartbeat({ ...heartbeat, deploymentId: "azure:old" }, expected, "0109_atomic_water_runtime_retirement.sql"), /heartbeat/)
+  const heartbeat = { releaseSha: sha, buildId: expected.buildId, version: expected.version, releaseSource: expected.source, environment: expected.environment, migrationHead: contract.release.requiredMigrationHead, deploymentId: `ecs:finnor-production:finnor-worker:${sha}`, capabilities: body.capabilities, ageSeconds: 10 }
+  assert.doesNotThrow(() => assertWorkerHeartbeat(heartbeat, expected, contract.release.requiredMigrationHead))
+  assert.throws(() => assertWorkerHeartbeat({ ...heartbeat, deploymentId: "azure:old" }, expected, contract.release.requiredMigrationHead), /heartbeat/)
 })
 
 test("active release workflow is AWS-only and Phase 5-only", () => {
@@ -117,7 +117,7 @@ test("runtime parity requires the embedded orchestrator and exact migration", ()
     frontend: { ...expected, traceable: true },
     api: { ...expected, traceable: true },
     worker: { ...expected, traceable: true, capabilities: ["jobs", "orchestration", "realtime", "sse"] },
-    migrationHead: "0109_atomic_water_runtime_retirement.sql",
+    migrationHead: contract.release.requiredMigrationHead,
   }
   assert.doesNotThrow(() => assertRuntimeParity(contract, expected, observed))
   assert.throws(() => assertRuntimeParity(contract, expected, { ...observed, migrationHead: "0108_operating_product_closure.sql" }), /migration head/)

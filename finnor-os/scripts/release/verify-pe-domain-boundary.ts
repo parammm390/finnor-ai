@@ -289,7 +289,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 13) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 13`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 14) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 14`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];
@@ -333,6 +333,6 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   void verifyPeDomainBoundary()
-    .then((result) => console.log(`PE-DOMAIN-BOUNDARY PASS files=${result.scannedFiles} actions=32 queries=13 negative_injection=PASS`))
+    .then((result) => console.log(`PE-DOMAIN-BOUNDARY PASS files=${result.scannedFiles} actions=32 queries=14 negative_injection=PASS`))
     .catch((error) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
 }

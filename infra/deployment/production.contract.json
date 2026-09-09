@@ -8,7 +8,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "requiredMigrationHead": "0126_pe_underwriting_runtime.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

@@ -1,0 +1,933 @@
+{
+  "schema": "finnor.pe-p1-world-truth-certification.v1",
+  "generatedAt": "2026-09-09T14:46:18.911Z",
+  "result": "PASS",
+  "startingBaseline": {
+    "branch": "codex/p3-epistemic-runtime",
+    "headSha": "80f617d321965b8694de18940ff23b005dedcdb7",
+    "treeSha": "f38b551d99952986527e4986e3ba77891a3c10ef",
+    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
+    "cachedOriginMainSha": "4cc85c5534988f2b9f4b5938f0e4b6758985206c"
+  },
+  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
+  "currentMigrationCount": 124,
+  "auditVerdict": {
+    "EXISTS": [
+      "signed-LOI Deal root and 14 Deal graph owners",
+      "Deal execution graph",
+      "existing operational/action contracts"
+    ],
+    "PARTIAL": [
+      "Source Truth had only a converged current projection",
+      "Document/Evidence PE links were Deal-only"
+    ],
+    "WRONG": [
+      "historical assertion loaders admitted evidence by as_of without also bounding retrieved_at"
+    ],
+    "MISSING": [
+      "six P1 world owners",
+      "canonical temporal PE history and explicit coverage",
+      "three-root pe_world_state",
+      "immutable provider-observation ledger"
+    ],
+    "REUSE": [
+      "Core Work",
+      "Documents",
+      "Evidence",
+      "Epistemic Runtime",
+      "BusinessEvents",
+      "Authority/Approval",
+      "DecisionReceipt",
+      "external_refs",
+      "reconciliation_cases"
+    ],
+    "DELETE": [
+      "none; no duplicate P1 subsystem was retained"
+    ]
+  },
+  "newEntityTypes": [
+    "pe_strategy",
+    "pe_opportunity",
+    "pe_investment_case",
+    "pe_thesis",
+    "pe_assumption",
+    "pe_decision"
+  ],
+  "reusedSubsystems": [
+    "pe_deal and its 13 child/link entity types",
+    "Core Work",
+    "Core Documents",
+    "Core Evidence",
+    "Core Epistemic Runtime",
+    "Core BusinessEvents",
+    "Core Authority/Approval",
+    "Core DecisionReceipt",
+    "Source Truth external_refs",
+    "reconciliation_cases"
+  ],
+  "canonicalTruthRegistryChanges": [
+    {
+      "entityType": "pe_strategy",
+      "owner": "@finnor/private-equity"
+    },
+    {
+      "entityType": "pe_opportunity",
+      "owner": "@finnor/private-equity"
+    },
+    {
+      "entityType": "pe_investment_case",
+      "owner": "@finnor/private-equity"
+    },
+    {
+      "entityType": "pe_thesis",
+      "owner": "@finnor/private-equity"
+    },
+    {
+      "entityType": "pe_assumption",
+      "owner": "@finnor/private-equity"
+    },
+    {
+      "entityType": "pe_decision",
+      "owner": "@finnor/private-equity"
+    }
+  ],
+  "migrationsAdded": [
+    "0110_canonical_temporal_truth.sql",
+    "0111_pe_world_truth.sql"
+  ],
+  "databaseInvariants": {
+    "migrationCount": 124,
+    "migrationHead": "0126_pe_underwriting_runtime.sql",
+    "registryEntityTypes": [
+      "pe_assumption",
+      "pe_closing_condition",
+      "pe_closing_item",
+      "pe_deal",
+      "pe_deal_party",
+      "pe_deal_risk",
+      "pe_decision",
+      "pe_deliverable",
+      "pe_dependency",
+      "pe_document_link",
+      "pe_evidence_link",
+      "pe_finding",
+      "pe_finding_risk_link",
+      "pe_investment_case",
+      "pe_milestone",
+      "pe_opportunity",
+      "pe_request",
+      "pe_strategy",
+      "pe_thesis",
+      "pe_workstream"
+    ],
+    "newOwners": [
+      {
+        "entity_type": "pe_assumption",
+        "source_table": "pe_assumptions",
+        "writable_owner": "@finnor/private-equity"
+      },
+      {
+        "entity_type": "pe_decision",
+        "source_table": "pe_decisions",
+        "writable_owner": "@finnor/private-equity"
+      },
+      {
+        "entity_type": "pe_investment_case",
+        "source_table": "pe_investment_cases",
+        "writable_owner": "@finnor/private-equity"
+      },
+      {
+        "entity_type": "pe_opportunity",
+        "source_table": "pe_opportunities",
+        "writable_owner": "@finnor/private-equity"
+      },
+      {
+        "entity_type": "pe_strategy",
+        "source_table": "pe_strategies",
+        "writable_owner": "@finnor/private-equity"
+      },
+      {
+        "entity_type": "pe_thesis",
+        "source_table": "pe_theses",
+        "writable_owner": "@finnor/private-equity"
+      }
+    ],
+    "ownership": {
+      "duplicates": 0,
+      "coverage": 20,
+      "history_triggers": 20
+    },
+    "rlsTables": [
+      "canonical_entity_versions",
+      "external_ref_observations",
+      "pe_assumptions",
+      "pe_decision_effect_links",
+      "pe_decisions",
+      "pe_investment_cases",
+      "pe_opportunities",
+      "pe_strategies",
+      "pe_theses"
+    ],
+    "integrity": {
+      "history_table": true,
+      "observation_table": true,
+      "external_refs": true,
+      "reconciliation_cases": true,
+      "artifact_table": false,
+      "artifact_registry": false,
+      "app_history_select": true,
+      "app_history_insert": false,
+      "app_history_update": false,
+      "app_history_delete": false,
+      "evidence_type_guard": 1,
+      "assumption_replacement_guard": 1
+    }
+  },
+  "commands": {
+    "migrationBundle": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 252,
+      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "outputLineCount": 1,
+      "summary": "bundled 124 migrations"
+    },
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 17195,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "openapi": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 2138,
+      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "outputLineCount": 1,
+      "summary": "Generated openapi.json with 57 active/quarantine paths."
+    },
+    "unit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 75255,
+      "outputHash": "1f36fb86020ac00d2c3cf43f3d245b938603b451effafb27edbb2b8614a72d7d",
+      "outputLineCount": 26,
+      "summary": "stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:16:38 |    Duration  74.87s (transform 2.33s, setup 1.51s, import 49.70s, tests 13.56s, environment 7ms)"
+    },
+    "boundary": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1317,
+      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "outputLineCount": 1,
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+    },
+    "p1Integration": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 6331,
+      "outputHash": "6b3d8025f6107e6d4ec0709db26b85b20226910f26f0477f2477fb1d0b9cffa2",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ·········· |  Test Files  2 passed (2) |       Tests  10 passed (10) |    Start at  20:17:57 |    Duration  6.03s (transform 1.23s, setup 137ms, import 2.82s, tests 2.85s, environment 0ms)"
+    },
+    "pePhaseRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 14289,
+      "outputHash": "b7817d8d60de188ac5d9cea1bf839d4afb0b3a78df14e64f8d510eee98cd7e32",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:18:03 |    Duration  13.99s (transform 1.57s, setup 192ms, import 5.80s, tests 7.67s, environment 0ms)"
+    },
+    "sourceTruthRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/source-truth-loop.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1847,
+      "outputHash": "a1818b50a50d22e77f6d244bcd330e489c94236248b833357359b827535b1a52",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ······· |  Test Files  1 passed (1) |       Tests  7 passed (7) |    Start at  20:18:18 |    Duration  1.56s (transform 484ms, setup 77ms, import 970ms, tests 402ms, environment 0ms)"
+    },
+    "phase5Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/run-pe5-water-retirement-certification.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 128708,
+      "outputHash": "8536814a78ac5c17a50dec03afdbd8ae9e1dc1916dc8449c27d5a6397150e517",
+      "outputLineCount": 1,
+      "summary": "PE5 WATER RETIREMENT CERTIFICATION LOCAL PASS / PRODUCTION BLOCKED output=../docs/release/generated/pe5-water-retirement-certification.json markdown=../docs/release/pe5-water-retirement-certification.md"
+    }
+  },
+  "gates": {
+    "typecheck": {
+      "status": "PASS",
+      "evidence": "commands.typecheck"
+    },
+    "unit_tests": {
+      "status": "PASS",
+      "evidence": "commands.unit; no skipped tests or deprecation warnings"
+    },
+    "integration_tests": {
+      "status": "PASS",
+      "evidence": "commands.p1Integration, commands.pePhaseRegression, and commands.sourceTruthRegression; no skipped tests or deprecation warnings"
+    },
+    "fresh_migration": {
+      "status": "PASS",
+      "evidence": {
+        "applied": 124,
+        "head": "0126_pe_underwriting_runtime.sql"
+      }
+    },
+    "populated_upgrade": {
+      "status": "PASS",
+      "evidence": "private-equity-p1-upgrade.test.ts"
+    },
+    "rls": {
+      "status": "PASS",
+      "evidence": [
+        "canonical_entity_versions",
+        "external_ref_observations",
+        "pe_assumptions",
+        "pe_decision_effect_links",
+        "pe_decisions",
+        "pe_investment_cases",
+        "pe_opportunities",
+        "pe_strategies",
+        "pe_theses"
+      ]
+    },
+    "tenant_isolation": {
+      "status": "PASS",
+      "evidence": "adversarial P1 integration assertions"
+    },
+    "canonical_ownership_uniqueness": {
+      "status": "PASS",
+      "evidence": {
+        "duplicates": 0,
+        "coverage": 20,
+        "history_triggers": 20
+      }
+    },
+    "pe_domain_boundary": {
+      "status": "PASS",
+      "evidence": "commands.boundary"
+    },
+    "history_table_exists": {
+      "status": "PASS",
+      "evidence": {
+        "migrationCount": 124,
+        "migrationHead": "0126_pe_underwriting_runtime.sql",
+        "registryEntityTypes": [
+          "pe_assumption",
+          "pe_closing_condition",
+          "pe_closing_item",
+          "pe_deal",
+          "pe_deal_party",
+          "pe_deal_risk",
+          "pe_decision",
+          "pe_deliverable",
+          "pe_dependency",
+          "pe_document_link",
+          "pe_evidence_link",
+          "pe_finding",
+          "pe_finding_risk_link",
+          "pe_investment_case",
+          "pe_milestone",
+          "pe_opportunity",
+          "pe_request",
+          "pe_strategy",
+          "pe_thesis",
+          "pe_workstream"
+        ],
+        "newOwners": [
+          {
+            "entity_type": "pe_assumption",
+            "source_table": "pe_assumptions",
+            "writable_owner": "@finnor/private-equity"
+          },
+          {
+            "entity_type": "pe_decision",
+            "source_table": "pe_decisions",
+            "writable_owner": "@finnor/private-equity"
+          },
+          {
+            "entity_type": "pe_investment_case",
+            "source_table": "pe_investment_cases",
+            "writable_owner": "@finnor/private-equity"
+          },
+          {
+            "entity_type": "pe_opportunity",
+            "source_table": "pe_opportunities",
+            "writable_owner": "@finnor/private-equity"
+          },
+          {
+            "entity_type": "pe_strategy",
+            "source_table": "pe_strategies",
+            "writable_owner": "@finnor/private-equity"
+          },
+          {
+            "entity_type": "pe_thesis",
+            "source_table": "pe_theses",
+            "writable_owner": "@finnor/private-equity"
+          }
+        ],
+        "ownership": {
+          "duplicates": 0,
+          "coverage": 20,
+          "history_triggers": 20
+        },
+        "rlsTables": [
+          "canonical_entity_versions",
+          "external_ref_observations",
+          "pe_assumptions",
+          "pe_decision_effect_links",
+          "pe_decisions",
+          "pe_investment_cases",
+          "pe_opportunities",
+          "pe_strategies",
+          "pe_theses"
+        ],
+        "integrity": {
+          "history_table": true,
+          "observation_table": true,
+          "external_refs": true,
+          "reconciliation_cases": true,
+          "artifact_table": false,
+          "artifact_registry": false,
+          "app_history_select": true,
+          "app_history_insert": false,
+          "app_history_update": false,
+          "app_history_delete": false,
+          "evidence_type_guard": 1,
+          "assumption_replacement_guard": 1
+        }
+      }
+    },
+    "happy_path": {
+      "status": "PASS",
+      "evidence": "Strategy through semantic Decision integration path"
+    },
+    "openapi_generates": {
+      "status": "PASS",
+      "evidence": "commands.openapi"
+    },
+    "existing_pe_tests": {
+      "status": "PASS",
+      "evidence": "commands.pePhaseRegression and commands.phase5Regression"
+    },
+    "source_truth_regression": {
+      "status": "PASS",
+      "evidence": "commands.sourceTruthRegression and P1 temporal observation assertions"
+    },
+    "new_repository_files_exist": {
+      "status": "PASS",
+      "evidence": [
+        "world-repository.ts",
+        "world-state.ts"
+      ]
+    },
+    "world_state_query_returns": {
+      "status": "PASS",
+      "evidence": "P1 three-root operational-query integration assertion"
+    },
+    "certification_document_written": {
+      "status": "PASS",
+      "evidence": [
+        "/Users/paramdave/Desktop/FINNOR/docs/release/generated/pe-p1-world-truth-certification.json",
+        "/Users/paramdave/Desktop/FINNOR/docs/release/pe-p1-world-truth-certification.md"
+      ]
+    }
+  },
+  "mandatoryCases": [
+    {
+      "number": 1,
+      "name": "Strategy creation",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Strategy transition",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Opportunity creation",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Opportunity lifecycle",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Opportunity to Deal atomic promotion",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Direct existing signed-LOI Deal creation still works",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "InvestmentCase creation and activation",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Second active InvestmentCase rejected",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Thesis lifecycle works without manually setting epistemic support",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Assumption belongs directly to InvestmentCase",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "Assumption can exist independently of one Thesis",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Assumption revision preserves history",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "Semantic Decision creation",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Decision finalization",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "Final Decision cannot be mutated",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "New Decision can supersede old Decision",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "Decision links to multiple execution effects",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "New PE entity types exactly match canonical_truth_registry",
+      "status": "PASS",
+      "evidence": [
+        "database_invariants",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "Every changed row receives one history snapshot",
+      "status": "PASS",
+      "evidence": [
+        "database_invariants",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "Multi-row Opportunity promotion receives one history snapshot per changed canonical row",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "Failed transaction produces no committed snapshots",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "state_at before mutation returns previous canonical state",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "state_at after mutation returns new canonical state",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "Evidence with as_of before t but retrieved_at after t is excluded",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Evidence with as_of and retrieved_at at or before t is eligible",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 26,
+      "name": "UNKNOWN to KNOWN",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 27,
+      "name": "KNOWN to STALE",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 28,
+      "name": "KNOWN to CONFLICTING",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 29,
+      "name": "Conflict resolution today does not rewrite yesterday",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration",
+        "source_truth_regression"
+      ]
+    },
+    {
+      "number": 30,
+      "name": "Existing PE canonical rows receive migration baseline",
+      "status": "PASS",
+      "evidence": [
+        "upgrade_integration"
+      ]
+    },
+    {
+      "number": 31,
+      "name": "Request before baseline returns explicit history unavailable",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 32,
+      "name": "Existing Deal child history is represented",
+      "status": "PASS",
+      "evidence": [
+        "upgrade_integration"
+      ]
+    },
+    {
+      "number": 33,
+      "name": "Provider duplicate behavior unchanged",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration",
+        "source_truth_regression"
+      ]
+    },
+    {
+      "number": 34,
+      "name": "Provider out-of-order behavior unchanged",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration",
+        "source_truth_regression"
+      ]
+    },
+    {
+      "number": 35,
+      "name": "Provider same-position conflict behavior unchanged",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration",
+        "source_truth_regression"
+      ]
+    },
+    {
+      "number": 36,
+      "name": "Provider tombstone behavior unchanged",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration",
+        "source_truth_regression"
+      ]
+    },
+    {
+      "number": 37,
+      "name": "Strategy and Opportunity receive source, evidence, and document links without fake Deal IDs",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 38,
+      "name": "Existing Deal document and evidence linking still works",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 39,
+      "name": "Tenant A cannot inspect Tenant B world or history",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 40,
+      "name": "Cross-world-root link fails",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 41,
+      "name": "pe_world_state for Strategy composes Strategy and Opportunity state",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 42,
+      "name": "pe_world_state for Opportunity composes related world",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 43,
+      "name": "pe_world_state for Deal includes existing DealExecutionGraph plus P1 entities",
+      "status": "PASS",
+      "evidence": [
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 44,
+      "name": "Existing PE operational queries remain unchanged",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "pe_phase_regression",
+        "boundary"
+      ]
+    },
+    {
+      "number": 45,
+      "name": "Current close readiness remains unchanged",
+      "status": "PASS",
+      "evidence": [
+        "pe_phase_regression",
+        "phase5_regression"
+      ]
+    },
+    {
+      "number": 46,
+      "name": "Current PE action contract remains unchanged",
+      "status": "PASS",
+      "evidence": [
+        "pe_phase_regression",
+        "phase5_regression"
+      ]
+    },
+    {
+      "number": 47,
+      "name": "Current authority behavior remains unchanged",
+      "status": "PASS",
+      "evidence": [
+        "pe_phase_regression",
+        "phase5_regression"
+      ]
+    },
+    {
+      "number": 48,
+      "name": "Current DecisionReceipt behavior remains unchanged",
+      "status": "PASS",
+      "evidence": [
+        "pe_phase_regression",
+        "phase5_regression"
+      ]
+    },
+    {
+      "number": 49,
+      "name": "Existing PE Phase2, Phase3, Phase4, and Phase5 regression suites remain green",
+      "status": "PASS",
+      "evidence": [
+        "pe_phase_regression",
+        "phase5_regression"
+      ]
+    },
+    {
+      "number": 50,
+      "name": "Fresh database migration passes",
+      "status": "PASS",
+      "evidence": [
+        "fresh_migration",
+        "p1_integration"
+      ]
+    },
+    {
+      "number": 51,
+      "name": "Existing populated database migration passes",
+      "status": "PASS",
+      "evidence": [
+        "upgrade_integration"
+      ]
+    }
+  ],
+  "results": {
+    "unit_test_result": "PASS — full tests/unit suite, no skips",
+    "integration_test_result": "PASS — P1 world/upgrade, active Source Truth, and PE Phase2/3/4 scopes; no skips",
+    "fresh_migration_result": "PASS — 124 migrations through 0126_pe_underwriting_runtime.sql",
+    "populated_upgrade_result": "PASS — populated 0109 Deal, child, and link upgraded through 0126_pe_underwriting_runtime.sql",
+    "rls_result": "PASS — forced tenant RLS on all nine P1 tenant tables",
+    "tenant_isolation_result": "PASS — cross-tenant roots, links, histories, assumptions, targets, and Source Truth candidates rejected",
+    "source_truth_regression_result": "PASS — active PE observe-only duplicate/order/conflict/tombstone/reconciliation ledger suite",
+    "pe_regression_result": "PASS — Phase2/3/4 integration suites and Phase5 local certification",
+    "authority_regression_result": "PASS — inherited Phase2/3/4 and Phase5 governance assertions",
+    "close_waiver_regression_result": "PASS — inherited Phase4 and Phase5 close-safety/waiver assertions",
+    "openapi_query_result": "PASS — 15 generated paths and 14 active PE query intents",
+    "p1_certification_result": "PASS — all deterministic gates and 51 mandatory cases"
+  },
+  "filesCreated": [
+    "packages/db/migrations/0110_canonical_temporal_truth.sql",
+    "packages/db/migrations/0111_pe_world_truth.sql",
+    "packages/private-equity/src/world-repository.ts",
+    "packages/private-equity/src/world-state.ts",
+    "tests/unit/private-equity-p1-world.test.ts",
+    "tests/integration/private-equity-p1-world-truth.test.ts",
+    "tests/integration/private-equity-p1-upgrade.test.ts",
+    "scripts/release/run-pe-p1-world-truth-certification.ts"
+  ],
+  "filesMateriallyChanged": [
+    "package.json",
+    "openapi.json",
+    "packages/db/migration-head.ts",
+    "packages/db/migrations-bundle.ts",
+    "packages/db/schema.ts",
+    "packages/data-platform/src/source-truth.ts",
+    "packages/read-models/src/party-resolver.ts",
+    "packages/private-equity/src/types.ts",
+    "packages/private-equity/src/state-machines.ts",
+    "packages/private-equity/src/repository.ts",
+    "packages/private-equity/src/source-mapping.ts",
+    "packages/private-equity/src/epistemic.ts",
+    "packages/private-equity/src/operational-queries.ts",
+    "packages/private-equity/src/index.ts",
+    "packages/shared-types/src/operational-queries.ts",
+    "packages/orchestration/src/fast-read-lane.ts",
+    "scripts/generate-openapi.ts",
+    "scripts/release/verify-pe-domain-boundary.ts",
+    "scripts/release/run-pe5-water-retirement-certification.ts",
+    "tests/unit/private-equity-state-machines.test.ts",
+    "tests/unit/private-equity-epistemic.test.ts",
+    "tests/unit/openapi-operational-query-contract.test.ts",
+    "tests/unit/pe5-runtime-boundary.test.ts",
+    "tests/integration/private-equity-phase2.test.ts",
+    "tests/integration/private-equity-phase3.test.ts",
+    "tests/integration/source-truth-loop.test.ts"
+  ],
+  "remainingBlockers": [
+    "None for local P1 behavior. Live origin/main freshness and VCS cleanliness are not certified because the partial-clone remote refresh/status operation did not complete; no contrary claim is made."
+  ],
+  "p2Handoff": "P2 may add M365/live nervous-system ingestion by mapping provider observations into the existing Source Truth, Document, Evidence, reconciliation, and three-root world contracts. It must not add canonical owners for the six P1 entities or bypass `retrieved_at` in historical reads."
+}

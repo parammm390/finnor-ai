@@ -13,6 +13,7 @@ import {
   vector,
   index,
   unique,
+  uniqueIndex,
   real,
   date,
   primaryKey,
@@ -456,7 +457,7 @@ export const communicationIdentities = pgTable(
     providerIdentityRef: text("provider_identity_ref"),
     status: text("status", { enum: ["active", "disabled", "suspended"] }).notNull().default("active"),
     capabilities: jsonb("capabilities").notNull().default([]),
-    credentialProvider: text("credential_provider", { enum: ["aws-secrets-manager", "legacy-env"] }),
+    credentialProvider: text("credential_provider", { enum: ["aws-secrets-manager", "aws-iam-federated", "legacy-env"] }),
     credentialRef: text("credential_ref"),
     credentialVersion: text("credential_version"),
     // Phase 5 may bind a communication address to the same governed auth profile
@@ -570,11 +571,11 @@ export const authProfiles = pgTable(
     purpose: text("purpose").notNull().default("default"),
     priority: integer("priority").notNull().default(0),
     scope: jsonb("scope").notNull().default({}),
-    credentialProvider: text("credential_provider", { enum: ["aws-secrets-manager", "os-keychain", "legacy-env"] }),
+    credentialProvider: text("credential_provider", { enum: ["aws-secrets-manager", "aws-iam-federated", "os-keychain", "legacy-env"] }),
     credentialRef: text("credential_ref"),
     credentialVersion: text("credential_version"),
     status: text("status", { enum: ["active", "disabled", "suspended"] }).notNull().default("active"),
-    authMethod: text("auth_method", { enum: ["managed_secret", "oauth2", "browser_profile"] }).notNull().default("managed_secret"),
+    authMethod: text("auth_method", { enum: ["managed_secret", "oauth2", "browser_profile", "workload_identity"] }).notNull().default("managed_secret"),
     connectionRequired: boolean("connection_required").notNull().default(true),
     connectionStatus: text("connection_status", {
       enum: ["disconnected", "connecting", "active", "degraded", "expired", "reauth_required", "revoked", "disabled", "misconfigured", "provider_unavailable"],
@@ -604,7 +605,7 @@ export const authProfiles = pgTable(
     check("auth_profiles_scope_object_check", sql`jsonb_typeof(${t.scope}) = 'object'`),
     check("auth_profiles_capabilities_array_check", sql`jsonb_typeof(${t.capabilities}) = 'array'`),
     check("auth_profiles_restrictions_object_check", sql`jsonb_typeof(${t.restrictions}) = 'object'`),
-    check("auth_profiles_auth_method_check", sql`${t.authMethod} IN ('managed_secret','oauth2','browser_profile')`),
+    check("auth_profiles_auth_method_check", sql`${t.authMethod} IN ('managed_secret','oauth2','browser_profile','workload_identity')`),
     check("auth_profiles_connection_status_check", sql`${t.connectionStatus} IN ('disconnected','connecting','active','degraded','expired','reauth_required','revoked','disabled','misconfigured','provider_unavailable')`),
     check("auth_profiles_connection_revision_check", sql`${t.connectionRevision} >= 1`),
     unique("auth_profiles_tenant_ref_unique").on(t.tenantId, t.authProfileRef),
@@ -658,6 +659,44 @@ export const oauthConnectionRequests = pgTable(
   ],
 );
 
+/** Administrative application-consent state. This is configuration proof, not a
+ * delegated runtime token or a second OAuth credential store. */
+export const applicationConsentRequests = pgTable(
+  "application_consent_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    authProfileId: uuid("auth_profile_id").notNull(),
+    actorId: uuid("actor_id").notNull(),
+    provider: text("provider").notNull(),
+    stateHash: text("state_hash").notNull().unique(),
+    expectedDirectoryTenantId: text("expected_directory_tenant_id").notNull(),
+    returnedDirectoryTenantId: text("returned_directory_tenant_id"),
+    redirectUri: text("redirect_uri").notNull(),
+    requestedPermissions: text("requested_permissions").array().notNull().default([]),
+    status: text("status", { enum: ["requested", "returned", "verified", "failed", "expired"] }).notNull().default("requested"),
+    permissionVerification: jsonb("permission_verification").notNull().default({}),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.tenantId, t.authProfileId],
+      foreignColumns: [authProfiles.tenantId, authProfiles.id],
+      name: "application_consent_requests_profile_tenant_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.tenantId, t.actorId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "application_consent_requests_actor_tenant_fkey",
+    }),
+    index("application_consent_requests_expiry_idx").on(t.expiresAt).where(sql`${t.consumedAt} IS NULL`),
+    index("application_consent_requests_tenant_profile_idx").on(t.tenantId, t.authProfileId, t.createdAt),
+  ],
+);
+
 export const connectionEvents = pgTable(
   "connection_events",
   {
@@ -666,7 +705,7 @@ export const connectionEvents = pgTable(
     authProfileId: uuid("auth_profile_id").notNull(),
     actorId: uuid("actor_id"),
     eventType: text("event_type", {
-      enum: ["connect_started", "connect_failed", "connected", "refreshed", "verified", "degraded", "reauth_required", "revoked", "disabled", "reconnected", "provider_unavailable"],
+      enum: ["connect_started", "connect_failed", "consent_requested", "consent_returned", "connected", "refreshed", "verified", "permission_verified", "degraded", "reauth_required", "revoked", "disabled", "reconnected", "provider_unavailable"],
     }).notNull(),
     fromStatus: text("from_status"),
     toStatus: text("to_status").notNull(),
@@ -1054,6 +1093,7 @@ export const workQueryExecutions = pgTable(
         "open_deal_risks",
         "critical_dependencies",
         "closing_readiness",
+        "pe_world_state",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),
@@ -1782,6 +1822,7 @@ export const embeddings = pgTable(
     // Additive alongside the loose sourceDocId text field above — new ingestion can
     // point here once a real documents row exists; sourceDocId stays for back-compat.
     documentId: uuid("document_id"),
+    documentVersionId: uuid("document_version_id"),
     chunk: text("chunk").notNull(),
     // Phase 5 (§5.1): Voyage AI voyage-3.5, 1024-dim (migration 0027 retypes the
     // column — this table had zero real writers before this phase, see that migration).
@@ -3254,7 +3295,7 @@ export const inboxEvents = pgTable(
 export const reconciliationCases = pgTable("reconciliation_cases", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
-  caseType: text("case_type", { enum: ["unknown_delivery", "unmatched_inbox_event", "external_drift", "mapping_ambiguous", "stale_source", "auth_failure"] }).notNull(),
+  caseType: text("case_type", { enum: ["unknown_delivery", "unmatched_inbox_event", "external_drift", "mapping_ambiguous", "stale_source", "auth_failure", "unresolved_world_root", "coverage_gap", "provider_permission_drift", "delete_unverified"] }).notNull(),
   relatedOutboxEventId: uuid("related_outbox_event_id").references(() => outboxEvents.id),
   relatedInboxEventId: uuid("related_inbox_event_id").references(() => inboxEvents.id),
   relatedStepId: uuid("related_step_id").references(() => workflowSteps.id),
@@ -3645,6 +3686,7 @@ export const integrationSyncCheckpoints = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     integrationId: uuid("integration_id").notNull(),
+    sourceScopeId: uuid("source_scope_id"),
     sourceScope: text("source_scope").notNull(),
     cursor: jsonb("cursor").notNull().default({}),
     cursorVersion: integer("cursor_version").notNull().default(1),
@@ -3664,6 +3706,210 @@ export const integrationSyncCheckpoints = pgTable(
     unique("integration_sync_checkpoints_tenant_id_id_key").on(t.tenantId, t.id),
     index("integration_sync_checkpoints_due_idx").on(t.tenantId, t.status, t.leaseExpiresAt, t.updatedAt),
     foreignKey({ columns: [t.tenantId, t.integrationId], foreignColumns: [tenantIntegrations.tenantId, tenantIntegrations.id], name: "integration_sync_checkpoints_integration_tenant_fkey" }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId, t.sourceScopeId],
+      foreignColumns: [integrationSourceScopes.tenantId, integrationSourceScopes.integrationId, integrationSourceScopes.id],
+      name: "integration_sync_checkpoints_scope_identity_fkey",
+    }),
+  ],
+);
+
+/** Exact provider information-space boundary. Freshness is current telemetry on
+ * this row; historical completeness is owned by integrationSourceCoverageHistory. */
+export const integrationSourceScopes = pgTable(
+  "integration_source_scopes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    integrationId: uuid("integration_id").notNull(),
+    provider: text("provider").notNull(),
+    sourceKind: text("source_kind", {
+      enum: [
+        "outlook_mail_folder",
+        "outlook_calendar_view",
+        "teams_channel",
+        "teams_chat",
+        "teams_user_chat_feed",
+        "teams_transcript_organizer",
+        "sharepoint_drive",
+        "sharepoint_list",
+      ],
+    }).notNull(),
+    providerScopeType: text("provider_scope_type").notNull(),
+    providerResourceId: text("provider_resource_id").notNull(),
+    providerParentId: text("provider_parent_id"),
+    scopeKey: text("scope_key").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    rootBindingType: text("root_binding_type", { enum: ["pe_strategy", "pe_opportunity", "pe_deal"] }),
+    rootBindingId: uuid("root_binding_id"),
+    syncStrategy: text("sync_strategy", { enum: ["delta", "bounded_enumeration", "exact_read"] }).notNull(),
+    recoveryStrategy: text("recovery_strategy", {
+      enum: ["EXACT_DELTA", "BOUNDED_RECONCILIATION", "BEST_EFFORT_NOTIFICATION_RECOVERY"],
+    }).notNull(),
+    permissionMode: text("permission_mode", { enum: ["SCOPED", "BROAD"] }).notNull().default("SCOPED"),
+    requiredPermissions: text("required_permissions").array().notNull().default([]),
+    effectivePermissions: text("effective_permissions").array().notNull().default([]),
+    providerRestrictionMethod: text("provider_restriction_method"),
+    permissionVerifiedAt: timestamp("permission_verified_at", { withTimezone: true }),
+    coveragePolicy: jsonb("coverage_policy").notNull().default({}),
+    freshnessPolicy: jsonb("freshness_policy").notNull().default({}),
+    configuration: jsonb("configuration").notNull().default({}),
+    freshnessState: text("freshness_state", { enum: ["unknown", "fresh", "stale", "expired"] }).notNull().default("unknown"),
+    lastSyncStartedAt: timestamp("last_sync_started_at", { withTimezone: true }),
+    lastSuccessfulSyncAt: timestamp("last_successful_sync_at", { withTimezone: true }),
+    lastObservedAt: timestamp("last_observed_at", { withTimezone: true }),
+    configuredBy: text("configured_by").notNull(),
+    configuredAt: timestamp("configured_at", { withTimezone: true }).notNull().defaultNow(),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("integration_source_scopes_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("integration_source_scopes_tenant_integration_id_key").on(t.tenantId, t.integrationId, t.id),
+    unique("integration_source_scopes_identity_key").on(t.tenantId, t.integrationId, t.scopeKey),
+    index("integration_source_scopes_integration_kind_idx").on(t.tenantId, t.integrationId, t.sourceKind, t.enabled),
+    index("integration_source_scopes_root_idx").on(t.tenantId, t.rootBindingType, t.rootBindingId, t.enabled),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId],
+      foreignColumns: [tenantIntegrations.tenantId, tenantIntegrations.id],
+      name: "integration_source_scopes_integration_tenant_fkey",
+    }).onDelete("cascade"),
+  ],
+);
+
+/** Append-only coverage facts. Query code derives an epoch's implicit end from the
+ * next revision unless an exact bounded effectiveTo was known when it was recorded. */
+export const integrationSourceCoverageHistory = pgTable(
+  "integration_source_coverage_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    sourceScopeId: uuid("source_scope_id").notNull(),
+    coverageRevision: integer("coverage_revision").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+    effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
+    effectiveTo: timestamp("effective_to", { withTimezone: true }),
+    coverageRegion: jsonb("coverage_region").notNull().default({}),
+    state: text("state", {
+      enum: ["INITIALIZING", "COMPLETE", "PARTIAL", "RECOVERING", "BLOCKED_AUTH", "BLOCKED_PERMISSION", "HISTORY_LIMITED", "NOT_CONFIGURED", "DISABLED"],
+    }).notNull(),
+    reason: text("reason"),
+    checkpointId: uuid("checkpoint_id"),
+    baselineStartedAt: timestamp("baseline_started_at", { withTimezone: true }),
+    baselineCompletedAt: timestamp("baseline_completed_at", { withTimezone: true }),
+    earliestProviderAt: timestamp("earliest_provider_at", { withTimezone: true }),
+    latestProviderAt: timestamp("latest_provider_at", { withTimezone: true }),
+    unresolvedObservations: integer("unresolved_observations").notNull().default(0),
+    ambiguousObservations: integer("ambiguous_observations").notNull().default(0),
+    sourceDescriptor: jsonb("source_descriptor").notNull().default({}),
+    metadata: jsonb("metadata").notNull().default({}),
+  },
+  (t) => [
+    unique("integration_source_coverage_history_scope_revision_key").on(t.sourceScopeId, t.coverageRevision),
+    index("integration_source_coverage_history_asof_idx").on(t.tenantId, t.sourceScopeId, t.effectiveFrom, t.recordedAt),
+    foreignKey({
+      columns: [t.tenantId, t.sourceScopeId],
+      foreignColumns: [integrationSourceScopes.tenantId, integrationSourceScopes.id],
+      name: "integration_source_coverage_history_scope_tenant_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.tenantId, t.checkpointId],
+      foreignColumns: [integrationSyncCheckpoints.tenantId, integrationSyncCheckpoints.id],
+      name: "integration_source_coverage_history_checkpoint_tenant_fkey",
+    }),
+  ],
+);
+
+/** Mutable Graph control-plane state. Business/evidence truth never lives here. */
+export const integrationSubscriptions = pgTable(
+  "integration_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    integrationId: uuid("integration_id").notNull(),
+    sourceScopeId: uuid("source_scope_id").notNull(),
+    provider: text("provider").notNull(),
+    providerSubscriptionId: text("provider_subscription_id"),
+    resource: text("resource").notNull(),
+    changeTypes: text("change_types").array().notNull().default([]),
+    status: text("status", {
+      enum: ["provisioning", "active", "renewing", "degraded", "reauthorization_required", "removed", "expired", "deleting", "disabled"],
+    }).notNull().default("provisioning"),
+    expirationAt: timestamp("expiration_at", { withTimezone: true }),
+    renewAt: timestamp("renew_at", { withTimezone: true }),
+    createdAtProvider: timestamp("created_at_provider", { withTimezone: true }),
+    lastRenewedAt: timestamp("last_renewed_at", { withTimezone: true }),
+    lastNotificationAt: timestamp("last_notification_at", { withTimezone: true }),
+    lastLifecycleEventAt: timestamp("last_lifecycle_event_at", { withTimezone: true }),
+    clientStateHash: text("client_state_hash").notNull(),
+    failureCode: text("failure_code"),
+    recoveryState: text("recovery_state").notNull().default("none"),
+    leaseOwner: text("lease_owner"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("integration_subscriptions_tenant_id_id_key").on(t.tenantId, t.id),
+    uniqueIndex("integration_subscriptions_provider_id_key").on(t.provider, t.providerSubscriptionId).where(sql`${t.providerSubscriptionId} IS NOT NULL`),
+    uniqueIndex("integration_subscriptions_current_scope_key").on(t.tenantId, t.sourceScopeId).where(sql`${t.status} IN ('provisioning','active','renewing','degraded','reauthorization_required','deleting')`),
+    index("integration_subscriptions_due_idx").on(t.provider, t.status, t.renewAt, t.leaseExpiresAt),
+    index("integration_subscriptions_scope_idx").on(t.tenantId, t.sourceScopeId, t.status),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId],
+      foreignColumns: [tenantIntegrations.tenantId, tenantIntegrations.id],
+      name: "integration_subscriptions_integration_tenant_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId, t.sourceScopeId],
+      foreignColumns: [integrationSourceScopes.tenantId, integrationSourceScopes.integrationId, integrationSourceScopes.id],
+      name: "integration_subscriptions_scope_identity_fkey",
+    }).onDelete("cascade"),
+  ],
+);
+
+/** Durable, deterministic object/thread/root proof. Conflicts remain separate active
+ * candidates only when they refer to different binding levels and are reconciled. */
+export const providerObjectRootBindings = pgTable(
+  "provider_object_root_bindings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    integrationId: uuid("integration_id").notNull(),
+    sourceScopeId: uuid("source_scope_id"),
+    provider: text("provider").notNull(),
+    resourceKind: text("resource_kind").notNull(),
+    externalObjectType: text("external_object_type").notNull(),
+    externalObjectId: text("external_object_id").notNull(),
+    bindingLevel: text("binding_level", { enum: ["object", "document", "parent", "thread", "series", "meeting"] }).notNull(),
+    worldRootType: text("world_root_type", { enum: ["pe_strategy", "pe_opportunity", "pe_deal"] }).notNull(),
+    worldRootId: uuid("world_root_id").notNull(),
+    bindingSource: text("binding_source", { enum: ["explicit", "source_scope", "core_document", "external_ref", "parent_inheritance", "conversation_inheritance", "meeting_inheritance"] }).notNull(),
+    createdBy: text("created_by").notNull(),
+    supersedesBindingId: uuid("supersedes_binding_id"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("provider_object_root_bindings_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("provider_object_root_bindings_supersedes_key").on(t.supersedesBindingId),
+    uniqueIndex("provider_object_root_bindings_active_identity_key")
+      .on(t.tenantId, t.integrationId, t.resourceKind, t.externalObjectType, t.externalObjectId, t.bindingLevel)
+      .where(sql`${t.supersededAt} IS NULL`),
+    index("provider_object_root_bindings_root_idx").on(t.tenantId, t.worldRootType, t.worldRootId, t.supersededAt),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId],
+      foreignColumns: [tenantIntegrations.tenantId, tenantIntegrations.id],
+      name: "provider_object_root_bindings_integration_tenant_fkey",
+    }),
+    foreignKey({
+      columns: [t.tenantId, t.integrationId, t.sourceScopeId],
+      foreignColumns: [integrationSourceScopes.tenantId, integrationSourceScopes.integrationId, integrationSourceScopes.id],
+      name: "provider_object_root_bindings_scope_identity_fkey",
+    }),
   ],
 );
 
@@ -4217,5 +4463,296 @@ export const workWakeClaims = pgTable(
     unique("work_wake_claims_job_unique").on(t.jobId),
     unique("work_wake_claims_tenant_id_id_key").on(t.tenantId, t.id),
     index("work_wake_claims_tenant_loop_idx").on(t.tenantId, t.objectiveLoopId, t.claimedAt),
+  ],
+);
+
+// P1 Private Equity World. SQL migrations own the full database checks and
+// trigger boundaries; these declarations keep application/query types aligned
+// with those canonical tables without creating a second persistence model.
+export const peStrategies = pgTable(
+  "pe_strategies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    name: text("name").notNull(),
+    description: text("description"),
+    investmentCriteria: jsonb("investment_criteria").notNull().default({}),
+    state: text("state", { enum: ["draft", "active", "retired"] }).notNull().default("draft"),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_strategies_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("pe_strategies_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    index("pe_strategies_tenant_state_idx").on(t.tenantId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peOpportunities = pgTable(
+  "pe_opportunities",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    strategyId: uuid("strategy_id").notNull().references(() => peStrategies.id),
+    targetOrganizationId: uuid("target_organization_id").notNull().references(() => externalOrganizations.id),
+    name: text("name").notNull(),
+    summary: text("summary"),
+    state: text("state", { enum: ["identified", "screening", "qualified", "promoted", "rejected"] }).notNull().default("identified"),
+    screeningStartedAt: timestamp("screening_started_at", { withTimezone: true }),
+    qualifiedAt: timestamp("qualified_at", { withTimezone: true }),
+    promotedAt: timestamp("promoted_at", { withTimezone: true }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_opportunities_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("pe_opportunities_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    index("pe_opportunities_tenant_strategy_state_idx").on(t.tenantId, t.strategyId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peInvestmentCases = pgTable(
+  "pe_investment_cases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    dealId: uuid("deal_id").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    state: text("state", { enum: ["draft", "active", "superseded", "archived"] }).notNull().default("draft"),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_investment_cases_tenant_deal_id_key").on(t.tenantId, t.dealId, t.id),
+    unique("pe_investment_cases_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    uniqueIndex("pe_investment_cases_one_active_idx").on(t.dealId).where(sql`${t.state}='active'`),
+    index("pe_investment_cases_tenant_deal_state_idx").on(t.tenantId, t.dealId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peTheses = pgTable(
+  "pe_theses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    dealId: uuid("deal_id").notNull(),
+    investmentCaseId: uuid("investment_case_id").notNull().references(() => peInvestmentCases.id),
+    thesisType: text("thesis_type").notNull(),
+    title: text("title").notNull(),
+    statement: text("statement").notNull(),
+    state: text("state", { enum: ["draft", "active", "superseded", "retired"] }).notNull().default("draft"),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_theses_tenant_deal_id_key").on(t.tenantId, t.dealId, t.id),
+    unique("pe_theses_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    index("pe_theses_tenant_case_state_idx").on(t.tenantId, t.investmentCaseId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peAssumptions = pgTable(
+  "pe_assumptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    dealId: uuid("deal_id").notNull(),
+    investmentCaseId: uuid("investment_case_id").notNull().references(() => peInvestmentCases.id),
+    assumptionKey: text("assumption_key").notNull(),
+    statement: text("statement").notNull(),
+    valueType: text("value_type", { enum: ["number", "currency", "percent", "boolean", "date", "text", "json"] }).notNull(),
+    value: jsonb("value").notNull(),
+    currencyCode: text("currency_code"),
+    unit: text("unit"),
+    materiality: text("materiality", { enum: ["low", "medium", "high", "critical"] }).notNull().default("medium"),
+    state: text("state", { enum: ["active", "superseded", "invalidated"] }).notNull().default("active"),
+    supersedesAssumptionId: uuid("supersedes_assumption_id"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+    invalidationReason: text("invalidation_reason"),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_assumptions_tenant_deal_id_key").on(t.tenantId, t.dealId, t.id),
+    unique("pe_assumptions_revision_once_key").on(t.supersedesAssumptionId),
+    unique("pe_assumptions_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    uniqueIndex("pe_assumptions_one_current_key_idx").on(t.investmentCaseId, t.assumptionKey).where(sql`${t.state}='active'`),
+    index("pe_assumptions_tenant_case_state_idx").on(t.tenantId, t.investmentCaseId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peDecisions = pgTable(
+  "pe_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    dealId: uuid("deal_id").notNull(),
+    investmentCaseId: uuid("investment_case_id").notNull().references(() => peInvestmentCases.id),
+    decisionType: text("decision_type").notNull(),
+    title: text("title").notNull(),
+    decision: text("decision").notNull(),
+    rationale: text("rationale"),
+    state: text("state", { enum: ["draft", "final", "superseded"] }).notNull().default("draft"),
+    decidedByPartyType: text("decided_by_party_type"),
+    decidedByPartyId: uuid("decided_by_party_id"),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    supersedesDecisionId: uuid("supersedes_decision_id"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_decisions_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("pe_decisions_tenant_deal_id_key").on(t.tenantId, t.dealId, t.id),
+    unique("pe_decisions_supersession_once_key").on(t.supersedesDecisionId),
+    unique("pe_decisions_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
+    index("pe_decisions_tenant_case_state_idx").on(t.tenantId, t.investmentCaseId, t.state, t.createdAt, t.id),
+  ],
+);
+
+export const peDecisionEffectLinks = pgTable(
+  "pe_decision_effect_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    decisionId: uuid("decision_id").notNull().references(() => peDecisions.id),
+    effectType: text("effect_type", { enum: ["work", "domain_action", "decision_receipt"] }).notNull(),
+    effectId: uuid("effect_id").notNull(),
+    relationship: text("relationship", { enum: ["implements", "records", "governs"] }).notNull().default("implements"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("pe_decision_effect_links_identity_key").on(t.decisionId, t.effectType, t.effectId, t.relationship),
+    index("pe_decision_effect_links_tenant_decision_idx").on(t.tenantId, t.decisionId, t.createdAt, t.id),
+  ],
+);
+
+export const canonicalHistoryCoverage = pgTable("canonical_history_coverage", {
+  entityType: text("entity_type").primaryKey(),
+  sourceTable: text("source_table").notNull(),
+  verticalKey: text("vertical_key").notNull(),
+  coverageStartedAt: timestamp("coverage_started_at", { withTimezone: true }).notNull(),
+  baselineCompletedAt: timestamp("baseline_completed_at", { withTimezone: true }).notNull(),
+});
+
+export const canonicalEntityVersions = pgTable(
+  "canonical_entity_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    entityType: text("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    entityVersion: integer("entity_version").notNull(),
+    snapshot: jsonb("snapshot").notNull(),
+    snapshotHash: text("snapshot_hash").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true }),
+    sourceSystem: text("source_system"),
+    externalId: text("external_id"),
+    actor: text("actor"),
+    origin: text("origin", { enum: ["mutation", "baseline"] }).notNull(),
+    previousVersionId: uuid("previous_version_id"),
+  },
+  (t) => [
+    unique("canonical_entity_versions_identity_key").on(t.tenantId, t.entityType, t.entityId, t.entityVersion),
+    index("canonical_entity_versions_entity_recorded_idx").on(t.tenantId, t.entityType, t.entityId, t.recordedAt, t.entityVersion),
+    index("canonical_entity_versions_tenant_recorded_idx").on(t.tenantId, t.recordedAt, t.id),
+  ],
+);
+
+export const externalRefObservations = pgTable(
+  "external_ref_observations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    integrationId: uuid("integration_id").notNull().references(() => tenantIntegrations.id),
+    sourceScopeId: uuid("source_scope_id").references(() => integrationSourceScopes.id),
+    sourceLinkId: uuid("source_link_id").references(() => externalRefs.id),
+    provider: text("provider").notNull(),
+    resourceKind: text("resource_kind"),
+    externalObjectType: text("external_object_type").notNull(),
+    externalId: text("external_id").notNull(),
+    canonicalEntityType: text("canonical_entity_type"),
+    canonicalEntityId: uuid("canonical_entity_id"),
+    sourceVersion: text("source_version"),
+    sourceSequence: bigint("source_sequence", { mode: "bigint" }),
+    observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+    retrievedAt: timestamp("retrieved_at", { withTimezone: true }),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    observationKey: text("observation_key"),
+    observedHash: text("observed_hash").notNull(),
+    observedState: jsonb("observed_state").notNull(),
+    providerParentRefs: jsonb("provider_parent_refs").notNull().default([]),
+    providerMetadata: jsonb("provider_metadata").notNull().default({}),
+    ingestionMode: text("ingestion_mode", { enum: ["initial_backfill", "incremental", "recovery", "exact_read"] }),
+    traceId: text("trace_id"),
+    evidenceSourceId: uuid("evidence_source_id").references(() => evidenceSources.id),
+    evidenceVersionId: uuid("evidence_version_id").references(() => evidenceSourceVersions.id),
+    materializationStatus: text("materialization_status").notNull(),
+    mappingStatus: text("mapping_status"),
+    conflictState: text("conflict_state"),
+    providerDeleted: boolean("provider_deleted").notNull().default(false),
+    reason: text("reason"),
+    businessEffectId: uuid("business_effect_id"),
+    provenance: jsonb("provenance").notNull().default({}),
+  },
+  (t) => [
+    index("external_ref_observations_external_time_idx").on(
+      t.tenantId, t.integrationId, t.externalObjectType, t.externalId, t.receivedAt, t.id,
+    ),
+    index("external_ref_observations_canonical_time_idx").on(
+      t.tenantId, t.canonicalEntityType, t.canonicalEntityId, t.receivedAt, t.id,
+    ),
+    uniqueIndex("external_ref_observations_observation_key")
+      .on(t.tenantId, t.integrationId, t.observationKey)
+      .where(sql`${t.observationKey} IS NOT NULL`),
+    index("external_ref_observations_scope_retrieved_idx").on(
+      t.tenantId, t.sourceScopeId, t.retrievedAt, t.id,
+    ),
+    index("external_ref_observations_parent_refs_gin_idx")
+      .using("gin", t.providerParentRefs.op("jsonb_path_ops")),
   ],
 );

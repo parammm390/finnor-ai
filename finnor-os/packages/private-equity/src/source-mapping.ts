@@ -8,9 +8,9 @@ import {
 import { withTenant, withTenantTransaction } from "@finnor/db";
 import { appendEvidenceVersion, createEvidenceSource } from "@finnor/memory";
 import type { CanonicalSourceRecord } from "@finnor/shared-types";
-import { attachCanonicalEvidence } from "./repository";
-import { PE_PROPOSITION_PREDICATES, pePropositionId, type PePropositionPredicate, type PrivateEquityAssertion } from "./epistemic";
-import { PE_ENTITY_TYPES, PeDomainError, type PeEntityRef, type PeMutationContext } from "./types";
+import { attachCanonicalEvidence, attachCanonicalEvidenceToWorld } from "./repository";
+import { PE_PROPOSITION_PREDICATES, pePropositionId, peWorldPropositionId, type PePropositionPredicate, type PrivateEquityAssertion } from "./epistemic";
+import { PE_ENTITY_TYPES, PeDomainError, type PeEntityRef, type PeMutationContext, type PeWorldRootRef } from "./types";
 
 const PREDICATES = new Set<string>(PE_PROPOSITION_PREDICATES);
 const ENTITY_TYPES = new Set<string>(PE_ENTITY_TYPES);
@@ -31,21 +31,36 @@ function assertClaim(claim: PrivateEquityObservationClaim): void {
   }
 }
 
-async function assertEntityInDeal(ctx: PeMutationContext, dealId: string, entity: PeEntityRef): Promise<void> {
+function normalizedWorldRoot(input: { dealId?: string; worldRoot?: PeWorldRootRef }): { root: PeWorldRootRef; dealId: string | null } {
+  const root = input.worldRoot ?? (input.dealId ? { entityType: "pe_deal", entityId: input.dealId } as const : null);
+  if (!root) throw new PeDomainError("PE_WORLD_ROOT_REQUIRED", "A Deal or explicit PE world root is required");
+  if (input.dealId && (root.entityType !== "pe_deal" || root.entityId !== input.dealId)) {
+    throw new PeDomainError("PE_WORLD_ROOT_MISMATCH", "dealId and worldRoot describe different PE worlds");
+  }
+  return { root, dealId: root.entityType === "pe_deal" ? root.entityId : null };
+}
+
+async function assertEntityInWorld(
+  ctx: PeMutationContext,
+  scope: { dealId?: string; worldRoot?: PeWorldRootRef },
+  entity: PeEntityRef,
+): Promise<{ root: PeWorldRootRef; dealId: string | null }> {
   if (!ENTITY_TYPES.has(entity.entityType)) throw new PeDomainError("PE_INVALID_REFERENCE", "Unknown PE entity type");
+  const normalized = normalizedWorldRoot(scope);
   await withTenantTransaction(ctx.auth.tenantId, {
     userId: ctx.auth.userId,
     readOnly: true,
     isolation: "repeatable read",
   }, async (_db, client) => {
-    const result = await client.query<{ deal_id: string | null }>(
-      "SELECT finnor_os.pe_entity_deal($1,$2::uuid)::text AS deal_id",
+    const result = await client.query<{ root_type: string; root_id: string; deal_id: string | null }>(
+      "SELECT root_type,root_id::text,deal_id::text FROM finnor_os.pe_entity_world_root($1,$2::uuid)",
       [entity.entityType, entity.entityId],
     );
-    if (result.rows[0]?.deal_id !== dealId) {
-      throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE entity is not part of the authenticated Deal");
+    if (result.rows[0]?.root_type !== normalized.root.entityType || result.rows[0]?.root_id !== normalized.root.entityId) {
+      throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE entity is not part of the authenticated world root");
     }
   });
+  return normalized;
 }
 
 export interface PrivateEquityObservationClaim {
@@ -66,7 +81,8 @@ export interface MapPrivateEquitySourceObservationInput {
   sourceScope: string;
   externalObjectType: string;
   externalId: string;
-  dealId: string;
+  dealId?: string;
+  worldRoot?: PeWorldRootRef;
   entity: PeEntityRef;
   claims: PrivateEquityObservationClaim[];
   observedAt: string;
@@ -80,6 +96,7 @@ export interface MapPrivateEquitySourceObservationInput {
  * ledger, but `observe_only` prevents the generic canonical import seam from ever
  * writing a PE lifecycle table. */
 export function mapPrivateEquitySourceObservation(input: MapPrivateEquitySourceObservationInput): CanonicalSourceRecord {
+  const scope = normalizedWorldRoot(input);
   if (!input.claims.length && !input.deleted) throw new PeDomainError("PE_INVALID_OBSERVATION", "A PE observation needs at least one typed claim");
   if (input.claims.length > 100) throw new PeDomainError("PE_INVALID_OBSERVATION", "A PE observation may contain at most 100 typed claims");
   for (const claim of input.claims) {
@@ -103,11 +120,14 @@ export function mapPrivateEquitySourceObservation(input: MapPrivateEquitySourceO
     observedAt: input.observedAt,
     deleted: input.deleted,
     data: {
-      schema: "finnor.pe.observation.v1",
-      dealId: input.dealId,
+      schema: "finnor.pe.observation.v2",
+      ...(scope.dealId ? { dealId: scope.dealId } : {}),
+      worldRoot: scope.root,
       entity: input.entity,
       claims: input.claims.map((claim) => ({
-        propositionId: pePropositionId(input.dealId, claim.entity.entityType, claim.entity.entityId, claim.predicate),
+        propositionId: scope.root.entityType === "pe_deal"
+          ? pePropositionId(scope.root.entityId, claim.entity.entityType, claim.entity.entityId, claim.predicate)
+          : peWorldPropositionId(scope.root, claim.entity.entityType, claim.entity.entityId, claim.predicate),
         predicate: claim.predicate,
         value: claim.value,
         ...(claim.maximumAgeMs === undefined ? {} : { maximumAgeMs: claim.maximumAgeMs }),
@@ -115,7 +135,7 @@ export function mapPrivateEquitySourceObservation(input: MapPrivateEquitySourceO
         ...(claim.supersedesEvidenceRefs?.length ? { supersedesEvidenceRefs: [...claim.supersedesEvidenceRefs] } : {}),
       })),
     },
-    relationships: { deal: { entity: "pe_deal", canonicalId: input.dealId, required: true } },
+    relationships: { root: { entity: scope.root.entityType, canonicalId: scope.root.entityId, required: true } },
     ownership: { default: "finnor", direction: "inbound" },
     provenance: { ...input.provenance, epistemicOnly: true },
     materialization: "observe_only",
@@ -123,7 +143,8 @@ export function mapPrivateEquitySourceObservation(input: MapPrivateEquitySourceO
 }
 
 export async function recordPrivateEquityProviderAcknowledgement(ctx: PeMutationContext, input: {
-  dealId: string;
+  dealId?: string;
+  worldRoot?: PeWorldRootRef;
   entity: PeEntityRef;
   integrationId: string;
   provider: string;
@@ -131,7 +152,7 @@ export async function recordPrivateEquityProviderAcknowledgement(ctx: PeMutation
   externalId: string;
   businessEffectId?: string;
 }): Promise<string> {
-  await assertEntityInDeal(ctx, input.dealId, input.entity);
+  await assertEntityInWorld(ctx, input, input.entity);
   return withTenant(ctx.auth.tenantId, (db) => recordExternalReferenceAcknowledgement(db, {
     tenantId: ctx.auth.tenantId,
     integrationId: input.integrationId,
@@ -151,7 +172,7 @@ export interface PrivateEquityObservationReceipt {
   contentHash: string | null;
 }
 
-interface AssertionSourceRow {
+export interface PrivateEquityAssertionSourceRow {
   source_id: string;
   version_id: string;
   source_type: string;
@@ -160,10 +181,16 @@ interface AssertionSourceRow {
   snapshot: Record<string, unknown>;
 }
 
-function assertionsFromRows(rows: AssertionSourceRow[], limit: number, dealId: string): PrivateEquityAssertion[] {
+export function privateEquityAssertionsFromRows(
+  rows: PrivateEquityAssertionSourceRow[],
+  limit: number,
+  root: PeWorldRootRef,
+): PrivateEquityAssertion[] {
   const assertions: PrivateEquityAssertion[] = [];
   for (const row of rows) {
-    if (row.snapshot?.dealId !== dealId) continue;
+    const snapshotRoot = row.snapshot?.worldRoot as Record<string, unknown> | undefined;
+    const legacyDealMatch = root.entityType === "pe_deal" && row.snapshot?.dealId === root.entityId;
+    if (!legacyDealMatch && (snapshotRoot?.entityType !== root.entityType || snapshotRoot?.entityId !== root.entityId)) continue;
     const claims = Array.isArray(row.snapshot?.claims) ? row.snapshot.claims : [];
     for (const claim of claims) {
       if (!claim || typeof claim !== "object") continue;
@@ -192,7 +219,7 @@ export async function recordPrivateEquitySourceObservation(
   ctx: PeMutationContext,
   input: Omit<MapPrivateEquitySourceObservationInput, "tenantId">,
 ): Promise<PrivateEquityObservationReceipt> {
-  await assertEntityInDeal(ctx, input.dealId, input.entity);
+  const scope = await assertEntityInWorld(ctx, input, input.entity);
   const record = mapPrivateEquitySourceObservation({ ...input, tenantId: ctx.auth.tenantId });
   const materialization = await withTenant(ctx.auth.tenantId, (db) => materializeSourceRecord(db, record), ctx.auth.userId);
   if (["out_of_order", "conflict", "ambiguous", "unresolved", "tombstoned"].includes(materialization.status)) {
@@ -204,7 +231,7 @@ export async function recordPrivateEquitySourceObservation(
     sourceType: "pe_provider_observation",
     title: `PE provider observation ${input.externalObjectType}/${input.externalId}`,
     publisher: input.provider,
-    metadata: { integrationId: input.integrationId, dealId: input.dealId, entity: input.entity },
+    metadata: { integrationId: input.integrationId, worldRoot: scope.root, entity: input.entity },
   });
   const content = stableJson(record.data);
   const version = await appendEvidenceVersion(ctx.auth.tenantId, evidenceSource.id, {
@@ -214,13 +241,17 @@ export async function recordPrivateEquitySourceObservation(
     retrievedAt: new Date(),
     entityRefs: [{ type: input.entity.entityType, id: input.entity.entityId }],
   });
-  await attachCanonicalEvidence(ctx, {
-    dealId: input.dealId,
-    entity: input.entity,
-    evidenceSourceId: evidenceSource.id,
-    evidenceVersionId: version.versionId,
-    relationship: "supports",
-  });
+  if (scope.root.entityType === "pe_deal") {
+    await attachCanonicalEvidence(ctx, {
+      dealId: scope.root.entityId, entity: input.entity, evidenceSourceId: evidenceSource.id,
+      evidenceVersionId: version.versionId, relationship: "supports",
+    });
+  } else {
+    await attachCanonicalEvidenceToWorld(ctx, {
+      worldRoot: scope.root, entity: input.entity, evidenceSourceId: evidenceSource.id,
+      evidenceVersionId: version.versionId, relationship: "supports",
+    });
+  }
   return {
     materialization,
     evidenceSourceId: evidenceSource.id,
@@ -230,7 +261,8 @@ export async function recordPrivateEquitySourceObservation(
 }
 
 export async function recordPrivateEquityDocumentClaim(ctx: PeMutationContext, input: {
-  dealId: string;
+  dealId?: string;
+  worldRoot?: PeWorldRootRef;
   entity: PeEntityRef;
   documentId: string;
   predicate: PePropositionPredicate;
@@ -248,20 +280,25 @@ export async function recordPrivateEquityDocumentClaim(ctx: PeMutationContext, i
     freshnessPolicyRef: input.freshnessPolicyRef,
     supersedesEvidenceRefs: input.supersedesEvidenceRefs,
   });
-  await assertEntityInDeal(ctx, input.dealId, input.entity);
+  const scope = await assertEntityInWorld(ctx, input, input.entity);
   await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
     const linked = await client.query(
       `SELECT 1 FROM finnor_os.pe_document_links
-        WHERE tenant_id=$1 AND deal_id=$2 AND entity_type=$3 AND entity_id=$4 AND document_id=$5
+        WHERE tenant_id=$1 AND world_root_type=$2 AND world_root_id=$3
+          AND entity_type=$4 AND entity_id=$5 AND document_id=$6
           AND archived_at IS NULL LIMIT 1`,
-      [ctx.auth.tenantId, input.dealId, input.entity.entityType, input.entity.entityId, input.documentId],
+      [ctx.auth.tenantId, scope.root.entityType, scope.root.entityId,
+        input.entity.entityType, input.entity.entityId, input.documentId],
     );
     if (!linked.rows[0]) throw new PeDomainError("PE_DOCUMENT_NOT_LINKED", "Document claim requires an exact canonical PE Document link");
   });
-  const propositionId = pePropositionId(input.dealId, input.entity.entityType, input.entity.entityId, input.predicate);
+  const propositionId = scope.root.entityType === "pe_deal"
+    ? pePropositionId(scope.root.entityId, input.entity.entityType, input.entity.entityId, input.predicate)
+    : peWorldPropositionId(scope.root, input.entity.entityType, input.entity.entityId, input.predicate);
   const snapshot = {
     schema: "finnor.pe.document-claim.v1",
-    dealId: input.dealId,
+    ...(scope.dealId ? { dealId: scope.dealId } : {}),
+    worldRoot: scope.root,
     entity: input.entity,
     documentId: input.documentId,
     claims: [{
@@ -277,7 +314,7 @@ export async function recordPrivateEquityDocumentClaim(ctx: PeMutationContext, i
     sourceKey: `pe-document:${input.documentId}:${input.entity.entityType}:${input.entity.entityId}`,
     sourceType: "pe_document_claim",
     title: `PE document claim ${input.documentId}`,
-    metadata: { dealId: input.dealId, entity: input.entity, documentId: input.documentId },
+    metadata: { worldRoot: scope.root, entity: input.entity, documentId: input.documentId },
   });
   const version = await appendEvidenceVersion(ctx.auth.tenantId, source.id, {
     content: stableJson(snapshot),
@@ -286,13 +323,17 @@ export async function recordPrivateEquityDocumentClaim(ctx: PeMutationContext, i
     retrievedAt: new Date(),
     entityRefs: [{ type: input.entity.entityType, id: input.entity.entityId }],
   });
-  await attachCanonicalEvidence(ctx, {
-    dealId: input.dealId,
-    entity: input.entity,
-    evidenceSourceId: source.id,
-    evidenceVersionId: version.versionId,
-    relationship: "supports",
-  });
+  if (scope.root.entityType === "pe_deal") {
+    await attachCanonicalEvidence(ctx, {
+      dealId: scope.root.entityId, entity: input.entity, evidenceSourceId: source.id,
+      evidenceVersionId: version.versionId, relationship: "supports",
+    });
+  } else {
+    await attachCanonicalEvidenceToWorld(ctx, {
+      worldRoot: scope.root, entity: input.entity, evidenceSourceId: source.id,
+      evidenceVersionId: version.versionId, relationship: "supports",
+    });
+  }
   return { evidenceSourceId: source.id, evidenceVersionId: version.versionId, contentHash: version.contentHash };
 }
 
@@ -308,18 +349,46 @@ export async function loadPrivateEquityAssertions(
     readOnly: true,
     isolation: "repeatable read",
   }, async (_db, client) => {
-    const rows = await client.query<AssertionSourceRow>(
+    const rows = await client.query<PrivateEquityAssertionSourceRow>(
       `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot
          FROM finnor_os.pe_evidence_links l
          JOIN finnor_os.evidence_sources s ON s.tenant_id=l.tenant_id AND s.id=l.evidence_source_id
          JOIN finnor_os.evidence_source_versions v ON v.tenant_id=l.tenant_id AND v.id=l.evidence_version_id
         WHERE l.tenant_id=$1 AND l.deal_id=$2 AND l.archived_at IS NULL
           AND s.source_type IN ('pe_provider_observation','pe_document_claim')
-          AND v.as_of <= $3
+          AND v.as_of <= $3 AND v.retrieved_at <= $3
         ORDER BY v.as_of,v.id LIMIT $4`,
       [ctx.auth.tenantId, dealId, asOf, boundedLimit],
     );
-    return assertionsFromRows(rows.rows, boundedLimit, dealId);
+    return privateEquityAssertionsFromRows(rows.rows, boundedLimit, { entityType: "pe_deal", entityId: dealId });
+  });
+}
+
+export async function loadPrivateEquityWorldAssertions(
+  ctx: PeMutationContext,
+  root: PeWorldRootRef,
+  limit = 200,
+  asOf = new Date(),
+): Promise<PrivateEquityAssertion[]> {
+  const boundedLimit = Math.max(1, Math.min(200, Math.floor(limit)));
+  return withTenantTransaction(ctx.auth.tenantId, {
+    userId: ctx.auth.userId,
+    readOnly: true,
+    isolation: "repeatable read",
+  }, async (_db, client) => {
+    const rows = await client.query<PrivateEquityAssertionSourceRow>(
+      `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot
+         FROM finnor_os.pe_evidence_links l
+         JOIN finnor_os.evidence_sources s ON s.tenant_id=l.tenant_id AND s.id=l.evidence_source_id
+         JOIN finnor_os.evidence_source_versions v ON v.tenant_id=l.tenant_id AND v.id=l.evidence_version_id
+        WHERE l.tenant_id=$1 AND l.world_root_type=$2 AND l.world_root_id=$3
+          AND l.archived_at IS NULL
+          AND s.source_type IN ('pe_provider_observation','pe_document_claim')
+          AND v.as_of <= $4 AND v.retrieved_at <= $4
+        ORDER BY v.as_of,v.id LIMIT $5`,
+      [ctx.auth.tenantId, root.entityType, root.entityId, asOf, boundedLimit],
+    );
+    return privateEquityAssertionsFromRows(rows.rows, boundedLimit, root);
   });
 }
 
@@ -338,18 +407,18 @@ export async function loadPrivateEquityAssertionsForEvidence(
     readOnly: true,
     isolation: "repeatable read",
   }, async (_db, client) => {
-    const rows = await client.query<AssertionSourceRow>(
+    const rows = await client.query<PrivateEquityAssertionSourceRow>(
       `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot
          FROM finnor_os.evidence_sources s
          JOIN finnor_os.evidence_source_versions v
            ON v.tenant_id=s.tenant_id AND v.source_id=s.id
         WHERE s.tenant_id=$1 AND s.scope='tenant' AND s.id=$2::uuid
           AND s.source_type IN ('pe_provider_observation','pe_document_claim')
-          AND ($3::uuid IS NULL OR v.id=$3::uuid) AND v.as_of <= $4
+          AND ($3::uuid IS NULL OR v.id=$3::uuid) AND v.as_of <= $4 AND v.retrieved_at <= $4
         ORDER BY v.version_number DESC,v.id DESC LIMIT 1`,
       [ctx.auth.tenantId, evidenceSourceId, evidenceVersionId ?? null, asOf],
     );
-    return assertionsFromRows(rows.rows, 100, dealId);
+    return privateEquityAssertionsFromRows(rows.rows, 100, { entityType: "pe_deal", entityId: dealId });
   });
 }
 

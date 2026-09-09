@@ -4,6 +4,18 @@ import { PE_TRANSITIONS, isMilestoneLate, isRequestOverdue, transitionAllowed } 
 describe("Private Equity lifecycle state machines", () => {
   it("contains the exact bounded transition matrices", () => {
     expect(PE_TRANSITIONS).toEqual({
+      strategy: { draft: ["active"], active: ["retired"], retired: [] },
+      opportunity: {
+        identified: ["screening", "rejected"], screening: ["qualified", "rejected"],
+        qualified: ["promoted", "rejected"], promoted: [], rejected: [],
+      },
+      investment_case: {
+        draft: ["active", "archived"], active: ["superseded", "archived"],
+        superseded: ["archived"], archived: [],
+      },
+      thesis: { draft: ["active", "retired"], active: ["superseded", "retired"], superseded: ["retired"], retired: [] },
+      assumption: { active: ["superseded", "invalidated"], superseded: [], invalidated: [] },
+      decision: { draft: ["final"], final: ["superseded"], superseded: [] },
       deal: { active: ["closed", "terminated"], closed: [], terminated: [] },
       deal_party: { active: ["removed"], removed: [] },
       workstream: { not_started: ["active", "cancelled"], active: ["complete", "cancelled"], complete: [], cancelled: [] },

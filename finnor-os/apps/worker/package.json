@@ -10,13 +10,16 @@
     "start:sse": "tsx src/sse-server.ts"
   },
   "dependencies": {
+    "@finnor/artifacts": "*",
     "@finnor/authority": "*",
     "@finnor/computer": "*",
     "@finnor/data-platform": "*",
     "@finnor/db": "*",
     "@finnor/memory": "*",
     "@finnor/orchestration": "*",
+    "@finnor/private-equity": "*",
     "@finnor/projections": "*",
+    "@finnor/provider-microsoft365": "*",
     "@finnor/read-models": "*",
     "@finnor/security": "*",
     "@finnor/shared-types": "*",

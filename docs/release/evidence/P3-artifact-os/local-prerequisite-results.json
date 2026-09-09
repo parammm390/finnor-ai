@@ -1,0 +1,333 @@
+{
+  "success": true,
+  "numTotalTests": 53,
+  "numPassedTests": 53,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "startTime": 1788826378037,
+  "scope": "Local prerequisite regression only; not P2 180-case or P3 190-case certification.",
+  "suites": [
+    {
+      "path": "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P2 Microsoft 365 PE evidence mapping retains unresolved evidence, replays it idempotently, then attaches the original version after exact root resolution",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft 365 PE evidence mapping refuses to choose between disagreeing deterministic roots",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft 365 PE evidence mapping reuses one Core Document for a Drive file and suppresses per-item backfill events",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft 365 PE evidence mapping rejects cross-tenant root proofs at the database boundary",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/microsoft365-subscription-worker.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P2 Microsoft subscription maintenance creates the subscription before queueing initial sync, persists only the clientState hash, renews without plaintext, and disables without deleting history",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance reconciles the create-response crash window from Graph clientState without issuing a duplicate create",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance best-effort deletes a remote create when the local active commit fails and never claims active",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance persists safe renewal failure state for Graph 401",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance persists safe renewal failure state for Graph 403",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance persists safe renewal failure state for Graph 429",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft subscription maintenance recreates an expired subscription and marks the replacement sync as recovery",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/microsoft365-sync-worker.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P2 Microsoft 365 sync/checkpoint runtime commits every observation before its cursor and keeps the stable cursor until 410 recovery catch-up completes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/microsoft365-webhook.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P2 Microsoft Graph webhook returns the URL-decoded validation token as exact non-HTML plain text without queueing",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook validates the registered subscription and durably deduplicates a fast-path wake before returning 202",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook fails closed for unknown subscription, clientState, provider resource, and directory mismatch",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook returns 5xx and rolls back notification state when durable queue insertion fails",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook marks missed delivery RECOVERING immediately and enqueues exact source recovery",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook marks subscriptionRemoved as removed and queues both replacement and source recovery",
+          "status": "passed"
+        },
+        {
+          "name": "P2 Microsoft Graph webhook queues reauthorization maintenance without exchanging a token in the request path",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-p1-upgrade.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P1 populated PE database upgrade preserves populated PE truth and records explicit non-fabricated owner baselines",
+          "status": "passed"
+        },
+        {
+          "name": "P1 populated PE database upgrade does not fabricate history before the recorded baseline",
+          "status": "passed"
+        },
+        {
+          "name": "P1 populated PE database upgrade is idempotent at the new migration head",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "P1 canonical PE world and temporal truth registers exactly the six P1 owners while retaining all existing PE owners",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth creates and transitions Strategy and Opportunity with historical replay",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth supports pre-Deal Documents, Evidence, and Source Truth without fake Deal ids",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth promotes one qualified Opportunity atomically and keeps direct Deal creation",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth enforces InvestmentCase, Thesis, Assumption, and semantic Decision semantics",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth composes Strategy, Opportunity, and complete Deal world-state through the operational query",
+          "status": "passed"
+        },
+        {
+          "name": "P1 canonical PE world and temporal truth reports pre-baseline history honestly and enforces append-only, deterministic, tenant-isolated history",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase2.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "Private Equity Phase 2 canonical execution graph persists the complete Atlas signed-LOI to verified-close world without duplicate owners",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph certifies registry ownership, RLS, initial states, immutable close truth, and vertical=none",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph fails all cross-tenant graph references closed under application RLS",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph keeps retired Water registrations inert while PE and none boundaries hold",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph names open, failed, and dependency blockers and never emits premature close history",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph rejects a stale close when a required condition commits after its eligibility snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 2 canonical execution graph serializes competing condition outcomes without last-write-wins",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase3.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "Private Equity Phase 3 truth and cognition keeps acknowledgement, observation, Document evidence, ordering, dedupe, and tombstone distinct from canonical state",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 3 truth and cognition executes all bounded PE queries, reuses exact PE2 blockers, and emits a Work read receipt without business mutation",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 3 truth and cognition uses exact active Work anchors and routes the natural question before any planner can guess",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 3 truth and cognition fails closed across tenants and the retired vertical while preserving shared Core query registration",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase4.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "Private Equity Phase 4 governed execution creates one exact Request through DomainAction/BusinessEffect/worker/receipt, blocks duplicates and foreign Deals, and does not mistake creation for fulfillment",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 4 governed execution keeps one PE Work across request, shadow message, durable deadline, chase, response evidence, restart, and verified condition resolution",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 4 governed execution blocks unresolved P3 evidence, satisfies only from exact authoritative evidence, and rejects stale grounded state",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 4 governed execution requires exact human approval for waiver and rejects an approved waiver after canonical state changes",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 4 governed execution revalidates approved close against stale reality, then closes an eligible Deal once with a finalized receipt and evidence-backed success",
+          "status": "passed"
+        },
+        {
+          "name": "Private Equity Phase 4 governed execution blocks PE external egress unless an explicit sandbox/emulator binding exists",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "finnor-os/tests/integration/source-truth-loop.test.ts",
+      "status": "passed",
+      "tests": [
+        {
+          "name": "active PE Source Truth observe-only loop records one mapped observation and an immutable duplicate without mutating canonical PE truth",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop accepts a strictly newer provider observation while leaving canonical state unchanged",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop quarantines ambiguous deterministic candidates in existing reconciliation_cases",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop rejects an older provider sequence without rolling the current projection backward",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop opens divergence at the same provider position instead of last-write-wins",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop tombstones the provider projection while retaining canonical Opportunity truth",
+          "status": "passed"
+        },
+        {
+          "name": "active PE Source Truth observe-only loop fails closed on cross-tenant canonical candidates and checkpoint forgery",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "logSha256": "aca4552934b346a166ff830d71487b3fb63fb47ab7db840564ef2ae1c9aa3fc2",
+  "postgres": "Fresh isolated embedded-postgres cluster, all disk migrations applied, restricted finnor_app test login initialized; stopped after tests.",
+  "p1Certification": {
+    "result": "PASS",
+    "generatedAt": "2026-09-08T00:14:39.576Z",
+    "cases": 51,
+    "migrationCount": 114,
+    "migrationHead": "0114_microsoft_subscription_current_scope.sql",
+    "evidence": "docs/release/generated/pe-p1-world-truth-certification.json",
+    "sha256": "5ce6347f684ccf42cc9995b19d9a44bc510ca6302a8cfe943f22845a635ef3df",
+    "commandSummaries": {
+      "migrationBundle": {
+        "status": "PASS",
+        "summary": "bundled 114 migrations"
+      },
+      "typecheck": {
+        "status": "PASS",
+        "summary": ""
+      },
+      "openapi": {
+        "status": "PASS",
+        "summary": "Generated openapi.json with 15 active/quarantine paths."
+      },
+      "unit": {
+        "status": "PASS",
+        "summary": "stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7 |  Test Files  86 passed (86) |       Tests  364 passed (364) |    Start at  05:44:49 |    Duration  41.84s (transform 1.29s, setup 896ms, import 29.04s, tests 6.02s, environment 4ms)"
+      },
+      "boundary": {
+        "status": "PASS",
+        "summary": "PE-DOMAIN-BOUNDARY PASS files=600 actions=32 queries=14 negative_injection=PASS"
+      },
+      "p1Integration": {
+        "status": "PASS",
+        "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7 |  Test Files  2 passed (2) |       Tests  10 passed (10) |    Start at  05:45:33 |    Duration  3.35s (transform 559ms, setup 101ms, import 1.21s, tests 1.89s, environment 0ms)"
+      },
+      "pePhaseRegression": {
+        "status": "PASS",
+        "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7 |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:45:37 |    Duration  8.61s (transform 895ms, setup 118ms, import 3.26s, tests 5.02s, environment 0ms)"
+      },
+      "sourceTruthRegression": {
+        "status": "PASS",
+        "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7 |  Test Files  1 passed (1) |       Tests  7 passed (7) |    Start at  05:45:46 |    Duration  844ms (transform 213ms, setup 49ms, import 469ms, tests 254ms, environment 0ms)"
+      },
+      "phase5Regression": {
+        "status": "PASS",
+        "summary": "PE5 WATER RETIREMENT CERTIFICATION LOCAL PASS / PRODUCTION BLOCKED output=../docs/release/generated/pe5-water-retirement-certification.json markdown=../docs/release/pe5-water-retirement-certification.md"
+      }
+    }
+  },
+  "p3Status": "BLOCKED_PREREQUISITES"
+}

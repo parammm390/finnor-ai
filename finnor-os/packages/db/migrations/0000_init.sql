@@ -14,7 +14,11 @@ BEGIN
     EXECUTE 'ALTER ROLE CURRENT_USER SET search_path = finnor_os, public';
   END IF;
 END $sp$;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Pin pgcrypto to public instead of whichever schema happens to lead a role's
+-- inherited search_path. Later migrations deliberately call public.digest, and a
+-- populated-upgrade database may be created after the local migration role has
+-- acquired `finnor_os, public` as its default search path.
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 -- pgvector is present on Supabase and the CI image. On a dev machine without it,
 -- the embeddings column falls back to jsonb and semantic search runs in-process
 -- (packages/memory/src/semantic.ts detects which mode the database is in).

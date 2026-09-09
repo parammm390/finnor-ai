@@ -218,6 +218,123 @@ export async function createEvidenceSource(tenantId: string, input: EvidenceSour
   });
 }
 
+/** Core Evidence transaction seam for callers that must atomically persist a wider
+ * observation outcome. It retains the same tenant ownership and idempotent source
+ * identity as createEvidenceSource without opening a nested transaction. */
+export async function createEvidenceSourceTx(
+  db: Db,
+  tenantId: string,
+  input: EvidenceSourceInput,
+): Promise<{ id: string; scope: EvidenceScope }> {
+  const scope = input.scope ?? "tenant";
+  if (scope !== "tenant") throw new Error("Public evidence writes require a privileged cache-ingestion process");
+  const [existing] = await db
+    .select({ id: evidenceSources.id, scope: evidenceSources.scope })
+    .from(evidenceSources)
+    .where(and(sourceScopeWhere(tenantId, scope), eq(evidenceSources.sourceKey, input.sourceKey)))
+    .limit(1);
+  if (existing) return { id: existing.id, scope: existing.scope as EvidenceScope };
+  const [row] = await db.insert(evidenceSources).values({
+    scope,
+    tenantId,
+    sourceKey: input.sourceKey,
+    sourceType: input.sourceType,
+    canonicalUrl: input.canonicalUrl ?? null,
+    title: input.title,
+    publisher: input.publisher ?? null,
+    metadata: input.metadata ?? {},
+  }).onConflictDoNothing().returning({ id: evidenceSources.id, scope: evidenceSources.scope });
+  if (row) return { id: row.id, scope: row.scope as EvidenceScope };
+  const [raced] = await db.select({ id: evidenceSources.id, scope: evidenceSources.scope }).from(evidenceSources)
+    .where(and(sourceScopeWhere(tenantId, scope), eq(evidenceSources.sourceKey, input.sourceKey))).limit(1);
+  if (!raced) throw new Error("Evidence source insert returned no row");
+  return { id: raced.id, scope: raced.scope as EvidenceScope };
+}
+
+function storageSafeChunks(content: string): EvidenceChunkText[] {
+  const logical = chunkEvidenceText(content);
+  const stored: EvidenceChunkText[] = [];
+  for (const chunk of logical) {
+    for (let offset = 0; offset < chunk.length; offset += 24_000) {
+      const part = chunk.slice(offset, offset + 24_000).trim();
+      if (part) stored.push({ content: part, tokenCount: Math.min(600, Math.max(1, tokenCount(part))), entityRefs: [], timeRefs: [] });
+    }
+  }
+  return stored;
+}
+
+/** Append-only Core Evidence version inside an existing tenant transaction. Network
+ * embedding is intentionally unavailable here; transaction callers must keep remote
+ * work outside Postgres and may supply already-computed vectors if ever required. */
+export async function appendEvidenceVersionTx(
+  db: Db,
+  tenantId: string,
+  sourceId: string,
+  input: Omit<EvidenceVersionInput, "embeddingProvider">,
+): Promise<EvidenceVersionResult> {
+  const content = input.content.trim();
+  if (!content) throw new Error("Evidence version content cannot be empty");
+  if (Buffer.byteLength(content, "utf8") > 262_144) throw new Error("Evidence version content exceeds the 262144-byte transaction bound");
+  const snapshot = input.snapshot ?? {};
+  const snapshotBytes = Buffer.byteLength(JSON.stringify(snapshot), "utf8");
+  if (snapshotBytes > 262_144) throw new Error("Evidence snapshot exceeds the 262144-byte transaction bound");
+  const hash = contentHash(content);
+  const chunks = storageSafeChunks(content).map((chunk) => ({
+    ...chunk,
+    entityRefs: input.entityRefs ?? [],
+    timeRefs: input.timeRefs ?? [],
+  }));
+  if (!chunks.length) throw new Error("Evidence version produced no chunks");
+  if (input.embeddings?.length && input.embeddings.length !== chunks.length) {
+    throw new Error("Evidence embeddings must match chunk count");
+  }
+  const [source] = await db.select().from(evidenceSources).where(and(
+    eq(evidenceSources.id, sourceId),
+    eq(evidenceSources.scope, "tenant"),
+    eq(evidenceSources.tenantId, tenantId),
+  )).limit(1);
+  if (!source) throw new Error("Evidence source is not visible in this tenant context");
+  await db.execute(sql`SELECT id FROM ${evidenceSources} WHERE ${evidenceSources.id}=${sourceId} FOR UPDATE`);
+  const [existing] = await db.select({ id: evidenceSourceVersions.id, versionNumber: evidenceSourceVersions.versionNumber })
+    .from(evidenceSourceVersions).where(and(
+      eq(evidenceSourceVersions.sourceId, sourceId),
+      eq(evidenceSourceVersions.contentHash, hash),
+    )).limit(1);
+  if (existing) {
+    const [countRow] = await db.select({ count: sql<number>`count(*)::int` }).from(evidenceChunks)
+      .where(eq(evidenceChunks.versionId, existing.id));
+    return { sourceId, versionId: existing.id, versionNumber: existing.versionNumber, chunks: Number(countRow?.count ?? 0), contentHash: hash };
+  }
+  const [previous] = await db.select({ versionNumber: max(evidenceSourceVersions.versionNumber) })
+    .from(evidenceSourceVersions).where(eq(evidenceSourceVersions.sourceId, sourceId));
+  const versionNumber = Number(previous?.versionNumber ?? 0) + 1;
+  const [version] = await db.insert(evidenceSourceVersions).values({
+    sourceId,
+    scope: "tenant",
+    tenantId,
+    versionNumber,
+    contentHash: hash,
+    content,
+    snapshot,
+    asOf: input.asOf ?? new Date(),
+    retrievedAt: input.retrievedAt ?? new Date(),
+  }).returning({ id: evidenceSourceVersions.id });
+  if (!version) throw new Error("Evidence version insert returned no row");
+  await db.insert(evidenceChunks).values(chunks.map((chunk, index) => ({
+    sourceId,
+    versionId: version.id,
+    scope: "tenant" as const,
+    tenantId,
+    ordinal: index + 1,
+    content: chunk.content,
+    tokenCount: chunk.tokenCount,
+    entityRefs: chunk.entityRefs,
+    timeRefs: chunk.timeRefs,
+    ...(input.embeddings?.[index] ? { embedding: input.embeddings[index] } : {}),
+  })));
+  return { sourceId, versionId: version.id, versionNumber, chunks: chunks.length, contentHash: hash };
+}
+
 /** Appends one immutable source version and its bounded chunks. Embeddings are
  * caller-supplied or produced only when an explicit provider is passed, so lexical
  * evidence remains ingestible while an embedding integration is unavailable. */

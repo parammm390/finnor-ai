@@ -8,6 +8,7 @@
     "start": "next start -p 3100"
   },
   "dependencies": {
+    "@finnor/artifacts": "*",
     "@finnor/authority": "*",
     "@finnor/computer": "*",
     "@finnor/data-platform": "*",
@@ -15,7 +16,9 @@
     "@finnor/memory": "*",
     "@finnor/orchestration": "*",
     "@finnor/policy-schema": "*",
+    "@finnor/private-equity": "*",
     "@finnor/projections": "*",
+    "@finnor/provider-microsoft365": "*",
     "@finnor/read-models": "*",
     "@finnor/security": "*",
     "@finnor/shared-types": "*",

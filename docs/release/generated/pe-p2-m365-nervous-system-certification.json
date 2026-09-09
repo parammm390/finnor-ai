@@ -1,0 +1,2638 @@
+{
+  "schema": "finnor.pe-p2-m365-nervous-system-certification.v1",
+  "generatedAt": "2026-09-09T14:50:41.479Z",
+  "result": "BLOCKED-EXTERNAL-CERTIFICATION",
+  "deterministicResult": "PASS",
+  "deterministicMandatoryCases": {
+    "passed": 179,
+    "required": 179
+  },
+  "externallyCertifiedMandatoryCases": {
+    "passed": 0,
+    "required": 1
+  },
+  "startingBaseline": {
+    "branch": "codex/p3-epistemic-runtime",
+    "headSha": "80f617d321965b8694de18940ff23b005dedcdb7",
+    "treeSha": "f38b551d99952986527e4986e3ba77891a3c10ef",
+    "migrationHead": "0111_pe_world_truth.sql"
+  },
+  "p2MigrationHead": "0118_provider_parent_relationship_lookup.sql",
+  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
+  "currentMigrationCount": 124,
+  "p1Prerequisite": {
+    "result": "PASS",
+    "generatedAt": "2026-09-09T14:46:18.911Z",
+    "mandatoryCases": 51,
+    "reportHash": "28c310c67a01fb378c1f5ead0f9a5ff6fbb35453abc0c09ac1150edb4c60fa18"
+  },
+  "auditVerdict": {
+    "EXISTS": [
+      "one Core job queue",
+      "integration_sync_checkpoints",
+      "Core Source Truth/Evidence/Document/BusinessEvent/Work/reconciliation",
+      "P1 temporal PE world"
+    ],
+    "PARTIAL": [
+      "pre-P2 provider contracts lacked Microsoft exact scopes, durable Graph subscriptions, and historical source coverage"
+    ],
+    "WRONG": [
+      "none retained; webhook payload truth and current-scope historical projection were corrected"
+    ],
+    "MISSING": [
+      "real live Microsoft tenant credentials/configuration on this host; deterministic implementation is complete"
+    ],
+    "REUSE": [
+      "tenant integrations and auth profiles",
+      "jobs",
+      "integration_sync_checkpoints",
+      "external_refs and external_ref_observations",
+      "EvidenceVersion",
+      "Document",
+      "reconciliation_cases",
+      "BusinessEvent",
+      "Work/realtime",
+      "P1 state_at"
+    ],
+    "DELETE": [
+      "none; no duplicate provider authority or truth system was retained"
+    ]
+  },
+  "exactMicrosoftProviderArchitecture": "@finnor/provider-microsoft365 is a read/control transport boundary: app-only token acquisition, bounded v1.0 Graph reads, normalization into ProviderObservation, and notification-subscription control. It owns no PE state.",
+  "exactAuthArchitecture": "Existing application_accounts → auth_profiles → tenant_integrations chain, with tenant-bound Entra directory/application IDs. AWS IAM outbound web identity federation is primary; ephemeral Graph tokens live only in a revision-keyed process cache. X.509 is an explicitly enabled managed-secret fallback; client secrets fail closed.",
+  "awsWorkloadFederationResult": "DETERMINISTIC PASS; BLOCKED-EXTERNAL-CERTIFICATION for a real token",
+  "certificateFallbackStatus": "Implemented and deterministically tested; not selected as production primary and not required by current certification evidence.",
+  "adminConsentImplementation": "Tenant-bound Entra admin-consent request with hashed single-use state, exact directory return check, app-token inspection, effective-role equality, and consequential authority checks.",
+  "effectivePermissionModel": "Requested roles never imply coverage. Each exact source requires an app-token role match plus a positive Graph read; SCOPED claims additionally require a known non-covered resource to return 403. BROAD mode records and requires explicit blast-radius acknowledgement.",
+  "providerRestrictionVerification": {
+    "exchange": "Exchange Online Application RBAC positive/negative resource probes",
+    "sharepoint": "Sites/Lists/Files Selected role plus exact assigned-resource positive/negative probes",
+    "teams": "RSC where stable for exact channel/chat/transcript scope; otherwise explicit broad mode and tenant blast radius",
+    "transcripts": "OnlineMeetingTranscript permission profile, application-access/RSC restriction descriptor, explicit tenant-policy blocked state, speaker-attribution fallback"
+  },
+  "sourceCapabilityMatrix": [
+    {
+      "sourceKind": "outlook_mail_folder",
+      "family": "outlook_mail",
+      "coverageUnit": [
+        "directoryTenantId",
+        "mailboxId",
+        "folderId"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": true,
+      "historyLimit": {
+        "kind": "none"
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": [
+          "Mail.Read"
+        ],
+        "BROAD": [
+          "Mail.Read"
+        ]
+      }
+    },
+    {
+      "sourceKind": "outlook_calendar_view",
+      "family": "outlook_calendar",
+      "coverageUnit": [
+        "directoryTenantId",
+        "mailboxId",
+        "calendarId",
+        "windowStart",
+        "windowEnd"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": true,
+      "historyLimit": {
+        "kind": "configured_window"
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": [
+          "Calendars.Read"
+        ],
+        "BROAD": [
+          "Calendars.Read"
+        ]
+      }
+    },
+    {
+      "sourceKind": "teams_channel",
+      "family": "teams_channel",
+      "coverageUnit": [
+        "directoryTenantId",
+        "teamId",
+        "channelId"
+      ],
+      "initialBaseline": true,
+      "delta": false,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "provider_availability"
+      },
+      "recoveryStrength": "BOUNDED_RECONCILIATION",
+      "permissionProfiles": {
+        "SCOPED": [
+          "ChannelMessage.Read.Group"
+        ],
+        "BROAD": [
+          "ChannelMessage.Read.All"
+        ]
+      }
+    },
+    {
+      "sourceKind": "teams_chat",
+      "family": "teams_chat",
+      "coverageUnit": [
+        "directoryTenantId",
+        "chatId"
+      ],
+      "initialBaseline": true,
+      "delta": false,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "provider_availability"
+      },
+      "recoveryStrength": "BOUNDED_RECONCILIATION",
+      "permissionProfiles": {
+        "SCOPED": [
+          "ChatMessage.Read.Chat"
+        ],
+        "BROAD": [
+          "Chat.Read.All"
+        ]
+      }
+    },
+    {
+      "sourceKind": "teams_user_chat_feed",
+      "family": "teams_chat",
+      "coverageUnit": [
+        "directoryTenantId",
+        "userId",
+        "rollingEightMonthHistory"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "rolling_months",
+        "months": 8
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": null,
+        "BROAD": [
+          "Chat.Read.All"
+        ]
+      }
+    },
+    {
+      "sourceKind": "teams_transcript_organizer",
+      "family": "teams_transcript",
+      "coverageUnit": [
+        "directoryTenantId",
+        "organizerUserId",
+        "startDateTime",
+        "providerTranscriptAvailability"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": false,
+      "deletes": false,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "provider_availability"
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": [
+          "OnlineMeetingTranscript.Read.All",
+          "OnlineMeetings.Read.All"
+        ],
+        "BROAD": [
+          "OnlineMeetingTranscript.Read.All",
+          "OnlineMeetings.Read.All"
+        ]
+      }
+    },
+    {
+      "sourceKind": "sharepoint_drive",
+      "family": "sharepoint_drive",
+      "coverageUnit": [
+        "directoryTenantId",
+        "siteOrUser",
+        "driveId",
+        "optionalRootItemId"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "none"
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": [
+          "Sites.Selected",
+          "Files.SelectedOperations.Selected"
+        ],
+        "BROAD": [
+          "Files.Read.All",
+          "Sites.Read.All"
+        ]
+      }
+    },
+    {
+      "sourceKind": "sharepoint_list",
+      "family": "sharepoint_list",
+      "coverageUnit": [
+        "directoryTenantId",
+        "siteId",
+        "listId"
+      ],
+      "initialBaseline": true,
+      "delta": true,
+      "notifications": true,
+      "deletes": true,
+      "immutableId": false,
+      "historyLimit": {
+        "kind": "none"
+      },
+      "recoveryStrength": "EXACT_DELTA",
+      "permissionProfiles": {
+        "SCOPED": [
+          "Lists.SelectedOperations.Selected"
+        ],
+        "BROAD": [
+          "Sites.Read.All"
+        ]
+      }
+    }
+  ],
+  "schemaResult": {
+    "sourceScopes": "integration_source_scopes — exact authorized provider information-space boundary plus separate current freshness telemetry",
+    "coverageHistory": "integration_source_coverage_history — append-only revisioned coverage facts with immutable historical source descriptor",
+    "subscriptions": "integration_subscriptions — durable mutable Graph control plane with one current row per scope and hashed clientState",
+    "providerObservation": "extended immutable external_ref_observations with source, resource, observed/retrieved times, parent refs, evidence IDs, ingestion mode, trace, and idempotency key"
+  },
+  "syncEngineResult": "Existing sync_source job and integration_sync_checkpoints own page durability. Every observation/EvidenceVersion transaction commits before cursor advancement; recovery keeps the stable cursor until baseline plus immediate catch-up converges.",
+  "unresolvedObservationHandling": "EvidenceVersion and provider observation persist first; unresolved or ambiguous roots enter existing reconciliation_cases, and later exact resolution attaches the same evidence version without rewriting retrievedAt.",
+  "peRootMapper": "Only dedicated source, exact object/Document/external-ref, exact parent/thread/series/meeting inheritance. Conflicting proofs are ambiguous. No title/subject fuzziness and no LLM selection.",
+  "evidenceDocumentEventWorkIntegration": "Core EvidenceVersion owns provider evidence; Core Document is created/reused only for actual Drive files (mail attachments remain metadata until materialized); incremental/exact mapped observations emit existing BusinessEvents and wake existing Work waits idempotently; backfill does neither per item.",
+  "sourceImplementations": {
+    "mail": "folder-scoped immutable-ID delta, attachment metadata, bounded untrusted body, tombstones, terminal cursor and immediate catch-up",
+    "calendar": "immutable-ID bounded calendarView delta with exact window, cancellations as evidence and provider removals as tombstones",
+    "teamsChannel": "exact channel enumeration/notifications, thread/reply/edit/delete identity, bounded recovery with PARTIAL on unprovable gaps",
+    "teamsChat": "exact-chat enumeration/RSC mode plus configured-user rolling-eight-month v1.0 delta mode; no obsolete metering code",
+    "transcripts": "organizer getAllTranscripts delta, metadata/content, exact meeting parent, bounded content, policy-disabled block and attribution fallback",
+    "drive": "drive/root delta with stable drive-item Document identity across rename/move, tombstones and provider-directed 410 recovery; no workbook parsing",
+    "lists": "exact site/list delta with selected bounded fields and tombstones; non-file items remain evidence rather than fake Documents"
+  },
+  "webhookAndRecovery": "Validation token returns exact text/plain; normal/lifecycle envelopes validate registered subscription, hashed clientState, directory and resource; one transaction persists deduplicated wake before 202. Webhook never calls Graph or writes evidence. Retry-After becomes durable queue delay; 410 starts provider-directed recovery.",
+  "architecture": {
+    "providerFiles": [
+      "packages/provider-microsoft365/src/access-probes.ts",
+      "packages/provider-microsoft365/src/artifact-transport.ts",
+      "packages/provider-microsoft365/src/auth.ts",
+      "packages/provider-microsoft365/src/client.ts",
+      "packages/provider-microsoft365/src/errors.ts",
+      "packages/provider-microsoft365/src/index.ts",
+      "packages/provider-microsoft365/src/normalization.ts",
+      "packages/provider-microsoft365/src/source-capabilities.ts",
+      "packages/provider-microsoft365/src/sources.ts",
+      "packages/provider-microsoft365/src/subscriptions.ts",
+      "packages/provider-microsoft365/src/types.ts"
+    ],
+    "forbiddenProviderImports": [],
+    "coreSourceTruthImportsProvider": false,
+    "observationBusinessWrites": false,
+    "fuzzyOrLlmRootSelection": false,
+    "sourceKinds": [
+      "outlook_calendar_view",
+      "outlook_mail_folder",
+      "sharepoint_drive",
+      "sharepoint_list",
+      "teams_channel",
+      "teams_chat",
+      "teams_transcript_organizer",
+      "teams_user_chat_feed"
+    ],
+    "sourceFamilies": [
+      "outlook_calendar",
+      "outlook_mail",
+      "sharepoint_drive",
+      "sharepoint_list",
+      "teams_channel",
+      "teams_chat",
+      "teams_transcript"
+    ],
+    "capabilityDigest": "ac754e60d62781b7523d26976110b0269bb4d48fa0d0d865d194d9c797f7288f",
+    "expectedFiles": [
+      "packages/provider-microsoft365/src/auth.ts",
+      "packages/provider-microsoft365/src/client.ts",
+      "packages/provider-microsoft365/src/sources.ts",
+      "packages/provider-microsoft365/src/subscriptions.ts",
+      "packages/private-equity/src/microsoft365-mapping.ts",
+      "apps/worker/src/handlers/maintain-integration-subscriptions.ts",
+      "apps/api/app/api/webhooks/microsoft-graph/route.ts",
+      "apps/api/app/api/connections/microsoft-graph/start/route.ts",
+      "apps/api/app/api/connections/microsoft-graph/callback/route.ts",
+      "apps/api/app/api/integrations/microsoft-graph/source-scopes/route.ts"
+    ]
+  },
+  "databaseInvariants": {
+    "migration": {
+      "count": 124,
+      "head": "0126_pe_underwriting_runtime.sql"
+    },
+    "rlsTables": [
+      "application_consent_requests",
+      "integration_source_coverage_history",
+      "integration_source_scopes",
+      "integration_subscriptions",
+      "provider_object_root_bindings"
+    ],
+    "integrity": {
+      "scopes": true,
+      "coverage": true,
+      "subscriptions": true,
+      "observations": true,
+      "externalRefs": true,
+      "evidence": true,
+      "documents": true,
+      "reconciliation": true,
+      "jobs": true,
+      "checkpoints": true,
+      "businessEvents": true,
+      "works": true,
+      "descriptor": true,
+      "currentSubscriptionIndex": true,
+      "parentRelationshipIndex": true,
+      "webhookResolver": true,
+      "coverageSelect": true,
+      "coverageInsert": true,
+      "coverageUpdate": false,
+      "coverageDelete": false,
+      "microsoftOwners": 0,
+      "coverageTriggers": 2,
+      "rootTriggers": 2,
+      "subscriptionTriggers": 1
+    },
+    "providerObservationColumns": [
+      "evidence_source_id",
+      "evidence_version_id",
+      "ingestion_mode",
+      "observation_key",
+      "provider_metadata",
+      "provider_parent_refs",
+      "resource_kind",
+      "retrieved_at",
+      "source_scope_id",
+      "trace_id"
+    ],
+    "authConstraints": [
+      {
+        "name": "auth_profiles_auth_method_check",
+        "definition": "CHECK ((auth_method = ANY (ARRAY['managed_secret'::text, 'oauth2'::text, 'browser_profile'::text, 'workload_identity'::text])))"
+      },
+      {
+        "name": "auth_profiles_credential_contract_check",
+        "definition": "CHECK ((((credential_provider IS NULL) AND (credential_ref IS NULL) AND (credential_version IS NULL)) OR ((credential_provider = 'aws-secrets-manager'::text) AND (credential_ref IS NOT NULL) AND (btrim(credential_ref) <> ''::text) AND (POSITION(((tenant_id)::text) IN (credential_ref)) > 0) AND ((credential_version IS NULL) OR (btrim(credential_version) <> ''::text))) OR ((credential_provider = 'aws-iam-federated'::text) AND (credential_ref IS NULL) AND (credential_version IS NULL)) OR ((credential_provider = 'os-keychain'::text) AND (credential_ref IS NOT NULL) AND (credential_ref ~~ (('finnor/tenants/'::text || (tenant_id)::text) || '/%'::text)) AND (credential_version IS NULL)) OR ((credential_provider = 'legacy-env'::text) AND (credential_ref ~ '^legacy-env:(quickbooks|vapi|stripe|docusign|ghl|gmail|resend|meta_ads|google_ads)$'::text) AND (credential_version IS NULL))))"
+      },
+      {
+        "name": "auth_profiles_workload_identity_shape_check",
+        "definition": "CHECK ((((auth_method = 'workload_identity'::text) AND (credential_provider = 'aws-iam-federated'::text) AND (credential_ref IS NULL) AND (credential_version IS NULL)) OR ((auth_method <> 'workload_identity'::text) AND (credential_provider IS DISTINCT FROM 'aws-iam-federated'::text))))"
+      },
+      {
+        "name": "tenant_integrations_credential_contract_check",
+        "definition": "CHECK ((((credential_provider IS NULL) AND (credential_ref IS NULL) AND (credential_version IS NULL) AND (credential_metadata = '{}'::jsonb)) OR ((credential_provider = 'aws-secrets-manager'::text) AND (credential_ref IS NOT NULL) AND (btrim(credential_ref) <> ''::text) AND ((credential_version IS NULL) OR (btrim(credential_version) <> ''::text))) OR ((credential_provider = 'aws-iam-federated'::text) AND (credential_ref IS NULL) AND (credential_version IS NULL)) OR ((credential_provider = 'legacy-env'::text) AND (credential_ref ~ '^legacy-env:(quickbooks|vapi|stripe|docusign|ghl|gmail|resend|meta_ads|google_ads)$'::text) AND (credential_version IS NULL))))"
+      }
+    ]
+  },
+  "populatedUpgrade": {
+    "appliedBefore": 114,
+    "appliedFinal": [
+      "0117_microsoft_source_coverage_descriptor_history.sql",
+      "0118_provider_parent_relationship_lookup.sql",
+      "0119_document_artifact_versions.sql",
+      "0120_artifact_collaboration_publication.sql",
+      "0121_artifact_publication_recovery.sql",
+      "0122_artifact_provider_creation.sql",
+      "0123_artifact_authority_defaults.sql",
+      "0124_artifact_comment_review_guard.sql",
+      "0125_artifact_history_least_privilege.sql",
+      "0126_pe_underwriting_runtime.sql"
+    ],
+    "retainedCoverageId": "e1489c15-530f-415a-9181-0ad33473a24e",
+    "descriptorDefault": {},
+    "head": "0126_pe_underwriting_runtime.sql",
+    "count": 124
+  },
+  "commands": {
+    "migrationBundle": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 233,
+      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "outputLineCount": 1,
+      "summary": "bundled 124 migrations"
+    },
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 18989,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "openapi": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 2235,
+      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "outputLineCount": 1,
+      "summary": "Generated openapi.json with 57 active/quarantine paths."
+    },
+    "authzMatrix": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 225,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "unit": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 76365,
+      "outputHash": "05c48c70abe20b78506ead99046274e0fe25eeed99d6e668fbfc8f4d7701c5a1",
+      "outputLineCount": 26,
+      "summary": "  message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:21:03 |    Duration  75.98s (transform 2.44s, setup 1.53s, import 50.37s, tests 13.91s, environment 7ms)"
+    },
+    "peBoundary": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1433,
+      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "outputLineCount": 1,
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+    },
+    "p2Integration": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 10182,
+      "outputHash": "fd5d0def40225527596a8af4090e72e1de54bccd549d817949b029d5606b6b2f",
+      "outputLineCount": 228,
+      "summary": "[14:52:34] \u001b[32mINFO\u001b[39m: \u001b[36mMicrosoft Graph notification wake durably queued\u001b[39m |     \u001b[35mtraceId\u001b[39m: \"fc4215af-32c3-4370-8f44-ab6f5135f0bd\" |     \u001b[35mevent\u001b[39m: \"m365_webhook_accepted\" |     \u001b[35mmetric\u001b[39m: \"m365_webhook_duration_ms\" |     \u001b[35mdurationMs\u001b[39m: 11 |     \u001b[35mnotificationCount\u001b[39m: 1 |     \u001b[35mtenantCount\u001b[39m: 1 | ··· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  20:22:25 |    Duration  9.84s (transform 1.20s, setup 311ms, import 5.72s, tests 3.27s, environment 0ms)"
+    },
+    "p1AndSourceTruthRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7998,
+      "outputHash": "7411ebb6b1051835abd6ca8f40a328b7a6e5b6b12dfb7d247d030cfc87e23830",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:22:35 |    Duration  7.67s (transform 1.27s, setup 194ms, import 3.30s, tests 3.83s, environment 0ms)"
+    },
+    "peGraphRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 18365,
+      "outputHash": "86630df6a11f140560140e337fa51d7f84bf0d7e78e97179f100180d5c4b09ed",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  20:22:43 |    Duration  18.04s (transform 1.72s, setup 315ms, import 8.46s, tests 8.68s, environment 0ms)"
+    },
+    "workQueueConnectionRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/queue.test.ts tests/integration/dlq-auto-triage.test.ts tests/integration/phase5-connection-lifecycle.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 5571,
+      "outputHash": "ba6d190f9ebf2dc0d6f228cb7179a479c379ffcc118092ee3d8202315dbca55e",
+      "outputLineCount": 64,
+      "summary": "    \u001b[35mms\u001b[39m: 0 | ·········[14:53:04] \u001b[32mINFO\u001b[39m: \u001b[36mjob lease_renewal_test completed\u001b[39m |     \u001b[35mtraceId\u001b[39m: \"21ca674c-a2d3-4b1b-bd27-208d14662e8a\" |     \u001b[35mjobType\u001b[39m: \"lease_renewal_test\" |     \u001b[35mjobId\u001b[39m: \"21ca674c-a2d3-4b1b-bd27-208d14662e8a\" |     \u001b[35mok\u001b[39m: true |     \u001b[35mms\u001b[39m: 1311 | ········ |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:23:01 |    Duration  5.27s (transform 693ms, setup 193ms, import 2.58s, tests 2.16s, environment 0ms)"
+    }
+  },
+  "gates": {
+    "typecheck": {
+      "status": "PASS",
+      "evidence": "commands.typecheck"
+    },
+    "unit_tests": {
+      "status": "PASS",
+      "evidence": "commands.unit; no skips or deprecation warnings"
+    },
+    "integration_tests": {
+      "status": "PASS",
+      "evidence": "commands.p2Integration; no skips or deprecation warnings"
+    },
+    "fresh_migration": {
+      "status": "PASS",
+      "evidence": {
+        "applied": 124,
+        "head": "0126_pe_underwriting_runtime.sql"
+      }
+    },
+    "populated_upgrade": {
+      "status": "PASS",
+      "evidence": {
+        "appliedBefore": 114,
+        "appliedFinal": [
+          "0117_microsoft_source_coverage_descriptor_history.sql",
+          "0118_provider_parent_relationship_lookup.sql",
+          "0119_document_artifact_versions.sql",
+          "0120_artifact_collaboration_publication.sql",
+          "0121_artifact_publication_recovery.sql",
+          "0122_artifact_provider_creation.sql",
+          "0123_artifact_authority_defaults.sql",
+          "0124_artifact_comment_review_guard.sql",
+          "0125_artifact_history_least_privilege.sql",
+          "0126_pe_underwriting_runtime.sql"
+        ],
+        "retainedCoverageId": "e1489c15-530f-415a-9181-0ad33473a24e",
+        "descriptorDefault": {},
+        "head": "0126_pe_underwriting_runtime.sql",
+        "count": 124
+      }
+    },
+    "rls": {
+      "status": "PASS",
+      "evidence": [
+        "application_consent_requests",
+        "integration_source_coverage_history",
+        "integration_source_scopes",
+        "integration_subscriptions",
+        "provider_object_root_bindings"
+      ]
+    },
+    "tenant_isolation": {
+      "status": "PASS",
+      "evidence": "database guards plus adversarial administration/webhook/mapping tests"
+    },
+    "auth_architecture": {
+      "status": "PASS",
+      "evidence": "AWS IAM outbound identity federation primary; explicit X.509-only fallback; no client secret"
+    },
+    "source_capability_matrix": {
+      "status": "PASS",
+      "evidence": {
+        "providerFiles": [
+          "packages/provider-microsoft365/src/access-probes.ts",
+          "packages/provider-microsoft365/src/artifact-transport.ts",
+          "packages/provider-microsoft365/src/auth.ts",
+          "packages/provider-microsoft365/src/client.ts",
+          "packages/provider-microsoft365/src/errors.ts",
+          "packages/provider-microsoft365/src/index.ts",
+          "packages/provider-microsoft365/src/normalization.ts",
+          "packages/provider-microsoft365/src/source-capabilities.ts",
+          "packages/provider-microsoft365/src/sources.ts",
+          "packages/provider-microsoft365/src/subscriptions.ts",
+          "packages/provider-microsoft365/src/types.ts"
+        ],
+        "forbiddenProviderImports": [],
+        "coreSourceTruthImportsProvider": false,
+        "observationBusinessWrites": false,
+        "fuzzyOrLlmRootSelection": false,
+        "sourceKinds": [
+          "outlook_calendar_view",
+          "outlook_mail_folder",
+          "sharepoint_drive",
+          "sharepoint_list",
+          "teams_channel",
+          "teams_chat",
+          "teams_transcript_organizer",
+          "teams_user_chat_feed"
+        ],
+        "sourceFamilies": [
+          "outlook_calendar",
+          "outlook_mail",
+          "sharepoint_drive",
+          "sharepoint_list",
+          "teams_channel",
+          "teams_chat",
+          "teams_transcript"
+        ],
+        "capabilityDigest": "ac754e60d62781b7523d26976110b0269bb4d48fa0d0d865d194d9c797f7288f",
+        "expectedFiles": [
+          "packages/provider-microsoft365/src/auth.ts",
+          "packages/provider-microsoft365/src/client.ts",
+          "packages/provider-microsoft365/src/sources.ts",
+          "packages/provider-microsoft365/src/subscriptions.ts",
+          "packages/private-equity/src/microsoft365-mapping.ts",
+          "apps/worker/src/handlers/maintain-integration-subscriptions.ts",
+          "apps/api/app/api/webhooks/microsoft-graph/route.ts",
+          "apps/api/app/api/connections/microsoft-graph/start/route.ts",
+          "apps/api/app/api/connections/microsoft-graph/callback/route.ts",
+          "apps/api/app/api/integrations/microsoft-graph/source-scopes/route.ts"
+        ]
+      }
+    },
+    "webhook_fast_path": {
+      "status": "PASS",
+      "evidence": "wake-only integration test completes duplicate notifications below 3 seconds"
+    },
+    "subscription_lifecycle": {
+      "status": "PASS",
+      "evidence": "create/reconcile/renew/expire/remove/disable integration tests"
+    },
+    "delta_cursor_durability": {
+      "status": "PASS",
+      "evidence": "page commit before checkpoint, injected pre-checkpoint crash/replay, and 410 stable-cursor recovery tests"
+    },
+    "historical_coverage": {
+      "status": "PASS",
+      "evidence": "immutable descriptor-backed coverage and no-hindsight world tests"
+    },
+    "source_families": {
+      "status": "PASS",
+      "evidence": [
+        "outlook_mail_folder",
+        "outlook_calendar_view",
+        "teams_channel",
+        "teams_chat",
+        "teams_user_chat_feed",
+        "teams_transcript_organizer",
+        "sharepoint_drive",
+        "sharepoint_list"
+      ]
+    },
+    "root_resolution": {
+      "status": "PASS",
+      "evidence": "exact scope/object/thread/meeting proofs; unresolved and ambiguous retention"
+    },
+    "p1_regression": {
+      "status": "PASS",
+      "evidence": "commands.p1AndSourceTruthRegression and commands.peGraphRegression"
+    },
+    "work_event_regression": {
+      "status": "PASS",
+      "evidence": "commands.p2Integration and commands.workQueueConnectionRegression"
+    },
+    "google_regression": {
+      "status": "PASS",
+      "evidence": "phase5-connection-lifecycle.test.ts"
+    },
+    "openapi_and_authz": {
+      "status": "PASS",
+      "evidence": "commands.openapi and commands.authzMatrix"
+    },
+    "live_microsoft": {
+      "status": "BLOCKED-EXTERNAL-CERTIFICATION",
+      "evidence": {
+        "missing": [
+          "P2_M365_LIVE_DATABASE_URL",
+          "P2_M365_LIVE_TENANT_ID",
+          "P2_M365_LIVE_SOURCE_SCOPE_IDS",
+          "P2_M365_LIVE_WEBHOOK_URL"
+        ],
+        "optIn": "P2_M365_LIVE_CERTIFICATION=1"
+      }
+    }
+  },
+  "mandatoryCases": [
+    {
+      "number": 1,
+      "name": "Starting main SHA/tree recorded.",
+      "status": "PASS",
+      "evidence": [
+        "baseline",
+        "p1Prerequisite",
+        "architecture"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "P1 certification verified.",
+      "status": "PASS",
+      "evidence": [
+        "baseline",
+        "p1Prerequisite",
+        "architecture"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "No active Microsoft provider already exists unnoticed.",
+      "status": "PASS",
+      "evidence": [
+        "baseline",
+        "p1Prerequisite",
+        "architecture"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Existing Google/Gmail connection behavior remains green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "architecture"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Existing tenant integration semantics remain green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "architecture"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Existing source sync engine remains one engine.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "architecture"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Existing reconciliation remains one system.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "architecture"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Existing PE Source Truth tests remain green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "architecture"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Microsoft provider resolves through existing account/auth-profile/integration architecture.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Microsoft directory identity is tenant-bound.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "AWS workload identity can acquire Graph token in production-cert environment.",
+      "status": "BLOCKED-EXTERNAL-CERTIFICATION",
+      "evidence": [
+        "deterministic auth architecture PASS",
+        "real AWS→Entra→Graph token unavailable"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Graph token never persists.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "Worker restart reacquires token.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Token cache isolates Microsoft tenant A/B.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "Expired token refreshes.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "Persistent auth failure marks correct state.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "Certificate fallback works if deliberately enabled.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "Client-secret production configuration fails certification.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "Forged Microsoft tenant ID cannot override stored integration.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "Requested permission alone does not imply coverage.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "Effective Graph probe required.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Exchange allowed mailbox read succeeds.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "Exchange denied mailbox does not count covered.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "SharePoint selected site succeeds.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Unselected site fails.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 26,
+      "name": "Teams scoped resource succeeds where RSC configured.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 27,
+      "name": "Unconfigured resource fails/returns not covered.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 28,
+      "name": "Transcript disabled tenant yields explicit blocked state.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration"
+      ]
+    },
+    {
+      "number": 29,
+      "name": "Validation handshake exact.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 30,
+      "name": "Normal notification acknowledged within fast-path target.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 31,
+      "name": "Graph is not called in webhook critical path.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 32,
+      "name": "Evidence is not written in webhook critical path.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 33,
+      "name": "Unknown subscription ignored/fails safely.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 34,
+      "name": "clientState mismatch fails.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 35,
+      "name": "notification tenant mismatch fails.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 36,
+      "name": "durable enqueue succeeds before 202.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 37,
+      "name": "queue failure does not return false success.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 38,
+      "name": "duplicate notification converges.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:webhook"
+      ]
+    },
+    {
+      "number": 39,
+      "name": "Subscription created before notification-backed backfill.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 40,
+      "name": "Provider-returned expiration persisted.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 41,
+      "name": "Resource-specific maximum lifetime respected.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 42,
+      "name": "renew_at deterministic.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 43,
+      "name": "renewal idempotent.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 44,
+      "name": "expired subscription not active.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 45,
+      "name": "subscriptionRemoved triggers recovery.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 46,
+      "name": "renewal worker restart safe.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 47,
+      "name": "disabling scope deletes/disables remote subscription without deleting evidence.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration:subscriptions"
+      ]
+    },
+    {
+      "number": 48,
+      "name": "Folder-scoped initial delta.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 49,
+      "name": "Independent cursor per folder.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 50,
+      "name": "terminal deltaLink stored.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 51,
+      "name": "immediate catch-up.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 52,
+      "name": "new message EvidenceVersion.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 53,
+      "name": "message update new version.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 54,
+      "name": "exact duplicate idempotent.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 55,
+      "name": "message move preserves immutable identity.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 56,
+      "name": "delete tombstone.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 57,
+      "name": "unconfigured folder not covered.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 58,
+      "name": "folder sync failure does not make mailbox complete.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 59,
+      "name": "message body truncation explicit.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 60,
+      "name": "attachment Document relationship correct.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 61,
+      "name": "calendar-view initial delta.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 62,
+      "name": "exact configured date window recorded.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 63,
+      "name": "incremental delta.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 64,
+      "name": "create event.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 65,
+      "name": "update event.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 66,
+      "name": "cancel event.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 67,
+      "name": "event outside coverage window does not create false full coverage.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 68,
+      "name": "window expansion begins partial.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 69,
+      "name": "window expansion becomes complete only after sync.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 70,
+      "name": "immutable event identity preserved.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:coverage"
+      ]
+    },
+    {
+      "number": 71,
+      "name": "configured channel initial enumeration.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 72,
+      "name": "new message observation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 73,
+      "name": "edit observation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 74,
+      "name": "reply/thread identity.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 75,
+      "name": "delete/tombstone where provider proves it.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 76,
+      "name": "exact scoped access enforcement.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 77,
+      "name": "known notification gap causes recovery.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 78,
+      "name": "inability to prove full recovery results PARTIAL.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:webhook",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 79,
+      "name": "exact-chat mode.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 80,
+      "name": "exact chat RSC enforcement where supported.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 81,
+      "name": "chat message observation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 82,
+      "name": "edit observation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 83,
+      "name": "delete observation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 84,
+      "name": "configured user-chat delta mode where enabled.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 85,
+      "name": "historical delta boundary exposed.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 86,
+      "name": "request before historical boundary returns HISTORY_LIMITED.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 87,
+      "name": "no obsolete Teams billing code exists.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "architecture"
+      ]
+    },
+    {
+      "number": 88,
+      "name": "configured organizer transcript initial sync.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 89,
+      "name": "transcript delta continuation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 90,
+      "name": "transcript metadata observed.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 91,
+      "name": "transcript content retrieved.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 92,
+      "name": "exact meeting relationship.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 93,
+      "name": "root inherited from uniquely bound calendar meeting.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 94,
+      "name": "no title-based root guess.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 95,
+      "name": "transcript tenant-policy 403 handled.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 96,
+      "name": "speaker-attribution-disabled fallback handled when provider supports it.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 97,
+      "name": "transcript historical limitation exposed.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:administration",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 98,
+      "name": "initial drive delta.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 99,
+      "name": "terminal deltaLink.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 100,
+      "name": "file creation.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 101,
+      "name": "file update.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 102,
+      "name": "file rename same Document.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 103,
+      "name": "file move semantics correct.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 104,
+      "name": "delete tombstone.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 105,
+      "name": "410 resync.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 106,
+      "name": "recovery preserves history.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 107,
+      "name": "selected-site permission enforcement.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 108,
+      "name": "no workbook parsing occurs.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 109,
+      "name": "list initial delta.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 110,
+      "name": "item update.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 111,
+      "name": "item deletion.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 112,
+      "name": "410 resync.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 113,
+      "name": "field snapshot bounded.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 114,
+      "name": "non-file list item not made Document.",
+      "status": "PASS",
+      "evidence": [
+        "unit:provider",
+        "p2Integration:sync"
+      ]
+    },
+    {
+      "number": 115,
+      "name": "dedicated scope → Strategy.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 116,
+      "name": "dedicated scope → Opportunity.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 117,
+      "name": "dedicated scope → Deal.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 118,
+      "name": "exact object binding.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 119,
+      "name": "exact thread inheritance.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 120,
+      "name": "exact calendar→transcript inheritance.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 121,
+      "name": "no binding → unresolved.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 122,
+      "name": "two candidates → ambiguous.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 123,
+      "name": "LLM never invoked.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 124,
+      "name": "fuzzy subject ignored.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 125,
+      "name": "cross-tenant root rejected.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 126,
+      "name": "evidence persists before root resolution.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 127,
+      "name": "later root resolution attaches existing version without changing retrievedAt.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "databaseInvariants",
+        "architecture"
+      ]
+    },
+    {
+      "number": 128,
+      "name": "observedAt is provider time.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 129,
+      "name": "retrievedAt is successful Graph-read time.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 130,
+      "name": "webhook arrival not retrievedAt.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 131,
+      "name": "old mail retrieved later excluded from earlier state_at.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 132,
+      "name": "evidence appears after actual retrieval.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 133,
+      "name": "tombstone does not erase earlier state.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 134,
+      "name": "coverage before connection = unavailable.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 135,
+      "name": "historical coverage snapshot uses historical scope.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 136,
+      "name": "future scope expansion does not leak backwards.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 137,
+      "name": "P1 no-hindsight tests remain green.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:mapping",
+        "p1Regression"
+      ]
+    },
+    {
+      "number": 138,
+      "name": "initial scope = INITIALIZING.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 139,
+      "name": "baseline completion = COMPLETE where recoverable.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 140,
+      "name": "auth failure = BLOCKED_AUTH.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 141,
+      "name": "permission failure = BLOCKED_PERMISSION.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 142,
+      "name": "delta 410 = RECOVERING.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 143,
+      "name": "Teams historical boundary = HISTORY_LIMITED.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 144,
+      "name": "known unrecoverable notification gap = PARTIAL.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 145,
+      "name": "scope disabled = DISABLED.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 146,
+      "name": "unresolved relevant observations make root evidence completeness partial.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 147,
+      "name": "freshness and coverage remain separate.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:administration",
+        "p2Integration:webhook",
+        "p2Integration:sync",
+        "p2Integration:mapping"
+      ]
+    },
+    {
+      "number": 148,
+      "name": "crash before read.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 149,
+      "name": "crash after read.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 150,
+      "name": "crash after ProviderObservation.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 151,
+      "name": "crash after EvidenceVersion.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 152,
+      "name": "crash before checkpoint.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 153,
+      "name": "replay after crash.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 154,
+      "name": "no duplicate evidence.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 155,
+      "name": "no duplicate BusinessEvent.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 156,
+      "name": "no duplicate Work wake.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 157,
+      "name": "Retry-After obeyed.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 158,
+      "name": "DLQ existing semantics preserved.",
+      "status": "PASS",
+      "evidence": [
+        "p2Integration:sync",
+        "p2Integration:subscriptions",
+        "p2Integration:mapping",
+        "queueRegression"
+      ]
+    },
+    {
+      "number": 159,
+      "name": "Tenant A cannot read Tenant B scopes.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 160,
+      "name": "Tenant A notification cannot enqueue Tenant B job.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 161,
+      "name": "Tenant A provider object cannot bind Tenant B PE root.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 162,
+      "name": "access token never logged.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 163,
+      "name": "clientState never logged.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 164,
+      "name": "Microsoft content never becomes instruction.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 165,
+      "name": "malicious HTML safely rendered/sanitized.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 166,
+      "name": "provider payload cannot supply FINNOR tenant authority.",
+      "status": "PASS",
+      "evidence": [
+        "unit",
+        "p2Integration",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 167,
+      "name": "existing PE graph tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 168,
+      "name": "P1 world-state tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 169,
+      "name": "P1 temporal-history tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 170,
+      "name": "Source Truth tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 171,
+      "name": "external effect observation tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 172,
+      "name": "reconciliation tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 173,
+      "name": "Work wait tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 174,
+      "name": "BusinessEvent/realtime projection tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 175,
+      "name": "connection/security tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 176,
+      "name": "Google/Gmail tests green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 177,
+      "name": "fresh DB migration green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 178,
+      "name": "populated DB upgrade green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 179,
+      "name": "worker restart/recovery green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    },
+    {
+      "number": 180,
+      "name": "OpenAPI/generated contracts green.",
+      "status": "PASS",
+      "evidence": [
+        "regressions",
+        "freshMigration",
+        "populatedUpgrade",
+        "openapi"
+      ]
+    }
+  ],
+  "architectureStatements": [
+    "Microsoft Graph notifications are acceleration signals only; provider read-back/delta/reconciliation establishes FINNOR observation truth.",
+    "P2 never invents a Deal or PE root for ambiguous Microsoft content.",
+    "Successfully retrieved Microsoft evidence is retained even when its PE root is unresolved.",
+    "FINNOR distinguishes source freshness from source coverage and never converts lack of coverage into proof of absence.",
+    "P1 historical `state_at(t)` remains no-hindsight: Microsoft evidence is unavailable before FINNOR's actual retrievedAt even when the provider object itself is older.",
+    "No Microsoft business-write capability was built in P2.",
+    "No Artifact OS, underwriting engine, IC system, planner or autonomous workforce was built in P2.",
+    "No second Source Truth, Evidence, Document, Work, Event, Reconciliation or queue system was created.",
+    "FINNOR now continuously observes its explicitly authorized Microsoft 365 surface across Outlook, Teams, meeting transcripts, SharePoint and OneDrive and projects verified observations into the existing P1 PE world with explicit coverage truth."
+  ],
+  "migrationsAdded": [
+    "0112_pe_microsoft365_nervous_system.sql",
+    "0113_microsoft_graph_webhook_resolver.sql",
+    "0114_microsoft_subscription_current_scope.sql",
+    "0117_microsoft_source_coverage_descriptor_history.sql",
+    "0118_provider_parent_relationship_lookup.sql"
+  ],
+  "newJobTypes": [
+    "maintain_integration_subscriptions"
+  ],
+  "reusedJobTypes": [
+    "sync_source",
+    "sync_sources"
+  ],
+  "newApiRoutes": [
+    "POST /api/connections/microsoft-graph/start",
+    "GET /api/connections/microsoft-graph/callback",
+    "GET /api/connections/microsoft-graph/status",
+    "GET|POST /api/integrations/microsoft-graph/source-scopes",
+    "GET|DELETE /api/integrations/microsoft-graph/source-scopes/{id}",
+    "GET /api/integrations/microsoft-graph/coverage",
+    "POST /api/webhooks/microsoft-graph"
+  ],
+  "filesCreated": [
+    "packages/provider-microsoft365",
+    "packages/private-equity/src/microsoft365-mapping.ts",
+    "packages/db/migrations/0112_pe_microsoft365_nervous_system.sql",
+    "packages/db/migrations/0113_microsoft_graph_webhook_resolver.sql",
+    "packages/db/migrations/0114_microsoft_subscription_current_scope.sql",
+    "packages/db/migrations/0117_microsoft_source_coverage_descriptor_history.sql",
+    "packages/db/migrations/0118_provider_parent_relationship_lookup.sql",
+    "apps/worker/src/handlers/maintain-integration-subscriptions.ts",
+    "apps/api/app/api/webhooks/microsoft-graph/route.ts",
+    "apps/api/app/api/connections/microsoft-graph",
+    "apps/api/app/api/integrations/microsoft-graph",
+    "tests/unit/microsoft365-provider.test.ts",
+    "tests/unit/microsoft365-access-probes.test.ts",
+    "tests/integration/microsoft365-administration.test.ts",
+    "tests/integration/microsoft365-webhook.test.ts",
+    "tests/integration/microsoft365-subscription-worker.test.ts",
+    "tests/integration/microsoft365-sync-worker.test.ts",
+    "tests/integration/microsoft365-pe-mapping.test.ts",
+    "tests/live/microsoft365-nervous-system.live.test.ts",
+    "scripts/release/run-pe-p2-m365-nervous-system-certification.ts"
+  ],
+  "filesMateriallyChanged": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "openapi.json",
+    "packages/db/schema.ts",
+    "packages/db/migration-head.ts",
+    "packages/db/migrations-bundle.ts",
+    "packages/shared-types/src/source-truth.ts",
+    "packages/shared-types/src/jobs.ts",
+    "packages/security/src/provider-auth.ts",
+    "packages/security/src/index.ts",
+    "packages/data-platform/src/source-coverage.ts",
+    "packages/data-platform/src/microsoft365-administration.ts",
+    "packages/data-platform/src/index.ts",
+    "packages/private-equity/src/world-state.ts",
+    "packages/private-equity/src/operational-queries.ts",
+    "packages/private-equity/src/types.ts",
+    "packages/private-equity/src/index.ts",
+    "apps/worker/src/handlers/sync-source.ts",
+    "apps/worker/src/index.ts",
+    "scripts/generate-openapi.ts"
+  ],
+  "results": {
+    "typecheck_result": "PASS",
+    "unit_test_result": "PASS — full unit suite, no skips",
+    "integration_test_result": "PASS — P2 provider/control/data plane and selected active regressions, no skips",
+    "fresh_migration_result": "PASS — 124 migrations through 0126_pe_underwriting_runtime.sql",
+    "populated_migration_result": "PASS — populated pre-0117 coverage row retained through 0126_pe_underwriting_runtime.sql",
+    "rls_result": "PASS — forced tenant RLS on all five P2 tenant tables",
+    "tenant_isolation_result": "PASS — tenant/scope/root/evidence/provider notification authority constrained in SQL and adversarial tests",
+    "p1_temporal_regression_result": "PASS — state_at and dual observedAt/retrievedAt no-hindsight tests",
+    "source_truth_regression_result": "PASS — duplicate/order/conflict/tombstone/reconciliation regression",
+    "work_event_regression_result": "PASS — BusinessEvent/realtime temporal boundary and idempotent Work wake",
+    "google_connection_regression_result": "PASS — existing Google/Gmail lifecycle suite",
+    "webhook_timing_result": "PASS — durable duplicate wake path under 3,000 ms; no Graph/evidence critical-path call",
+    "crash_replay_result": "PASS — injected failures after Graph response, after EvidenceVersion, after ProviderObservation, and before checkpoint; stable recovery cursor and idempotent evidence/event replay",
+    "coverage_correctness_result": "PASS — append-only historical descriptor, explicit initial/complete/partial/recovering/blocked/history-limited/disabled states, separate freshness",
+    "no_business_write_actions_result": "PASS — only subscription control-plane writes; no Microsoft business mutation",
+    "no_artifact_os_result": "PASS — no P2 artifact/underwriting/IC/planner/autonomous capability",
+    "deterministic_certification_result": "PASS — 179/179 deterministic mandatory cases; case 11 is the external live gate",
+    "live_microsoft_certification_result": "BLOCKED-EXTERNAL-CERTIFICATION"
+  },
+  "liveMicrosoftCertification": {
+    "result": "BLOCKED-EXTERNAL-CERTIFICATION",
+    "configured": false,
+    "missingEnvironmentNames": [
+      "P2_M365_LIVE_DATABASE_URL",
+      "P2_M365_LIVE_TENANT_ID",
+      "P2_M365_LIVE_SOURCE_SCOPE_IDS",
+      "P2_M365_LIVE_WEBHOOK_URL"
+    ],
+    "command": "P2_M365_LIVE_CERTIFICATION=1 npm run release:pe-p2",
+    "productionLiveClaimAllowed": false
+  },
+  "remainingExternalBlockers": [
+    "BLOCKED-EXTERNAL-CERTIFICATION: no configured real Microsoft 365 test tenant/AWS→Entra workload identity was available. Production release must not claim live Microsoft certification until the opt-in live gate passes.",
+    "VCS cleanliness is not certified because the workspace contains a macOS dataless .vercelignore that blocks Git index scans; the recorded starting SHA/tree remains the audit baseline."
+  ],
+  "exactHandoffToP3": "P3 may consume retained EvidenceVersion/Document and explicit coverage truth to add artifact semantics. It must preserve P2's provider-observation immutability, retrievedAt no-hindsight boundary, deterministic root proofs, existing subsystem owners, and read-only Microsoft business surface.",
+  "documentationEvidence": [
+    "https://learn.microsoft.com/en-us/graph/outlook-immutable-id",
+    "https://learn.microsoft.com/en-us/graph/api/message-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/event-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/teams-changenotifications-chatmessage",
+    "https://learn.microsoft.com/en-us/graph/api/chatmessage-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/calltranscript-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/resources/calltranscript?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/onlinemeeting-get?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/cloud-communication-online-meeting-application-access-policy",
+    "https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks",
+    "https://learn.microsoft.com/en-us/graph/change-notifications-lifecycle-events",
+    "https://learn.microsoft.com/en-us/graph/api/driveitem-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/listitem-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/permissions-selected-overview",
+    "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+    "https://learn.microsoft.com/en-us/graph/metered-api-list",
+    "https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac"
+  ]
+}

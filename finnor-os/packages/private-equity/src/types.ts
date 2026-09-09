@@ -3,7 +3,13 @@ import type { CanonicalEntityRef, PartyRef, TenantContext, VerticalDefinition } 
 export const PRIVATE_EQUITY_VERTICAL_KEY = "private_equity" as const;
 
 export const PE_ENTITY_TYPES = [
+  "pe_strategy",
+  "pe_opportunity",
   "pe_deal",
+  "pe_investment_case",
+  "pe_thesis",
+  "pe_assumption",
+  "pe_decision",
   "pe_deal_party",
   "pe_workstream",
   "pe_request",
@@ -45,8 +51,23 @@ export type DealRiskState = "open" | "mitigating" | "resolved" | "accepted";
 export type MilestoneState = "pending" | "achieved" | "cancelled";
 export type ClosingConditionState = "open" | "evidence_pending" | "satisfied" | "waived" | "failed";
 export type ClosingItemState = "open" | "ready" | "verified" | "cancelled";
+export type StrategyState = "draft" | "active" | "retired";
+export type OpportunityState = "identified" | "screening" | "qualified" | "promoted" | "rejected";
+export type InvestmentCaseState = "draft" | "active" | "superseded" | "archived";
+export type ThesisState = "draft" | "active" | "superseded" | "retired";
+export type AssumptionState = "active" | "superseded" | "invalidated";
+export type DecisionState = "draft" | "final" | "superseded";
+export type AssumptionValueType = "number" | "currency" | "percent" | "boolean" | "date" | "text" | "json";
+export type PeWorldRootType = "pe_strategy" | "pe_opportunity" | "pe_deal";
+export interface PeWorldRootRef { entityType: PeWorldRootType; entityId: string }
 
 export type PeLifecycleName =
+  | "strategy"
+  | "opportunity"
+  | "investment_case"
+  | "thesis"
+  | "assumption"
+  | "decision"
   | "deal"
   | "deal_party"
   | "workstream"
@@ -60,7 +81,8 @@ export type PeLifecycleName =
 
 export type PeLifecycleState =
   | DealState | DealPartyState | WorkstreamState | RequestState | DeliverableState
-  | FindingState | DealRiskState | MilestoneState | ClosingConditionState | ClosingItemState;
+  | FindingState | DealRiskState | MilestoneState | ClosingConditionState | ClosingItemState
+  | StrategyState | OpportunityState | InvestmentCaseState | ThesisState | AssumptionState | DecisionState;
 
 export const DEAL_PARTY_ROLES = [
   "buyer_sponsor","target_management","seller","sell_side_banker","lender",
@@ -166,6 +188,80 @@ export interface DealExecutionGraph {
   approvalRequests: Record<string, unknown>[];
   decisionReceipts: Record<string, unknown>[];
   asOf: string;
+}
+
+export type TemporalCompletenessStatus = "complete" | "partial" | "unavailable_before_baseline";
+
+export interface PeWorldState {
+  root: PeWorldRootRef;
+  stateAt: string;
+  temporalCompleteness: {
+    status: TemporalCompletenessStatus;
+    baselineAt: string | null;
+    unavailableEntityTypes: PeEntityType[];
+    reasons: string[];
+  };
+  strategy: Record<string, unknown> | null;
+  opportunity: Record<string, unknown> | null;
+  deal: Record<string, unknown> | null;
+  opportunities: Record<string, unknown>[];
+  deals: Record<string, unknown>[];
+  investmentCases: Record<string, unknown>[];
+  theses: Record<string, unknown>[];
+  assumptions: Record<string, unknown>[];
+  decisions: Record<string, unknown>[];
+  decisionEffectLinks: Record<string, unknown>[];
+  dealParties: Record<string, unknown>[];
+  workstreams: Record<string, unknown>[];
+  requests: Record<string, unknown>[];
+  deliverables: Record<string, unknown>[];
+  findings: Record<string, unknown>[];
+  dealRisks: Record<string, unknown>[];
+  findingRiskLinks: Record<string, unknown>[];
+  dependencies: Record<string, unknown>[];
+  milestones: Record<string, unknown>[];
+  closingConditions: Record<string, unknown>[];
+  closingItems: Record<string, unknown>[];
+  documents: Record<string, unknown>[];
+  evidence: Record<string, unknown>[];
+  /** Provider observations whose EvidenceVersions are historically visible in
+   * this world. Payload content remains in Core Evidence, not duplicated here. */
+  observedEvidence: Record<string, unknown>[];
+  /** Exact source coverage facts as known at stateAt. */
+  sourceCoverage: Record<string, unknown>[];
+  sourceCoverageWarnings: Record<string, unknown>[];
+  unresolvedProviderObservations: number;
+  ambiguousProviderObservations: number;
+  providerFreshnessWarnings: Record<string, unknown>[];
+  providerEvidenceCompleteness: {
+    status: "complete" | "partial" | "not_configured";
+    absenceClaimsPermitted: boolean;
+    reasons: string[];
+  };
+  documentLinks: Record<string, unknown>[];
+  evidenceLinks: Record<string, unknown>[];
+  workLinks: Record<string, unknown>[];
+  taskLinks: Record<string, unknown>[];
+  businessEvents: Record<string, unknown>[];
+  authorityDecisions: Record<string, unknown>[];
+  approvalRequests: Record<string, unknown>[];
+  decisionReceipts: Record<string, unknown>[];
+  conflicts: Record<string, unknown>[];
+  epistemicWarnings: Array<{
+    propositionId: string;
+    predicate: string;
+    status: "UNKNOWN" | "STALE" | "CONFLICTING" | "UNCERTAIN" | "CONTRADICTED";
+    reason: string;
+    evidenceRefs: string[];
+  }>;
+  provenance: Array<{
+    entityType: string;
+    entityId: string;
+    entityVersion: number;
+    snapshotHash: string;
+    recordedAt: string;
+    origin: "mutation" | "baseline";
+  }>;
 }
 
 export const privateEquityVerticalDefinition: VerticalDefinition<PeEntityType> = {

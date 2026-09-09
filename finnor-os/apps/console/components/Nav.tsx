@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 
 const LINKS = [
+  { href: "/underwriting", label: "Underwriting" },
   { href: "/confirm", label: "Confirmation Queue" },
   { href: "/customers", label: "Customers" },
   { href: "/audit", label: "Audit Log" },
@@ -28,7 +29,7 @@ export default function Nav() {
     <nav className="app-nav">
       <a href="/" className="app-brand">FINNOR</a>
       {LINKS.map((l) => (
-        <a key={l.href} href={l.href} className={`app-nav-link${pathname === l.href ? " active" : ""}`}>
+        <a key={l.href} href={l.href} className={`app-nav-link${pathname === l.href || pathname.startsWith(`${l.href}/`) ? " active" : ""}`}>
           {l.label}
         </a>
       ))}
