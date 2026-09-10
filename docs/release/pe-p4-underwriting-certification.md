@@ -1,11 +1,11 @@
 # PE Phase 4 deterministic underwriting certification
 
-Generated: 2026-09-09T14:55:51.582Z
+Generated: 2026-09-10T00:23:24.485Z
 
 - Deterministic result: **PASS — 240/240**
 - Live Microsoft/Excel result: **BLOCKED_EXTERNAL_OFFICE_CERTIFICATION**
 - Overall result: **BLOCKED_EXTERNAL_OFFICE_CERTIFICATION**
-- Migration: **124 through 0126_pe_underwriting_runtime.sql**
+- Migration: **126 through 0127_pe_actions_ic_runtime.sql**
 
 P1 InvestmentCase remains the canonical PE business context.
 
@@ -42,24 +42,24 @@ FINNOR can now deterministically underwrite a PE InvestmentCase from exact sourc
 
 | Gate | Result | Tests | Duration | Evidence hash |
 |---|---:|---:|---:|---|
-| migrationBundle | PASS | — | 233 ms | 61ff99ec1cd774f2 |
-| openapi | PASS | — | 1533 ms | 8ae48595faa67518 |
-| typecheck | PASS | — | 23074 ms | e3b0c44298fc1c14 |
-| authzMatrix | PASS | — | 624 ms | e3b0c44298fc1c14 |
-| releaseBoundary | PASS | — | 4909 ms | 7688152d9356d36c |
-| p4Unit | PASS | 41 | 6547 ms | 3ac609d17e8a4084 |
-| propertyFuzz | PASS | 9 | 6503 ms | 23810053299c2b62 |
-| apiFrontendContract | PASS | 10 | 7349 ms | 9c84b58ba8a496a7 |
-| fullUnit | PASS | 520 | 86031 ms | f92e0a46cd4baa64 |
-| performance | PASS | 8 | 13329 ms | e68a9f9c5573a33e |
-| freshMigration | PASS | — | 2179 ms | 3c6d28bf81847ab2 |
-| p4Integration | PASS | 11 | 4455 ms | 4f168a4b47973cbf |
-| p4Upgrade | PASS | 3 | 5430 ms | ca71cae612a9d3a6 |
-| p3Regression | PASS | 13 | 4513 ms | 5a9797f3095f7763 |
-| p2Regression | PASS | 33 | 9649 ms | ff94e7e2c2ee0785 |
-| p1Regression | PASS | 17 | 7815 ms | 4fe6f170ed7bdf4d |
-| historicalPeRegression | PASS | 24 | 17451 ms | 61275b59b7029db3 |
-| coreRegression | PASS | 41 | 11602 ms | 1f26bca75f16aba1 |
+| migrationBundle | PASS | — | 147 ms | 9607a08067d07568 |
+| openapi | PASS | — | 1029 ms | f2fbdbb7deaab692 |
+| typecheck | PASS | — | 12422 ms | e3b0c44298fc1c14 |
+| authzMatrix | PASS | — | 285 ms | e3b0c44298fc1c14 |
+| releaseBoundary | PASS | — | 1942 ms | b96730148108570e |
+| p4Unit | PASS | 41 | 2674 ms | 1f691a1bcc284c0a |
+| propertyFuzz | PASS | 9 | 2639 ms | 165f5821d5504221 |
+| apiFrontendContract | PASS | 10 | 3151 ms | 57438d6d0cdbb1c6 |
+| fullUnit | PASS | 572 | 52069 ms | c19d4ebef54df5b3 |
+| performance | PASS | 8 | 7890 ms | a93b63be27744c10 |
+| freshMigration | PASS | — | 1537 ms | 7f5a5ab03b340779 |
+| p4Integration | PASS | 11 | 2743 ms | b0dec9a11705f66b |
+| p4Upgrade | PASS | 3 | 3351 ms | 9d0e5536ab59e36a |
+| p3Regression | PASS | 13 | 2911 ms | ec6f6d7b953d940d |
+| p2Regression | PASS | 33 | 6172 ms | 45b127abf2ff7ff2 |
+| p1Regression | PASS | 17 | 4842 ms | cf7518b297ade5f7 |
+| historicalPeRegression | PASS | 24 | 11206 ms | 9cd0f80053649381 |
+| coreRegression | PASS | 41 | 7864 ms | dcaae4614fc3ca2b |
 
 ## Standard LBO v1 capability matrix
 
@@ -337,7 +337,7 @@ FINNOR can now deterministically underwrite a PE InvestmentCase from exact sourc
 | 221 | api_frontend_contract | Workspace renders coherent exact Run, ModelVersion, node, unit, currency and period context. | PASS | commands.apiFrontendContract, commands.openapi, architecture |
 | 222 | api_frontend_contract | Workspace distinguishes canonical Assumptions, Scenario overrides, P3 projection and Excel comparison. | PASS | commands.apiFrontendContract, commands.openapi, architecture |
 | 223 | migration_regression | P4 is a forward migration from the exact P3 head 0125. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |
-| 224 | migration_regression | A fresh database applies all 124 migrations through 0126. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |
+| 224 | migration_regression | A fresh database applies all 125 migrations through 0126. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |
 | 225 | migration_regression | Generated migration bundle exactly matches every disk migration byte. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |
 | 226 | migration_regression | Populated P1 Deal, InvestmentCase, Assumption and canonical history survive P4 upgrade exactly. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |
 | 227 | migration_regression | Populated P2 EvidenceVersion, source scope and ExternalRef survive P4 upgrade exactly. | PASS | databaseInvariants, commands.p4Upgrade, commands.p1Regression, commands.p2Regression, commands.p3Regression, commands.historicalPeRegression, commands.coreRegression |

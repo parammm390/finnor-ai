@@ -1,19 +1,19 @@
 {
   "title": "PE5 WATER RETIREMENT CERTIFICATION",
   "schemaVersion": 2,
-  "generatedAt": "2026-09-06T19:32:30.814Z",
-  "startedAt": "2026-09-06T19:30:33.677Z",
+  "generatedAt": "2026-09-10T00:26:33.468Z",
+  "startedAt": "2026-09-10T00:25:07.278Z",
   "status": "LOCAL_PASS_PRODUCTION_BLOCKED",
   "certificationScope": "deterministic isolated full-history cutover rehearsal, post-cutover runtime tests, and sanitized read-only production census",
   "startingState": {
-    "branch": "codex/p3-epistemic-runtime",
-    "sha": "b5f36a9129ff2a40edc0926da29f3250a9976d13",
+    "branch": "codex/p5-actions-ic",
+    "sha": "c84c9becf72bbfe99f2514a93291d1609b38697f",
     "tree": {
-      "changedPaths": 0,
-      "porcelainSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "summaryTail": "clean"
+      "changedPaths": null,
+      "porcelainSha256": "851e95280545b7bd15b685e73cb0e27e9538aad78b37f03f5922fb8838e86748",
+      "summaryTail": "NOT_EVALUATED_PARTIAL_CLONE_GIT_DIFF_BLOCKS"
     },
-    "implementationTreeDirty": false
+    "implementationTreeDirty": true
   },
   "prerequisites": {
     "status": "PASS",
@@ -57,7 +57,7 @@
       "certificationHash": "6d45feede16205d57cfea7f2e0586ff524c2f0832a887ab08885130da2aba736"
     },
     "pe3": {
-      "activeQueries": 13,
+      "activeQueries": 14,
       "certificationHash": "850b515991b5eab12aaab87c4b3b9d74c748ad86af64e3f669b9137bb9267e27"
     },
     "pe4": {
@@ -91,7 +91,7 @@
       },
       "unknown": 0
     },
-    "sha256": "4e8268a5f13f5672a5bc5e9fe9cc0b812d8f85411c573e6584c392cc3b16b1f3",
+    "sha256": "72635d178ff87a46618150f40ff2337f269729a273bf0924fbb2b9cba55af4e1",
     "artifact": "docs/release/generated/pe5-disposition-ledger.json"
   },
   "runtime": {
@@ -101,8 +101,8 @@
     ],
     "activeProductVertical": "private_equity",
     "coreNonePurpose": "internal certification only",
-    "activeActionCount": 32,
-    "activeQueryCount": 13,
+    "activeActionCount": 41,
+    "activeQueryCount": 14,
     "activeParties": [
       "employee",
       "team",
@@ -402,7 +402,7 @@
   },
   "localRehearsalCensus": {
     "tenantClassification": {
-      "c2679b20-bdf0-4c9b-81b7-cab7355b0990": {
+      "8d01222b-526f-4bb4-b26d-a02f1fbf0ffe": {
         "classification": "TEST",
         "authorized": true,
         "authorizationRef": "pe5:isolated-upgrade"
@@ -610,9 +610,9 @@
   ],
   "database": {
     "engine": "embedded PostgreSQL",
-    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
-    "migrationCount": 109,
-    "migrationNamesHash": "1f5f98f387b2212ad5b8b94284afe763eebe7ec264543ae641d8c81518b90069",
+    "migrationHead": "0127_pe_actions_ic_runtime.sql",
+    "migrationCount": 126,
+    "migrationNamesHash": "7a215a8caca9572ae97f673a8b6201441ad25dcee2340d74f5d8e33b31a6a991",
     "fresh": {
       "status": "PASS",
       "evidence": {
@@ -663,11 +663,11 @@
         "epoch": 6,
         "assignment": "water",
         "rows": 4,
-        "migrations": 109,
+        "migrations": 126,
         "applicationMutationDenied": "RETIRED_VERTICAL: Water history is read-only "
       }
     },
-    "historicalFingerprint": "fb621aaca9b45e3c169126f9ae94858835f4e12007ca06cc51079f4ec1f85fe4",
+    "historicalFingerprint": "2d7ebd42c95dd104200d56cfe6bd754cd941705b0c885e428c82a400d64c2ff3",
     "finalAuthority": {
       "epoch": 6,
       "state": "water_retired",
@@ -679,7 +679,7 @@
   "history": {
     "status": "PASS",
     "evidence": {
-      "fingerprint": "fb621aaca9b45e3c169126f9ae94858835f4e12007ca06cc51079f4ec1f85fe4",
+      "fingerprint": "2d7ebd42c95dd104200d56cfe6bd754cd941705b0c885e428c82a400d64c2ff3",
       "replayNodes": 12,
       "actionIdentity": "schedule_water_test",
       "receipts": 1,
@@ -705,20 +705,20 @@
     "mixedFleetFinal": "PASS",
     "delayedWebhooks": "authenticated receipt-only quarantine returning HTTP 410; integration tests cover no action/job/event mutation",
     "delayedWebhookTests": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4637,
-      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
-      "outputLineCount": 32,
-      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+      "durationMs": 3237,
+      "outputHash": "5b2fffba0b1b5566fb986cbe9258d4dfef2647eea4db29e40697e43607b9daa3",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ···· |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  05:56:28 |    Duration  3.01s (transform 392ms, setup 129ms, import 2.17s, tests 500ms, environment 0ms)"
     },
     "rollback": "normal finnor_app SQL paths rejected by durable epoch-6 database guards",
     "sourceResurrection": "empty active mapper registry plus PE-DOMAIN-BOUNDARY"
   },
   "boundary": {
     "status": "PASS",
-    "scannedFiles": 571,
+    "scannedFiles": 736,
     "negativeControl": true,
     "deliberateNegativeInjection": "PASS",
     "ledgerRows": 250,
@@ -726,13 +726,13 @@
   },
   "pe": {
     "postCutoverTests": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 14615,
-      "outputHash": "c02bad7d7fd23e616f0f62e0f85d65b529ee772456bb1a4741154551194cb456",
-      "outputLineCount": 18,
-      "summary": "(Use `node --trace-deprecation ...` to show where the warning was created) | ·······(node:72484) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ···· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  01:02:10 |    Duration  14.24s (transform 1.41s, setup 0ms, import 6.75s, tests 7.15s, environment 0ms)"
+      "durationMs": 9950,
+      "outputHash": "b4e571111eca5a2ce4ba812e99df1040cd333f43dcfbfe075378edeac3afcba4",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:56:18 |    Duration  9.69s (transform 1.16s, setup 133ms, import 4.07s, tests 5.26s, environment 0ms)"
     },
     "representativeExecution": "PASS",
     "longLivedObjective": "PASS",
@@ -741,49 +741,49 @@
   },
   "coreRegression": {
     "typecheck": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 18011,
+      "durationMs": 10856,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "unit": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit packages/orchestration/src/instruction-trace.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit packages/orchestration/src/instruction-trace.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 67360,
-      "outputHash": "247a693d733796ed7d20f5e2503f7b261304eeb8d8d9353bc9e8afeeb5d84ce4",
-      "outputLineCount": 30,
-      "summary": "  name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ···················································································································································································································································································· |  Test Files  85 passed (85) |       Tests  350 passed (350) |    Start at  01:00:53 |    Duration  66.66s (transform 1.93s, setup 0ms, import 48.34s, tests 8.44s, environment 7ms)"
+      "durationMs": 52624,
+      "outputHash": "b7391fc6d473def896cc1f088c6bc3eb86f859ee695096e983d659bef9d45739",
+      "outputLineCount": 26,
+      "summary": "  name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ···················································································································································································································································································································································································· |  Test Files  100 passed (100) |       Tests  574 passed (574) |    Start at  05:55:18 |    Duration  52.32s (transform 1.62s, setup 1.07s, import 35.49s, tests 8.97s, environment 5ms)"
     },
     "plannerEvals": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/planner-evals --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/planner-evals --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4619,
-      "outputHash": "9798fbd645739fd3a037d7bc25d891dca3770fc138ebaa6dde732939720a7735",
-      "outputLineCount": 12,
-      "summary": "  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json | Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning. |  RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  01:02:00 |    Duration  4.20s (transform 1.71s, setup 0ms, import 4.08s, tests 6ms, environment 0ms)"
+      "durationMs": 2475,
+      "outputHash": "19d5808a3b69f8548ea8878f139fcaf30c7321762bfb08e2f5626b3afd84859d",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  05:56:11 |    Duration  2.22s (transform 1.05s, setup 27ms, import 2.11s, tests 3ms, environment 0ms)"
     },
     "pePostCutover": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 14615,
-      "outputHash": "c02bad7d7fd23e616f0f62e0f85d65b529ee772456bb1a4741154551194cb456",
-      "outputLineCount": 18,
-      "summary": "(Use `node --trace-deprecation ...` to show where the warning was created) | ·······(node:72484) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ···· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  01:02:10 |    Duration  14.24s (transform 1.41s, setup 0ms, import 6.75s, tests 7.15s, environment 0ms)"
+      "durationMs": 9950,
+      "outputHash": "b4e571111eca5a2ce4ba812e99df1040cd333f43dcfbfe075378edeac3afcba4",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:56:18 |    Duration  9.69s (transform 1.16s, setup 133ms, import 4.07s, tests 5.26s, environment 0ms)"
     },
     "webhookQuarantine": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4637,
-      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
-      "outputLineCount": 32,
-      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+      "durationMs": 3237,
+      "outputHash": "5b2fffba0b1b5566fb986cbe9258d4dfef2647eea4db29e40697e43607b9daa3",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ···· |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  05:56:28 |    Duration  3.01s (transform 392ms, setup 129ms, import 2.17s, tests 500ms, environment 0ms)"
     }
   },
   "retained": [
@@ -913,13 +913,13 @@
     "permanentGate": "npm run PE-DOMAIN-BOUNDARY",
     "certificationCommand": "npm run release:pe5",
     "webhookQuarantineTests": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/marketing-webhook-auth.test.ts tests/integration/payment-webhook-auth.test.ts tests/integration/retired-water-webhook-quarantine.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4637,
-      "outputHash": "83f8424db27796247d74a5c2f9cecd81f2936062c1e49aee2c4949d4e0fdceec",
-      "outputLineCount": 32,
-      "summary": "    \u001b[35mroute\u001b[39m: \"webhooks/payment\" |     \u001b[35mevent\u001b[39m: \"webhook_signature_rejected\" |     \u001b[35mprovider\u001b[39m: \"payment\" | · |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  01:02:25 |    Duration  4.30s (transform 510ms, setup 0ms, import 3.15s, tests 816ms, environment 0ms)"
+      "durationMs": 3237,
+      "outputHash": "5b2fffba0b1b5566fb986cbe9258d4dfef2647eea4db29e40697e43607b9daa3",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ···· |  Test Files  3 passed (3) |       Tests  4 passed (4) |    Start at  05:56:28 |    Duration  3.01s (transform 392ms, setup 129ms, import 2.17s, tests 500ms, environment 0ms)"
     }
   },
   "completionConditions": [
@@ -1414,9 +1414,9 @@
     "status": "BLOCKED_UNTIL_PRODUCTION_CUTOVER_CERTIFIED",
     "activeProductVertical": "private_equity",
     "productEpoch": 6,
-    "migrationHead": "0109_atomic_water_runtime_retirement.sql",
-    "actionCount": 32,
-    "queryCount": 13,
+    "migrationHead": "0127_pe_actions_ic_runtime.sql",
+    "actionCount": 41,
+    "queryCount": 14,
     "historicalWaterMode": "read_only",
     "permanentGate": "npm run PE-DOMAIN-BOUNDARY",
     "certification": "docs/release/generated/pe5-water-retirement-certification.json",

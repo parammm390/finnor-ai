@@ -48,7 +48,7 @@ function finiteDate(value: Date, label: string): void {
   }
 }
 
-async function worldRowForUpdate(
+export async function worldRowForUpdate(
   client: PeClient,
   ctx: PeMutationContext,
   lifecycle: WorldLifecycle,
@@ -104,7 +104,7 @@ async function transitionWorld(ctx: PeMutationContext, input: {
   });
 }
 
-function creationValues(ctx: PeMutationContext): Record<string, unknown> {
+export function creationValues(ctx: PeMutationContext): Record<string, unknown> {
   const source = peProvenance(ctx);
   return {
     tenant_id: ctx.auth.tenantId,
@@ -430,11 +430,27 @@ export async function recordDecision(ctx: PeMutationContext, input: {
   rationale?: string;
   supersedesDecisionId?: string;
 }): Promise<PeMutationResult> {
+  return peTransaction(ctx, async (_db, client) => recordDecisionTx(client, ctx, input));
+}
+
+/** P1-owned transaction form. P5 may compose this inside its serializable
+ * finalization boundary, but the canonical insert remains implemented here. */
+export async function recordDecisionTx(client: PeClient, ctx: PeMutationContext, input: {
+  id?: string;
+  dealId: string;
+  investmentCaseId: string;
+  decisionType: string;
+  title: string;
+  decision: string;
+  rationale?: string;
+  supersedesDecisionId?: string;
+}): Promise<PeMutationResult> {
   assertPeText(input.decisionType, "Decision type");
   assertPeText(input.title, "Decision title");
   assertPeText(input.decision, "Decision");
-  return createWorldRow(ctx, "pe_decisions", {
-    id: input.id,
+  const row = await insertPeRow(client, "pe_decisions", {
+    id: input.id ?? randomUUID(),
+    ...creationValues(ctx),
     deal_id: input.dealId,
     investment_case_id: input.investmentCaseId,
     decision_type: input.decisionType.trim(),
@@ -443,6 +459,7 @@ export async function recordDecision(ctx: PeMutationContext, input: {
     rationale: input.rationale?.trim() || null,
     supersedes_decision_id: input.supersedesDecisionId ?? null,
   });
+  return { row: shapePeRow(row), changed: true, idempotent: false };
 }
 
 export async function finalizeDecision(ctx: PeMutationContext, input: {
@@ -451,38 +468,47 @@ export async function finalizeDecision(ctx: PeMutationContext, input: {
   decidedBy: PePartyRef;
   decidedAt?: Date;
 }): Promise<PeMutationResult> {
-  return peTransaction(ctx, async (_db, client) => {
-    const current = await worldRowForUpdate(client, ctx, "decision", input.decisionId);
-    if (current.state === "final") return { row: shapePeRow(current), changed: false, idempotent: true };
-    if (current.state !== "draft") throw new PeDomainError("PE_INVALID_TRANSITION", "Only a draft Decision can be finalized");
-    if (Number(current.version) !== input.expectedVersion) throw new PeDomainError("PE_STALE_VERSION", "Decision changed since it was read");
-    if (current.supersedes_decision_id) {
-      const prior = await worldRowForUpdate(client, ctx, "decision", String(current.supersedes_decision_id));
-      if (prior.state !== "final" || prior.deal_id !== current.deal_id || prior.investment_case_id !== current.investment_case_id) {
-        throw new PeDomainError("PE_INVALID_SUPERSESSION", "Replacement Decision must supersede a final Decision in the same InvestmentCase");
-      }
+  return peTransaction(ctx, async (_db, client) => finalizeDecisionTx(client, ctx, input));
+}
+
+/** P1-owned transaction form used to keep P5 process linkage and the canonical
+ * Decision atomic without granting P5 a second insert/transition owner. */
+export async function finalizeDecisionTx(client: PeClient, ctx: PeMutationContext, input: {
+  decisionId: string;
+  expectedVersion: number;
+  decidedBy: PePartyRef;
+  decidedAt?: Date;
+}): Promise<PeMutationResult> {
+  const current = await worldRowForUpdate(client, ctx, "decision", input.decisionId);
+  if (current.state === "final") return { row: shapePeRow(current), changed: false, idempotent: true };
+  if (current.state !== "draft") throw new PeDomainError("PE_INVALID_TRANSITION", "Only a draft Decision can be finalized");
+  if (Number(current.version) !== input.expectedVersion) throw new PeDomainError("PE_STALE_VERSION", "Decision changed since it was read");
+  if (current.supersedes_decision_id) {
+    const prior = await worldRowForUpdate(client, ctx, "decision", String(current.supersedes_decision_id));
+    if (prior.state !== "final" || prior.deal_id !== current.deal_id || prior.investment_case_id !== current.investment_case_id) {
+      throw new PeDomainError("PE_INVALID_SUPERSESSION", "Replacement Decision must supersede a final Decision in the same InvestmentCase");
     }
-    const finalized = await client.query<SqlRow>(
+  }
+  const finalized = await client.query<SqlRow>(
+    `UPDATE finnor_os.pe_decisions
+        SET state='final',decided_by_party_type=$3,decided_by_party_id=$4,decided_at=$5,version=version+1,updated_at=now()
+      WHERE tenant_id=$1 AND id=$2 AND version=$6 RETURNING *`,
+    [ctx.auth.tenantId, input.decisionId, input.decidedBy.partyType, input.decidedBy.partyId,
+      input.decidedAt ?? new Date(), input.expectedVersion],
+  );
+  const row = finalized.rows[0];
+  if (!row) throw new PeDomainError("PE_STALE_VERSION", "Decision changed concurrently");
+  if (current.supersedes_decision_id) {
+    await client.query("SELECT set_config('app.pe_decision_transition','supersede',true)");
+    const prior = await client.query(
       `UPDATE finnor_os.pe_decisions
-          SET state='final',decided_by_party_type=$3,decided_by_party_id=$4,decided_at=$5,version=version+1,updated_at=now()
-        WHERE tenant_id=$1 AND id=$2 AND version=$6 RETURNING *`,
-      [ctx.auth.tenantId, input.decisionId, input.decidedBy.partyType, input.decidedBy.partyId,
-        input.decidedAt ?? new Date(), input.expectedVersion],
+          SET state='superseded',superseded_at=now(),version=version+1,updated_at=now()
+        WHERE tenant_id=$1 AND id=$2 AND state='final'`,
+      [ctx.auth.tenantId, current.supersedes_decision_id],
     );
-    const row = finalized.rows[0];
-    if (!row) throw new PeDomainError("PE_STALE_VERSION", "Decision changed concurrently");
-    if (current.supersedes_decision_id) {
-      await client.query("SELECT set_config('app.pe_decision_transition','supersede',true)");
-      const prior = await client.query(
-        `UPDATE finnor_os.pe_decisions
-            SET state='superseded',superseded_at=now(),version=version+1,updated_at=now()
-          WHERE tenant_id=$1 AND id=$2 AND state='final'`,
-        [ctx.auth.tenantId, current.supersedes_decision_id],
-      );
-      if (prior.rowCount !== 1) throw new PeDomainError("PE_STALE_VERSION", "Superseded Decision changed concurrently");
-    }
-    return { row: shapePeRow(row), changed: true, idempotent: false };
-  });
+    if (prior.rowCount !== 1) throw new PeDomainError("PE_STALE_VERSION", "Superseded Decision changed concurrently");
+  }
+  return { row: shapePeRow(row), changed: true, idempotent: false };
 }
 
 export async function supersedeDecision(ctx: PeMutationContext, input: {
@@ -549,30 +575,43 @@ export async function linkDecisionEffects(ctx: PeMutationContext, input: {
   if (input.effects.length === 0 || input.effects.length > 100) {
     throw new PeDomainError("PE_INVALID_INPUT", "Decision effects must contain between 1 and 100 links");
   }
-  return peTransaction(ctx, async (_db, client) => {
-    const createdBy = peProvenance(ctx).createdBy;
-    const rows: Record<string, unknown>[] = [];
-    for (const effect of input.effects) {
-      assertPeUuid(effect.effectId, "effectId");
-      const result = await client.query<SqlRow>(
-        `INSERT INTO finnor_os.pe_decision_effect_links
-          (id,tenant_id,decision_id,effect_type,effect_id,relationship,created_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)
-         ON CONFLICT (decision_id,effect_type,effect_id,relationship) DO NOTHING
-         RETURNING *`,
-        [randomUUID(), ctx.auth.tenantId, input.decisionId, effect.effectType, effect.effectId,
-          effect.relationship ?? "implements", createdBy],
-      );
-      const row = result.rows[0] ?? (await client.query<SqlRow>(
-        `SELECT * FROM finnor_os.pe_decision_effect_links
-          WHERE tenant_id=$1 AND decision_id=$2 AND effect_type=$3 AND effect_id=$4 AND relationship=$5`,
-        [ctx.auth.tenantId, input.decisionId, effect.effectType, effect.effectId, effect.relationship ?? "implements"],
-      )).rows[0];
-      if (!row) throw new PeDomainError("PE_WRITE_FAILED", "Decision effect link was not persisted");
-      rows.push(shapePeRow(row));
-    }
-    return rows;
-  });
+  return peTransaction(ctx, async (_db, client) => linkDecisionEffectsTx(client, ctx, input));
+}
+
+/** P1-owned transaction form for canonical Decision effect links. */
+export async function linkDecisionEffectsTx(client: PeClient, ctx: PeMutationContext, input: {
+  decisionId: string;
+  effects: Array<{
+    effectType: "work" | "domain_action" | "decision_receipt";
+    effectId: string;
+    relationship?: "implements" | "records" | "governs";
+  }>;
+}): Promise<Record<string, unknown>[]> {
+  if (input.effects.length === 0 || input.effects.length > 100) {
+    throw new PeDomainError("PE_INVALID_INPUT", "Decision effects must contain between 1 and 100 links");
+  }
+  const createdBy = peProvenance(ctx).createdBy;
+  const rows: Record<string, unknown>[] = [];
+  for (const effect of input.effects) {
+    assertPeUuid(effect.effectId, "effectId");
+    const result = await client.query<SqlRow>(
+      `INSERT INTO finnor_os.pe_decision_effect_links
+        (id,tenant_id,decision_id,effect_type,effect_id,relationship,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       ON CONFLICT (decision_id,effect_type,effect_id,relationship) DO NOTHING
+       RETURNING *`,
+      [randomUUID(), ctx.auth.tenantId, input.decisionId, effect.effectType, effect.effectId,
+        effect.relationship ?? "implements", createdBy],
+    );
+    const row = result.rows[0] ?? (await client.query<SqlRow>(
+      `SELECT * FROM finnor_os.pe_decision_effect_links
+        WHERE tenant_id=$1 AND decision_id=$2 AND effect_type=$3 AND effect_id=$4 AND relationship=$5`,
+      [ctx.auth.tenantId, input.decisionId, effect.effectType, effect.effectId, effect.relationship ?? "implements"],
+    )).rows[0];
+    if (!row) throw new PeDomainError("PE_WRITE_FAILED", "Decision effect link was not persisted");
+    rows.push(shapePeRow(row));
+  }
+  return rows;
 }
 
 export async function resolvePeWorldRoot(

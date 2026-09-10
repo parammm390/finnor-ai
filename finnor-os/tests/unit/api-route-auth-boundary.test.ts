@@ -55,9 +55,19 @@ describe("A5 tenant/auth boundary inventory", () => {
 
     for (const route of discovered) {
       const source = readFileSync(join(API_ROOT, route), "utf8");
-      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext/;
+      // P5 IC routes use the shared handleIcGet/handleIcPost boundary; those
+      // wrappers resolve requireIcContext -> requireContext before invoking a
+      // domain operation. Recognize that named audited boundary explicitly.
+      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext|handleIc(?:Get|Post)/;
       expect(source, `${route} has no explicit auth/tenant boundary; add requireContext or an audited exception`).toMatch(expected);
     }
+  });
+
+  it("keeps the shared IC route wrappers anchored to requireContext", () => {
+    const helper = readFileSync(join(process.cwd(), "apps/api/lib/ic.ts"), "utf8");
+    expect(helper).toMatch(/requireIcContext[\s\S]*requireContext\(req\)/);
+    expect(helper).toMatch(/handleIcPost[\s\S]*requireIcContext\(req\)/);
+    expect(helper).toMatch(/handleIcGet[\s\S]*requireIcContext\(req\)/);
   });
 
   it("has no stale exception: every exception is a real route", () => {

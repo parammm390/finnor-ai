@@ -1,6 +1,6 @@
 {
   "schema": "finnor.pe-p2-m365-nervous-system-certification.v1",
-  "generatedAt": "2026-09-09T14:50:41.479Z",
+  "generatedAt": "2026-09-10T00:20:13.811Z",
   "result": "BLOCKED-EXTERNAL-CERTIFICATION",
   "deterministicResult": "PASS",
   "deterministicMandatoryCases": {
@@ -18,13 +18,13 @@
     "migrationHead": "0111_pe_world_truth.sql"
   },
   "p2MigrationHead": "0118_provider_parent_relationship_lookup.sql",
-  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
-  "currentMigrationCount": 124,
+  "currentMigrationHead": "0127_pe_actions_ic_runtime.sql",
+  "currentMigrationCount": 126,
   "p1Prerequisite": {
     "result": "PASS",
-    "generatedAt": "2026-09-09T14:46:18.911Z",
+    "generatedAt": "2026-09-10T00:17:22.294Z",
     "mandatoryCases": 51,
-    "reportHash": "28c310c67a01fb378c1f5ead0f9a5ff6fbb35453abc0c09ac1150edb4c60fa18"
+    "reportHash": "2ee5c323844c4940b649f556e5043a916d404c54a747c5be9ad627fb678e894a"
   },
   "auditVerdict": {
     "EXISTS": [
@@ -359,8 +359,8 @@
   },
   "databaseInvariants": {
     "migration": {
-      "count": 124,
-      "head": "0126_pe_underwriting_runtime.sql"
+      "count": 126,
+      "head": "0127_pe_actions_ic_runtime.sql"
     },
     "rlsTables": [
       "application_consent_requests",
@@ -427,7 +427,7 @@
     ]
   },
   "populatedUpgrade": {
-    "appliedBefore": 114,
+    "appliedBefore": 115,
     "appliedFinal": [
       "0117_microsoft_source_coverage_descriptor_history.sql",
       "0118_provider_parent_relationship_lookup.sql",
@@ -438,103 +438,104 @@
       "0123_artifact_authority_defaults.sql",
       "0124_artifact_comment_review_guard.sql",
       "0125_artifact_history_least_privilege.sql",
-      "0126_pe_underwriting_runtime.sql"
+      "0126_pe_underwriting_runtime.sql",
+      "0127_pe_actions_ic_runtime.sql"
     ],
-    "retainedCoverageId": "e1489c15-530f-415a-9181-0ad33473a24e",
+    "retainedCoverageId": "a9db9dbe-1fa9-4446-8c6e-325995747859",
     "descriptorDefault": {},
-    "head": "0126_pe_underwriting_runtime.sql",
-    "count": 124
+    "head": "0127_pe_actions_ic_runtime.sql",
+    "count": 126
   },
   "commands": {
     "migrationBundle": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 233,
-      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "durationMs": 146,
+      "outputHash": "9607a08067d0756818955494a4d8788c4a6f76c0dc7ba048c035e4ecf4b34a83",
       "outputLineCount": 1,
-      "summary": "bundled 124 migrations"
+      "summary": "bundled 126 migrations"
     },
     "typecheck": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 18989,
+      "durationMs": 11188,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "openapi": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 2235,
-      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "durationMs": 1595,
+      "outputHash": "f2fbdbb7deaab6921504ef0f063141091d4ed037a1ec520b3adb0738c6ae022a",
       "outputLineCount": 1,
-      "summary": "Generated openapi.json with 57 active/quarantine paths."
+      "summary": "Generated openapi.json with 87 active/quarantine paths."
     },
     "authzMatrix": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 225,
+      "durationMs": 151,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "unit": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 76365,
-      "outputHash": "05c48c70abe20b78506ead99046274e0fe25eeed99d6e668fbfc8f4d7701c5a1",
+      "durationMs": 51895,
+      "outputHash": "3fb42256c5c130d511add1492c47ef9f1a06d16cda34f3c7ca93cb9c56960763",
       "outputLineCount": 26,
-      "summary": "  message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:21:03 |    Duration  75.98s (transform 2.44s, setup 1.53s, import 50.37s, tests 13.91s, environment 7ms)"
+      "summary": "  message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ·················································································································································································································································································································································································· |  Test Files  99 passed (99) |       Tests  572 passed (572) |    Start at  05:50:27 |    Duration  51.58s (transform 1.70s, setup 1.04s, import 34.34s, tests 9.59s, environment 5ms)"
     },
     "peBoundary": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 1433,
-      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "durationMs": 948,
+      "outputHash": "b96730148108570e6dbe3d4cc9c645f454a531ee89e80b2f94cf7a0aef9c2412",
       "outputLineCount": 1,
-      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=736 actions=32 queries=14 negative_injection=PASS"
     },
     "p2Integration": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 10182,
-      "outputHash": "fd5d0def40225527596a8af4090e72e1de54bccd549d817949b029d5606b6b2f",
-      "outputLineCount": 228,
-      "summary": "[14:52:34] \u001b[32mINFO\u001b[39m: \u001b[36mMicrosoft Graph notification wake durably queued\u001b[39m |     \u001b[35mtraceId\u001b[39m: \"fc4215af-32c3-4370-8f44-ab6f5135f0bd\" |     \u001b[35mevent\u001b[39m: \"m365_webhook_accepted\" |     \u001b[35mmetric\u001b[39m: \"m365_webhook_duration_ms\" |     \u001b[35mdurationMs\u001b[39m: 11 |     \u001b[35mnotificationCount\u001b[39m: 1 |     \u001b[35mtenantCount\u001b[39m: 1 | ··· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  20:22:25 |    Duration  9.84s (transform 1.20s, setup 311ms, import 5.72s, tests 3.27s, environment 0ms)"
+      "durationMs": 6207,
+      "outputHash": "dfae515ef63e7f7869ca1b3b6197b4b1045fd2efe40171bda26bf795a74d3f01",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  05:51:22 |    Duration  6.00s (transform 768ms, setup 192ms, import 3.48s, tests 1.98s, environment 0ms)"
     },
     "p1AndSourceTruthRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 7998,
-      "outputHash": "7411ebb6b1051835abd6ca8f40a328b7a6e5b6b12dfb7d247d030cfc87e23830",
+      "durationMs": 5208,
+      "outputHash": "60994bd5fa87637b2508d73f04675c4bebe90ec85d0914ed9912f6364eae1497",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:22:35 |    Duration  7.67s (transform 1.27s, setup 194ms, import 3.30s, tests 3.83s, environment 0ms)"
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:51:28 |    Duration  5.02s (transform 849ms, setup 123ms, import 2.06s, tests 2.63s, environment 0ms)"
     },
     "peGraphRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 18365,
-      "outputHash": "86630df6a11f140560140e337fa51d7f84bf0d7e78e97179f100180d5c4b09ed",
+      "durationMs": 11597,
+      "outputHash": "ba67deeada28665a33b73a0371a1190550b9e4870670e48b3f7192cf0e7e98fe",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  20:22:43 |    Duration  18.04s (transform 1.72s, setup 315ms, import 8.46s, tests 8.68s, environment 0ms)"
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  05:51:33 |    Duration  11.39s (transform 1.10s, setup 195ms, import 5.14s, tests 5.72s, environment 0ms)"
     },
     "workQueueConnectionRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/queue.test.ts tests/integration/dlq-auto-triage.test.ts tests/integration/phase5-connection-lifecycle.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/queue.test.ts tests/integration/dlq-auto-triage.test.ts tests/integration/phase5-connection-lifecycle.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 5571,
-      "outputHash": "ba6d190f9ebf2dc0d6f228cb7179a479c379ffcc118092ee3d8202315dbca55e",
-      "outputLineCount": 64,
-      "summary": "    \u001b[35mms\u001b[39m: 0 | ·········[14:53:04] \u001b[32mINFO\u001b[39m: \u001b[36mjob lease_renewal_test completed\u001b[39m |     \u001b[35mtraceId\u001b[39m: \"21ca674c-a2d3-4b1b-bd27-208d14662e8a\" |     \u001b[35mjobType\u001b[39m: \"lease_renewal_test\" |     \u001b[35mjobId\u001b[39m: \"21ca674c-a2d3-4b1b-bd27-208d14662e8a\" |     \u001b[35mok\u001b[39m: true |     \u001b[35mms\u001b[39m: 1311 | ········ |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:23:01 |    Duration  5.27s (transform 693ms, setup 193ms, import 2.58s, tests 2.16s, environment 0ms)"
+      "durationMs": 4091,
+      "outputHash": "0abf10df98aa50a0ccc39d8b6be4407bfff8e5e2641f452a614630cb74a6377c",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:51:45 |    Duration  3.88s (transform 472ms, setup 123ms, import 1.64s, tests 1.88s, environment 0ms)"
     }
   },
   "gates": {
@@ -553,14 +554,14 @@
     "fresh_migration": {
       "status": "PASS",
       "evidence": {
-        "applied": 124,
-        "head": "0126_pe_underwriting_runtime.sql"
+        "applied": 126,
+        "head": "0127_pe_actions_ic_runtime.sql"
       }
     },
     "populated_upgrade": {
       "status": "PASS",
       "evidence": {
-        "appliedBefore": 114,
+        "appliedBefore": 115,
         "appliedFinal": [
           "0117_microsoft_source_coverage_descriptor_history.sql",
           "0118_provider_parent_relationship_lookup.sql",
@@ -571,12 +572,13 @@
           "0123_artifact_authority_defaults.sql",
           "0124_artifact_comment_review_guard.sql",
           "0125_artifact_history_least_privilege.sql",
-          "0126_pe_underwriting_runtime.sql"
+          "0126_pe_underwriting_runtime.sql",
+          "0127_pe_actions_ic_runtime.sql"
         ],
-        "retainedCoverageId": "e1489c15-530f-415a-9181-0ad33473a24e",
+        "retainedCoverageId": "a9db9dbe-1fa9-4446-8c6e-325995747859",
         "descriptorDefault": {},
-        "head": "0126_pe_underwriting_runtime.sql",
-        "count": 124
+        "head": "0127_pe_actions_ic_runtime.sql",
+        "count": 126
       }
     },
     "rls": {
@@ -2583,8 +2585,8 @@
     "typecheck_result": "PASS",
     "unit_test_result": "PASS — full unit suite, no skips",
     "integration_test_result": "PASS — P2 provider/control/data plane and selected active regressions, no skips",
-    "fresh_migration_result": "PASS — 124 migrations through 0126_pe_underwriting_runtime.sql",
-    "populated_migration_result": "PASS — populated pre-0117 coverage row retained through 0126_pe_underwriting_runtime.sql",
+    "fresh_migration_result": "PASS — 126 migrations through 0127_pe_actions_ic_runtime.sql",
+    "populated_migration_result": "PASS — populated pre-0117 coverage row retained through 0127_pe_actions_ic_runtime.sql",
     "rls_result": "PASS — forced tenant RLS on all five P2 tenant tables",
     "tenant_isolation_result": "PASS — tenant/scope/root/evidence/provider notification authority constrained in SQL and adversarial tests",
     "p1_temporal_regression_result": "PASS — state_at and dual observedAt/retrievedAt no-hindsight tests",

@@ -1,6 +1,6 @@
 {
   "schema": "finnor.pe-p1-world-truth-certification.v1",
-  "generatedAt": "2026-09-09T14:46:18.911Z",
+  "generatedAt": "2026-09-10T00:17:22.294Z",
   "result": "PASS",
   "startingBaseline": {
     "branch": "codex/p3-epistemic-runtime",
@@ -9,8 +9,8 @@
     "migrationHead": "0109_atomic_water_runtime_retirement.sql",
     "cachedOriginMainSha": "4cc85c5534988f2b9f4b5938f0e4b6758985206c"
   },
-  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
-  "currentMigrationCount": 124,
+  "currentMigrationHead": "0127_pe_actions_ic_runtime.sql",
+  "currentMigrationCount": 126,
   "auditVerdict": {
     "EXISTS": [
       "signed-LOI Deal root and 14 Deal graph owners",
@@ -96,8 +96,8 @@
     "0111_pe_world_truth.sql"
   ],
   "databaseInvariants": {
-    "migrationCount": 124,
-    "migrationHead": "0126_pe_underwriting_runtime.sql",
+    "migrationCount": 126,
+    "migrationHead": "0127_pe_actions_ic_runtime.sql",
     "registryEntityTypes": [
       "pe_assumption",
       "pe_closing_condition",
@@ -112,6 +112,14 @@
       "pe_evidence_link",
       "pe_finding",
       "pe_finding_risk_link",
+      "pe_ic_case",
+      "pe_ic_condition",
+      "pe_ic_decision_proposal",
+      "pe_ic_dissent",
+      "pe_ic_memo",
+      "pe_ic_question",
+      "pe_ic_recommendation",
+      "pe_ic_vote",
       "pe_investment_case",
       "pe_milestone",
       "pe_opportunity",
@@ -154,8 +162,8 @@
     ],
     "ownership": {
       "duplicates": 0,
-      "coverage": 20,
-      "history_triggers": 20
+      "coverage": 28,
+      "history_triggers": 28
     },
     "rlsTables": [
       "canonical_entity_versions",
@@ -185,82 +193,82 @@
   },
   "commands": {
     "migrationBundle": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 252,
-      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "durationMs": 165,
+      "outputHash": "9607a08067d0756818955494a4d8788c4a6f76c0dc7ba048c035e4ecf4b34a83",
       "outputLineCount": 1,
-      "summary": "bundled 124 migrations"
+      "summary": "bundled 126 migrations"
     },
     "typecheck": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 17195,
+      "durationMs": 11059,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "openapi": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 2138,
-      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "durationMs": 1557,
+      "outputHash": "f2fbdbb7deaab6921504ef0f063141091d4ed037a1ec520b3adb0738c6ae022a",
       "outputLineCount": 1,
-      "summary": "Generated openapi.json with 57 active/quarantine paths."
+      "summary": "Generated openapi.json with 87 active/quarantine paths."
     },
     "unit": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 75255,
-      "outputHash": "1f36fb86020ac00d2c3cf43f3d245b938603b451effafb27edbb2b8614a72d7d",
+      "durationMs": 50730,
+      "outputHash": "1b8a2907865cb1401a6bb30d14f99f917ae0d1b5f99309817237d0eba50649f7",
       "outputLineCount": 26,
-      "summary": "stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:16:38 |    Duration  74.87s (transform 2.33s, setup 1.51s, import 49.70s, tests 13.56s, environment 7ms)"
+      "summary": "stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······················································································································································································································································································································································································· |  Test Files  99 passed (99) |       Tests  572 passed (572) |    Start at  05:47:35 |    Duration  50.43s (transform 1.68s, setup 1.03s, import 33.89s, tests 8.90s, environment 4ms)"
     },
     "boundary": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 1317,
-      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "durationMs": 917,
+      "outputHash": "b96730148108570e6dbe3d4cc9c645f454a531ee89e80b2f94cf7a0aef9c2412",
       "outputLineCount": 1,
-      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=736 actions=32 queries=14 negative_injection=PASS"
     },
     "p1Integration": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 6331,
-      "outputHash": "6b3d8025f6107e6d4ec0709db26b85b20226910f26f0477f2477fb1d0b9cffa2",
+      "durationMs": 4527,
+      "outputHash": "ec12b2331fdbe5806549afd43ba30fa7aba42e41262390eb0b6121e29aff119f",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ·········· |  Test Files  2 passed (2) |       Tests  10 passed (10) |    Start at  20:17:57 |    Duration  6.03s (transform 1.23s, setup 137ms, import 2.82s, tests 2.85s, environment 0ms)"
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ·········· |  Test Files  2 passed (2) |       Tests  10 passed (10) |    Start at  05:48:28 |    Duration  4.31s (transform 1.03s, setup 88ms, import 1.98s, tests 2.11s, environment 0ms)"
     },
     "pePhaseRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 14289,
-      "outputHash": "b7817d8d60de188ac5d9cea1bf839d4afb0b3a78df14e64f8d510eee98cd7e32",
+      "durationMs": 9566,
+      "outputHash": "ee6b2f846c170f5aef923192c76dc914887ee026779405b8c791da2d83528d1f",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:18:03 |    Duration  13.99s (transform 1.57s, setup 192ms, import 5.80s, tests 7.67s, environment 0ms)"
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:48:33 |    Duration  9.37s (transform 1.05s, setup 120ms, import 3.91s, tests 5.13s, environment 0ms)"
     },
     "sourceTruthRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/source-truth-loop.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/source-truth-loop.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 1847,
-      "outputHash": "a1818b50a50d22e77f6d244bcd330e489c94236248b833357359b827535b1a52",
+      "durationMs": 1188,
+      "outputHash": "0f481df31503d89cc22e7d5ccf2edf2b07ce28b56668b425da8a4bc95747a37a",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ······· |  Test Files  1 passed (1) |       Tests  7 passed (7) |    Start at  20:18:18 |    Duration  1.56s (transform 484ms, setup 77ms, import 970ms, tests 402ms, environment 0ms)"
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ······· |  Test Files  1 passed (1) |       Tests  7 passed (7) |    Start at  05:48:42 |    Duration  1.00s (transform 324ms, setup 65ms, import 611ms, tests 258ms, environment 0ms)"
     },
     "phase5Regression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/run-pe5-water-retirement-certification.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/run-pe5-water-retirement-certification.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 128708,
+      "durationMs": 89314,
       "outputHash": "8536814a78ac5c17a50dec03afdbd8ae9e1dc1916dc8449c27d5a6397150e517",
       "outputLineCount": 1,
       "summary": "PE5 WATER RETIREMENT CERTIFICATION LOCAL PASS / PRODUCTION BLOCKED output=../docs/release/generated/pe5-water-retirement-certification.json markdown=../docs/release/pe5-water-retirement-certification.md"
@@ -282,8 +290,8 @@
     "fresh_migration": {
       "status": "PASS",
       "evidence": {
-        "applied": 124,
-        "head": "0126_pe_underwriting_runtime.sql"
+        "applied": 126,
+        "head": "0127_pe_actions_ic_runtime.sql"
       }
     },
     "populated_upgrade": {
@@ -312,8 +320,8 @@
       "status": "PASS",
       "evidence": {
         "duplicates": 0,
-        "coverage": 20,
-        "history_triggers": 20
+        "coverage": 28,
+        "history_triggers": 28
       }
     },
     "pe_domain_boundary": {
@@ -323,8 +331,8 @@
     "history_table_exists": {
       "status": "PASS",
       "evidence": {
-        "migrationCount": 124,
-        "migrationHead": "0126_pe_underwriting_runtime.sql",
+        "migrationCount": 126,
+        "migrationHead": "0127_pe_actions_ic_runtime.sql",
         "registryEntityTypes": [
           "pe_assumption",
           "pe_closing_condition",
@@ -339,6 +347,14 @@
           "pe_evidence_link",
           "pe_finding",
           "pe_finding_risk_link",
+          "pe_ic_case",
+          "pe_ic_condition",
+          "pe_ic_decision_proposal",
+          "pe_ic_dissent",
+          "pe_ic_memo",
+          "pe_ic_question",
+          "pe_ic_recommendation",
+          "pe_ic_vote",
           "pe_investment_case",
           "pe_milestone",
           "pe_opportunity",
@@ -381,8 +397,8 @@
         ],
         "ownership": {
           "duplicates": 0,
-          "coverage": 20,
-          "history_triggers": 20
+          "coverage": 28,
+          "history_triggers": 28
         },
         "rlsTables": [
           "canonical_entity_versions",
@@ -441,8 +457,8 @@
     "certification_document_written": {
       "status": "PASS",
       "evidence": [
-        "/Users/paramdave/Desktop/FINNOR/docs/release/generated/pe-p1-world-truth-certification.json",
-        "/Users/paramdave/Desktop/FINNOR/docs/release/pe-p1-world-truth-certification.md"
+        "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/generated/pe-p1-world-truth-certification.json",
+        "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/pe-p1-world-truth-certification.md"
       ]
     }
   },
@@ -877,8 +893,8 @@
   "results": {
     "unit_test_result": "PASS — full tests/unit suite, no skips",
     "integration_test_result": "PASS — P1 world/upgrade, active Source Truth, and PE Phase2/3/4 scopes; no skips",
-    "fresh_migration_result": "PASS — 124 migrations through 0126_pe_underwriting_runtime.sql",
-    "populated_upgrade_result": "PASS — populated 0109 Deal, child, and link upgraded through 0126_pe_underwriting_runtime.sql",
+    "fresh_migration_result": "PASS — 126 migrations through 0127_pe_actions_ic_runtime.sql",
+    "populated_upgrade_result": "PASS — populated 0109 Deal, child, and link upgraded through 0127_pe_actions_ic_runtime.sql",
     "rls_result": "PASS — forced tenant RLS on all nine P1 tenant tables",
     "tenant_isolation_result": "PASS — cross-tenant roots, links, histories, assumptions, targets, and Source Truth candidates rejected",
     "source_truth_regression_result": "PASS — active PE observe-only duplicate/order/conflict/tombstone/reconciliation ledger suite",

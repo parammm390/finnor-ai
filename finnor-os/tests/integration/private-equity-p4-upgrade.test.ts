@@ -19,6 +19,7 @@ import { MIGRATIONS } from "../../packages/db/migrations-bundle";
 
 const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const P4_MIGRATION = "0126_pe_underwriting_runtime.sql";
+const THROUGH_P4_MIGRATIONS = MIGRATIONS.filter(({ name }) => name <= P4_MIGRATION);
 const P4_TABLES = [
   "underwriting_models",
   "underwriting_model_versions",
@@ -305,7 +306,10 @@ describe.skipIf(!available)("P4 populated P1/P2/P3 database upgrade", () => {
 
     beforeFingerprint = await populatedStateFingerprint(admin, tenantId);
     registryBefore = await registryFingerprint(admin);
-    appliedP4 = await migrate(targetUrl, MIGRATIONS);
+    // Keep this regression scoped to the populated P3 -> P4 boundary. Later
+    // migrations have their own populated-upgrade suites and must not blur the
+    // assertion that 0126 alone preserves pre-P4 state.
+    appliedP4 = await migrate(targetUrl, THROUGH_P4_MIGRATIONS);
     afterFingerprint = await populatedStateFingerprint(admin, tenantId);
     registryAfter = await registryFingerprint(admin);
   }, 120_000);
@@ -446,7 +450,7 @@ describe.skipIf(!available)("P4 populated P1/P2/P3 database upgrade", () => {
     expect(definitions).toContain("REFERENCES document_versions(tenant_id, document_id, id)");
     expect(definitions).toContain("REFERENCES underwriting_runs(tenant_id, investment_case_id, model_version_id, id)");
 
-    await expect(migrate(targetUrl, MIGRATIONS)).resolves.toEqual([]);
+    await expect(migrate(targetUrl, THROUGH_P4_MIGRATIONS)).resolves.toEqual([]);
     const tracked = await admin!.query<{ count: number }>(
       "SELECT count(*)::int count FROM finnor_os._migrations WHERE name=$1",
       [P4_MIGRATION],

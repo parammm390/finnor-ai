@@ -281,7 +281,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   const discovered = await discoverActionRegistry();
   const discoveredTypes = discovered.map((row) => row.actionType);
   const expectedTypes = ACTION_HARDENING_SPEC.map((row) => row.actionType);
-  if (EXECUTABLE_ACTION_COUNT !== 32 || !equalSets(discoveredTypes, expectedTypes)) {
+  if (EXECUTABLE_ACTION_COUNT !== 41 || !equalSets(discoveredTypes, expectedTypes)) {
     errors.push(`active action registry mismatch: discovered=${discoveredTypes.length}, expected=${EXECUTABLE_ACTION_COUNT}`);
   }
   const retiredActions = discoveredTypes.filter((type) => (RETIRED_WATER_ACTION_TYPES as readonly string[]).includes(type));

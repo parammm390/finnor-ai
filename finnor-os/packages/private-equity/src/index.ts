@@ -10,3 +10,7 @@ export * from "./operational-queries";
 export * from "./underwriting-repository";
 export * from "./underwriting-artifacts";
 export * from "./underwriting-telemetry";
+export * from "./ic-types";
+export * from "./ic-aggregation";
+export * from "./ic-repository";
+export * from "./ic-telemetry";

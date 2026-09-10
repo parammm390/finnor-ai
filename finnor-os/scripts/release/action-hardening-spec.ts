@@ -53,6 +53,15 @@ const COMPUTER_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile
 ];
 
 const PRIVATE_EQUITY_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile, ApprovalFloor, string, boolean]> = [
+  ["private-equity", "open_ic_case", "DURABLE_WORKFLOW", "REQUIRED", "private-equity/ic/work/authority", false],
+  ["private-equity", "begin_ic_preparation", "OPERATIONAL_CHANGE", "POLICY", "private-equity/ic/work", false],
+  ["private-equity", "select_ic_memo_version", "OPERATIONAL_CHANGE", "REQUIRED", "private-equity/ic/artifacts", false],
+  ["private-equity", "select_ic_underwriting_run", "OPERATIONAL_CHANGE", "REQUIRED", "private-equity/ic/underwriting", false],
+  ["private-equity", "create_ic_question", "INTERNAL_WRITE", "POLICY", "private-equity/ic/evidence/work", false],
+  ["private-equity", "attach_ic_question_evidence", "INTERNAL_WRITE", "POLICY", "private-equity/ic/evidence", false],
+  ["private-equity", "request_ic_memo_review", "OPERATIONAL_CHANGE", "POLICY", "private-equity/ic/artifacts/work", false],
+  ["private-equity", "satisfy_ic_condition", "OPERATIONAL_CHANGE", "POLICY", "private-equity/ic/evidence/work", false],
+  ["private-equity", "prepare_ic_decision_proposal", "INTERNAL_DRAFT", "POLICY", "private-equity/ic/policy", false],
   ["private-equity", "open_workstream", "INTERNAL_WRITE", "POLICY", "private-equity/work", false],
   ["private-equity", "create_deal_request", "INTERNAL_WRITE", "POLICY", "private-equity/work", false],
   ["private-equity", "submit_deliverable", "OPERATIONAL_CHANGE", "POLICY", "private-equity/documents", false],
@@ -88,7 +97,7 @@ export const ACTION_HARDENING_SPEC: readonly ActionHardeningSpecRow[] = [...CORE
 export const CORE_ACTION_COUNT = 2;
 export const UNIVERSAL_ACTION_COUNT = 14;
 export const COMPUTER_ACTION_COUNT = 1;
-export const PRIVATE_EQUITY_ACTION_COUNT = 15;
+export const PRIVATE_EQUITY_ACTION_COUNT = 24;
 export const EXECUTABLE_ACTION_COUNT = ACTION_HARDENING_SPEC.length;
 /** Compatibility alias for release scripts that count the complete executable set. */
 export const TOTAL_ACTION_COUNT = EXECUTABLE_ACTION_COUNT;

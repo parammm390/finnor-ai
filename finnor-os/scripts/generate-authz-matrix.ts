@@ -30,7 +30,7 @@ function methods(source: string): string {
 function guard(source: string, path: string): string {
   if (path.includes("/webhooks/")) return "webhook signature / provider verification";
   if (path.includes("/admin/")) return "ADMIN_SECRET";
-  if (/requireContext\s*\(/.test(source)) {
+  if (/(?:requireContext|requireIcContext|handleIcPost|handleIcGet)\s*\(/.test(source)) {
     if (/ctx\.role\s*!==\s*["']owner["']|role\s*!==\s*["']owner["']|requireOwner\s*\(/.test(source)) return "JWT + tenant context + owner";
     if (/\/api\/(?:actions|operations|queries)(?:\/|$)/.test(path)) return "JWT + tenant context + employee authority runtime";
     return "JWT + tenant context";

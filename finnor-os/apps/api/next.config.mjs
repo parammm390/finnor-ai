@@ -2,6 +2,10 @@
 import { fileURLToPath } from "node:url";
 
 const nextConfig = {
+  // This repository has no ESLint build contract. Recovery worktrees can be nested
+  // below unrelated checkouts with an ESLint config, which Next would otherwise
+  // discover and execute. TypeScript validation remains enabled below by default.
+  eslint: { ignoreDuringBuilds: true },
   // Release builds provide a commit-derived value. Keeping the Next build ID
   // deterministic makes the runtime release record independently checkable.
   generateBuildId: async () => process.env.FINNOR_BUILD_ID || process.env.VERCEL_GIT_COMMIT_SHA || null,

@@ -1,6 +1,6 @@
 {
   "schema": "finnor.pe-p4-underwriting-certification.v1",
-  "generatedAt": "2026-09-09T14:55:51.582Z",
+  "generatedAt": "2026-09-10T00:23:24.485Z",
   "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
   "deterministicResult": "PASS",
   "deterministicMandatoryCases": {
@@ -36,22 +36,22 @@
     "p1": {
       "result": "PASS",
       "cases": 51,
-      "generatedAt": "2026-09-09T14:46:18.911Z",
-      "reportHash": "43d5656a7a839aa3cb8382cb1048f0b2a846d8999019b0795912ea55c578c701"
+      "generatedAt": "2026-09-10T00:17:22.294Z",
+      "reportHash": "5c717744dd9aa00bac00c53ff213f17175907c8bf46e0d6c991775eace1c7fa9"
     },
     "p2": {
       "result": "BLOCKED-EXTERNAL-CERTIFICATION",
       "deterministicResult": "PASS",
       "passed": 179,
-      "generatedAt": "2026-09-09T14:50:41.479Z",
-      "reportHash": "e91c87dd2806569102e464b8d73218383d74e987faffeaabe24fdb92d7057b65"
+      "generatedAt": "2026-09-10T00:20:13.811Z",
+      "reportHash": "ea4a5bff7da768989f12ee6f4388c241e724d0ac7113ad6e4ce00efa222fe246"
     },
     "p3": {
       "result": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
       "deterministicResult": "PASS",
       "passed": 190,
-      "generatedAt": "2026-09-09T14:53:13.176Z",
-      "reportHash": "7f0a93e3b9128236b4ada9e32cbce2f5af21573f3cc7ea420b7ded5d1c943596"
+      "generatedAt": "2026-09-10T00:21:51.072Z",
+      "reportHash": "361c7bc9e846ae0c575e069f4c280bc41e32bd153e4c87e1fe50b5133e7d10e3"
     }
   },
   "hardAuditMap": {
@@ -261,8 +261,8 @@
   "migrationsAdded": [
     "0126_pe_underwriting_runtime.sql"
   ],
-  "currentMigrationCount": 124,
-  "currentMigrationHead": "0126_pe_underwriting_runtime.sql",
+  "currentMigrationCount": 126,
+  "currentMigrationHead": "0127_pe_actions_ic_runtime.sql",
   "jobTypesAdded": [],
   "jobTypesReused": [
     "P3 artifact operation/publication and existing durable queue paths"
@@ -530,8 +530,8 @@
   ],
   "databaseInvariants": {
     "migration": {
-      "count": 124,
-      "head": "0126_pe_underwriting_runtime.sql"
+      "count": 126,
+      "head": "0127_pe_actions_ic_runtime.sql"
     },
     "tables": [
       "underwriting_models",
@@ -700,114 +700,114 @@
   },
   "commands": {
     "migrationBundle": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 233,
-      "outputHash": "61ff99ec1cd774f2232b7d3c7df6fbeaf92a27a5b60d839f23a3182264fc6122",
+      "durationMs": 147,
+      "outputHash": "9607a08067d0756818955494a4d8788c4a6f76c0dc7ba048c035e4ecf4b34a83",
       "outputLineCount": 1,
-      "summary": "bundled 124 migrations"
+      "summary": "bundled 126 migrations"
     },
     "openapi": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 1533,
-      "outputHash": "8ae48595faa67518c01ec1869adeafc1651aa31865372f685204b945a2554af1",
+      "durationMs": 1029,
+      "outputHash": "f2fbdbb7deaab6921504ef0f063141091d4ed037a1ec520b3adb0738c6ae022a",
       "outputLineCount": 1,
-      "summary": "Generated openapi.json with 57 active/quarantine paths."
+      "summary": "Generated openapi.json with 87 active/quarantine paths."
     },
     "typecheck": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 23074,
+      "durationMs": 12422,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "authzMatrix": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 624,
+      "durationMs": 285,
       "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "outputLineCount": 0,
       "summary": ""
     },
     "releaseBoundary": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4909,
-      "outputHash": "7688152d9356d36ca86d74cdd6b5f223171e0570e8bb5679daa47bd81c2903a5",
+      "durationMs": 1942,
+      "outputHash": "b96730148108570e6dbe3d4cc9c645f454a531ee89e80b2f94cf7a0aef9c2412",
       "outputLineCount": 1,
-      "summary": "PE-DOMAIN-BOUNDARY PASS files=694 actions=32 queries=14 negative_injection=PASS"
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=736 actions=32 queries=14 negative_injection=PASS"
     },
     "p4Unit": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-core.test.ts tests/unit/underwriting-golden.test.ts tests/unit/underwriting-failures.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-core.test.ts tests/unit/underwriting-golden.test.ts tests/unit/underwriting-failures.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 6547,
-      "outputHash": "3ac609d17e8a4084b205572ede2ab3cd975e55963775d5776e71eb097f15574b",
+      "durationMs": 2674,
+      "outputHash": "1f691a1bcc284c0a73b89f3cc59c468a10f5668e3351451cfb3b70621b964533",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ········································· |  Test Files  3 passed (3) |       Tests  41 passed (41) |    Start at  20:25:54 |    Duration  5.77s (transform 770ms, setup 150ms, import 1.07s, tests 3.84s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ········································· |  Test Files  3 passed (3) |       Tests  41 passed (41) |    Start at  05:53:26 |    Duration  2.31s (transform 309ms, setup 85ms, import 401ms, tests 1.49s, environment 0ms)",
       "testsPassed": 41,
       "testFilesPassed": 3
     },
     "propertyFuzz": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-property.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-property.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 6503,
-      "outputHash": "23810053299c2b62421755044847cc6f5bf1c088432b8bee28b09f0d1dd57587",
+      "durationMs": 2639,
+      "outputHash": "165f5821d5504221e22be69699b0572d939f8d5a6afba8e550bcf2409eb218b8",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ········· |  Test Files  1 passed (1) |       Tests  9 passed (9) |    Start at  20:25:54 |    Duration  5.74s (transform 728ms, setup 83ms, import 830ms, tests 4.53s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ········· |  Test Files  1 passed (1) |       Tests  9 passed (9) |    Start at  05:53:26 |    Duration  2.30s (transform 269ms, setup 45ms, import 328ms, tests 1.78s, environment 0ms)",
       "testsPassed": 9,
       "testFilesPassed": 1
     },
     "apiFrontendContract": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-api-frontend-contract.test.ts --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/underwriting-api-frontend-contract.test.ts --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 7349,
-      "outputHash": "9c84b58ba8a496a74deeaa8f31a6406e5e006fbae0cf62072f3c8dca48d132a0",
+      "durationMs": 3151,
+      "outputHash": "57438d6d0cdbb1c6062b98ca0d53f69a34d4dede285998116718dec9e8130501",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ·········· |  Test Files  1 passed (1) |       Tests  10 passed (10) |    Start at  20:25:54 |    Duration  6.57s (transform 3.29s, setup 84ms, import 6.14s, tests 31ms, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ·········· |  Test Files  1 passed (1) |       Tests  10 passed (10) |    Start at  05:53:26 |    Duration  2.77s (transform 1.55s, setup 53ms, import 2.58s, tests 10ms, environment 0ms)",
       "testsPassed": 10,
       "testFilesPassed": 1
     },
     "fullUnit": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 86031,
-      "outputHash": "f92e0a46cd4baa643c58a0647c7faa0610bc47121ca4e4123ee92c8c6b01be28",
+      "durationMs": 52069,
+      "outputHash": "c19d4ebef54df5b300c5e114c276ab799543916b88502f0be5814c821e4594c7",
       "outputLineCount": 26,
-      "summary": "[web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ······························································································································································································································································································································ |  Test Files  95 passed (95) |       Tests  520 passed (520) |    Start at  20:25:54 |    Duration  85.22s (transform 4.64s, setup 1.62s, import 51.82s, tests 20.91s, environment 9ms)",
-      "testsPassed": 520,
-      "testFilesPassed": 95
+      "summary": "[web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ·················································································································································································································································································································································································· |  Test Files  99 passed (99) |       Tests  572 passed (572) |    Start at  05:53:26 |    Duration  51.67s (transform 2.47s, setup 1.05s, import 33.63s, tests 10.36s, environment 4ms)",
+      "testsPassed": 572,
+      "testFilesPassed": 99
     },
     "performance": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/performance/underwriting-performance.test.ts --reporter=verbose --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/performance/underwriting-performance.test.ts --reporter=verbose --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 13329,
-      "outputHash": "e68a9f9c5573a33e75ee417181e1a151956ca2fdd7e5c23ef2352a8076231516",
+      "durationMs": 7890,
+      "outputHash": "a93b63be27744c104640edb5b1cd1288118d1b4828edd57ad1c89842d588b025",
       "outputLineCount": 18,
-      "summary": "stdout | tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits | P4_PURE_BENCHMARK {\"metrics\":{\"compileMeanMs\":1.7120146000000005,\"singleRunMeanMs\":4.419425000000001,\"debtScheduleMeanMs\":4.3048832999999975,\"circularSolverMeanMs\":4.843435399999999,\"sensitivity100Ms\":501.183041,\"sensitivity2500Ms\":11806.9675,\"serializationHash100Ms\":67.48579199999949},\"guardrails\":{\"compileMeanMs\":100,\"singleRunMeanMs\":250,\"debtScheduleMeanMs\":250,\"circularSolverMeanMs\":500,\"sensitivity100Ms\":10000,\"sensitivity2500Ms\":60000,\"serializationHash100Ms\":5000}} |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > compiles a standard ModelIR inside the measured release guardrail 1ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes one standard LBO independently of DB, Excel, network or LLM inside the guardrail 1ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the multi-tranche debt schedule inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the bounded average-balance circular solver inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes exactly 100 sensitivity cells inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the exact 2,500-cell maximum inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > canonically serializes and hashes 100 complete results inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > freezes and enforces the certified model, period, debt, scenario, sensitivity, solver and payload ceilings 1ms |  Test Files  1 passed (1) |       Tests  8 passed (8) |    Start at  20:27:19 |    Duration  13.03s (transform 133ms, setup 35ms, import 147ms, tests 12.74s, environment 0ms)",
+      "summary": "stdout | tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits | P4_PURE_BENCHMARK {\"metrics\":{\"compileMeanMs\":1.0123791499999997,\"singleRunMeanMs\":2.5959416500000003,\"debtScheduleMeanMs\":2.7598021000000017,\"circularSolverMeanMs\":2.9988437500000003,\"sensitivity100Ms\":297.85766600000005,\"sensitivity2500Ms\":6956.588542,\"serializationHash100Ms\":39.06187500000033},\"guardrails\":{\"compileMeanMs\":100,\"singleRunMeanMs\":250,\"debtScheduleMeanMs\":250,\"circularSolverMeanMs\":500,\"sensitivity100Ms\":10000,\"sensitivity2500Ms\":60000,\"serializationHash100Ms\":5000}} |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > compiles a standard ModelIR inside the measured release guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes one standard LBO independently of DB, Excel, network or LLM inside the guardrail 1ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the multi-tranche debt schedule inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the bounded average-balance circular solver inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes exactly 100 sensitivity cells inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > executes the exact 2,500-cell maximum inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > canonically serializes and hashes 100 complete results inside its measured guardrail 0ms |  ✓ tests/performance/underwriting-performance.test.ts > P4 deterministic underwriting measured performance and hard limits > freezes and enforces the certified model, period, debt, scenario, sensitivity, solver and payload ceilings 0ms |  Test Files  1 passed (1) |       Tests  8 passed (8) |    Start at  05:54:17 |    Duration  7.70s (transform 87ms, setup 26ms, import 92ms, tests 7.52s, environment 0ms)",
       "testsPassed": 8,
       "testFilesPassed": 1,
       "benchmark": {
         "1": {
           "metrics": {
-            "compileMeanMs": 1.7120146000000005,
-            "singleRunMeanMs": 4.419425000000001,
-            "debtScheduleMeanMs": 4.3048832999999975,
-            "circularSolverMeanMs": 4.843435399999999,
-            "sensitivity100Ms": 501.183041,
-            "sensitivity2500Ms": 11806.9675,
-            "serializationHash100Ms": 67.48579199999949
+            "compileMeanMs": 1.0123791499999997,
+            "singleRunMeanMs": 2.5959416500000003,
+            "debtScheduleMeanMs": 2.7598021000000017,
+            "circularSolverMeanMs": 2.9988437500000003,
+            "sensitivity100Ms": 297.85766600000005,
+            "sensitivity2500Ms": 6956.588542,
+            "serializationHash100Ms": 39.06187500000033
           },
           "guardrails": {
             "compileMeanMs": 100,
@@ -825,92 +825,92 @@
       "command": "embedded-postgres + migrate(all disk migrations) + inspectFreshDatabase",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 2179,
-      "outputHash": "3c6d28bf81847ab227a4fe6bf586267e5ca5144724d4f2b206940787074f05c1",
+      "durationMs": 1537,
+      "outputHash": "7f5a5ab03b3407795eab645c3dcc4671296f151391917531df031ccacab2c1e8",
       "outputLineCount": 1,
-      "summary": "124 migrations; 9 forced-RLS immutable P4 tables; zero fabricated rows"
+      "summary": "126 migrations; 9 forced-RLS immutable P4 tables; zero fabricated rows"
     },
     "p4Integration": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-underwriting.test.ts --reporter=verbose --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-underwriting.test.ts --reporter=verbose --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4455,
-      "outputHash": "4f168a4b47973cbffd111226fe1d3cb9b8072fffcb42f083ca9f4b4034436d67",
+      "durationMs": 2743,
+      "outputHash": "b0dec9a11705f66bcc43a45f8c2bdff631caff07c97aef4e79bdc496e0a70c7e",
       "outputLineCount": 21,
-      "summary": " ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > reproduces an old world exactly after P1 truth changes and fails closed on an obsolete exact binding 1ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > keeps scenarios and sensitivity cells immutable, coherent, and pinned to exact Runs 8ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > uses exact SpreadsheetIR anchors, exposes mismatch, and recovers a P3-operation/P4-projection crash boundary 0ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces FORCE RLS and tenant isolation on every P4 tenant relation 620ms | stdout | tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows | P4_INTEGRATION_BENCHMARK {\"runServiceLatencyMs\":32.82941699999992,\"persistenceLatencyMs\":7.167374999999993,\"artifactProjectionLatencyMs\":90.29358400000001} |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces database immutability on every P4 relation 6ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows 29ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > provides deterministic explanations, diffs, and bounded audit events 37ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects exact cross-tenant P1 Assumption, EvidenceVersion, and P3 bindings at service/database boundaries 35ms |  Test Files  1 passed (1) |       Tests  11 passed (11) |    Start at  20:27:35 |    Duration  4.15s (transform 1.10s, setup 76ms, import 2.47s, tests 1.50s, environment 0ms)",
+      "summary": " ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > reproduces an old world exactly after P1 truth changes and fails closed on an obsolete exact binding 1ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > keeps scenarios and sensitivity cells immutable, coherent, and pinned to exact Runs 5ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > uses exact SpreadsheetIR anchors, exposes mismatch, and recovers a P3-operation/P4-projection crash boundary 0ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces FORCE RLS and tenant isolation on every P4 tenant relation 376ms | stdout | tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows | P4_INTEGRATION_BENCHMARK {\"runServiceLatencyMs\":22.397917000000007,\"persistenceLatencyMs\":5.931082999999944,\"artifactProjectionLatencyMs\":57.986625000000004} |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > enforces database immutability on every P4 relation 5ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows 22ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > provides deterministic explanations, diffs, and bounded audit events 27ms |  ✓ tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects exact cross-tenant P1 Assumption, EvidenceVersion, and P3 bindings at service/database boundaries 24ms |  Test Files  1 passed (1) |       Tests  11 passed (11) |    Start at  05:54:27 |    Duration  2.56s (transform 810ms, setup 50ms, import 1.46s, tests 975ms, environment 0ms)",
       "testsPassed": 11,
       "testFilesPassed": 1,
       "benchmark": {
         "1": {
-          "runServiceLatencyMs": 32.82941699999992,
-          "persistenceLatencyMs": 7.167374999999993,
-          "artifactProjectionLatencyMs": 90.29358400000001
+          "runServiceLatencyMs": 22.397917000000007,
+          "persistenceLatencyMs": 5.931082999999944,
+          "artifactProjectionLatencyMs": 57.986625000000004
         }
       }
     },
     "p4Upgrade": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-upgrade.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-upgrade.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 5430,
-      "outputHash": "ca71cae612a9d3a6245ddbc2eef5bb92e95b6be89777e046eae9afdb5ddf8328",
+      "durationMs": 3351,
+      "outputHash": "9d0e5536ab59e36a8c102307643316de424f55abce3dfe0c5b30411777b4b470",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  20:27:39 |    Duration  5.13s (transform 1.28s, setup 76ms, import 2.53s, tests 2.42s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ··· |  Test Files  1 passed (1) |       Tests  3 passed (3) |    Start at  05:54:30 |    Duration  3.17s (transform 844ms, setup 51ms, import 1.51s, tests 1.54s, environment 0ms)",
       "testsPassed": 3,
       "testFilesPassed": 1
     },
     "p3Regression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/artifact-os.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/artifact-os.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 4513,
-      "outputHash": "5a9797f3095f7763c168b5c67a56e6a6c282c3cfd4eed7dd5b71378f5f3a04f5",
+      "durationMs": 2911,
+      "outputHash": "ec6f6d7b953d940d6ebab45999da30ea84973b23e4eac97720f2d63812c41dc7",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ············· |  Test Files  1 passed (1) |       Tests  13 passed (13) |    Start at  20:27:45 |    Duration  4.21s (transform 1.08s, setup 76ms, import 2.13s, tests 1.89s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ············· |  Test Files  1 passed (1) |       Tests  13 passed (13) |    Start at  05:54:33 |    Duration  2.73s (transform 734ms, setup 51ms, import 1.40s, tests 1.20s, environment 0ms)",
       "testsPassed": 13,
       "testFilesPassed": 1
     },
     "p2Regression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 9649,
-      "outputHash": "ff94e7e2c2ee0785c08e56c255f58ddf277017f325e1005f5cdfa8ddd994db28",
+      "durationMs": 6172,
+      "outputHash": "45b127abf2ff7ff2fbe15f3711959696e7e8102decb3ce0d5f346b73e72d1bda",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  20:27:49 |    Duration  9.35s (transform 1.14s, setup 303ms, import 5.40s, tests 3.11s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  05:54:36 |    Duration  5.99s (transform 782ms, setup 193ms, import 3.47s, tests 1.99s, environment 0ms)",
       "testsPassed": 33,
       "testFilesPassed": 5
     },
     "p1Regression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 7815,
-      "outputHash": "4fe6f170ed7bdf4d846b1d7460bf5530e4e90fa8ebf072685867173d5072bfb7",
+      "durationMs": 4842,
+      "outputHash": "cf7518b297ade5f77763ea9e561eefe6ef27e0feabdabd1ba1c536e1126b266c",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  20:27:59 |    Duration  7.51s (transform 1.38s, setup 209ms, import 3.64s, tests 3.32s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:54:42 |    Duration  4.65s (transform 938ms, setup 121ms, import 2.19s, tests 2.14s, environment 0ms)",
       "testsPassed": 17,
       "testFilesPassed": 3
     },
     "historicalPeRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 17451,
-      "outputHash": "61275b59b7029db33ca33a4372e8655f08a9c7880c344f5cf3c0ff384cc3a853",
+      "durationMs": 11206,
+      "outputHash": "9cd0f80053649381caaa1e795b43b1b9289d423b4cd96f913c0137a95c816b93",
       "outputLineCount": 8,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  20:28:07 |    Duration  17.11s (transform 1.60s, setup 302ms, import 7.92s, tests 8.35s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  05:54:47 |    Duration  11.01s (transform 1.04s, setup 191ms, import 4.98s, tests 5.50s, environment 0ms)",
       "testsPassed": 24,
       "testFilesPassed": 5
     },
     "coreRegression": {
-      "command": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/.bin/vitest run tests/integration/actions-pending-receipts.test.ts tests/integration/decision-receipts.test.ts tests/integration/computer-execution-fabric.test.ts tests/integration/evidence-corpus.test.ts tests/integration/work-cases.test.ts tests/integration/queue.test.ts --reporter=dot --maxWorkers=1",
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/actions-pending-receipts.test.ts tests/integration/decision-receipts.test.ts tests/integration/computer-execution-fabric.test.ts tests/integration/evidence-corpus.test.ts tests/integration/work-cases.test.ts tests/integration/queue.test.ts --reporter=dot --maxWorkers=1",
       "status": "PASS",
       "exitCode": 0,
-      "durationMs": 11602,
-      "outputHash": "1f26bca75f16aba17ba96805a930e7fc087f524fe8f146f885e5802a2eedb21f",
+      "durationMs": 7864,
+      "outputHash": "dcaae4614fc3ca2bf29c86d9ecae889d5882906371836a7737befcb6a27da24d",
       "outputLineCount": 10,
-      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/finnor-os | (node:43312) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ········································· |  Test Files  6 passed (6) |       Tests  41 passed (41) |    Start at  20:28:24 |    Duration  11.31s (transform 902ms, setup 357ms, import 5.89s, tests 4.42s, environment 0ms)",
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ··········(node:10197) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ······························· |  Test Files  6 passed (6) |       Tests  41 passed (41) |    Start at  05:54:58 |    Duration  7.68s (transform 589ms, setup 226ms, import 3.68s, tests 3.35s, environment 0ms)",
       "testsPassed": 41,
       "testFilesPassed": 6
     }
@@ -3524,7 +3524,7 @@
       "number": 224,
       "category": "migration_regression",
       "categoryNumber": 2,
-      "name": "A fresh database applies all 124 migrations through 0126.",
+      "name": "A fresh database applies all 125 migrations through 0126.",
       "status": "PASS",
       "evidence": [
         "databaseInvariants",

@@ -144,7 +144,9 @@ describe.skipIf(!available)("P1 populated PE database upgrade", () => {
       deals: 1,
       workstreams: 1,
       document_links: 1,
-      coverage_types: 20,
+      // The original twenty P1/legacy PE owners plus the eight P5 IC process
+      // entities that join the same canonical temporal-history substrate.
+      coverage_types: 28,
       deal_history: 1,
       child_history: 1,
       // 0110 captures the legacy row and 0111 captures the root-scope backfill.
@@ -155,6 +157,18 @@ describe.skipIf(!available)("P1 populated PE database upgrade", () => {
     expect(baselineAt).toBeInstanceOf(Date);
     expect(linkBaselineAt).toBeInstanceOf(Date);
     expect(linkBaselineAt.getTime()).toBeGreaterThanOrEqual(baselineAt.getTime());
+    const p5Coverage = await client.query<{ entity_type: string }>(
+      `SELECT entity_type FROM finnor_os.canonical_history_coverage
+        WHERE entity_type=ANY($1::text[]) ORDER BY entity_type`,
+      [[
+        "pe_ic_case", "pe_ic_memo", "pe_ic_question", "pe_ic_recommendation",
+        "pe_ic_vote", "pe_ic_dissent", "pe_ic_condition", "pe_ic_decision_proposal",
+      ]],
+    );
+    expect(p5Coverage.rows.map((row) => row.entity_type)).toEqual([
+      "pe_ic_case", "pe_ic_condition", "pe_ic_decision_proposal", "pe_ic_dissent",
+      "pe_ic_memo", "pe_ic_question", "pe_ic_recommendation", "pe_ic_vote",
+    ]);
   });
 
   it("does not fabricate history before the recorded baseline", async () => {

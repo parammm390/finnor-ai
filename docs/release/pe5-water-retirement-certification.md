@@ -4,15 +4,15 @@ Status: **LOCAL_PASS_PRODUCTION_BLOCKED**.
 
 The candidate repository passed the complete deterministic local cutover rehearsal. The actual production cutover is blocked by the mandatory tenant, in-flight state, migration-lineage, and mixed-fleet gates below.
 
-- Starting branch / SHA: `codex/p3-epistemic-runtime` / `b5f36a9129ff2a40edc0926da29f3250a9976d13`
-- Migration head: `0109_atomic_water_runtime_retirement.sql` (109 immutable forward migrations)
+- Starting branch / SHA: `codex/p5-actions-ic` / `c84c9becf72bbfe99f2514a93291d1609b38697f`
+- Migration head: `0127_pe_actions_ic_runtime.sql` (126 immutable forward migrations)
 - Final product authority: epoch 6, `water_retired`, `private_equity`
 - Executable verticals: `none`, `private_equity`
-- Active actions / queries: 32 / 13
+- Active actions / queries: 41 / 14
 - Final isolated-rehearsal Water blockers: {"tenant_disposition":0,"water_domain_action":0,"water_job":0,"water_workflow":0,"water_event_wait":0,"water_objective":0,"water_business_effect":0,"water_external_operation":0,"water_integration_operation":0,"water_computer_run":0}
 - Mixed-fleet negative tests: freeze=PASS, final=PASS
 - Fresh migration / populated upgrade / restore / rollback: PASS / PASS / PASS / PASS
-- PE post-cutover P2/P3/P4 suite: PASS ((Use `node --trace-deprecation ...` to show where the warning was created) | ·······(node:72484) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ···· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  01:02:10 |    Duration  14.24s (transform 1.41s, setup 0ms, import 6.75s, tests 7.15s, environment 0ms))
+- PE post-cutover P2/P3/P4 suite: PASS (RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:56:18 |    Duration  9.69s (transform 1.16s, setup 133ms, import 4.07s, tests 5.26s, environment 0ms))
 - Permanent boundary / injected regression: PASS / PASS
 - External deployment: BLOCKED_CUTOVER_UNKNOWN_WATER_TENANTS — Read-only production inspection found UNKNOWN Water-associated tenants, unresolved in-flight state, incompatible migration lineage, and incomplete five-role provenance. The safety gate prohibits deployment or mutation.
 - Production tenant census: total=4, legacy-Water-associated=3, UNKNOWN=3

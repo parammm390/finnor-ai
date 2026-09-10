@@ -1,11 +1,11 @@
 # PE Phase 3 Artifact OS certification
 
-Generated: 2026-09-09T14:53:13.176Z
+Generated: 2026-09-10T00:21:51.072Z
 
 - Deterministic result: **PASS — 190/190**
 - Live Microsoft Office result: **BLOCKED_EXTERNAL_OFFICE_CERTIFICATION**
 - Overall result: **BLOCKED_EXTERNAL_OFFICE_CERTIFICATION**
-- Migration: **124 through 0126_pe_underwriting_runtime.sql**
+- Migration: **126 through 0127_pe_actions_ic_runtime.sql**
 
 Core Document remains the single canonical logical artifact identity.
 
@@ -42,37 +42,37 @@ FINNOR can open a real PE workbook/document/deck as a deterministic semantic wor
 
 | Gate | Result | Tests | Duration | Evidence hash |
 |---|---:|---:|---:|---|
-| migrationBundle | PASS | — | 239 ms | 61ff99ec1cd774f2 |
-| openapi | PASS | — | 1650 ms | 8ae48595faa67518 |
-| typecheck | PASS | — | 23031 ms | e3b0c44298fc1c14 |
-| authzMatrix | PASS | — | 320 ms | e3b0c44298fc1c14 |
-| peBoundary | PASS | — | 1981 ms | 7688152d9356d36c |
-| p3Unit | PASS | 65 | 8045 ms | 374489d23c405503 |
-| fullUnit | PASS | 520 | 82074 ms | b528badc5e0d4289 |
-| p3Integration | PASS | 13 | 4494 ms | fe3550788346b91e |
-| p2Regression | PASS | 33 | 13141 ms | 3ea34a7ec23e371e |
-| p1AndSourceTruthRegression | PASS | 17 | 7361 ms | 23bf1f34aa7559a2 |
-| peGraphRegression | PASS | 24 | 17222 ms | f38949b5f0d8f56a |
-| coreRegression | PASS | 41 | 12130 ms | 5b789800dbc03377 |
+| migrationBundle | PASS | — | 148 ms | 9607a08067d07568 |
+| openapi | PASS | — | 1140 ms | f2fbdbb7deaab692 |
+| typecheck | PASS | — | 12197 ms | e3b0c44298fc1c14 |
+| authzMatrix | PASS | — | 248 ms | e3b0c44298fc1c14 |
+| peBoundary | PASS | — | 1405 ms | b96730148108570e |
+| p3Unit | PASS | 65 | 3912 ms | f86f7789563c040d |
+| fullUnit | PASS | 572 | 52978 ms | 837392178f4b2e7a |
+| p3Integration | PASS | 13 | 3044 ms | de9bae028befce7d |
+| p2Regression | PASS | 33 | 6171 ms | 837726ca243f8ecf |
+| p1AndSourceTruthRegression | PASS | 17 | 5296 ms | 67ab32ac829ac053 |
+| peGraphRegression | PASS | 24 | 11462 ms | 6783630b51263a77 |
+| coreRegression | PASS | 41 | 7859 ms | 4a5b3153fb1fc31e |
 
 ## Golden Office/PDF corpus
 
 | Fixture | Kind | Bytes | IR bytes | Nodes | Parse |
 |---|---:|---:|---:|---:|---:|
-| lbo-style.xlsx | xlsx | 11742 | 75853 | 141 | 32 ms |
-| feature-heavy.xlsx | xlsx | 19460 | 27758 | 58 | 8 ms |
-| macro-preservation.xlsm | xlsm | 13796 | 3076 | 5 | 4 ms |
-| investment-memo.docx | docx | 39301 | 45875 | 105 | 58 ms |
-| tracked-changes.docx | docx | 36754 | 7611 | 16 | 50 ms |
-| ic-style.pptx | pptx | 22815 | 23160 | 51 | 12 ms |
-| feature-heavy.pptx | pptx | 105638 | 46697 | 101 | 35 ms |
-| text-evidence.pdf | pdf | 2558 | 982 | 2 | 1333 ms |
-| image-only-evidence.pdf | pdf | 29043 | 467 | 1 | 3 ms |
-| office-features.xlsx | xlsx | 9150 | 7676 | 15 | 5 ms |
-| office-formulas.xlsx | xlsx | 9571 | 5400 | 10 | 4 ms |
-| office-document.docx | docx | 31773 | 3894 | 6 | 7 ms |
-| office-header-footer.docx | docx | 18079 | 26971 | 35 | 11 ms |
-| office-presentation.pptx | pptx | 37859 | 5235 | 4 | 6 ms |
+| lbo-style.xlsx | xlsx | 11742 | 75853 | 141 | 18 ms |
+| feature-heavy.xlsx | xlsx | 19460 | 27758 | 58 | 4 ms |
+| macro-preservation.xlsm | xlsm | 13796 | 3076 | 5 | 2 ms |
+| investment-memo.docx | docx | 39301 | 45875 | 105 | 36 ms |
+| tracked-changes.docx | docx | 36754 | 7611 | 16 | 30 ms |
+| ic-style.pptx | pptx | 22815 | 23160 | 51 | 7 ms |
+| feature-heavy.pptx | pptx | 105638 | 46697 | 101 | 22 ms |
+| text-evidence.pdf | pdf | 2558 | 982 | 2 | 821 ms |
+| image-only-evidence.pdf | pdf | 29043 | 467 | 1 | 4 ms |
+| office-features.xlsx | xlsx | 9150 | 7676 | 15 | 4 ms |
+| office-formulas.xlsx | xlsx | 9571 | 5400 | 10 | 5 ms |
+| office-document.docx | docx | 31773 | 3894 | 6 | 14 ms |
+| office-header-footer.docx | docx | 18079 | 26971 | 35 | 9 ms |
+| office-presentation.pptx | pptx | 37859 | 5235 | 4 | 7 ms |
 
 Limits: {"bytes":10485760,"expandedBytes":67108864,"parts":4096,"xmlBytes":8388608,"xmlNodes":200000,"xmlDepth":128,"irBytes":16777216,"pdfPages":500,"ratio":1000,"parseMs":30000}. These limits bound memory/ZIP/XML/IR/page work; the corpus benchmark stayed within them.
 

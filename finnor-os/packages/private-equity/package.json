@@ -17,6 +17,7 @@
     "@finnor/spreadsheet-ir": "*",
     "@finnor/tools": "*",
     "@finnor/underwriting": "*",
+    "@finnor/workflow-runtime": "*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.13.1"
   }

@@ -31,6 +31,18 @@ const RESOURCE_KEYS: Record<string, string> = {
   evidenceSourceId: "evidence_source",
   evidenceVersionId: "evidence_source_version",
   verifierEmployeeId: "employee",
+  investmentCaseId: "pe_investment_case",
+  reconsidersDecisionId: "pe_decision",
+  icCaseId: "pe_ic_case",
+  memoSelectionId: "pe_ic_memo",
+  questionId: "pe_ic_question",
+  conditionId: "pe_ic_condition",
+  decisionProposalId: "pe_ic_decision_proposal",
+  riskId: "pe_deal_risk",
+  underwritingRunId: "underwriting_run",
+  documentVersionId: "document_version",
+  committeeConfigVersionId: "pe_ic_committee_config_version",
+  scheduledInternalEventId: "internal_event",
 };
 
 function walk(value: unknown, visit: (key: string, value: unknown) => void): void {
@@ -93,6 +105,11 @@ export function actionAuthorityRequest(action: DomainAction, policy: DomainPolic
     ? draft.businessEffect.targets.map((target) => ({ type: target.type, ...(UUID.test(target.id) ? { id: target.id } : {}) }))
     : authorityResourcesFromPayload(draft.payload ?? action.payload);
   const primaryTypeByAction: Record<string, string> = {
+    open_ic_case: "pe_ic_case", begin_ic_preparation: "pe_ic_case",
+    select_ic_memo_version: "pe_ic_memo", select_ic_underwriting_run: "pe_ic_case",
+    create_ic_question: "pe_ic_question", attach_ic_question_evidence: "pe_ic_question",
+    request_ic_memo_review: "pe_ic_case", satisfy_ic_condition: "pe_ic_condition",
+    prepare_ic_decision_proposal: "pe_ic_decision_proposal",
     open_workstream: "pe_workstream", create_deal_request: "pe_request", submit_deliverable: "pe_deliverable",
     record_finding: "pe_finding", resolve_finding: "pe_finding", raise_deal_risk: "pe_deal_risk",
     resolve_deal_risk: "pe_deal_risk", link_deal_dependency: "pe_dependency", mark_dependency_resolved: "pe_dependency",

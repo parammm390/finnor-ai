@@ -26,6 +26,30 @@ import {
   UnderwritingCreateSensitivitySchema,
   UnderwritingProjectionSchema,
 } from "../apps/api/lib/underwriting";
+import {
+  IcAnswerQuestionSchema,
+  IcCaseTransitionSchema,
+  IcCloseVotingSchema,
+  IcCommitteeConfigurationSchema,
+  IcConditionSchema,
+  IcConditionTransitionSchema,
+  IcCreateCaseSchema,
+  IcCreateQuestionSchema,
+  IcDecisionProposalSchema,
+  IcDissentSchema,
+  IcFinalizeDecisionSchema,
+  IcOpenVotingSchema,
+  IcQuestionSourceSchema,
+  IcRecommendationSchema,
+  IcResolveQuestionSchema,
+  IcSatisfyConditionSchema,
+  IcSelectMemoSchema,
+  IcSelectUnderwritingRunSchema,
+  IcSupersedeQuestionSchema,
+  IcVoteSchema,
+  IcWaiveConditionSchema,
+  IcWaiveQuestionSchema,
+} from "../apps/api/lib/ic";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
 const range = z.object({ start: z.string().datetime({ offset: true }), end: z.string().datetime({ offset: true }) }).strict();
@@ -189,7 +213,81 @@ const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schem
 const secured = [{ bearerAuth: [] }];
 const documentIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
 const artifactVersionQueryParameter = { name: "versionId", in: "query", required: true, schema: { type: "string", format: "uuid" } } as const;
+const icCaseIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
+const icQuestionIdParameter = { name: "questionId", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
+const icConditionIdParameter = { name: "conditionId", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
+const icMutation = (schema: z.ZodTypeAny, description: string, parameters: readonly Record<string, unknown>[] = [icCaseIdParameter]) => ({
+  security: secured,
+  parameters,
+  requestBody: json(schema),
+  responses: {
+    "200": { description },
+    "400": { description: "Strict request schema rejected unknown or invalid input" },
+    "403": { description: "Authenticated employee lacks the required Core Authority capability" },
+    "409": { description: "Version, identity, or idempotency precondition conflict" },
+    "422": { description: "Pinned IC policy or lifecycle prerequisite blocks the transition" },
+  },
+});
 const paths = {
+  "/api/private-equity/ic/committee-configurations": {
+    post: icMutation(IcCommitteeConfigurationSchema, "Immutable committee membership and Core policy revision snapshot created", []),
+  },
+  "/api/private-equity/ic/cases": {
+    post: icMutation(IcCreateCaseSchema, "ICCase opened against one exact P1 InvestmentCase and committee configuration", []),
+    get: { security: secured, responses: { "200": { description: "Bounded tenant-scoped IC Case list with exact P1, P3, P4, Recommendation, and Decision references" } } },
+  },
+  "/api/private-equity/ic/cases/{id}": {
+    get: { security: secured, parameters: [icCaseIdParameter, { name: "asOf", in: "query", required: false, schema: { type: "string", format: "date-time" } }], responses: { "200": { description: "One deterministic no-hindsight IC aggregate read model" }, "404": { description: "ICCase absent in this tenant or at the requested time" } } },
+  },
+  "/api/private-equity/ic/cases/{id}/decision-proof": {
+    get: { security: secured, parameters: [icCaseIdParameter], responses: { "200": { description: "Canonical P1 Decision, immutable DecisionProposal, Core Authority decision, and Core DecisionReceipt proof" } } },
+  },
+  "/api/private-equity/ic/cases/{id}/begin-preparation": { post: icMutation(IcCaseTransitionSchema, "ICCase entered PREPARING") },
+  "/api/private-equity/ic/cases/{id}/ready-for-review": { post: icMutation(IcCaseTransitionSchema, "ICCase entered READY_FOR_REVIEW") },
+  "/api/private-equity/ic/cases/{id}/open-questions": { post: icMutation(IcCaseTransitionSchema, "ICCase entered QUESTIONS_OPEN") },
+  "/api/private-equity/ic/cases/{id}/ready-for-vote": { post: icMutation(IcCaseTransitionSchema, "ICCase entered READY_FOR_VOTE after deterministic prerequisites") },
+  "/api/private-equity/ic/cases/{id}/withdraw": { post: icMutation(IcCaseTransitionSchema, "ICCase entered terminal WITHDRAWN") },
+  "/api/private-equity/ic/cases/{id}/memos": { post: icMutation(IcSelectMemoSchema, "Exact P3 Memo or Deck DocumentVersion revision selected") },
+  "/api/private-equity/ic/cases/{id}/underwriting-run": { post: icMutation(IcSelectUnderwritingRunSchema, "Exact immutable P4 UnderwritingRun selected as the primary run") },
+  "/api/private-equity/ic/cases/{id}/questions": { post: icMutation(IcCreateQuestionSchema, "First-class IC Question opened, optionally linked to Core Work") },
+  "/api/private-equity/ic/cases/{id}/questions/{questionId}/sources": {
+    post: icMutation(IcQuestionSourceSchema, "Exact Evidence, P3 anchor, P4 Run, or canonical source attached to the Question", [icCaseIdParameter, icQuestionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/questions/{questionId}/answer": {
+    post: icMutation(IcAnswerQuestionSchema, "Authenticated employee answer recorded without implying resolution", [icCaseIdParameter, icQuestionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/questions/{questionId}/resolve": {
+    post: icMutation(IcResolveQuestionSchema, "Answered Question deterministically resolved", [icCaseIdParameter, icQuestionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/questions/{questionId}/waive": {
+    post: icMutation(IcWaiveQuestionSchema, "Question waived under pinned policy, Core Authority, and Core DecisionReceipt", [icCaseIdParameter, icQuestionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/questions/{questionId}/supersede": {
+    post: icMutation(IcSupersedeQuestionSchema, "Question explicitly superseded without rewriting its immutable history", [icCaseIdParameter, icQuestionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/recommendations": { post: icMutation(IcRecommendationSchema, "Immutable Recommendation revision pinned to exact Memo and P4 Run") },
+  "/api/private-equity/ic/cases/{id}/voting/open": { post: icMutation(IcOpenVotingSchema, "Voting opened on one immutable basis under Core Authority") },
+  "/api/private-equity/ic/cases/{id}/votes": { post: icMutation(IcVoteSchema, "Authenticated member's one immutable effective Vote recorded; voter identity is never accepted in the body") },
+  "/api/private-equity/ic/cases/{id}/dissents": { post: icMutation(IcDissentSchema, "Authenticated member's first-class Dissent attached to their own Vote") },
+  "/api/private-equity/ic/cases/{id}/conditions": { post: icMutation(IcConditionSchema, "Governed IC Condition created; it is not a P1 closing condition") },
+  "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/activate": {
+    post: icMutation(IcConditionTransitionSchema, "IC Condition activated", [icCaseIdParameter, icConditionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/satisfy": {
+    post: icMutation(IcSatisfyConditionSchema, "IC Condition satisfied only with an exact verification source", [icCaseIdParameter, icConditionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/waive": {
+    post: icMutation(IcWaiveConditionSchema, "IC Condition waived under pinned policy, Core Authority, and Core DecisionReceipt", [icCaseIdParameter, icConditionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/fail": {
+    post: icMutation(IcConditionTransitionSchema, "IC Condition explicitly failed without rewriting its prior states", [icCaseIdParameter, icConditionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/supersede": {
+    post: icMutation(IcConditionTransitionSchema, "IC Condition explicitly superseded without becoming a P1 closing condition", [icCaseIdParameter, icConditionIdParameter]),
+  },
+  "/api/private-equity/ic/cases/{id}/decision-proposals": { post: icMutation(IcDecisionProposalSchema, "Deterministic immutable DecisionProposal prepared from the exact vote set") },
+  "/api/private-equity/ic/cases/{id}/voting/close": { post: icMutation(IcCloseVotingSchema, "Voting atomically closed and exact DecisionProposal frozen under Core Authority") },
+  "/api/private-equity/ic/cases/{id}/finalize": { post: icMutation(IcFinalizeDecisionSchema, "P1 owner finalized the sole canonical investment Decision from exact IC proof") },
   "/api/investment-cases": {
     get: { security: secured, responses: { "200": { description: "Tenant-scoped P1 InvestmentCases with P4 model/run counts" } } },
   },
@@ -402,7 +500,7 @@ const paths = {
 
 const document = {
   openapi: "3.1.0",
-  info: { title: "FINNOR Private Equity API", version: "5.3.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase and Assumption truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 adds deterministic, decimal-string underwriting without using Excel or an LLM as the calculation authority. Historical Water payloads remain receipt-only quarantine inputs." },
+  info: { title: "FINNOR Private Equity API", version: "5.4.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 adds a governed Investment Committee runtime without duplicating Core Authority, Core Work, Core DecisionReceipt, or any prior owner. Historical Water payloads remain receipt-only quarantine inputs." },
   components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } } },
   paths,
 };

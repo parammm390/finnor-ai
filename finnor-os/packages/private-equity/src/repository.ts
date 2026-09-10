@@ -90,15 +90,18 @@ export function peProvenance(ctx: PeMutationContext): {
 }
 
 function pgCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code?: unknown }).code ?? "")
-    : undefined;
+  if (typeof error !== "object" || error === null) return undefined;
+  if ("code" in error) {
+    const code = String((error as { code?: unknown }).code ?? "");
+    if (code) return code;
+  }
+  return "cause" in error ? pgCode((error as { cause?: unknown }).cause) : undefined;
 }
 
 export async function peTransaction<T>(
   ctx: PeMutationContext,
   fn: (db: Db, client: Client) => Promise<T>,
-  options: { readOnly?: boolean; isolation?: "repeatable read" | "serializable" } = {},
+  options: { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" } = {},
 ): Promise<T> {
   const source = peProvenance(ctx);
   const maxAttempts = options.readOnly ? 1 : 3;

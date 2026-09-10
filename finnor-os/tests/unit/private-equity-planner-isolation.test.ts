@@ -95,7 +95,7 @@ describe("Private Equity planner isolation", () => {
     expect(actions).toContain("send_message");
     expect(actions).toContain("computer_task");
     expect(actions).toContain("declare_deal_closed");
-    expect(actions).toHaveLength(32);
+    expect(actions).toHaveLength(41);
     expect(registry.payloadSpecJson(actions)).not.toMatch(/create_invoice|schedule_water_test/i);
     expect(() => plannerActionTypesForVertical(registry, "water")).toThrow(/retired/i);
   });

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FINNOR Private Equity API",
-    "version": "5.3.0",
-    "description": "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase and Assumption truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 adds deterministic, decimal-string underwriting without using Excel or an LLM as the calculation authority. Historical Water payloads remain receipt-only quarantine inputs."
+    "version": "5.4.0",
+    "description": "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 adds a governed Investment Committee runtime without duplicating Core Authority, Core Work, Core DecisionReceipt, or any prior owner. Historical Water payloads remain receipt-only quarantine inputs."
   },
   "components": {
     "securitySchemes": {
@@ -15,6 +15,3020 @@
     }
   },
   "paths": {
+    "/api/private-equity/ic/committee-configurations": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "committeeOrgUnitId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "policyRevisionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "employeeId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "memberRole": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "votingEligible": {
+                          "type": "boolean"
+                        },
+                        "chair": {
+                          "type": "boolean"
+                        },
+                        "effectiveFrom": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "effectiveUntil": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "employeeId",
+                        "memberRole",
+                        "effectiveFrom"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 50
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "committeeOrgUnitId",
+                  "policyRevisionId",
+                  "members",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Immutable committee membership and Core policy revision snapshot created"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dealId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "investmentCaseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "committeeConfigVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "scheduledInternalEventId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "primaryUnderwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "reconsidersDecisionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "dealId",
+                  "investmentCaseId",
+                  "committeeConfigVersionId",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase opened against one exact P1 InvestmentCase and committee configuration"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded tenant-scoped IC Case list with exact P1, P3, P4, Recommendation, and Decision references"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One deterministic no-hindsight IC aggregate read model"
+          },
+          "404": {
+            "description": "ICCase absent in this tenant or at the requested time"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/decision-proof": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Canonical P1 Decision, immutable DecisionProposal, Core Authority decision, and Core DecisionReceipt proof"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/begin-preparation": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase entered PREPARING"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/ready-for-review": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase entered READY_FOR_REVIEW"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/open-questions": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase entered QUESTIONS_OPEN"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/ready-for-vote": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase entered READY_FOR_VOTE after deterministic prerequisites"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/withdraw": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ICCase entered terminal WITHDRAWN"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/memos": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "artifactRole": {
+                    "type": "string",
+                    "enum": [
+                      "MEMO",
+                      "DECK"
+                    ]
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "underwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "evidenceCutoffAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "sourceCompleteness": {
+                    "type": "string",
+                    "enum": [
+                      "COMPLETE",
+                      "INCOMPLETE",
+                      "CONFLICTING",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "changeClassification": {
+                    "type": "string",
+                    "enum": [
+                      "INITIAL",
+                      "MATERIAL",
+                      "NON_MATERIAL",
+                      "MANUAL_REVIEW_REQUIRED"
+                    ]
+                  },
+                  "semanticChecks": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "artifactRole",
+                  "documentId",
+                  "documentVersionId",
+                  "evidenceCutoffAt",
+                  "sourceCompleteness",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact P3 Memo or Deck DocumentVersion revision selected"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/underwriting-run": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "underwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "underwritingRunId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact immutable P4 UnderwritingRun selected as the primary run"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "question": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "LOW",
+                      "NORMAL",
+                      "HIGH",
+                      "CRITICAL"
+                    ]
+                  },
+                  "requiredBeforeVote": {
+                    "type": "boolean"
+                  },
+                  "requiredBeforeDecision": {
+                    "type": "boolean"
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "question",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "First-class IC Question opened, optionally linked to Core Work"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/sources": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedQuestionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "link": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "EVIDENCE_VERSION"
+                              },
+                              "evidenceVersionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "evidenceVersionId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "ARTIFACT_ANCHOR"
+                              },
+                              "documentId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "documentVersionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "anchorId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048
+                              },
+                              "anchorHash": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "documentId",
+                              "documentVersionId",
+                              "anchorId",
+                              "anchorHash"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "UNDERWRITING_RUN"
+                              },
+                              "underwritingRunId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "underwritingRunId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "P1_WORLD"
+                              },
+                              "entityType": {
+                                "type": "string",
+                                "enum": [
+                                  "pe_strategy",
+                                  "pe_opportunity",
+                                  "pe_deal",
+                                  "pe_investment_case",
+                                  "pe_thesis",
+                                  "pe_assumption",
+                                  "pe_decision",
+                                  "pe_deal_party",
+                                  "pe_workstream",
+                                  "pe_request",
+                                  "pe_deliverable",
+                                  "pe_finding",
+                                  "pe_deal_risk",
+                                  "pe_dependency",
+                                  "pe_milestone",
+                                  "pe_closing_condition",
+                                  "pe_closing_item",
+                                  "pe_document_link",
+                                  "pe_evidence_link",
+                                  "pe_finding_risk_link",
+                                  "pe_ic_case",
+                                  "pe_ic_memo",
+                                  "pe_ic_question",
+                                  "pe_ic_recommendation",
+                                  "pe_ic_vote",
+                                  "pe_ic_dissent",
+                                  "pe_ic_condition",
+                                  "pe_ic_decision_proposal"
+                                ]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "entityType",
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "IC_QUESTION"
+                              },
+                              "questionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "questionId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "PE_RISK"
+                              },
+                              "riskId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "riskId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "IC_CONDITION"
+                              },
+                              "conditionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "conditionId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "relationship": {
+                        "type": "string",
+                        "enum": [
+                          "SUPPORTS",
+                          "CONTRADICTS",
+                          "ANSWERS",
+                          "VERIFIES",
+                          "REQUIRES",
+                          "REFERENCES"
+                        ]
+                      },
+                      "truthStatus": {
+                        "type": "string",
+                        "enum": [
+                          "ATTACHED",
+                          "CONFLICTING",
+                          "STALE",
+                          "UNKNOWN"
+                        ]
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "relationship",
+                      "idempotencyKey"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "expectedQuestionVersion",
+                  "link"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Evidence, P3 anchor, P4 Run, or canonical source attached to the Question"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/answer": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedQuestionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "answer": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "required": [
+                  "expectedQuestionVersion",
+                  "answer"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated employee answer recorded without implying resolution"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/resolve": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedQuestionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedQuestionVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answered Question deterministically resolved"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/waive": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedQuestionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedQuestionVersion",
+                  "reason",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question waived under pinned policy, Core Authority, and Core DecisionReceipt"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/supersede": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedQuestionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedQuestionVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question explicitly superseded without rewriting its immutable history"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/recommendations": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "INVEST",
+                      "DECLINE",
+                      "DEFER",
+                      "INVEST_WITH_CONDITIONS",
+                      "CONTINUE_DILIGENCE"
+                    ]
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "memoId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "underwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "EVIDENCE_VERSION"
+                                },
+                                "evidenceVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "evidenceVersionId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "ARTIFACT_ANCHOR"
+                                },
+                                "documentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "documentVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "anchorId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2048
+                                },
+                                "anchorHash": {
+                                  "type": "string",
+                                  "pattern": "^[0-9a-f]{64}$"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "documentId",
+                                "documentVersionId",
+                                "anchorId",
+                                "anchorHash"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "UNDERWRITING_RUN"
+                                },
+                                "underwritingRunId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "underwritingRunId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "P1_WORLD"
+                                },
+                                "entityType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pe_strategy",
+                                    "pe_opportunity",
+                                    "pe_deal",
+                                    "pe_investment_case",
+                                    "pe_thesis",
+                                    "pe_assumption",
+                                    "pe_decision",
+                                    "pe_deal_party",
+                                    "pe_workstream",
+                                    "pe_request",
+                                    "pe_deliverable",
+                                    "pe_finding",
+                                    "pe_deal_risk",
+                                    "pe_dependency",
+                                    "pe_milestone",
+                                    "pe_closing_condition",
+                                    "pe_closing_item",
+                                    "pe_document_link",
+                                    "pe_evidence_link",
+                                    "pe_finding_risk_link",
+                                    "pe_ic_case",
+                                    "pe_ic_memo",
+                                    "pe_ic_question",
+                                    "pe_ic_recommendation",
+                                    "pe_ic_vote",
+                                    "pe_ic_dissent",
+                                    "pe_ic_condition",
+                                    "pe_ic_decision_proposal"
+                                  ]
+                                },
+                                "entityId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "entityType",
+                                "entityId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "IC_QUESTION"
+                                },
+                                "questionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "questionId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "PE_RISK"
+                                },
+                                "riskId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "riskId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "IC_CONDITION"
+                                },
+                                "conditionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "conditionId"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "relationship": {
+                          "type": "string",
+                          "enum": [
+                            "SUPPORTS",
+                            "CONTRADICTS",
+                            "ANSWERS",
+                            "VERIFIES",
+                            "REQUIRES",
+                            "REFERENCES"
+                          ]
+                        },
+                        "truthStatus": {
+                          "type": "string",
+                          "enum": [
+                            "ATTACHED",
+                            "CONFLICTING",
+                            "STALE",
+                            "UNKNOWN"
+                          ]
+                        },
+                        "idempotencyKey": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 240
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relationship",
+                        "idempotencyKey"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "outcome",
+                  "rationale",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Immutable Recommendation revision pinned to exact Memo and P4 Run"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/voting/open": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "recommendationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "memoId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "underwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "recommendationId",
+                  "memoId",
+                  "underwritingRunId",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voting opened on one immutable basis under Core Authority"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/votes": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recommendationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "memoId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "underwritingRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "expectedVotingBasisVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "choice": {
+                    "type": "string",
+                    "enum": [
+                      "APPROVE",
+                      "REJECT",
+                      "ABSTAIN",
+                      "DEFER"
+                    ]
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "maxLength": 10000
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "recommendationId",
+                  "memoId",
+                  "underwritingRunId",
+                  "expectedVotingBasisVersion",
+                  "choice",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated member's one immutable effective Vote recorded; voter identity is never accepted in the body"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/dissents": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "voteId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "EVIDENCE_VERSION"
+                                },
+                                "evidenceVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "evidenceVersionId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "ARTIFACT_ANCHOR"
+                                },
+                                "documentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "documentVersionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "anchorId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2048
+                                },
+                                "anchorHash": {
+                                  "type": "string",
+                                  "pattern": "^[0-9a-f]{64}$"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "documentId",
+                                "documentVersionId",
+                                "anchorId",
+                                "anchorHash"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "UNDERWRITING_RUN"
+                                },
+                                "underwritingRunId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "underwritingRunId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "P1_WORLD"
+                                },
+                                "entityType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pe_strategy",
+                                    "pe_opportunity",
+                                    "pe_deal",
+                                    "pe_investment_case",
+                                    "pe_thesis",
+                                    "pe_assumption",
+                                    "pe_decision",
+                                    "pe_deal_party",
+                                    "pe_workstream",
+                                    "pe_request",
+                                    "pe_deliverable",
+                                    "pe_finding",
+                                    "pe_deal_risk",
+                                    "pe_dependency",
+                                    "pe_milestone",
+                                    "pe_closing_condition",
+                                    "pe_closing_item",
+                                    "pe_document_link",
+                                    "pe_evidence_link",
+                                    "pe_finding_risk_link",
+                                    "pe_ic_case",
+                                    "pe_ic_memo",
+                                    "pe_ic_question",
+                                    "pe_ic_recommendation",
+                                    "pe_ic_vote",
+                                    "pe_ic_dissent",
+                                    "pe_ic_condition",
+                                    "pe_ic_decision_proposal"
+                                  ]
+                                },
+                                "entityId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "entityType",
+                                "entityId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "IC_QUESTION"
+                                },
+                                "questionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "questionId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "PE_RISK"
+                                },
+                                "riskId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "riskId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "IC_CONDITION"
+                                },
+                                "conditionId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "conditionId"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "relationship": {
+                          "type": "string",
+                          "enum": [
+                            "SUPPORTS",
+                            "CONTRADICTS",
+                            "ANSWERS",
+                            "VERIFIES",
+                            "REQUIRES",
+                            "REFERENCES"
+                          ]
+                        },
+                        "truthStatus": {
+                          "type": "string",
+                          "enum": [
+                            "ATTACHED",
+                            "CONFLICTING",
+                            "STALE",
+                            "UNKNOWN"
+                          ]
+                        },
+                        "idempotencyKey": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 240
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relationship",
+                        "idempotencyKey"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "voteId",
+                  "rationale",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated member's first-class Dissent attached to their own Vote"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "sourceRecommendationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "conditionType": {
+                    "type": "string",
+                    "enum": [
+                      "PRE_DECISION",
+                      "POST_DECISION_PRE_SIGNING",
+                      "PRE_CLOSING",
+                      "MONITORING"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "ownerEmployeeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "dueAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "evidenceRequired": {
+                    "type": "boolean"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "conditionType",
+                  "title",
+                  "description",
+                  "ownerEmployeeId",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Governed IC Condition created; it is not a P1 closing condition"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/activate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conditionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedConditionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedConditionVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "IC Condition activated"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/satisfy": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conditionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedConditionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "verification": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "EVIDENCE_VERSION"
+                              },
+                              "evidenceVersionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "evidenceVersionId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "ARTIFACT_ANCHOR"
+                              },
+                              "documentId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "documentVersionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "anchorId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048
+                              },
+                              "anchorHash": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "documentId",
+                              "documentVersionId",
+                              "anchorId",
+                              "anchorHash"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "UNDERWRITING_RUN"
+                              },
+                              "underwritingRunId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "underwritingRunId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "P1_WORLD"
+                              },
+                              "entityType": {
+                                "type": "string",
+                                "enum": [
+                                  "pe_strategy",
+                                  "pe_opportunity",
+                                  "pe_deal",
+                                  "pe_investment_case",
+                                  "pe_thesis",
+                                  "pe_assumption",
+                                  "pe_decision",
+                                  "pe_deal_party",
+                                  "pe_workstream",
+                                  "pe_request",
+                                  "pe_deliverable",
+                                  "pe_finding",
+                                  "pe_deal_risk",
+                                  "pe_dependency",
+                                  "pe_milestone",
+                                  "pe_closing_condition",
+                                  "pe_closing_item",
+                                  "pe_document_link",
+                                  "pe_evidence_link",
+                                  "pe_finding_risk_link",
+                                  "pe_ic_case",
+                                  "pe_ic_memo",
+                                  "pe_ic_question",
+                                  "pe_ic_recommendation",
+                                  "pe_ic_vote",
+                                  "pe_ic_dissent",
+                                  "pe_ic_condition",
+                                  "pe_ic_decision_proposal"
+                                ]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "entityType",
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "IC_QUESTION"
+                              },
+                              "questionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "questionId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "PE_RISK"
+                              },
+                              "riskId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "riskId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "IC_CONDITION"
+                              },
+                              "conditionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "conditionId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "relationship": {
+                        "type": "string",
+                        "enum": [
+                          "SUPPORTS",
+                          "CONTRADICTS",
+                          "ANSWERS",
+                          "VERIFIES",
+                          "REQUIRES",
+                          "REFERENCES"
+                        ]
+                      },
+                      "truthStatus": {
+                        "type": "string",
+                        "enum": [
+                          "ATTACHED",
+                          "CONFLICTING",
+                          "STALE",
+                          "UNKNOWN"
+                        ]
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "relationship",
+                      "idempotencyKey"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "expectedConditionVersion",
+                  "verification"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "IC Condition satisfied only with an exact verification source"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/waive": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conditionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedConditionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedConditionVersion",
+                  "reason",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "IC Condition waived under pinned policy, Core Authority, and Core DecisionReceipt"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/fail": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conditionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedConditionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedConditionVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "IC Condition explicitly failed without rewriting its prior states"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/supersede": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "conditionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedConditionVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedConditionVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "IC Condition explicitly superseded without becoming a P1 closing condition"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/decision-proposals": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "expectedVoteSetVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "expectedVoteSetVersion",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deterministic immutable DecisionProposal prepared from the exact vote set"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/voting/close": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "expectedVoteSetVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "expectedVoteSetVersion",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voting atomically closed and exact DecisionProposal frozen under Core Authority"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/finalize": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decisionProposalId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "decisionProposalId",
+                  "expectedCaseVersion",
+                  "title",
+                  "rationale",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "P1 owner finalized the sole canonical investment Decision from exact IC proof"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
     "/api/investment-cases": {
       "get": {
         "security": [

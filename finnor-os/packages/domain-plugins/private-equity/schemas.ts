@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PE_DEPENDENCY_ENDPOINT_TYPES, WORKSTREAM_KINDS } from "@finnor/private-equity";
+import { PE_DEPENDENCY_ENDPOINT_TYPES, PE_ENTITY_TYPES, WORKSTREAM_KINDS } from "@finnor/private-equity";
 
 const uuid = z.string().uuid();
 const version = z.number().int().positive();
@@ -23,7 +23,91 @@ const evidenceFields = {
   evidenceVersionId: uuid.optional(),
 };
 
+export const IC_SOURCE_REFERENCE_SCHEMA = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("EVIDENCE_VERSION"), evidenceVersionId: uuid }).strict(),
+  z.object({
+    kind: z.literal("ARTIFACT_ANCHOR"), documentId: uuid, documentVersionId: uuid,
+    anchorId: z.string().min(1).max(2_048), anchorHash: z.string().regex(/^[0-9a-f]{64}$/),
+  }).strict(),
+  z.object({ kind: z.literal("UNDERWRITING_RUN"), underwritingRunId: uuid }).strict(),
+  z.object({ kind: z.literal("P1_WORLD"), entityType: z.enum(PE_ENTITY_TYPES), entityId: uuid }).strict(),
+  z.object({ kind: z.literal("IC_QUESTION"), questionId: uuid }).strict(),
+  z.object({ kind: z.literal("PE_RISK"), riskId: uuid }).strict(),
+  z.object({ kind: z.literal("IC_CONDITION"), conditionId: uuid }).strict(),
+]);
+
 export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
+  open_ic_case: z.object({
+    dealId: uuid,
+    icCaseId: uuid.optional(),
+    investmentCaseId: uuid,
+    committeeConfigVersionId: uuid,
+    scheduledInternalEventId: uuid.optional(),
+    primaryUnderwritingRunId: uuid.optional(),
+    reconsidersDecisionId: uuid.optional(),
+  }).strict(),
+  begin_ic_preparation: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+  }).strict(),
+  select_ic_memo_version: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    memoSelectionId: uuid.optional(),
+    expectedCaseVersion: version,
+    artifactRole: z.enum(["MEMO", "DECK"]),
+    documentId: uuid,
+    documentVersionId: uuid,
+    underwritingRunId: uuid.optional(),
+    evidenceCutoffAt: dateTime,
+    sourceCompleteness: z.enum(["COMPLETE", "INCOMPLETE", "CONFLICTING", "UNKNOWN"]),
+    changeClassification: z.enum(["INITIAL", "MATERIAL", "NON_MATERIAL", "MANUAL_REVIEW_REQUIRED"]).optional(),
+  }).strict(),
+  select_ic_underwriting_run: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+    underwritingRunId: uuid,
+  }).strict(),
+  create_ic_question: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    questionId: uuid.optional(),
+    expectedCaseVersion: version,
+    question: text,
+    priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]).optional(),
+    requiredBeforeVote: z.boolean().optional(),
+    requiredBeforeDecision: z.boolean().optional(),
+  }).strict(),
+  attach_ic_question_evidence: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    questionId: uuid,
+    expectedQuestionVersion: version,
+    source: IC_SOURCE_REFERENCE_SCHEMA,
+    relationship: z.enum(["SUPPORTS", "CONTRADICTS", "ANSWERS", "VERIFIES", "REQUIRES", "REFERENCES"]),
+    truthStatus: z.enum(["ATTACHED", "CONFLICTING", "STALE", "UNKNOWN"]).optional(),
+  }).strict(),
+  request_ic_memo_review: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+  }).strict(),
+  satisfy_ic_condition: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    conditionId: uuid,
+    expectedConditionVersion: version,
+    source: IC_SOURCE_REFERENCE_SCHEMA,
+  }).strict(),
+  prepare_ic_decision_proposal: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    decisionProposalId: uuid.optional(),
+    expectedCaseVersion: version,
+    expectedVoteSetVersion: z.number().int().nonnegative(),
+  }).strict(),
   open_workstream: z.object({
     dealId: uuid,
     workstreamId: uuid.optional(),
