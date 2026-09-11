@@ -9,7 +9,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params;
     if (!UUID.test(id)) return Response.json({ error: "Invalid Document ID", code: "invalid_id" }, { status: 400 });
     const ctx = artifactActor(await requireContext(req));
-    const artifact = await getArtifact(ctx, id);
+    const requestedVersion = new URL(req.url).searchParams.get("versionId") ?? undefined;
+    if (requestedVersion && !UUID.test(requestedVersion)) return Response.json({ error: "Invalid DocumentVersion ID", code: "invalid_id" }, { status: 400 });
+    const artifact = await getArtifact(ctx, id, requestedVersion);
     const context = await artifactContext(ctx, id, artifact.version.id);
     return Response.json({
       documentId: id,

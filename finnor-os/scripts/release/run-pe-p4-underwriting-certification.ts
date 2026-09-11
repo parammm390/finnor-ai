@@ -37,7 +37,7 @@ const P1_REPORT = resolve(OUTPUT_DIR, "pe-p1-world-truth-certification.json");
 const P2_REPORT = resolve(OUTPUT_DIR, "pe-p2-m365-nervous-system-certification.json");
 const P3_REPORT = resolve(OUTPUT_DIR, "pe-p3-artifact-os-certification.json");
 const P4_MIGRATION = "0126_pe_underwriting_runtime.sql";
-const EXPECTED_MIGRATION_COUNT = 125;
+const P4_MINIMUM_MIGRATION_COUNT = 126;
 const STARTING_BASELINE = Object.freeze({
   branch: "codex/p3-epistemic-runtime",
   headSha: "80f617d321965b8694de18940ff23b005dedcdb7",
@@ -471,18 +471,19 @@ async function main(): Promise<void> {
   }, 0);
   assert(countedTotal === 240 && new Set(P4_MANDATORY_CASES.map((item) => item.name)).size === 240,
     "P4 certification ledger count or uniqueness failed");
-  assert(CURRENT_MIGRATION_HEAD === P4_MIGRATION, "P4 migration is not the current head");
+  assert(String(CURRENT_MIGRATION_HEAD).localeCompare(P4_MIGRATION) >= 0, "P4 migration is newer than the current head");
   const bin = (name: string) => resolve(ROOT, "node_modules/.bin", name);
   const commands: Record<string, CommandEvidence> = {};
 
   commands.migrationBundle = await runCommand("migrationBundle", bin("tsx"), ["scripts/bundle-migrations.ts"]);
   const diskMigrations = await loadDiskMigrations();
   const bundle = await import("../../packages/db/migrations-bundle");
-  assert(diskMigrations.length === EXPECTED_MIGRATION_COUNT && bundle.MIGRATIONS.length === EXPECTED_MIGRATION_COUNT,
-    `migration count is disk=${diskMigrations.length}, bundle=${bundle.MIGRATIONS.length}, expected=${EXPECTED_MIGRATION_COUNT}`);
+  assert(diskMigrations.length >= P4_MINIMUM_MIGRATION_COUNT && bundle.MIGRATIONS.length === diskMigrations.length,
+    `migration count is disk=${diskMigrations.length}, bundle=${bundle.MIGRATIONS.length}, minimum=${P4_MINIMUM_MIGRATION_COUNT}`);
   assert(diskMigrations.every((migration, index) => migration.name === bundle.MIGRATIONS[index]?.name && migration.sql === bundle.MIGRATIONS[index]?.sql),
     "generated migration bundle differs byte-for-byte from disk");
-  assert(diskMigrations.at(-1)?.name === P4_MIGRATION, "disk migration head is not P4 0126");
+  assert(diskMigrations.some(({ name }) => name === P4_MIGRATION), "disk migration set does not contain P4 0126");
+  assert(diskMigrations.at(-1)?.name === CURRENT_MIGRATION_HEAD, "disk migration head differs from the declared current head");
 
   const [p1Raw, p2Raw, p3Raw, architecture] = await Promise.all([
     readFile(P1_REPORT, "utf8"), readFile(P2_REPORT, "utf8"), readFile(P3_REPORT, "utf8"), inspectArchitecture(),
@@ -535,13 +536,13 @@ async function main(): Promise<void> {
     await embedded.start();
     await embedded.createDatabase(databaseName);
     const applied = await migrate(databaseUrl, diskMigrations);
-    assert(applied.length === EXPECTED_MIGRATION_COUNT, `fresh database applied ${applied.length}/${EXPECTED_MIGRATION_COUNT} migrations`);
-    databaseInvariants = await inspectFreshDatabase(databaseUrl, EXPECTED_MIGRATION_COUNT);
+    assert(applied.length === diskMigrations.length, `fresh database applied ${applied.length}/${diskMigrations.length} migrations`);
+    databaseInvariants = await inspectFreshDatabase(databaseUrl, diskMigrations.length);
     commands.freshMigration = {
       command: "embedded-postgres + migrate(all disk migrations) + inspectFreshDatabase",
       status: "PASS", exitCode: 0, durationMs: Date.now() - started,
       outputHash: digest(JSON.stringify(databaseInvariants)), outputLineCount: 1,
-      summary: `${EXPECTED_MIGRATION_COUNT} migrations; ${P4_TABLES.length} forced-RLS immutable P4 tables; zero fabricated rows`,
+      summary: `${diskMigrations.length} migrations; ${P4_TABLES.length} forced-RLS immutable P4 tables; zero fabricated rows`,
     };
     console.log(`P4_GATE_PASS freshMigration ${commands.freshMigration.durationMs}ms`);
     const admin = new pg.Client({ connectionString: databaseUrl });

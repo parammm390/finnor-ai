@@ -53,7 +53,11 @@ export async function requireContext(req: Request): Promise<TenantContext> {
     if (tenantId) {
       await enforceRateLimit(`tenant:${tenantId}`);
       await readProductRuntimeAuthority();
-      return { tenantId, userId, role, correlationId };
+      // In production, resolveTenantFromBearerToken supplies employeeId from the
+      // authenticated users row. Keep the local-only bypass structurally
+      // equivalent so employee-scoped reads (notably attention_queue) exercise
+      // the same fail-closed authority path during browser/integration checks.
+      return { tenantId, userId, employeeId: userId, role, correlationId };
     }
   }
 

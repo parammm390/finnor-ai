@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, desc, eq } from "drizzle-orm";
@@ -96,6 +96,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
   const communicationIntegration = randomUUID();
   const communicationIdentity = randomUUID();
   const supportingDocument = randomUUID();
+  const workforceProfileId = randomUUID();
   const ctxA: PeMutationContext = {
     auth: { tenantId: tenantA, userId: actor, employeeId: actor, role: "owner" },
     provenance: { sourceSystem: "integration:pe4", createdBy: actor },
@@ -272,6 +273,36 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     await closePool();
     await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "integration:pe4" });
     await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 0, createdBy: actorB, sourceSystem: "integration:pe4" });
+    // P7 assigns each already-selected P6 node to a non-human worker. This
+    // fixture grants only the exact capabilities exercised by the scripted
+    // objective; it does not create authority or broaden the planner.
+    await admin.query(
+      `INSERT INTO finnor_os.agent_profiles(id,tenant_id,key,name)
+       VALUES($1,$2,'pe4-runtime-worker','PE4 Runtime Worker')`,
+      [workforceProfileId, tenantA],
+    );
+    await admin.query(
+      `INSERT INTO finnor_os.agent_profile_revisions(
+         id,tenant_id,agent_profile_id,revision,model_route,capability_grants,
+         max_concurrent_assignments,autonomy_limits,planning_hints,status,config_hash,created_by
+       ) VALUES($1,$2,$3,1,$4::jsonb,$5::jsonb,1,$6::jsonb,'{}'::jsonb,'active',$7,$8)`,
+      [
+        randomUUID(),
+        tenantA,
+        workforceProfileId,
+        JSON.stringify({ provider: "orchestration_runtime", model: null, purpose: "objective_execution" }),
+        JSON.stringify([
+          { capability: "create_deal_request", kind: "action" },
+          { capability: "send_message", kind: "action" },
+          { capability: "satisfy_closing_condition", kind: "action" },
+          { capability: "wait:event", kind: "wait" },
+          { capability: "check:objective_success", kind: "check" },
+        ]),
+        JSON.stringify({ maxActions: 4, maxQueries: 11, maxReplans: 8, maxPlannerCalls: 11, maxWallClockMs: 86_400_000, maxKnownCostUsd: null, maxKnownTokens: null }),
+        `sha256:${createHash("sha256").update(`pe4-runtime-worker:${workforceProfileId}`).digest("hex")}`,
+        actor,
+      ],
+    );
   }, 60_000);
 
   afterAll(async () => {

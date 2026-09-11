@@ -9,7 +9,7 @@
 
 import { withTenant, scanFindings } from "@finnor/db";
 import { and, eq, isNull } from "drizzle-orm";
-import { computeLearningDigest, MIN_SAMPLE, CONCERN_THRESHOLD } from "@finnor/orchestration";
+import { computeLearningDigest, generateWorkforceLearningProposals, MIN_SAMPLE, CONCERN_THRESHOLD } from "@finnor/orchestration";
 import type { JobHandler } from "../queue";
 
 export const learningDigest: JobHandler = async (payload) => {
@@ -17,6 +17,9 @@ export const learningDigest: JobHandler = async (payload) => {
   if (!tenantId) throw new Error("learning_digest requires tenantId");
 
   const digest = await computeLearningDigest(tenantId);
+  // P7 reuses this one existing job. Typed proposals are immutable and remain
+  // inert until an authorized human explicitly promotes one.
+  await generateWorkforceLearningProposals(tenantId, digest.windowDays);
   const concerning = digest.actionTypeStats.filter(
     (s) => s.total >= MIN_SAMPLE && (s.failureRate >= CONCERN_THRESHOLD || (s.decided >= MIN_SAMPLE && s.rejectionRate >= CONCERN_THRESHOLD)),
   );

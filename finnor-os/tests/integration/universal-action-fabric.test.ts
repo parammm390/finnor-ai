@@ -68,7 +68,6 @@ const PHOENIX_TEAM = randomUUID();
 const WORK_A = randomUUID();
 const WORK_B = randomUUID();
 const DOCUMENT_A = randomUUID();
-const HOUSEHOLD_A = randomUUID();
 const EXTERNAL_CONTACT_A = randomUUID();
 const EMAIL_IDENTITY = randomUUID();
 const SMS_IDENTITY = randomUUID();
@@ -227,11 +226,6 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
         `INSERT INTO finnor_os.documents(id,tenant_id,kind,title,storage_ref)
          VALUES ($1,$2,'proposal_pdf','Peterson Proposal','governed://peterson-proposal')`,
         [DOCUMENT_A, TENANT_A],
-      );
-      await admin.query(
-        `INSERT INTO finnor_os.households(id,tenant_id,address,contact_info)
-         VALUES ($1,$2,'Governed address','{"name":"Peterson"}'::jsonb)`,
-        [HOUSEHOLD_A, TENANT_A],
       );
       await admin.query(
         `INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,name,business_email)

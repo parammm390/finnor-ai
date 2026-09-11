@@ -4,14 +4,46 @@
  */
 
 export interface paths {
-    "/api/ready": {
+    "/api/actions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Dependency readiness for database, migration head, worker fleet, and managed secrets */
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Instruction accepted into governed Work */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get: {
             parameters: {
                 query?: never;
@@ -21,15 +53,8 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Ready with exact release provenance */
+                /** @description Tenant-scoped pending action page */
                 200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description A process-level dependency is not ready */
-                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -45,7 +70,459 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/connections/google/start": {
+    "/api/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped employee list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped business events */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operational-deltas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Bounded tenant-scoped operational delta page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid cursor or limit */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Cursor tenant scope mismatch */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/read-models/{view}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    view: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Named tenant-scoped read model */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped insights */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Source-backed setup status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Source-backed integration status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped audit records */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped decision receipts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/receipts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact decision receipt */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated employee context */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dlq": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped dead-letter page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dlq/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact dead-letter record */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dlq/{id}/replay": {
         parameters: {
             query?: never;
             header?: never;
@@ -54,7 +531,93 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start a governed Google OAuth connection using one-time state and PKCE */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized dead-letter replay requested */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dlq/{id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized dead-letter discard recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped corrections */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
         post: {
             parameters: {
                 query?: never;
@@ -62,24 +625,393 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        authProfileRef: string;
-                        /** Format: uri */
-                        redirectUri?: string;
+            requestBody?: never;
+            responses: {
+                /** @description Correction recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
                     };
+                    content?: never;
                 };
             };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vitals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
             responses: {
-                /** @description Safe provider authorization URL and expiry; verifier remains HttpOnly */
+                /** @description Queue and runtime vitals */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid or unsupported connection */
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped operational activity */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped workflow runs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized workflow pause */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized workflow resume */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized workflow cancellation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized workflow retry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workflows/runs/{id}/escalate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorized workflow escalation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/instructions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact instruction lifecycle */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/instructions/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact instruction event stream page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    instructionId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description EventSource stream for one instruction lifecycle */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description instructionId is missing */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -93,92 +1025,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Employee authority denied */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/connections/google/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Consume one Google OAuth callback and bind the verified provider account */
-        get: {
-            parameters: {
-                query: {
-                    state: string;
-                    code: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Redirect to the connection settings result */
-                303: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/connections/{ref}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read safe connection lifecycle status */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    ref: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Safe status/scopes/timestamps without credential reference or token */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Profile not found */
+                /** @description Instruction not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -189,34 +1036,32 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        /** Revoke a governed connection locally and attempt provider revocation */
-        delete: {
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/works/{id}/execution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    ref: string;
+                    id: string;
                 };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Local revocation is authoritative */
+                /** @description Exact Work execution projection */
                 200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Employee authority denied */
-                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -224,12 +1069,104 @@ export interface paths {
                 };
             };
         };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/connections/{ref}/verify": {
+    "/api/works/{id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact Work causal replay */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/works/{id}/objective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact Work objective state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Objective control recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/committee-configurations": {
         parameters: {
             query?: never;
             header?: never;
@@ -238,26 +1175,2560 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Run a bounded connection health verification */
         post: {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    ref: string;
-                };
+                path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        committeeOrgUnitId: string;
+                        /** Format: uuid */
+                        policyRevisionId: string;
+                        members: {
+                            /** Format: uuid */
+                            employeeId: string;
+                            memberRole: string;
+                            votingEligible?: boolean;
+                            chair?: boolean;
+                            /** Format: date-time */
+                            effectiveFrom: string;
+                            /** Format: date-time */
+                            effectiveUntil?: string;
+                        }[];
+                        idempotencyKey: string;
+                    };
+                };
+            };
             responses: {
-                /** @description Connection usable */
+                /** @description Immutable committee membership and Core policy revision snapshot created */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Connection degraded, expired, or requires reauthentication */
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Bounded tenant-scoped IC Case list with exact P1, P3, P4, Recommendation, and Decision references */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        dealId: string;
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        /** Format: uuid */
+                        committeeConfigVersionId: string;
+                        /** Format: uuid */
+                        scheduledInternalEventId?: string;
+                        /** Format: uuid */
+                        primaryUnderwritingRunId?: string;
+                        /** Format: uuid */
+                        reconsidersDecisionId?: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase opened against one exact P1 InvestmentCase and committee configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    asOf?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One deterministic no-hindsight IC aggregate read model */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description ICCase absent in this tenant or at the requested time */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/decision-proof": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Canonical P1 Decision, immutable DecisionProposal, Core Authority decision, and Core DecisionReceipt proof */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/begin-preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase entered PREPARING */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/ready-for-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase entered READY_FOR_REVIEW */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/open-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase entered QUESTIONS_OPEN */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/ready-for-vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase entered READY_FOR_VOTE after deterministic prerequisites */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description ICCase entered terminal WITHDRAWN */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/memos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        /** @enum {string} */
+                        artifactRole: "MEMO" | "DECK";
+                        /** Format: uuid */
+                        documentId: string;
+                        /** Format: uuid */
+                        documentVersionId: string;
+                        /** Format: uuid */
+                        underwritingRunId?: string;
+                        /** Format: date-time */
+                        evidenceCutoffAt: string;
+                        /** @enum {string} */
+                        sourceCompleteness: "COMPLETE" | "INCOMPLETE" | "CONFLICTING" | "UNKNOWN";
+                        /** @enum {string} */
+                        changeClassification?: "INITIAL" | "MATERIAL" | "NON_MATERIAL" | "MANUAL_REVIEW_REQUIRED";
+                        semanticChecks?: {
+                            [key: string]: unknown;
+                        };
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact P3 Memo or Deck DocumentVersion revision selected */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/underwriting-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        /** Format: uuid */
+                        underwritingRunId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact immutable P4 UnderwritingRun selected as the primary run */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        question: string;
+                        /** @enum {string} */
+                        priority?: "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
+                        requiredBeforeVote?: boolean;
+                        requiredBeforeDecision?: boolean;
+                        /** Format: uuid */
+                        workId?: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description First-class IC Question opened, optionally linked to Core Work */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    questionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedQuestionVersion: number;
+                        link: {
+                            source: {
+                                /** @constant */
+                                kind: "EVIDENCE_VERSION";
+                                /** Format: uuid */
+                                evidenceVersionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "ARTIFACT_ANCHOR";
+                                /** Format: uuid */
+                                documentId: string;
+                                /** Format: uuid */
+                                documentVersionId: string;
+                                anchorId: string;
+                                anchorHash: string;
+                            } | {
+                                /** @constant */
+                                kind: "UNDERWRITING_RUN";
+                                /** Format: uuid */
+                                underwritingRunId: string;
+                            } | {
+                                /** @constant */
+                                kind: "P1_WORLD";
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_investment_case" | "pe_thesis" | "pe_assumption" | "pe_decision" | "pe_deal_party" | "pe_workstream" | "pe_request" | "pe_deliverable" | "pe_finding" | "pe_deal_risk" | "pe_dependency" | "pe_milestone" | "pe_closing_condition" | "pe_closing_item" | "pe_document_link" | "pe_evidence_link" | "pe_finding_risk_link" | "pe_ic_case" | "pe_ic_memo" | "pe_ic_question" | "pe_ic_recommendation" | "pe_ic_vote" | "pe_ic_dissent" | "pe_ic_condition" | "pe_ic_decision_proposal";
+                                /** Format: uuid */
+                                entityId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_QUESTION";
+                                /** Format: uuid */
+                                questionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "PE_RISK";
+                                /** Format: uuid */
+                                riskId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_CONDITION";
+                                /** Format: uuid */
+                                conditionId: string;
+                            };
+                            /** @enum {string} */
+                            relationship: "SUPPORTS" | "CONTRADICTS" | "ANSWERS" | "VERIFIES" | "REQUIRES" | "REFERENCES";
+                            /** @enum {string} */
+                            truthStatus?: "ATTACHED" | "CONFLICTING" | "STALE" | "UNKNOWN";
+                            idempotencyKey: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact Evidence, P3 anchor, P4 Run, or canonical source attached to the Question */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    questionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedQuestionVersion: number;
+                        answer: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated employee answer recorded without implying resolution */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    questionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedQuestionVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Answered Question deterministically resolved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/waive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    questionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedQuestionVersion: number;
+                        reason: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Question waived under pinned policy, Core Authority, and Core DecisionReceipt */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/questions/{questionId}/supersede": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    questionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedQuestionVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Question explicitly superseded without rewriting its immutable history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        /** @enum {string} */
+                        outcome: "INVEST" | "DECLINE" | "DEFER" | "INVEST_WITH_CONDITIONS" | "CONTINUE_DILIGENCE";
+                        rationale: string;
+                        /** Format: uuid */
+                        memoId?: string;
+                        /** Format: uuid */
+                        underwritingRunId?: string;
+                        sources?: {
+                            source: {
+                                /** @constant */
+                                kind: "EVIDENCE_VERSION";
+                                /** Format: uuid */
+                                evidenceVersionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "ARTIFACT_ANCHOR";
+                                /** Format: uuid */
+                                documentId: string;
+                                /** Format: uuid */
+                                documentVersionId: string;
+                                anchorId: string;
+                                anchorHash: string;
+                            } | {
+                                /** @constant */
+                                kind: "UNDERWRITING_RUN";
+                                /** Format: uuid */
+                                underwritingRunId: string;
+                            } | {
+                                /** @constant */
+                                kind: "P1_WORLD";
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_investment_case" | "pe_thesis" | "pe_assumption" | "pe_decision" | "pe_deal_party" | "pe_workstream" | "pe_request" | "pe_deliverable" | "pe_finding" | "pe_deal_risk" | "pe_dependency" | "pe_milestone" | "pe_closing_condition" | "pe_closing_item" | "pe_document_link" | "pe_evidence_link" | "pe_finding_risk_link" | "pe_ic_case" | "pe_ic_memo" | "pe_ic_question" | "pe_ic_recommendation" | "pe_ic_vote" | "pe_ic_dissent" | "pe_ic_condition" | "pe_ic_decision_proposal";
+                                /** Format: uuid */
+                                entityId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_QUESTION";
+                                /** Format: uuid */
+                                questionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "PE_RISK";
+                                /** Format: uuid */
+                                riskId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_CONDITION";
+                                /** Format: uuid */
+                                conditionId: string;
+                            };
+                            /** @enum {string} */
+                            relationship: "SUPPORTS" | "CONTRADICTS" | "ANSWERS" | "VERIFIES" | "REQUIRES" | "REFERENCES";
+                            /** @enum {string} */
+                            truthStatus?: "ATTACHED" | "CONFLICTING" | "STALE" | "UNKNOWN";
+                            idempotencyKey: string;
+                        }[];
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Immutable Recommendation revision pinned to exact Memo and P4 Run */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/voting/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        /** Format: uuid */
+                        recommendationId: string;
+                        /** Format: uuid */
+                        memoId: string;
+                        /** Format: uuid */
+                        underwritingRunId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Voting opened on one immutable basis under Core Authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/votes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        recommendationId: string;
+                        /** Format: uuid */
+                        memoId: string;
+                        /** Format: uuid */
+                        underwritingRunId: string;
+                        expectedVotingBasisVersion: number;
+                        /** @enum {string} */
+                        choice: "APPROVE" | "REJECT" | "ABSTAIN" | "DEFER";
+                        rationale?: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated member's one immutable effective Vote recorded; voter identity is never accepted in the body */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/dissents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        voteId: string;
+                        rationale: string;
+                        sources?: {
+                            source: {
+                                /** @constant */
+                                kind: "EVIDENCE_VERSION";
+                                /** Format: uuid */
+                                evidenceVersionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "ARTIFACT_ANCHOR";
+                                /** Format: uuid */
+                                documentId: string;
+                                /** Format: uuid */
+                                documentVersionId: string;
+                                anchorId: string;
+                                anchorHash: string;
+                            } | {
+                                /** @constant */
+                                kind: "UNDERWRITING_RUN";
+                                /** Format: uuid */
+                                underwritingRunId: string;
+                            } | {
+                                /** @constant */
+                                kind: "P1_WORLD";
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_investment_case" | "pe_thesis" | "pe_assumption" | "pe_decision" | "pe_deal_party" | "pe_workstream" | "pe_request" | "pe_deliverable" | "pe_finding" | "pe_deal_risk" | "pe_dependency" | "pe_milestone" | "pe_closing_condition" | "pe_closing_item" | "pe_document_link" | "pe_evidence_link" | "pe_finding_risk_link" | "pe_ic_case" | "pe_ic_memo" | "pe_ic_question" | "pe_ic_recommendation" | "pe_ic_vote" | "pe_ic_dissent" | "pe_ic_condition" | "pe_ic_decision_proposal";
+                                /** Format: uuid */
+                                entityId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_QUESTION";
+                                /** Format: uuid */
+                                questionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "PE_RISK";
+                                /** Format: uuid */
+                                riskId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_CONDITION";
+                                /** Format: uuid */
+                                conditionId: string;
+                            };
+                            /** @enum {string} */
+                            relationship: "SUPPORTS" | "CONTRADICTS" | "ANSWERS" | "VERIFIES" | "REQUIRES" | "REFERENCES";
+                            /** @enum {string} */
+                            truthStatus?: "ATTACHED" | "CONFLICTING" | "STALE" | "UNKNOWN";
+                            idempotencyKey: string;
+                        }[];
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated member's first-class Dissent attached to their own Vote */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        /** Format: uuid */
+                        sourceRecommendationId?: string;
+                        /** @enum {string} */
+                        conditionType: "PRE_DECISION" | "POST_DECISION_PRE_SIGNING" | "PRE_CLOSING" | "MONITORING";
+                        title: string;
+                        description: string;
+                        /** Format: uuid */
+                        ownerEmployeeId: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        /** Format: date-time */
+                        dueAt?: string;
+                        required?: boolean;
+                        evidenceRequired?: boolean;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Governed IC Condition created; it is not a P1 closing condition */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    conditionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedConditionVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description IC Condition activated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/satisfy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    conditionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedConditionVersion: number;
+                        verification: {
+                            source: {
+                                /** @constant */
+                                kind: "EVIDENCE_VERSION";
+                                /** Format: uuid */
+                                evidenceVersionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "ARTIFACT_ANCHOR";
+                                /** Format: uuid */
+                                documentId: string;
+                                /** Format: uuid */
+                                documentVersionId: string;
+                                anchorId: string;
+                                anchorHash: string;
+                            } | {
+                                /** @constant */
+                                kind: "UNDERWRITING_RUN";
+                                /** Format: uuid */
+                                underwritingRunId: string;
+                            } | {
+                                /** @constant */
+                                kind: "P1_WORLD";
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_investment_case" | "pe_thesis" | "pe_assumption" | "pe_decision" | "pe_deal_party" | "pe_workstream" | "pe_request" | "pe_deliverable" | "pe_finding" | "pe_deal_risk" | "pe_dependency" | "pe_milestone" | "pe_closing_condition" | "pe_closing_item" | "pe_document_link" | "pe_evidence_link" | "pe_finding_risk_link" | "pe_ic_case" | "pe_ic_memo" | "pe_ic_question" | "pe_ic_recommendation" | "pe_ic_vote" | "pe_ic_dissent" | "pe_ic_condition" | "pe_ic_decision_proposal";
+                                /** Format: uuid */
+                                entityId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_QUESTION";
+                                /** Format: uuid */
+                                questionId: string;
+                            } | {
+                                /** @constant */
+                                kind: "PE_RISK";
+                                /** Format: uuid */
+                                riskId: string;
+                            } | {
+                                /** @constant */
+                                kind: "IC_CONDITION";
+                                /** Format: uuid */
+                                conditionId: string;
+                            };
+                            /** @enum {string} */
+                            relationship: "SUPPORTS" | "CONTRADICTS" | "ANSWERS" | "VERIFIES" | "REQUIRES" | "REFERENCES";
+                            /** @enum {string} */
+                            truthStatus?: "ATTACHED" | "CONFLICTING" | "STALE" | "UNKNOWN";
+                            idempotencyKey: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description IC Condition satisfied only with an exact verification source */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/waive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    conditionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedConditionVersion: number;
+                        reason: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description IC Condition waived under pinned policy, Core Authority, and Core DecisionReceipt */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/fail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    conditionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedConditionVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description IC Condition explicitly failed without rewriting its prior states */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/conditions/{conditionId}/supersede": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    conditionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedConditionVersion: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description IC Condition explicitly superseded without becoming a P1 closing condition */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/decision-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        expectedVoteSetVersion: number;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Deterministic immutable DecisionProposal prepared from the exact vote set */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/voting/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedCaseVersion: number;
+                        expectedVoteSetVersion: number;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Voting atomically closed and exact DecisionProposal frozen under Core Authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private-equity/ic/cases/{id}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        decisionProposalId: string;
+                        expectedCaseVersion: number;
+                        title: string;
+                        rationale: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description P1 owner finalized the sole canonical investment Decision from exact IC proof */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict request schema rejected unknown or invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks the required Core Authority capability */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version, identity, or idempotency precondition conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned IC policy or lifecycle prerequisite blocks the transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investment-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant-scoped P1 InvestmentCases with P4 model/run counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investment-cases/{id}/underwriting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Truthful Underwriting Workspace projection for one exact P1 InvestmentCase */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description InvestmentCase not found in the authenticated tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        modelKey: string;
+                        name: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Logical deterministic model attached to the canonical P1 InvestmentCase */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/models/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        definition: {
+                            /** @constant */
+                            schemaVersion: "underwriting-model-ir.v1";
+                            modelKey: string;
+                            modelVersion: string;
+                            financialConventionVersion: string;
+                            minimumEngineVersion: string;
+                            periodDefinition: {
+                                /** @enum {string} */
+                                frequency: "annual" | "quarterly" | "monthly";
+                                forecastStart: string;
+                                count: number;
+                                fiscalYearStartMonth?: number;
+                            };
+                            nodes: ({
+                                id: string;
+                                /** @enum {string} */
+                                kind: "input" | "constant" | "expression" | "series" | "schedule" | "aggregate" | "check" | "output";
+                                /** @enum {string} */
+                                valueType: "decimal" | "date" | "boolean" | "text";
+                                /** @enum {string} */
+                                unit: "money" | "rate" | "multiple" | "ratio" | "count" | "date" | "period" | "boolean" | "text";
+                                currency?: string;
+                                /** @enum {string} */
+                                shape: "scalar" | "series";
+                                dependencies: string[];
+                                source?: {
+                                    /** @enum {string} */
+                                    kind: "p1_assumption" | "evidence_version" | "artifact_anchor" | "explicit" | "model_parameter";
+                                    /** Format: uuid */
+                                    assumptionId?: string;
+                                    /** Format: uuid */
+                                    evidenceVersionId?: string;
+                                    /** Format: uuid */
+                                    documentId?: string;
+                                    /** Format: uuid */
+                                    documentVersionId?: string;
+                                    anchorId?: string;
+                                    anchorHash?: string;
+                                    valuePath?: string;
+                                    valueSelector?: string;
+                                    staleAfterDays?: number;
+                                };
+                            } & {
+                                [key: string]: unknown;
+                            })[];
+                            circularBlocks: {
+                                id: string;
+                                nodeIds: string[];
+                                iterationOrder: string[];
+                                settings: {
+                                    /** @constant */
+                                    algorithm: "fixed_point";
+                                    /** @enum {string} */
+                                    initialState: "opening_balance" | "zero";
+                                    absoluteTolerance: string;
+                                    relativeTolerance: string;
+                                    maxIterations: number;
+                                };
+                            }[];
+                            runtime?: {
+                                [key: string]: unknown;
+                            };
+                            metadata?: {
+                                [key: string]: string | boolean | number;
+                            };
+                        };
+                        /** Format: uuid */
+                        parentVersionId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Immutable compiled ModelIR version created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Model version identity conflict */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -272,32 +3743,181 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/stats": {
+    "/api/underwriting/scenarios": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Pending/blocked counts + recent actions */
-        get: {
+        get?: never;
+        put?: never;
+        post: {
             parameters: {
                 query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        /** Format: uuid */
+                        modelVersionId: string;
+                        /** Format: uuid */
+                        parentScenarioId?: string;
+                        scenario: {
+                            /** @constant */
+                            schemaVersion: "underwriting-scenario.v1";
+                            name: string;
+                            /** Format: uuid */
+                            parentScenarioId?: string;
+                            overrides: {
+                                nodeId: string;
+                                value: (string | boolean) | {
+                                    [key: string]: string | boolean;
+                                };
+                                reason?: string;
+                            }[];
+                            semanticHash?: string;
+                        };
+                    };
+                };
+            };
             responses: {
-                /** @description StatsResponse */
+                /** @description Immutable explicit scenario override set created without mutating P1 Assumptions */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        /** Format: uuid */
+                        modelVersionId: string;
+                        /** Format: date-time */
+                        worldAt: string;
+                        idempotencyKey: string;
+                        /** Format: uuid */
+                        scenarioId?: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        explicitInputs?: {
+                            [key: string]: {
+                                value: ((string | boolean) | {
+                                    [key: string]: string | boolean;
+                                }) | null;
+                                /** @enum {string} */
+                                truthClass: "OBSERVED_FACT" | "CANONICAL_ASSUMPTION" | "MODEL_PARAMETER";
+                                /** @enum {string} */
+                                status?: "KNOWN" | "UNKNOWN" | "STALE" | "CONFLICTING" | "UNSUPPORTED";
+                                provenance?: {
+                                    /** @enum {string} */
+                                    kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor";
+                                    id: string;
+                                    versionId?: string;
+                                    anchorId?: string;
+                                    semanticHash?: string;
+                                    /** Format: date-time */
+                                    effectiveAt?: string;
+                                    /** Format: date-time */
+                                    observedAt?: string;
+                                    /** Format: date-time */
+                                    retrievedAt?: string;
+                                }[];
+                                reason?: string;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Idempotent replay returned the exact prior Run */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad auth */
-                401: {
+                /** @description Immutable deterministic UnderwritingRun completed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required input is unknown, stale, conflicting, missing, or non-convergent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact historical Run, InputSnapshot, checks, outputs, engine version, and hashes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Run not found in the authenticated tenant */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -313,7 +3933,153 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/actions": {
+    "/api/underwriting/runs/{id}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    nodeId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deterministic recursive calculation and exact source lineage */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/runs/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    left: string;
+                    right: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deterministic Run/input/output/check diff with dependency-graph attribution */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/model-versions/{id}/affected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    nodeId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact downstream dependency impact for one ModelVersion node */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/model-versions/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    left: string;
+                    right: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Semantic ModelIR node/version diff */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/sensitivities": {
         parameters: {
             query?: never;
             header?: never;
@@ -322,7 +4088,291 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Submit a new instruction (voice transcript or text) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        baseRunId: string;
+                        idempotencyKey: string;
+                        definition: {
+                            /** @constant */
+                            schemaVersion: "underwriting-sensitivity.v1";
+                            name: string;
+                            rowAxis: {
+                                nodeId: string;
+                                values: ((string | boolean) | {
+                                    [key: string]: string | boolean;
+                                })[];
+                                label?: string;
+                            };
+                            columnAxis?: {
+                                nodeId: string;
+                                values: ((string | boolean) | {
+                                    [key: string]: string | boolean;
+                                })[];
+                                label?: string;
+                            };
+                            outputNodeIds: string[];
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Idempotent sensitivity replay */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded deterministic sensitivity with an immutable Run per cell */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/sensitivities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact sensitivity definition and provenance-retaining cell Runs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/artifact-bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        /** Format: uuid */
+                        modelVersionId: string;
+                        /** Format: uuid */
+                        documentId: string;
+                        /** Format: uuid */
+                        documentVersionId: string;
+                        /** @enum {string} */
+                        direction: "input" | "output";
+                        /** @enum {string} */
+                        bindingMode: "read_only" | "write_and_compare" | "compare_only";
+                        modelNodeId: string;
+                        anchorId: string;
+                        anchorHash: string;
+                        valueSelector?: string;
+                        comparisonPolicy?: {
+                            /** @constant */
+                            mode: "EXACT_DECIMAL";
+                        } | {
+                            /** @constant */
+                            mode: "DECLARED_ROUNDED_VALUE";
+                            decimalPlaces: number;
+                        } | {
+                            /** @constant */
+                            mode: "EXPLICIT_ABSOLUTE_TOLERANCE";
+                            tolerance: string;
+                        } | {
+                            /** @constant */
+                            mode: "EXPLICIT_RELATIVE_TOLERANCE";
+                            tolerance: string;
+                        };
+                        /** Format: uuid */
+                        supersedesBindingId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Thin exact P4 node to P3 SpreadsheetIR anchor binding created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Artifact anchor/version conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/projections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                        /** Format: uuid */
+                        documentId: string;
+                        /** Format: uuid */
+                        baseVersionId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Idempotent projection replay */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Outputs projected through a P3 typed patch into a new local DocumentVersion */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description P3 version or anchor conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/underwriting/comparisons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                        /** Format: uuid */
+                        documentId: string;
+                        /** Format: uuid */
+                        documentVersionId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Independent P4 decimal outputs compared with exact P3/Excel values under declared policies */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/instructions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post: {
             parameters: {
                 query?: never;
@@ -359,28 +4409,25 @@ export interface paths {
                                 workId: string;
                             };
                             focusedEntity?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             };
                             /** @default [] */
                             selectedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             }[];
                             /** @default [] */
                             excludedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             }[];
                             surface: {
                                 /** @enum {string} */
-                                id: "home" | "customers" | "money" | "work" | "schedule" | "agents";
+                                id: "home" | "work" | "agents" | "deals";
                                 route?: string;
                                 /** @enum {string} */
                                 spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
@@ -399,192 +4446,27 @@ export interface paths {
                                 end?: string;
                                 timezone?: string;
                             };
-                            cohort?: {
-                                /** @constant */
-                                kind: "work_query_execution";
-                                /** Format: uuid */
-                                executionId: string;
-                                /** @constant */
-                                entityType: "household";
-                                /** @constant */
-                                queryIntent: "customer_cohort";
-                                count: number;
-                            };
                         };
                     };
                 };
             };
             responses: {
-                /** @description Planned domain actions */
+                /** @description Work accepted */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid payload */
+                /** @description Invalid or retired request */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/threads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the authenticated employee's private durable conversation threads */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Bounded Postgres thread summaries owned by the current employee */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Canonical human principal required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Create a private durable conversation thread for the authenticated employee */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Canonical Postgres thread summary */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid payload */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Canonical human principal required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/threads/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Load one employee-owned thread and a bounded page of exact original messages */
-        get: {
-            parameters: {
-                query?: {
-                    limit?: number;
-                    beforeSequence?: number;
-                };
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Thread summary plus exact ordered messages */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Canonical human principal required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Thread absent or owned by another employee/tenant */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -600,7 +4482,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Accept responsibility for one persistent, governed Work objective and queue its first bounded iteration */
         post: {
             parameters: {
                 query?: never;
@@ -637,28 +4518,25 @@ export interface paths {
                                 workId: string;
                             };
                             focusedEntity?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             };
                             /** @default [] */
                             selectedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             }[];
                             /** @default [] */
                             excludedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
+                                entityType: string;
                                 /** Format: uuid */
                                 entityId: string;
                             }[];
                             surface: {
                                 /** @enum {string} */
-                                id: "home" | "customers" | "money" | "work" | "schedule" | "agents";
+                                id: "home" | "work" | "agents" | "deals";
                                 route?: string;
                                 /** @enum {string} */
                                 spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
@@ -676,17 +4554,6 @@ export interface paths {
                                 /** Format: date-time */
                                 end?: string;
                                 timezone?: string;
-                            };
-                            cohort?: {
-                                /** @constant */
-                                kind: "work_query_execution";
-                                /** Format: uuid */
-                                executionId: string;
-                                /** @constant */
-                                entityType: "household";
-                                /** @constant */
-                                queryIntent: "customer_cohort";
-                                count: number;
                             };
                         };
                         successCondition?: {
@@ -758,315 +4625,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Idempotent replay of an existing objective */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Objective persisted and queued */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid objective or budget */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/outcome-packs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the five certified outcome contracts, tenant operating state, and evidence-derived autonomy readiness */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Definitions, settings, certifications, active grants, and explicit readiness gates */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Accept responsibility for one versioned Outcome Pack on the existing durable Objective controller */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        packId: "lead_to_verified_water_test_booking" | "stuck_installation_service_resolution" | "overdue_receivable_collection" | "service_due_lifecycle" | "general_operator_objective";
-                        input: {
-                            [key: string]: unknown;
-                        };
-                        /**
-                         * @default console
-                         * @enum {string}
-                         */
-                        channel?: "voice" | "text" | "console";
-                        sessionId?: string;
-                        /** Format: uuid */
-                        instructionId?: string;
-                        /** Format: uuid */
-                        workId?: string;
-                        idempotencyKey?: string;
-                        activeContext?: {
-                            /** @constant */
-                            version: 1;
-                            /** Format: date-time */
-                            capturedAt: string;
-                            /** @enum {string} */
-                            source: "voice" | "text" | "console";
-                            activeWork?: {
-                                /** Format: uuid */
-                                workId: string;
-                            };
-                            focusedEntity?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
-                                /** Format: uuid */
-                                entityId: string;
-                            };
-                            /** @default [] */
-                            selectedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
-                                /** Format: uuid */
-                                entityId: string;
-                            }[];
-                            /** @default [] */
-                            excludedEntities?: {
-                                /** @enum {string} */
-                                entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "delegation" | "acknowledgement_request" | "communication_delivery" | "internal_event" | "document_share" | "inventory_item" | "computer_run";
-                                /** Format: uuid */
-                                entityId: string;
-                            }[];
-                            surface: {
-                                /** @enum {string} */
-                                id: "home" | "customers" | "money" | "work" | "schedule" | "agents";
-                                route?: string;
-                                /** @enum {string} */
-                                spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
-                            };
-                            /** @default [] */
-                            filters?: {
-                                field: string;
-                                /** @enum {string} */
-                                operator: "eq" | "neq" | "in" | "not_in" | "gte" | "lte" | "contains";
-                                value: string | number | boolean | string[];
-                            }[];
-                            timeContext?: {
-                                /** Format: date-time */
-                                start?: string;
-                                /** Format: date-time */
-                                end?: string;
-                                timezone?: string;
-                            };
-                            cohort?: {
-                                /** @constant */
-                                kind: "work_query_execution";
-                                /** Format: uuid */
-                                executionId: string;
-                                /** @constant */
-                                entityType: "household";
-                                /** @constant */
-                                queryIntent: "customer_cohort";
-                                count: number;
-                            };
-                        };
-                        budgets?: {
-                            maxSteps?: number;
-                            maxActions?: number;
-                            maxQueries?: number;
-                            maxPlannerFailures?: number;
-                            maxConsecutiveNoProgress?: number;
-                            /** Format: date-time */
-                            deadlineAt?: string;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Pack, Work, and Objective persisted and first iteration queued */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid pack input or disabled pack */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/outcome-packs/grants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List tenant-scoped progressive-autonomy grants and their current status */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Current and historical exact-scope grants */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Owner authority required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Create one narrow, expiring autonomy grant only after deterministic readiness passes */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        packId: "lead_to_verified_water_test_booking" | "stuck_installation_service_resolution" | "overdue_receivable_collection" | "service_due_lifecycle" | "general_operator_objective";
-                        packVersion: number;
-                        scope: {
-                            effectClasses: ("internal_draft" | "internal_write" | "operational_change" | "financial_write" | "external_side_effect" | "external_spend" | "batch_external" | "durable_workflow")[];
-                            resources: {
-                                type: string;
-                                ids?: string[];
-                            }[];
-                            principal: string;
-                            providers: {
-                                provider: string;
-                                /** Format: uuid */
-                                applicationAccountId?: string;
-                            }[];
-                            maxAmountUsd: number | null;
-                            /** @enum {string} */
-                            maxRisk: "low" | "medium" | "high";
-                            /** Format: date-time */
-                            validFrom: string;
-                            /** Format: date-time */
-                            expiresAt: string;
-                            policyVersion: number | null;
-                            authorityRevision: number;
-                            certificationFingerprint: string;
-                            /** Format: date-time */
-                            reviewAfter: string;
-                        };
-                        reason: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Grant persisted */
+                /** @description Objective accepted */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid scope or readiness not earned */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Owner authority required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
             };
         };
         delete?: never;
@@ -1075,7 +4640,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/outcome-packs/grants/{id}": {
+    "/api/objectives/{id}/control": {
         parameters: {
             query?: never;
             header?: never;
@@ -1084,2741 +4649,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** Revoke an autonomy grant and prevent all future uncommitted effects that depended on it */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        reason: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Grant revoked */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Owner authority required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Grant not found in tenant */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/outcome-packs/control": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Enable or disable an Outcome Pack; disabling pauses active runs and suspends grants */
         post: {
             parameters: {
                 query?: never;
                 header?: never;
                 path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        packId: "lead_to_verified_water_test_booking" | "stuck_installation_service_resolution" | "overdue_receivable_collection" | "service_due_lifecycle" | "general_operator_objective";
-                        enabled: boolean;
-                        reason: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Tenant pack operating state updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Owner authority required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/employees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the authenticated tenant's employee directory for governed Work ownership and handoff */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {employees: [{id, displayName, status, roles, legacyRole}]} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/queries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Execute one bounded deterministic operational query without invoking the planner */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        intent: "customer_lookup";
-                        /** Format: uuid */
-                        householdId?: string;
-                        query?: string;
-                        name?: string;
-                        address?: string;
-                        contact?: string;
-                        phone?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "customer_cohort";
-                        /** @constant */
-                        cohort: "inactive";
-                        minDaysInactive: number;
-                        /** Format: date-time */
-                        asOf?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "schedule_range";
-                        range?: {
-                            /** Format: date-time */
-                            start: string;
-                            /** Format: date-time */
-                            end: string;
-                        };
-                        localDateRange?: {
-                            startDate: string;
-                            endDate?: string;
-                        };
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "money_summary";
-                        range?: {
-                            /** Format: date-time */
-                            start: string;
-                            /** Format: date-time */
-                            end: string;
-                        };
-                        /** Format: date-time */
-                        start?: string;
-                        /** Format: date-time */
-                        end?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "work_list";
-                        /** @enum {string} */
-                        section?: "all" | "works" | "work_orders" | "tasks";
-                        openOnly?: boolean;
-                        statuses?: string[];
-                        /** Format: uuid */
-                        recordId?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "inventory_status";
-                        sku?: string;
-                        lowStockOnly?: boolean;
-                        includeOpenProcurement?: boolean;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "agent_activity";
-                        range?: {
-                            /** Format: date-time */
-                            start: string;
-                            /** Format: date-time */
-                            end: string;
-                        };
-                        localDateRange?: {
-                            startDate: string;
-                            endDate?: string;
-                        };
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "business_state";
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "company_context";
-                        anchor?: {
-                            /** @enum {string} */
-                            entityType: "household" | "contact" | "user" | "technician" | "equipment" | "service_visit" | "maintenance_agreement" | "lead" | "opportunity" | "quote" | "proposal" | "work_order" | "appointment" | "invoice" | "payment" | "conversation" | "call" | "message" | "communication" | "document" | "task" | "work" | "domain_action" | "workflow_run" | "workflow_step" | "business_operation" | "business_operation_target" | "decision_receipt" | "business_event" | "org_unit" | "tenant_location" | "external_organization" | "external_contact";
-                            /** Format: uuid */
-                            entityId: string;
-                        } | {
-                            /** @enum {string} */
-                            partyType: "employee" | "team" | "location" | "household" | "contact" | "external_organization" | "external_contact";
-                            /** Format: uuid */
-                            partyId: string;
-                        };
-                        /** Format: uuid */
-                        householdId?: string;
-                        query?: string;
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "party_lookup";
-                        ref?: {
-                            /** @enum {string} */
-                            partyType: "employee" | "team" | "location" | "household" | "contact" | "external_organization" | "external_contact";
-                            /** Format: uuid */
-                            partyId: string;
-                        };
-                        query?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "party_context";
-                        ref?: {
-                            /** @enum {string} */
-                            partyType: "employee" | "team" | "location" | "household" | "contact" | "external_organization" | "external_contact";
-                            /** Format: uuid */
-                            partyId: string;
-                        };
-                        query?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "team_roster";
-                        teamRef?: {
-                            /** @constant */
-                            partyType: "team";
-                            /** Format: uuid */
-                            partyId: string;
-                        };
-                        query?: string;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    } | {
-                        /** @constant */
-                        intent: "party_availability";
-                        ref?: {
-                            /** @enum {string} */
-                            partyType: "employee" | "team" | "location" | "household" | "contact" | "external_organization" | "external_contact";
-                            /** Format: uuid */
-                            partyId: string;
-                        };
-                        query?: string;
-                        localDateRange?: {
-                            startDate: string;
-                            endDate?: string;
-                        };
-                        includeCapacity?: boolean;
-                        page?: {
-                            limit?: number;
-                            cursor?: string;
-                        };
-                        /** Format: uuid */
-                        workId?: string;
-                        executionKey?: string;
-                        idempotencyKey?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Typed canonical PostgreSQL result with Work/execution metadata */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid or mismatched typed query request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dealer-zero/time-compression": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Read-only, explicitly synthetic Dealer Zero time-compression script (owner-only) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {demo:true, synthetic:true, frames} with optional real receipt ids */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not an owner or not the Dealer Zero demo tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actions/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List actions awaiting confirmation (filter=blocked for stuck items) */
-        get: {
-            parameters: {
-                query?: {
-                    filter?: "pending" | "blocked";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Pending actions with their exact frozen Business Effect */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            actions: ({
-                                /** Format: uuid */
-                                id: string;
-                                actionType: string;
-                                summary: string | null;
-                                payload: {
-                                    [key: string]: unknown;
-                                };
-                                status: string;
-                                businessEffect: ({
-                                    /** Format: uuid */
-                                    id: string;
-                                    /** @constant */
-                                    schemaVersion: 1;
-                                    semanticHash: string;
-                                    scopeHash: string;
-                                    operation: {
-                                        name: string;
-                                        class: string;
-                                        external: boolean;
-                                    };
-                                    targets: {
-                                        kind: string;
-                                        type: string;
-                                        id: string;
-                                        sourcePath?: string;
-                                    }[];
-                                    bindings: {
-                                        [key: string]: unknown;
-                                    }[];
-                                    before: {
-                                        [key: string]: unknown;
-                                    }[];
-                                    delta: {
-                                        operation: string;
-                                        values: {
-                                            [key: string]: unknown;
-                                        };
-                                    };
-                                    expected: {
-                                        [key: string]: unknown;
-                                    };
-                                    authority: {
-                                        [key: string]: unknown;
-                                    };
-                                    approval: {
-                                        required: boolean;
-                                        typedConfirmation: boolean;
-                                        summary: string;
-                                    };
-                                    provenance: {
-                                        [key: string]: unknown;
-                                    };
-                                } & {
-                                    [key: string]: unknown;
-                                }) | null;
-                                businessEffectStatus: string | null;
-                            } & {
-                                [key: string]: unknown;
-                            })[];
-                        };
-                    };
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actions/{id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Approve a pending action — executes bounded work or durably queues an associated business operation */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        note?: string;
-                        /** @constant */
-                        typedConfirmation?: true;
-                    };
-                };
-            };
-            responses: {
-                /** @description {result} or {status, idempotent:true} if already decided */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot approve */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Action not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not pending/needs_human_review */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operations/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Inspect a durable business operation, its frozen targets, per-target execution state, events, and receipt */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {operation: {operation, targets, events, receipt}} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Operation not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operations/{id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Recover retryable, configuration, or human-review targets without replaying successful or policy-skipped targets */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        recoveryKey: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description {result: {operationId, retried, duplicate, queued}, operation} */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid recovery key */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot approve recovery */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Operation not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Operation has no recoverable targets or cannot be retried in its current state */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/computer/runs/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Reconstruct one tenant-scoped computer run from safe durable run, step, and artifact metadata */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {run, steps, artifacts}; no provider/auth handles or artifact bytes */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Computer run not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/computer/runs/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request durable cancellation of an active computer run */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {run, cancellationRequested} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not the actor or an authorized approver */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Computer run not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actions/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reject a pending action — halts it permanently */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        reason?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description {status:'rejected'} or {status, idempotent:true} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot decide */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actions/{id}/escalate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Flag a still-pending action as needing human review (not approve/reject) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        note?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description {result} or {status:'needs_human_review', idempotent:true} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot decide */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not pending */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Live + recent-terminal workflow runs with steps */
-        get: {
-            parameters: {
-                query?: {
-                    status?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {runs: WorkflowRun[]} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs/{id}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pause a running workflow run (owner-only, optimistic concurrency) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        expectedVersion: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description {run} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Version conflict / illegal transition */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs/{id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resume a paused workflow run */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        expectedVersion: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description {run} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Version conflict / illegal transition */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel a workflow run */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        expectedVersion: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description {run} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Version conflict / illegal transition */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs/{id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Retry a failed workflow run */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        expectedVersion: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description {run} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Version conflict / illegal transition */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/runs/{id}/escalate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Escalate a workflow run */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        expectedVersion: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description {run} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Version conflict / illegal transition */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workflows/steps/{id}/compensate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Compensate one completed workflow effect with its registered typed binding */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        reason: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Compensation succeeded or an existing successful case was returned */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid reason */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not authorized */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Step not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Illegal or unsupported compensation */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Compensation attempted and failed; case and receipt were preserved */
-                502: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** business_events cross-entity timeline (backward `before` paging) */
-        get: {
-            parameters: {
-                query?: {
-                    entityType?: string;
-                    entityId?: string;
-                    before?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {events: EventRow[]} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/business-world": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Bounded canonical Business World projection for one operating scene */
-        get: {
-            parameters: {
-                query: {
-                    scene: "customer" | "schedule" | "money" | "work" | "inventory" | "computer";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {data: BusinessWorldProjection} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid scene */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operational-deltas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Establish or replay a bounded tenant-scoped operational delta cursor */
-        get: {
-            parameters: {
-                query?: {
-                    cursor?: string;
-                    limit?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OperationalDeltaPage */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid cursor */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Cursor tenant scope mismatch */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/read-models/{view}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Named cross-entity read-model view (pipeline-health, technician-load, stock-risk, cash-collections, service-due, sla-breaches, follow-up-debt, data-quality, household-360, reliability, readiness, failure-injections) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {view, data} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unknown view (or no such household for household-360) */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/comms": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Outbox + communications history (native comms layer) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {outbox, communications} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/insights": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Action-type failure/rejection stats + critic findings + unclear-confirmation phrasings */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Insights */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/setup/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Dealer setup readiness + integration self-tests + env/binding posture */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description SetupStatus */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/integrations/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Real self-tests for every external integration (not just presence) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description IntegrationsStatus */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/resources/{kind}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Whitelisted table reads (households, inventory, invoices, technicians, visits, compliance-policy, workflows) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {rows} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unknown resource kind */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/audit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Paginated, filterable audit log */
-        get: {
-            parameters: {
-                query?: {
-                    actionType?: string;
-                    status?: string;
-                    limit?: number;
-                    offset?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {entries, limit, offset} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid query */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/receipts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Look up decision receipts by domainActionId, workflowStepId, or workflowRunId */
-        get: {
-            parameters: {
-                query?: {
-                    domainActionId?: string;
-                    workflowStepId?: string;
-                    workflowRunId?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {receipts} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description None of the three ids provided */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/receipts/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Full DecisionReceipt by id — the 'Why?' view */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {receipt} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Caller's own userId/tenantId/role */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {userId, tenantId, role} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Daily briefing (real receipted get_business_overview action, 5-minute cache unless ?refresh=1) */
-        get: {
-            parameters: {
-                query?: {
-                    refresh?: "1";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {domainActionId, receiptId?, cached, ...output} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Briefing could not be generated */
-                502: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dlq": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Dead-letter queue, owner-only */
-        get: {
-            parameters: {
-                query?: {
-                    status?: "open" | "replayed" | "discarded";
-                    limit?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {deadLetters} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dlq/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Single dead-letter row, owner-only */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {deadLetter} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dlq/{id}/replay": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Re-enqueue a dead-lettered outbox event, owner-only */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {replayed:true} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description not_found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description not_open / not_replayable / no_linked_outbox_event */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dlq/{id}/discard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Permanently give up on a dead-lettered event, owner-only */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {discarded:true} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not owner */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description not_found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description not_open */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/corrections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List memory corrections (gated, owner default) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {corrections} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot view */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Submit a correction to a past AI answer, receipt-linked */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        receiptId: string;
-                        correctedFact: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description {id} */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Role cannot submit */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Receipt not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/vitals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** D1.T2 pulse bar — queue depth/oldest-pending age, worker heartbeat age, this tenant's open DLQ count, resolved capability bindings, per-scan-type last-run clocks */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {queue, heartbeat, dlq, bindings, scans} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/activity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** D1.T3 activity theater — merged action_log + workflow_step + computer_step + call feed, forward-only (occurredAt,id) keyset cursor */
-        get: {
-            parameters: {
-                query?: {
-                    since?: string;
-                    limit?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {items, nextCursor, hasMore} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid query */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/policies/{tenantId}/{actionType}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read a domain policy */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Policy */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not configured */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        /** Create or update a domain policy (owner only) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        policy: {
-                            [key: string]: unknown;
-                        };
-                        requiresConfirmation: boolean;
-                        confirmationTemplate?: string | null;
-                        modelProvider?: string;
-                        confirmationTimeoutHours?: number | null;
-                        version?: number;
-                        /** Format: date-time */
-                        effectiveFrom?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Saved policy */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/instructions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read one tenant-scoped instruction trace session */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Instruction session */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Instruction not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/instructions/{id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read new tenant-scoped instruction lifecycle events after a sequence number */
-        get: {
-            parameters: {
-                query?: {
-                    after?: number;
-                };
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Ordered instruction trace events */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid after cursor */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Instruction not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/works": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List durable Work, optionally by session or active state */
-        get: {
-            parameters: {
-                query?: {
-                    sessionId?: string;
-                    active?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description {works: Work[]} */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/works/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read one Work with inputs, planner attempts, query executions, actions, approvals, workflow runs, receipts, recovery, and events */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Canonical durable Work aggregate */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/works/{id}/execution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read one bounded, tenant-scoped execution projection for a durable Work */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Presentation-safe action DAG, authority, workflow, computer, uncertainty, and receipt truth */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/works/{id}/replay": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Replay one Work's evidence-backed causal history without mutating operational state */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Bounded, privacy-safe trigger-to-outcome causal graph with explicit provenance gaps */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/works/{id}/objective": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Inspect one Work objective, its bounded iterations, observations, decisions, and planner attempts */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Durable objective-loop audit */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work objective not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Continue, interrupt, or redirect the same persistent Work objective */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
                 cookie?: never;
             };
             requestBody?: {
@@ -3904,29 +4739,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Objective interrupted */
+                /** @description Control recorded */
                 200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Continuation or redirect durably queued */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid control command */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work objective not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3949,7 +4763,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Transfer responsibility for the same durable Work to an active employee in the same tenant */
         post: {
             parameters: {
                 query?: never;
@@ -3969,43 +4782,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Idempotent handoff to the existing owner */
+                /** @description Handoff recorded */
                 200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work owner and authority context updated; employee_handoff event appended */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Inactive, missing, or foreign-tenant target employee */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Only the current owner may hand off this Work */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Work not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Concurrent ownership change */
-                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4019,7 +4797,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/works/{id}/retry": {
+    "/api/outcome-packs": {
         parameters: {
             query?: never;
             header?: never;
@@ -4028,7 +4806,573 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Retry failed Work through the ordinary planner with an idempotent recovery claim */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        packId: "deal_to_verified_closing_readiness" | "deal_request_resolution" | "critical_deal_dependency_resolution" | "general_operator_objective";
+                        input: {
+                            [key: string]: unknown;
+                        };
+                        /**
+                         * @default console
+                         * @enum {string}
+                         */
+                        channel?: "voice" | "text" | "console";
+                        sessionId?: string;
+                        /** Format: uuid */
+                        instructionId?: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        idempotencyKey?: string;
+                        activeContext?: {
+                            /** @constant */
+                            version: 1;
+                            /** Format: date-time */
+                            capturedAt: string;
+                            /** @enum {string} */
+                            source: "voice" | "text" | "console";
+                            activeWork?: {
+                                /** Format: uuid */
+                                workId: string;
+                            };
+                            focusedEntity?: {
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                            };
+                            /** @default [] */
+                            selectedEntities?: {
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                            }[];
+                            /** @default [] */
+                            excludedEntities?: {
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                            }[];
+                            surface: {
+                                /** @enum {string} */
+                                id: "home" | "work" | "agents" | "deals";
+                                route?: string;
+                                /** @enum {string} */
+                                spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
+                            };
+                            /** @default [] */
+                            filters?: {
+                                field: string;
+                                /** @enum {string} */
+                                operator: "eq" | "neq" | "in" | "not_in" | "gte" | "lte" | "contains";
+                                value: string | number | boolean | string[];
+                            }[];
+                            timeContext?: {
+                                /** Format: date-time */
+                                start?: string;
+                                /** Format: date-time */
+                                end?: string;
+                                timezone?: string;
+                            };
+                        };
+                        budgets?: {
+                            maxSteps?: number;
+                            maxActions?: number;
+                            maxQueries?: number;
+                            maxPlannerFailures?: number;
+                            maxConsecutiveNoProgress?: number;
+                            /** Format: date-time */
+                            deadlineAt?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Outcome pack started */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        intent: "work_list";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** @enum {string} */
+                        section?: "all" | "works" | "tasks";
+                        openOnly?: boolean;
+                        statuses?: string[];
+                        /** Format: uuid */
+                        recordId?: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "attention_queue";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "agent_activity";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        range?: {
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                        };
+                        localDateRange?: {
+                            startDate: string;
+                            endDate?: string;
+                        };
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "workforce_status";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        page?: {
+                            limit?: number;
+                            /** Format: uuid */
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "company_context";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        anchor?: {
+                            /** @enum {string} */
+                            entityType: "work" | "task" | "user" | "org_unit" | "tenant_location" | "external_organization" | "external_contact" | "document" | "domain_action" | "workflow_run" | "workflow_step" | "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_investment_case" | "pe_thesis" | "pe_assumption" | "pe_decision" | "pe_deal_party" | "pe_workstream" | "pe_request" | "pe_deliverable" | "pe_finding" | "pe_deal_risk" | "pe_dependency" | "pe_milestone" | "pe_closing_condition" | "pe_closing_item" | "pe_document_link" | "pe_evidence_link" | "pe_finding_risk_link";
+                            /** Format: uuid */
+                            entityId: string;
+                        } | {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                        query?: string;
+                    } | {
+                        /** @constant */
+                        intent: "party_lookup";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        ref?: {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                        query?: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "party_context";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        ref?: {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                        query?: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "team_roster";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        teamRef?: {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                        query?: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "pe_world_state";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: date-time */
+                        at?: string;
+                    } | {
+                        /** @constant */
+                        intent: "deal_context";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "deal_workstreams";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                        states?: string[];
+                        owner?: {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                    } | {
+                        /** @constant */
+                        intent: "open_requests";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                        /** Format: uuid */
+                        workstreamId?: string;
+                        requestedFrom?: {
+                            /** @enum {string} */
+                            partyType: "employee" | "team" | "location" | "external_organization" | "external_contact";
+                            /** Format: uuid */
+                            partyId: string;
+                        };
+                        /** @enum {string} */
+                        dueState?: "any" | "overdue" | "not_overdue";
+                    } | {
+                        /** @constant */
+                        intent: "open_findings";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                        /** Format: uuid */
+                        workstreamId?: string;
+                        severities?: ("low" | "medium" | "high" | "critical")[];
+                    } | {
+                        /** @constant */
+                        intent: "open_deal_risks";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                        /** Format: uuid */
+                        workstreamId?: string;
+                        severities?: ("low" | "medium" | "high" | "critical")[];
+                    } | {
+                        /** @constant */
+                        intent: "critical_dependencies";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                        includeResolved?: boolean;
+                    } | {
+                        /** @constant */
+                        intent: "closing_readiness";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                        /** Format: uuid */
+                        dealId: string;
+                        page?: {
+                            limit?: number;
+                            cursor?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Canonical query completed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid or retired query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/read-models/workforce-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Source-backed configured AI workforce, assignments, verified metrics, governed learning state, truthful truncation, and a next cursor */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Source-backed governed workforce state with truthful bounded-page metadata */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        profileId?: string;
+                        key: string;
+                        name: string;
+                        /** @enum {string} */
+                        status?: "enabled" | "disabled";
+                        modelRoute?: {
+                            provider: string;
+                            model?: string | null;
+                            /** @constant */
+                            purpose: "objective_execution";
+                        };
+                        capabilityGrants: {
+                            capability: string;
+                            /** @enum {string} */
+                            kind: "query" | "action" | "wait" | "check";
+                        }[];
+                        maxConcurrentAssignments?: number;
+                        autonomyLimits?: {
+                            maxActions?: number;
+                            maxQueries?: number;
+                            maxReplans?: number;
+                            maxPlannerCalls?: number;
+                            maxWallClockMs?: number;
+                            maxKnownCostUsd?: number | null;
+                            maxKnownTokens?: number | null;
+                        };
+                        planningHints?: {
+                            [key: string]: unknown;
+                        };
+                        learningRevisionId?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description New immutable configuration revision created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description AgentProfile and first immutable revision created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid capability or bounded configuration */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated employee lacks workforce governance authority */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/proposals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post: {
             parameters: {
                 query?: never;
@@ -4041,27 +5385,28 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        idempotencyKey: string;
+                        /** @enum {string} */
+                        decision: "promote" | "reject";
                     };
                 };
             };
             responses: {
-                /** @description Recovery planner result */
-                201: {
+                /** @description Learning proposal human review recorded; promotion creates immutable LearningRevision and AgentProfileRevision */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Duplicate retry still planning */
-                202: {
+                /** @description Invalid proposal review */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Work is not retryable */
-                409: {
+                /** @description Authenticated employee lacks workforce learning-review authority */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4075,48 +5420,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/stream": {
+    "/api/workforce/assignments/{id}/reassign": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Stream one instruction lifecycle as Server-Sent Events */
-        get: {
+        get?: never;
+        put?: never;
+        post: {
             parameters: {
-                query: {
-                    instructionId: string;
-                };
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        note?: string;
+                    };
+                };
+            };
             responses: {
-                /** @description EventSource stream; each data frame is one instruction trace event */
+                /** @description Active assignment relinquished with immutable operator provenance; normal deterministic assignment resumes the exact P6 node */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description instructionId is missing */
+                /** @description Invalid assignment or note */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad auth */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Instruction not found */
-                404: {
+                /** @description Authenticated employee lacks workforce reassignment authority */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4124,7 +5469,172 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        note?: string;
+                        /** @constant */
+                        typedConfirmation?: true;
+                    };
+                };
+            };
+            responses: {
+                /** @description Approval recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Rejection recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/{id}/escalate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Escalation recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/policies/{tenantId}/{actionType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        policy: {
+                            [key: string]: unknown;
+                        };
+                        requiresConfirmation: boolean;
+                        confirmationTemplate?: string | null;
+                        modelProvider?: string;
+                        confirmationTimeoutHours?: number | null;
+                        version?: number;
+                        /** Format: date-time */
+                        effectiveFrom?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Active policy saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -4141,7 +5651,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Vapi inbound call events (transcripts → Planner instructions) */
         post: {
             parameters: {
                 query?: never;
@@ -4184,7 +5693,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Received */
+                /** @description Employee voice event received */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4208,7 +5717,138 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** GoHighLevel CRM sync events */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated historical payload quarantined; never executed */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/marketing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated historical payload quarantined; never executed */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated historical payload quarantined; never executed */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/esign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated historical payload quarantined; never executed */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/microsoft-graph/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post: {
             parameters: {
                 query?: never;
@@ -4219,17 +5859,1359 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        type: string;
-                        locationId?: string;
-                        contactId?: string;
-                    } & {
-                        [key: string]: unknown;
+                        /** Format: uuid */
+                        directoryTenantId: string;
+                        /** Format: uuid */
+                        applicationClientId: string;
+                        requestedPermissions: string[];
+                        auth: {
+                            /** @constant */
+                            kind: "federated_workload";
+                            awsRegion: string;
+                            federationAudience: string;
+                            federationConfigId: string;
+                            /** @enum {string} */
+                            signingAlgorithm: "ES384" | "RS256";
+                            identityTokenDurationSeconds?: number;
+                        } | {
+                            /** @constant */
+                            kind: "managed_certificate";
+                            credentialRef: string;
+                            credentialVersion?: string;
+                            /** @constant */
+                            certificateFallbackAcknowledged: true;
+                        };
+                        /** Format: uri */
+                        redirectUri?: string;
                     };
                 };
             };
             responses: {
-                /** @description Received */
+                /** @description One-time Microsoft app-only admin-consent configuration started */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Integration administration denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Connection or capability conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/microsoft-graph/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    state: string;
+                    tenant?: string;
+                    admin_consent?: boolean;
+                    error?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One-time consent state consumed and browser redirected to connection status */
+                303: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/microsoft-graph/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Microsoft app identity, consent, permission, capability, and health status */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft-graph/source-scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Configured Microsoft source scopes with coverage and freshness */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        sourceKind: "outlook_mail_folder" | "outlook_calendar_view" | "teams_channel" | "teams_chat" | "teams_user_chat_feed" | "teams_transcript_organizer" | "sharepoint_drive" | "sharepoint_list";
+                        /** @enum {string} */
+                        permissionMode: "SCOPED" | "BROAD";
+                        configuration: {
+                            [key: string]: unknown;
+                        };
+                        negativeProbeConfiguration?: {
+                            [key: string]: unknown;
+                        } | null;
+                        acknowledgeBroadAccess?: boolean;
+                        rootBinding?: {
+                            /** @enum {string} */
+                            type: "pe_strategy" | "pe_opportunity" | "pe_deal";
+                            /** Format: uuid */
+                            id: string;
+                        } | null;
+                        freshnessPolicy?: {
+                            maxAgeSeconds: number;
+                            /** @enum {string} */
+                            criticality: "informational" | "operational" | "consequential";
+                            /** @enum {string} */
+                            staleBehavior: "allow_with_warning" | "refresh_then_degrade" | "refresh_then_block";
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact source scope verified; subscription-first baseline queued */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Coverage administration denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Effective access not verified or broad access not acknowledged */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft-graph/source-scopes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact source-scope status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Source scope not found in the authenticated tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Source disabled; observations, evidence, and coverage history retained */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Coverage administration denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft-graph/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description As-of provider coverage, freshness, recovery, unresolved counts, and integration health */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/microsoft-graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        value: ({
+                            subscriptionId: string;
+                            clientState: string;
+                            /** Format: uuid */
+                            tenantId: string;
+                            resource?: string;
+                            /** @enum {string} */
+                            changeType?: "created" | "updated" | "deleted";
+                            /** @enum {string} */
+                            lifecycleEvent?: "reauthorizationRequired" | "subscriptionRemoved" | "missed";
+                            /** Format: date-time */
+                            subscriptionExpirationDateTime?: string;
+                        } & {
+                            [key: string]: unknown;
+                        })[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Validation token echoed exactly as text/plain */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated notifications durably enqueued before acknowledgement */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Malformed notification envelope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description clientState, directory, or resource mismatch */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Durable enqueue failed; no false success */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kind: "xlsx" | "docx" | "pptx";
+                        title: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Core Document and first immutable local DocumentVersion created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Artifact summary, immutable version timeline, distinct heads, semantic status, and pinned context */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    versionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact immutable version metadata and semantic status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/ir/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    id?: string[];
+                    kind?: string[];
+                    search?: string;
+                    sheetId?: string;
+                    address?: string;
+                    range?: string;
+                    dependencyOf?: string;
+                    dependentOf?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    versionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Bounded semantic IR slice; never a fabricated Office rendering */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    left: string;
+                    right: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Semantic diff between two immutable versions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        baseVersionId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Actor-owned local draft head created from an exact version */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Stale version or head */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/patches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        baseVersionId: string;
+                        draftKey: string;
+                        operations: {
+                            [key: string]: unknown;
+                        }[];
+                        expectedSemanticHash?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Atomic typed patch appended one immutable version */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Stale head or anchor precondition */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    versionId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Version-pinned artifact comments */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        versionId: string;
+                        anchorId: string;
+                        anchorHash: string;
+                        body: string;
+                        /** Format: uuid */
+                        parentCommentId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Version and anchor-pinned comment created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    versionId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Version-pinned editorial review history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        versionId: string;
+                        /** @enum {string} */
+                        state: "requested" | "approved" | "changes_requested" | "withdrawn" | "comment_resolved";
+                        /** Format: uuid */
+                        commentId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Editorial review event recorded; it grants no execution authority */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    versionId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact version and anchor bindings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        versionId: string;
+                        anchorId: string;
+                        anchorHash: string;
+                        /** @enum {string} */
+                        targetKind: "evidence_version" | "canonical_entity" | "document_version";
+                        /** Format: uuid */
+                        targetId: string;
+                        targetEntityType?: string;
+                        targetAnchor?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Version-specific Evidence, entity, or DocumentVersion binding created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    versionId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Artifact version lineage */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        sourceVersionId: string;
+                        /** Format: uuid */
+                        targetVersionId: string;
+                        /** @enum {string} */
+                        relation: "supersedes" | "derived_from" | "copied_from" | "template_instantiation" | "rendered_from" | "merged_from";
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact cross-version lineage edge created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        localVersionId: string;
+                        /** Format: uuid */
+                        baseVersionId: string;
+                        /** @enum {string} */
+                        mode: "APP_ONLY_FILE_REPLACE" | "DELEGATED_FILE_REPLACE";
+                    };
+                };
+            };
+            responses: {
+                /** @description Conditional Microsoft replace read back and semantically verified */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider head conflict; no blind overwrite */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/publish-new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        localVersionId: string;
+                        /** Format: uuid */
+                        integrationId: string;
+                        /** Format: uuid */
+                        sourceScopeId: string;
+                        driveId: string;
+                        parentItemId: string;
+                        name: string;
+                        /** @enum {string} */
+                        mode: "APP_ONLY_FILE_CREATE" | "DELEGATED_FILE_CREATE";
+                        /** @constant */
+                        conflictBehavior: "fail";
+                    };
+                };
+            };
+            responses: {
+                /** @description New Microsoft file created at explicit target, read back, and semantically verified */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Name conflict under mandatory fail policy */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/publications/{publicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    publicationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Truthful replacement publication state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Publication not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/provider-creations/{creationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    creationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Truthful provider-create state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider creation not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    versionId: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Version-pinned comments, review, bindings, lineage, remaps, and external operation state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/artifact/recalculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        versionId: string;
+                        ranges: {
+                            worksheetId: string;
+                            address: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Delegated Excel calculation requested and required ranges read back */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider or authorization precondition failed; calculation remains stale */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/artifact-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active immutable artifact templates */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        documentId: string;
+                        /** Format: uuid */
+                        versionId: string;
+                        templateKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact DocumentVersion registered as a template */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/artifact-templates/{key}/instantiate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        title: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description New Core Document and first immutable version instantiated with lineage */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };

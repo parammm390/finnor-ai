@@ -281,7 +281,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   const discovered = await discoverActionRegistry();
   const discoveredTypes = discovered.map((row) => row.actionType);
   const expectedTypes = ACTION_HARDENING_SPEC.map((row) => row.actionType);
-  if (EXECUTABLE_ACTION_COUNT !== 32 || !equalSets(discoveredTypes, expectedTypes)) {
+  if (EXECUTABLE_ACTION_COUNT !== 41 || !equalSets(discoveredTypes, expectedTypes)) {
     errors.push(`active action registry mismatch: discovered=${discoveredTypes.length}, expected=${EXECUTABLE_ACTION_COUNT}`);
   }
   const retiredActions = discoveredTypes.filter((type) => (RETIRED_WATER_ACTION_TYPES as readonly string[]).includes(type));
@@ -289,7 +289,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 14) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 14`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 16) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 16 including additive P7 workforce_status`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

@@ -680,7 +680,7 @@ async function prerequisites(migrations: MigrationFile[]): Promise<Record<string
   assert(PHASE5_DISPOSITION_LEDGER_VERSION === 2 && PHASE5_DISPOSITION_LEDGER.length === PHASE5_DISPOSITION_COUNTS.total,
     "PE0 -> P1 -> P5 disposition ledger is incomplete");
   assert(EXECUTABLE_VERTICALS.join(",") === "none,private_equity", "PE1 executable vertical boundary is wrong");
-  assert(OPERATIONAL_QUERY_INTENTS.length === 14, "PE3 query contract is incomplete");
+  assert(OPERATIONAL_QUERY_INTENTS.length === 16, "PE3 query contract plus additive P7 workforce status is incomplete");
   return {
     status: "PASS",
     pe0: {

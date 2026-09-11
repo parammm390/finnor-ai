@@ -112,6 +112,28 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
       )).limit(1);
       return row ? "verified" : "not_found";
     }
+    case "scheduledInternalEventId": {
+      const [row] = await db.select({ id: internalEvents.id }).from(internalEvents).where(tenantFor(eq(internalEvents.id, value), internalEvents.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "documentVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.document_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "underwritingRunId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "committeeConfigVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.pe_ic_committee_config_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
     default:
       break;
   }
@@ -120,7 +142,9 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
     responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
     deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
     dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
-    closingItemId: "pe_closing_item",
+    closingItemId: "pe_closing_item", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
+    icCaseId: "pe_ic_case", memoSelectionId: "pe_ic_memo", questionId: "pe_ic_question",
+    conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
   };
   const entityType = privateEquityTypeByField[field];
   return entityType ? lookUpTypedRef(db, tenantId, "entity", entityType, value) : "unverifiable";
@@ -263,7 +287,11 @@ const EFFECT_RESOURCE_KEYS: Record<string, string> = {
   deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
   dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
   closingItemId: "pe_closing_item", evidenceSourceId: "evidence_source", evidenceVersionId: "evidence_source_version",
-  verifierEmployeeId: "employee",
+  verifierEmployeeId: "employee", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
+  icCaseId: "pe_ic_case", memoSelectionId: "pe_ic_memo", questionId: "pe_ic_question",
+  conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
+  underwritingRunId: "underwriting_run", documentVersionId: "document_version",
+  committeeConfigVersionId: "pe_ic_committee_config_version", scheduledInternalEventId: "internal_event",
 };
 
 const EFFECT_RECIPIENT_KEYS: Record<string, string> = {
@@ -368,6 +396,11 @@ function iso(value: Date | null | undefined): string | null {
 }
 
 const PE_STATE_TABLES: Partial<Record<string, string>> = {
+  pe_investment_case: "pe_investment_cases",
+  pe_decision: "pe_decisions",
+  pe_ic_case: "pe_ic_cases",
+  pe_ic_question: "pe_ic_questions",
+  pe_ic_condition: "pe_ic_conditions",
   pe_workstream: "pe_workstreams",
   pe_request: "pe_requests",
   pe_deliverable: "pe_deliverables",
@@ -391,6 +424,45 @@ async function safePrivateEquityState(db: Db, tenantId: string, type: string, id
       SELECT id::text id,deal_id::text "dealId",version,removed_at "removedAt",
              blocker_type "blockerType",blocker_id::text "blockerId",blocked_type "blockedType",blocked_id::text "blockedId",updated_at "updatedAt"
       FROM finnor_os.pe_dependencies WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_memo") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",revision,artifact_role "artifactRole",
+             document_version_id::text "documentVersionId",created_at "createdAt"
+        FROM finnor_os.pe_ic_memos WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_decision_proposal") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",case_version "caseVersion",
+             vote_set_version "voteSetVersion",process_status "processStatus",input_hash "inputHash",created_at "createdAt"
+        FROM finnor_os.pe_ic_decision_proposals WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_run") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",status,validity,input_hash "inputHash",
+             result_hash "resultHash",computed_at "computedAt"
+        FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "document_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,document_id::text "documentId",created_at "createdAt"
+        FROM finnor_os.document_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_committee_config_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,config_version "configVersion",policy_revision_id::text "policyRevisionId",
+             policy_hash "policyHash",created_at "createdAt"
+        FROM finnor_os.pe_ic_committee_config_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
     `);
     return result.rows[0] ?? null;
   }
@@ -528,6 +600,7 @@ function amountExposure(payload: Record<string, unknown>): { amount: number; cur
 
 function expectedState(actionType: string, payload: Record<string, unknown>, before: BusinessEffectStateSnapshot[]): Record<string, unknown> | null {
   if (["create_task", "schedule_internal_event", "delegate_objective",
+    "open_ic_case", "select_ic_memo_version", "create_ic_question", "prepare_ic_decision_proposal",
     "open_workstream", "create_deal_request", "record_finding", "raise_deal_risk", "link_deal_dependency", "create_closing_condition", "submit_condition_evidence"].includes(actionType)) return { exists: true };
   if (actionType === "update_task") return Object.fromEntries(["title", "dueAt", "status", "priority"].filter((key) => key in payload).map((key) => [key, payload[key]]));
   if (actionType === "assign_task" && payload.assigneeRef && typeof payload.assigneeRef === "object") {
@@ -539,6 +612,11 @@ function expectedState(actionType: string, payload: Record<string, unknown>, bef
   if (actionType === "reschedule_internal_event") return { startsAt: payload.startsAt, endsAt: payload.endsAt, status: "rescheduled" };
   if (actionType === "computer_task" && payload.authorizedEffect && typeof payload.authorizedEffect === "object") return { ...(payload.authorizedEffect as Record<string, unknown>).changes as Record<string, unknown> };
   if (actionType === "submit_deliverable") return { state: "received" };
+  if (actionType === "begin_ic_preparation") return { state: "PREPARING" };
+  if (actionType === "select_ic_underwriting_run") return { primaryUnderwritingRunId: payload.underwritingRunId };
+  if (actionType === "attach_ic_question_evidence") return { substantiationStatus: payload.truthStatus ?? "ATTACHED" };
+  if (actionType === "request_ic_memo_review") return { state: "READY_FOR_REVIEW" };
+  if (actionType === "satisfy_ic_condition") return { state: "SATISFIED" };
   if (actionType === "resolve_finding") return { state: "resolved" };
   if (actionType === "resolve_deal_risk") return { state: "resolved" };
   if (actionType === "mark_dependency_resolved") return { removedAt: { exists: true } };
@@ -551,6 +629,10 @@ function expectedState(actionType: string, payload: Record<string, unknown>, bef
 
 function isCreateResultTarget(actionType: string, payload: Record<string, unknown>, target: BusinessEffectTarget): boolean {
   const resultFields: Record<string, readonly [string, string]> = {
+    open_ic_case: ["icCaseId", "pe_ic_case"],
+    select_ic_memo_version: ["memoSelectionId", "pe_ic_memo"],
+    create_ic_question: ["questionId", "pe_ic_question"],
+    prepare_ic_decision_proposal: ["decisionProposalId", "pe_ic_decision_proposal"],
     open_workstream: ["workstreamId", "pe_workstream"],
     create_deal_request: ["requestId", "pe_request"],
     record_finding: ["findingId", "pe_finding"],

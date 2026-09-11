@@ -143,7 +143,9 @@ describe("P4 underwriting API and frontend truth contracts", () => {
       "/api/underwriting/comparisons",
     ];
     for (const path of required) expect(openapi.paths).toHaveProperty(path);
-    expect(Object.keys(openapi.paths).filter((path) => path.includes("underwriting"))).toHaveLength(15);
+    expect(Object.keys(openapi.paths).filter((path) =>
+      path === "/api/investment-cases/{id}/underwriting" || path.startsWith("/api/underwriting/"),
+    )).toHaveLength(15);
   });
 
   it("authenticates every underwriting route and derives tenant/actor from the authenticated context", () => {

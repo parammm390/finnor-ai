@@ -91,7 +91,7 @@ test("ECR, freshness, ECS, and ALB guards reject unsafe evidence", () => {
   assert.throws(() => assertAlbTargetsHealthy([]), /healthy/)
 })
 
-test("worker health and heartbeat guards bind the exact Phase 5 release", () => {
+test("worker health and heartbeat guards bind the exact certified P7 release", () => {
   const body = { ok: true, realtime: true, capabilities: ["jobs", "orchestration", "realtime", "sse"], release: expected }
   assert.doesNotThrow(() => assertAwsWorkerHealth({ status: 200, body, expected }))
   assert.throws(() => assertAwsWorkerHealth({ status: 200, body: { ...body, release: { ...expected, commitSha: "b".repeat(40) } }, expected }), /exact release/)
@@ -100,14 +100,15 @@ test("worker health and heartbeat guards bind the exact Phase 5 release", () => 
   assert.throws(() => assertWorkerHeartbeat({ ...heartbeat, deploymentId: "azure:old" }, expected, contract.release.requiredMigrationHead), /heartbeat/)
 })
 
-test("active release workflow is AWS-only and Phase 5-only", () => {
+test("active release workflow is AWS-only and includes the P7 certification gate", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
   assert.doesNotMatch(workflow, /azure\/login|AZURE_|deploy-azure|RunCommand|cloudapp\.azure/i)
-  assert.match(workflow, /aws-actions\/configure-aws-credentials@v6/)
+  assert.match(workflow, /aws-actions\/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c/)
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-worker\.mjs/)
   assert.match(workflow, /phase5-readiness/)
+  assert.match(workflow, /release:pe-p7-workforce-learning/)
   assert.match(workflow, /phase6-conversation-context-kernel\.test\.ts/)
   assert.doesNotMatch(workflow, /FINNOR_CORE_CERTIFICATION_FILE=|release:certify -- core/)
 })

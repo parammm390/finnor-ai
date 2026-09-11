@@ -455,6 +455,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
       "pe_closing_conditions", "pe_closing_items", "pe_document_links", "pe_evidence_links",
       "pe_investment_cases", "pe_theses", "pe_assumptions", "pe_decisions",
     ];
+    const phase2EntityTypes = PE_ENTITY_TYPES.filter((entityType) => !entityType.startsWith("pe_ic_"));
+    const p5ProcessEntityTypes = PE_ENTITY_TYPES.filter((entityType) => entityType.startsWith("pe_ic_"));
     const rls = await admin.query<{ relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean; policies: number }>(
       `SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,
         (SELECT count(*)::int FROM pg_policies p WHERE p.schemaname='finnor_os' AND p.tablename=c.relname AND p.policyname='tenant_isolation') policies
@@ -466,11 +468,25 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     expect(rls.rows.every((row) => row.relrowsecurity && row.relforcerowsecurity && row.policies === 1)).toBe(true);
 
     const registry = await admin.query<{ entity_type: string; vertical_key: string; writable_owner: string; mutation_boundary: string }>(
-      "SELECT entity_type,vertical_key,writable_owner,mutation_boundary FROM finnor_os.canonical_truth_registry WHERE vertical_key='private_equity' ORDER BY entity_type",
+      "SELECT entity_type,vertical_key,writable_owner,mutation_boundary FROM finnor_os.canonical_truth_registry WHERE vertical_key='private_equity' AND entity_type=ANY($1::text[]) ORDER BY entity_type",
+      [phase2EntityTypes],
     );
     expect(registry.rows).toHaveLength(peTables.length);
     expect(registry.rows.every((row) => row.writable_owner === "@finnor/private-equity" && row.mutation_boundary.length > 0)).toBe(true);
-    expect(registry.rows.map((row) => row.entity_type).sort()).toEqual([...PE_ENTITY_TYPES].sort());
+    expect(registry.rows.map((row) => row.entity_type).sort()).toEqual([...phase2EntityTypes].sort());
+
+    // Later phases may add process-history entity types, but they must not
+    // alter or duplicate any Phase-2 owner—especially the P1 Decision owner.
+    const p5Registry = await admin.query<{ entity_type: string; writable_owner: string }>(
+      "SELECT entity_type,writable_owner FROM finnor_os.canonical_truth_registry WHERE vertical_key='private_equity' AND entity_type=ANY($1::text[]) ORDER BY entity_type",
+      [p5ProcessEntityTypes],
+    );
+    expect(p5Registry.rows.map((row) => row.entity_type)).toEqual([...p5ProcessEntityTypes].sort());
+    expect(p5Registry.rows.every((row) => row.writable_owner === "@finnor/private-equity")).toBe(true);
+    const decisionOwner = await admin.query<{ count: number; owner: string }>(
+      "SELECT count(*)::int count,max(writable_owner) owner FROM finnor_os.canonical_truth_registry WHERE entity_type='pe_decision'",
+    );
+    expect(decisionOwner.rows[0]).toEqual({ count: 1, owner: "@finnor/private-equity" });
 
     const none = await admin.query<{ vertical: string; core_available: boolean; water_available: boolean; pe_available: boolean }>(
       `SELECT finnor_os.active_tenant_vertical($1) vertical,

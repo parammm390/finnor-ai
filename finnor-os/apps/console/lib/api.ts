@@ -4,12 +4,17 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3100";
 const DEV_TENANT = process.env.NEXT_PUBLIC_DEV_TENANT_ID ?? "00000000-0000-4000-8000-000000000001";
+const DEV_USER = process.env.NEXT_PUBLIC_DEV_USER_ID;
 
 export function authHeaders(): Record<string, string> {
   const token = typeof window !== "undefined" ? window.localStorage.getItem("finnor_token") : null;
   if (token) return { Authorization: `Bearer ${token}` };
   // Dev bypass (API must run with AUTH_DEV_BYPASS=1)
-  return { "x-tenant-id": DEV_TENANT, "x-user-role": "owner" };
+  return {
+    "x-tenant-id": DEV_TENANT,
+    "x-user-role": "owner",
+    ...(DEV_USER ? { "x-user-id": DEV_USER } : {}),
+  };
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {

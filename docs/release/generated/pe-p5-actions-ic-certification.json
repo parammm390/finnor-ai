@@ -1,0 +1,4374 @@
+{
+  "schema": "finnor.pe-p5-actions-ic-certification.v1",
+  "generatedAt": "2026-09-10T00:15:17.421Z",
+  "result": "PASS",
+  "deterministicResult": "PASS",
+  "deterministicMandatoryCases": {
+    "passed": 260,
+    "required": 260,
+    "categoryMemberships": 270,
+    "categoryMembershipsRequired": 270,
+    "dualTaggedBoundaryCases": 10,
+    "distribution": {
+      "baseline_prerequisite_ownership": 12,
+      "ic_schema_state_machine": 18,
+      "memo_artifact_version": 18,
+      "question_evidence": 24,
+      "recommendation_versioning": 20,
+      "committee_membership_quorum_policy": 30,
+      "vote_dissent": 30,
+      "condition": 24,
+      "decision_proposal_p1_decision": 22,
+      "pe_action_fabric_hardening": 24,
+      "authority_security": 12,
+      "concurrency_idempotency_recovery": 12,
+      "api_frontend_contract": 8,
+      "migration_regression_release_boundary": 8,
+      "performance_limits": 8
+    },
+    "roadmapArithmeticReconciliation": "The stated category counts total 270; ten boundary cases are explicitly dual-tagged so the repeated exact total remains 260 unique cases."
+  },
+  "startingBaseline": {
+    "branch": "main",
+    "headSha": "c84c9becf72bbfe99f2514a93291d1609b38697f",
+    "treeSha": "1a6c9b5b666b3b2839aa434edb6f2506c04cb57c",
+    "migrationHead": "0126_pe_underwriting_runtime.sql",
+    "fetchedRemoteSha": "c84c9becf72bbfe99f2514a93291d1609b38697f",
+    "fetchedRemoteTree": "1a6c9b5b666b3b2839aa434edb6f2506c04cb57c",
+    "mergeBase": "c84c9becf72bbfe99f2514a93291d1609b38697f"
+  },
+  "currentMigrationCount": 126,
+  "currentMigrationHead": "0127_pe_actions_ic_runtime.sql",
+  "migrationAdded": "0127_pe_actions_ic_runtime.sql",
+  "prerequisites": {
+    "p1": {
+      "result": "PASS",
+      "cases": 51,
+      "reportHash": "5c717744dd9aa00bac00c53ff213f17175907c8bf46e0d6c991775eace1c7fa9"
+    },
+    "p2": {
+      "deterministicResult": "PASS",
+      "cases": 179,
+      "externalResult": "BLOCKED-EXTERNAL-CERTIFICATION",
+      "reportHash": "ea4a5bff7da768989f12ee6f4388c241e724d0ac7113ad6e4ce00efa222fe246"
+    },
+    "p3": {
+      "deterministicResult": "PASS",
+      "cases": 190,
+      "externalResult": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+      "reportHash": "361c7bc9e846ae0c575e069f4c280bc41e32bd153e4c87e1fe50b5133e7d10e3"
+    },
+    "p4": {
+      "deterministicResult": "PASS",
+      "cases": 240,
+      "externalResult": "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION",
+      "reportHash": "3b5113bd04bd5516b3e3f5d8958c96ce2a31a0f6dd09086e2400766a7c33bcf5"
+    },
+    "historicalPe5": {
+      "result": "LOCAL_PASS_PRODUCTION_BLOCKED",
+      "reportHash": "067a7ceb39da7b2d73775d61c8d33742870b0aa2a8a203a3ce813d43f85da746"
+    }
+  },
+  "architecture": {
+    "p5TableCount": 13,
+    "apiRouteFiles": [
+      "apps/api/app/api/private-equity/ic/cases/[id]/begin-preparation/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/activate/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/fail/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/satisfy/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/supersede/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/waive/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/conditions/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/decision-proof/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/decision-proposals/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/dissents/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/finalize/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/memos/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/open-questions/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/answer/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/resolve/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/sources/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/supersede/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/waive/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/questions/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/ready-for-review/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/ready-for-vote/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/recommendations/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/underwriting-run/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/votes/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/voting/close/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/voting/open/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/[id]/withdraw/route.ts",
+      "apps/api/app/api/private-equity/ic/cases/route.ts",
+      "apps/api/app/api/private-equity/ic/committee-configurations/route.ts"
+    ],
+    "openapiPathCount": 30,
+    "authorizationPathCount": 30,
+    "privateEquityActionCount": 24,
+    "globalActionCount": 41,
+    "p5PlannerSafeActionCount": 9,
+    "p5PlannerSafeActions": [
+      "open_ic_case",
+      "begin_ic_preparation",
+      "select_ic_memo_version",
+      "select_ic_underwriting_run",
+      "create_ic_question",
+      "attach_ic_question_evidence",
+      "request_ic_memo_review",
+      "satisfy_ic_condition",
+      "prepare_ic_decision_proposal"
+    ],
+    "telemetryMetricCount": 21,
+    "telemetryMetrics": [
+      "ic_cases_opened",
+      "ic_case_transition_failures",
+      "ic_questions_open",
+      "ic_required_questions_blocking",
+      "ic_question_waivers",
+      "ic_recommendation_revisions",
+      "ic_voting_sessions",
+      "ic_votes_recorded",
+      "ic_vote_conflicts",
+      "ic_ineligible_vote_attempts",
+      "ic_dissents_recorded",
+      "ic_quorum_failures",
+      "ic_threshold_failures",
+      "ic_conditions_active",
+      "ic_condition_waivers",
+      "ic_decision_finalizations",
+      "ic_decision_finalization_failures",
+      "pe_action_grounding_failures",
+      "pe_action_authority_failures",
+      "pe_action_verification_failures",
+      "pe_action_recovery_attempts"
+    ],
+    "historicalReleaseCommand": "tsx scripts/release/run-pe5-water-retirement-certification.ts",
+    "currentReleaseCommand": "tsx scripts/release/run-pe-p5-actions-ic-certification.ts"
+  },
+  "databaseInvariants": {
+    "migration": {
+      "count": 126,
+      "head": "0127_pe_actions_ic_runtime.sql"
+    },
+    "tables": [
+      "pe_ic_committee_config_versions",
+      "pe_ic_committee_membership_versions",
+      "pe_ic_cases",
+      "pe_ic_memos",
+      "pe_ic_questions",
+      "pe_ic_recommendations",
+      "pe_ic_votes",
+      "pe_ic_dissents",
+      "pe_ic_conditions",
+      "pe_ic_source_links",
+      "pe_ic_decision_proposals",
+      "pe_ic_decision_links",
+      "pe_ic_decision_condition_links"
+    ],
+    "rlsTables": [
+      "pe_ic_cases",
+      "pe_ic_committee_config_versions",
+      "pe_ic_committee_membership_versions",
+      "pe_ic_conditions",
+      "pe_ic_decision_condition_links",
+      "pe_ic_decision_links",
+      "pe_ic_decision_proposals",
+      "pe_ic_dissents",
+      "pe_ic_memos",
+      "pe_ic_questions",
+      "pe_ic_recommendations",
+      "pe_ic_source_links",
+      "pe_ic_votes"
+    ],
+    "privileges": [
+      {
+        "table": "pe_ic_committee_config_versions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_committee_membership_versions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_cases",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_memos",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_questions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_recommendations",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_votes",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_dissents",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_conditions",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": true,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_source_links",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_decision_proposals",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_decision_links",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      },
+      {
+        "table": "pe_ic_decision_condition_links",
+        "can_select": true,
+        "can_insert": true,
+        "can_update": false,
+        "can_delete": false
+      }
+    ],
+    "freshRows": [
+      {
+        "table": "pe_ic_committee_config_versions",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_committee_membership_versions",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_cases",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_memos",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_questions",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_recommendations",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_votes",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_dissents",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_conditions",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_source_links",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_decision_proposals",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_decision_links",
+        "count": 0
+      },
+      {
+        "table": "pe_ic_decision_condition_links",
+        "count": 0
+      }
+    ],
+    "canonicalHistoryTypes": [
+      {
+        "entity_type": "pe_ic_case",
+        "source_table": "pe_ic_cases"
+      },
+      {
+        "entity_type": "pe_ic_condition",
+        "source_table": "pe_ic_conditions"
+      },
+      {
+        "entity_type": "pe_ic_decision_proposal",
+        "source_table": "pe_ic_decision_proposals"
+      },
+      {
+        "entity_type": "pe_ic_dissent",
+        "source_table": "pe_ic_dissents"
+      },
+      {
+        "entity_type": "pe_ic_memo",
+        "source_table": "pe_ic_memos"
+      },
+      {
+        "entity_type": "pe_ic_question",
+        "source_table": "pe_ic_questions"
+      },
+      {
+        "entity_type": "pe_ic_recommendation",
+        "source_table": "pe_ic_recommendations"
+      },
+      {
+        "entity_type": "pe_ic_vote",
+        "source_table": "pe_ic_votes"
+      }
+    ],
+    "p1DecisionOwner": {
+      "count": 1,
+      "owner": "@finnor/private-equity"
+    },
+    "immutableTriggerTables": [
+      "pe_ic_cases",
+      "pe_ic_committee_config_versions",
+      "pe_ic_committee_membership_versions",
+      "pe_ic_conditions",
+      "pe_ic_decision_condition_links",
+      "pe_ic_decision_links",
+      "pe_ic_decision_proposals",
+      "pe_ic_dissents",
+      "pe_ic_memos",
+      "pe_ic_questions",
+      "pe_ic_recommendations",
+      "pe_ic_source_links",
+      "pe_ic_votes"
+    ],
+    "businessEventTriggerTables": [
+      "pe_ic_cases",
+      "pe_ic_conditions",
+      "pe_ic_decision_links",
+      "pe_ic_decision_proposals",
+      "pe_ic_dissents",
+      "pe_ic_memos",
+      "pe_ic_questions",
+      "pe_ic_recommendations",
+      "pe_ic_votes"
+    ],
+    "ownershipComments": {
+      "command": "SELECT",
+      "rowCount": 5,
+      "oid": null,
+      "rows": [
+        {
+          "relname": "pe_ic_cases",
+          "comment": "P5 governed IC process for one exact P1 InvestmentCase; never a duplicate InvestmentCase or Decision."
+        },
+        {
+          "relname": "pe_ic_conditions",
+          "comment": "Investment-approval condition; deliberately distinct from transaction pe_closing_conditions."
+        },
+        {
+          "relname": "pe_ic_decision_proposals",
+          "comment": "Deterministic immutable process aggregate; not the canonical investment Decision."
+        },
+        {
+          "relname": "pe_ic_memos",
+          "comment": "Thin immutable IC selection of an exact P3 DocumentVersion; document content remains P3-owned."
+        },
+        {
+          "relname": "pe_ic_votes",
+          "comment": "Authenticated immutable committee-member attestation; distinct from Authority approval and P1 Decision."
+        }
+      ],
+      "fields": [
+        {
+          "name": "relname",
+          "tableID": 1259,
+          "columnID": 2,
+          "dataTypeID": 19,
+          "dataTypeSize": 64,
+          "dataTypeModifier": -1,
+          "format": "text"
+        },
+        {
+          "name": "comment",
+          "tableID": 0,
+          "columnID": 0,
+          "dataTypeID": 25,
+          "dataTypeSize": -1,
+          "dataTypeModifier": -1,
+          "format": "text"
+        }
+      ],
+      "_parsers": [
+        null,
+        null
+      ],
+      "_types": {
+        "_types": {
+          "arrayParser": {},
+          "builtins": {
+            "BOOL": 16,
+            "BYTEA": 17,
+            "CHAR": 18,
+            "INT8": 20,
+            "INT2": 21,
+            "INT4": 23,
+            "REGPROC": 24,
+            "TEXT": 25,
+            "OID": 26,
+            "TID": 27,
+            "XID": 28,
+            "CID": 29,
+            "JSON": 114,
+            "XML": 142,
+            "PG_NODE_TREE": 194,
+            "SMGR": 210,
+            "PATH": 602,
+            "POLYGON": 604,
+            "CIDR": 650,
+            "FLOAT4": 700,
+            "FLOAT8": 701,
+            "ABSTIME": 702,
+            "RELTIME": 703,
+            "TINTERVAL": 704,
+            "CIRCLE": 718,
+            "MACADDR8": 774,
+            "MONEY": 790,
+            "MACADDR": 829,
+            "INET": 869,
+            "ACLITEM": 1033,
+            "BPCHAR": 1042,
+            "VARCHAR": 1043,
+            "DATE": 1082,
+            "TIME": 1083,
+            "TIMESTAMP": 1114,
+            "TIMESTAMPTZ": 1184,
+            "INTERVAL": 1186,
+            "TIMETZ": 1266,
+            "BIT": 1560,
+            "VARBIT": 1562,
+            "NUMERIC": 1700,
+            "REFCURSOR": 1790,
+            "REGPROCEDURE": 2202,
+            "REGOPER": 2203,
+            "REGOPERATOR": 2204,
+            "REGCLASS": 2205,
+            "REGTYPE": 2206,
+            "UUID": 2950,
+            "TXID_SNAPSHOT": 2970,
+            "PG_LSN": 3220,
+            "PG_NDISTINCT": 3361,
+            "PG_DEPENDENCIES": 3402,
+            "TSVECTOR": 3614,
+            "TSQUERY": 3615,
+            "GTSVECTOR": 3642,
+            "REGCONFIG": 3734,
+            "REGDICTIONARY": 3769,
+            "JSONB": 3802,
+            "REGNAMESPACE": 4089,
+            "REGROLE": 4096
+          }
+        },
+        "text": {},
+        "binary": {}
+      },
+      "RowCtor": null,
+      "rowAsArray": false,
+      "_prebuiltEmptyResultObject": {
+        "relname": null,
+        "comment": null
+      }
+    }
+  },
+  "commands": {
+    "remoteFresh": {
+      "command": "git fetch origin main --no-tags",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 685,
+      "outputHash": "fea9a9133d4d03bb9edefd1ce6c1b75337a38546c198916655694e0b81287f91",
+      "outputLineCount": 2,
+      "summary": "From https://github.com/parammm390/finnor-ai |  * branch              main       -> FETCH_HEAD"
+    },
+    "migrationBundle": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/bundle-migrations.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 176,
+      "outputHash": "9607a08067d0756818955494a4d8788c4a6f76c0dc7ba048c035e4ecf4b34a83",
+      "outputLineCount": 1,
+      "summary": "bundled 126 migrations"
+    },
+    "openapi": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-openapi.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1166,
+      "outputHash": "f2fbdbb7deaab6921504ef0f063141091d4ed037a1ec520b3adb0738c6ae022a",
+      "outputLineCount": 1,
+      "summary": "Generated openapi.json with 87 active/quarantine paths."
+    },
+    "authzGenerate": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 236,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "typecheck": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsc -p tsconfig.json --pretty false",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 17046,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "authzMatrix": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/generate-authz-matrix.ts --check",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 436,
+      "outputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputLineCount": 0,
+      "summary": ""
+    },
+    "releaseBoundary": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/verify-pe-domain-boundary.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4998,
+      "outputHash": "b96730148108570e6dbe3d4cc9c645f454a531ee89e80b2f94cf7a0aef9c2412",
+      "outputLineCount": 1,
+      "summary": "PE-DOMAIN-BOUNDARY PASS files=736 actions=32 queries=14 negative_injection=PASS"
+    },
+    "actionManifest": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/tsx scripts/release/verify-action-manifest.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1736,
+      "outputHash": "1621c47acaa8a3de4a0af1378646e45fff91d192707ae268f6ed45f5043b0440",
+      "outputLineCount": 1,
+      "summary": "PASS: executable spec and active registry match 41/41 (docs/release/generated/action-manifest.md)"
+    },
+    "p5Contract": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/private-equity-p5-contract.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7545,
+      "outputHash": "0a1d5c79c40bdd2a9b22b199116c549b2e7e50ad4155421e19c3cf56285c8b4f",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ·············· |  Test Files  1 passed (1) |       Tests  14 passed (14) |    Start at  05:45:20 |    Duration  6.81s (transform 3.89s, setup 113ms, import 6.54s, tests 13ms, environment 0ms)",
+      "testsPassed": 14,
+      "testFilesPassed": 1
+    },
+    "p5Golden": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/private-equity-p5-golden.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7526,
+      "outputHash": "2517567b9a9d20fd1cbc142945d393c0a3e738af1fef1fb054305eae0cc65ce6",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················ |  Test Files  1 passed (1) |       Tests  16 passed (16) |    Start at  05:45:20 |    Duration  6.83s (transform 3.88s, setup 149ms, import 6.52s, tests 20ms, environment 0ms)",
+      "testsPassed": 16,
+      "testFilesPassed": 1
+    },
+    "p5AggregationProperty": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/private-equity-p5-ic-aggregation.test.ts --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7476,
+      "outputHash": "7d56c3e5c750f20ac61a7f037e56b645498aaa3966597c95adc28b6f661f960f",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ···················· |  Test Files  1 passed (1) |       Tests  20 passed (20) |    Start at  05:45:20 |    Duration  6.79s (transform 3.66s, setup 63ms, import 6.53s, tests 54ms, environment 0ms)",
+      "testsPassed": 20,
+      "testFilesPassed": 1
+    },
+    "plannerIsolation": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit/private-equity-planner-isolation.test.ts tests/planner-evals --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 9766,
+      "outputHash": "84fb83627a5081f365e3e23b626d602c18f808f826ba5bfb9141aa83afec5799",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ····· |  Test Files  2 passed (2) |       Tests  5 passed (5) |    Start at  05:45:20 |    Duration  9.02s (transform 3.74s, setup 77ms, import 8.73s, tests 15ms, environment 0ms)",
+      "testsPassed": 5,
+      "testFilesPassed": 2
+    },
+    "freshMigration": {
+      "command": "embedded-postgres + migrate(all disk migrations) + inspectFreshDatabase",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 1772,
+      "outputHash": "149de9a98fa3dc6b6be66d8cdfdd93ebf74bc6e25b544c2da66f14821cbbdb68",
+      "outputLineCount": 1,
+      "summary": "126 migrations; 13 empty forced-RLS P5 tables; P1 Decision owner retained"
+    },
+    "p5Runtime": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p5-ic-runtime.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 5624,
+      "outputHash": "dd6f76cca8af8d9e5328817ac0723a8b5068289450cfddfc2944a3d1c82aa3e1",
+      "outputLineCount": 11,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ······················stdout | tests/integration/private-equity-p5-ic-runtime.test.ts > P5 governed PE Investment Committee runtime > measured P5 IC database performance and enforced limits | P5_IC_BENCHMARK {\"metrics\":{\"loadAggregateMs\":4.468874999999571,\"openQuestionMs\":4.4143749999993815,\"concurrentVotes50Ms\":129.03341600000022,\"closeVotingAggregate50Ms\":14.686458999999559,\"decisionProposalMs\":10.601125000000138,\"finalDecisionTransactionMs\":16.51020900000003,\"loadDecisionProofMs\":6.688875000000735,\"questions100Ms\":336.0306250000003,\"conditions50Ms\":144.67712500000016},\"guardrails\":{\"loadAggregateMs\":5000,\"openQuestionMs\":2000,\"concurrentVotes50Ms\":15000,\"closeVotingAggregate50Ms\":5000,\"decisionProposalMs\":5000,\"finalDecisionTransactionMs\":5000,\"loadDecisionProofMs\":5000,\"questions100Ms\":30000,\"conditions50Ms\":20000},\"observed\":{\"eligibleVoters\":50,\"effectiveVotes\":50,\"openQuestions\":100,\"activeConditions\":50,\"canonicalDecisions\":1}} | ········ |  Test Files  1 passed (1) |       Tests  30 passed (30) |    Start at  05:45:38 |    Duration  5.41s (transform 915ms, setup 53ms, import 1.66s, tests 3.62s, environment 0ms)",
+      "testsPassed": 30,
+      "testFilesPassed": 1,
+      "benchmark": {
+        "metrics": {
+          "loadAggregateMs": 4.468874999999571,
+          "openQuestionMs": 4.4143749999993815,
+          "concurrentVotes50Ms": 129.03341600000022,
+          "closeVotingAggregate50Ms": 14.686458999999559,
+          "decisionProposalMs": 10.601125000000138,
+          "finalDecisionTransactionMs": 16.51020900000003,
+          "loadDecisionProofMs": 6.688875000000735,
+          "questions100Ms": 336.0306250000003,
+          "conditions50Ms": 144.67712500000016
+        },
+        "guardrails": {
+          "loadAggregateMs": 5000,
+          "openQuestionMs": 2000,
+          "concurrentVotes50Ms": 15000,
+          "closeVotingAggregate50Ms": 5000,
+          "decisionProposalMs": 5000,
+          "finalDecisionTransactionMs": 5000,
+          "loadDecisionProofMs": 5000,
+          "questions100Ms": 30000,
+          "conditions50Ms": 20000
+        },
+        "observed": {
+          "eligibleVoters": 50,
+          "effectiveVotes": 50,
+          "openQuestions": 100,
+          "activeConditions": 50,
+          "canonicalDecisions": 1
+        }
+      }
+    },
+    "p5Upgrade": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p5-upgrade.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4264,
+      "outputHash": "92db6837e23b199c4e14d4977402f9db8859e28a8b75c76341a4431c2022aa19",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ···· |  Test Files  1 passed (1) |       Tests  4 passed (4) |    Start at  05:45:44 |    Duration  3.88s (transform 899ms, setup 52ms, import 1.60s, tests 2.16s, environment 0ms)",
+      "testsPassed": 4,
+      "testFilesPassed": 1
+    },
+    "p3Regression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/artifact-os.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4198,
+      "outputHash": "7dc46d0875a073cd46eedbef8f998f2031915a09c87b15fab56cdf32a4239172",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ············· |  Test Files  1 passed (1) |       Tests  13 passed (13) |    Start at  05:45:48 |    Duration  3.89s (transform 824ms, setup 57ms, import 1.67s, tests 2.09s, environment 0ms)",
+      "testsPassed": 13,
+      "testFilesPassed": 1
+    },
+    "p1RuntimeRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p1-world-truth.test.ts tests/integration/private-equity-p1-upgrade.test.ts tests/integration/source-truth-loop.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 5232,
+      "outputHash": "02fb4c66f300cc8fd3891ed40c85e0999fa6daa85b0b67c19989fb07acd1a94a",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ················· |  Test Files  3 passed (3) |       Tests  17 passed (17) |    Start at  05:45:52 |    Duration  5.02s (transform 909ms, setup 130ms, import 2.25s, tests 2.42s, environment 0ms)",
+      "testsPassed": 17,
+      "testFilesPassed": 3
+    },
+    "p2RuntimeRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/microsoft365-administration.test.ts tests/integration/microsoft365-webhook.test.ts tests/integration/microsoft365-subscription-worker.test.ts tests/integration/microsoft365-sync-worker.test.ts tests/integration/microsoft365-pe-mapping.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7012,
+      "outputHash": "0450dba326cc0989bc3847911a1f276ff8737351d2796132dde5112cc190cd2e",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ································· |  Test Files  5 passed (5) |       Tests  33 passed (33) |    Start at  05:45:58 |    Duration  6.82s (transform 1.04s, setup 202ms, import 4.05s, tests 2.22s, environment 0ms)",
+      "testsPassed": 33,
+      "testFilesPassed": 5
+    },
+    "p4RuntimeRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-p4-underwriting.test.ts tests/integration/private-equity-p4-upgrade.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 5114,
+      "outputHash": "a8b711f64e1957df643d47353afc14d3e9cc0be21cd71853b2ee1afb8bc43c98",
+      "outputLineCount": 11,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ··········stdout | tests/integration/private-equity-p4-underwriting.test.ts > P4 deterministic PE underwriting persistence and P3 integration > rejects corrupted prepared results and converges retry-after-commit without partial completed rows | P4_INTEGRATION_BENCHMARK {\"runServiceLatencyMs\":22.232749999999896,\"persistenceLatencyMs\":70.62904100000014,\"artifactProjectionLatencyMs\":59.10591700000009} | ···· |  Test Files  2 passed (2) |       Tests  14 passed (14) |    Start at  05:46:05 |    Duration  4.91s (transform 861ms, setup 88ms, import 2.21s, tests 2.47s, environment 0ms)",
+      "testsPassed": 14,
+      "testFilesPassed": 2
+    },
+    "historicalPeRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/private-equity-phase2.test.ts tests/integration/private-equity-phase3.test.ts tests/integration/private-equity-phase4.test.ts tests/integration/external-effect-observation.test.ts tests/integration/operational-deltas.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 11754,
+      "outputHash": "6f13e57ab43ebb7433dcb40c5f4acddaa3bb104e2b4c244bbf9cd6684a7d2464",
+      "outputLineCount": 8,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | ························ |  Test Files  5 passed (5) |       Tests  24 passed (24) |    Start at  05:46:10 |    Duration  11.54s (transform 1.12s, setup 200ms, import 5.31s, tests 5.68s, environment 0ms)",
+      "testsPassed": 24,
+      "testFilesPassed": 5
+    },
+    "coreRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/integration/actions-pending-receipts.test.ts tests/integration/decision-receipts.test.ts tests/integration/computer-execution-fabric.test.ts tests/integration/evidence-corpus.test.ts tests/integration/work-cases.test.ts tests/integration/queue.test.ts --reporter=dot --maxWorkers=1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 7912,
+      "outputHash": "47202c1cd82994c4db29a688f5e495a09c3cba266cb026b4f09860cf77ffb241",
+      "outputLineCount": 10,
+      "summary": "RUN  v4.1.11 /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os | (node:7880) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead. | (Use `node --trace-deprecation ...` to show where the warning was created) | ········································· |  Test Files  6 passed (6) |       Tests  41 passed (41) |    Start at  05:46:22 |    Duration  7.71s (transform 576ms, setup 225ms, import 3.71s, tests 3.36s, environment 0ms)",
+      "testsPassed": 41,
+      "testFilesPassed": 6
+    },
+    "fullUnitRegression": {
+      "command": "/Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/finnor-os/node_modules/.bin/vitest run tests/unit --reporter=dot",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 50535,
+      "outputHash": "7717abbb145146da1a89a64ebde0476ac1a2278c199524669909b15d3ccce3cc",
+      "outputLineCount": 26,
+      "summary": "[web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | stderr | tests/unit/web-research-discovery.test.ts > web-research discovery verification > uses Exa-retrieved page text as cited source material when Firecrawl is unavailable | [web-research] source synthesis unavailable { |   name: 'LLMProviderSelectionError', |   message: 'route:answer:text is unavailable: no configured provider matched the safe route' | } | ··························································································································································································································································································································································································· |  Test Files  99 passed (99) |       Tests  572 passed (572) |    Start at  05:46:30 |    Duration  50.31s (transform 1.68s, setup 1.02s, import 34.12s, tests 8.65s, environment 4ms)",
+      "testsPassed": 572,
+      "testFilesPassed": 99
+    },
+    "p1Certification": {
+      "command": "npm run release:pe-p1",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 172645,
+      "outputHash": "550cf7a8a65d04bb51ed220559c2c69c7057ad13b028a39a904061fe8fb3df68",
+      "outputLineCount": 6,
+      "summary": "> finnor-os@0.1.0 release:pe-p1 | > tsx scripts/release/run-pe-p1-world-truth-certification.ts | PE P1 WORLD + TRUTH CERTIFICATION PASS (51/51 cases, 126 migrations) | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/generated/pe-p1-world-truth-certification.json | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/pe-p1-world-truth-certification.md"
+    },
+    "p2Certification": {
+      "command": "npm run release:pe-p2",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 96541,
+      "outputHash": "6b94ffa15be5ecb2ff7f97cefe4065f750bf720e6405674b3026526103ec8812",
+      "outputLineCount": 7,
+      "summary": "> finnor-os@0.1.0 release:pe-p2 | > tsx scripts/release/run-pe-p2-m365-nervous-system-certification.ts | PE P2 M365 DETERMINISTIC CERTIFICATION PASS (179/179 deterministic cases, 126 migrations) | LIVE MICROSOFT CERTIFICATION BLOCKED-EXTERNAL-CERTIFICATION | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/generated/pe-p2-m365-nervous-system-certification.json | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/pe-p2-m365-nervous-system-certification.md"
+    },
+    "p3Certification": {
+      "command": "npm run release:pe-p3",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 93420,
+      "outputHash": "75fecb610bc73c8a507f23c30d142bdfbfec983d81517241dcccfa3e11dad350",
+      "outputLineCount": 7,
+      "summary": "> finnor-os@0.1.0 release:pe-p3 | > tsx scripts/release/run-pe-p3-artifact-os-certification.ts | PE P3 ARTIFACT OS DETERMINISTIC CERTIFICATION PASS (190/190 cases, 126 migrations) | LIVE MICROSOFT OFFICE CERTIFICATION BLOCKED_EXTERNAL_OFFICE_CERTIFICATION | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/generated/pe-p3-artifact-os-certification.json | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/pe-p3-artifact-os-certification.md"
+    },
+    "p4Certification": {
+      "command": "npm run release:pe-p4-underwriting",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 103338,
+      "outputHash": "b8deffc0cb1094efa28d4887cbc6841e8962dac07897336fb1f3a293cee0f0c7",
+      "outputLineCount": 43,
+      "summary": "P4_GATE_START p3Regression | P4_GATE_PASS p3Regression 2911ms 13 tests | P4_GATE_START p2Regression | P4_GATE_PASS p2Regression 6172ms 33 tests | P4_GATE_START p1Regression | P4_GATE_PASS p1Regression 4842ms 17 tests | P4_GATE_START historicalPeRegression | P4_GATE_PASS historicalPeRegression 11206ms 24 tests | P4_GATE_START coreRegression | P4_GATE_PASS coreRegression 7864ms 41 tests | PE P4 UNDERWRITING DETERMINISTIC CERTIFICATION PASS (240/240 cases, 126 migrations) | LIVE MICROSOFT/EXCEL CERTIFICATION BLOCKED_EXTERNAL_OFFICE_CERTIFICATION | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/generated/pe-p4-underwriting-certification.json | /Users/paramdave/Desktop/FINNOR/.codex-release-recovery/p5-actions-ic/docs/release/pe-p4-underwriting-certification.md"
+    },
+    "historicalPe5": {
+      "command": "npm run release:pe5",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 86929,
+      "outputHash": "301752552f3bf994b2b05144dcfa6328aa3af03b8afb315315aefadf4848d476",
+      "outputLineCount": 4,
+      "summary": "> finnor-os@0.1.0 release:pe5 | > tsx scripts/release/run-pe5-water-retirement-certification.ts | PE5 WATER RETIREMENT CERTIFICATION LOCAL PASS / PRODUCTION BLOCKED output=../docs/release/generated/pe5-water-retirement-certification.json markdown=../docs/release/pe5-water-retirement-certification.md"
+    }
+  },
+  "goldenCorpus": {
+    "status": "PASS",
+    "independentlySpecifiedCases": 20,
+    "path": "tests/pe-ic-corpus/golden-cases.ts",
+    "evidence": "commands.p5Golden"
+  },
+  "concurrencyCorpus": {
+    "status": "PASS",
+    "requiredRaces": 10,
+    "directP5Races": 8,
+    "additionalLifecycleConcurrencyCases": 2,
+    "evidence": "commands.p5Runtime"
+  },
+  "crashCorpus": {
+    "status": "PASS",
+    "requiredBoundaries": 10,
+    "p5TransactionalBoundaries": 9,
+    "p3PublicationBoundary": 1,
+    "evidence": [
+      "commands.p5Runtime",
+      "commands.p3Regression"
+    ]
+  },
+  "performance": {
+    "status": "PASS",
+    "measuredCases": 8,
+    "benchmark": {
+      "metrics": {
+        "loadAggregateMs": 4.468874999999571,
+        "openQuestionMs": 4.4143749999993815,
+        "concurrentVotes50Ms": 129.03341600000022,
+        "closeVotingAggregate50Ms": 14.686458999999559,
+        "decisionProposalMs": 10.601125000000138,
+        "finalDecisionTransactionMs": 16.51020900000003,
+        "loadDecisionProofMs": 6.688875000000735,
+        "questions100Ms": 336.0306250000003,
+        "conditions50Ms": 144.67712500000016
+      },
+      "guardrails": {
+        "loadAggregateMs": 5000,
+        "openQuestionMs": 2000,
+        "concurrentVotes50Ms": 15000,
+        "closeVotingAggregate50Ms": 5000,
+        "decisionProposalMs": 5000,
+        "finalDecisionTransactionMs": 5000,
+        "loadDecisionProofMs": 5000,
+        "questions100Ms": 30000,
+        "conditions50Ms": 20000
+      },
+      "observed": {
+        "eligibleVoters": 50,
+        "effectiveVotes": 50,
+        "openQuestions": 100,
+        "activeConditions": 50,
+        "canonicalDecisions": 1
+      }
+    }
+  },
+  "mandatoryCases": [
+    {
+      "number": 1,
+      "name": "The recorded starting commit and tree identify the verified remote-main P4 baseline.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "P1 InvestmentCase remains the canonical PE business context consumed by an ICCase.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "P1 temporal Assumption and Evidence semantics remain available without P5 duplication.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "P2 remains the owner of Microsoft source identity, observations, meetings, and evidence handoff.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "P3 remains the owner of Documents, immutable DocumentVersions, anchors, and publication truth.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "P4 remains the sole deterministic underwriting engine and immutable Run owner.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Core Work and BusinessEvent remain the workflow and event owners used by P5.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Core Authority and DecisionReceipt remain the authorization and execution-proof owners used by P5.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "The canonical owner registry contains no new P5 owner for Evidence, Artifact, Work, Authority, Receipt, Decision, policy, or finance.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "P5 introduces no P6 planning-core redesign, P7 workforce, fund or LP system, or AWS expansion.",
+      "categories": [
+        "baseline_prerequisite_ownership"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "P1 pe_decision remains the sole canonical PE investment Decision owner.",
+      "categories": [
+        "baseline_prerequisite_ownership",
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants",
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "An IC Condition remains distinct from the existing transaction closing-condition owner.",
+      "categories": [
+        "baseline_prerequisite_ownership",
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.remoteFresh",
+        "prerequisites",
+        "architecture",
+        "databaseInvariants",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "The migration creates exactly thirteen tenant-scoped P5 IC relations.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Every P5 relation carries tenant_id and participates in same-tenant foreign-key enforcement.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "ICCase identity pins one exact P1 InvestmentCase root.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "ICCase state vocabulary is exactly DRAFT, PREPARING, READY_FOR_REVIEW, QUESTIONS_OPEN, READY_FOR_VOTE, VOTING, CONDITIONS_PENDING, DECIDED, WITHDRAWN, SUPERSEDED, BLOCKED.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "DRAFT transitions only through the explicit begin-preparation or withdrawal commands.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "PREPARING reaches READY_FOR_REVIEW only through the named readiness command.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "READY_FOR_REVIEW reaches READY_FOR_VOTE only through the named readiness command.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "READY_FOR_VOTE reaches VOTING only through the governed open-voting transaction.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "VOTING reaches DECIDED only through canonical P1 Decision finalization.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Withdrawal is explicit and cannot masquerade as an investment Decision.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "No generic UPDATE_IC or generic PATCH state mutation exists.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "Optimistic case-version preconditions reject stale mutations.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Case state timestamps are written by the same transaction as their transition.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 26,
+      "name": "ICCase entry rejects missing P1 InvestmentCase prerequisites.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 27,
+      "name": "ICCase entry rejects cross-root Deal and InvestmentCase combinations.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 28,
+      "name": "ICCase entry rejects cross-tenant prerequisite references.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 29,
+      "name": "Append-only IC history and mutable lifecycle rows have separately enforced mutation rules.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 30,
+      "name": "Database guards reject invalid state, root, version, and lifecycle combinations independently of the API.",
+      "categories": [
+        "ic_schema_state_machine"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.p5Runtime",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 31,
+      "name": "P5 stores memo selection and review state rather than memo or deck content.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 32,
+      "name": "Memo content remains a Core Document with immutable P3 DocumentVersions.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 33,
+      "name": "Every selected memo records an exact P3 Document ID and DocumentVersion ID.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 34,
+      "name": "Every selected memo records an exact P3 ArtifactAnchor and anchor hash.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 35,
+      "name": "Memo selection rejects a DocumentVersion outside the ICCase root.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 36,
+      "name": "Memo selection rejects a stale or mismatched ArtifactAnchor.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 37,
+      "name": "Memo revisions are append-only selections with explicit predecessor identity.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 38,
+      "name": "At most one memo selection is current for an ICCase version.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 39,
+      "name": "The selected memo version is frozen into the voting snapshot.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 40,
+      "name": "Opening voting fails when no exact memo version is selected.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 41,
+      "name": "A memo change during review is visible as a material version change.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 42,
+      "name": "A memo change after Votes follows the pinned policy and requires a fresh vote when configured.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 43,
+      "name": "Memo generation may draft P3 content but cannot fabricate source-backed claims.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 44,
+      "name": "Every memo claim retains links to canonical Evidence, P3, or P4 truth.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 45,
+      "name": "P3 editorial approval cannot be interpreted as IC investment approval.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 46,
+      "name": "Memo and deck publication stays on the P3 publication and read-back path.",
+      "categories": [
+        "memo_artifact_version"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification"
+      ]
+    },
+    {
+      "number": 47,
+      "name": "An IC memo selection pins an exact tenant- and root-consistent P3 DocumentVersion and ArtifactAnchor.",
+      "categories": [
+        "memo_artifact_version",
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 48,
+      "name": "A Question source pins an exact canonical P3 ArtifactAnchor without copying artifact truth into P5.",
+      "categories": [
+        "memo_artifact_version",
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Certification",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 49,
+      "name": "A Question belongs to exactly one tenant-consistent ICCase.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 50,
+      "name": "Question state vocabulary is OPEN, ANSWERED, RESOLVED, WAIVED, SUPERSEDED.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 51,
+      "name": "Question creation records explicit required-before-vote and required-before-Decision flags.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 52,
+      "name": "Question creation creates or links canonical Core Work instead of a P5 work system.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 53,
+      "name": "Question answering preserves the question text and adds an immutable answer revision.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 54,
+      "name": "Question resolution is distinct from merely recording an answer.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 55,
+      "name": "Question supersession preserves the prior question and names its successor.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 56,
+      "name": "A required Question blocks opening voting while unresolved.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 57,
+      "name": "A required-before-Decision Question blocks DecisionProposal eligibility while unresolved.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 58,
+      "name": "A Question waiver requires the exact governed Authority decision.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 59,
+      "name": "A Question waiver preserves the Question and its waiver provenance.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 60,
+      "name": "Question Evidence uses canonical Core Evidence and EvidenceVersion identities.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 61,
+      "name": "Question Evidence can pin a P4 UnderwritingRun and exact output path.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 62,
+      "name": "Question source links are typed and reject ambiguous free-text references.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 63,
+      "name": "A Question source rejects cross-tenant EvidenceVersion references.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 64,
+      "name": "A Question source rejects cross-InvestmentCase Evidence references.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 65,
+      "name": "A Question source rejects a P3 artifact outside the case root.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 66,
+      "name": "A Question source rejects a P4 Run outside the case root.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 67,
+      "name": "No ic_evidence table or duplicate Evidence owner is created.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 68,
+      "name": "Question source lineage remains exact after the canonical source receives a later version.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 69,
+      "name": "Question lifecycle changes emit metadata-only BusinessEvents.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 70,
+      "name": "The 100-open-Question hard limit is enforced in the database.",
+      "categories": [
+        "question_evidence"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.coreRegression"
+      ]
+    },
+    {
+      "number": 71,
+      "name": "A Recommendation belongs to one exact ICCase and recommendation sequence.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 72,
+      "name": "Recommendation outcomes are INVEST, DECLINE, DEFER, INVEST_WITH_CONDITIONS, and CONTINUE_DILIGENCE.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 73,
+      "name": "Recommendation content records structured rationale references rather than becoming a canonical Decision.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 74,
+      "name": "Recommendation revisions are append-only and retain their predecessor identity.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 75,
+      "name": "Recommendation revision numbers are unique and monotonic within an ICCase.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 76,
+      "name": "A Recommendation pins the selected memo revision.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 77,
+      "name": "A Recommendation pins the selected P4 UnderwritingRun.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 78,
+      "name": "A Recommendation pins the policy and committee configuration used to assess readiness.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 79,
+      "name": "Opening voting requires one exact current Recommendation revision.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 80,
+      "name": "The voting snapshot freezes the Recommendation revision.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 81,
+      "name": "A Recommendation change before voting leaves no stale Vote attached.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 82,
+      "name": "A Recommendation change after Votes follows policy and invalidates the prior voting snapshot when required.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 83,
+      "name": "A replacement P4 Run requires a new Recommendation when the pinned policy says so.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 84,
+      "name": "An ineligible, failed, stale, or conflicting P4 Run cannot back a final Recommendation.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 85,
+      "name": "A Recommendation never translates its outcome into a P1 Decision without committee aggregation.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 86,
+      "name": "A DECLINE Recommendation approved by the committee remains a DECLINE proposal.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 87,
+      "name": "INVEST_WITH_CONDITIONS requires at least one real IC Condition.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 88,
+      "name": "Recommendation creation enforces the twenty-revision hard limit.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 89,
+      "name": "Recommendation semantic provenance remains stable across read order.",
+      "categories": [
+        "recommendation_versioning"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification"
+      ]
+    },
+    {
+      "number": 90,
+      "name": "A Recommendation pins the exact eligible P4 UnderwritingRun it interprets without recalculating finance.",
+      "categories": [
+        "recommendation_versioning",
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p4Certification",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 91,
+      "name": "Committee configuration is immutable and versioned.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 92,
+      "name": "An ICCase pins one exact committee configuration version.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 93,
+      "name": "Committee members reference canonical employee identities rather than free-text names.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 94,
+      "name": "Membership effective_from participates in eligibility at the voting snapshot time.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 95,
+      "name": "Membership effective_until participates in eligibility at the voting snapshot time.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 96,
+      "name": "A non-voting member cannot enter the eligible-voter denominator.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 97,
+      "name": "Duplicate eligible membership for one employee fails closed.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 98,
+      "name": "Committee chair identity is explicit and cannot be inferred from row order.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 99,
+      "name": "Committee membership is capped at fifty members.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 100,
+      "name": "Meeting attendance never implies committee membership.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 101,
+      "name": "Meeting attendance never creates a Vote.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 102,
+      "name": "The voting snapshot freezes the eligible member set.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 103,
+      "name": "The voting snapshot freezes the exact committee configuration version.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 104,
+      "name": "Quorum supports an exact minimum-count rule.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 105,
+      "name": "Percentage quorum uses deterministic integer ceiling arithmetic.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 106,
+      "name": "Abstention treatment for quorum is explicit in the pinned policy.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 107,
+      "name": "Deferral treatment for quorum is explicit in the pinned policy.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 108,
+      "name": "Missing Votes never count toward quorum unless the exact policy explicitly permits their choice class.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 109,
+      "name": "Simple-majority threshold uses the exact configured denominator.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 110,
+      "name": "Supermajority threshold uses exact basis points and deterministic ceiling arithmetic.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 111,
+      "name": "Unanimous threshold requires every configured denominator member to approve.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 112,
+      "name": "Named-role concurrence is evaluated in addition to its configured base threshold.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 113,
+      "name": "Unsupported custom quorum or threshold rules fail as BLOCKED_CONFIG.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 114,
+      "name": "Core policy identity and version are pinned into the committee snapshot.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 115,
+      "name": "Policy parsing rejects invented rule shapes rather than approximating them.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 116,
+      "name": "Policy changes do not rewrite historical voting snapshots.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 117,
+      "name": "Material memo, Run, Recommendation, or membership changes follow the exact pinned policy.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 118,
+      "name": "Aggregation output records eligible, participating, approve, reject, abstain, and defer counts.",
+      "categories": [
+        "committee_membership_quorum_policy"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden"
+      ]
+    },
+    {
+      "number": 119,
+      "name": "Effective voter identity derives from the authenticated employee and pinned eligible committee membership.",
+      "categories": [
+        "committee_membership_quorum_policy",
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 120,
+      "name": "Quorum uses the immutable voting snapshot and remains deterministic under concurrent membership changes.",
+      "categories": [
+        "committee_membership_quorum_policy",
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5AggregationProperty",
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 121,
+      "name": "Vote choices are APPROVE, REJECT, ABSTAIN, and DEFER.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 122,
+      "name": "A Vote belongs to one exact voting snapshot and Recommendation revision.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 123,
+      "name": "Vote actor identity is not accepted from request or planner arguments.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 124,
+      "name": "The Vote endpoint resolves the authenticated principal to a canonical employee.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 125,
+      "name": "The Vote transaction verifies that employee is eligible in the pinned snapshot.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 126,
+      "name": "One effective Vote per member is enforced by a database uniqueness invariant.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 127,
+      "name": "An identical Vote retry converges to the original immutable Vote.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 128,
+      "name": "A conflicting second Vote from the same member is rejected.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 129,
+      "name": "Votes are immutable after insertion.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 130,
+      "name": "Votes cannot be deleted by the application role.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 131,
+      "name": "A Vote after voting closure is rejected.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 132,
+      "name": "A Vote on a superseded Recommendation snapshot is rejected.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 133,
+      "name": "A Vote on a different ICCase root is rejected.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 134,
+      "name": "A Vote from an ineligible member is rejected and observed.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 135,
+      "name": "A member becoming ineligible before snapshot creation is excluded.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 136,
+      "name": "A member becoming ineligible after snapshot creation does not rewrite historical eligibility.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 137,
+      "name": "Simultaneous distinct member Votes all persist exactly once.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 138,
+      "name": "Simultaneous conflicting same-member Votes yield one winner and one explicit conflict.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 139,
+      "name": "Vote rationale is protected content and absent from metadata-only events and metrics.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 140,
+      "name": "Dissent is a separate append-only process record, not a Vote choice alias.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 141,
+      "name": "A Dissent pins the exact Vote and voting snapshot it explains.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 142,
+      "name": "Dissent actor identity is derived from the authenticated eligible member.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 143,
+      "name": "Dissent cannot be created for another member.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 144,
+      "name": "Dissent is preserved after majority approval.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 145,
+      "name": "Dissent is preserved after canonical P1 Decision finalization.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 146,
+      "name": "Dissent rationale is not copied into telemetry.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 147,
+      "name": "A committee-approved Recommendation and its minority rejection Votes coexist without erasure.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 148,
+      "name": "Vote totals are independent of database row arrival order.",
+      "categories": [
+        "vote_dissent"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 149,
+      "name": "Dissent remains immutable, tenant-isolated process evidence after the majority outcome is finalized.",
+      "categories": [
+        "vote_dissent",
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants",
+        "commands.coreRegression",
+        "commands.authzMatrix"
+      ]
+    },
+    {
+      "number": 150,
+      "name": "IC Condition types are PRE_DECISION, POST_DECISION_PRE_SIGNING, PRE_CLOSING, and MONITORING.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 151,
+      "name": "IC Condition states are PROPOSED, ACTIVE, SATISFIED, WAIVED, FAILED, and SUPERSEDED.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 152,
+      "name": "A Condition belongs to exactly one tenant-consistent ICCase.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 153,
+      "name": "Condition creation records whether the condition is required.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 154,
+      "name": "Condition activation is an explicit state transition.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 155,
+      "name": "Condition satisfaction is an explicit state transition with exact supporting truth.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 156,
+      "name": "Condition waiver requires governed Authority.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 157,
+      "name": "Condition waiver preserves the original Condition and provenance.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 158,
+      "name": "Condition failure is explicit and cannot masquerade as satisfaction.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 159,
+      "name": "Condition supersession preserves its predecessor and successor identities.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 160,
+      "name": "An ACTIVE required PRE_DECISION Condition blocks DecisionProposal eligibility.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 161,
+      "name": "A satisfied PRE_DECISION Condition no longer blocks DecisionProposal eligibility.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 162,
+      "name": "A governed waived PRE_DECISION Condition remains visible and no longer blocks.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 163,
+      "name": "INVEST_WITH_CONDITIONS requires an actual IC Condition row.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 164,
+      "name": "POST_DECISION_PRE_SIGNING Conditions may remain active after the investment Decision.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 165,
+      "name": "PRE_CLOSING Conditions never imply that the transaction has closed.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 166,
+      "name": "MONITORING Conditions remain governance obligations rather than closing state.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 167,
+      "name": "Condition fulfillment links canonical Evidence or exact P3/P4 truth.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 168,
+      "name": "Condition lifecycle creates or links Core Work instead of a P5 task system.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 169,
+      "name": "Condition transitions emit metadata-only BusinessEvents.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 170,
+      "name": "At most fifty active or proposed Conditions are allowed per ICCase.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 171,
+      "name": "A Condition cannot cross tenant or InvestmentCase roots.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 172,
+      "name": "Concurrent Condition creation and Decision finalization serialize to one truthful order.",
+      "categories": [
+        "condition"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 173,
+      "name": "DecisionProposal is immutable aggregated process evidence, not a canonical Decision.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 174,
+      "name": "DecisionProposal pins the exact ICCase version used for aggregation.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 175,
+      "name": "DecisionProposal pins the committee configuration and policy versions.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 176,
+      "name": "DecisionProposal pins the memo, Recommendation, and P4 Run revisions.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 177,
+      "name": "DecisionProposal pins the exact voting snapshot and effective Vote set.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 178,
+      "name": "DecisionProposal records Question and Condition blockers explicitly.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 179,
+      "name": "DecisionProposal records deterministic quorum and threshold results.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 180,
+      "name": "DecisionProposal semantic hash is stable across equivalent input row order.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 181,
+      "name": "DecisionProposal fails closed for duplicate effective membership or Votes.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 182,
+      "name": "DecisionProposal fails closed for an ineligible Vote.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 183,
+      "name": "A blocked DecisionProposal cannot create a P1 Decision.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 184,
+      "name": "Finalization requires an eligible immutable DecisionProposal.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 185,
+      "name": "The canonical P1 Decision uses decision_type investment_committee.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 186,
+      "name": "The P1 Decision retains exact provenance links to the DecisionProposal and process snapshot.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 187,
+      "name": "Finalization creates one Core DecisionReceipt through the existing execution fabric.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 188,
+      "name": "An identical finalization retry returns the one canonical P1 Decision and Receipt.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 189,
+      "name": "Two simultaneous identical finalizations converge to one canonical P1 Decision.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 190,
+      "name": "P5 never updates or deletes an existing final P1 Decision.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 191,
+      "name": "Reconsideration creates a new P1 Decision that supersedes the earlier final Decision.",
+      "categories": [
+        "decision_proposal_p1_decision"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 192,
+      "name": "Finalization calls the existing P1 recordDecision and finalizeDecision semantics instead of owning Decision rows.",
+      "categories": [
+        "decision_proposal_p1_decision",
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p5Golden",
+        "commands.p1Certification",
+        "databaseInvariants",
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 193,
+      "name": "The Private Equity action registry contains exactly twenty-four executable actions.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 194,
+      "name": "The nine P5 additions are planner-safe preparation actions only.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 195,
+      "name": "open_ic_case is a named durable workflow action with a fixed schema.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 196,
+      "name": "begin_ic_preparation is a named transition action with a fixed schema.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 197,
+      "name": "select_ic_memo_version requires exact grounded P3 identifiers.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 198,
+      "name": "select_ic_underwriting_run requires an exact grounded P4 Run identifier.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 199,
+      "name": "create_ic_question creates an explicit typed Question rather than a generic update.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 200,
+      "name": "attach_ic_question_evidence accepts only exact canonical source identities.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 201,
+      "name": "request_ic_memo_review is a named review-readiness operation.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 202,
+      "name": "satisfy_ic_condition requires an exact Condition and supporting truth.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 203,
+      "name": "prepare_ic_decision_proposal computes a draft proposal without finalizing a Decision.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 204,
+      "name": "Every executable action has exactly one action-hardening specification row.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 205,
+      "name": "Every P5 action schema rejects tenantId and actorId selectors.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 206,
+      "name": "Action grounding resolves exact tenant-owned canonical entities before mutation.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 207,
+      "name": "Action preconditions pin case and referenced object versions.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 208,
+      "name": "Action authority checks occur outside presentation/UI code.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 209,
+      "name": "Action effects are recorded through existing Core BusinessEffect semantics.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 210,
+      "name": "Action verification reads back the postcondition instead of trusting invocation success.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 211,
+      "name": "Action completion creates or converges on an existing Core DecisionReceipt.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 212,
+      "name": "Action idempotency keys converge retries without duplicate domain effects.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 213,
+      "name": "Ambiguous failures trigger read-back recovery before any repeat mutation.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 214,
+      "name": "The executable registry and fixed manifest agree on all forty-one global actions.",
+      "categories": [
+        "pe_action_fabric_hardening"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture"
+      ]
+    },
+    {
+      "number": 215,
+      "name": "Planner input cannot cast a Vote, create a Dissent, waive governance, close voting, or finalize a Decision.",
+      "categories": [
+        "pe_action_fabric_hardening",
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.actionManifest",
+        "commands.plannerIsolation",
+        "commands.p5Contract",
+        "architecture",
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 216,
+      "name": "Core Authority decisions authorize operations but are never IC Votes or P1 investment Decisions.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 217,
+      "name": "Question waiver requires the exact Authority capability and scoped resource.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 218,
+      "name": "Condition waiver requires the exact Authority capability and scoped resource.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 219,
+      "name": "Voting open and close require their exact governed capabilities.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 220,
+      "name": "P1 Decision finalization requires an Authority decision outside the UI.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 221,
+      "name": "Authority denial fails before any P5 or P1 mutation.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 222,
+      "name": "All thirteen P5 relations have enabled and forced tenant RLS.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 223,
+      "name": "Cross-tenant reads and writes fail under the application role.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 224,
+      "name": "Prompt-injected voter, tenant, authority, or finalization instructions cannot alter trusted identity context.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 225,
+      "name": "Audit events and metrics contain identifiers and states but no memo, answer, vote, dissent, evidence, or financial content.",
+      "categories": [
+        "authority_security"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.coreRegression",
+        "commands.authzMatrix",
+        "databaseInvariants"
+      ]
+    },
+    {
+      "number": 226,
+      "name": "Two conflicting Votes from one authenticated member produce one immutable effective Vote.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 227,
+      "name": "Voting close racing a new Vote yields either an included Vote or an explicit late-Vote rejection.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 228,
+      "name": "Recommendation revision racing a Vote cannot attach the Vote to the wrong revision.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 229,
+      "name": "Memo revision selection racing voting-open cannot produce a mixed snapshot.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 230,
+      "name": "Question resolution racing voting-open retains a single serializable truth.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 231,
+      "name": "Condition creation racing Decision finalization retains a single serializable truth.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 232,
+      "name": "Two simultaneous finalization requests converge to one P1 Decision.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 233,
+      "name": "P1 Decision supersession racing a Decision proof read returns a coherent before-or-after proof.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 234,
+      "name": "Crash after ICCase insertion and before event publication rolls back and replays cleanly.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 235,
+      "name": "Crash after Vote insertion and before response replays to one immutable Vote.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 236,
+      "name": "Crash between P1 Decision creation, P5 linkage, Receipt creation, and response never leaves a false completed state.",
+      "categories": [
+        "concurrency_idempotency_recovery"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime",
+        "commands.p3Regression"
+      ]
+    },
+    {
+      "number": 237,
+      "name": "The P5 API exposes exactly thirty typed routes and no generic mutation route.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 238,
+      "name": "The Vote API is a separate authenticated human endpoint with no voter selector.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 239,
+      "name": "Every P5 API route is present in generated OpenAPI.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 240,
+      "name": "Every P5 API route is present in the generated authorization matrix.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 241,
+      "name": "The IC aggregate endpoint returns semantic memo, Question, Recommendation, voting, Condition, and Decision proof sections.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 242,
+      "name": "The IC Workspace renders the full lifecycle without raw JSON panels.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 243,
+      "name": "The frontend labels P3 editorial state, P4 finance, Authority, and P1 Decision ownership truthfully.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 244,
+      "name": "The frontend never presents a planner operation as a human Vote, waiver, voting close, or final Decision.",
+      "categories": [
+        "api_frontend_contract"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Contract",
+        "commands.openapi",
+        "commands.authzMatrix",
+        "architecture"
+      ]
+    },
+    {
+      "number": 245,
+      "name": "A fresh database applies every migration through 0127 and creates empty P5 tables.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 246,
+      "name": "A populated P1-P4 database upgrades through 0127 without changing legacy row bytes or identities.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 247,
+      "name": "Legacy P1 investment_committee Decisions remain valid without fabricated P5 history.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 248,
+      "name": "P1 deterministic certification and integration regressions remain green.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 249,
+      "name": "P2 deterministic certification and integration regressions remain green.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 250,
+      "name": "P3 deterministic certification and integration regressions remain green.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 251,
+      "name": "P4 deterministic certification and integration regressions remain green.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 252,
+      "name": "Historical release:pe5 evidence remains intact while release:pe-p5-actions-ic is unambiguous and production release remains gated by literal /GOAL.",
+      "categories": [
+        "migration_regression_release_boundary"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.freshMigration",
+        "commands.p5Upgrade",
+        "commands.releaseBoundary",
+        "commands.historicalPe5"
+      ]
+    },
+    {
+      "number": 253,
+      "name": "Loading the complete IC aggregate stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 254,
+      "name": "Opening one Question stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 255,
+      "name": "Fifty authenticated concurrent Votes stay inside their measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 256,
+      "name": "Closing and aggregating a fifty-member Vote set stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 257,
+      "name": "Computing and persisting an immutable DecisionProposal stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 258,
+      "name": "The canonical P1 Decision finalization transaction stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 259,
+      "name": "Loading the authenticated Decision proof stays inside its measured release guardrail.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    },
+    {
+      "number": 260,
+      "name": "The exact 100-open-Question and 50-active-Condition limits are enforced and measured.",
+      "categories": [
+        "performance_limits"
+      ],
+      "status": "PASS",
+      "evidence": [
+        "commands.p5Runtime.benchmark"
+      ]
+    }
+  ],
+  "explicitStatements": [
+    "P1 pe_decision remains the sole canonical PE investment Decision.",
+    "IC Votes, Recommendations, Dissents and DecisionProposals are process evidence/state and are not canonical investment Decisions.",
+    "Core Authority decisions are authorization decisions and are not IC Votes or P1 investment Decisions.",
+    "P3 editorial approval is not investment approval.",
+    "P4 remains the sole deterministic underwriting engine; P5 never recalculates finance.",
+    "IC memo/deck content remains P3 Document/DocumentVersion truth; P5 does not create another artifact system.",
+    "Questions attach exact canonical Evidence/P3/P4 references instead of creating an ic_evidence system.",
+    "Committee Votes derive actor identity from authenticated canonical membership and cannot be planner-forged.",
+    "Quorum and vote thresholds are deterministic and evaluated against the exact pinned committee/policy version.",
+    "The final investment outcome is finalized through existing P1 recordDecision/finalizeDecision semantics rather than direct P5 ownership.",
+    "IC Conditions are distinct from transaction closing conditions.",
+    "No separate Work, Event, Authority, Receipt, Evidence, Artifact, Decision, Source Truth, policy or underwriting system was created.",
+    "No P6 planning-core redesign, P7 autonomous workforce, fund/LP system or AWS expansion was smuggled into P5.",
+    "FINNOR can take an exact InvestmentCase through one auditable IC lifecycle from memo/questions/evidence through recommendation, member votes/dissents, conditions and canonical Decision, while executable PE operations are grounded, authorized, verified, recoverable and receipted through the existing Core."
+  ],
+  "productionRelease": {
+    "result": "NOT_EXECUTED_LITERAL_GOAL_NOT_SUPPLIED",
+    "authorized": false,
+    "reason": "The authoritative roadmap permits production release only when the user supplies the literal /GOAL command."
+  },
+  "remainingBlockers": [
+    "Production release was intentionally not executed because literal /GOAL was not supplied; this is outside deterministic P5 completion."
+  ],
+  "exactCleanHandoffToP6": "P6 may consume the immutable IC aggregate, exact DecisionProposal/proof, canonical P1 Decision link, Work/Event/Authority/Receipt evidence, and the nine planner-safe preparation actions. P6 must not forge sovereign committee acts, alter P1/P3/P4 ownership, or redesign P5 state."
+}

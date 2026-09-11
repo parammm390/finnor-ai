@@ -20,11 +20,11 @@ const openapi = JSON.parse(readFileSync(join(process.cwd(), "openapi.json"), "ut
   };
 };
 
-describe("generated Upgrade 3 OpenAPI contract", () => {
+describe("generated operational-query OpenAPI contract", () => {
   it("composes Work metadata into each strict intent branch", () => {
     const schema = openapi.paths["/api/queries"].post.requestBody.content["application/json"].schema;
     expect(schema.allOf).toBeUndefined();
-    expect(schema.anyOf).toHaveLength(14);
+    expect(schema.anyOf).toHaveLength(16);
 
     for (const branch of schema.anyOf ?? []) {
       expect(branch.additionalProperties).toBe(false);
@@ -46,6 +46,7 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
     ]));
     expect([...byIntent.keys()].sort()).toEqual([
       "agent_activity",
+      "attention_queue",
       "closing_readiness",
       "company_context",
       "critical_dependencies",
@@ -59,13 +60,25 @@ describe("generated Upgrade 3 OpenAPI contract", () => {
       "pe_world_state",
       "team_roster",
       "work_list",
+      "workforce_status",
     ]);
     expect(byIntent.get("agent_activity")).toEqual(expect.objectContaining({ localDateRange: expect.any(Object) }));
+    expect(byIntent.get("workforce_status")).toEqual(expect.objectContaining({ page: expect.any(Object) }));
     expect(byIntent.get("work_list")).toEqual(expect.objectContaining({
       openOnly: expect.any(Object),
       recordId: expect.any(Object),
       // workId is the durable Work attachment metadata, not the query filter.
       workId: expect.any(Object),
+    }));
+    expect(byIntent.get("attention_queue")).toEqual(expect.objectContaining({
+      page: expect.any(Object),
+      workId: expect.any(Object),
+      executionKey: expect.any(Object),
+      idempotencyKey: expect.any(Object),
+    }));
+    expect(byIntent.get("attention_queue")).not.toEqual(expect.objectContaining({
+      employeeId: expect.anything(),
+      tenantId: expect.anything(),
     }));
     expect(byIntent.get("company_context")).toEqual(expect.objectContaining({ anchor: expect.any(Object), query: expect.any(Object) }));
     expect(byIntent.get("party_lookup")).toEqual(expect.objectContaining({ ref: expect.any(Object), query: expect.any(Object) }));

@@ -15,6 +15,10 @@ export async function seed(databaseUrl = process.env.DATABASE_URL): Promise<void
     await client.query("BEGIN");
     await client.query("SET LOCAL search_path = finnor_os, public");
     await client.query("SELECT set_config('app.tenant_id', $1, true)", [SEED_TENANT_ID]);
+    // The canonical development seed owns its explicit product assignment. This
+    // also keeps disposable Core fixture triggers from classifying the seed as a
+    // generic non-product tenant when a test invokes seed after Vitest setup.
+    await client.query("SELECT set_config('app.test_vertical_mode', 'explicit', true)");
     await client.query(
       `INSERT INTO tenants (id,name) VALUES ($1,'Private Equity Development Project')
        ON CONFLICT (id) DO NOTHING`,

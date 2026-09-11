@@ -23,6 +23,14 @@ export const PE_ENTITY_TYPES = [
   "pe_document_link",
   "pe_evidence_link",
   "pe_finding_risk_link",
+  "pe_ic_case",
+  "pe_ic_memo",
+  "pe_ic_question",
+  "pe_ic_recommendation",
+  "pe_ic_vote",
+  "pe_ic_dissent",
+  "pe_ic_condition",
+  "pe_ic_decision_proposal",
 ] as const;
 
 export type PeEntityType = (typeof PE_ENTITY_TYPES)[number];

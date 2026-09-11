@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, downloadArtifact } from "../../../lib/api";
 
@@ -54,6 +54,7 @@ function cellPosition(address: string): { column: number; row: number } {
 
 export default function ArtifactWorkspacePage() {
   const { id } = useParams<{ id: string }>();
+  const requestedVersion = useSearchParams().get("versionId") ?? "";
   const [summary, setSummary] = useState<Summary | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<string>("");
   const [ir, setIr] = useState<IrSlice | null>(null);
@@ -70,10 +71,10 @@ export default function ArtifactWorkspacePage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadSummary = useCallback(async () => {
-    const data = await api<Summary>(`/api/documents/${id}/artifact`);
+    const data = await api<Summary>(`/api/documents/${id}/artifact${requestedVersion ? `?versionId=${encodeURIComponent(requestedVersion)}` : ""}`);
     setSummary(data);
-    setSelectedVersion((current) => current || data.version.id);
-  }, [id]);
+    setSelectedVersion((current) => current || requestedVersion || data.version.id);
+  }, [id, requestedVersion]);
 
   useEffect(() => { loadSummary().catch((reason) => setError((reason as Error).message)); }, [loadSummary]);
   useEffect(() => {

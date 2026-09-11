@@ -200,9 +200,31 @@ interface CommunicationPlan {
   targets: Array<{ recipient: PartyRef; endpoint?: string }>;
 }
 
+type CommunicationActionType = "send_message" | "notify_group" | "place_call";
+
+interface CommunicationRouteAttempt {
+  channel: UniversalCommunicationChannel;
+  route: ExecutionRouteDecision;
+  recipientCount: number;
+}
+
+interface CommunicationSelection {
+  config: UniversalConfig;
+  recipient: PartyRef;
+  requestedChannel: UniversalCommunicationChannel;
+  explicitIdentityId?: string;
+  routeAttempts: CommunicationRouteAttempt[];
+  plan: CommunicationPlan | null;
+  failure?: {
+    error: string;
+    errorKind: "config";
+    output: Record<string, unknown>;
+  };
+}
+
 async function planCommunicationChannel(params: {
   scope: RuntimeScope;
-  actionType: "send_message" | "notify_group" | "place_call";
+  actionType: CommunicationActionType;
   recipient: PartyRef;
   channel: UniversalCommunicationChannel;
   explicitIdentityId?: string;
@@ -217,6 +239,172 @@ async function planCommunicationChannel(params: {
   }
   const targets = await resolveCommunicationTargets(params.scope.tenantId, params.recipient, params.channel, params.scope.actorId);
   return { channel: params.channel, route, targets: targets.map((target) => ({ recipient: target.recipient, endpoint: target.endpoint })) };
+}
+
+/** Resolve the exact tenant policy, actor-bound identity/provider, fallback route,
+ * and recipient endpoint availability used by execution. This is read-only and is
+ * deliberately shared with planning so a candidate cannot be accepted using a
+ * different provider-health model than the one dispatch will actually use. */
+async function selectCommunicationPlan(params: {
+  scope: RuntimeScope;
+  actionType: CommunicationActionType;
+  payload: Record<string, unknown>;
+}): Promise<CommunicationSelection> {
+  const config = await readConfig(params.scope.tenantId);
+  const recipient = (params.actionType === "notify_group" ? params.payload.teamRef : params.payload.recipient) as PartyRef;
+  const requestedChannel: UniversalCommunicationChannel = params.actionType === "place_call"
+    ? "voice"
+    : params.payload.channel as UniversalCommunicationChannel;
+  await requireParty(params.scope, recipient);
+  if (!config.communication.allowedChannels.includes(requestedChannel) && !config.communication.allowChannelFallback) {
+    return {
+      config,
+      recipient,
+      requestedChannel,
+      routeAttempts: [],
+      plan: null,
+      failure: {
+        error: `Channel ${requestedChannel} is not allowed by tenant policy`,
+        errorKind: "config",
+        output: { recipient, requestedChannel },
+      },
+    };
+  }
+
+  const identityId = object(params.payload.communicationIdentityRef).communicationIdentityId;
+  const explicitIdentityId = typeof identityId === "string" ? identityId : undefined;
+  const supportedChannels: UniversalCommunicationChannel[] = params.actionType === "place_call"
+    ? ["voice"]
+    : ["internal", "email", "sms"];
+  // An explicit identity is an exact sender/provider choice. Do not silently route
+  // around it even when general tenant fallback is enabled.
+  const fallbackChannels = config.communication.allowChannelFallback && !explicitIdentityId
+    ? config.communication.allowedChannels.filter((candidate) => supportedChannels.includes(candidate) && candidate !== requestedChannel)
+    : [];
+  const candidateChannels = [requestedChannel, ...fallbackChannels];
+  const routeAttempts: CommunicationRouteAttempt[] = [];
+  let plan: CommunicationPlan | null = null;
+  for (const candidate of candidateChannels) {
+    if (!config.communication.allowedChannels.includes(candidate)) continue;
+    const candidatePlan = await planCommunicationChannel({
+      scope: params.scope,
+      actionType: params.actionType,
+      recipient,
+      channel: candidate,
+      explicitIdentityId,
+    });
+    routeAttempts.push({ channel: candidate, route: candidatePlan.route, recipientCount: candidatePlan.targets.length });
+    if (!plan) plan = candidatePlan;
+    if (candidatePlan.route.executable && candidatePlan.targets.length > 0) {
+      plan = candidatePlan;
+      break;
+    }
+  }
+  if (!plan) {
+    return {
+      config,
+      recipient,
+      requestedChannel,
+      ...(explicitIdentityId ? { explicitIdentityId } : {}),
+      routeAttempts,
+      plan: null,
+      failure: {
+        error: "No tenant-allowed channel is available for this communication",
+        errorKind: "config",
+        output: { recipient, requestedChannel, routeAttempts },
+      },
+    };
+  }
+  return {
+    config,
+    recipient,
+    requestedChannel,
+    ...(explicitIdentityId ? { explicitIdentityId } : {}),
+    routeAttempts,
+    plan,
+  };
+}
+
+export interface CommunicationActionAvailability {
+  actionType: CommunicationActionType;
+  available: boolean;
+  requestedChannel: UniversalCommunicationChannel;
+  selectedChannel: UniversalCommunicationChannel | null;
+  provider: string | null;
+  route: ExecutionRouteDecision["route"] | null;
+  reason: string | null;
+  reasonCode: string | null;
+  recipientCount: number;
+}
+
+/** Secret-free, read-only projection of the route that would be selected now.
+ * Endpoints, identity addresses, credential references, and secrets are never
+ * returned to the planner. Any inability to prove the route fails closed. */
+export async function inspectCommunicationActionAvailability(params: {
+  tenantId: string;
+  actorId?: string;
+  actionType: CommunicationActionType;
+  payload: Record<string, unknown>;
+}): Promise<CommunicationActionAvailability> {
+  const requestedChannel: UniversalCommunicationChannel = params.actionType === "place_call"
+    ? "voice"
+    : params.payload.channel as UniversalCommunicationChannel;
+  try {
+    const selection = await selectCommunicationPlan({
+      scope: {
+        tenantId: params.tenantId,
+        domainActionId: "00000000-0000-4000-8000-000000000000",
+        ...(params.actorId ? { actorId: params.actorId } : {}),
+      },
+      actionType: params.actionType,
+      payload: params.payload,
+    });
+    if (!selection.plan) {
+      return {
+        actionType: params.actionType,
+        available: false,
+        requestedChannel,
+        selectedChannel: null,
+        provider: null,
+        route: null,
+        reason: selection.failure?.error ?? "No communication route could be proven",
+        reasonCode: "route_unavailable",
+        recipientCount: 0,
+      };
+    }
+    const { channel, route, targets } = selection.plan;
+    const overRecipientCap = targets.length > selection.config.communication.maxGroupRecipients;
+    const available = route.executable && targets.length > 0 && !overRecipientCap;
+    return {
+      actionType: params.actionType,
+      available,
+      requestedChannel,
+      selectedChannel: channel,
+      provider: route.provider,
+      route: route.route,
+      reason: available
+        ? null
+        : overRecipientCap
+          ? "Resolved group exceeds the tenant recipient cap"
+          : targets.length === 0
+            ? "No active recipient has an endpoint for any eligible channel"
+            : `Communication route is unavailable (${route.reasonCode})`,
+      reasonCode: available ? null : overRecipientCap ? "recipient_cap_exceeded" : targets.length === 0 ? "recipient_endpoint_unavailable" : route.reasonCode,
+      recipientCount: targets.length,
+    };
+  } catch (error) {
+    return {
+      actionType: params.actionType,
+      available: false,
+      requestedChannel,
+      selectedChannel: null,
+      provider: null,
+      route: null,
+      reason: error instanceof Error ? error.message : "Communication route health could not be verified",
+      reasonCode: "route_check_failed",
+      recipientCount: 0,
+    };
+  }
 }
 
 async function ensureDelivery(params: {
@@ -303,44 +491,16 @@ async function dispatchOne(params: {
   return { deliveryId: delivery.id, recipient: params.recipient, status, route: params.route.route, providerRef: ref, communicationIdentityId, errorKind: result.errorKind };
 }
 
-async function executeCommunication(actionType: "send_message" | "notify_group" | "place_call", payload: Record<string, unknown>, tools: ToolRegistry) {
+async function executeCommunication(actionType: CommunicationActionType, payload: Record<string, unknown>, tools: ToolRegistry) {
   const scope = requireScope(tools);
-  const config = await readConfig(scope.tenantId);
-  const recipient = (actionType === "notify_group" ? payload.teamRef : payload.recipient) as PartyRef;
-  const requestedChannel: UniversalCommunicationChannel = actionType === "place_call" ? "voice" : payload.channel as UniversalCommunicationChannel;
-  await requireParty(scope, recipient);
-  if (!config.communication.allowedChannels.includes(requestedChannel) && !config.communication.allowChannelFallback) {
-    return { status: "failure" as const, output: { recipient, requestedChannel }, error: `Channel ${requestedChannel} is not allowed by tenant policy`, errorKind: "config" as const };
-  }
-  const identityId = object(payload.communicationIdentityRef).communicationIdentityId;
-  const supportedChannels: UniversalCommunicationChannel[] = actionType === "place_call" ? ["voice"] : ["internal", "email", "sms"];
-  // An explicit identity is an exact sender/provider choice. Do not silently route
-  // around it even when general tenant fallback is enabled.
-  const fallbackChannels = config.communication.allowChannelFallback && typeof identityId !== "string"
-    ? config.communication.allowedChannels.filter((candidate) => supportedChannels.includes(candidate) && candidate !== requestedChannel)
-    : [];
-  const candidateChannels = [requestedChannel, ...fallbackChannels];
-  const routeAttempts: Array<{ channel: UniversalCommunicationChannel; route: ExecutionRouteDecision; recipientCount: number }> = [];
-  let plan: CommunicationPlan | null = null;
-  for (const candidate of candidateChannels) {
-    if (!config.communication.allowedChannels.includes(candidate)) continue;
-    const candidatePlan = await planCommunicationChannel({
-      scope,
-      actionType,
-      recipient,
-      channel: candidate,
-      explicitIdentityId: typeof identityId === "string" ? identityId : undefined,
-    });
-    routeAttempts.push({ channel: candidate, route: candidatePlan.route, recipientCount: candidatePlan.targets.length });
-    if (!plan) plan = candidatePlan;
-    if (candidatePlan.route.executable && candidatePlan.targets.length > 0) {
-      plan = candidatePlan;
-      break;
-    }
-  }
-  if (!plan) {
-    return { status: "failure" as const, output: { recipient, requestedChannel, routeAttempts }, error: "No tenant-allowed channel is available for this communication", errorKind: "config" as const };
-  }
+  const selection = await selectCommunicationPlan({ scope, actionType, payload });
+  if (!selection.plan) return {
+    status: "failure" as const,
+    output: selection.failure?.output ?? { recipient: selection.recipient, requestedChannel: selection.requestedChannel, routeAttempts: selection.routeAttempts },
+    error: selection.failure?.error ?? "No tenant-allowed channel is available for this communication",
+    errorKind: selection.failure?.errorKind ?? "config" as const,
+  };
+  const { config, recipient, requestedChannel, explicitIdentityId: identityId, routeAttempts, plan } = selection;
   const { channel, route, targets } = plan;
   const fallbackApplied = channel !== requestedChannel;
   const workId = object(payload.workRef).workId as string | undefined;
@@ -357,7 +517,7 @@ async function executeCommunication(actionType: "send_message" | "notify_group" 
   }
   const counts = deliveries.reduce<Record<string, number>>((acc, row) => ({ ...acc, [row.status]: (acc[row.status] ?? 0) + 1 }), {});
   const usedIdentityIds = [...new Set(deliveries.map((row) => row.communicationIdentityId).filter((id): id is string => typeof id === "string"))];
-  await appendUniversalEvent({ scope, actionType, eventType: "communication_dispatched", route: route.route, subject: { type: recipient.partyType, id: recipient.partyId }, communicationIdentityId: usedIdentityIds.length === 1 ? usedIdentityIds[0] : null, evidence: { requestedChannel, selectedChannel: channel, fallbackApplied, requestedCommunicationIdentityId: typeof identityId === "string" ? identityId : null, routeAttempts, recipientCount: targets.length, counts, deliveryIds: deliveries.map((row) => row.deliveryId), communicationIdentityIds: usedIdentityIds } });
+  await appendUniversalEvent({ scope, actionType, eventType: "communication_dispatched", route: route.route, subject: { type: recipient.partyType, id: recipient.partyId }, communicationIdentityId: usedIdentityIds.length === 1 ? usedIdentityIds[0] : null, evidence: { requestedChannel, selectedChannel: channel, fallbackApplied, requestedCommunicationIdentityId: identityId ?? null, routeAttempts, recipientCount: targets.length, counts, deliveryIds: deliveries.map((row) => row.deliveryId), communicationIdentityIds: usedIdentityIds } });
   const unavailable = deliveries.some((row) => row.status === "failed" || row.status === "unknown");
   return unavailable
     ? { status: "integration_unavailable" as const, output: { recipient, requestedChannel, channel, fallbackApplied, route, routeAttempts, deliveries, counts }, error: deliveries.some((row) => row.status === "unknown") ? "A provider outcome is unknown and requires reconciliation" : `The selected route could not deliver to every recipient`, errorKind: deliveries.some((row) => row.status === "unknown") ? "unknown_outcome" as const : "config" as const }

@@ -51,8 +51,11 @@ export { JarvisApiError }
 // fetch calls below use the SUFFIX (jarvisGet/jarvisPost already prefix `/api/jarvis/`),
 // so this table is the one place path literals are cross-checked, not scattered
 // per-call-site string gymnastics.
+// Only locally implemented finnor-os routes belong in this compile-time map.
+// Older deployment-compatibility calls (stats/comms/resources/overview/showtime
+// and workflow-step compensation) remain runtime clients but are not falsely
+// represented as routes in the current local OpenAPI document.
 const API_PATHS = {
-  stats: "/api/stats",
   actionsSubmit: "/api/actions",
   objectives: "/api/objectives",
   employees: "/api/employees",
@@ -66,19 +69,15 @@ const API_PATHS = {
   runControlCancel: "/api/workflows/runs/{id}/cancel",
   runControlRetry: "/api/workflows/runs/{id}/retry",
   runControlEscalate: "/api/workflows/runs/{id}/escalate",
-  compensateStep: "/api/workflows/steps/{id}/compensate",
   events: "/api/events",
   readModel: "/api/read-models/{view}",
-  comms: "/api/comms",
   insights: "/api/insights",
   setupStatus: "/api/setup/status",
   integrationsStatus: "/api/integrations/status",
-  resources: "/api/resources/{kind}",
   audit: "/api/audit",
   receipts: "/api/receipts",
   receipt: "/api/receipts/{id}",
   me: "/api/me",
-  overview: "/api/overview",
   dlqList: "/api/dlq",
   dlqItem: "/api/dlq/{id}",
   dlqReplay: "/api/dlq/{id}/replay",
@@ -90,7 +89,6 @@ const API_PATHS = {
   workCases: "/api/read-models/{view}",
   workExecution: "/api/works/{id}/execution",
   workReplay: "/api/works/{id}/replay",
-  dealerZeroTimeCompression: "/api/dealer-zero/time-compression",
   instruction: "/api/instructions/{id}",
   instructionEvents: "/api/instructions/{id}/events",
   workObjective: "/api/works/{id}/objective",
@@ -205,6 +203,97 @@ export interface ActivityPage {
   items: ActivityItem[]
   nextCursor: string | null
   hasMore: boolean
+}
+
+export type WorkforceRuntimeStatus = "idle" | "working" | "waiting" | "blocked" | "failed" | "unavailable"
+export interface WorkforceAssignmentProjection {
+  id: string
+  workId: string
+  planRevisionId: string
+  planNodeId: string
+  objectiveLoopId: string | null
+  objectiveStepId: string | null
+  agentProfileId: string
+  agentRevisionId: string
+  capability: string
+  nodeKind: "query" | "action" | "wait" | "check"
+  state: "queued" | "claimed" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "reassigned"
+  attempt: number
+  assignmentReason: string
+  reassignmentReason: string | null
+  domainActionId: string | null
+  startedAt: string | null
+  completedAt: string | null
+  failure: Record<string, unknown> | null
+  createdAt: string
+  updatedAt: string
+}
+export interface WorkforceMetricProjection {
+  agentRevisionId: string
+  capability: string
+  nodeKind: "query" | "action" | "wait" | "check"
+  contextClass: string
+  attemptCount: number
+  qualityAttemptCount: number
+  verifiedCompletionCount: number
+  qualityFailureCount: number
+  humanRejectionCount: number
+  providerOutageCount: number
+  externalFailureCount: number
+  replanCount: number
+  recoveryCount: number
+  sampleState: "KNOWN" | "UNKNOWN"
+  verifiedCompletionRate: number | null
+  qualityFailureRate: number | null
+  humanRejectionRate: number | null
+  medianLatencyMs: number | null
+  p95LatencyMs: number | null
+  knownCostUsd: number | null
+}
+export interface WorkforceWorkerProjection {
+  id: string
+  key: string
+  name: string
+  profileStatus: "enabled" | "disabled"
+  runtimeStatus: WorkforceRuntimeStatus
+  currentLoad: number
+  activeRevision: null | {
+    id: string
+    revision: number
+    modelRoute: { provider: string; model?: string | null; purpose: "objective_execution" }
+    capabilityGrants: Array<{ capability: string; kind: "query" | "action" | "wait" | "check" }>
+    maxConcurrentAssignments: number
+    autonomyLimits: { maxActions: number; maxQueries: number; maxReplans: number; maxPlannerCalls: number; maxWallClockMs: number; maxKnownCostUsd?: number | null; maxKnownTokens?: number | null }
+    planningHints: Record<string, unknown>
+    learningRevisionId: string | null
+    configHash: string
+    createdAt: string
+  }
+  latestAssignment: WorkforceAssignmentProjection | null
+  metrics: WorkforceMetricProjection[]
+}
+export interface WorkforceStatusProjection {
+  kind: "operational_query_result"
+  status: "ok" | "partial" | "unavailable"
+  intent: "workforce_status"
+  configurationState: "configured" | "unconfigured"
+  workers: WorkforceWorkerProjection[]
+  assignments: WorkforceAssignmentProjection[]
+  currentAssignments: WorkforceAssignmentProjection[]
+  completedAssignments: WorkforceAssignmentProjection[]
+  blockedOrFailedAssignments: WorkforceAssignmentProjection[]
+  proposals: Array<{ id: string; targetType: "agent_profile" | "agent_capability"; targetId: string; targetAgentRevisionId: string; capability: string | null; evidenceWindow: Record<string, unknown>; sampleSize: number; proposedChange: Record<string, unknown>; confidenceClass: "SUPPORTED" | "STRONG"; status: "proposed" | "approved" | "rejected" | "promoted"; reviewedBy: string | null; reviewedAt: string | null; createdAt: string }>
+  learningRevisions: Array<{ id: string; targetAgentProfileId: string; revision: number; parentRevisionId: string | null; sourceProposalId: string; semanticHash: string; promotedBy: string; createdAt: string }>
+  truncated: boolean
+  page: { limit: number; returned: number; totalCount: number | null; totalCountExact: boolean; hasMore: boolean; nextCursor: string | null; truncated: boolean }
+  sourceStatus: {
+    status: "complete" | "partial"
+    asOf: string
+    tables: string[]
+    truncatedSources: string[]
+    bounds: Record<string, { returned: number; limit: number; truncated: boolean; totalCount?: number }>
+  }
+  asOf: string
 }
 
 // P2.T3 — exact household source shapes from resources/households and the existing
@@ -532,6 +621,7 @@ const READ_MODEL_VIEWS = {
   "follow-up-debt": null as unknown as FollowUpDebt,
   "data-quality": null as unknown as DataQuality,
   "work-cases": null as unknown as WorkCaseProjection[],
+  "workforce-status": null as unknown as WorkforceStatusProjection,
   reliability: null as unknown as ReliabilityMetrics,
 }
 type ReadModelView = keyof typeof READ_MODEL_VIEWS

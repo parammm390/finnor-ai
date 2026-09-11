@@ -1,4 +1,5 @@
 import type { DomainAction, OperatingInteractionContext } from "@finnor/shared-types";
+import type { PlanGraph } from "@finnor/planning";
 import type { OperationalQueryDecision } from "./fast-read-lane";
 import { isConsequentialAction } from "./compiler";
 
@@ -101,4 +102,25 @@ export function finalizeInstructionRoute(
   return atomic
     ? { ...preliminary, reasonCodes: [...preliminary.reasonCodes, "one_independent_effect_set"] }
     : { version: 1, route: "OBJECTIVE", reasonCodes: ["atomic_candidate_rejected_by_typed_plan"] };
+}
+
+/** Canonical P6 route refinement. Check nodes are completion coverage, not extra
+ * effects; query/wait nodes or any action dependency make the Work an Objective. */
+export function finalizeInstructionRouteFromPlan(
+  preliminary: InstructionRouteDecision,
+  graph: PlanGraph | null | undefined,
+): InstructionRouteDecision {
+  if (preliminary.route !== "ATOMIC_EFFECT") return preliminary;
+  const actions = graph?.nodes.filter((node) => node.kind === "action") ?? [];
+  const hasContinuation = graph?.nodes.some((node) => node.kind === "query" || node.kind === "wait") ?? true;
+  const action = actions[0];
+  const atomic = Boolean(graph)
+    && actions.length === 1
+    && !hasContinuation
+    && action?.dependsOn.length === 0
+    && !CONTINUATION_ACTION.test(action?.actionType ?? "")
+    && Boolean(action && isConsequentialAction(action.actionType, action.payload));
+  return atomic
+    ? { ...preliminary, reasonCodes: [...preliminary.reasonCodes, "one_independent_effect_set"] }
+    : { version: 1, route: "OBJECTIVE", reasonCodes: ["atomic_candidate_rejected_by_compiled_plan"] };
 }

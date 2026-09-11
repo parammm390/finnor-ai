@@ -1,5 +1,5 @@
 // B1.T1 acceptance: every table the plan names (action_log, workflow_steps,
-// dead_letters, domain_actions(status)) — plus B1.T4's durable half (calls) — actually
+// dead_letters, domain_actions(status)) — plus the canonical Work operational delta — actually
 // fires a real 'jarvis_events' NOTIFY carrying {tenantId, kind, id, ts} on a real
 // Postgres LISTEN connection. Not a unit test of the trigger SQL in isolation — a real
 // dedicated pg.Client LISTENs, real drizzle inserts/updates run through adminDb(), and
@@ -19,7 +19,7 @@ import {
   workflowRuns,
   workflowSteps,
   deadLetters,
-  calls,
+  works,
 } from "@finnor/db";
 import { eq } from "drizzle-orm";
 
@@ -139,18 +139,18 @@ describe.skipIf(!available)("B1.T1 — jarvis_events NOTIFY triggers", () => {
     expect(seen.id).toBe(dl!.id);
   });
 
-  it("fires on calls insert (B1.T4 durable half)", async () => {
+  it("fires on canonical Work insert (operational delta)", async () => {
     events = [];
-    const [call] = await adminDb()
-      .insert(calls)
+    const [work] = await adminDb()
+      .insert(works)
       .values({
         tenantId,
-        direction: "inbound",
-        sourceSystem: "vapi",
-        externalId: `test-call-${Date.now()}`,
+        initialChannel: "console",
+        initialInstruction: "notify test work",
       })
       .returning();
-    const seen = await waitForKind("call");
-    expect(seen.id).toBe(call!.id);
+    const seen = await waitForKind("operational_delta");
+    expect(seen.id).toMatch(/^\d+$/);
+    expect(work!.id).toBeTruthy();
   });
 });

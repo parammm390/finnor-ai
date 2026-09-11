@@ -15,6 +15,7 @@ export const runObjectiveIteration: JobHandler = async (payload) => {
     objectiveLoopId,
     ...(Number.isInteger(payload.expectedRevision) ? { expectedRevision: Number(payload.expectedRevision) } : {}),
     ...(Number.isInteger(payload.expectedStepNumber) ? { expectedStepNumber: Number(payload.expectedStepNumber) } : {}),
+    deferToWorkforceJob: true,
   });
 };
 

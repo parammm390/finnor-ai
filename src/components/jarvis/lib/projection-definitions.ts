@@ -1,4 +1,4 @@
-import { jarvisClient, type ActivityPage, type CausalReplayProjection, type ExecutionProjection, type Household360Projection, type HouseholdResource, type InvoiceResource, type Vitals, type WorkCaseProjection } from "@/lib/jarvis-client"
+import { jarvisClient, type ActivityPage, type CausalReplayProjection, type ExecutionProjection, type Household360Projection, type HouseholdResource, type InvoiceResource, type Vitals, type WorkCaseProjection, type WorkforceStatusProjection } from "@/lib/jarvis-client"
 import { jarvisGet, jarvisPost } from "./api"
 import type {
   CashCollections,
@@ -88,6 +88,7 @@ export const businessProjections = {
   setupStatus: (): ProjectionDefinition<SetupStatus> => ({ key: ["system", "setup"], owner: "data-core.sanity", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.setupStatus }),
   integrationsStatus: (): ProjectionDefinition<IntegrationsStatus> => ({ key: ["system", "integrations"], owner: "agents", staleMs: PROJECTION_FRESHNESS.sanity, pollMs: 180_000, tags: ["system", "agents"], load: jarvisClient.integrationsStatus }),
   workCases: (): ProjectionDefinition<WorkCaseProjection[]> => ({ key: ["read-model", "work-cases"], owner: "work", staleMs: PROJECTION_FRESHNESS.active, pollMs: 15_000, fallbackPollMs: 2_000, tags: ["work", "actions", "approvals", "workflows", "receipts", "customers", "schedule", "money", "agents", "queries"], load: async () => (await jarvisClient.workCases()).data }),
+  workforceStatus: (): ProjectionDefinition<WorkforceStatusProjection> => ({ key: ["read-model", "workforce-status"], owner: "agents", staleMs: PROJECTION_FRESHNESS.active, pollMs: 15_000, fallbackPollMs: 2_000, tags: ["agents", "work", "actions", "queries"], load: async () => (await jarvisClient.readModel("workforce-status")).data }),
   workExecution: (workId: string): ProjectionDefinition<ExecutionProjection> => ({
     key: ["work-execution", workId],
     owner: "work.execution",

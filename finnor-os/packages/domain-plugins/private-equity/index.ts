@@ -12,29 +12,45 @@ import {
 import {
   attachCanonicalEvidence,
   attachWorkToDealGraph,
+  attachIcQuestionSource,
+  beginIcPreparation,
   buildPrivateEquityEpistemicSnapshot,
   createClosingCondition,
   createDealRisk,
   createDependency,
   createFinding,
+  createIcCase,
+  createIcQuestion,
   createRequest,
   createWorkstream,
   declareDealClosed,
   evaluateDealCloseEligibility,
+  getIcWorkspace,
+  groundIcCaseOpening,
+  groundIcMemoDocumentVersion,
+  groundIcSourceReference,
+  groundIcUnderwritingRun,
   loadDealExecutionGraph,
   loadPrivateEquityAssertions,
   loadPrivateEquityAssertionsForEvidence,
+  markIcReadyForReview,
   pePropositionId,
   PeDomainError,
   receiveDeliverable,
   removeDependency,
   resolveDealRisk,
   resolveFinding,
+  prepareIcDecisionProposal,
+  recordIcMetric,
+  satisfyIcCondition,
+  selectIcMemoVersion,
+  selectPrimaryIcUnderwritingRun,
   satisfyClosingCondition,
   verifyClosingItem,
   waiveClosingCondition,
   type DealExecutionGraph,
   type GovernanceProof,
+  type IcSourceRef,
   type PeEntityRef,
   type PeMutationContext,
   type PeMutationResult,
@@ -77,6 +93,15 @@ export interface PrivateEquityActionContract {
 /** Auditable one-to-one map: the plugin translates, while PE2 remains the only
  * owner of business truth and state-machine semantics. */
 export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContract[] = [
+  ["open_ic_case", "createIcCase", "pe_ic_case"],
+  ["begin_ic_preparation", "beginIcPreparation", "pe_ic_case"],
+  ["select_ic_memo_version", "selectIcMemoVersion", "pe_ic_memo"],
+  ["select_ic_underwriting_run", "selectPrimaryIcUnderwritingRun", "pe_ic_case"],
+  ["create_ic_question", "createIcQuestion", "pe_ic_question"],
+  ["attach_ic_question_evidence", "attachIcQuestionSource", "pe_ic_question"],
+  ["request_ic_memo_review", "markIcReadyForReview", "pe_ic_case"],
+  ["satisfy_ic_condition", "satisfyIcCondition", "pe_ic_condition"],
+  ["prepare_ic_decision_proposal", "prepareIcDecisionProposal", "pe_ic_decision_proposal"],
   ["open_workstream", "createWorkstream", "pe_workstream"],
   ["create_deal_request", "createRequest", "pe_request"],
   ["submit_deliverable", "receiveDeliverable", "pe_deliverable"],
@@ -103,6 +128,10 @@ export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContra
 
 const CONTRACT_BY_ACTION = new Map(PRIVATE_EQUITY_ACTION_CONTRACTS.map((row) => [row.actionType, row]));
 const CREATE_ID_FIELD: Partial<Record<PrivateEquityActionType, string>> = {
+  open_ic_case: "icCaseId",
+  select_ic_memo_version: "memoSelectionId",
+  create_ic_question: "questionId",
+  prepare_ic_decision_proposal: "decisionProposalId",
   open_workstream: "workstreamId",
   create_deal_request: "requestId",
   record_finding: "findingId",
@@ -127,6 +156,18 @@ const COLLECTION_BY_TYPE: Partial<Record<PeEntityRef["entityType"], keyof DealEx
   pe_finding_risk_link: "findingRiskLinks",
 };
 
+const IC_PLANNER_ACTIONS = new Set<PrivateEquityActionType>([
+  "open_ic_case",
+  "begin_ic_preparation",
+  "select_ic_memo_version",
+  "select_ic_underwriting_run",
+  "create_ic_question",
+  "attach_ic_question_evidence",
+  "request_ic_memo_review",
+  "satisfy_ic_condition",
+  "prepare_ic_decision_proposal",
+]);
+
 function record(value: unknown): Row {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
 }
@@ -149,6 +190,149 @@ function entityRef(field: string, entityType: PeEntityRef["entityType"], entityI
   return { field, entityType, entityId };
 }
 
+function icState(row: Row, allowed: string[], actionType: PrivateEquityActionType): void {
+  const state = String(row.state ?? "");
+  if (!allowed.includes(state)) {
+    throw new ActionGroundingError("IC_INVALID_TRANSITION", `ICCase state ${state} is not valid for ${actionType}`, { state, allowed });
+  }
+}
+
+function icExpectedVersion(row: Row, expected: unknown, label: string): void {
+  if (Number(row.version) !== Number(expected)) {
+    throw new ActionGroundingError("IC_STALE_PRECONDITION", `${label} changed since it was inspected`, {
+      expectedVersion: Number(expected), actualVersion: Number(row.version),
+    });
+  }
+}
+
+async function groundIcPlannerAction(params: {
+  actionType: PrivateEquityActionType;
+  payload: Payload;
+  ctx: PeMutationContext;
+  dealId: string;
+  workId: string;
+  graph: DealExecutionGraph;
+}): Promise<DomainActionGrounding> {
+  const { actionType, payload, ctx, dealId, workId, graph } = params;
+  const groundedPayload: DomainActionGrounding["groundedPayload"] = [
+    { field: "dealId", status: "verified" },
+    { field: "workId", status: "verified" },
+  ];
+  const entities: Array<{ entityType: string; entityId: string; state?: unknown; version?: unknown }> = [];
+  try {
+    if (actionType === "open_ic_case") {
+      const investment = await groundIcCaseOpening(ctx, {
+        dealId,
+        investmentCaseId: requiredString(payload, "investmentCaseId"),
+        committeeConfigVersionId: requiredString(payload, "committeeConfigVersionId"),
+        scheduledInternalEventId: payload.scheduledInternalEventId as string | undefined,
+        primaryUnderwritingRunId: payload.primaryUnderwritingRunId as string | undefined,
+        reconsidersDecisionId: payload.reconsidersDecisionId as string | undefined,
+      });
+      groundedPayload.push(
+        { field: "investmentCaseId", status: "verified" },
+        { field: "committeeConfigVersionId", status: "verified" },
+        { field: "icCaseId", status: "verified" },
+      );
+      entities.push({ entityType: "pe_investment_case", entityId: String(investment.id), state: investment.state, version: investment.version });
+      payload.grounding = {
+        verticalKey: "private_equity",
+        deal: { entityType: "pe_deal", entityId: dealId, state: graph.deal.status, version: graph.deal.version, graphVersion: graph.deal.graphVersion },
+        work: { entityType: "work", entityId: workId },
+        entities,
+      };
+      return { draft: { actionType, payload, summary: "", requiresConfirmation: false }, groundedPayload };
+    }
+
+    const workspace = await getIcWorkspace(ctx, { icCaseId: requiredString(payload, "icCaseId") });
+    const process = workspace.case;
+    if (process.dealId !== dealId) throw new ActionGroundingError("IC_ROOT_MISMATCH", "ICCase does not belong to the exact grounded Deal");
+    groundedPayload.push({ field: "icCaseId", status: "verified" });
+    entities.push({ entityType: "pe_ic_case", entityId: String(process.id), state: process.state, version: process.version });
+
+    switch (actionType) {
+      case "begin_ic_preparation":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        icState(process, ["DRAFT"], actionType);
+        groundedPayload.push({ field: "expectedCaseVersion", status: "verified" });
+        break;
+      case "select_ic_memo_version":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN", "READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING", "BLOCKED"], actionType);
+        await groundIcMemoDocumentVersion(ctx, {
+          icCaseId: String(process.id), documentId: requiredString(payload, "documentId"),
+          documentVersionId: requiredString(payload, "documentVersionId"),
+        });
+        if (payload.underwritingRunId) await groundIcUnderwritingRun(ctx, { icCaseId: String(process.id), underwritingRunId: String(payload.underwritingRunId) });
+        groundedPayload.push(
+          { field: "expectedCaseVersion", status: "verified" },
+          { field: "documentVersionId", status: "verified" },
+          { field: "memoSelectionId", status: "verified" },
+        );
+        break;
+      case "select_ic_underwriting_run":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        icState(process, ["DRAFT", "PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN", "READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING", "BLOCKED"], actionType);
+        await groundIcUnderwritingRun(ctx, { icCaseId: String(process.id), underwritingRunId: requiredString(payload, "underwritingRunId") });
+        groundedPayload.push({ field: "expectedCaseVersion", status: "verified" }, { field: "underwritingRunId", status: "verified" });
+        break;
+      case "create_ic_question":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"], actionType);
+        groundedPayload.push({ field: "expectedCaseVersion", status: "verified" }, { field: "questionId", status: "verified" });
+        break;
+      case "attach_ic_question_evidence": {
+        const question = workspace.questions.find((row) => row.id === payload.questionId);
+        if (!question) throw new ActionGroundingError("IC_QUESTION_NOT_FOUND", "Question does not resolve inside the exact ICCase");
+        icExpectedVersion(question, payload.expectedQuestionVersion, "IC Question");
+        if (!["OPEN", "ANSWERED"].includes(String(question.state))) throw new ActionGroundingError("IC_INVALID_TRANSITION", "Only an open or answered Question can receive planner-attached evidence");
+        const grounded = await groundIcSourceReference(ctx, { icCaseId: String(process.id), source: payload.source as IcSourceRef });
+        groundedPayload.push({ field: "questionId", status: "verified" }, { field: "expectedQuestionVersion", status: "verified" }, { field: "source", status: "verified" });
+        entities.push({ entityType: "pe_ic_question", entityId: String(question.id), state: question.state, version: question.version }, { entityType: grounded.sourceKind, entityId: grounded.sourceId });
+        break;
+      }
+      case "request_ic_memo_review":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        icState(process, ["PREPARING"], actionType);
+        if (!workspace.memo) throw new ActionGroundingError("IC_MEMO_REQUIRED", "An exact P3 Memo DocumentVersion must be selected before review");
+        groundedPayload.push({ field: "expectedCaseVersion", status: "verified" });
+        break;
+      case "satisfy_ic_condition": {
+        const condition = workspace.conditions.find((row) => row.id === payload.conditionId);
+        if (!condition) throw new ActionGroundingError("IC_CONDITION_NOT_FOUND", "Condition does not resolve inside the exact ICCase");
+        icExpectedVersion(condition, payload.expectedConditionVersion, "IC Condition");
+        if (condition.state !== "ACTIVE") throw new ActionGroundingError("IC_INVALID_TRANSITION", "Only an ACTIVE IC Condition can be satisfied");
+        const grounded = await groundIcSourceReference(ctx, { icCaseId: String(process.id), source: payload.source as IcSourceRef });
+        groundedPayload.push({ field: "conditionId", status: "verified" }, { field: "expectedConditionVersion", status: "verified" }, { field: "source", status: "verified" });
+        entities.push({ entityType: "pe_ic_condition", entityId: String(condition.id), state: condition.state, version: condition.version }, { entityType: grounded.sourceKind, entityId: grounded.sourceId });
+        break;
+      }
+      case "prepare_ic_decision_proposal":
+        icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
+        if (Number(process.voteSetVersion) !== Number(payload.expectedVoteSetVersion)) {
+          throw new ActionGroundingError("IC_STALE_PRECONDITION", "IC Vote set changed since it was inspected", { expectedVoteSetVersion: payload.expectedVoteSetVersion, actualVoteSetVersion: process.voteSetVersion });
+        }
+        icState(process, ["VOTING", "CONDITIONS_PENDING"], actionType);
+        groundedPayload.push({ field: "expectedCaseVersion", status: "verified" }, { field: "expectedVoteSetVersion", status: "verified" }, { field: "decisionProposalId", status: "verified" });
+        break;
+      default:
+        throw new ActionGroundingError("PE_UNHANDLED_ACTION", `No IC grounding contract exists for ${actionType}`);
+    }
+    payload.grounding = {
+      verticalKey: "private_equity",
+      deal: { entityType: "pe_deal", entityId: dealId, state: graph.deal.status, version: graph.deal.version, graphVersion: graph.deal.graphVersion },
+      work: { entityType: "work", entityId: workId },
+      icCase: { entityType: "pe_ic_case", entityId: process.id, state: process.state, version: process.version, voteSetVersion: process.voteSetVersion },
+      entities,
+    };
+    return { draft: { actionType, payload, summary: "", requiresConfirmation: false }, groundedPayload };
+  } catch (error) {
+    if (error instanceof ActionGroundingError) throw error;
+    if (error instanceof PeDomainError) throw new ActionGroundingError(error.code, error.message, record(error.details));
+    throw error;
+  }
+}
+
 function requiredEntityRefs(actionType: PrivateEquityActionType, payload: Payload): Array<ReturnType<typeof entityRef> & { states?: string[]; expectedVersion?: number }> {
   const ref = (field: string, entityType: PeEntityRef["entityType"], states?: string[], versionField?: string) => ({
     ...entityRef(field, entityType, requiredString(payload, field)),
@@ -156,6 +340,16 @@ function requiredEntityRefs(actionType: PrivateEquityActionType, payload: Payloa
     ...(versionField ? { expectedVersion: Number(payload[versionField]) } : {}),
   });
   switch (actionType) {
+    case "open_ic_case":
+    case "begin_ic_preparation":
+    case "select_ic_memo_version":
+    case "select_ic_underwriting_run":
+    case "create_ic_question":
+    case "attach_ic_question_evidence":
+    case "request_ic_memo_review":
+    case "satisfy_ic_condition":
+    case "prepare_ic_decision_proposal":
+      return [];
     case "open_workstream": return [];
     case "create_deal_request": return [ref("workstreamId", "pe_workstream", ["not_started", "active"]), ref("requestedFromDealPartyId", "pe_deal_party", ["active"])];
     case "submit_deliverable": return [ref("deliverableId", "pe_deliverable", ["expected", "rejected", "received"], "expectedVersion")];
@@ -270,6 +464,11 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
     payload[createIdField] = action.id;
   }
   payload.workId = workId;
+
+  if (IC_PLANNER_ACTIONS.has(actionType)) {
+    const grounded = await groundIcPlannerAction({ actionType, payload, ctx, dealId, workId, graph });
+    return { ...grounded, draft: { ...draft, payload: grounded.draft.payload } };
+  }
 
   if (actionType === "create_deal_request") {
     const requestId = String(payload.requestId);
@@ -442,6 +641,73 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
   const existing = existingCreateResult(await loadDealExecutionGraph(ctx, String(payload.dealId)), actionType, payload);
   if (existing) return existing;
   switch (actionType) {
+    case "open_ic_case": return createIcCase(ctx, {
+      id: String(payload.icCaseId), dealId: String(payload.dealId), investmentCaseId: String(payload.investmentCaseId),
+      committeeConfigVersionId: String(payload.committeeConfigVersionId),
+      scheduledInternalEventId: payload.scheduledInternalEventId as string | undefined,
+      primaryUnderwritingRunId: payload.primaryUnderwritingRunId as string | undefined,
+      reconsidersDecisionId: payload.reconsidersDecisionId as string | undefined,
+      workId: String(payload.workId), idempotencyKey: String(draft.domainActionId), governance: await governanceProof(draft, ctx.auth.tenantId),
+    });
+    case "begin_ic_preparation": return beginIcPreparation(ctx, {
+      icCaseId: String(payload.icCaseId), expectedVersion: Number(payload.expectedCaseVersion),
+    });
+    case "select_ic_memo_version": {
+      const result = await selectIcMemoVersion(ctx, {
+        id: String(payload.memoSelectionId), icCaseId: String(payload.icCaseId), expectedCaseVersion: Number(payload.expectedCaseVersion),
+        artifactRole: payload.artifactRole as "MEMO" | "DECK", documentId: String(payload.documentId),
+        documentVersionId: String(payload.documentVersionId), underwritingRunId: payload.underwritingRunId as string | undefined,
+        evidenceCutoffAt: String(payload.evidenceCutoffAt), sourceCompleteness: payload.sourceCompleteness as never,
+        changeClassification: payload.changeClassification as never, idempotencyKey: String(draft.domainActionId),
+      });
+      return { row: result.memo, changed: !result.idempotent, idempotent: result.idempotent };
+    }
+    case "select_ic_underwriting_run": return selectPrimaryIcUnderwritingRun(ctx, {
+      icCaseId: String(payload.icCaseId), expectedCaseVersion: Number(payload.expectedCaseVersion),
+      underwritingRunId: String(payload.underwritingRunId),
+    });
+    case "create_ic_question": {
+      const result = await createIcQuestion(ctx, {
+        id: String(payload.questionId), icCaseId: String(payload.icCaseId), expectedCaseVersion: Number(payload.expectedCaseVersion),
+        question: String(payload.question), priority: payload.priority as never,
+        requiredBeforeVote: payload.requiredBeforeVote as boolean | undefined,
+        requiredBeforeDecision: payload.requiredBeforeDecision as boolean | undefined,
+        workId: String(payload.workId), idempotencyKey: String(draft.domainActionId),
+      });
+      return { row: result.question, changed: !result.idempotent, idempotent: result.idempotent };
+    }
+    case "attach_ic_question_evidence": {
+      const result = await attachIcQuestionSource(ctx, {
+        icCaseId: String(payload.icCaseId), questionId: String(payload.questionId),
+        expectedQuestionVersion: Number(payload.expectedQuestionVersion),
+        link: {
+          source: payload.source as IcSourceRef,
+          relationship: payload.relationship as never,
+          truthStatus: payload.truthStatus as never,
+          idempotencyKey: String(draft.domainActionId),
+        },
+      });
+      return { row: result.question, changed: !result.idempotent, idempotent: result.idempotent };
+    }
+    case "request_ic_memo_review": return markIcReadyForReview(ctx, {
+      icCaseId: String(payload.icCaseId), expectedVersion: Number(payload.expectedCaseVersion),
+    });
+    case "satisfy_ic_condition": {
+      const result = await satisfyIcCondition(ctx, {
+        icCaseId: String(payload.icCaseId), conditionId: String(payload.conditionId),
+        expectedConditionVersion: Number(payload.expectedConditionVersion),
+        verification: { source: payload.source as IcSourceRef, relationship: "VERIFIES", idempotencyKey: String(draft.domainActionId) },
+      });
+      return { row: result.condition, changed: !result.idempotent, idempotent: result.idempotent };
+    }
+    case "prepare_ic_decision_proposal": {
+      const result = await prepareIcDecisionProposal(ctx, {
+        id: String(payload.decisionProposalId), icCaseId: String(payload.icCaseId),
+        expectedCaseVersion: Number(payload.expectedCaseVersion), expectedVoteSetVersion: Number(payload.expectedVoteSetVersion),
+        idempotencyKey: String(draft.domainActionId),
+      });
+      return { row: result.proposal, changed: !result.idempotent, idempotent: result.idempotent };
+    }
     case "open_workstream": return createWorkstream(ctx, {
       id: String(payload.workstreamId), dealId: String(payload.dealId), kind: payload.kind as never,
       name: String(payload.name), owner: payload.owner as never,
@@ -508,7 +774,8 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
 }
 
 function summary(actionType: PrivateEquityActionType, payload: Payload): string {
-  const target = payload.closingConditionId ?? payload.closingItemId ?? payload.findingId ?? payload.dealRiskId
+  const target = payload.decisionProposalId ?? payload.conditionId ?? payload.questionId ?? payload.memoSelectionId ?? payload.icCaseId
+    ?? payload.closingConditionId ?? payload.closingItemId ?? payload.findingId ?? payload.dealRiskId
     ?? payload.dependencyId ?? payload.requestId ?? payload.workstreamId ?? payload.dealId;
   return `${actionType.replaceAll("_", " ")} on exact canonical target ${String(target)} in Deal ${String(payload.dealId)}.`;
 }
@@ -519,6 +786,15 @@ export const privateEquityPlugin: DomainEnginePlugin = {
   // independently discover the executable surface. A contract test proves this
   // list is exactly the schema-key set, preventing registration/schema drift.
   actionTypes: [
+    "open_ic_case",
+    "begin_ic_preparation",
+    "select_ic_memo_version",
+    "select_ic_underwriting_run",
+    "create_ic_question",
+    "attach_ic_question_evidence",
+    "request_ic_memo_review",
+    "satisfy_ic_condition",
+    "prepare_ic_decision_proposal",
     "open_workstream",
     "create_deal_request",
     "submit_deliverable",
@@ -561,7 +837,16 @@ export const privateEquityPlugin: DomainEnginePlugin = {
     };
   },
   ground(draft, action) {
-    return groundPrivateEquityAction(draft, action);
+    return groundPrivateEquityAction(draft, action).catch((error) => {
+      recordIcMetric({
+        tenantId: action.tenantId,
+        actorId: action.initiatedBy ?? undefined,
+        icCaseId: typeof draft.payload.icCaseId === "string" ? draft.payload.icCaseId : undefined,
+        operation: action.actionType,
+        result: "failure",
+      }, "pe_action_grounding_failures");
+      throw error;
+    });
   },
   simulate(actionType, payload) {
     const parsed = PRIVATE_EQUITY_ACTION_SCHEMAS[actionType as PrivateEquityActionType].parse(payload) as Payload;
@@ -588,8 +873,10 @@ export const privateEquityPlugin: DomainEnginePlugin = {
       },
       provenance: { sourceSystem: "@finnor/plugin-private-equity", externalId: runtime.domainActionId, createdBy: runtime.actorId ?? "system:private-equity" },
     };
+    let mutationObserved = false;
     try {
       const result = await executeMutation(actionType, draft.payload, ctx, draft);
+      mutationObserved = true;
       const entityId = String(result.row.id);
       const workId = String(draft.payload.workId);
       // Closing atomically makes the Deal graph immutable.  Its Work->Deal anchor
@@ -601,6 +888,16 @@ export const privateEquityPlugin: DomainEnginePlugin = {
           workId,
           entities: [{ entityType: contract.resultEntityType, entityId, relationship: "result" }],
         });
+      }
+      if (result.idempotent) {
+        recordIcMetric({
+          tenantId: runtime.tenantId,
+          actorId: runtime.actorId,
+          icCaseId: typeof draft.payload.icCaseId === "string" ? draft.payload.icCaseId : undefined,
+          operation: actionType,
+          entityId,
+          result: "recovered",
+        }, "pe_action_recovery_attempts");
       }
       return {
         status: "success",
@@ -621,7 +918,22 @@ export const privateEquityPlugin: DomainEnginePlugin = {
     } catch (error) {
       const code = error instanceof PeDomainError ? error.code : "PE_EXECUTION_FAILED";
       const message = error instanceof Error ? error.message : "Private Equity mutation failed";
-      const conflict = code === "PE_STALE_VERSION" || code === "PE_DEAL_NOT_CLOSE_ELIGIBLE" || code === "PE_INVALID_TRANSITION";
+      const metricContext = {
+        tenantId: runtime.tenantId,
+        actorId: runtime.actorId,
+        icCaseId: typeof draft.payload.icCaseId === "string" ? draft.payload.icCaseId : undefined,
+        operation: actionType,
+        result: "failure" as const,
+      };
+      if (["PE_GOVERNANCE_PROOF_MISSING", "PE_APPROVAL_PROOF_MISSING", "PE_DECISION_RECEIPT_MISSING"].includes(code)) {
+        recordIcMetric(metricContext, "pe_action_authority_failures");
+      }
+      if (mutationObserved) {
+        recordIcMetric(metricContext, "pe_action_verification_failures");
+        recordIcMetric({ ...metricContext, result: "recovered" }, "pe_action_recovery_attempts");
+      }
+      const conflict = code === "PE_STALE_VERSION" || code === "IC_STALE_PRECONDITION" || code === "IC_STALE_PROPOSAL"
+        || code === "PE_DEAL_NOT_CLOSE_ELIGIBLE" || code === "PE_INVALID_TRANSITION" || code === "IC_INVALID_TRANSITION";
       return { status: "failure", output: { actionType, code }, error: message, errorKind: conflict ? "conflict" : "terminal" };
     }
   },
