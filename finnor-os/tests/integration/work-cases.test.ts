@@ -9,7 +9,6 @@ import { workCases } from "../../packages/read-models";
 import {
   actionLog,
   businessEvents,
-  calls,
   closePool,
   commands,
   decisionReceipts,
@@ -99,7 +98,6 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
       await db.insert(workflowSteps).values({ tenantId: TENANT_ID, id: STEP_A, workflowRunId: RUN_A, stepType: "schedule_water_test", sequence: 0, status: "completed", idempotencyKey: "p2-t1-step", domainActionId: ACTION_A1, evidence: { invoiceId: INVOICE_ID } });
       await db.insert(decisionReceipts).values({ id: RECEIPT_A, tenantId: TENANT_ID, workflowRunId: RUN_A, workflowStepId: STEP_A, domainActionId: ACTION_A1, objective: "Schedule the Henderson service", evidence: [{ source: "test", ref: "p2-t1" }], actualResult: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, finalizedAt: new Date() });
       await db.insert(voiceTurns).values({ tenantId: TENANT_ID, voiceSessionId: VOICE_SESSION, sequence: 1, role: "caller", transcriptText: "yes", resolvedActionIds: [ACTION_B] });
-      await db.insert(calls).values({ tenantId: TENANT_ID, direction: "inbound", transcript: "Please follow up", sourceSystem: "vapi", externalId: CALL_EXTERNAL_ID });
       await db.insert(businessEvents).values({ tenantId: TENANT_ID, entityType: "household", entityId: HOUSEHOLD_ID, eventType: "service_scheduled", source: "p2-t1" });
     });
   });
@@ -109,7 +107,6 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
       await db.execute(sql`SELECT set_config('app.allow_audit_mutation', 'true', true)`);
       await db.delete(pendingConfirmations).where(eq(pendingConfirmations.tenantId, TENANT_ID));
       await db.delete(voiceTurns).where(eq(voiceTurns.tenantId, TENANT_ID));
-      await db.delete(calls).where(eq(calls.tenantId, TENANT_ID));
       await db.delete(decisionReceipts).where(eq(decisionReceipts.tenantId, TENANT_ID));
       await db.delete(workflowSteps).where(eq(workflowSteps.tenantId, TENANT_ID));
       await db.delete(workflowRuns).where(eq(workflowRuns.tenantId, TENANT_ID));
@@ -153,13 +150,16 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
     expect(second.linkedEntities.some((link) => link.entityId === INVOICE_ID)).toBe(true);
   });
 
-  it("keeps approval pending without inventing a run or receipt and links the exact call", async () => {
+  it("keeps approval pending without inventing a run or receipt and preserves the exact voice confirmation context", async () => {
     const result = await workCases(TENANT_ID);
     const root = result.find((item) => item.root.kind === "instruction" && item.root.id === INSTRUCTION_B)!;
     expect(root.approvals).toEqual([expect.objectContaining({ actionId: ACTION_B, status: "pending" })]);
     expect(root.workflows).toHaveLength(0);
     expect(root.receipts).toHaveLength(0);
-    expect(root.calls).toHaveLength(1);
+    // The retired Water call table is unavailable to a Core/none tenant. The
+    // durable voice session/turn still proves the confirmation context without
+    // manufacturing an unsupported call row.
+    expect(root.calls).toHaveLength(0);
   });
 
   it("projects terminal failure as Failed and exposes the exact tenant boundary", async () => {

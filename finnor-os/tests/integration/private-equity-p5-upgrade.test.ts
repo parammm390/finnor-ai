@@ -267,8 +267,9 @@ describe.skipIf(!available)("P5 populated P1-P4 database upgrade", () => {
     }
   }, 30_000);
 
-  it("applies only P5 and preserves the byte-stable populated P1/P2/P3/P4 tenant truth", () => {
-    expect(applied).toEqual([P5_MIGRATION]);
+  it("applies the forward P5/P6/P7 migrations and preserves the byte-stable populated P1/P2/P3/P4 tenant truth", () => {
+    const expectedForwardMigrations = MIGRATIONS.filter(({ name }) => name >= P5_MIGRATION).map(({ name }) => name);
+    expect(applied).toEqual(expectedForwardMigrations);
     expect(after).toEqual(before);
     expect(after.facts).toBeGreaterThanOrEqual(20);
   });
