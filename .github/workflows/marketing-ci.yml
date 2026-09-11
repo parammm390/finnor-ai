@@ -6,6 +6,7 @@
 name: marketing-ci
 # Release audit marker: this workflow file is intentionally touched for the
 # audited production push so marketing parity runs on the same commit as CI.
+# Keep this marker synchronized on each release-fix push.
 on:
   pull_request:
     paths-ignore: ["finnor-os/**"]
