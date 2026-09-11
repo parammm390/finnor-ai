@@ -155,7 +155,9 @@ export function queryAuthorityRequest(request: OperationalQueryRequest, workId?:
   let resource: AuthorityResource = { type: "*" };
   switch (request.intent) {
     case "work_list": resource = { type: "work", ...(typeof params.recordId === "string" ? { id: params.recordId } : {}) }; break;
+    case "attention_queue": resource = { type: "attention_queue" }; break;
     case "agent_activity": resource = { type: "agent_activity" }; break;
+    case "workforce_status": resource = { type: "workforce" }; break;
     case "company_context": {
       const anchor = params.anchor && typeof params.anchor === "object" ? params.anchor as Record<string, unknown> : null;
       resource = anchor && typeof anchor.partyType === "string"

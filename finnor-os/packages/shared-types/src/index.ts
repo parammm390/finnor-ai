@@ -121,6 +121,9 @@ export interface DomainAction {
    * historical/system-authored actions that did not originate from a user Work. */
   workId?: string | null;
   plannerAttemptId?: string | null;
+  /** P6: exact immutable PlanRevision/PlanNode materialized by this row. */
+  planRevisionId?: string | null;
+  planNodeId?: string | null;
   initiatedBy?: string | null;
   authorityDecisionId?: string | null;
   authorityRevision?: number | null;

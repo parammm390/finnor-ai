@@ -18,15 +18,18 @@ import {
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
   decisionReceipts, planRepairs, enqueueJob, receiveWork, transitionWork,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
+  recordRejectedWorkPlan, activeWorkPlanRevision,
   authorityStates,
   workObjectiveSteps,
+  workPlanRevisions,
   businessEffects,
   resolveTenantVertical,
 } from "@finnor/db";
 import { buildMemorySnapshot, appendEpisode, appendShortTerm } from "@finnor/memory";
 import { createDefaultRegistry, type ToolRegistry } from "@finnor/tools";
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
-import { LLMPlanner, type Planner } from "./planner";
+import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
+import { selectAndMaterializePlan } from "./plan-runtime";
 import { GatedExecutor, type Executor } from "./executor";
 import { OutcomeReflection, type Reflection } from "./reflection";
 import { createDefaultPluginRegistry, PluginRegistry } from "./plugin-registry";
@@ -68,11 +71,13 @@ import {
   type ObjectiveDecisionPlanner,
   type StartObjectiveOptions,
 } from "./objective-loop";
-import { classifyInstructionRoute, finalizeInstructionRoute, type InstructionRouteDecision } from "./instruction-routing";
+import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type InstructionRouteDecision } from "./instruction-routing";
 import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
 
 export * from "./llm";
 export * from "./planner";
+export * from "./plan-runtime";
+export * from "./plan-progress";
 export * from "./compiler";
 export * from "./executor";
 export * from "./reflection";
@@ -109,6 +114,8 @@ export * from "./conversation-kernel";
 export * from "./outcome-packs";
 export * from "./autonomy";
 export * from "./operational-query-runtime";
+export * from "./workforce-runtime";
+export * from "./workforce-learning";
 
 const EXTERNAL_RESEARCH_ACTION_TYPES = new Set(["search_web"]);
 
@@ -292,7 +299,7 @@ export class FinnorOrchestrator implements Orchestrator {
       const graph = new LangGraphExecutor(buildGateGraph(this.plugins, this.tools, getCheckpointer()));
       this.executor = new AllowlistExecutor(legacy, graph);
     }
-    this.objectiveLoopRuntime = new ObjectiveLoopRuntime(this.plugins, this, deps?.objectiveDecisionPlanner);
+    this.objectiveLoopRuntime = new ObjectiveLoopRuntime(this.plugins, this, deps?.objectiveDecisionPlanner, this.planner);
   }
 
   private readonly objectiveLoopRuntime: ObjectiveLoopRuntime;
@@ -301,7 +308,17 @@ export class FinnorOrchestrator implements Orchestrator {
     return startWorkObjective(objective, ctx, options);
   }
 
-  async runObjectiveIteration(params: { tenantId: string; workId: string; objectiveLoopId: string; expectedRevision?: number; expectedStepNumber?: number; signal?: AbortSignal }) {
+  async runObjectiveIteration(params: {
+    tenantId: string;
+    workId: string;
+    objectiveLoopId: string;
+    expectedRevision?: number;
+    expectedStepNumber?: number;
+    workforceAssignmentId?: string;
+    deferToWorkforceJob?: boolean;
+    workforceLeaseOwner?: string;
+    signal?: AbortSignal;
+  }) {
     return this.objectiveLoopRuntime.runIteration(params);
   }
 
@@ -791,12 +808,14 @@ export class FinnorOrchestrator implements Orchestrator {
     });
     requireFreshPlannerAttempt(workId, plannerAttempt);
     await transitionWork(ctx.tenantId, workId, "planning", "planning_started", { plannerAttemptId: plannerAttempt.id }, { expectedWorkInputId: workInputId });
-    let actions: DomainAction[];
+    let planning: PlanningResult;
     try {
-      actions = await this.planner.plan(instruction, ctx, memory, {
+      planning = await this.planner.plan(instruction, ctx, memory, {
         instructionId,
         workId,
+        workInputId,
         plannerAttemptId: plannerAttempt.id,
+        decisionContextHash: plannerAttempt.decisionContextHash ?? undefined,
         channel: opts.channel,
         signal: opts.signal,
         deadlineAt: opts.deadlineAt,
@@ -811,34 +830,30 @@ export class FinnorOrchestrator implements Orchestrator {
       throw err;
     }
     if (await isInstructionCancelled(ctx.tenantId, instructionId)) {
-      await this.rejectCancelledDrafts(ctx.tenantId, instructionId);
+      await finishWorkPlannerAttempt({ tenantId: ctx.tenantId, attemptId: plannerAttempt.id, status: "failed", failure: { code: "instruction_cancelled_before_plan_selection" } });
       return { actions: [], workId, workInputId, instructionId };
     }
     const finalRoute = opts.conversationContext?.resolution.status === "clarification_required"
       ? instructionRoute!
-      : finalizeInstructionRoute(instructionRoute!, actions);
+      : finalizeInstructionRouteFromPlan(instructionRoute!, planning.compilation.selected?.graph);
     if (finalRoute.route === "OBJECTIVE") {
-      if (actions.length > 0) {
-        await withTenant(ctx.tenantId, async (db) => {
-          const rejected = await db.update(domainActions).set({ status: "rejected" }).where(and(
-            eq(domainActions.tenantId, ctx.tenantId),
-            inArray(domainActions.id, actions.map((action) => action.id)),
-            eq(domainActions.status, "draft"),
-          )).returning({ id: domainActions.id });
-          if (rejected.length > 0) await db.insert(actionLog).values(rejected.map((action) => ({
-            tenantId: ctx.tenantId,
-            domainActionId: action.id,
-            step: "rejected",
-            input: { routePolicyVersion: finalRoute.version },
-            output: { reason: "Typed plan proved this instruction was not one independent EffectSet; the same Work now owns a persistent Objective." },
-          })));
-        });
-      }
+      // Preserve proposal/violation evidence on the attempt, but do not persist or
+      // materialize an atomic graph that routing proved belongs to ObjectiveLoop.
+      await recordRejectedWorkPlan({
+        tenantId: ctx.tenantId,
+        workId,
+        plannerAttemptId: plannerAttempt.id,
+        goalSpec: planning.goal,
+        constraintSet: planning.constraints,
+        planningSnapshot: planning.snapshot,
+        candidatePlans: planning.candidates,
+        compilationResult: planning.compilation,
+      });
       await finishWorkPlannerAttempt({
         tenantId: ctx.tenantId,
         attemptId: plannerAttempt.id,
         status: "succeeded",
-        plannerResult: { route: "OBJECTIVE", reasonCodes: finalRoute.reasonCodes, supersededActionIds: actions.map((action) => action.id) },
+        plannerResult: { route: "OBJECTIVE", reasonCodes: finalRoute.reasonCodes, materializedActionIds: [] },
       });
       await transitionWork(ctx.tenantId, workId, "planning", "instruction_route_refined", { from: instructionRoute!.route, to: "OBJECTIVE", reasonCodes: finalRoute.reasonCodes }, { executionModel: "objective", expectedWorkInputId: workInputId });
       const started = await this.startObjective(instruction, ctx, {
@@ -853,14 +868,31 @@ export class FinnorOrchestrator implements Orchestrator {
       await emitInstructionEvent(ctx.tenantId, instructionId, "plan_ready", { route: "objective", objectiveLoopId: started.objectiveLoopId, boundedIterations: true });
       return { actions: [], workId, workInputId, instructionId, objective: { objectiveLoopId: started.objectiveLoopId, state: started.state, route: "OBJECTIVE" } };
     }
-    if (actions.length === 0) {
-      return this.conversationalResult(instruction, ctx, memory, effectiveOpts, "empty_plan_recovery", { workId, workInputId, instructionId, plannerAttemptId: plannerAttempt.id });
+    let materialized: Awaited<ReturnType<typeof selectAndMaterializePlan>>;
+    try {
+      materialized = await selectAndMaterializePlan({
+        planning,
+        tenantContext: ctx,
+        workId,
+        workInputId,
+        plannerAttemptId: plannerAttempt.id,
+        instructionId,
+        reason: "initial",
+      });
+    } catch (err) {
+      const failure = workFailure(err, "Plan selection or materialization failed");
+      await finishWorkPlannerAttempt({ tenantId: ctx.tenantId, attemptId: plannerAttempt.id, status: "failed", failure });
+      await transitionWork(ctx.tenantId, workId, "failed", "planning_failed", failure, { failure, expectedWorkInputId: workInputId });
+      await emitInstructionEvent(ctx.tenantId, instructionId, "failed", { error: failure.message, workId, recoverable: true });
+      throw err;
     }
+    const actions = materialized.actions;
+    if (actions.length === 0) throw new Error("An atomic PlanGraph must materialize exactly one action");
     await finishWorkPlannerAttempt({
       tenantId: ctx.tenantId,
       attemptId: plannerAttempt.id,
       status: "succeeded",
-      plannerResult: { actionCount: actions.length, actionIds: actions.map((action) => action.id), actionTypes: actions.map((action) => action.actionType) },
+      plannerResult: { planRevisionId: materialized.planRevisionId, planSemanticHash: materialized.planSemanticHash, actionCount: actions.length, actionIds: actions.map((action) => action.id), actionTypes: actions.map((action) => action.actionType) },
     });
     await transitionWork(ctx.tenantId, workId, "ready", "planner_succeeded", { plannerAttemptId: plannerAttempt.id, actionCount: actions.length }, { expectedWorkInputId: workInputId });
     {
@@ -1013,6 +1045,9 @@ export class FinnorOrchestrator implements Orchestrator {
       initiatedBy?: string | null;
       authorityContext?: Record<string, unknown>;
       objectiveStepId?: string;
+      plannerAttemptId?: string;
+      planRevisionId?: string;
+      planNodeId?: string;
     } = {},
   ): Promise<{ action: DomainAction; result: ExecutionResult }> {
     if (isRetiredWaterAction(actionType)) throw new RetiredVerticalError("water");
@@ -1030,6 +1065,9 @@ export class FinnorOrchestrator implements Orchestrator {
         initiatedBy: opts.initiatedBy ?? null,
         authorityContext: opts.authorityContext ?? {},
         objectiveStepId: opts.objectiveStepId ?? null,
+        plannerAttemptId: opts.plannerAttemptId ?? null,
+        planRevisionId: opts.planRevisionId ?? null,
+        planNodeId: opts.planNodeId ?? null,
       }).onConflictDoNothing().returning();
       if (created) return created;
       const [existing] = opts.objectiveStepId
@@ -1043,7 +1081,9 @@ export class FinnorOrchestrator implements Orchestrator {
     // PostgreSQL jsonb canonicalizes object key order. Compare semantic JSON so a
     // crash/retry can safely reclaim the same objective step after the executor has
     // read the row back in a different key order.
-    if (row.actionType !== actionType || canonicalPayload(row.payload) !== canonicalPayload(payload)) {
+    if (row.actionType !== actionType || canonicalPayload(row.payload) !== canonicalPayload(payload)
+      || (opts.planRevisionId !== undefined && row.planRevisionId !== opts.planRevisionId)
+      || (opts.planNodeId !== undefined && row.planNodeId !== opts.planNodeId)) {
       const [boundStep] = row.objectiveStepId
         ? await withTenant(tenantId, (db) => db.select({ decision: workObjectiveSteps.decision }).from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, row.objectiveStepId!))).limit(1))
         : [];
@@ -1065,6 +1105,8 @@ export class FinnorOrchestrator implements Orchestrator {
       createdAt: row.createdAt.toISOString(),
       workId: row.workId,
       plannerAttemptId: row.plannerAttemptId,
+      planRevisionId: row.planRevisionId,
+      planNodeId: row.planNodeId,
       initiatedBy: row.initiatedBy,
       authorityDecisionId: row.authorityDecisionId,
       authorityRevision: row.authorityRevision,
@@ -1112,6 +1154,9 @@ export class FinnorOrchestrator implements Orchestrator {
     authorityContext: Record<string, unknown>;
     objectiveStepId: string;
     actionId: string;
+    plannerAttemptId: string;
+    planRevisionId: string;
+    planNodeId: string;
   }): Promise<{ action: DomainAction; result: ExecutionResult }> {
     return this.draftKnownAction(params.actionType, params.payload, params.tenantId, {
       source: "objective_loop",
@@ -1121,6 +1166,9 @@ export class FinnorOrchestrator implements Orchestrator {
       initiatedBy: params.initiatedBy,
       authorityContext: params.authorityContext,
       objectiveStepId: params.objectiveStepId,
+      plannerAttemptId: params.plannerAttemptId,
+      planRevisionId: params.planRevisionId,
+      planNodeId: params.planNodeId,
     });
   }
 
@@ -1143,6 +1191,15 @@ export class FinnorOrchestrator implements Orchestrator {
         .orderBy(desc(actionLog.timestamp))
         .limit(1);
       const [currentBeforeClaim] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId))).limit(1);
+      if (currentBeforeClaim?.planRevisionId && !["completed", "failed", "rejected"].includes(currentBeforeClaim.status)) {
+        if (!currentBeforeClaim.workId) return { claimed: null, current: currentBeforeClaim, stalePlanBoundary: true as const };
+        const [planRevision] = await db.select({ status: workPlanRevisions.status }).from(workPlanRevisions).where(and(
+          eq(workPlanRevisions.tenantId, tenantId),
+          eq(workPlanRevisions.id, currentBeforeClaim.planRevisionId),
+          eq(workPlanRevisions.workId, currentBeforeClaim.workId),
+        )).limit(1);
+        if (planRevision?.status !== "active") return { claimed: null, current: currentBeforeClaim, stalePlanBoundary: true as const };
+      }
       if (currentBeforeClaim && isRetiredWaterAction(currentBeforeClaim.actionType)) {
         return { claimed: null, current: currentBeforeClaim, retiredBoundary: true as const };
       }
@@ -1186,6 +1243,9 @@ export class FinnorOrchestrator implements Orchestrator {
     }
     if ("cancelledBoundary" in row && row.cancelledBoundary) {
       return { status: "failure", output: { cancelled: true }, error: "Execution refused: the instruction or Work item is cancelled." };
+    }
+    if ("stalePlanBoundary" in row && row.stalePlanBoundary) {
+      return { status: "failure", output: { code: "PLAN_REVISION_NOT_ACTIVE", planRevisionId: row.current.planRevisionId }, error: "Execution refused: the DomainAction belongs to a superseded or terminal PlanRevision." };
     }
     if ("consequentialReady" in row && row.consequentialReady) {
       const durable = await authorizeActionExecution({
@@ -1277,6 +1337,12 @@ export class FinnorOrchestrator implements Orchestrator {
     const failure = (receipt.failure ?? null) as Record<string, unknown> | null;
     if (failure?.errorKind !== "terminal") return;
     const terminalReceipt = { failure, actualResult: receipt.actualResult ?? null };
+    const activeParent = sourceAction.workId && sourceAction.planRevisionId
+      ? await activeWorkPlanRevision(tenantId, sourceAction.workId)
+      : null;
+    // A terminal receipt from an old/superseded revision is historical evidence,
+    // not authority to create another child or replay its side effects.
+    if (sourceAction.planRevisionId && activeParent?.id !== sourceAction.planRevisionId) return;
 
     // Unique failed_domain_action_id is the concurrency boundary: duplicate jobs or
     // repeated worker delivery cannot create two competing repair plans.
@@ -1345,36 +1411,69 @@ export class FinnorOrchestrator implements Orchestrator {
           repairPlannerAttemptId = attempt.id;
         }
       }
-      const repaired = await this.planner.plan(instruction, { tenantId, userId: "system:plan-repair", role: "owner" }, memory, {
+      if (!sourceAction.workId || !repairPlannerAttemptId) throw new Error("Recovery planning requires a Work-scoped planner attempt");
+      const input = await latestWorkInput(tenantId, sourceAction.workId);
+      if (!input) throw new Error("Recovery planning requires a current WorkInput");
+      const verifiedNodeRows = sourceAction.planRevisionId
+        ? await withTenant(tenantId, (db) => db.select({ planNodeId: domainActions.planNodeId }).from(domainActions)
+            .innerJoin(businessEffects, and(eq(businessEffects.tenantId, domainActions.tenantId), eq(businessEffects.domainActionId, domainActions.id)))
+            .where(and(
+              eq(domainActions.tenantId, tenantId),
+              eq(domainActions.planRevisionId, sourceAction.planRevisionId!),
+              eq(businessEffects.status, "verified"),
+            )))
+        : [];
+      const verifiedNodeIds = new Set(verifiedNodeRows.flatMap((row) => row.planNodeId ?? []));
+      const parentGraph = activeParent?.planGraph && typeof activeParent.planGraph === "object" && !Array.isArray(activeParent.planGraph)
+        ? activeParent.planGraph as { nodes?: Array<{ id?: string; semanticHash?: string; kind?: string; irreversible?: boolean }> }
+        : null;
+      const priorVerifiedEffectHashes = (parentGraph?.nodes ?? []).flatMap((node) =>
+        node.kind === "action" && node.irreversible === true && node.id && verifiedNodeIds.has(node.id) && typeof node.semanticHash === "string"
+          ? [node.semanticHash]
+          : [],
+      );
+      const recoveryContext: TenantContext = { tenantId, userId: "system:plan-repair", role: "owner" };
+      const repaired = await this.planner.plan(instruction, recoveryContext, memory, {
         instructionId: sourceAction.instructionId ?? undefined,
-        workId: sourceAction.workId ?? undefined,
-        plannerAttemptId: repairPlannerAttemptId ?? undefined,
+        workId: sourceAction.workId,
+        workInputId: input.id,
+        plannerAttemptId: repairPlannerAttemptId,
+        parentRevisionId: sourceAction.planRevisionId ?? undefined,
+        priorVerifiedEffectHashes,
       });
-      if (repairPlannerAttemptId) {
-        await finishWorkPlannerAttempt({
-          tenantId,
-          attemptId: repairPlannerAttemptId,
-          status: "succeeded",
-          plannerResult: { route: "recovery", actionCount: repaired.length, actionIds: repaired.map((action) => action.id) },
-        });
-      }
-      const repairPlanId = repaired.length > 0 ? await planIdForAction(tenantId, repaired[0]!.id) : null;
+      const materialized = await selectAndMaterializePlan({
+        planning: repaired,
+        tenantContext: recoveryContext,
+        workId: sourceAction.workId,
+        workInputId: input.id,
+        plannerAttemptId: repairPlannerAttemptId,
+        instructionId: sourceAction.instructionId ?? undefined,
+        parentRevisionId: sourceAction.planRevisionId ?? null,
+        reason: "failure",
+      });
+      await finishWorkPlannerAttempt({
+        tenantId,
+        attemptId: repairPlannerAttemptId,
+        status: "succeeded",
+        plannerResult: { route: "recovery", planRevisionId: materialized.planRevisionId, actionCount: materialized.actions.length, actionIds: materialized.actions.map((action) => action.id) },
+      });
+      const repairPlanId = materialized.planRevisionId;
       if (repairPlanId) {
         await withTenant(tenantId, (db) =>
           db.update(domainActions).set({ repairedFromPlanId: sourceAction.planId }).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.planId, repairPlanId))),
         );
       }
       await withTenant(tenantId, (db) =>
-        db.update(planRepairs).set({ repairPlanId, status: repaired.length > 0 ? "proposed" : "no_remainder", proposedAt: new Date() }).where(eq(planRepairs.id, claim.id)),
+        db.update(planRepairs).set({ repairPlanId, status: materialized.actions.length > 0 ? "proposed" : "no_remainder", proposedAt: new Date() }).where(eq(planRepairs.id, claim.id)),
       );
-      await appendEpisode(tenantId, domainActionId, "plan_repair", { receipt: terminalReceipt, unfinishedRemainder: remainder }, { sourcePlanId: sourceAction.planId, repairPlanId, actionIds: repaired.map((action) => action.id) });
+      await appendEpisode(tenantId, domainActionId, "plan_repair", { receipt: terminalReceipt, unfinishedRemainder: remainder }, { sourcePlanId: sourceAction.planId, repairPlanId, actionIds: materialized.actions.map((action) => action.id) });
       if (repairPlanId) await this.dispatchReadyPlanActions(tenantId, repairPlanId);
       if (sourceAction.workId) {
         await transitionWork(tenantId, sourceAction.workId, "recovery", "recovery_planned", {
           planRepairId: claim.id,
           repairPlanId,
-          actionIds: repaired.map((action) => action.id),
-        }, { recovery: { status: repaired.length > 0 ? "proposed" : "no_remainder", planRepairId: claim.id, repairPlanId } });
+          actionIds: materialized.actions.map((action) => action.id),
+        }, { recovery: { status: materialized.actions.length > 0 ? "proposed" : "no_remainder", planRepairId: claim.id, repairPlanId } });
         await reconcileWorkStatus(tenantId, sourceAction.workId);
       }
     } catch (err) {

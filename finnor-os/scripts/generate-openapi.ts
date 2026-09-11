@@ -52,6 +52,7 @@ import {
 } from "../apps/api/lib/ic";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
+const workforcePage = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().uuid().optional() }).strict();
 const range = z.object({ start: z.string().datetime({ offset: true }), end: z.string().datetime({ offset: true }) }).strict();
 const localRange = z.object({
   startDate: z.string().regex(/^(?:today|tomorrow|\d{4}-\d{2}-\d{2})$/),
@@ -193,7 +194,12 @@ const ArtifactTemplateInstantiateSchema = z.object({ title: z.string().trim().mi
 
 const OperationalQuerySchema = z.discriminatedUnion("intent", [
   z.object({ intent: z.literal("work_list"), ...queryEnvelope, section: z.enum(["all", "works", "tasks"]).optional(), openOnly: z.boolean().optional(), statuses: z.array(z.string().min(1).max(80)).max(20).optional(), recordId: z.string().uuid().optional(), page: page.optional() }).strict(),
+  // Employee/tenant identity is injected from the authenticated context. In
+  // particular, this branch deliberately exposes no selector that could turn
+  // the causal attention projection into a cross-employee read.
+  z.object({ intent: z.literal("attention_queue"), ...queryEnvelope, page: page.optional() }).strict(),
   z.object({ intent: z.literal("agent_activity"), ...queryEnvelope, range: range.optional(), localDateRange: localRange.optional(), page: page.optional() }).strict(),
+  z.object({ intent: z.literal("workforce_status"), ...queryEnvelope, page: workforcePage.optional() }).strict(),
   z.object({ intent: z.literal("company_context"), ...queryEnvelope, anchor: z.union([entityRef, partyRef]).optional(), query: z.string().trim().min(1).max(300).optional() }).strict(),
   z.object({ intent: z.literal("party_lookup"), ...queryEnvelope, ref: partyRef.optional(), query: z.string().trim().min(1).max(300).optional(), page: page.optional() }).strict(),
   z.object({ intent: z.literal("party_context"), ...queryEnvelope, ref: partyRef.optional(), query: z.string().trim().min(1).max(300).optional(), page: page.optional() }).strict(),
@@ -207,11 +213,38 @@ const OperationalQuerySchema = z.discriminatedUnion("intent", [
   z.object({ intent: z.literal("critical_dependencies"), ...queryEnvelope, ...deal, includeResolved: z.boolean().optional() }).strict(),
   z.object({ intent: z.literal("closing_readiness"), ...queryEnvelope, ...deal }).strict(),
 ]);
+const WorkforceCapabilityGrantSchema = z.object({ capability: z.string().trim().min(1).max(240), kind: z.enum(["query", "action", "wait", "check"]) }).strict();
+const WorkforceConfigureProfileSchema = z.object({
+  profileId: z.string().uuid().optional(),
+  key: z.string().regex(/^[a-z0-9][a-z0-9._-]{0,79}$/),
+  name: z.string().trim().min(1).max(160),
+  status: z.enum(["enabled", "disabled"]).optional(),
+  modelRoute: z.object({ provider: z.string().trim().min(1).max(120), model: z.string().trim().min(1).max(240).nullable().optional(), purpose: z.literal("objective_execution") }).strict().optional(),
+  capabilityGrants: z.array(WorkforceCapabilityGrantSchema).min(1).max(512),
+  maxConcurrentAssignments: z.number().int().min(1).max(32).optional(),
+  autonomyLimits: z.object({
+    maxActions: z.number().int().min(1).max(4).optional(),
+    maxQueries: z.number().int().min(1).max(11).optional(),
+    maxReplans: z.number().int().min(1).max(8).optional(),
+    maxPlannerCalls: z.number().int().min(1).max(11).optional(),
+    maxWallClockMs: z.number().int().min(1_000).max(604_799_999).optional(),
+    maxKnownCostUsd: z.number().nonnegative().finite().nullable().optional(),
+    maxKnownTokens: z.number().int().nonnegative().nullable().optional(),
+  }).strict().optional(),
+  planningHints: z.record(z.string(), z.unknown()).optional(),
+  learningRevisionId: z.string().uuid().nullable().optional(),
+}).strict();
+const WorkforceReviewProposalSchema = z.object({ decision: z.enum(["promote", "reject"]) }).strict();
+const WorkforceReassignSchema = z.object({ note: z.string().trim().min(1).max(2_000).optional() }).strict();
 
 const s = (schema: z.ZodTypeAny) => zodToJsonSchema(schema, { $refStrategy: "none" });
 const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schema: s(schema) } } });
 const secured = [{ bearerAuth: [] }];
 const documentIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
+const workforcePageParameters = [
+  { name: "limit", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 100 } },
+  { name: "cursor", in: "query", required: false, schema: { type: "string", format: "uuid" } },
+] as const;
 const artifactVersionQueryParameter = { name: "versionId", in: "query", required: true, schema: { type: "string", format: "uuid" } } as const;
 const icCaseIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
 const icQuestionIdParameter = { name: "questionId", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
@@ -229,6 +262,46 @@ const icMutation = (schema: z.ZodTypeAny, description: string, parameters: reado
   },
 });
 const paths = {
+  "/api/actions": { post: { security: secured, responses: { "201": { description: "Instruction accepted into governed Work" } } } },
+  "/api/actions/pending": { get: { security: secured, responses: { "200": { description: "Tenant-scoped pending action page" } } } },
+  "/api/employees": { get: { security: secured, responses: { "200": { description: "Tenant-scoped employee list" } } } },
+  "/api/events": { get: { security: secured, responses: { "200": { description: "Tenant-scoped business events" } } } },
+  "/api/operational-deltas": { get: { security: secured, parameters: [
+    { name: "cursor", in: "query", required: false, schema: { type: "string" } },
+    { name: "limit", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 250 } },
+  ], responses: { "200": { description: "Bounded tenant-scoped operational delta page" }, "400": { description: "Invalid cursor or limit" }, "409": { description: "Cursor tenant scope mismatch" } } } },
+  "/api/read-models/{view}": { get: { security: secured, parameters: [{ name: "view", in: "path", required: true, schema: { type: "string" } }], responses: { "200": { description: "Named tenant-scoped read model" } } } },
+  "/api/insights": { get: { security: secured, responses: { "200": { description: "Tenant-scoped insights" } } } },
+  "/api/setup/status": { get: { security: secured, responses: { "200": { description: "Source-backed setup status" } } } },
+  "/api/integrations/status": { get: { security: secured, responses: { "200": { description: "Source-backed integration status" } } } },
+  "/api/audit": { get: { security: secured, responses: { "200": { description: "Tenant-scoped audit records" } } } },
+  "/api/receipts": { get: { security: secured, responses: { "200": { description: "Tenant-scoped decision receipts" } } } },
+  "/api/receipts/{id}": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact decision receipt" } } } },
+  "/api/me": { get: { security: secured, responses: { "200": { description: "Authenticated employee context" } } } },
+  "/api/dlq": { get: { security: secured, responses: { "200": { description: "Tenant-scoped dead-letter page" } } } },
+  "/api/dlq/{id}": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact dead-letter record" } } } },
+  "/api/dlq/{id}/replay": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized dead-letter replay requested" } } } },
+  "/api/dlq/{id}/discard": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized dead-letter discard recorded" } } } },
+  "/api/corrections": { get: { security: secured, responses: { "200": { description: "Tenant-scoped corrections" } } }, post: { security: secured, responses: { "201": { description: "Correction recorded" } } } },
+  "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
+  "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped operational activity" } } } },
+  "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
+  "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow pause" } } } },
+  "/api/workflows/runs/{id}/resume": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow resume" } } } },
+  "/api/workflows/runs/{id}/cancel": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow cancellation" } } } },
+  "/api/workflows/runs/{id}/retry": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow retry" } } } },
+  "/api/workflows/runs/{id}/escalate": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow escalation" } } } },
+  "/api/instructions/{id}": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact instruction lifecycle" } } } },
+  "/api/instructions/{id}/events": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact instruction event stream page" } } } },
+  "/api/stream": { get: { security: secured, parameters: [{ name: "instructionId", in: "query", required: true, schema: { type: "string", format: "uuid" } }], responses: {
+    "200": { description: "EventSource stream for one instruction lifecycle" },
+    "400": { description: "instructionId is missing" },
+    "401": { description: "Bad auth" },
+    "404": { description: "Instruction not found" },
+  } } },
+  "/api/works/{id}/execution": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact Work execution projection" } } } },
+  "/api/works/{id}/replay": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact Work causal replay" } } } },
+  "/api/works/{id}/objective": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact Work objective state" } } }, post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Objective control recorded" } } } },
   "/api/private-equity/ic/committee-configurations": {
     post: icMutation(IcCommitteeConfigurationSchema, "Immutable committee membership and Core policy revision snapshot created", []),
   },
@@ -345,9 +418,16 @@ const paths = {
   "/api/instructions": { post: { security: secured, requestBody: json(SubmitInstructionSchema), responses: { "201": { description: "Work accepted" }, "400": { description: "Invalid or retired request" } } } },
   "/api/objectives": { post: { security: secured, requestBody: json(StartObjectiveSchema), responses: { "201": { description: "Objective accepted" } } } },
   "/api/objectives/{id}/control": { post: { security: secured, requestBody: json(ControlObjectiveSchema), responses: { "200": { description: "Control recorded" } } } },
-  "/api/work/{id}/handoff": { post: { security: secured, requestBody: json(HandoffWorkSchema), responses: { "200": { description: "Handoff recorded" } } } },
+  "/api/works/{id}/handoff": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(HandoffWorkSchema), responses: { "200": { description: "Handoff recorded" } } } },
   "/api/outcome-packs": { post: { security: secured, requestBody: json(StartOutcomePackSchema), responses: { "201": { description: "Outcome pack started" } } } },
   "/api/queries": { post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } } },
+  "/api/read-models/workforce-status": { get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed configured AI workforce, assignments, verified metrics, governed learning state, truthful truncation, and a next cursor" } } } },
+  "/api/workforce/profiles": {
+    get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed governed workforce state with truthful bounded-page metadata" } } },
+    post: { security: secured, requestBody: json(WorkforceConfigureProfileSchema), responses: { "200": { description: "New immutable configuration revision created" }, "201": { description: "AgentProfile and first immutable revision created" }, "400": { description: "Invalid capability or bounded configuration" }, "403": { description: "Authenticated employee lacks workforce governance authority" } } },
+  },
+  "/api/workforce/proposals/{id}": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkforceReviewProposalSchema), responses: { "200": { description: "Learning proposal human review recorded; promotion creates immutable LearningRevision and AgentProfileRevision" }, "400": { description: "Invalid proposal review" }, "403": { description: "Authenticated employee lacks workforce learning-review authority" } } } },
+  "/api/workforce/assignments/{id}/reassign": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkforceReassignSchema), responses: { "200": { description: "Active assignment relinquished with immutable operator provenance; normal deterministic assignment resumes the exact P6 node" }, "400": { description: "Invalid assignment or note" }, "403": { description: "Authenticated employee lacks workforce reassignment authority" } } } },
   "/api/actions/{id}/confirm": { post: { security: secured, requestBody: json(ConfirmActionSchema), responses: { "200": { description: "Approval recorded" } } } },
   "/api/actions/{id}/reject": { post: { security: secured, requestBody: json(RejectActionSchema), responses: { "200": { description: "Rejection recorded" } } } },
   "/api/actions/{id}/escalate": { post: { security: secured, requestBody: json(EscalateActionSchema), responses: { "200": { description: "Escalation recorded" } } } },
@@ -500,7 +580,7 @@ const paths = {
 
 const document = {
   openapi: "3.1.0",
-  info: { title: "FINNOR Private Equity API", version: "5.4.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 adds a governed Investment Committee runtime without duplicating Core Authority, Core Work, Core DecisionReceipt, or any prior owner. Historical Water payloads remain receipt-only quarantine inputs." },
+  info: { title: "FINNOR Private Equity API", version: "6.0.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 owns governed Investment Committee truth; P6 adds deterministic selected PlanGraphs and authenticated employee-specific causal attention without duplicating Core Work, Authority, DomainAction, BusinessEffect, DecisionReceipt, ObjectiveLoop, or prior truth owners. Historical Water payloads remain receipt-only quarantine inputs." },
   components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } } },
   paths,
 };

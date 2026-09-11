@@ -4,7 +4,7 @@ import { BusinessWorldScene } from "@/components/jarvis/BusinessWorldScene"
 
 export const metadata: Metadata = {
   title: "JARVIS — Agents",
-  description: "Agent Fleet: five bounded operating channels under one JARVIS authority boundary.",
+  description: "Source-backed governed AI worker identities, assignments, and verified learning evidence.",
 }
 
 export default function AgentsPage() {

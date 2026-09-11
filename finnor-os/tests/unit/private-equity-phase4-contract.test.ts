@@ -77,13 +77,16 @@ describe("Private Equity Phase 4 executable action contract", () => {
     const registry = createDefaultPluginRegistry();
     const pe = plannerActionTypesForVertical(registry, "private_equity");
     const shared = plannerActionTypesForVertical(registry, "none");
-    expect(pe).toHaveLength(41);
+    const plannerSafePeActions = EXPECTED_PE_ACTIONS.filter((action) => action !== "waive_closing_condition");
+    expect(pe).toHaveLength(40);
     expect(shared).toHaveLength(17);
-    expect(EXPECTED_PE_ACTIONS.every((action) => pe.includes(action))).toBe(true);
+    expect(plannerSafePeActions.every((action) => pe.includes(action))).toBe(true);
+    expect(pe).not.toContain("waive_closing_condition");
     expect(EXPECTED_PE_ACTIONS.every((action) => !shared.includes(action))).toBe(true);
     expect(() => plannerActionTypesForVertical(registry, "water")).toThrow(/retired/i);
     expect(pe).not.toContain("create_invoice");
-    expect(actionHardeningSpecForVertical("private_equity").map((row) => row.actionType).sort()).toEqual([...pe].sort());
+    expect(actionHardeningSpecForVertical("private_equity").map((row) => row.actionType).sort())
+      .toEqual([...pe, "waive_closing_condition"].sort());
   });
 
   it("requires a receipt for every PE action and enforces unconditional human floors for waiver and close", () => {

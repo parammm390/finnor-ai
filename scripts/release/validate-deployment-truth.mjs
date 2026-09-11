@@ -14,7 +14,7 @@ required(contract.schemaVersion === 2 && contract.environment === "production", 
 required(contract.canonicalGit.remote === "origin" && contract.canonicalGit.branch === "main" && contract.canonicalGit.repository === "parammm390/finnor-ai", "canonical Git target must be origin/main")
 required(contract.canonicalGit.requireCleanWorktree === true, "production contract must require a clean worktree")
 required(contract.release.concurrencyGroup === "finnor-production-release", "production concurrency lock changed")
-required(contract.release.requiredMigrationHead === "0126_pe_underwriting_runtime.sql", "production migration head is not locked to the published P4 runtime")
+required(contract.release.requiredMigrationHead === "0129_phase7_governed_workforce_learning.sql", "production migration head is not locked to the certified P7 runtime")
 required(contract.release.requiredComponents.includes("worker"), "worker must be required for every production release")
 required(contract.forbiddenActiveProviders.includes("azure"), "Azure must remain forbidden in the active production topology")
 
@@ -34,6 +34,8 @@ required(contract.topology.orchestrator.separateDeployment === false && contract
 
 const migrationPath = join(repoRoot, "finnor-os/packages/db/migrations", contract.release.requiredMigrationHead)
 required(existsSync(migrationPath), `required migration does not exist: ${relative(repoRoot, migrationPath)}`)
+const repositoryMigrationHead = readdirSync(join(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort().at(-1)
+required(repositoryMigrationHead === contract.release.requiredMigrationHead, `production contract migration head ${contract.release.requiredMigrationHead} differs from repository head ${repositoryMigrationHead ?? "<missing>"}`)
 for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-worker.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 
 const dockerfile = read("finnor-os/Dockerfile.worker")
@@ -45,6 +47,14 @@ const cfn = read("infra/aws/finnor-production.yaml")
 for (const invariant of ["AWSAgentToolkit: aws-cloudformation@2", "AWS::ECR::Repository", "ImageTagMutability: IMMUTABLE", "AWS::ECS::Cluster", "AWS::ECS::Service", "AWS::ElasticLoadBalancingV2::LoadBalancer", "AWS::ElasticLoadBalancingV2::Listener", "HealthCheckPath: /healthz", "AssignPublicIp: ENABLED", "MinimumHealthyPercent: 100", "MaximumPercent: 200", "RetentionInDays: 7"]) required(cfn.includes(invariant), `AWS CloudFormation template lost ${invariant}`)
 
 const workflow = read(".github/workflows/production-release.yml")
+const workflowDirectory = join(repoRoot, ".github/workflows")
+for (const workflowName of readdirSync(workflowDirectory).filter((name) => /\.ya?ml$/.test(name))) {
+  const workflowText = readFileSync(join(workflowDirectory, workflowName), "utf8")
+  for (const match of workflowText.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)$/gm)) {
+    const actionRef = match[1]
+    required(/@[0-9a-f]{40}$/i.test(actionRef), `${workflowName} uses a mutable GitHub Action ref: ${actionRef}`)
+  }
+}
 const activeFiles = [
   ".github/workflows/production-release.yml",
   "scripts/release/release-policy.mjs",
@@ -67,13 +77,13 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@v6", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "phase5-readiness"]) required(workflow.includes(marker), `production workflow omits AWS/Phase 5 marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "phase5-readiness", "release:pe-p7-workforce-learning"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
 required(workflow.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "Phase 5 gate must exclude the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")
 required(workflow.includes("production.contract.json').topology.api") && read("scripts/release/deploy-production.mjs").includes("production.contract.json"), "Vercel release stages must consume the canonical deployment contract")
 
-const oidcAt = workflow.indexOf("aws-actions/configure-aws-credentials@v6")
+const oidcAt = workflow.indexOf("aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c")
 const pushAt = workflow.indexOf("docker push")
 const preflightAt = workflow.indexOf("preflight-production.mjs")
 const migrationAt = workflow.indexOf("release:migrate:production")
@@ -85,4 +95,4 @@ if (failures.length) {
   console.error(`Deployment truth validation failed:\n- ${failures.join("\n- ")}`)
   process.exit(1)
 }
-console.log(JSON.stringify({ ok: true, phase: "5", provider: "aws-ecs-fargate", contract: "infra/deployment/production.contract.json" }, null, 2))
+console.log(JSON.stringify({ ok: true, phase: "7", provider: "aws-ecs-fargate", contract: "infra/deployment/production.contract.json" }, null, 2))

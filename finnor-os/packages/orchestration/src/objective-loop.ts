@@ -8,10 +8,15 @@
 
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import type { DomainAction, ExecutionResult, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
+import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
+import type { DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
 import {
+  activeWorkPlanRevision,
+  beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
+  completeWorkPlanRevision,
+  finishWorkPlannerAttempt as finishCanonicalWorkPlannerAttempt,
   domainActions,
+  domainPolicyRevisions,
   authorityApprovalRequests,
   authorityApprovalRequestSteps,
   businessEffects,
@@ -35,6 +40,8 @@ import {
   workEventWaits,
   workEvents,
   workInputs,
+  workPlanRevisions,
+  workforceAssignments,
   works,
   pendingConfirmations,
   outcomePackRuns,
@@ -42,14 +49,37 @@ import {
   type Db,
   resolveTenantVertical,
 } from "@finnor/db";
+import {
+  buildConstraintSet,
+  buildGoalSpec,
+  buildPlanningWorldSnapshot,
+  compileAndSelectPlans,
+  DEFAULT_PLAN_BUDGETS,
+  planNodeSemanticHash,
+  sha256 as planningHash,
+  type CandidateCompilationFacts,
+  type CandidatePlan,
+  type CandidatePlanNode,
+  type CompletionProof,
+  type ConstraintSet,
+  type GoalSpec,
+  type PlanGraph,
+  type PlanNode,
+  type PlanningWorldSnapshot,
+} from "@finnor/planning";
 import { attachWorkToDealGraph, resolvePrivateEquityDealReference } from "@finnor/private-equity";
-import { evaluateAuthority } from "@finnor/authority";
+import { canExerciseAuthority, employeeAuthoritySnapshot, evaluateAuthority } from "@finnor/authority";
 import { listAvailableIdentityAccess } from "@finnor/security";
 import type { LLMChannel, LLMProvider } from "./llm";
 import { resolveProviderForPurpose } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
-import { plannerActionTypesForVertical } from "./plugin-registry";
+import { plannerActionTypesForVertical, planningCapabilitiesForVertical } from "./plugin-registry";
+import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
+import { PlanCompilationError, deterministicPlanActionId, selectPlanRevision } from "./plan-runtime";
+import { resolvePlanProgress, type PlanReplanCause } from "./plan-progress";
+import { planningHealthForAction, requiredPlanningHealthCapability } from "./planning-health";
 import { queryAuthorityRequest } from "./authority-runtime";
+import { groundEntitiesWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
 import { ingestIntegrationEvent, markObjectiveWakeConsumed, objectiveWakeContext, recoverDueWorkEventWaits } from "./event-waits";
@@ -63,6 +93,14 @@ import {
   parseObjectiveSuccessCondition,
   privateEquityObjectiveSuccessCondition,
 } from "./objective-success";
+import {
+  claimWorkforceAssignment,
+  completePriorWaitingAssignments,
+  enqueueAssignmentRecovery,
+  isWorkforceAssignmentCurrent,
+  recordLearningObservationForAssignment,
+  requestWorkforceAssignment,
+} from "./workforce-runtime";
 
 export const OBJECTIVE_ITERATION_OUTCOMES = ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] as const;
 export type ObjectiveIterationOutcome = (typeof OBJECTIVE_ITERATION_OUTCOMES)[number];
@@ -170,6 +208,9 @@ export interface ObjectiveActionExecutor {
     authorityContext: Record<string, unknown>;
     objectiveStepId: string;
     actionId: string;
+    plannerAttemptId: string;
+    planRevisionId: string;
+    planNodeId: string;
   }): Promise<{ action: DomainAction; result: ExecutionResult }>;
 }
 
@@ -332,7 +373,7 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         "Complete only when the persisted business success condition appears true in current canonical state, including when a previously expected action is no longer necessary. Include evidence using exact query/effect/event/delegation/computer ids or a typed canonical query assertion.",
         "Wait only for a future business condition. Use waitFor with exact canonical refs and optionally deadlineAt for 'event X OR deadline Y'. Never correlate by similar names or message text. A timer-only wait may use deadlineAt without waitFor. Block when safe progress requires a human fact/integration. Fail only for a terminal objective failure.",
         `Allowed action types: ${input.allowedActionTypes.join(", ")}`,
-        `Typed operational query intents: work_list, agent_activity, company_context, party_lookup, party_context, team_roster, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness.`,
+        `Typed operational query intents: work_list, attention_queue, agent_activity, workforce_status, company_context, party_lookup, party_context, team_roster, pe_world_state, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness.`,
         "Deal-scoped operational queries require the exact dealId from canonical state. Never infer a deal, company, fund, party, request, finding, risk, condition, or workstream from a similar label.",
         "Action payload schemas follow. Field names and required fields are strict:",
         input.actionPayloadSpec,
@@ -838,7 +879,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     })),
     eventWake: bounded(eventWake, 24_000),
     eventWaits: (aggregate.eventWaits as Array<Record<string, unknown>>).map((wait) => ({
-      id: wait.id, status: wait.status, expectedEventType: wait.expectedEventType,
+      id: wait.id, objectiveStepId: wait.objectiveStepId, status: wait.status, expectedEventType: wait.expectedEventType,
       matchedEventId: wait.matchedEventId, conditionSummary: wait.conditionSummary,
       deadlineAt: wait.deadlineAt instanceof Date ? wait.deadlineAt.toISOString() : wait.deadlineAt ?? null,
     })),
@@ -935,6 +976,8 @@ async function finishIteration(params: {
   authorityDecisionId?: string | null;
   queryExecutionId?: string | null;
   domainActionId?: string | null;
+  planRevisionId?: string | null;
+  planNodeId?: string | null;
   scheduledFor?: Date | null;
   failure?: unknown;
   actionIncrement?: number;
@@ -971,6 +1014,40 @@ async function finishIteration(params: {
       outcome = "blocked";
       reason = `Objective stopped after ${nextNoProgress} consecutive iterations without observed progress.`;
     }
+    // The ObjectiveLoop lease owner is also the P7 assignment fencing token.
+    // Finalize ownership in this same transaction as the P6 step so a crash can
+    // expose neither a completed step with a running owner nor the inverse.
+    const [activeAssignment] = await db.select().from(workforceAssignments).where(and(
+      eq(workforceAssignments.tenantId, params.tenantId),
+      eq(workforceAssignments.objectiveStepId, params.step.id),
+      eq(workforceAssignments.state, "running"),
+      eq(workforceAssignments.leaseOwner, current.leaseOwner!),
+    )).limit(1);
+    if (activeAssignment) {
+      const assignmentWaiting = outcome === "waiting" || outcome === "awaiting_approval";
+      const assignmentCancelled = outcome === "cancelled";
+      const assignmentFailed = outcome === "failed" || outcome === "blocked" || Boolean(params.failure);
+      await db.update(workforceAssignments).set({
+        state: assignmentWaiting ? "waiting" : assignmentCancelled ? "cancelled" : assignmentFailed ? "failed" : "completed",
+        leaseOwner: null,
+        leaseUntil: null,
+        domainActionId: params.domainActionId ?? null,
+        completedAt: assignmentWaiting ? null : new Date(),
+        failure: assignmentFailed ? bounded({ code: outcome === "blocked" ? "OBJECTIVE_BLOCKED" : "OBJECTIVE_STEP_FAILED", reason, detail: params.failure ?? null }, 16_000) as object : null,
+        updatedAt: new Date(),
+      }).where(and(
+        eq(workforceAssignments.id, activeAssignment.id),
+        eq(workforceAssignments.state, "running"),
+        eq(workforceAssignments.leaseOwner, current.leaseOwner!),
+      ));
+    }
+    if (params.step.planRevisionId && (outcome === "blocked" || outcome === "failed" || outcome === "cancelled")) {
+      await db.update(workPlanRevisions).set({ status: outcome === "failed" ? "failed" : "blocked" }).where(and(
+        eq(workPlanRevisions.tenantId, params.tenantId),
+        eq(workPlanRevisions.id, params.step.planRevisionId),
+        eq(workPlanRevisions.status, "active"),
+      ));
+    }
     await db.update(workObjectiveSteps).set({
       phase: "finished",
       decisionKind: params.decision?.kind ?? (outcome === "waiting" ? "wait" : outcome === "completed" ? "complete" : outcome === "blocked" ? "block" : outcome === "failed" ? "fail" : null),
@@ -979,6 +1056,8 @@ async function finishIteration(params: {
       authorityDecisionId: params.authorityDecisionId ?? null,
       queryExecutionId: params.queryExecutionId ?? null,
       domainActionId: params.domainActionId ?? null,
+      planRevisionId: params.planRevisionId ?? params.step.planRevisionId ?? null,
+      planNodeId: params.planNodeId ?? params.step.planNodeId ?? null,
       observation: bounded(params.observation),
       progressMade: params.progressMade,
       iterationOutcome: outcome,
@@ -1038,7 +1117,7 @@ async function finishIteration(params: {
         updatedAt: new Date(),
       }).where(and(eq(outcomePackRuns.tenantId, params.tenantId), eq(outcomePackRuns.objectiveLoopId, current.id)));
     }
-    return { outcome, loop: finalLoop, superseded: false as const, wakeClaimedDuringWaitCreation };
+    return { outcome, loop: finalLoop, superseded: false as const, wakeClaimedDuringWaitCreation, finalizedAssignmentId: activeAssignment?.id ?? null };
   });
   if (result.superseded) return result;
   if (result.wakeClaimedDuringWaitCreation) return result;
@@ -1054,6 +1133,7 @@ async function finishIteration(params: {
     : result.outcome === "failed" ? { failure: { kind: "objective", objectiveLoopId: params.loop.id, reason: result.loop.reason, detail: bounded(params.failure) } }
       : result.outcome === "cancelled" ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, state: "cancelled", reason: result.loop.reason } } : {});
   if (result.outcome === "continue") await scheduleIteration(result.loop, new Date(), params.loop.workId);
+  if (result.finalizedAssignmentId) await recordLearningObservationForAssignment(params.tenantId, result.finalizedAssignmentId);
   return result;
 }
 
@@ -1071,15 +1151,371 @@ function operationStillRunning(observation: Record<string, unknown>): boolean {
   return operations.some((operation) => ["awaiting_approval", "queued", "running"].includes(String(operation.status)));
 }
 
+const EMPTY_OBJECTIVE_MEMORY: MemorySnapshot = {
+  shortTerm: null,
+  longTerm: null,
+  semantic: [],
+  episodic: [],
+  patterns: null,
+};
+
+function objectiveStateProjection(inspection: ObjectiveInspection): Record<string, unknown> {
+  return {
+    work: inspection.work,
+    objective: inspection.objective,
+    companyGraph: inspection.companyGraph,
+    businessState: inspection.businessState,
+    executionAccess: inspection.executionAccess,
+    computerRuns: inspection.computerRuns,
+    delegations: inspection.delegations,
+    acknowledgementRequests: inspection.acknowledgementRequests,
+    eventWake: inspection.eventWake,
+    eventWaits: inspection.eventWaits,
+    integrationEvents: inspection.integrationEvents,
+    actions: inspection.actions,
+    businessEffects: inspection.businessEffects,
+    operations: inspection.operations,
+    receipts: inspection.receipts,
+  };
+}
+
+function graphFromPersistence(value: unknown): PlanGraph {
+  if (!isRecord(value) || value.version !== 1 || typeof value.semanticHash !== "string" || !Array.isArray(value.nodes) || !Array.isArray(value.edges)) {
+    throw new Error("Active PlanRevision contains an invalid immutable PlanGraph");
+  }
+  return value as unknown as PlanGraph;
+}
+
+function compatibilityCandidate(decision: ObjectiveDecision, goal: GoalSpec): CandidatePlan {
+  let material: CandidatePlanNode | null = null;
+  if (decision.kind === "query") {
+    material = { key: "material", kind: "query", request: decision.request, supports: goal.criteria.map((criterion) => criterion.id) };
+  } else if (decision.kind === "action") {
+    material = { key: "material", kind: "action", actionType: decision.actionType, payload: decision.payload, supports: goal.criteria.map((criterion) => criterion.id) };
+  } else if (decision.kind === "wait") {
+    material = {
+      key: "material",
+      kind: "wait",
+      waitFor: decision.waitFor ?? { eventType: "deadline.reached" },
+      ...(decision.deadlineAt || decision.resumeAt ? { deadlineAt: decision.deadlineAt ?? decision.resumeAt } : {}),
+      supports: goal.criteria.map((criterion) => criterion.id),
+    };
+  }
+  return {
+    version: 1,
+    candidateKey: "scripted-objective-compatibility",
+    nodes: [
+      ...(material ? [material] : []),
+      ...goal.criteria.map((criterion, index): CandidatePlanNode => ({
+        key: `check_${index + 1}`,
+        kind: "check",
+        criterionId: criterion.id,
+        ...(material ? { dependsOn: [material.key] } : {}),
+        observation: decision.kind === "complete" || decision.kind === "block" || decision.kind === "fail"
+          ? { compatibilityControl: decision.kind, criterion: criterion.criterion }
+          : criterion.criterion,
+      })),
+    ],
+    rationale: decision.reason,
+  };
+}
+
+function planDecision(node: PlanNode): ObjectiveDecision {
+  if (node.kind === "query") {
+    return {
+      kind: "query",
+      request: node.request,
+      reason: "Execute the selected immutable PlanGraph query node and observe its canonical result.",
+      nextStep: "Advance a causally ready dependent node when the persisted query observation matches; otherwise create a child PlanRevision.",
+      recoveryMode: node.recovery.mode,
+    };
+  }
+  if (node.kind === "action") {
+    return {
+      kind: "action",
+      actionType: node.actionType,
+      payload: node.groundedPayload,
+      reason: "Execute the selected immutable PlanGraph action node through the existing governed DomainAction boundary.",
+      nextStep: "Observe the durable BusinessEffect or DecisionReceipt, then advance the graph or create a child PlanRevision on mismatch.",
+      recoveryMode: node.recovery.mode,
+    };
+  }
+  if (node.kind === "wait") {
+    return {
+      kind: "wait",
+      waitFor: node.waitFor as z.infer<typeof WaitForSchema>,
+      ...(node.deadlineAt ? { deadlineAt: node.deadlineAt } : {}),
+      condition: "Wait for the exact selected PlanGraph event correlation.",
+      reason: "Enter the selected immutable PlanGraph wait node through the durable event-wait boundary.",
+      recoveryMode: node.recovery.mode,
+    };
+  }
+  return {
+    kind: "complete",
+    outcome: { planNodeId: node.id, criterionId: node.criterionId },
+    reason: "Verify the accepted GoalSpec against current canonical business state.",
+  };
+}
+
+function readyRootNode(graph: PlanGraph): PlanNode {
+  const priority: Record<PlanNode["kind"], number> = { query: 0, wait: 1, action: 2, check: 3 };
+  const ready = graph.nodes.filter((node) => node.dependsOn.length === 0)
+    .sort((left, right) => priority[left.kind] - priority[right.kind] || left.semanticHash.localeCompare(right.semanticHash));
+  if (!ready[0]) throw new Error("Selected PlanGraph has no causally ready root node");
+  return ready[0];
+}
+
+function completionEvidenceRefs(verification: ObjectiveSuccessVerification): Array<{ type: string; id: string }> {
+  const refs = verification.results.flatMap((result) => result.evidenceRefs ?? []);
+  refs.push(...verification.queryExecutionIds.map((id) => ({ type: "work_query_execution", id })));
+  const seen = new Set<string>();
+  return refs.filter((ref) => {
+    const key = `${ref.type}:${ref.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((left, right) => `${left.type}:${left.id}`.localeCompare(`${right.type}:${right.id}`));
+}
+
+async function objectivePlanningInputs(params: {
+  tenantId: string;
+  workId: string;
+  plannerAttemptId: string;
+  loop: typeof workObjectiveLoops.$inferSelect;
+  inspection: ObjectiveInspection;
+  ctx: TenantContext;
+  plugins: PluginRegistry;
+}): Promise<{ workInputId: string; verticalKey: string; goal: GoalSpec; constraints: ConstraintSet; snapshot: PlanningWorldSnapshot; verifiedIrreversibleEffectHashes: string[] }> {
+  const vertical = await resolveTenantVertical(params.tenantId);
+  const manifest = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey);
+  const actionTypes = manifest.filter((item) => item.kind === "action" && item.available).map((item) => item.capability);
+  const [input, policyRows, revisions, effectRows] = await Promise.all([
+    withTenant(params.tenantId, async (db) => {
+      const [row] = await db.select().from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+        .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+      return row ?? null;
+    }),
+    actionTypes.length === 0 ? Promise.resolve([]) : withTenant(params.tenantId, (db) => db.select().from(domainPolicyRevisions).where(and(
+      eq(domainPolicyRevisions.tenantId, params.tenantId),
+      inArray(domainPolicyRevisions.actionType, actionTypes),
+      lte(domainPolicyRevisions.effectiveFrom, new Date()),
+    )).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version))),
+    withTenant(params.tenantId, (db) => db.select({ id: workPlanRevisions.id, planGraph: workPlanRevisions.planGraph })
+      .from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId)))),
+    withTenant(params.tenantId, (db) => {
+      return db.select({
+        id: businessEffects.id,
+        status: businessEffects.status,
+        planRevisionId: domainActions.planRevisionId,
+        planNodeId: domainActions.planNodeId,
+      }).from(domainActions).innerJoin(businessEffects, and(
+        eq(businessEffects.tenantId, params.tenantId),
+        eq(businessEffects.domainActionId, domainActions.id),
+      )).where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.workId, params.workId)));
+    }),
+  ]);
+  if (!input) throw new Error("Objective planning requires a durable WorkInput");
+  const effectivePolicies = policyRows.filter((row, index, all) => all.findIndex((candidate) => candidate.actionType === row.actionType) === index);
+  const graphByRevision = new Map(revisions.map((row) => [row.id, graphFromPersistence(row.planGraph)]));
+  const currentEffects = effectRows.flatMap((effect) => {
+    const graph = effect.planRevisionId ? graphByRevision.get(effect.planRevisionId) : undefined;
+    const node = graph?.nodes.find((candidate) => candidate.id === effect.planNodeId && candidate.kind === "action");
+    return node ? [{
+      semanticHash: node.semanticHash,
+      status: effect.status,
+      irreversible: node.kind === "action" && node.irreversible,
+      evidenceRef: `business_effect:${effect.id}`,
+    }] : [];
+  });
+  const verifiedIrreversibleEffectHashes = currentEffects
+    .filter((effect) => effect.status === "verified" && effect.irreversible)
+    .map((effect) => effect.semanticHash);
+  const stateProjection = objectiveStateProjection(params.inspection);
+  const stateHash = planningHash(stateProjection);
+  const rawRefs = canonicalRefsFromContext({ work: params.inspection.work, companyGraph: params.inspection.companyGraph });
+  const refs = rawRefs.filter((ref, index, all) => all.findIndex((candidate) => candidate.entityType === ref.entityType && candidate.entityId === ref.entityId) === index);
+  const targets = refs.map((ref) => ({
+    kind: "entity" as const,
+    type: ref.entityType,
+    id: ref.entityId,
+    sourceRef: "work.active_context",
+  }));
+  const condition = parseObjectiveSuccessCondition(params.loop.successCondition);
+  const authority = await employeeAuthoritySnapshot(params.ctx).catch(() => ({
+    employeeId: params.ctx.employeeId ?? null,
+    revision: params.ctx.authorityRevision ?? null,
+    roles: params.ctx.authorityRoles ?? [params.ctx.role],
+  }));
+  const goal = buildGoalSpec({
+    objective: params.loop.objective,
+    workId: params.workId,
+    workInputId: input.id,
+    targets,
+    deadline: params.loop.deadlineAt,
+    successCondition: condition as unknown as Record<string, unknown> & { criteria?: unknown[]; source?: unknown },
+  });
+  const constraints = buildConstraintSet({
+    tenantId: params.tenantId,
+    verticalKey: vertical.verticalKey,
+    allowedCapabilities: manifest.filter((item) => item.modelProposable && item.available).map((item) => item.capability),
+    humanOnlyCapabilities: manifest.filter((item) => !item.modelProposable).map((item) => item.capability),
+    prohibitedCapabilities: [],
+    authorityRevision: authority.revision,
+    budgets: {
+      ...DEFAULT_PLAN_BUDGETS,
+      maxActions: Math.max(0, params.loop.maxActions - params.loop.actionCount),
+      maxQueries: Math.max(0, params.loop.maxQueries - params.loop.queryCount),
+    },
+    constraints: [],
+    deadlineAt: params.loop.deadlineAt.toISOString(),
+    softPreferences: [],
+  });
+  const snapshot = buildPlanningWorldSnapshot({
+    workId: params.workId,
+    workInputId: input.id,
+    plannerAttemptId: params.plannerAttemptId,
+    tenantId: params.tenantId,
+    verticalKey: vertical.verticalKey,
+    capturedAt: params.inspection.inspectedAt,
+    decisionContextHash: stateHash,
+    canonicalStateHash: stateHash,
+    work: { id: params.workId, status: String(params.inspection.work.status ?? ""), inputId: input.id },
+    interactionContextRef: { hash: planningHash(input.contextSnapshot ?? null), sourceRef: "work_input.context_snapshot" },
+    canonicalEntities: targets.map((target) => ({ ...target, versionHash: null })),
+    canonicalVersions: [
+      { sourceRef: "objective.canonical_state", versionHash: planningHash(params.inspection.businessState) },
+      { sourceRef: "objective.execution_state", versionHash: planningHash({ actions: params.inspection.actions, effects: params.inspection.businessEffects, operations: params.inspection.operations }) },
+    ],
+    activeObjective: { id: params.loop.id, revision: params.loop.revision, successConditionHash: planningHash(condition) },
+    completedEffects: currentEffects.filter((effect) => effect.status === "verified").map((effect) => ({ semanticHash: effect.semanticHash, irreversible: effect.irreversible, evidenceRef: effect.evidenceRef })),
+    outstandingEffects: currentEffects.filter((effect) => effect.status !== "verified").map((effect) => ({ semanticHash: effect.semanticHash, status: effect.status, evidenceRef: effect.evidenceRef })),
+    policyRefs: effectivePolicies.map((row) => ({
+      actionType: row.actionType,
+      policyId: row.policyId,
+      version: row.version,
+      semanticHash: planningHash({ actionType: row.actionType, policyId: row.policyId, version: row.version, policy: row.policy, requiresConfirmation: row.requiresConfirmation }),
+    })),
+    evidenceRefs: effectRows.map((effect) => ({ type: "business_effect", id: effect.id })),
+    epistemicWarnings: [],
+    sourceRefs: [{ kind: "operational_query", ref: "objective.canonical_state", asOf: params.inspection.inspectedAt, hash: planningHash(params.inspection.businessState) }],
+    authority,
+    capabilities: manifest.map((item) => ({
+      capability: item.capability,
+      kind: item.kind,
+      modelProposable: item.modelProposable,
+      available: item.available,
+      health: item.health,
+      risk: item.risk,
+      irreversible: item.irreversible,
+      requiredReferences: item.requiredReferences,
+      effectClass: item.effectClass,
+      observationStrategy: item.observationStrategy,
+      reversibility: item.reversibility,
+      supportedRecoveryModes: item.supportedRecoveryModes,
+      externalSideEffect: item.externalSideEffect,
+      authorityRequirement: item.authorityRequirement,
+    })),
+    currentEffects: currentEffects.map(({ semanticHash, status, irreversible }) => ({ semanticHash, status, irreversible })),
+    sourceHealth: { status: "complete", missing: [] },
+  });
+  return { workInputId: input.id, verticalKey: vertical.verticalKey, goal, constraints, snapshot, verifiedIrreversibleEffectHashes };
+}
+
+async function consequentialDispatchViolation(params: {
+  tenantId: string;
+  workId: string;
+  loopRevision: number;
+  planRevisionId: string;
+  node: Extract<PlanNode, { kind: "action" }>;
+  ctx: TenantContext;
+  plugins: PluginRegistry;
+}): Promise<string | null> {
+  const currentPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+  if (!currentPlan || currentPlan.id !== params.planRevisionId) return "The PlanRevision is no longer active";
+  const snapshot = isRecord(currentPlan.planningSnapshot) ? currentPlan.planningSnapshot as unknown as PlanningWorldSnapshot : null;
+  if (!snapshot || snapshot.workId !== params.workId) return "The active PlanRevision snapshot is malformed or Work-scoped incorrectly";
+  const current = await withTenant(params.tenantId, async (db) => {
+    const [work] = await db.select({ status: works.status }).from(works).where(and(eq(works.tenantId, params.tenantId), eq(works.id, params.workId))).limit(1);
+    const [input] = await db.select({ id: workInputs.id }).from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+      .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+    const [loop] = await db.select({ revision: workObjectiveLoops.revision, state: workObjectiveLoops.state }).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
+    const [policy] = await db.select().from(domainPolicyRevisions).where(and(
+      eq(domainPolicyRevisions.tenantId, params.tenantId),
+      eq(domainPolicyRevisions.actionType, params.node.actionType),
+      lte(domainPolicyRevisions.effectiveFrom, new Date()),
+    )).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version)).limit(1);
+    const grounding = await groundEntitiesWithDb(db, params.tenantId, params.node.groundedPayload);
+    return { work, input, loop, policy, grounding };
+  });
+  if (!current.work || ["cancelled", "completed", "failed"].includes(current.work.status)) return `Work is ${current.work?.status ?? "missing"}`;
+  if (current.input?.id !== snapshot.workInputId) return "The active WorkInput changed after plan selection";
+  if (current.loop?.revision !== params.loopRevision || current.loop.state !== "continue") return "The Objective was interrupted, redirected, or moved out of runnable state";
+  if (current.grounding.some((field) => field.status !== "verified")) return "An entity reference or expected version is no longer grounded";
+  const vertical = await resolveTenantVertical(params.tenantId);
+  const capability = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey).find((item) => item.kind === "action" && item.capability === params.node.actionType);
+  if (!capability?.available || !capability.modelProposable || capability.health === "unavailable") return "The selected capability is no longer available to the planner";
+  if (requiredPlanningHealthCapability(params.node.actionType, params.node.groundedPayload)) {
+    const providerHealth = await planningHealthForAction({
+      tenantId: params.tenantId,
+      actorId: params.ctx.employeeId ?? params.ctx.userId,
+      actionType: params.node.actionType,
+      payload: params.node.groundedPayload,
+    });
+    if (!providerHealth || providerHealth.health === "unavailable") {
+      return providerHealth?.reason
+        ? `The selected provider capability is unavailable: ${providerHealth.reason}`
+        : "The selected provider capability health could not be verified";
+    }
+  }
+  const plugin = params.plugins.resolve(params.node.actionType);
+  const schemaResult = plugin?.payloadSchemas?.[params.node.actionType]?.safeParse(params.node.groundedPayload);
+  if (!plugin || (schemaResult && !schemaResult.success)) return "The selected action payload no longer satisfies its registered schema";
+  const snapshotPolicy = snapshot.policyRefs.find((ref) => ref.actionType === params.node.actionType);
+  const currentPolicyHash = current.policy ? planningHash({
+    actionType: current.policy.actionType,
+    policyId: current.policy.policyId,
+    version: current.policy.version,
+    policy: current.policy.policy,
+    requiresConfirmation: current.policy.requiresConfirmation,
+  }) : null;
+  if ((snapshotPolicy && snapshotPolicy.semanticHash !== currentPolicyHash) || (!snapshotPolicy && current.policy)) return "The effective action policy changed after plan selection";
+  const authority = await employeeAuthoritySnapshot(params.ctx).catch(() => null);
+  if (snapshot.authority.revision !== null && authority?.revision !== snapshot.authority.revision) return "The responsible employee's authority revision changed after plan selection";
+  const refs = canonicalRefsFromContext(params.node.groundedPayload).map((ref) => ({ type: ref.entityType, id: ref.entityId }));
+  if (params.node.authority === "approval_required") return null;
+  const mayAct = await canExerciseAuthority(params.ctx, {
+    operation: "action",
+    capability: `action:${params.node.actionType}`,
+    resources: refs.length > 0 ? refs : [{ type: "work", id: params.workId }],
+    risk: params.node.risk,
+    policyRequiresApproval: false,
+    workId: params.workId,
+  }).catch(() => false);
+  return mayAct ? null : "Current authority cannot exercise the selected action capability";
+}
+
 export class ObjectiveLoopRuntime {
   constructor(
     private plugins: PluginRegistry,
     private actionExecutor: ObjectiveActionExecutor,
-    private planner: ObjectiveDecisionPlanner = new LLMObjectiveDecisionPlanner(),
+    private compatibilityPlanner?: ObjectiveDecisionPlanner,
+    private canonicalPlanner: Planner = new LLMPlanner(plugins),
   ) {}
 
-  async runIteration(params: { tenantId: string; workId: string; objectiveLoopId: string; expectedRevision?: number; expectedStepNumber?: number; signal?: AbortSignal }): Promise<ObjectiveIterationOutcome> {
-    const leaseOwner = randomUUID();
+  async runIteration(params: {
+    tenantId: string;
+    workId: string;
+    objectiveLoopId: string;
+    expectedRevision?: number;
+    expectedStepNumber?: number;
+    workforceAssignmentId?: string;
+    /** Existing Objective jobs defer; direct/manual invocations may execute the
+     * same governed assignment inline without bypassing assignment/lease checks. */
+    deferToWorkforceJob?: boolean;
+    workforceLeaseOwner?: string;
+    signal?: AbortSignal;
+  }): Promise<ObjectiveIterationOutcome> {
+    const leaseOwner = params.workforceLeaseOwner ?? randomUUID();
     const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber);
     if (claimed.terminal || !claimed.step) return claimed.loop.state;
     const loop = claimed.loop;
@@ -1128,78 +1564,238 @@ export class ObjectiveLoopRuntime {
       })).outcome;
     }
 
-    const attempt = await beginPlannerAttempt(params.tenantId, loop.id, step.id, inspectionHash);
-    const vertical = await resolveTenantVertical(params.tenantId);
-    const allowedActionTypes = plannerActionTypesForVertical(this.plugins, vertical.verticalKey);
-    const allowedActionSet = new Set(allowedActionTypes);
+    let planRevisionId: string;
+    let planSemanticHash: string;
+    let planGoalHash: string;
+    let planNode: PlanNode;
+    let plannerAttemptId: string;
     let decision: ObjectiveDecision;
-    try {
-      decision = await this.planner.decide({
-        objective: loop.objective,
-        inspection,
-        allowedActionTypes,
-        actionPayloadSpec: this.plugins.payloadSpecJson(allowedActionTypes),
-        remaining: { steps: Math.max(0, loop.maxSteps - loop.stepCount), actions: Math.max(0, loop.maxActions - loop.actionCount), queries: Math.max(0, loop.maxQueries - loop.queryCount) },
-        tenantId: params.tenantId,
-        workId: params.workId,
-        channel: channel(loop.initialChannel),
-        signal: params.signal,
-        deadlineAt: Math.min(loop.deadlineAt.getTime(), Date.now() + 15_000),
-      });
-      if (decision.kind === "query") {
-        const validated = validateOperationalQueryRequest(decision.request);
-        if (!validated.success) throw new Error(`Objective decision failed semantic validation: ${validated.error}`);
+    const active = await activeWorkPlanRevision(params.tenantId, params.workId);
+    if (!active && step.planRevisionId) {
+      const [completedPlan] = await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
+        eq(workPlanRevisions.tenantId, params.tenantId),
+        eq(workPlanRevisions.id, step.planRevisionId!),
+        eq(workPlanRevisions.workId, params.workId),
+        eq(workPlanRevisions.status, "completed"),
+      )).limit(1));
+      const proof = isRecord(completedPlan?.completionProof) ? completedPlan.completionProof : null;
+      const verification = proof && isRecord(proof.verification) ? proof.verification as unknown as ObjectiveSuccessVerification : null;
+      if (proof?.verified === true && verification?.state === "verified") {
+        return (await finishIteration({
+          tenantId: params.tenantId,
+          loop,
+          step,
+          outcome: "completed",
+          reason: "Recovered a verified CompletionProof persisted before the prior Objective worker stopped.",
+          decision: DecisionSchema.safeParse(step.decision).success ? step.decision as ObjectiveDecision : undefined,
+          observation: { recoveredCompletionProof: proof },
+          successVerification: verification,
+          progressMade: true,
+        })).outcome;
       }
-      if (decision.kind === "action") {
-        if (!allowedActionSet.has(decision.actionType)) {
-          throw new Error(`Objective decision failed semantic validation: ${decision.actionType} is unavailable for active vertical ${vertical.verticalKey}`);
-        }
-        const plugin = this.plugins.resolve(decision.actionType);
-        if (!plugin) throw new Error(`Objective decision failed semantic validation: unregistered action type ${decision.actionType}`);
-        const schema = plugin.payloadSchemas?.[decision.actionType];
-        const payload = schema?.safeParse(decision.payload);
-        if (payload && !payload.success) throw new Error(`Objective decision failed semantic validation: ${payload.error.issues.map((issue) => issue.message).join("; ")}`);
-        if (decision.actionType === "computer_task" && decision.payload.mode === "READ_ONLY") {
-          decision = {
-            ...decision,
-            payload: {
-              ...decision.payload,
-              task: loop.objective,
-              successCriteria: [
-                "Complete every fact requested by the objective from the observed application state",
-                "Capture literal page evidence supporting every reported fact",
-              ],
-            },
-          };
-        }
-      }
-      if (decision.kind === "wait") {
-        const deadlineValue = decision.deadlineAt ?? decision.resumeAt;
-        if (!decision.waitFor && !deadlineValue) throw new Error("Objective decision failed semantic validation: wait requires waitFor and/or deadlineAt");
-        if (decision.waitFor) {
-          const exact = decision.waitFor;
-          const hasStrongCorrelation = Boolean(
-            exact.resource?.id || exact.delegationId || exact.taskId || exact.acknowledgementRequestId
-            || exact.computerRunId || exact.domainActionId || exact.providerConversationId
-            || exact.providerMessageId || exact.applicationRef || exact.correlationId,
-          );
-          if (!hasStrongCorrelation) throw new Error("Objective decision failed semantic validation: event wait requires an exact Work/resource/delegation/task/run/provider correlation; a party alone is insufficient");
-        }
-      }
-      if (decision.kind === "complete") parseObjectiveCompletionEvidence(decision.evidence);
-      await finishPlannerAttempt(params.tenantId, attempt.id, "succeeded", this.planner.providerName, decision);
-    } catch (error) {
-      const failure = failureShape(error);
-      await finishPlannerAttempt(params.tenantId, attempt.id, failure.timeout ? "timed_out" : "failed", this.planner.providerName, undefined, failure);
-      const [updated] = await withTenant(params.tenantId, (db) => db.update(workObjectiveLoops).set({ plannerFailureCount: sql`${workObjectiveLoops.plannerFailureCount} + 1`, reason: String(failure.message), updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning());
-      if ((updated?.plannerFailureCount ?? loop.plannerFailureCount + 1) >= loop.maxPlannerFailures) {
-        return (await finishIteration({ tenantId: params.tenantId, loop: updated ?? loop, step, outcome: "failed", reason: "Objective decision provider exhausted its configured recovery attempts.", progressMade: false, failure })).outcome;
-      }
-      await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ phase: "deciding", failure }).where(eq(workObjectiveSteps.id, step.id)));
-      await transitionWork(params.tenantId, params.workId, "recovery", "objective_planner_attempt_failed", { objectiveLoopId: loop.id, objectiveStepId: step.id, attempt: attempt.attempt, failure });
-      await releaseLease(params.tenantId, loop.id, leaseOwner);
-      throw error;
     }
+    const [latestHistoricalPlan] = !active ? await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
+      eq(workPlanRevisions.tenantId, params.tenantId),
+      eq(workPlanRevisions.workId, params.workId),
+    )).orderBy(desc(workPlanRevisions.revision)).limit(1)) : [];
+    if (!active && latestHistoricalPlan?.status === "completed") {
+      throw new Error("A completed PlanRevision exists without a recoverable Objective CompletionProof binding");
+    }
+    const lineageParent = active ?? latestHistoricalPlan ?? null;
+    let activeGraph: PlanGraph | null = null;
+    let activeNode: PlanNode | null = null;
+    let replanCause: PlanReplanCause = "observation";
+    if (active) {
+      activeGraph = graphFromPersistence(active.planGraph);
+      if (step.planRevisionId === active.id && step.planNodeId) {
+        // Exact crash resume: the unfinished Objective step retains ownership of
+        // the same immutable node and deterministic action/query idempotency key.
+        activeNode = activeGraph.nodes.find((node) => node.id === step.planNodeId)
+          ?? (() => { throw new Error("Objective step references a node outside its active PlanRevision"); })();
+      } else if (!this.compatibilityPlanner) {
+        // The compatibility planner is a deterministic fixture/legacy adapter that
+        // proposes exactly one material decision per call. It still compiles through
+        // P6, but deliberately starts a child revision after that material boundary.
+        // Canonical CandidatePlan planners use the complete graph frontier below.
+        const completedSteps = await withTenant(params.tenantId, (db) => db.select({
+          id: workObjectiveSteps.id,
+          stepNumber: workObjectiveSteps.stepNumber,
+          planNodeId: workObjectiveSteps.planNodeId,
+          queryExecutionId: workObjectiveSteps.queryExecutionId,
+          domainActionId: workObjectiveSteps.domainActionId,
+          iterationOutcome: workObjectiveSteps.iterationOutcome,
+          failure: workObjectiveSteps.failure,
+          successVerification: workObjectiveSteps.successVerification,
+          completedAt: workObjectiveSteps.completedAt,
+        }).from(workObjectiveSteps).where(and(
+          eq(workObjectiveSteps.tenantId, params.tenantId),
+          eq(workObjectiveSteps.objectiveLoopId, loop.id),
+          eq(workObjectiveSteps.planRevisionId, active.id),
+          sql`${workObjectiveSteps.completedAt} IS NOT NULL`,
+        )).orderBy(asc(workObjectiveSteps.stepNumber)));
+        const progress = resolvePlanProgress(activeGraph, completedSteps, inspection);
+        if (progress.state === "waiting") {
+          return (await finishIteration({
+            tenantId: params.tenantId,
+            loop,
+            step,
+            outcome: "waiting",
+            reason: progress.reason,
+            nextStep: "Resume only after the existing exact durable correlation changes state.",
+            observation: { canonicalInspectionHash: inspectionHash, waitingPlanRevisionId: active.id, waitingPlanNodeId: progress.node.id },
+            progressMade: false,
+          })).outcome;
+        }
+        if (progress.state === "ready") activeNode = progress.node;
+        else replanCause = progress.cause;
+      }
+    }
+
+    if (active && activeGraph && activeNode) {
+      planNode = activeNode;
+      planRevisionId = active.id;
+      planSemanticHash = active.semanticHash;
+      planGoalHash = activeGraph.goalHash;
+      if (!active.plannerAttemptId) throw new Error("Active Objective PlanRevision has no canonical planner attempt");
+      plannerAttemptId = active.plannerAttemptId;
+      const persistedDecision = DecisionSchema.safeParse(step.decision);
+      decision = planNode.kind === "check" && persistedDecision.success && ["complete", "block", "fail"].includes(persistedDecision.data.kind)
+        ? persistedDecision.data
+        : planDecision(planNode);
+    } else {
+      const attempt = await beginPlannerAttempt(params.tenantId, loop.id, step.id, inspectionHash);
+      let canonicalAttempt: Awaited<ReturnType<typeof beginCanonicalWorkPlannerAttempt>> | undefined;
+      try {
+        const latestInput = await withTenant(params.tenantId, async (db) => {
+          const [row] = await db.select({ id: workInputs.id }).from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+            .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+          return row ?? null;
+        });
+        if (!latestInput) throw new Error("Objective planning requires a durable WorkInput");
+        canonicalAttempt = await beginCanonicalWorkPlannerAttempt({
+          tenantId: params.tenantId,
+          workId: params.workId,
+          workInputId: latestInput.id,
+          attemptKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:attempt:${attempt.attempt}`,
+          decisionContext: objectiveStateProjection(inspection),
+        });
+        const inputs = await objectivePlanningInputs({
+          tenantId: params.tenantId,
+          workId: params.workId,
+          plannerAttemptId: canonicalAttempt.id,
+          loop,
+          inspection,
+          ctx,
+          plugins: this.plugins,
+        });
+        let planning: PlanningResult;
+        let compatibilityDecision: ObjectiveDecision | undefined;
+        if (this.compatibilityPlanner) {
+          const allowedActionTypes = plannerActionTypesForVertical(this.plugins, inputs.verticalKey);
+          const proposed = await this.compatibilityPlanner.decide({
+            objective: loop.objective,
+            inspection,
+            allowedActionTypes,
+            actionPayloadSpec: this.plugins.payloadSpecJson(allowedActionTypes),
+            remaining: { steps: Math.max(0, loop.maxSteps - loop.stepCount), actions: Math.max(0, loop.maxActions - loop.actionCount), queries: Math.max(0, loop.maxQueries - loop.queryCount) },
+            tenantId: params.tenantId,
+            workId: params.workId,
+            channel: channel(loop.initialChannel),
+            signal: params.signal,
+            deadlineAt: Math.min(loop.deadlineAt.getTime(), Date.now() + 15_000),
+          });
+          const parsed = DecisionSchema.safeParse(proposed);
+          if (!parsed.success) throw new Error(`Scripted Objective proposal failed schema validation: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`);
+          compatibilityDecision = parsed.data;
+          if (compatibilityDecision.kind === "complete") parseObjectiveCompletionEvidence(compatibilityDecision.evidence);
+          planning = await new LLMPlanner(this.plugins).compileCandidatePlans({
+            candidates: [compatibilityCandidate(compatibilityDecision, inputs.goal)],
+            tenantContext: ctx,
+            verticalKey: inputs.verticalKey,
+            goal: inputs.goal,
+            constraints: inputs.constraints,
+            snapshot: inputs.snapshot,
+            useDatabase: true,
+          });
+        } else {
+          planning = await this.canonicalPlanner.plan(loop.objective, ctx, EMPTY_OBJECTIVE_MEMORY, {
+            workId: params.workId,
+            workInputId: inputs.workInputId,
+            plannerAttemptId: canonicalAttempt.id,
+            decisionContextHash: canonicalAttempt.decisionContextHash ?? inputs.snapshot.decisionContextHash,
+            channel: channel(loop.initialChannel),
+            signal: params.signal,
+            deadlineAt: Math.min(loop.deadlineAt.getTime(), Date.now() + 15_000),
+            planDeadlineAt: loop.deadlineAt.toISOString(),
+            goalSpec: inputs.goal,
+            constraints: inputs.constraints,
+            planningSnapshot: inputs.snapshot,
+            planningContext: inspection,
+            parentRevisionId: lineageParent?.id,
+            priorVerifiedEffectHashes: inputs.verifiedIrreversibleEffectHashes,
+          });
+        }
+        const selected = await selectPlanRevision({
+          planning,
+          tenantContext: ctx,
+          workId: params.workId,
+          workInputId: inputs.workInputId,
+          plannerAttemptId: canonicalAttempt.id,
+          objectiveLoopId: loop.id,
+          parentRevisionId: lineageParent?.id ?? null,
+          reason: active ? replanCause : lineageParent ? "redirect" : "initial",
+        });
+        planRevisionId = selected.planRevisionId;
+        planSemanticHash = selected.planSemanticHash;
+        planGoalHash = selected.graph.goalHash;
+        plannerAttemptId = canonicalAttempt.id;
+        planNode = readyRootNode(selected.graph);
+        decision = planNode.kind === "check" && compatibilityDecision && ["complete", "block", "fail"].includes(compatibilityDecision.kind)
+          ? compatibilityDecision
+          : planDecision(planNode);
+        await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
+          planRevisionId,
+          planNodeId: planNode.id,
+          decisionKind: decision.kind,
+          decision,
+          decisionReason: decision.reason,
+        }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, step.id))));
+        await finishCanonicalWorkPlannerAttempt({
+          tenantId: params.tenantId,
+          attemptId: canonicalAttempt.id,
+          status: "succeeded",
+          plannerResult: {
+            planRevisionId,
+            planSemanticHash: selected.planSemanticHash,
+            selectedCandidateKey: planning.compilation.selected?.candidateKey ?? null,
+            planNodeId: planNode.id,
+          },
+        });
+        await finishPlannerAttempt(params.tenantId, attempt.id, "succeeded", this.compatibilityPlanner?.providerName ?? "canonical_candidate_planner", decision);
+      } catch (error) {
+        const failure = failureShape(error);
+        if (canonicalAttempt) await finishCanonicalWorkPlannerAttempt({ tenantId: params.tenantId, attemptId: canonicalAttempt.id, status: failure.timeout ? "timed_out" : "failed", failure });
+        await finishPlannerAttempt(params.tenantId, attempt.id, failure.timeout ? "timed_out" : "failed", this.compatibilityPlanner?.providerName ?? "canonical_candidate_planner", undefined, failure);
+        const [updated] = await withTenant(params.tenantId, (db) => db.update(workObjectiveLoops).set({ plannerFailureCount: sql`${workObjectiveLoops.plannerFailureCount} + 1`, reason: String(failure.message), updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning());
+        if ((updated?.plannerFailureCount ?? loop.plannerFailureCount + 1) >= loop.maxPlannerFailures) {
+          return (await finishIteration({ tenantId: params.tenantId, loop: updated ?? loop, step, outcome: "failed", reason: "Objective candidate planning exhausted its configured recovery attempts.", progressMade: false, failure })).outcome;
+        }
+        await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ phase: "deciding", failure }).where(eq(workObjectiveSteps.id, step.id)));
+        await transitionWork(params.tenantId, params.workId, "recovery", "objective_planner_attempt_failed", { objectiveLoopId: loop.id, objectiveStepId: step.id, attempt: attempt.attempt, failure });
+        await releaseLease(params.tenantId, loop.id, leaseOwner);
+        throw error;
+      }
+    }
+
+    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
+      planRevisionId,
+      planNodeId: planNode.id,
+      decisionKind: decision.kind,
+      decision,
+      decisionReason: decision.reason,
+    }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, step.id))));
+    step.planRevisionId = planRevisionId;
+    step.planNodeId = planNode.id;
 
     const currency = await currentIterationState(params.tenantId, loop.id, step.id, loop.revision, leaseOwner);
     if (!currency.current) {
@@ -1207,9 +1803,91 @@ export class ObjectiveLoopRuntime {
       return currency.state;
     }
 
-    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ phase: decision.kind === "query" || decision.kind === "action" ? "acting" : "observing", decisionKind: decision.kind, decision, decisionReason: decision.reason }).where(eq(workObjectiveSteps.id, step.id)));
+    const currentPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+    if (currentPlan?.id !== planRevisionId || currentPlan.semanticHash !== planSemanticHash) {
+      return (await finishIteration({
+        tenantId: params.tenantId,
+        loop,
+        step,
+        outcome: "continue",
+        reason: "The selected PlanRevision was superseded before its material node could run; no operation was dispatched.",
+        decision,
+        observation: { selectedPlanRevisionId: planRevisionId, activePlanRevisionId: currentPlan?.id ?? null },
+        progressMade: false,
+      })).outcome;
+    }
+
+    // P7 interposes only after P6 has selected and revalidated the exact ready
+    // node. The assignment cannot select, repair, or broaden the plan.
+    await completePriorWaitingAssignments(params.tenantId, loop.id, step.id);
+    let assignmentId = params.workforceAssignmentId;
+    if (!assignmentId) {
+      const requested = await requestWorkforceAssignment({
+        tenantId: params.tenantId,
+        workId: params.workId,
+        planRevisionId,
+        node: planNode,
+        objectiveLoop: loop,
+        objectiveStepId: step.id,
+        plugins: this.plugins,
+      });
+      if (requested.status !== "assigned") {
+        return (await finishIteration({
+          tenantId: params.tenantId,
+          loop,
+          step,
+          outcome: requested.status === "human_required" ? "waiting" : "blocked",
+          reason: requested.reason,
+          nextStep: requested.status === "human_required"
+            ? "An authenticated human must act through the existing human-only boundary."
+            : "Configure or restore an eligible governed AI worker, then explicitly continue this Work.",
+          decision,
+          observation: { workforceStatus: requested.status, capability: planNode.kind === "action" ? planNode.actionType : planNode.kind, ineligibility: requested.ineligibility },
+          progressMade: false,
+        })).outcome;
+      }
+      assignmentId = requested.assignment.id;
+      if (params.deferToWorkforceJob) {
+        await releaseLease(params.tenantId, loop.id, leaseOwner);
+        return "continue";
+      }
+    }
+    const workforceClaim = await claimWorkforceAssignment({ tenantId: params.tenantId, assignmentId, leaseOwner });
+    if (workforceClaim.status !== "claimed") {
+      await releaseLease(params.tenantId, loop.id, leaseOwner);
+      if (workforceClaim.status === "expired" || workforceClaim.status === "reassigned") {
+        await enqueueAssignmentRecovery(params.tenantId, assignmentId);
+      }
+      return loop.state;
+    }
+    if (workforceClaim.assignment.workId !== params.workId
+      || workforceClaim.assignment.objectiveLoopId !== loop.id
+      || workforceClaim.assignment.objectiveStepId !== step.id
+      || workforceClaim.assignment.planRevisionId !== planRevisionId
+      || workforceClaim.assignment.planNodeId !== planNode.id) {
+      await releaseLease(params.tenantId, loop.id, leaseOwner);
+      throw new Error("WorkforceAssignment does not bind the exact current P6 ObjectiveStep/PlanNode");
+    }
+    const workforceCurrency = () => isWorkforceAssignmentCurrent({
+      tenantId: params.tenantId,
+      assignmentId,
+      leaseOwner,
+      planRevisionId,
+      planNodeId: planNode.id,
+      agentRevisionId: workforceClaim.assignment.agentRevisionId,
+    });
+    const assignmentCurrent = await workforceCurrency();
+    if (!assignmentCurrent) {
+      await releaseLease(params.tenantId, loop.id, leaseOwner);
+      return loop.state;
+    }
+
+    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ phase: decision.kind === "query" || decision.kind === "action" ? "acting" : "observing", decisionKind: decision.kind, decision, decisionReason: decision.reason, planRevisionId, planNodeId: planNode.id }).where(eq(workObjectiveSteps.id, step.id)));
 
     if (decision.kind === "complete") {
+      if (planNode.kind !== "check") {
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "Completion may only be attempted by a selected PlanGraph check node.", decision, progressMade: false })).outcome;
+      }
       const condition = parseObjectiveSuccessCondition(loop.successCondition);
       const evidence = parseObjectiveCompletionEvidence(decision.evidence);
       const requestedVerificationQueries = condition.criteria.filter((criterion) => criterion.kind === "canonical_query").length
@@ -1227,7 +1905,36 @@ export class ObjectiveLoopRuntime {
         evidence,
       });
       if (successVerification.state === "verified") {
-        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "completed", reason: decision.reason, decision, observation: { ...decision.outcome, successVerification }, successVerification, progressMade: true, queryIncrement: successVerification.queryExecutionIds.length })).outcome;
+        const currentPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+        if (currentPlan?.id !== planRevisionId || currentPlan.semanticHash !== planSemanticHash) {
+          return (await finishIteration({
+            tenantId: params.tenantId,
+            loop,
+            step,
+            outcome: "continue",
+            reason: "Completion verification raced a newer PlanRevision; current truth must be verified against the new active graph.",
+            decision,
+            observation: { stalePlanRevisionId: planRevisionId, activePlanRevisionId: currentPlan?.id ?? null, successVerification },
+            successVerification,
+            progressMade: false,
+            queryIncrement: successVerification.queryExecutionIds.length,
+          })).outcome;
+        }
+        const completionProof: CompletionProof = {
+          version: 1,
+          finalPlanRevisionId: planRevisionId,
+          planRevisionId,
+          planSemanticHash,
+          goalSemanticHash: planGoalHash,
+          successConditionHash: planningHash(condition),
+          verified: true,
+          verifiedAt: successVerification.checkedAt,
+          verification: successVerification as unknown as Record<string, unknown>,
+          evidenceRefs: completionEvidenceRefs(successVerification),
+        };
+        const planCompleted = await completeWorkPlanRevision({ tenantId: params.tenantId, planRevisionId, completionProof: completionProof as unknown as Record<string, unknown> });
+        if (!planCompleted) throw new Error("CompletionProof could not atomically complete the active PlanRevision");
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "completed", reason: decision.reason, decision, observation: { ...decision.outcome, successVerification, completionProof }, successVerification, progressMade: true, queryIncrement: successVerification.queryExecutionIds.length })).outcome;
       }
       const failedKinds = successVerification.results.filter((result) => !result.satisfied).map((result) => result.kind);
       return (await finishIteration({
@@ -1251,6 +1958,9 @@ export class ObjectiveLoopRuntime {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "failed", reason: decision.reason, decision, observation: decision.failure, failure: decision.failure, progressMade: false })).outcome;
     }
     if (decision.kind === "wait") {
+      if (planNode.kind !== "wait") {
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "The wait decision does not match the selected PlanGraph node.", decision, progressMade: false })).outcome;
+      }
       const deadlineValue = decision.deadlineAt ?? decision.resumeAt;
       const requested = deadlineValue ? new Date(deadlineValue) : null;
       if (requested && (Number.isNaN(requested.getTime()) || requested <= new Date() || requested > loop.deadlineAt)) {
@@ -1273,6 +1983,9 @@ export class ObjectiveLoopRuntime {
     }
 
     if (decision.kind === "query") {
+      if (planNode.kind !== "query" || planningHash(planNode.request) !== planningHash(decision.request)) {
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "The query does not exactly match the selected immutable PlanGraph node.", decision, progressMade: false })).outcome;
+      }
       if (loop.queryCount >= loop.maxQueries) {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective exhausted its ${loop.maxQueries}-query budget.`, decision, progressMade: false })).outcome;
       }
@@ -1285,6 +1998,10 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Authority denied the selected query: ${authority.reasonCode}`, decision, authorityDecisionId: authority.id, observation: { authority }, progressMade: false })).outcome;
       }
       try {
+        if (!await workforceCurrency()) {
+          await releaseLease(params.tenantId, loop.id, leaseOwner);
+          return loop.state;
+        }
         const result = await executeTenantOperationalQuery(params.tenantId, validated.request, {
           workId: params.workId,
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
@@ -1307,6 +2024,31 @@ export class ObjectiveLoopRuntime {
     if (loop.actionCount >= loop.maxActions) {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective exhausted its ${loop.maxActions}-action budget.`, decision, progressMade: false })).outcome;
     }
+    if (planNode.kind !== "action" || planNode.actionType !== decision.actionType || planningHash(planNode.groundedPayload) !== planningHash(decision.payload)) {
+      return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "The executable action does not exactly match the selected immutable PlanGraph node.", decision, progressMade: false })).outcome;
+    }
+    const dispatchViolation = await consequentialDispatchViolation({
+      tenantId: params.tenantId,
+      workId: params.workId,
+      loopRevision: loop.revision,
+      planRevisionId,
+      node: planNode,
+      ctx,
+      plugins: this.plugins,
+    });
+    if (dispatchViolation) {
+      return (await finishIteration({
+        tenantId: params.tenantId,
+        loop,
+        step,
+        outcome: "continue",
+        reason: `Consequential dispatch was refused after current-state revalidation: ${dispatchViolation}.`,
+        nextStep: "Build an immutable child PlanRevision from the new canonical state.",
+        decision,
+        observation: { stalePlanRevisionId: planRevisionId, dispatchViolation },
+        progressMade: false,
+      })).outcome;
+    }
     if (!this.plugins.resolve(decision.actionType)) {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Model selected unregistered action type ${decision.actionType}.`, decision, progressMade: false })).outcome;
     }
@@ -1318,8 +2060,12 @@ export class ObjectiveLoopRuntime {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "continue", reason: "The same typed action was already attempted; its durable result was observed instead of repeating the side effect.", nextStep: decision.nextStep, decision, observation: { deduplicated: true, priorObjectiveStepId: duplicate.id, priorDomainActionId: duplicate.domainActionId, ...observation }, progressMade: false })).outcome;
     }
 
-    const actionId = randomUUID();
+    const actionId = deterministicPlanActionId(planRevisionId, planNode.id);
     try {
+      if (!await workforceCurrency()) {
+        await releaseLease(params.tenantId, loop.id, leaseOwner);
+        return loop.state;
+      }
       const { action, result } = await this.actionExecutor.draftObjectiveAction({
         tenantId: params.tenantId,
         actionType: decision.actionType,
@@ -1330,6 +2076,9 @@ export class ObjectiveLoopRuntime {
         authorityContext: isRecord(work.authorityContext) ? work.authorityContext : {},
         objectiveStepId: step.id,
         actionId,
+        plannerAttemptId,
+        planRevisionId,
+        planNodeId: planNode.id,
       });
       const observation = await latestActionObservation(params.tenantId, params.workId, action.id);
       const awaitingApproval = Boolean(result.output?.gated || result.output?.pendingConfirmation) || (isRecord(observation.action) && ["pending", "needs_human_review"].includes(String(observation.action.status)));
@@ -1383,6 +2132,13 @@ export async function controlWorkObjective(params: {
     if (current.state === "completed" || current.state === "cancelled") {
       throw new Error(`${current.state === "completed" ? "Completed" : "Cancelled"} objective cannot be ${params.command === "cancel" ? "cancelled" : "continued or redirected"}`);
     }
+    await db.update(workPlanRevisions).set({
+      status: params.command === "interrupt" || params.command === "cancel" ? "blocked" : "superseded",
+    }).where(and(
+      eq(workPlanRevisions.tenantId, params.tenantId),
+      eq(workPlanRevisions.workId, params.workId),
+      eq(workPlanRevisions.status, "active"),
+    ));
     await db.update(workEventWaits).set({ status: "cancelled", cancelledAt: new Date(), updatedAt: new Date() }).where(and(
       eq(workEventWaits.tenantId, params.tenantId),
       eq(workEventWaits.objectiveLoopId, current.id),

@@ -17,7 +17,7 @@ import {
 } from "@finnor/shared-types";
 
 export const CORE_OPERATIONAL_QUERY_INTENTS = [
-  "work_list", "agent_activity", "company_context", "party_lookup", "party_context", "team_roster",
+  "work_list", "attention_queue", "agent_activity", "workforce_status", "company_context", "party_lookup", "party_context", "team_roster",
 ] as const;
 
 const CORE = new Set<string>(CORE_OPERATIONAL_QUERY_INTENTS);
@@ -47,5 +47,5 @@ export async function executeTenantOperationalQuery<T extends CanonicalOperation
     return executePrivateEquityOperationalQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   }
   if (!CORE.has(request.intent)) throw new Error("Unsupported operational query intent");
-  return executeCoreOperationalQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
+  return executeCoreOperationalQuery(tenantId, request, { ...options, verticalKey: vertical.verticalKey }) as Promise<OperationalQueryResultFor<T>>;
 }

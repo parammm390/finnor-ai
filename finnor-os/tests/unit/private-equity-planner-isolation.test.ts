@@ -95,12 +95,13 @@ describe("Private Equity planner isolation", () => {
     expect(actions).toContain("send_message");
     expect(actions).toContain("computer_task");
     expect(actions).toContain("declare_deal_closed");
-    expect(actions).toHaveLength(41);
+    expect(actions).not.toContain("waive_closing_condition");
+    expect(actions).toHaveLength(40);
     expect(registry.payloadSpecJson(actions)).not.toMatch(/create_invoice|schedule_water_test/i);
     expect(() => plannerActionTypesForVertical(registry, "water")).toThrow(/retired/i);
   });
 
-  it("uses PE doctrine, exposes epistemic warnings, and drops a Water action without persisting it", async () => {
+  it("uses PE doctrine, exposes epistemic warnings, and rejects a legacy Water Action[] envelope", async () => {
     let capturedSystem = "";
     let capturedUser = "";
     const provider: LLMProvider = {
@@ -112,13 +113,18 @@ describe("Private Equity planner isolation", () => {
       },
     };
     const planner = new LLMPlanner(createDefaultPluginRegistry(), provider);
-    const actions = await planner.plan(
+    const result = await planner.plan(
       "Create an invoice for Atlas.",
       { tenantId: privateEquityContext().tenant.id, userId: privateEquityContext().employee.userId, role: "owner" },
       memory,
       { operatingContext: privateEquityContext() },
     );
-    expect(actions).toEqual([]);
+    expect(result.compilation.selected).toBeNull();
+    expect(result.compilation.candidates).toHaveLength(1);
+    expect(result.compilation.candidates[0]).toMatchObject({
+      accepted: false,
+      violations: [expect.objectContaining({ code: "CANDIDATE_SCHEMA_INVALID" })],
+    });
     expect(capturedSystem).toMatch(/Task is not Request.*Document is not Deliverable.*ready is not verified/i);
     expect(capturedSystem).toMatch(/provider acknowledgement is not verified external outcome/i);
     expect(capturedSystem).not.toMatch(/water treatment|schedule_water_test|create_invoice/i);

@@ -46,6 +46,8 @@
     "release:pe-p3": "tsx scripts/release/run-pe-p3-artifact-os-certification.ts",
     "release:pe-p4-underwriting": "tsx scripts/release/run-pe-p4-underwriting-certification.ts",
     "release:pe-p5-actions-ic": "tsx scripts/release/run-pe-p5-actions-ic-certification.ts",
+    "release:pe-p6": "tsx scripts/release/run-pe-p6-planning-attention-certification.ts",
+    "release:pe-p7-workforce-learning": "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts",
     "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts"
   },
   "dependencies": {

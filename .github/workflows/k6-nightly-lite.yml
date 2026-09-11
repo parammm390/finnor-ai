@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   staging:
     runs-on: ubuntu-latest
@@ -20,12 +22,12 @@ jobs:
       APPROVAL_RATE: "5"
       LOAD_DURATION: "60s"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Refuse an unconfigured run
         run: test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$MARKETING_WEBHOOK_SECRET"
-      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
       - run: k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
           name: k6-nightly-lite-summary

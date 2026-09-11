@@ -62,9 +62,11 @@ try {
   for (const path of ["/api/instructions/{id}", "/api/instructions/{id}/events", "/api/stream"]) {
     if (!openapi.paths?.[path]?.get) failures.push(`openapi.json is missing GET ${path}`)
   }
-  for (const path of ["/api/business-world", "/api/operational-deltas"]) {
-    if (!openapi.paths?.[path]?.get) failures.push(`openapi.json is missing GET ${path}`)
-  }
+  // The P5 backend keeps operational-deltas as the canonical projection route.
+  // The former business-world backend route was retired; the public proxy still
+  // accepts that legacy segment for compatibility, but it is not advertised as
+  // an active OpenAPI operation.
+  if (!openapi.paths?.["/api/operational-deltas"]?.get) failures.push("openapi.json is missing GET /api/operational-deltas")
 } catch {
   failures.push("openapi.json is not valid JSON")
 }

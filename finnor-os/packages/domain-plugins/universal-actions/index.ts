@@ -2,6 +2,10 @@ import type { DomainEnginePlugin } from "../shared/plugin-interface";
 import type { DraftAction, DomainPolicy, ExecutionResult, UniversalActionType, ValidationResult } from "@finnor/shared-types";
 import { UNIVERSAL_ACTION_SCHEMAS } from "./schemas";
 import { executeUniversalAction } from "./runtime";
+export {
+  inspectCommunicationActionAvailability,
+  type CommunicationActionAvailability,
+} from "./runtime";
 export * from "./schemas";
 export * from "./delegation-state";
 export * from "./endpoint-resolver";

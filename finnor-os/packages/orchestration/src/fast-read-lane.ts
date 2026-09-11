@@ -185,8 +185,14 @@ export function interpretOperationalQuery(instruction: string): OperationalQuery
   if (/\b(?:team\s+roster|members?\s+of\s+(?:the\s+)?team)\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "team_roster", query: cleanQuery(text) } };
   }
+  if (/\b(?:workforce\s+(?:status|activity)|ai\s+workers?|worker\s+(?:status|assignments?))\b/i.test(text)) {
+    return { route: "fast_read", confidence: "high", request: { intent: "workforce_status" } };
+  }
   if (/\b(?:agent|workflow|action)\s+activit(?:y|ies)\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "agent_activity" } };
+  }
+  if (/\b(?:attention|what\s+(?:needs|requires)\s+(?:my\s+)?attention|what\s+should\s+i\s+do\s+next)\b/i.test(text)) {
+    return { route: "fast_read", confidence: "high", request: { intent: "attention_queue" } };
   }
   if (/\b(?:work|task)s?\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "work_list", openOnly: /\bopen\b/i.test(text) } };
@@ -217,6 +223,52 @@ export function validateOperationalQueryRequest(
   if (!intent) return { success: false, error: "Operational query intent is required" };
   if (isRetiredWaterQuery(intent)) return { success: false, error: "Operational query intent belongs to the retired Water vertical" };
   if (!ACTIVE_INTENTS.has(intent)) return { success: false, error: "Unsupported operational query intent" };
+
+  if (intent === "attention_queue") {
+    const permitted = new Set(["intent", "page"]);
+    if (Object.keys(value!).some((key) => !permitted.has(key))) {
+      return { success: false, error: "Attention queue accepts only intent and page; employee identity comes from authentication" };
+    }
+    const page = value?.page === undefined ? undefined : object(value.page);
+    if (value?.page !== undefined && !page) return { success: false, error: "Attention queue page must be an object" };
+    if (page && Object.keys(page).some((key) => key !== "limit")) return { success: false, error: "Attention queue supports only a page limit" };
+    if (page?.limit !== undefined && (!Number.isInteger(page.limit) || Number(page.limit) < 1 || Number(page.limit) > 100)) {
+      return { success: false, error: "Attention queue limit must be an integer from 1 to 100" };
+    }
+    return {
+      success: true,
+      request: {
+        intent: "attention_queue",
+        ...(page?.limit !== undefined ? { page: { limit: Number(page.limit) } } : {}),
+      },
+    };
+  }
+
+  if (intent === "workforce_status") {
+    const permitted = new Set(["intent", "page"]);
+    if (Object.keys(value!).some((key) => !permitted.has(key))) {
+      return { success: false, error: "Workforce status accepts only intent and page; tenant identity comes from authentication" };
+    }
+    const page = value?.page === undefined ? undefined : object(value.page);
+    if (value?.page !== undefined && !page) return { success: false, error: "Workforce status page must be an object" };
+    if (page && Object.keys(page).some((key) => key !== "limit" && key !== "cursor")) return { success: false, error: "Workforce status supports only a page limit and AgentProfile cursor" };
+    if (page?.limit !== undefined && (!Number.isInteger(page.limit) || Number(page.limit) < 1 || Number(page.limit) > 100)) {
+      return { success: false, error: "Workforce status limit must be an integer from 1 to 100" };
+    }
+    if (page?.cursor !== undefined && (typeof page.cursor !== "string" || !UUID.test(page.cursor))) {
+      return { success: false, error: "Workforce status cursor must be an AgentProfile UUID" };
+    }
+    return {
+      success: true,
+      request: {
+        intent: "workforce_status",
+        ...(page?.limit !== undefined || page?.cursor !== undefined ? { page: {
+          ...(page.limit !== undefined ? { limit: Number(page.limit) } : {}),
+          ...(page.cursor !== undefined ? { cursor: page.cursor } : {}),
+        } } : {}),
+      },
+    };
+  }
 
   if (intent === "pe_world_state") {
     const root = object(value?.root);
@@ -266,9 +318,25 @@ function answerOperationalQuery(execution: OperationalQueryExecution): AnswerEnv
     facts.push({ label: "Works", value: String(result.works.length) });
     facts.push({ label: "Tasks", value: String(result.tasks.length) });
     summary = `There are ${result.works.length} matching work items and ${result.tasks.length} matching tasks.`;
+  } else if (result.intent === "attention_queue") {
+    facts.push({ label: "Source status", value: result.sourceStatus.status });
+    facts.push({ label: "Actionable items", value: String(result.items.length) });
+    summary = result.sourceStatus.status === "unavailable"
+      ? "The attention queue is unavailable; this is not a clear queue."
+      : result.sourceStatus.status === "partial"
+        ? `The attention queue is partial and contains ${result.items.length} verified actionable item${result.items.length === 1 ? "" : "s"}.`
+        : `There are ${result.items.length} verified actionable attention item${result.items.length === 1 ? "" : "s"}.`;
   } else if (result.intent === "agent_activity") {
     facts.push({ label: "Actions", value: String(result.actions.length) });
     facts.push({ label: "Workflows", value: String(result.workflows.length) });
+  } else if (result.intent === "workforce_status") {
+    facts.push({ label: "Configuration", value: result.configurationState });
+    facts.push({ label: "Current assignments", value: String(result.currentAssignments.length) });
+    facts.push({ label: "Failed / reassigned", value: String(result.blockedOrFailedAssignments.length) });
+    facts.push({ label: "Learning proposals", value: String(result.proposals.filter((proposal) => proposal.status === "proposed").length) });
+    summary = result.configurationState === "unconfigured"
+      ? "The AI workforce is unconfigured; no worker identities are being inferred."
+      : `${result.workers.length} configured AI worker${result.workers.length === 1 ? " is" : "s are"} recorded with ${result.currentAssignments.length} current assignment${result.currentAssignments.length === 1 ? "" : "s"}.`;
   } else if (result.intent === "closing_readiness") {
     facts.push({ label: "Eligible", value: result.eligible ? "Yes" : "No" });
     facts.push({ label: "Blocking conditions", value: String(result.blockingConditions.length) });
@@ -315,7 +383,11 @@ export function createFastReadOnlyRouter(
     if (!validation.success) throw new Error(validation.error);
     const startedAt = new Date();
     const started = performance.now();
-    const result = await executeQuery(ctx.tenantId, validation.request, options);
+    const result = await executeQuery(ctx.tenantId, validation.request, {
+      ...options,
+      employeeId: ctx.employeeId,
+      userId: ctx.userId,
+    });
     const completedAt = new Date();
     return {
       request: validation.request,

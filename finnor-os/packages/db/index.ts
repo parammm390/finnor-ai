@@ -1102,15 +1102,32 @@ export async function beginWorkPlannerAttempt(params: {
   workId: string;
   workInputId: string;
   attemptKey: string;
-}): Promise<{ id: string; attempt: number; claimed: boolean; status: "planning" | "succeeded" | "failed" | "timed_out" }> {
+  /** Already assembled, tenant-scoped operating context. It is reduced to the
+   * bounded immutable DecisionContextSnapshot inside this transaction. */
+  decisionContext?: unknown;
+}): Promise<{
+  id: string;
+  attempt: number;
+  claimed: boolean;
+  status: "planning" | "succeeded" | "failed" | "timed_out";
+  decisionContextSnapshot: DecisionContextSnapshot | null;
+  decisionContextHash: string | null;
+}> {
   return withTenant(params.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${params.workId} AND ${schema.works.tenantId} = ${params.tenantId} FOR UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.id, params.workId), eq(schema.works.tenantId, params.tenantId))).limit(1);
     if (!work) throw new Error("Work not found");
     const [existing] = await db.select().from(schema.workPlannerAttempts).where(and(eq(schema.workPlannerAttempts.workId, params.workId), eq(schema.workPlannerAttempts.attemptKey, params.attemptKey))).limit(1);
-    if (existing) return { id: existing.id, attempt: existing.attempt, claimed: false, status: existing.status };
+    if (existing) return {
+      id: existing.id,
+      attempt: existing.attempt,
+      claimed: false,
+      status: existing.status,
+      decisionContextSnapshot: existing.decisionContextSnapshot as DecisionContextSnapshot | null,
+      decisionContextHash: existing.decisionContextHash,
+    };
     const [input] = await db.select().from(schema.workInputs).where(and(eq(schema.workInputs.id, params.workInputId), eq(schema.workInputs.workId, params.workId))).limit(1);
-    const snapshot = await decisionContextSnapshot(db, work, input);
+    const snapshot = await decisionContextSnapshot(db, work, input, params.decisionContext);
     const [latest] = await db.select({ maxAttempt: sql<number>`coalesce(max(${schema.workPlannerAttempts.attempt}), 0)::int` }).from(schema.workPlannerAttempts).where(eq(schema.workPlannerAttempts.workId, params.workId));
     const [created] = await db.insert(schema.workPlannerAttempts).values({
       tenantId: params.tenantId,
@@ -1123,7 +1140,14 @@ export async function beginWorkPlannerAttempt(params: {
       decisionContextHash: provenanceHash(snapshot),
       decisionContextCapturedAt: new Date(snapshot.capturedAt),
     }).returning();
-    return { id: created!.id, attempt: created!.attempt, claimed: true, status: created!.status };
+    return {
+      id: created!.id,
+      attempt: created!.attempt,
+      claimed: true,
+      status: created!.status,
+      decisionContextSnapshot: snapshot,
+      decisionContextHash: provenanceHash(snapshot),
+    };
   });
 }
 
@@ -1142,12 +1166,184 @@ export async function finishWorkPlannerAttempt(params: {
   }).where(and(eq(schema.workPlannerAttempts.id, params.attemptId), eq(schema.workPlannerAttempts.tenantId, params.tenantId))));
 }
 
+export interface PersistSelectedWorkPlanParams {
+  tenantId: string;
+  workId: string;
+  workInputId: string;
+  plannerAttemptId: string;
+  objectiveLoopId?: string | null;
+  parentRevisionId?: string | null;
+  reason: "initial" | "observation" | "failure" | "stale" | "timeout" | "redirect";
+  goalSpec: object;
+  constraintSet: object;
+  planningSnapshot: object;
+  candidatePlans: unknown[];
+  compilationResult: object;
+  planGraph: object;
+  score: object;
+  semanticHash: string;
+}
+
+/** Atomically selects one immutable graph. A competing planner may replay the same
+ * semantic selection, but it cannot create a second active revision. Replanning
+ * must name and supersede the exact current parent. */
+export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanParams): Promise<typeof schema.workPlanRevisions.$inferSelect> {
+  return withTenant(params.tenantId, async (db) => {
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
+    const [attempt] = await db.select().from(schema.workPlannerAttempts).where(and(
+      eq(schema.workPlannerAttempts.tenantId, params.tenantId),
+      eq(schema.workPlannerAttempts.id, params.plannerAttemptId),
+      eq(schema.workPlannerAttempts.workId, params.workId),
+    )).limit(1);
+    if (!attempt || attempt.workInputId !== params.workInputId) throw new Error("Planner attempt does not belong to this exact Work/Input");
+    const [semanticReplay] = await db.select().from(schema.workPlanRevisions).where(and(
+      eq(schema.workPlanRevisions.tenantId, params.tenantId),
+      eq(schema.workPlanRevisions.workId, params.workId),
+      eq(schema.workPlanRevisions.semanticHash, params.semanticHash),
+    )).limit(1);
+    if (semanticReplay) {
+      if (semanticReplay.status !== "active") throw new Error("A historical PlanRevision cannot be re-selected as current");
+      await db.update(schema.workPlannerAttempts).set({
+        goalSpec: boundedJson(params.goalSpec, 131_072) as object,
+        constraintSet: boundedJson(params.constraintSet, 131_072) as object,
+        planningSnapshot: boundedJson(params.planningSnapshot, 262_144) as object,
+        candidatePlans: boundedJson(params.candidatePlans, 262_144) as object,
+        compilationResult: boundedJson(params.compilationResult, 262_144) as object,
+        selectedPlanRevisionId: semanticReplay.id,
+      }).where(and(eq(schema.workPlannerAttempts.tenantId, params.tenantId), eq(schema.workPlannerAttempts.id, params.plannerAttemptId)));
+      return semanticReplay;
+    }
+    const [active] = await db.select().from(schema.workPlanRevisions).where(and(
+      eq(schema.workPlanRevisions.tenantId, params.tenantId),
+      eq(schema.workPlanRevisions.workId, params.workId),
+      eq(schema.workPlanRevisions.status, "active"),
+    )).limit(1);
+    const parentId = params.parentRevisionId ?? null;
+    if (active && active.id !== parentId) throw new Error("A different active PlanRevision already owns this Work");
+    if (!active && parentId) {
+      const [historicalParent] = await db.select().from(schema.workPlanRevisions).where(and(
+        eq(schema.workPlanRevisions.tenantId, params.tenantId),
+        eq(schema.workPlanRevisions.workId, params.workId),
+        eq(schema.workPlanRevisions.id, parentId),
+      )).limit(1);
+      const [latestHistorical] = await db.select({ id: schema.workPlanRevisions.id }).from(schema.workPlanRevisions).where(and(
+        eq(schema.workPlanRevisions.tenantId, params.tenantId),
+        eq(schema.workPlanRevisions.workId, params.workId),
+      )).orderBy(desc(schema.workPlanRevisions.revision)).limit(1);
+      if (!historicalParent || latestHistorical?.id !== historicalParent.id || !["superseded", "blocked", "failed"].includes(historicalParent.status)) {
+        throw new Error("Replanning parent is not the latest resumable historical PlanRevision");
+      }
+    }
+    if (active) {
+      await db.update(schema.workPlanRevisions).set({ status: "superseded" }).where(and(
+        eq(schema.workPlanRevisions.tenantId, params.tenantId),
+        eq(schema.workPlanRevisions.id, active.id),
+        eq(schema.workPlanRevisions.status, "active"),
+      ));
+    }
+    const [latest] = await db.select({ revision: sql<number>`coalesce(max(${schema.workPlanRevisions.revision}),0)::int` })
+      .from(schema.workPlanRevisions).where(and(eq(schema.workPlanRevisions.tenantId, params.tenantId), eq(schema.workPlanRevisions.workId, params.workId)));
+    const revision = (latest?.revision ?? 0) + 1;
+    if ((revision === 1) !== (parentId === null)) throw new Error("Only the first PlanRevision may omit a parent");
+    const [created] = await db.insert(schema.workPlanRevisions).values({
+      tenantId: params.tenantId,
+      workId: params.workId,
+      workInputId: params.workInputId,
+      plannerAttemptId: params.plannerAttemptId,
+      objectiveLoopId: params.objectiveLoopId ?? null,
+      revision,
+      parentRevisionId: parentId,
+      reason: params.reason,
+      status: "active",
+      goalSpec: boundedJson(params.goalSpec, 131_072) as object,
+      constraintSet: boundedJson(params.constraintSet, 131_072) as object,
+      planningSnapshot: boundedJson(params.planningSnapshot, 262_144) as object,
+      candidateSummary: boundedJson({
+        candidates: jsonObject(params.compilationResult).candidates ?? [],
+        selected: jsonObject(params.compilationResult).selected ?? null,
+      }, 262_144) as object,
+      validation: boundedJson(params.compilationResult, 262_144) as object,
+      planGraph: boundedJson(params.planGraph, 262_144) as object,
+      score: boundedJson(params.score, 32_768) as object,
+      goalHash: String(jsonObject(params.goalSpec).semanticHash ?? ""),
+      constraintHash: String(jsonObject(params.constraintSet).semanticHash ?? ""),
+      worldSnapshotHash: String(jsonObject(params.planningSnapshot).semanticHash ?? ""),
+      graphHash: params.semanticHash,
+      semanticHash: params.semanticHash,
+    }).returning();
+    if (!created) throw new Error("Unable to persist selected PlanRevision");
+    await db.update(schema.workPlannerAttempts).set({
+      goalSpec: boundedJson(params.goalSpec, 131_072) as object,
+      constraintSet: boundedJson(params.constraintSet, 131_072) as object,
+      planningSnapshot: boundedJson(params.planningSnapshot, 262_144) as object,
+      candidatePlans: boundedJson(params.candidatePlans, 262_144) as object,
+      compilationResult: boundedJson(params.compilationResult, 262_144) as object,
+      selectedPlanRevisionId: created.id,
+    }).where(and(eq(schema.workPlannerAttempts.tenantId, params.tenantId), eq(schema.workPlannerAttempts.id, params.plannerAttemptId)));
+    return created;
+  });
+}
+
+export async function recordRejectedWorkPlan(params: Omit<PersistSelectedWorkPlanParams, "workInputId" | "planGraph" | "score" | "semanticHash" | "parentRevisionId" | "reason">): Promise<void> {
+  await withTenant(params.tenantId, (db) => db.update(schema.workPlannerAttempts).set({
+    goalSpec: boundedJson(params.goalSpec, 131_072) as object,
+    constraintSet: boundedJson(params.constraintSet, 131_072) as object,
+    planningSnapshot: boundedJson(params.planningSnapshot, 262_144) as object,
+    candidatePlans: boundedJson(params.candidatePlans, 262_144) as object,
+    compilationResult: boundedJson(params.compilationResult, 262_144) as object,
+  }).where(and(
+    eq(schema.workPlannerAttempts.tenantId, params.tenantId),
+    eq(schema.workPlannerAttempts.id, params.plannerAttemptId),
+    eq(schema.workPlannerAttempts.workId, params.workId),
+  )));
+}
+
+export async function activeWorkPlanRevision(tenantId: string, workId: string): Promise<typeof schema.workPlanRevisions.$inferSelect | null> {
+  const [row] = await withTenant(tenantId, (db) => db.select().from(schema.workPlanRevisions).where(and(
+    eq(schema.workPlanRevisions.tenantId, tenantId),
+    eq(schema.workPlanRevisions.workId, workId),
+    eq(schema.workPlanRevisions.status, "active"),
+  )).limit(1));
+  return row ?? null;
+}
+
+export async function completeWorkPlanRevision(params: { tenantId: string; planRevisionId: string; completionProof: Record<string, unknown> }): Promise<boolean> {
+  if (params.completionProof.version !== 1 || params.completionProof.verified !== true) throw new Error("A verified CompletionProof is required");
+  return withTenant(params.tenantId, async (db) => {
+    await db.execute(sql`SELECT id FROM ${schema.workPlanRevisions} WHERE ${schema.workPlanRevisions.id}=${params.planRevisionId} AND ${schema.workPlanRevisions.tenantId}=${params.tenantId} FOR UPDATE`);
+    const [revision] = await db.select().from(schema.workPlanRevisions).where(and(
+      eq(schema.workPlanRevisions.tenantId, params.tenantId),
+      eq(schema.workPlanRevisions.id, params.planRevisionId),
+    )).limit(1);
+    if (!revision || revision.status !== "active") return false;
+    const verification = jsonObject(params.completionProof.verification);
+    if (params.completionProof.finalPlanRevisionId !== revision.id || params.completionProof.planRevisionId !== revision.id
+      || params.completionProof.planSemanticHash !== revision.graphHash || params.completionProof.goalSemanticHash !== revision.goalHash
+      || verification.state !== "verified" || typeof params.completionProof.verifiedAt !== "string"
+      || !/^sha256:[0-9a-f]{64}$/.test(String(params.completionProof.successConditionHash ?? ""))) {
+      throw new Error("CompletionProof identity does not match the active PlanRevision and verified Objective result");
+    }
+    const rows = await db.update(schema.workPlanRevisions).set({
+      status: "completed",
+      completionProof: boundedJson(params.completionProof, 262_144) as object,
+      completedAt: new Date(),
+    }).where(and(
+      eq(schema.workPlanRevisions.tenantId, params.tenantId),
+      eq(schema.workPlanRevisions.id, params.planRevisionId),
+      eq(schema.workPlanRevisions.status, "active"),
+    )).returning({ id: schema.workPlanRevisions.id });
+    return rows.length === 1;
+  });
+}
+
 async function decisionContextSnapshot(
   db: Db,
   work: typeof schema.works.$inferSelect,
   input: typeof schema.workInputs.$inferSelect | undefined,
+  suppliedContext?: unknown,
 ): Promise<DecisionContextSnapshot> {
-  const rawContext = input?.contextSnapshot ?? work.activeContext;
+  const supplied = jsonObject(suppliedContext);
+  const rawContext = supplied.interactionContext ?? input?.contextSnapshot ?? work.activeContext;
   const context = boundedProvenance(rawContext);
   const refs = canonicalRefsFromContext(rawContext);
   const focused = jsonObject(context?.focusedEntity);
@@ -1185,7 +1381,7 @@ async function decisionContextSnapshot(
       sourceTable: user ? "users" : null,
     };
   });
-  const authority = jsonObject(work.authorityContext);
+  const authority = Object.keys(jsonObject(supplied.authority)).length > 0 ? jsonObject(supplied.authority) : jsonObject(work.authorityContext);
   const revision = typeof authority.revision === "number" ? authority.revision : authorityState[0]?.revision ?? null;
   const roles = Array.isArray(authority.roles) ? authority.roles.filter((role): role is string => typeof role === "string").slice(0, 20) : [];
   const capturedAt = new Date().toISOString();
@@ -1210,7 +1406,17 @@ async function decisionContextSnapshot(
         }
       : null,
     canonicalEvidence: refs.slice(0, 100).map((ref) => ({ kind: "entity_reference", source: "work_entity_links", ref: `${work.id}:${ref.entityType}:${ref.entityId}`, asOf: capturedAt })),
-    canonicalSummaries: [{ name: "work_context", source: "works.active_context", asOf: capturedAt, dataHash: provenanceHash(rawContext ?? {}) }],
+    canonicalSummaries: Array.isArray(supplied.canonicalSummaries) && supplied.canonicalSummaries.length > 0
+      ? supplied.canonicalSummaries.slice(0, 40).map((summary, index) => {
+          const row = jsonObject(summary);
+          return {
+            name: typeof row.name === "string" ? row.name : `canonical_${index + 1}`,
+            source: typeof row.source === "string" ? row.source : "operating_context",
+            asOf: typeof row.asOf === "string" ? row.asOf : capturedAt,
+            dataHash: provenanceHash(row.data ?? row),
+          };
+        })
+      : [{ name: "work_context", source: "works.active_context", asOf: capturedAt, dataHash: provenanceHash(rawContext ?? {}) }],
     authority: { employeeId: work.currentOwnerId ?? work.createdBy, revision, roles },
     health: { status: missing.length === 0 ? "complete" : "partial", missing },
   };
@@ -1278,6 +1484,8 @@ export async function reconcileWorkStatus(tenantId: string, workId: string): Pro
 }
 
 export type WorkAggregate = Record<string, unknown> & {
+  planRevisions: Array<typeof schema.workPlanRevisions.$inferSelect>;
+  businessEffects: Array<typeof schema.businessEffects.$inferSelect>;
   entityLinks: Array<typeof schema.workEntityLinks.$inferSelect>;
   queryExecutions: Array<typeof schema.workQueryExecutions.$inferSelect>;
   operations: Array<typeof schema.businessOperations.$inferSelect>;
@@ -1297,9 +1505,14 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
     if (!work) return null;
     const inputs = await db.select().from(schema.workInputs).where(eq(schema.workInputs.workId, workId)).orderBy(asc(schema.workInputs.createdAt));
     const plannerAttempts = await db.select().from(schema.workPlannerAttempts).where(eq(schema.workPlannerAttempts.workId, workId)).orderBy(asc(schema.workPlannerAttempts.attempt));
+    const planRevisions = await db.select().from(schema.workPlanRevisions).where(and(eq(schema.workPlanRevisions.tenantId, tenantId), eq(schema.workPlanRevisions.workId, workId))).orderBy(asc(schema.workPlanRevisions.revision));
     const events = await db.select().from(schema.workEvents).where(eq(schema.workEvents.workId, workId)).orderBy(asc(schema.workEvents.seq));
     const actions = await db.select().from(schema.domainActions).where(eq(schema.domainActions.workId, workId)).orderBy(asc(schema.domainActions.createdAt));
     const actionIds = actions.map((row) => row.id);
+    const businessEffects = actionIds.length === 0 ? [] : await db.select().from(schema.businessEffects).where(and(
+      eq(schema.businessEffects.tenantId, tenantId),
+      inArray(schema.businessEffects.domainActionId, actionIds),
+    )).orderBy(asc(schema.businessEffects.createdAt));
     const approvals = actionIds.length === 0 ? [] : await db.select().from(schema.actionLog).where(and(inArray(schema.actionLog.domainActionId, actionIds), inArray(schema.actionLog.step, ["gate", "confirmed", "rejected", "escalated", "policy_ungated_authorized"])) ).orderBy(asc(schema.actionLog.timestamp));
     const workflowRuns = await db.select().from(schema.workflowRuns).where(eq(schema.workflowRuns.workId, workId)).orderBy(asc(schema.workflowRuns.createdAt));
     const runIds = workflowRuns.map((row) => row.id);
@@ -1330,7 +1543,7 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
         ? or(eq(schema.integrationEvents.workId, workId), inArray(schema.integrationEvents.id, wakeEventIds))
         : eq(schema.integrationEvents.workId, workId),
     )).orderBy(asc(schema.integrationEvents.occurredAt));
-    return { work, inputs, plannerAttempts, actions, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, eventWaits, wakeClaims, integrationEvents };
+    return { work, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, eventWaits, wakeClaims, integrationEvents };
   });
 }
 

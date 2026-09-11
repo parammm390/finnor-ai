@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 
 const LINKS = [
+  { href: "/work", label: "Work + Attention" },
   { href: "/ic", label: "Investment Committee" },
   { href: "/underwriting", label: "Underwriting" },
   { href: "/confirm", label: "Confirmation Queue" },

@@ -427,7 +427,7 @@ async function main(): Promise<void> {
     "P5 roadmap arithmetic reconciliation must contain exactly ten dual-tagged boundary cases");
   assert(new Set(P5_MANDATORY_CASES.map((item) => item.name)).size === EXPECTED_UNIQUE_CASES, "P5 case names are not unique");
   assert(!P5_MANDATORY_CASES.some((item) => /\b(?:TODO|SKIP(?:PED)?)\b/i.test(item.name)), "P5 mandatory ledger contains a forbidden placeholder");
-  assert(CURRENT_MIGRATION_HEAD === P5_MIGRATION, `declared migration head is ${CURRENT_MIGRATION_HEAD}, expected ${P5_MIGRATION}`);
+  assert(String(CURRENT_MIGRATION_HEAD) >= P5_MIGRATION, `declared migration head is ${CURRENT_MIGRATION_HEAD}, expected at least ${P5_MIGRATION}`);
 
   const bin = (name: string) => resolve(ROOT, "node_modules/.bin", name);
   const commands: Record<string, CommandEvidence> = {};
@@ -441,8 +441,8 @@ async function main(): Promise<void> {
   commands.migrationBundle = await runCommand("migrationBundle", bin("tsx"), ["scripts/bundle-migrations.ts"]);
   const diskMigrations = await loadDiskMigrations();
   const bundle = await import(`../../packages/db/migrations-bundle.ts?p5=${Date.now()}`);
-  assert(diskMigrations.length === EXPECTED_MIGRATION_COUNT && bundle.MIGRATIONS.length === EXPECTED_MIGRATION_COUNT,
-    `migration count is disk=${diskMigrations.length}, bundle=${bundle.MIGRATIONS.length}, expected=${EXPECTED_MIGRATION_COUNT}`);
+  assert(diskMigrations.length >= EXPECTED_MIGRATION_COUNT && bundle.MIGRATIONS.length === diskMigrations.length,
+    `migration count is disk=${diskMigrations.length}, bundle=${bundle.MIGRATIONS.length}, expected at least ${EXPECTED_MIGRATION_COUNT} and exact bundle parity`);
   assert(diskMigrations.every((migration, index) => migration.name === bundle.MIGRATIONS[index]?.name && migration.sql === bundle.MIGRATIONS[index]?.sql),
     "generated migration bundle differs byte-for-byte from disk");
   assert(diskMigrations.at(-1)?.name === CURRENT_MIGRATION_HEAD, "disk migration head differs from declared head");

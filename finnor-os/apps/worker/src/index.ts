@@ -29,6 +29,7 @@ import { startScheduler, startGlobalScheduler, type ScheduledScan } from "./sche
 import { startHeartbeat } from "./heartbeat";
 import { startSseServer } from "./sse-server";
 import { recoverObjectives, runObjectiveIteration } from "./handlers/run-objective-iteration";
+import { runWorkforceAssignment } from "./handlers/run-workforce-assignment";
 import { recoverComputerTasks, runComputerTask } from "./handlers/run-computer-task";
 import { processWorkEventWaitDeadlineHandler } from "./handlers/process-work-event-wait-deadline";
 import { scanConnectionHealth } from "./handlers/scan-connection-health";
@@ -61,6 +62,7 @@ export function createWorker(): JobQueue {
   queue.register("purge_retention", purgeRetention);
   queue.register("send_resend_email", sendResendEmailJob);
   queue.register("run_objective_iteration", runObjectiveIteration);
+  queue.register("run_workforce_assignment", runWorkforceAssignment);
   queue.register("recover_objectives", recoverObjectives);
   queue.register("run_computer_task", runComputerTask);
   queue.register("recover_computer_tasks", recoverComputerTasks);

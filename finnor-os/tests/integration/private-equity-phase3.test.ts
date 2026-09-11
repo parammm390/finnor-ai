@@ -174,12 +174,12 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     const open = await createRequest(ctxA, {
       ...requestBase,
       requestText: "Provide final debt payoff letter.",
-      dueAt: new Date("2026-09-04T12:00:00.000Z"),
+      dueAt: new Date(AS_OF.getTime() - 24 * 60 * 60 * 1_000),
     });
     const acknowledged = await createRequest(ctxA, {
       ...requestBase,
       requestText: "Provide lender funds-flow confirmation.",
-      dueAt: new Date("2026-09-10T12:00:00.000Z"),
+      dueAt: new Date(AS_OF.getTime() + 24 * 60 * 60 * 1_000),
     });
     const fulfilled = await createRequest(ctxA, { ...requestBase, requestText: "Provide historical covenant schedule." });
     const cancelled = await createRequest(ctxA, { ...requestBase, requestText: "Provide obsolete lender checklist." });

@@ -32,16 +32,3 @@ export function classifyReasoningTier(input: {
 
   return "medium";
 }
-
-export interface CandidateScoreInputs {
-  actionType: string;
-  groundedPayload: Array<{ field: string; status: "verified" | "not_found" | "unverifiable" }>;
-  /** Extension point for Phase 9 — default 0, Phase 9 wires a real value in later. */
-  patternScore?: number;
-}
-
-export function scoreCandidate(input: CandidateScoreInputs): number {
-  const verifiedBonus = input.groundedPayload.filter((g) => g.status === "verified").length;
-  const notFoundPenalty = input.groundedPayload.filter((g) => g.status === "not_found").length * -2;
-  return verifiedBonus + notFoundPenalty + (input.patternScore ?? 0);
-}

@@ -10,6 +10,8 @@ on:
   push:
     branches: [main]
     paths-ignore: ["finnor-os/**"]
+permissions:
+  contents: read
 concurrency:
   group: marketing-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -30,8 +32,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://kpxrnonhnhexutvdywbh.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_pL3At585tx6uLFymhYtjbA_HJvVTeWB
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           # package-lock.json includes @mapbox/jsonlint-lines-primitives@2.0.3,
           # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on

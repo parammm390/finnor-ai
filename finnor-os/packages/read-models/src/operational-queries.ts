@@ -27,6 +27,7 @@ import {
   partyRefToCanonicalEntityRef,
   type AgentActivityRequest,
   type AgentActivityResult,
+  type AttentionQueueRequest,
   type CanonicalEntityNode,
   type CanonicalEntityRef,
   type CanonicalOperationalQueryRequest,
@@ -42,12 +43,15 @@ import {
   type PartyContextRequest,
   type PartyLookupRequest,
   type TeamRosterRequest,
+  type WorkforceStatusRequest,
   type WorkListRequest,
   type WorkListResult,
 } from "@finnor/shared-types";
 import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import { executePartyOperationalQuery, type PartyReadExecutionContext } from "./party-queries";
 import { resolveParty } from "./party-resolver";
+import { executeAttentionQueueQuery } from "./attention-query";
+import { workforceStatus } from "./workforce-status";
 
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;
@@ -61,6 +65,9 @@ export interface OperationalQueryOptions {
   maxRows?: number;
   employeeId?: string;
   userId?: string;
+  /** Resolved by the tenant-aware dispatcher. Direct read-model callers may omit
+   * it; attention_queue then resolves canonical tenant vertical truth itself. */
+  verticalKey?: string;
 }
 
 function nowFor(options: OperationalQueryOptions): Date {
@@ -284,7 +291,9 @@ async function runCoreQuery(
   now: Date,
 ): Promise<OperationalQueryResult> {
   if (request.intent === "work_list") return workList(tenantId, request, options, now);
+  if (request.intent === "attention_queue") return executeAttentionQueueQuery(tenantId, request as AttentionQueueRequest, options, now);
   if (request.intent === "agent_activity") return agentActivity(tenantId, request, options, now);
+  if (request.intent === "workforce_status") return workforceStatus(tenantId, request as WorkforceStatusRequest, now);
   if (request.intent === "company_context") return companyContextQuery(tenantId, request, options, now);
   const context: PartyReadExecutionContext = {
     employeeId: options.employeeId,
@@ -308,7 +317,7 @@ export async function executeOperationalQuery<T extends CanonicalOperationalQuer
   if (!tenantId.trim()) throw new Error("tenantId is required from authenticated context");
   if (Object.prototype.hasOwnProperty.call(request, "tenantId")) throw new Error("Operational query request must not contain tenantId");
   if (isRetiredWaterQuery(request.intent)) throw new Error("Operational query intent is retired");
-  const active = new Set(["work_list", "agent_activity", "company_context", "party_lookup", "party_context", "team_roster"]);
+  const active = new Set(["work_list", "attention_queue", "agent_activity", "workforce_status", "company_context", "party_lookup", "party_context", "team_roster"]);
   if (!active.has(request.intent)) throw new Error("Query belongs to a vertical-specific dispatcher");
   if (options.workInputId && !options.workId) throw new Error("workInputId requires workId");
   const now = nowFor(options);

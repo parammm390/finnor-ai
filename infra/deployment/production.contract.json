@@ -8,7 +8,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0126_pe_underwriting_runtime.sql",
+    "requiredMigrationHead": "0129_phase7_governed_workforce_learning.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

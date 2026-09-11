@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-10T00:15:21.107Z",
+  "generatedAt": "2026-09-11T02:26:45.595Z",
   "actionCount": 41,
   "actions": [
     {
       "plugin": "universal-actions",
       "actionType": "assign_task",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -30,9 +30,9 @@
       "plugin": "universal-actions",
       "actionType": "cancel_delegation",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "clarification",
@@ -78,9 +78,9 @@
       "plugin": "universal-actions",
       "actionType": "create_task",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -94,25 +94,25 @@
       "plugin": "universal-actions",
       "actionType": "delegate_objective",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "universal-actions",
       "actionType": "escalate_work",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "universal-actions",
       "actionType": "handoff_work",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -134,9 +134,9 @@
       "plugin": "universal-actions",
       "actionType": "notify_group",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -158,9 +158,9 @@
       "plugin": "universal-actions",
       "actionType": "place_call",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -190,9 +190,9 @@
       "plugin": "universal-actions",
       "actionType": "request_acknowledgement",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -206,9 +206,9 @@
       "plugin": "universal-actions",
       "actionType": "reschedule_internal_event",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -246,9 +246,9 @@
       "plugin": "universal-actions",
       "actionType": "schedule_internal_event",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "web-research",
@@ -278,17 +278,17 @@
       "plugin": "universal-actions",
       "actionType": "send_message",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "universal-actions",
       "actionType": "share_document",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",
@@ -310,9 +310,9 @@
       "plugin": "universal-actions",
       "actionType": "update_task",
       "sourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "sourceLine": 50,
+      "sourceLine": 54,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/universal-actions/index.ts",
-      "schemaSourceLine": 66
+      "schemaSourceLine": 70
     },
     {
       "plugin": "private-equity",

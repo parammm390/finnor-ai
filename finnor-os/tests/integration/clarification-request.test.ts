@@ -4,9 +4,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { closePool, domainActions, tenants, withTenant } from "@finnor/db";
+import { beginWorkPlannerAttempt, closePool, domainActions, receiveWork, tenantVerticalAssignments, tenants, withTenant } from "@finnor/db";
 import { eq } from "drizzle-orm";
-import { createDefaultPluginRegistry, GatedExecutor, LLMPlanner } from "@finnor/orchestration";
+import { createDefaultPluginRegistry, GatedExecutor, LLMPlanner, selectAndMaterializePlan } from "@finnor/orchestration";
 import { createDefaultRegistry } from "@finnor/tools";
 import type { LLMProvider } from "@finnor/orchestration";
 import type { DomainPolicy, MemorySnapshot, TenantContext } from "@finnor/shared-types";
@@ -19,15 +19,42 @@ const memory = (): MemorySnapshot => ({ shortTerm: null, longTerm: null, semanti
 const context = (): TenantContext => ({ tenantId: TENANT_ID, userId: "clarification-test", role: "owner" });
 
 describe.skipIf(!available)("clarification request", () => {
-  beforeAll(async () => { process.env.DATABASE_URL = DB_URL; await migrate(DB_URL); await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "Clarification Test Dealer" }).onConflictDoNothing()); });
+  beforeAll(async () => {
+    process.env.DATABASE_URL = DB_URL;
+    await migrate(DB_URL);
+    await withTenant(TENANT_ID, async (db) => {
+      await db.insert(tenants).values({ id: TENANT_ID, name: "Clarification Test Dealer" }).onConflictDoNothing();
+      await db.insert(tenantVerticalAssignments).values({ tenantId: TENANT_ID, verticalKey: "none", sourceSystem: "certification:test", createdBy: "test" })
+        .onConflictDoUpdate({ target: tenantVerticalAssignments.tenantId, set: { verticalKey: "none", sourceSystem: "certification:test", createdBy: "test", updatedAt: new Date() } });
+    });
+  });
   beforeEach(() => { delete process.env.AWS_BEDROCK_API_KEY; });
   afterAll(async () => { await closePool(); });
 
   it("registers, validates, and gates an ambiguous plan as a durable question card", async () => {
-    const provider: LLMProvider = { name: "clarification-stub", async complete() { return JSON.stringify({ actions: [{ action_type: "clarification_request", payload: { question: "Which deal should receive the diligence request?", missingFields: ["dealId"] } }] }); } };
+    const provider: LLMProvider = { name: "clarification-stub", async complete(options) {
+      const criteria = JSON.parse(options.system.split("Accepted completion criteria: ")[1]!.split("\n")[0]!) as Array<{ id: string }>;
+      return JSON.stringify({ candidates: [{
+        version: 1,
+        candidateKey: "clarification",
+        nodes: [
+          { key: "ask", kind: "action", actionType: "clarification_request", payload: { question: "Which deal should receive the diligence request?", missingFields: ["dealId"] }, supports: criteria.map((criterion) => criterion.id) },
+          ...criteria.map((criterion, index) => ({ key: `check_${index}`, kind: "check", criterionId: criterion.id, dependsOn: ["ask"] })),
+        ],
+      }] });
+    } };
     const plugins = createDefaultPluginRegistry();
     expect(plugins.actionTypes()).toContain("clarification_request");
-    const [action] = await new LLMPlanner(plugins, provider).plan("Send the Hendersons a quote.", context(), memory());
+    const work = await receiveWork({ tenantId: TENANT_ID, instruction: "Send the Hendersons a quote.", channel: "text", userId: context().userId });
+    const attempt = await beginWorkPlannerAttempt({ tenantId: TENANT_ID, workId: work.workId, workInputId: work.workInputId, attemptKey: `test:${work.instructionId}` });
+    const planning = await new LLMPlanner(plugins, provider).plan("Send the Hendersons a quote.", context(), memory(), {
+      workId: work.workId,
+      workInputId: work.workInputId,
+      plannerAttemptId: attempt.id,
+      decisionContextHash: attempt.decisionContextHash ?? undefined,
+    });
+    const materialized = await selectAndMaterializePlan({ planning, tenantContext: context(), workId: work.workId, workInputId: work.workInputId, plannerAttemptId: attempt.id, instructionId: work.instructionId });
+    const [action] = materialized.actions;
     expect(action!.actionType).toBe("clarification_request");
     const policy: DomainPolicy = { id: "", tenantId: TENANT_ID, actionType: "clarification_request", policy: {}, requiresConfirmation: true, confirmationTemplate: null, version: 0 };
     const result = await new GatedExecutor(plugins, createDefaultRegistry()).execute(action!, policy);

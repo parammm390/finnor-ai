@@ -1022,6 +1022,12 @@ export const workPlannerAttempts = pgTable(
     decisionContextSnapshot: jsonb("decision_context_snapshot"),
     decisionContextHash: text("decision_context_hash"),
     decisionContextCapturedAt: timestamp("decision_context_captured_at", { withTimezone: true }),
+    goalSpec: jsonb("goal_spec"),
+    constraintSet: jsonb("constraint_set"),
+    planningSnapshot: jsonb("planning_snapshot"),
+    candidatePlans: jsonb("candidate_plans"),
+    compilationResult: jsonb("compilation_result"),
+    selectedPlanRevisionId: uuid("selected_plan_revision_id"),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
@@ -1078,8 +1084,10 @@ export const workQueryExecutions = pgTable(
         "schedule_range",
         "money_summary",
         "work_list",
+        "attention_queue",
         "inventory_status",
         "agent_activity",
+        "workforce_status",
         "business_state",
         "company_context",
         "party_lookup",
@@ -1465,6 +1473,221 @@ export const domainPolicyRevisions = pgTable(
   ],
 );
 
+/** P6 immutable selection record. Model proposals and deterministic compiler
+ * evidence live here; execution truth stays in the existing primitive owners. */
+export const workPlanRevisions = pgTable(
+  "work_plan_revisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    workId: uuid("work_id").notNull().references(() => works.id),
+    workInputId: uuid("work_input_id").notNull().references(() => workInputs.id),
+    plannerAttemptId: uuid("planner_attempt_id").references(() => workPlannerAttempts.id),
+    objectiveLoopId: uuid("objective_loop_id").references(() => workObjectiveLoops.id),
+    revision: integer("revision").notNull(),
+    parentRevisionId: uuid("parent_revision_id"),
+    reason: text("reason", { enum: ["initial", "observation", "failure", "stale", "timeout", "redirect"] }).notNull(),
+    status: text("status", { enum: ["active", "superseded", "completed", "blocked", "failed"] }).notNull().default("active"),
+    goalSpec: jsonb("goal_spec").notNull(),
+    constraintSet: jsonb("constraint_set").notNull(),
+    planningSnapshot: jsonb("planning_snapshot").notNull(),
+    candidateSummary: jsonb("candidate_summary").notNull(),
+    validation: jsonb("validation").notNull(),
+    planGraph: jsonb("plan_graph").notNull(),
+    score: jsonb("score").notNull(),
+    goalHash: text("goal_hash").notNull(),
+    constraintHash: text("constraint_hash").notNull(),
+    worldSnapshotHash: text("world_snapshot_hash").notNull(),
+    graphHash: text("graph_hash").notNull(),
+    semanticHash: text("semantic_hash").notNull(),
+    completionProof: jsonb("completion_proof"),
+    selectedAt: timestamp("selected_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    unique("work_plan_revisions_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("work_plan_revisions_work_revision_idx").on(t.workId, t.revision),
+    unique("work_plan_revisions_work_hash_idx").on(t.tenantId, t.workId, t.semanticHash),
+    index("work_plan_revisions_tenant_work_idx").on(t.tenantId, t.workId, t.revision),
+    index("work_plan_revisions_tenant_status_idx").on(t.tenantId, t.status, t.selectedAt),
+  ],
+);
+
+// P7 governed workforce. Agent identities are deliberately separate from users:
+// users are human principals; profiles are non-human execution configurations and
+// never satisfy an Authority, approval, vote, verification, or attestation FK.
+export const agentProfiles = pgTable(
+  "agent_profiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("agent_profiles_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("agent_profiles_tenant_key_key").on(t.tenantId, t.key),
+    index("agent_profiles_tenant_status_idx").on(t.tenantId, t.status, t.id),
+  ],
+);
+
+export const learningRevisions = pgTable(
+  "learning_revisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    targetAgentProfileId: uuid("target_agent_profile_id").notNull().references(() => agentProfiles.id),
+    revision: integer("revision").notNull(),
+    parentRevisionId: uuid("parent_revision_id"),
+    sourceProposalId: uuid("source_proposal_id").notNull(),
+    guidance: jsonb("guidance").notNull(),
+    semanticHash: text("semantic_hash").notNull(),
+    promotedBy: uuid("promoted_by").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("learning_revisions_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("learning_revisions_tenant_profile_id_key").on(t.tenantId, t.targetAgentProfileId, t.id),
+    unique("learning_revisions_profile_revision_key").on(t.targetAgentProfileId, t.revision),
+    unique("learning_revisions_source_proposal_key").on(t.sourceProposalId),
+    unique("learning_revisions_semantic_hash_key").on(t.tenantId, t.targetAgentProfileId, t.semanticHash),
+    index("learning_revisions_tenant_profile_idx").on(t.tenantId, t.targetAgentProfileId, t.revision),
+  ],
+);
+
+export const agentProfileRevisions = pgTable(
+  "agent_profile_revisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    agentProfileId: uuid("agent_profile_id").notNull().references(() => agentProfiles.id),
+    revision: integer("revision").notNull(),
+    modelRoute: jsonb("model_route").notNull(),
+    capabilityGrants: jsonb("capability_grants").notNull(),
+    maxConcurrentAssignments: integer("max_concurrent_assignments").notNull().default(1),
+    autonomyLimits: jsonb("autonomy_limits").notNull(),
+    planningHints: jsonb("planning_hints").notNull().default({}),
+    learningRevisionId: uuid("learning_revision_id").references(() => learningRevisions.id),
+    status: text("status", { enum: ["active", "superseded", "disabled"] }).notNull().default("active"),
+    configHash: text("config_hash").notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("agent_profile_revisions_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("agent_profile_revisions_profile_revision_key").on(t.agentProfileId, t.revision),
+    unique("agent_profile_revisions_profile_hash_key").on(t.agentProfileId, t.configHash),
+    uniqueIndex("agent_profile_revisions_one_active_idx").on(t.agentProfileId).where(sql`${t.status} = 'active'`),
+    index("agent_profile_revisions_tenant_status_idx").on(t.tenantId, t.status, t.id),
+  ],
+);
+
+export const workforceAssignments = pgTable(
+  "workforce_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    workId: uuid("work_id").notNull().references(() => works.id),
+    planRevisionId: uuid("plan_revision_id").notNull().references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id").notNull(),
+    objectiveLoopId: uuid("objective_loop_id").references(() => workObjectiveLoops.id),
+    objectiveStepId: uuid("objective_step_id"),
+    agentProfileId: uuid("agent_profile_id").notNull().references(() => agentProfiles.id),
+    agentRevisionId: uuid("agent_revision_id").notNull().references(() => agentProfileRevisions.id),
+    capability: text("capability").notNull(),
+    nodeKind: text("node_kind", { enum: ["query", "action", "wait", "check"] }).notNull(),
+    state: text("state", { enum: ["queued", "claimed", "running", "waiting", "completed", "failed", "cancelled", "reassigned"] }).notNull().default("queued"),
+    attempt: integer("attempt").notNull().default(0),
+    leaseOwner: text("lease_owner"),
+    leaseUntil: timestamp("lease_until", { withTimezone: true }),
+    budgetSnapshot: jsonb("budget_snapshot").notNull(),
+    assignmentReason: text("assignment_reason").notNull(),
+    assignmentScore: jsonb("assignment_score").notNull(),
+    previousAssignmentId: uuid("previous_assignment_id"),
+    reassignmentReason: text("reassignment_reason"),
+    // Migration carries this FK; DomainAction is declared later in this module.
+    domainActionId: uuid("domain_action_id"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    failure: jsonb("failure"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("workforce_assignments_tenant_id_id_key").on(t.tenantId, t.id),
+    uniqueIndex("workforce_assignments_one_active_node_idx").on(t.planRevisionId, t.planNodeId)
+      .where(sql`${t.state} in ('queued','claimed','running','waiting')`),
+    index("workforce_assignments_tenant_profile_state_idx").on(t.tenantId, t.agentProfileId, t.state, t.createdAt),
+    index("workforce_assignments_tenant_work_idx").on(t.tenantId, t.workId, t.createdAt),
+    index("workforce_assignments_tenant_state_created_idx").on(t.tenantId, t.state, t.createdAt, t.id),
+    index("workforce_assignments_expired_lease_idx").on(t.tenantId, t.leaseUntil).where(sql`${t.state} in ('claimed','running')`),
+  ],
+);
+
+export const learningObservations = pgTable(
+  "learning_observations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    agentProfileId: uuid("agent_profile_id").notNull().references(() => agentProfiles.id),
+    agentRevisionId: uuid("agent_revision_id").notNull().references(() => agentProfileRevisions.id),
+    workforceAssignmentId: uuid("workforce_assignment_id").notNull().references(() => workforceAssignments.id),
+    capability: text("capability").notNull(),
+    nodeKind: text("node_kind", { enum: ["query", "action", "wait", "check"] }).notNull(),
+    contextClass: text("context_class").notNull(),
+    workId: uuid("work_id").notNull().references(() => works.id),
+    planRevisionId: uuid("plan_revision_id").notNull().references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id").notNull(),
+    outcomeClass: text("outcome_class", { enum: [
+      "verified_completion", "agent_planning_failure", "schema_compile_rejection", "authority_denial",
+      "human_rejection", "human_correction", "provider_outage", "external_failure", "stale_world_replan",
+      "business_outcome_failure", "timeout", "user_cancellation", "recovery", "unknown",
+    ] }).notNull(),
+    verified: boolean("verified").notNull(),
+    sourceRefs: jsonb("source_refs").notNull(),
+    contextFeatures: jsonb("context_features").notNull().default({}),
+    measuredMetrics: jsonb("measured_metrics").notNull().default({}),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    observationHash: text("observation_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("learning_observations_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("learning_observations_assignment_key").on(t.workforceAssignmentId),
+    unique("learning_observations_tenant_hash_key").on(t.tenantId, t.observationHash),
+    index("learning_observations_metric_slice_idx").on(t.tenantId, t.agentRevisionId, t.capability, t.nodeKind, t.contextClass, t.occurredAt),
+  ],
+);
+
+export const learningProposals = pgTable(
+  "learning_proposals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    targetType: text("target_type", { enum: ["agent_profile", "agent_capability"] }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    targetAgentRevisionId: uuid("target_agent_revision_id").notNull().references(() => agentProfileRevisions.id),
+    capability: text("capability"),
+    evidenceWindow: jsonb("evidence_window").notNull(),
+    sampleSize: integer("sample_size").notNull(),
+    observationRefs: jsonb("observation_refs").notNull(),
+    proposedChange: jsonb("proposed_change").notNull(),
+    confidenceClass: text("confidence_class", { enum: ["SUPPORTED", "STRONG"] }).notNull(),
+    status: text("status", { enum: ["proposed", "approved", "rejected", "promoted"] }).notNull().default("proposed"),
+    proposalHash: text("proposal_hash").notNull(),
+    reviewedBy: uuid("reviewed_by").references(() => users.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("learning_proposals_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("learning_proposals_tenant_hash_key").on(t.tenantId, t.proposalHash),
+    index("learning_proposals_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
+  ],
+);
+
 export const domainActions = pgTable(
   "domain_actions",
   {
@@ -1506,6 +1729,9 @@ export const domainActions = pgTable(
     predictedReceipt: jsonb("predicted_receipt"),
     predictionDiff: jsonb("prediction_diff"),
     repairedFromPlanId: uuid("repaired_from_plan_id"),
+    /** P6 canonical linkage. Legacy planId remains a compatibility projection. */
+    planRevisionId: uuid("plan_revision_id").references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id"),
     // jarvis-v3 P3.T1 (migration 0062): the client-minted instruction id that produced
     // this action, when the caller supplied one — nullable (draftKnownAction and every
     // pre-P3 row have none).
@@ -1527,6 +1753,8 @@ export const domainActions = pgTable(
   (t) => [
     index("domain_actions_tenant_status_idx").on(t.tenantId, t.status),
     index("domain_actions_tenant_plan_idx").on(t.tenantId, t.planId),
+    index("domain_actions_tenant_plan_revision_idx").on(t.tenantId, t.planRevisionId),
+    unique("domain_actions_plan_node_unique").on(t.planRevisionId, t.planNodeId),
     index("domain_actions_work_idx").on(t.workId),
     unique("domain_actions_objective_step_idx").on(t.objectiveStepId),
     unique("domain_actions_tenant_id_id_key").on(t.tenantId, t.id),
@@ -1583,6 +1811,8 @@ export const workObjectiveSteps = pgTable(
     authorityDecisionId: uuid("authority_decision_id").references(() => authorityDecisions.id),
     queryExecutionId: uuid("query_execution_id").references(() => workQueryExecutions.id),
     domainActionId: uuid("domain_action_id").references(() => domainActions.id),
+    planRevisionId: uuid("plan_revision_id").references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id"),
     observation: jsonb("observation"),
     progressMade: boolean("progress_made"),
     iterationOutcome: text("iteration_outcome", { enum: ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] }),
@@ -1594,12 +1824,15 @@ export const workObjectiveSteps = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (t) => [
+    unique("work_objective_steps_tenant_id_id_key").on(t.tenantId, t.id),
     unique("work_objective_steps_loop_number_idx").on(t.objectiveLoopId, t.stepNumber),
     unique("work_objective_steps_loop_key_idx").on(t.objectiveLoopId, t.idempotencyKey),
     unique("work_objective_steps_action_idx").on(t.domainActionId),
     unique("work_objective_steps_query_idx").on(t.queryExecutionId),
     index("work_objective_steps_tenant_loop_idx").on(t.tenantId, t.objectiveLoopId, t.stepNumber),
     index("work_objective_steps_tenant_outcome_idx").on(t.tenantId, t.iterationOutcome, t.completedAt),
+    index("work_objective_steps_workforce_boundary_idx").on(t.tenantId, t.startedAt, t.id)
+      .where(sql`${t.iterationOutcome} in ('waiting','blocked') and ${t.observation} ? 'workforceStatus'`),
   ],
 );
 

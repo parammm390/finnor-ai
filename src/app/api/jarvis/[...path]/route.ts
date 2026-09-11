@@ -32,6 +32,7 @@ const READ_MODEL_VIEWS = new Set([
   "readiness",
   "readiness-slo",
   "failure-injections",
+  "workforce-status",
 ])
 const RESOURCE_KINDS = new Set(["households", "inventory", "invoices", "technicians", "visits", "compliance-policy", "workflows"])
 
@@ -99,6 +100,7 @@ function isAllowedGet(segments: string[]): boolean {
   if (segments.length === 3 && a === "works" && c === "objective") return true
   if (segments.length === 2 && a === "operations") return true
   if (segments.length === 3 && a === "computer" && b === "runs") return true
+  if (segments.length === 2 && a === "workforce" && b === "profiles") return true
   return false
 }
 
@@ -129,6 +131,9 @@ function isAllowedPost(segments: string[]): boolean {
   // D8: owner/Dealer-Zero authorization remains entirely in finnor-os; this proxy
   // only exposes the one existing, read-only time-compression route.
   if (segments.length === 2 && a === "dealer-zero" && b === "time-compression") return true
+  if (segments.length === 2 && a === "workforce" && b === "profiles") return true
+  if (segments.length === 3 && a === "workforce" && b === "proposals") return true
+  if (segments.length === 4 && a === "workforce" && b === "assignments" && d === "reassign") return true
   return false
 }
 

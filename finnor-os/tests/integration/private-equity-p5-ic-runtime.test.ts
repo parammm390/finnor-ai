@@ -34,6 +34,7 @@ import {
   type PeMutationContext,
 } from "@finnor/private-equity";
 import { migrate } from "../../packages/db/migrate";
+import { executeAttentionQueueQuery } from "@finnor/read-models";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
@@ -575,6 +576,31 @@ describe.skipIf(!available)("P5 governed PE Investment Committee runtime", () =>
       idempotencyKey: `p5-question-${randomUUID()}`,
     });
     const questionId = idOf(questionResult.question);
+
+    const attention = await executeAttentionQueueQuery(tenantA, { intent: "attention_queue" }, {
+      employeeId: ownerA,
+      userId: ownerA,
+      verticalKey: "private_equity",
+    }, new Date());
+    expect(attention.sourceStatus.status).toBe("complete");
+    expect(attention.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: `p5_question_blocking:${questionId}`,
+        workId,
+        kind: "p5_question_blocking",
+        assignedOrEligibleActor: expect.objectContaining({ employeeId: ownerA }),
+        nextHumanBoundary: expect.objectContaining({ kind: "resolve_question", executable: false }),
+      }),
+    ]));
+    const outsiderAttention = await executeAttentionQueueQuery(tenantA, { intent: "attention_queue" }, {
+      employeeId: outsider,
+      userId: outsider,
+      verticalKey: "private_equity",
+    }, new Date());
+    expect(outsiderAttention.sourceStatus.status).toBe("complete");
+    expect(outsiderAttention.items).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: `p5_question_blocking:${questionId}` }),
+    ]));
 
     await expectRejected(
       () => markIcReadyForVote(ctxA, { icCaseId, expectedVersion: Number(questionResult.case.version) }),
