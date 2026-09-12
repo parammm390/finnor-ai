@@ -59,6 +59,9 @@ const HISTORICAL_OR_CONTROL_FILES = new Set([
   "apps/api/app/api/webhooks/esign/route.ts",
   "scripts/release/verify-pe-domain-boundary.ts",
   "scripts/release/run-pe5-water-retirement-certification.ts",
+  // Phase 8's runtime-contract verifier scans the retired vocabulary itself;
+  // it is a deny/control gate, not executable product doctrine.
+  "scripts/release/verify-p8-runtime-contract.ts",
   // Exact negative/history tests. There is deliberately no tests/** wildcard.
   "tests/unit/graph-allowlist.test.ts",
   "tests/unit/import-mapping.test.ts",
@@ -69,6 +72,9 @@ const HISTORICAL_OR_CONTROL_FILES = new Set([
   "tests/integration/private-equity-phase2.test.ts",
   "tests/integration/private-equity-phase3.test.ts",
   "tests/integration/work-cases.test.ts",
+  // Forward-head retirement proof intentionally inserts a retired action and
+  // asserts the existing barrier rejects it; it cannot become product code.
+  "tests/integration/water-retirement-forward-head.test.ts",
 ]);
 
 const COGNITION_PATHS = [
