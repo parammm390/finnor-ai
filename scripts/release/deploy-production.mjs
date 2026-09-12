@@ -1,5 +1,6 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { readFileSync, writeFileSync } from "node:fs"
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { worktreeStatus } from "./worktree-state.mjs"
 
@@ -67,6 +68,23 @@ if (buildId !== `finnor-${commitSha.slice(0, 12)}`) throw new Error(`FINNOR_BUIL
 if (!version.endsWith(`+${commitSha.slice(0, 12)}`)) throw new Error(`FINNOR_VERSION must be commit-derived: ${version}`)
 
 const appDir = resolve(repoRoot, app.directory)
+// Vercel's local build bootstrap can discover the parent finnor-os workspace
+// even when the canary project is rooted at this app directory. Its fallback
+// `npm install` then rewrites the parent workspace lockfile. Build canaries in
+// an isolated copy so that remote project settings cannot mutate canonical
+// release source; the prebuilt output is still deployed to the exact contract
+// project and verified below.
+const isolateCanaryBuild = appName.startsWith("supplierCanary") && !deployOnly
+const buildDir = isolateCanaryBuild ? mkdtempSync(join(tmpdir(), "finnor-vercel-canary-")) : appDir
+if (isolateCanaryBuild) {
+  process.on("exit", () => {
+    try { rmSync(buildDir, { recursive: true, force: true }) } catch { /* best effort cleanup */ }
+  })
+  cpSync(appDir, buildDir, {
+    recursive: true,
+    filter: (source) => !source.split("/").includes(".vercel"),
+  })
+}
 const tokenArgs = process.env.VERCEL_TOKEN ? ["--token", process.env.VERCEL_TOKEN] : []
 const env = {
   ...process.env,
@@ -82,10 +100,10 @@ const env = {
 }
 
 if (!deployOnly) {
-  run("vercel", ["pull", "--yes", "--environment=production", ...tokenArgs], appDir, env)
-  const localConfig = join(appDir, ".vercel", "finnor-release.vercel.json")
+  run("vercel", ["pull", "--yes", "--environment=production", ...tokenArgs], buildDir, env)
+  const localConfig = join(buildDir, ".vercel", "finnor-release.vercel.json")
   writeFileSync(localConfig, `${JSON.stringify({ installCommand: app.installCommand }, null, 2)}\n`)
-  run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig, ...tokenArgs], appDir, env)
+  run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig, ...tokenArgs], buildDir, env)
   const buildChanges = worktreeStatus(repoRoot)
   if (buildChanges) throw new Error(`The ${appName} build changed release source:\n${buildChanges}`)
 }
@@ -114,7 +132,7 @@ const deployArgs = [
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
   ...tokenArgs,
 ]
-const deployOutput = run("vercel", deployArgs, appDir, env)
+const deployOutput = run("vercel", deployArgs, buildDir, env)
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
 const productionUrls = [...deployOutput.matchAll(/^\s*Production:\s+(https:\/\/[^\s)]+)/gm)].map((match) => match[1].replace(/[.,]+$/, ""))
 const deploymentUrl = productionUrls.at(-1) ?? urls.findLast((url) => url.includes(".vercel.app"))
@@ -139,3 +157,4 @@ if (outputFile) {
 }
 process.stdout.write(`\nFINNOR_DEPLOYMENT_URL=${deploymentUrl}\n`)
 console.log(JSON.stringify(result, null, 2))
+if (isolateCanaryBuild) rmSync(buildDir, { recursive: true, force: true })

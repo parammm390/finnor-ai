@@ -119,6 +119,16 @@ test("active release workflow retains the AWS worker and adds the governed Phase
   assert.doesNotMatch(workflow, /FINNOR_CORE_CERTIFICATION_FILE=|release:certify -- core/)
 })
 
+test("supplier canary builds are isolated from the finnor-os workspace lockfile", () => {
+  const deployScript = readFileSync(new URL("./deploy-production.mjs", import.meta.url), "utf8")
+  assert.match(deployScript, /isolateCanaryBuild = appName\.startsWith\("supplierCanary"\)/)
+  assert.match(deployScript, /mkdtempSync\(join\(tmpdir\(\), "finnor-vercel-canary-"\)\)/)
+  assert.match(deployScript, /cpSync\(appDir, buildDir, \{\s*recursive: true/)
+  assert.match(deployScript, /worktreeStatus\(repoRoot\)/)
+  assert.match(deployScript, /vercel", \["build"[\s\S]*buildDir/)
+  assert.match(deployScript, /vercel", deployArgs, buildDir/)
+})
+
 test("runtime parity requires the embedded orchestrator and exact migration", () => {
   const observed = {
     frontend: { ...expected, traceable: true },
