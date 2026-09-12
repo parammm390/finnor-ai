@@ -14,6 +14,9 @@ import { eq } from "drizzle-orm";
 import { dumpAllTables, restoreAllTables } from "../../packages/db/backup";
 
 const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
+// This is a real schema-wide round trip, not a unit fixture. Keep enough headroom
+// for a constrained CI runner while still failing a genuinely stuck restore.
+const BACKUP_RESTORE_TIMEOUT_MS = 180_000;
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: SOURCE_URL, connectionTimeoutMillis: 2000 });
@@ -53,7 +56,7 @@ describe.skipIf(!available)("backup/restore round-trip (A4.T4, no pg_dump depend
     // so both the source db and this fresh target db run in the same jsonb-fallback
     // mode — no separate CREATE EXTENSION call needed or wanted here.
     await migrate(targetUrl(targetDb));
-  }, 60_000);
+  }, BACKUP_RESTORE_TIMEOUT_MS);
 
   afterAll(async () => {
     await closePool();
@@ -89,5 +92,5 @@ describe.skipIf(!available)("backup/restore round-trip (A4.T4, no pg_dump depend
     } finally {
       await target.end();
     }
-  }, 60_000);
+  }, BACKUP_RESTORE_TIMEOUT_MS);
 });

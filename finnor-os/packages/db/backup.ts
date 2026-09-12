@@ -14,6 +14,22 @@
 
 import pg from "pg";
 
+const MAX_BIND_PARAMETERS = 60_000;
+
+function quoteIdentifier(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+function encodeValue(value: unknown, arrayColumns: Set<string> | undefined, column: string): unknown {
+  // A real Postgres array must remain a native array so node-postgres encodes it
+  // as an array literal. JSON arrays/objects need an explicit JSON representation.
+  if (Array.isArray(value) && arrayColumns?.has(column)) return value;
+  if (value !== null && typeof value === "object" && !(value instanceof Date) && !Buffer.isBuffer(value)) {
+    return JSON.stringify(value);
+  }
+  return value;
+}
+
 export interface DatabaseDump {
   schemaVersion: 1;
   generatedAt: string;
@@ -96,19 +112,43 @@ export async function restoreAllTables(databaseUrl: string, dump: DatabaseDump):
     // native array for pg to encode as a Postgres array literal.
     const arrayColumns = await listFinnorArrayColumns(client);
     const generatedColumns = await listFinnorGeneratedColumns(client);
-    // Reverse order for TRUNCATE doesn't matter with FK checks disabled, but keep it
-    // deterministic (declaration order) for readable logs/failures.
-    for (const name of tableNames) {
-      await client.query(`TRUNCATE TABLE finnor_os.${name} CASCADE`);
+    // Truncate the complete restore set in one statement. Repeating a CASCADE
+    // catalog-lock walk once per table made this round trip exceed Vitest's timeout
+    // on a slower CI runner even though the database was healthy. One statement is
+    // both faster and atomic; the transaction still gives us full-replace semantics.
+    if (tableNames.length > 0) {
+      await client.query(`TRUNCATE TABLE ${tableNames.map((name) => `finnor_os.${quoteIdentifier(name)}`).join(", ")} CASCADE`);
     }
     for (const name of tableNames) {
       const rows = dump.tables[name]!;
-      for (const row of rows) {
+      let offset = 0;
+      while (offset < rows.length) {
+        const firstRow = rows[offset]!;
         // Stored generated columns (currently search_vector) must be recomputed by
         // PostgreSQL; an INSERT may not provide an explicit value for them.
-        const columns = Object.keys(row).filter((column) => !generatedColumns.get(name)?.has(column));
-        if (columns.length === 0) continue;
-        const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
+        const columns = Object.keys(firstRow).filter((column) => !generatedColumns.get(name)?.has(column));
+        if (columns.length === 0) {
+          offset++;
+          continue;
+        }
+
+        // Keep the legacy per-row column omission behavior for hand-authored dumps,
+        // while batching the normal dumpAllTables shape. A single INSERT cannot bind
+        // more than 65,535 parameters; stay below that server limit with headroom.
+        const rowsPerBatch = Math.max(1, Math.floor(MAX_BIND_PARAMETERS / columns.length));
+        const batch: Record<string, unknown>[] = [firstRow];
+        offset++;
+        while (offset < rows.length && batch.length < rowsPerBatch) {
+          const candidate = rows[offset]!;
+          const candidateColumns = Object.keys(candidate).filter((column) => !generatedColumns.get(name)?.has(column));
+          if (candidateColumns.join("\0") !== columns.join("\0")) break;
+          batch.push(candidate);
+          offset++;
+        }
+
+        const placeholders = batch.map((_, rowIndex) =>
+          `(${columns.map((_, columnIndex) => `$${rowIndex * columns.length + columnIndex + 1}`).join(", ")})`,
+        ).join(", ");
         // node-postgres's implicit array-vs-JSON handling picks the WRONG one for a
         // jsonb column whose value is a JS array (e.g. decision_receipts.evidence) —
         // it formats it as a Postgres array literal ("{...}"), not JSON, which Postgres
@@ -116,19 +156,12 @@ export async function restoreAllTables(databaseUrl: string, dump: DatabaseDump):
         // JSON.stringify-ing every plain object/array ourselves sidesteps pg's
         // ambiguous auto-detection entirely; Dates and primitives pass through as-is
         // (pg already binds those correctly for timestamp/text/numeric/uuid columns).
-        const values = columns.map((c) => {
-          const v = row[c];
-          if (Array.isArray(v) && arrayColumns.get(name)?.has(c)) return v;
-          if (v !== null && typeof v === "object" && !(v instanceof Date) && !Buffer.isBuffer(v)) {
-            return JSON.stringify(v);
-          }
-          return v;
-        });
+        const values = batch.flatMap((row) => columns.map((column) => encodeValue(row[column], arrayColumns.get(name), column)));
         await client.query(
-          `INSERT INTO finnor_os.${name} (${columns.map((c) => `"${c}"`).join(", ")}) VALUES (${placeholders})`,
+          `INSERT INTO finnor_os.${quoteIdentifier(name)} (${columns.map(quoteIdentifier).join(", ")}) VALUES ${placeholders}`,
           values,
         );
-        restoredRows++;
+        restoredRows += batch.length;
       }
     }
     await client.query("SET session_replication_role = DEFAULT");
