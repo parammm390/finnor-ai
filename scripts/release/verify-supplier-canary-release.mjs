@@ -17,8 +17,13 @@ const expected = {
   source: process.env.FINNOR_RELEASE_SOURCE || "github-actions",
 }
 const url = `${baseUrl.replace(/\/$/, "")}${target.releasePath}`
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
 const response = await fetch(url, {
-  headers: { accept: "application/json", "cache-control": "no-cache" },
+  headers: {
+    accept: "application/json",
+    "cache-control": "no-cache",
+    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
+  },
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)

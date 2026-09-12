@@ -129,6 +129,12 @@ test("supplier canary builds are isolated from the finnor-os workspace lockfile"
   assert.match(deployScript, /vercel", deployArgs, buildDir/)
 })
 
+test("supplier canary verification honors Vercel deployment protection", () => {
+  const verifier = readFileSync(new URL("./verify-supplier-canary-release.mjs", import.meta.url), "utf8")
+  assert.match(verifier, /VERCEL_AUTOMATION_BYPASS_SECRET/)
+  assert.match(verifier, /x-vercel-protection-bypass/)
+})
+
 test("runtime parity requires the embedded orchestrator and exact migration", () => {
   const observed = {
     frontend: { ...expected, traceable: true },
