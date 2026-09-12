@@ -6,17 +6,17 @@
   <rect x="882" y="88" width="240" height="454" fill="#112229"/>
   <path d="M882 178H1122M882 362H1122" stroke="#30444B"/>
   <text x="120" y="148" fill="#14272D" font-family="Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="5">FINNOR</text>
-  <text x="120" y="272" fill="#14272D" font-family="Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-3">Built around how</text>
-  <text x="120" y="350" fill="#14272D" font-family="Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-3">your company operates.</text>
-  <text x="120" y="433" fill="#53666B" font-family="Arial, sans-serif" font-size="25" font-weight="500">Customized AI operating + execution system.</text>
+  <text x="120" y="272" fill="#14272D" font-family="Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-3">Private Equity decision</text>
+  <text x="120" y="350" fill="#14272D" font-family="Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-3">+ execution infrastructure.</text>
+  <text x="120" y="433" fill="#53666B" font-family="Arial, sans-serif" font-size="25" font-weight="500">Source-backed context. Exact authority. Durable proof.</text>
   <text x="910" y="138" fill="#7FA6B3" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2">JARVIS / COMMAND SURFACE</text>
   <circle cx="920" cy="220" r="7" fill="#58AD78"/>
-  <text x="945" y="226" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Company configured</text>
+  <text x="945" y="226" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Deal truth linked</text>
   <circle cx="920" cy="276" r="7" fill="#E47B3E"/>
   <text x="945" y="282" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Authority applied</text>
   <circle cx="920" cy="332" r="7" fill="#2490B8"/>
-  <text x="945" y="338" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Work executing</text>
+  <text x="945" y="338" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Work governed</text>
   <text x="910" y="411" fill="#7FA6B3" font-family="monospace" font-size="12" font-weight="700" letter-spacing="2">VERIFIED CHANGE</text>
-  <text x="910" y="455" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Customers · Work · Stock</text>
-  <text x="910" y="485" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Schedule · Quotes · Money</text>
+  <text x="910" y="455" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Deals · Underwriting · IC</text>
+  <text x="910" y="485" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Work · Evidence · Agents</text>
 </svg>

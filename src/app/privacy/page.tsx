@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
-import { ResourceFrame } from "@/components/resources/ResourceFrame";
-import styles from "@/components/resources/PublicEditorial.module.css";
+import { LegalPage, legalStyles as styles } from "@/components/resources/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <ResourceFrame>
+    <LegalPage>
       <article className={styles.legal}>
         <span className={styles.legalMeta}>FINNOR / Privacy overview</span>
         <h1>Privacy</h1>
@@ -24,6 +23,6 @@ export default function PrivacyPage() {
           <section><h2>Questions and requests</h2><p>For privacy questions or requests related to information you provided, contact <a href="mailto:param@finnorai.com">param@finnorai.com</a>.</p></section>
         </div>
       </article>
-    </ResourceFrame>
+    </LegalPage>
   );
 }

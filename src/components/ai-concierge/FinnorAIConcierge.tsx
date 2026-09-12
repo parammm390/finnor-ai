@@ -16,7 +16,7 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 type ChatRole = "assistant" | "user";
-type ConciergePlan = "First certified chain" | "Company deployment" | "Multi-location deployment" | "Not enough detail";
+type ConciergePlan = "Certified PE chain" | "Firm deployment" | "Multi-fund deployment" | "Not enough detail";
 
 type CollectedFields = {
   name: string;
@@ -25,7 +25,7 @@ type CollectedFields = {
   role: string;
   email: string;
   pain: string;
-  locations: string;
+  operatingScope: string;
   currentSetup: string;
   desiredSystem: string;
   suggestedPlan: ConciergePlan;
@@ -74,7 +74,7 @@ const initialMessages: ChatMessage[] = [
     id: "assistant-initial",
     role: "assistant",
     content:
-      "FINNOR is a customized AI operating and execution system for water treatment companies. It is configured around the company’s workflows, systems, roles and authority; JARVIS is the command and work surface. I can explain the system, show what gets configured or help scope an operating review.",
+      "FINNOR is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers; JARVIS is the owner operating surface. I can explain the system or help scope an operating review.",
   },
 ];
 
@@ -85,7 +85,7 @@ const emptyCollectedFields: CollectedFields = {
   role: "",
   email: "",
   pain: "",
-  locations: "",
+  operatingScope: "",
   currentSetup: "",
   desiredSystem: "",
   suggestedPlan: "Not enough detail",
@@ -93,7 +93,7 @@ const emptyCollectedFields: CollectedFields = {
 
 const fitQuestionOrder = [
   "pain",
-  "locations",
+  "operatingScope",
   "currentSetup",
   "desiredSystem",
 ] as const;
@@ -253,7 +253,7 @@ export function FinnorAIConcierge() {
       await waitForThinkingDelay();
       addAssistantMessage({
         content:
-          "FINNOR is the operating and execution layer configured across the parts of a water treatment company that need to work together. JARVIS is where the team understands, directs, approves and inspects that work.",
+          "FINNOR connects the PE decision record to the execution record without creating a second source of truth. JARVIS is where owners inspect the Company Brain, direct bounded Work, and review evidence, receipts, proof, and governed agents.",
       });
       setActiveField(null);
       setIsFitFlow(false);
@@ -265,7 +265,7 @@ export function FinnorAIConcierge() {
       await waitForThinkingDelay();
       addAssistantMessage({
         content:
-          "A deployment can configure workflows, sources, systems, locations, roles, integrations, authority, approvals, AI policy, text or voice channels, agent scope, JARVIS workspaces, recovery, production activation and ongoing support. The first workflow is the first certified chain inside that broader company scope.",
+          "A deployment can configure PE truth and sources, underwriting and IC lineage, integrations, authority, JARVIS workspaces, Work and execution paths, evidence, receipts, proof, recovery, tenant isolation, production activation, and governed agent scope.",
       });
       setActiveField(null);
       setIsFitFlow(false);
@@ -512,12 +512,12 @@ function waitForThinkingDelay() {
 }
 
 const fitQuestions: Record<FitFieldKey, string> = {
-  pain: "Which cross-company outcome is hardest to execute today: customer follow-through, work, schedule, inventory, quotes, communication, money, research or agent coordination?",
-  locations: "How many locations do you operate?",
+  pain: "Which PE workflow is hardest to carry from evidence to decision and verified execution: diligence, underwriting, IC governance, closing, or portfolio work?",
+  operatingScope: "How many funds, deal teams, or portfolio-operations teams share this process?",
   currentSetup:
-    "Which systems and teams currently own that work?",
+    "Which source systems and teams currently own that truth and work?",
   desiredSystem:
-    "Should the first scope be text-only, voice-enabled, or decided during the operating review?",
+    "Should the first scope center on Company Brain inspection, governed Work, or both?",
 };
 
 function collectFieldsFromUserText(
@@ -539,8 +539,8 @@ function collectFieldsFromUserText(
 
   if (activeField && activeField !== "suggestedPlan" && cleaned) {
     if (activeField === "pain") next.pain = normalizePain(cleaned);
-    else if (activeField === "locations")
-      next.locations = normalizeLocations(cleaned);
+    else if (activeField === "operatingScope")
+      next.operatingScope = normalizeOperatingScope(cleaned);
     else if (activeField === "currentSetup")
       next.currentSetup = normalizeCurrentSetup(cleaned);
     else if (activeField === "desiredSystem")
@@ -558,9 +558,9 @@ function collectFieldsFromUserText(
     if (pain) next.pain = pain;
   }
 
-  if (!next.locations) {
-    const locations = inferLocations(lower);
-    if (locations) next.locations = locations;
+  if (!next.operatingScope) {
+    const operatingScope = inferOperatingScope(lower);
+    if (operatingScope) next.operatingScope = operatingScope;
   }
 
   if (!next.currentSetup) {
@@ -598,28 +598,26 @@ function inferAskedField(
       ],
     ],
     [
-      "locations",
-      ["how many locations", "number of locations", "locations do you operate"],
+      "operatingScope",
+      ["how many funds", "how many deal teams", "how many investment teams", "portfolio-operations teams"],
     ],
     [
       "currentSetup",
       [
-        "calls handled today",
-        "handled today",
-        "answering service",
-        "voicemail",
-        "internal dispatch",
+        "source systems",
+        "deal system",
+        "data room",
+        "underwriting model",
+        "investment committee",
       ],
     ],
     [
       "desiredSystem",
       [
-        "calls only",
-        "call coverage",
-        "voice only",
-        "voice + web",
-        "voice and web",
-        "web leads",
+        "company brain",
+        "governed work",
+        "decision lineage",
+        "execution proof",
       ],
     ],
     ["company", ["company name", "company name", "organization name"]],
@@ -647,18 +645,18 @@ function applySuggestedPlan(fields: CollectedFields): CollectedFields {
 function recommendPlan(fields: CollectedFields): ConciergePlan {
   const signal = [
     fields.pain,
-    fields.locations,
+    fields.operatingScope,
     fields.currentSetup,
     fields.desiredSystem,
   ]
     .join(" ")
     .toLowerCase();
 
-  const locationCount = Number(fields.locations.match(/\d+/)?.[0] || 0);
+  const scopeCount = Number(fields.operatingScope.match(/\d+/)?.[0] || 0);
 
-  if (locationCount > 1 || /\b(multi-location|multiple locations|business units|branches)\b/.test(signal)) return "Multi-location deployment";
-  if (/\b(integration|integrations|crm|accounting|inventory|workspace|workspaces|agents?|authority|approvals?|voice|multiple workflows|company-wide)\b/.test(signal)) return "Company deployment";
-  if (fields.pain && fields.currentSetup) return "First certified chain";
+  if (scopeCount > 1 || /\b(multiple funds|multi-fund|multiple deal teams|portfolio-wide)\b/.test(signal)) return "Multi-fund deployment";
+  if (/\b(integration|integrations|deal system|data room|underwriting|workspace|workspaces|agents?|authority|approvals?|multiple workflows|firm-wide)\b/.test(signal)) return "Firm deployment";
+  if (fields.pain && fields.currentSetup) return "Certified PE chain";
 
   return fields.suggestedPlan || "Not enough detail";
 }
@@ -667,12 +665,12 @@ function buildFitRecommendation(fields: CollectedFields) {
   const plan = fields.suggestedPlan;
   const summary = buildLeadSummary(fields);
   const planLine =
-    plan === "Multi-location deployment"
-      ? "This needs a multi-location deployment review so workflows, systems, roles and authority can be separated where the operating model differs."
-      : plan === "Company deployment"
-        ? "This needs a company deployment scope across the operating surfaces, integrations, roles, channels and workspaces involved."
-        : plan === "First certified chain"
-          ? "This is a strong candidate for the first certified operating chain inside a broader company deployment."
+    plan === "Multi-fund deployment"
+      ? "This needs a multi-fund deployment review so truth, workflows, teams, and authority remain explicit at each governance boundary."
+      : plan === "Firm deployment"
+        ? "This needs a firm deployment scope across the PE objects, source systems, decision forums, authority routes, and workspaces involved."
+        : plan === "Certified PE chain"
+          ? "This is a strong candidate for one certified PE chain from source truth through decision and verified execution."
           : "I need one more operational detail before I would call the plan.";
 
   return {
@@ -685,7 +683,7 @@ function buildFitRecommendation(fields: CollectedFields) {
 function buildBookReply() {
   return {
     content:
-      "Best next step is an operating review. Bring the company workflow that keeps crossing systems and teams; we will map the broader deployment and identify the first chain to certify.",
+      "Best next step is an operating review. Bring the PE workflow that crosses sources, decision makers, and execution teams; we will map the truth and authority boundary and identify the first chain to certify.",
     cta: workflowReviewCta(),
   };
 }
@@ -724,15 +722,15 @@ function normalizePain(value: string) {
   return cleanFieldValue(value);
 }
 
-function normalizeLocations(value: string) {
+function normalizeOperatingScope(value: string) {
   const lower = value.toLowerCase();
-  if (/\bone\b/.test(lower)) return "1 location";
-  if (/\btwo\b/.test(lower)) return "2 locations";
-  if (/\bthree\b/.test(lower)) return "3 locations";
-  if (/\bfour\b/.test(lower)) return "4 locations";
+  if (/\bone\b/.test(lower)) return "1 team";
+  if (/\btwo\b/.test(lower)) return "2 teams";
+  if (/\bthree\b/.test(lower)) return "3 teams";
+  if (/\bfour\b/.test(lower)) return "4 teams";
   const number = value.match(/\d+/)?.[0];
   return number
-    ? `${number} ${number === "1" ? "location" : "locations"}`
+    ? `${number} ${number === "1" ? "team" : "teams"}`
     : cleanFieldValue(value);
 }
 
@@ -742,64 +740,65 @@ function normalizeCurrentSetup(value: string) {
 
 function normalizeDesiredSystem(value: string) {
   const lower = value.toLowerCase();
-  if (/\bvoice\s*(\+|and)\s*web\b/.test(lower) || lower.includes("web intake"))
-    return "Voice + web intake";
-  if (lower.includes("voice only") || lower.includes("voice-only"))
-    return "Voice only";
+  if (lower.includes("company brain") && lower.includes("work")) return "Company Brain + governed Work";
+  if (lower.includes("company brain")) return "Company Brain inspection";
+  if (lower.includes("work") || lower.includes("execution")) return "Governed Work and execution proof";
   return cleanFieldValue(value);
 }
 
 function inferPain(lower: string) {
   const pains = [
-    ["unworked leads", "unworked leads"],
-    ["inbound calls", "inbound calls"],
-    ["after hours", "inbound calls"],
-    ["overflow", "overflow calls"],
-    ["website leads", "website leads"],
-    ["web leads", "website leads"],
-    ["follow-up", "follow-up"],
-    ["follow up", "follow-up"],
-    ["reporting", "reporting"],
+    ["diligence", "diligence evidence and work"],
+    ["underwriting", "underwriting lineage"],
+    ["investment committee", "IC governance"],
+    [" ic ", "IC governance"],
+    ["closing", "closing readiness"],
+    ["dependency", "critical dependencies"],
+    ["portfolio", "portfolio execution"],
+    ["evidence", "evidence lineage"],
+    ["reporting", "portfolio reporting"],
   ];
 
   return pains.find(([needle]) => lower.includes(needle))?.[1] || "";
 }
 
-function inferLocations(lower: string) {
-  if (/\bone location\b/.test(lower)) return "1 location";
-  const match = lower.match(/\b(\d+)\s*(locations?|companies|facilities?)\b/);
+function inferOperatingScope(lower: string) {
+  if (/\bone (?:fund|deal team|investment team|operating team)\b/.test(lower)) return "1 team";
+  const match = lower.match(/\b(\d+)\s*(funds?|deal teams?|investment teams?|operating teams?|portfolio companies)\b/);
   if (!match) return "";
-  return `${match[1]} ${match[1] === "1" ? "location" : "locations"}`;
+  return `${match[1]} ${match[1] === "1" ? "team" : "teams"}`;
 }
 
 function inferCurrentSetup(lower: string) {
-  if (lower.includes("answering service")) return "Answering service";
-  if (lower.includes("voicemail")) return "Voicemail";
-  if (lower.includes("internal dispatch")) return "Internal human team";
-  if (lower.includes("mixed")) return "Mixed setup";
+  if (lower.includes("data room")) return "Virtual data room";
+  if (lower.includes("dealcloud")) return "DealCloud";
+  if (lower.includes("affinity")) return "Affinity";
+  if (lower.includes("sharepoint")) return "SharePoint";
+  if (lower.includes("excel") || lower.includes("spreadsheet")) return "Spreadsheet-led process";
+  if (lower.includes("email")) return "Email-led process";
   return "";
 }
 
 function inferDesiredSystem(lower: string) {
-  if (/\bvoice\s*(\+|and)\s*web\b/.test(lower) || lower.includes("web intake"))
-    return "Voice + web intake";
-  if (lower.includes("voice only") || lower.includes("voice-only"))
-    return "Voice only";
+  if (lower.includes("company brain") && lower.includes("work")) return "Company Brain + governed Work";
+  if (lower.includes("company brain")) return "Company Brain inspection";
+  if (lower.includes("work") || lower.includes("execution")) return "Governed Work and execution proof";
   return "";
 }
 
 function inferRole(value: string) {
   const lower = value.toLowerCase();
   const roles = [
-    "founder",
-    "owner",
-    "ceo",
-    "coo",
-    "operator",
-    "dispatch director",
-    "director of dispatch",
-    "marketing director",
-    "growth lead",
+    "managing partner",
+    "operating partner",
+    "investment partner",
+    "partner",
+    "principal",
+    "vice president",
+    "associate",
+    "investment professional",
+    "portfolio operations",
+    "chief investment officer",
   ];
 
   return roles.find((role) => lower.includes(role)) || "";

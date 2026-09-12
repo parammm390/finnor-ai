@@ -55,7 +55,7 @@ export const tenantSettings = pgTable("tenant_settings", {
   isDealerZero: boolean("is_dealer_zero").notNull().default(false),
   simulatorEnabled: boolean("simulator_enabled").notNull().default(false),
   trainingMode: boolean("training_mode").notNull().default(false),
-  // Tenant Experience Manifest V2. This deliberately stays on the existing
+  // Tenant Experience Manifest V3. This deliberately stays on the existing
   // tenant settings aggregate rather than creating a second configuration source
   // or mixing company vocabulary into per-user preferences. Runtime authority,
   // integrations, and credentials remain in their existing governed contracts.

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { MissedCallCostCalculator } from "@/components/resources/MissedCallCostCalculator";
+import { PrivateEquityResource } from "@/components/resources/PrivateEquityResource";
 
 export const metadata: Metadata = {
   title: "Operational Drag Estimator",
-  description: "Estimate the labor and throughput tied up when water treatment work stalls between systems and requires manual reconciliation.",
+  description: "Measure observed evidence reconciliation, decision handoff, and execution verification effort without inventing an ROI claim.",
   alternates: { canonical: "https://finnorai.com/resources/operational-drag-estimator" },
   openGraph: {
     title: "Operational Drag Estimator | FINNOR",
@@ -14,5 +14,5 @@ export const metadata: Metadata = {
 };
 
 export default function OperationalDragEstimatorPage() {
-  return <MissedCallCostCalculator />;
+  return <PrivateEquityResource kind="drag" />;
 }

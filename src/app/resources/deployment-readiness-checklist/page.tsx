@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { PilotSetupChecklist } from "@/components/resources/PilotSetupChecklist";
+import { PrivateEquityResource } from "@/components/resources/PrivateEquityResource";
 
 export const metadata: Metadata = {
   title: "FINNOR Deployment Readiness Checklist",
-  description: "Map and certify a FINNOR company deployment across workflows, sources, systems, authority, workspaces, recovery, activation and support.",
+  description: "Map and certify FINNOR across canonical PE truth, tenant isolation, decision lineage, Work, Authority, runtime truth, recovery, evidence, and activation.",
   alternates: { canonical: "https://finnorai.com/resources/deployment-readiness-checklist" },
   openGraph: {
     title: "FINNOR Deployment Readiness Checklist",
@@ -14,5 +14,5 @@ export const metadata: Metadata = {
 };
 
 export default function DeploymentReadinessChecklistPage() {
-  return <PilotSetupChecklist />;
+  return <PrivateEquityResource kind="readiness" />;
 }

@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
-import WorkSurface from "@/components/jarvis/panels/WorkSurface"
-import { BusinessWorldScene } from "@/components/jarvis/BusinessWorldScene"
+import WorkSurface from "@/components/jarvis/pe/WorkSurface"
 
 export const metadata: Metadata = {
   title: "JARVIS — Work",
-  description: "The Work Causal Spine: from instruction and approval to execution, evidence, and next action.",
+  description: "Inspect root-linked Work, plans, execution, effects, receipts, proof, and recovery without leaving the Private Equity operating context.",
 }
 
 export default function JarvisWorkPage() {
-  return <><BusinessWorldScene scene="work" /><WorkSurface /></>
+  return <WorkSurface />
 }

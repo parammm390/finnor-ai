@@ -8,8 +8,8 @@ const prepareOnly = process.argv.includes("--prepare-only")
 const deployOnly = process.argv.includes("--deploy-only")
 const outputIndex = process.argv.indexOf("--output-file")
 const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : undefined
-if (!["frontend", "api"].includes(appName)) {
-  console.error("Usage: node scripts/release/deploy-production.mjs <frontend|api> [--prepare-only|--deploy-only] [--output-file path]")
+if (!["frontend", "api", "supplierCanaryApp", "supplierCanaryAuth"].includes(appName)) {
+  console.error("Usage: node scripts/release/deploy-production.mjs <frontend|api|supplierCanaryApp|supplierCanaryAuth> [--prepare-only|--deploy-only] [--output-file path]")
   process.exit(2)
 }
 if (prepareOnly && deployOnly) throw new Error("--prepare-only and --deploy-only are mutually exclusive")

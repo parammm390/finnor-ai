@@ -397,6 +397,7 @@ export interface WorkforceAssignmentSummary {
   state: "queued" | "claimed" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "reassigned";
   attempt: number;
   assignmentReason: string;
+  previousAssignmentId: string | null;
   reassignmentReason: string | null;
   domainActionId: string | null;
   startedAt: string | null;

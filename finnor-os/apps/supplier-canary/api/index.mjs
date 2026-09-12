@@ -1,5 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
+const CURRENT_MIGRATION_HEAD = "0130_phase8_cutover_runtime_head_compatibility.sql";
+const CUTOVER_PROTOCOL = 5;
+
 const DILIGENCE_RECORD = Object.freeze({
   reference: "DD-48",
   status: "Third-party diligence packet received",
@@ -63,28 +67,53 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+function releaseMetadata() {
+  const commitSha = String(process.env.FINNOR_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown");
+  const shortSha = FULL_COMMIT_SHA.test(commitSha) ? commitSha.slice(0, 12) : "unknown";
+  const buildId = String(process.env.FINNOR_BUILD_ID ?? `finnor-${shortSha}`);
+  const version = String(process.env.FINNOR_VERSION ?? `0.1.0+${shortSha}`);
+  const environment = String(process.env.FINNOR_ENVIRONMENT ?? process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown");
+  const source = String(process.env.FINNOR_RELEASE_SOURCE ?? "unknown");
+  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID ?? process.env.FINNOR_DEPLOYMENT_ID ?? null;
+  return {
+    commitSha,
+    buildId,
+    version,
+    environment,
+    source,
+    deploymentId,
+    migrationHead: CURRENT_MIGRATION_HEAD,
+    cutoverProtocol: CUTOVER_PROTOCOL,
+    traceable: FULL_COMMIT_SHA.test(commitSha)
+      && buildId !== "unknown"
+      && version !== "unknown"
+      && environment !== "unknown"
+      && source !== "unknown"
+      && typeof deploymentId === "string"
+      && deploymentId.length > 0,
+  };
+}
+
 export default function handler(req, res) {
   const role = process.env.PORTAL_ROLE;
   const signingKey = process.env.CANARY_SIGNING_KEY;
   const appOrigin = process.env.APP_ORIGIN;
   const authOrigin = process.env.AUTH_ORIGIN;
-  if (!role || !signingKey || !appOrigin || !authOrigin) return send(res, 503, page("Unavailable", "<h1>Canary configuration unavailable</h1>"));
-  const url = new URL(req.url, role === "auth" ? authOrigin : appOrigin);
+  const configured = (role === "app" || role === "auth") && Boolean(signingKey && appOrigin && authOrigin);
+  const url = new URL(req.url, (role === "auth" ? authOrigin : appOrigin) || "https://canary.invalid");
 
   if (url.pathname === "/health") {
-    const commitSha = String(process.env.FINNOR_COMMIT_SHA ?? "unknown");
-    return sendJson(res, /^[0-9a-f]{40}$/i.test(commitSha) ? 200 : 503, {
-      ok: /^[0-9a-f]{40}$/i.test(commitSha),
+    const release = releaseMetadata();
+    const ok = configured && release.traceable;
+    return sendJson(res, ok ? 200 : 503, {
+      ok,
       service: "supplier-canary",
-      commitSha,
-      buildId: process.env.FINNOR_BUILD_ID ?? "unknown",
-      version: process.env.FINNOR_VERSION ?? "unknown",
-      source: process.env.FINNOR_RELEASE_SOURCE ?? "unknown",
-      environment: process.env.FINNOR_ENVIRONMENT ?? process.env.NODE_ENV ?? "unknown",
-      cutoverProtocol: 5,
-      migrationHead: "0109_atomic_water_runtime_retirement.sql",
+      role: role ?? null,
+      ...release,
     });
   }
+
+  if (!configured) return send(res, 503, page("Unavailable", "<h1>Canary configuration unavailable</h1>"));
 
   if (role === "auth") {
     if (url.pathname !== "/login") return send(res, 404, page("Not found", "<h1>Not found</h1>"));

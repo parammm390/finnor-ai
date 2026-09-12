@@ -93,7 +93,7 @@ export default function FinnorNavigation({ tone = "light" }: { tone?: "light" | 
         <Link className={styles.wordmark} href="/" aria-label="FINNOR home">
           <span className={styles.wordmarkMark}><FinnorMark className={styles.markSvg} /></span>
           <span className={styles.wordmarkText}>FINNOR</span>
-          <span className={styles.wordmarkMeta}>OPERATING + EXECUTION SYSTEM</span>
+          <span className={styles.wordmarkMeta}>PRIVATE EQUITY · DECISION + EXECUTION</span>
         </Link>
 
         <nav className={styles.desktopNav} aria-label="Primary navigation">
@@ -166,7 +166,7 @@ export default function FinnorNavigation({ tone = "light" }: { tone?: "light" | 
               <div className={styles.drawerInner}>
                 <div className={styles.drawerContext}>
                   <span className={styles.drawerContextRule} aria-hidden="true" />
-                  <span>FINNOR / CUSTOMIZED COMPANY DEPLOYMENT</span>
+                  <span>FINNOR / PRIVATE EQUITY INFRASTRUCTURE</span>
                 </div>
 
                 <ul className={styles.drawerList}>

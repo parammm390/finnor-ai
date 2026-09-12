@@ -10,6 +10,7 @@ import { pgConnectionConfig } from "@finnor/db";
 import { migrate } from "@finnor/db/migrate";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import pg from "pg";
+import { repairWorkspaceV3Rows } from "./workspace-v3-repair";
 
 async function main(): Promise<void> {
   const envPath = process.argv[2];
@@ -89,6 +90,7 @@ async function main(): Promise<void> {
   }
 
   const applied = await migrate(databaseUrl);
+  const workspaceV3 = await repairWorkspaceV3Rows(databaseUrl);
   const pool = new pg.Pool(pgConnectionConfig(databaseUrl));
   try {
     await new PostgresSaver(pool, undefined, { schema: "finnor_langgraph" }).setup();
@@ -96,7 +98,7 @@ async function main(): Promise<void> {
     await pool.end();
   }
 
-  console.log(JSON.stringify({ ok: true, applied, langGraphSchemaReady: true }));
+  console.log(JSON.stringify({ ok: true, applied, workspaceV3, langGraphSchemaReady: true }));
 }
 
 void main().catch((error) => {

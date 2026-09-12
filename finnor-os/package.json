@@ -48,7 +48,8 @@
     "release:pe-p5-actions-ic": "tsx scripts/release/run-pe-p5-actions-ic-certification.ts",
     "release:pe-p6": "tsx scripts/release/run-pe-p6-planning-attention-certification.ts",
     "release:pe-p7-workforce-learning": "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts",
-    "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts"
+    "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts",
+    "release:p8-runtime-contract": "tsx scripts/release/verify-p8-runtime-contract.ts"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1086.0",

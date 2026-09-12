@@ -14,3 +14,7 @@ export * from "./ic-types";
 export * from "./ic-aggregation";
 export * from "./ic-repository";
 export * from "./ic-telemetry";
+export * from "./company-brain-types";
+export * from "./company-brain-relationships";
+export * from "./company-brain";
+export * from "./semantic-activity";

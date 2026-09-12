@@ -22,10 +22,6 @@ function read(name: string) {
   return trimmed
 }
 
-export function isDemoMockMode() {
-  return read("NEXT_PUBLIC_DEMO_MOCK_MODE").toLowerCase() === "true"
-}
-
 export const serverEnv = {
   get groqApiKey() {
     return read("GROQ_API_KEY")
@@ -45,31 +41,10 @@ export const serverEnv = {
   get supabaseServiceRoleKey() {
     return read("SUPABASE_SERVICE_ROLE_KEY")
   },
-  get leadNotifyWebhookUrl() {
-    return read("LEAD_NOTIFY_WEBHOOK_URL")
-  },
-  get vapiPrivateKey() {
-    return read("VAPI_PRIVATE_KEY")
-  },
-  get vapiWebhookSecret() {
-    return read("VAPI_WEBHOOK_SECRET")
-  },
   get gmailUser() {
     return read("GMAIL_USER")
   },
   get gmailAppPassword() {
     return read("GMAIL_APP_PASSWORD")
-  },
-}
-
-export const publicEnv = {
-  get vapiPublicKey() {
-    return read("NEXT_PUBLIC_VAPI_PUBLIC_KEY")
-  },
-  get vapiAssistantId() {
-    return read("NEXT_PUBLIC_VAPI_ASSISTANT_ID")
-  },
-  get demoMockMode() {
-    return isDemoMockMode()
   },
 }

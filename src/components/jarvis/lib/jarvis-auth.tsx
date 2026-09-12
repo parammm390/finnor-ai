@@ -11,13 +11,10 @@ import type { Session } from "@supabase/supabase-js"
 import { getSupabaseBrowser } from "@/lib/jarvis/supabase-browser"
 import { jarvisGet } from "./api"
 
-// Phase 7 (§7.4, role-aware views): the backend already resolves a real role per
-// signed-in user (owner/dispatcher/technician) via requireContext, and enforces it
-// server-side on every RBAC-gated route regardless of what the frontend shows or
-// hides. GET /api/me exposes that SAME role to the browser purely as defense-in-
-// depth — hiding owner-only surfaces (DLQ, run controls) for a dispatcher is a
-// courtesy, not a security boundary; the server 403s either way.
-export type JarvisRole = "owner" | "dispatcher" | "technician"
+// Workspace V3 exposes one active product role. Backend Authority remains the
+// mutation boundary; this browser union only prevents a retired role-specific UI
+// from being selected as a presentation fallback.
+export type JarvisRole = "owner"
 
 // Mirrors the old getJarvisKey() shape: a synchronous getter usable outside React
 // (api.ts isn't a component) that always reflects the latest session from the one
@@ -53,7 +50,7 @@ async function withTimeout<T>(promise: Promise<T>): Promise<T> {
 }
 
 function isJarvisRole(value: unknown): value is JarvisRole {
-  return value === "owner" || value === "dispatcher" || value === "technician"
+  return value === "owner"
 }
 
 interface JarvisAuthState {

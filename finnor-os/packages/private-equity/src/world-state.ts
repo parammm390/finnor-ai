@@ -70,9 +70,12 @@ interface ProviderEvidenceRow {
   mapping_status: string | null;
   conflict_state: string | null;
   provider_deleted: boolean;
+  canonical_entity_type: string | null;
+  canonical_entity_id: string | null;
 }
 
 interface ProviderCoverageRow {
+  coverage_history_id: string | null;
   source_scope_id: string;
   integration_id: string;
   source_kind: string;
@@ -321,7 +324,8 @@ async function loadProviderWorldContext(
     `SELECT id::text observation_id,integration_id::text,source_scope_id::text,provider,resource_kind,
             external_object_type,external_id,source_version,source_sequence::text,observed_at,retrieved_at,
             received_at,ingestion_mode,trace_id,evidence_source_id::text,evidence_version_id::text,
-            materialization_status,mapping_status,conflict_state,provider_deleted
+            materialization_status,mapping_status,conflict_state,provider_deleted,
+            canonical_entity_type,canonical_entity_id::text
        FROM finnor_os.external_ref_observations
       WHERE tenant_id=$1 AND evidence_version_id=ANY($2::uuid[])
         AND retrieved_at<=$3 AND received_at<=$3
@@ -347,6 +351,8 @@ async function loadProviderWorldContext(
     materializationStatus: row.materialization_status,
     mappingStatusAtObservation: row.mapping_status,
     conflictState: row.conflict_state,
+    canonicalEntityType: row.canonical_entity_type,
+    canonicalEntityId: row.canonical_entity_id,
     deleted: row.provider_deleted,
     traceId: row.trace_id,
     contentTreatment: "untrusted_evidence",
@@ -369,7 +375,7 @@ async function loadProviderWorldContext(
           AND (effective_to IS NULL OR effective_to>$2)
         ORDER BY source_scope_id,effective_from DESC,recorded_at DESC,coverage_revision DESC
      )
-     SELECT s.id::text source_scope_id,s.integration_id::text,s.source_kind,s.scope_key,
+     SELECT c.id::text coverage_history_id,s.id::text source_scope_id,s.integration_id::text,s.source_kind,s.scope_key,
             (s.updated_at<=$2) current_descriptor_safe,
             s.provider_scope_type current_provider_scope_type,s.provider_resource_id current_provider_resource_id,
             s.provider_parent_id current_provider_parent_id,s.enabled current_enabled,
@@ -459,6 +465,7 @@ async function loadProviderWorldContext(
     const freshness = providerFreshness(row.source_scope_id, row.source_kind, descriptor, clock);
     if (freshness.warning) providerFreshnessWarnings.push(freshness.warning);
     const item = {
+      coverageHistoryId: row.coverage_history_id,
       sourceScopeId: row.source_scope_id,
       integrationId: row.integration_id,
       provider: "microsoft_graph",

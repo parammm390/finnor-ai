@@ -1,103 +1,68 @@
-# Finnor AI Operating System
+# FINNOR Operating System
 
-A multi-tenant platform where water treatment dealers configure business rules **as data**, and an AI core takes voice/text instructions, plans actions, **stops for human approval on anything consequential**, executes through your existing tools (Vapi, GoHighLevel, Supabase), and logs every step forever.
+`finnor-os` is the canonical multi-tenant execution platform behind FINNOR’s Private Equity product. P1–P7 own the persisted PE, epistemic, underwriting, IC, Work, planning, execution, evidence, receipt, proof, attention, and workforce contracts. Phase 8 adds projections and product surfaces over those contracts; it does not redesign or duplicate them.
 
-This folder is fully self-contained. It does not touch the marketing site at the repo root.
+## Current architecture
 
-## The one idea that matters
-
-Nothing Finnor plans actually happens until a human clicks **Approve** in the Confirmation Queue. That gate is enforced in the executor and in the database — not in the UI.
-
-## What's inside
-
-| Piece | Where | What it does |
+| Layer | Ownership | Responsibility |
 |---|---|---|
-| API | `apps/api` | Auth, tenant resolution, actions/confirm/reject/audit/policies routes, Vapi + GHL webhooks |
-| Console | `apps/console` | Confirmation Queue, Audit Log, Policy Editor |
-| Orchestrator | `packages/orchestration` (+ `apps/orchestrator` service host) | Planner → confirmation gate → Executor → Reflection |
-| Worker | `apps/worker` | Postgres-backed job queue: transcripts, reminders, reconciliation |
-| Domain plugins | `packages/domain-plugins/*` | 17 engines behind one interface, 38 action types total — real business logic throughout; a handful of integration-bound actions (ads, QuickBooks, GHL) demo-fall-back until a dealer's real provider credentials land |
-| Memory | `packages/memory` | Short-term (Redis), long-term (households), semantic (pgvector), episodic (append-only audit) |
-| Database | `packages/db` | Schema, migrations with row-level security, seed data |
+| PE truth | `packages/private-equity` | Strategy, Opportunity, Deal, InvestmentCase, diligence, closing, underwriting, and IC contracts |
+| Epistemic and evidence truth | `packages/db`, `packages/read-models` | Sources, versions, observations, freshness, conflicts, provenance, and evidence lineage |
+| Durable Work | `packages/db`, orchestration/runtime packages | Goals, plan revisions, plan nodes, actions, effects, receipts, proof, attention, recovery, and reconciliation |
+| Governed workforce | P7 workforce tables and read models | Agent profiles, immutable revisions, grants, assignments, verified metrics, proposals, reviews, and promoted learning |
+| Company Brain | `packages/private-equity` | Tenant-scoped node, fact, relationship, history, provenance, evidence, decision-lineage, action-candidate, search, and traversal projections |
+| Semantic Activity | `packages/private-equity` | Deterministic business-event projection grouped by PE root and persisted causal thread |
+| API | `apps/api` | Authentication, tenant context, read composition, Policy/Authority boundary, and exact product endpoints |
+| Worker + orchestrator | `apps/worker`, `apps/orchestrator` | Persistent execution, recovery, reconciliation, and runtime truth |
 
-## Setup (first time, ~10 minutes)
+## Non-negotiable boundaries
 
-You need Node 20+ and Docker Desktop (for the local database). Then:
+- The authenticated context supplies `tenantId`; request bodies do not.
+- Company Brain lookup, search, traversal, provenance, history, evidence lineage, decision lineage, and inspection fail closed across tenants.
+- Facts and relationships are backed by canonical rows. Chronology is never promoted to causality.
+- `availableActions` are candidates only. Execution still requires the existing exact Policy and Authority evaluation.
+- A capability grant permits an agent attempt; it does not bypass Work selection, Policy, Authority, BusinessEffect, DecisionReceipt, CompletionProof, or human review.
+- Primary semantic Activity contains meaningful P1–P7 changes. Raw activity remains a technical diagnostic.
+- Production Private Equity authority cannot report ready until the legacy authority protocol is durably retired and runtime release truth is consistent.
+
+## Setup
+
+Requirements: Node.js 20+ and the repository’s configured PostgreSQL test environment.
 
 ```bash
 cd finnor-os
-
-# 1. Install dependencies
-npm install
-
-# 2. Start the local database + Redis
-docker compose up -d
-
-# 3. Copy the environment file and fill in what you have
+npm ci
 cp .env.example .env
-# For local dev you only need the defaults plus AUTH_DEV_BYPASS=1.
-# GROQ_API_KEY is needed for the AI planner (free at console.groq.com).
-
-# 4. Create the tables and load the test dealer
 npm run db:migrate
 npm run db:seed
 ```
 
-## Running it
-
-Three processes (three terminal tabs, or use a process manager):
+Run the local services in separate terminals:
 
 ```bash
-npm run dev:api       # API on http://localhost:3100
-npm run dev:console   # Console on http://localhost:3101
-npm run dev:worker    # Background worker (reminders, Vapi transcripts)
+npm run dev:api
+npm run dev:orchestrator
+npm run dev:worker
 ```
 
-Open http://localhost:3101/confirm — that's the Confirmation Queue.
-
-To create work for it, send an instruction (this is what a Vapi transcript does automatically):
+## Verification
 
 ```bash
-curl -X POST http://localhost:3100/api/actions \
-  -H 'content-type: application/json' \
-  -H 'x-tenant-id: 00000000-0000-4000-8000-000000000001' \
-  -d '{"instruction": "Schedule a water test for the Hendersons at 412 Maple Ridge Rd, phone +13195550142, next Tuesday morning"}'
+npm run typecheck
+npm run test:unit
+npm run test:integration
 ```
 
-(The `x-tenant-id` header works because `.env` has `AUTH_DEV_BYPASS=1`. In production, requests carry a Supabase login token instead and that header is ignored.)
+The Phase 8 focused suites cover Company Brain contracts, canonical relationships, temporal and epistemic behavior, exact persisted references, evidence and decision lineage, semantic Activity taxonomy and grouping, inspection targets, and cross-tenant denial.
 
-## Tests
+## Production release
 
-```bash
-npm test                    # everything (integration tests need docker compose up)
-npm run test:unit           # plugin validate/draft logic, tool framework — no DB needed
-npm run test:integration    # the safety-critical path: gate → approve → execute → audit
-```
+The repository root owns the production contract and guarded release workflow. A valid release must establish the same SHA, protocol, migration head, and authority state across frontend, API, worker, orchestrator, and database.
 
-The integration suite proves, against a real database: the confirmation gate blocks all tool calls before approval, rejection is permanent, failures retry once then escalate to a human, tenant A can never see tenant B's data, and the audit log physically cannot be edited.
+Legacy product retirement uses only the existing privileged boundaries:
 
-## Environment variables
+- `finnor_os.freeze_water_intake(expected_epoch, actor, evidence)`
+- `finnor_os.water_retirement_blockers()`
+- `finnor_os.activate_private_equity_product_authority(expected_epoch, actor, evidence)`
 
-Every variable is documented inline in [.env.example](.env.example). Values marked `PLACEHOLDER_NEEDS_REAL_VALUE` are intentional — they mark real-world input that doesn't exist yet (e.g. a QuickBooks key nobody has asked for).
-
-## Deploying
-
-- **Frontend + API** → the Vercel projects named in [`../infra/deployment/production.contract.json`](../infra/deployment/production.contract.json).
-- **Worker + embedded orchestrator** → the Azure VM and systemd unit named in that same contract. They hold persistent loops and are deployed by the guarded production workflow.
-- **Database** → the production database endpoint and required migration head in the contract. Production migration is allowed only after the full runtime preflight succeeds.
-- **Release rule** → `.github/workflows/production-release.yml` is the only production path; it accepts only the exact `origin/main` SHA and must verify DB/API/frontend/worker/orchestrator parity before PASS.
-- **Webhooks** → point Vapi's server URL at `https://<api-domain>/api/webhooks/vapi` (set `VAPI_WEBHOOK_SECRET` on both sides) and GHL webhooks at `/api/webhooks/ghl`.
-
-## Voice-native confirmation
-
-The Confirmation Queue now has a voice channel — same DB rows, same audit trail, different input:
-
-- **Live call**: give your Vapi assistant two server tools pointed at `/api/webhooks/vapi` — `finnor_instruct(instruction)` and `finnor_confirm(decision)`. The assistant plans the action, reads the draft back in the same call, and applies the spoken yes/no through the identical audit-first path the Approve button uses.
-- **No call active**: when an action gates, a `voice_confirm_request` job places an outbound Vapi call to the tenant's `owner_phone`, reads the draft, and the end-of-call transcript is parsed for the decision. **Unclear speech never approves** — the action just stays pending in the queue.
-- **Failures speak**: when an integration blocks an action, Finnor calls the owner and names exactly what broke ("your GoHighLevel key isn't working — want to give me a working one?"), in addition to the audit entry and the Blocked queue card.
-
-Voice uses the tenant's Vapi credential reference (`apiKey`, `assistantId`, and `phoneNumberId` in the referenced JSON secret), plus that tenant's `owner_phone`. Global Vapi env vars are an explicitly allowlisted legacy migration path only.
-
-## Where business rules live
-
-Nowhere in this codebase. Pricing, cadences, service radius, confirmation wording, who can approve what — all of it is rows in `domain_policies` and `role_permissions`, editable per dealer in the Policy Editor at `/policy`. The nine domain engines are thin plugins over one interface; a dealer's real SOPs populate them as configuration over time.
+Do not replace that protocol with direct updates to product authority or blocker rows. If durable tenant classification or Work terminalization is incomplete, activation remains blocked.

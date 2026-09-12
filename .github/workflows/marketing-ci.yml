@@ -56,6 +56,7 @@ jobs:
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
       - run: npm run lint
+      - run: npm run workspace:check
       - run: npx tsc --noEmit -p tsconfig.json
       # D9.T3 — committed, reproducible WCAG contrast audit (glass fill + RiskBadge
       # materials, both real `data-mood` variants). Replaces the earlier throwaway

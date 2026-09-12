@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { TrustSafetyPage } from "@/components/resources/TrustSafetyPage";
+import { PrivateEquityResource } from "@/components/resources/PrivateEquityResource";
 
 export const metadata: Metadata = {
   title: "Trust & Safety",
   description:
-    "How a FINNOR deployment configures data, roles, AI policy, approval, execution, recovery and evidence for a specific water treatment company.",
+    "How FINNOR preserves source-backed PE context, uncertainty, tenant isolation, authority, governed execution, recovery, evidence, receipts, and proof.",
   alternates: {
     canonical: "https://finnorai.com/trust-safety",
   },
@@ -30,5 +30,5 @@ export const metadata: Metadata = {
 };
 
 export default function TrustSafetyRoute() {
-  return <TrustSafetyPage />;
+  return <PrivateEquityResource kind="trust" />;
 }

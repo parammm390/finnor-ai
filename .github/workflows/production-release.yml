@@ -347,9 +347,32 @@ jobs:
 
       - name: Build commit-locked production artifacts before database mutation
         run: |
+          npm run release:p8-zero-resurrection
           node scripts/release/deploy-production.mjs frontend --prepare-only
           node scripts/release/deploy-production.mjs api --prepare-only
           node scripts/release/verify-release.mjs
+
+      - name: Deploy and verify Private Equity supplier canary app
+        id: supplier_canary_app
+        run: |
+          set -o pipefail
+          node scripts/release/deploy-production.mjs supplierCanaryApp --output-file "$RUNNER_TEMP/supplier-canary-app-release.json" | tee "$RUNNER_TEMP/supplier-canary-app-deploy.log"
+          url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/supplier-canary-app-release.json")"
+          test -n "$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          node scripts/release/verify-supplier-canary-release.mjs supplierCanaryApp "$url" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-supplier-canary-release.mjs supplierCanaryApp https://finnor-supplier-canary-app.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+
+      - name: Deploy and verify Private Equity supplier canary auth
+        id: supplier_canary_auth
+        run: |
+          set -o pipefail
+          node scripts/release/deploy-production.mjs supplierCanaryAuth --output-file "$RUNNER_TEMP/supplier-canary-auth-release.json" | tee "$RUNNER_TEMP/supplier-canary-auth-deploy.log"
+          url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/supplier-canary-auth-release.json")"
+          test -n "$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          node scripts/release/verify-supplier-canary-release.mjs supplierCanaryAuth "$url" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-supplier-canary-release.mjs supplierCanaryAuth https://finnor-supplier-canary-auth.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
 
       - name: Migrate production database
         run: npm run release:migrate:production -- apps/api/.vercel/.env.production.local
@@ -392,3 +415,16 @@ jobs:
 
       - name: Verify cross-runtime release and migration parity
         run: node scripts/release/verify-production-parity.mjs --database-env finnor-os/apps/api/.vercel/.env.production.local
+
+      - name: Execute governed Phase 8 Water retirement protocol
+        run: |
+          node scripts/release/run-p8-production-water-retirement.mjs \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --apply \
+            --authorization-ref "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Verify final PE product authority readiness
+        run: |
+          node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA"
+          node scripts/release/verify-production-readiness.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA"
+          npm --prefix finnor-os run release:p8-runtime-contract -- --readiness-url https://api-psi-brown-95.vercel.app

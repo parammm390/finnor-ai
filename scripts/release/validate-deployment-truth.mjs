@@ -14,14 +14,20 @@ required(contract.schemaVersion === 2 && contract.environment === "production", 
 required(contract.canonicalGit.remote === "origin" && contract.canonicalGit.branch === "main" && contract.canonicalGit.repository === "parammm390/finnor-ai", "canonical Git target must be origin/main")
 required(contract.canonicalGit.requireCleanWorktree === true, "production contract must require a clean worktree")
 required(contract.release.concurrencyGroup === "finnor-production-release", "production concurrency lock changed")
-required(contract.release.requiredMigrationHead === "0129_phase7_governed_workforce_learning.sql", "production migration head is not locked to the certified P7 runtime")
+required(contract.release.requiredMigrationHead === "0130_phase8_cutover_runtime_head_compatibility.sql", "production migration head is not locked to the Phase 8 cutover-compatible runtime")
 required(contract.release.requiredComponents.includes("worker"), "worker must be required for every production release")
+required(contract.release.requiredComponents.includes("supplierCanaryApp") && contract.release.requiredComponents.includes("supplierCanaryAuth"), "both supplier canary roles must be required for the Phase 8 cutover release")
 required(contract.forbiddenActiveProviders.includes("azure"), "Azure must remain forbidden in the active production topology")
 
-for (const name of ["frontend", "api", "worker", "orchestrator", "database"]) required(contract.topology[name], `topology is missing ${name}`)
+for (const name of ["frontend", "api", "worker", "orchestrator", "supplierCanaryApp", "supplierCanaryAuth", "database"]) required(contract.topology[name], `topology is missing ${name}`)
 for (const name of ["frontend", "api"]) {
   const target = contract.topology[name]
   required(target.provider === "vercel" && target.releaseWorkingDirectory && target.installCommand === "npm ci", `${name} must use the canonical Vercel npm-ci contract`)
+}
+for (const [name, role] of [["supplierCanaryApp", "app"], ["supplierCanaryAuth", "auth"]]) {
+  const target = contract.topology[name]
+  required(target.provider === "vercel" && target.releaseWorkingDirectory === "finnor-os/apps/supplier-canary" && target.installCommand === "npm ci", `${name} must use the canonical supplier-canary Vercel contract`)
+  required(target.releasePath === "/health" && target.portalRole === role, `${name} health role contract is invalid`)
 }
 
 const worker = contract.topology.worker
@@ -61,6 +67,8 @@ const activeFiles = [
   "scripts/release/preflight-production.mjs",
   "scripts/release/deploy-aws-worker.mjs",
   "scripts/release/verify-production-parity.mjs",
+  "scripts/release/verify-supplier-canary-release.mjs",
+  "scripts/release/run-p8-production-water-retirement.mjs",
   "scripts/release/deploy-production.mjs",
   "finnor-os/scripts/release/migrate-production.ts",
 ]
@@ -77,7 +85,7 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "phase5-readiness", "release:pe-p7-workforce-learning"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-worker.mjs", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "phase5-readiness", "release:pe-p7-workforce-learning"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
 required(workflow.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "Phase 5 gate must exclude the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")
@@ -89,10 +97,14 @@ const preflightAt = workflow.indexOf("preflight-production.mjs")
 const migrationAt = workflow.indexOf("release:migrate:production")
 const workerAt = workflow.indexOf("deploy-aws-worker.mjs")
 const parityAt = workflow.indexOf("verify-production-parity.mjs")
-required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < migrationAt && migrationAt < workerAt && workerAt < parityAt, "production workflow ordering is not OIDC -> image -> preflight -> migration -> AWS worker -> parity")
+const canaryAppAt = workflow.indexOf("deploy-production.mjs supplierCanaryApp")
+const canaryAuthAt = workflow.indexOf("deploy-production.mjs supplierCanaryAuth")
+const cutoverAt = workflow.indexOf("run-p8-production-water-retirement.mjs")
+const readinessAt = workflow.indexOf("verify-production-readiness.mjs")
+required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < cutoverAt && cutoverAt < readinessAt, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> AWS worker -> parity -> governed Water retirement -> readiness")
 
 if (failures.length) {
   console.error(`Deployment truth validation failed:\n- ${failures.join("\n- ")}`)
   process.exit(1)
 }
-console.log(JSON.stringify({ ok: true, phase: "7", provider: "aws-ecs-fargate", contract: "infra/deployment/production.contract.json" }, null, 2))
+console.log(JSON.stringify({ ok: true, phase: "8", provider: "aws-ecs-fargate", contract: "infra/deployment/production.contract.json" }, null, 2))

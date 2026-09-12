@@ -273,7 +273,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   assert(!P7_MANDATORY_CASES.some((item) => /\b(?:TODO|SKIP(?:PED)?|PLACEHOLDER|NOT.CONFIGURED)\b/i.test(`${item.id} ${item.statement}`)), "P7 mandatory registry contains a disguised non-gate");
   assert(P7_GATE_IDS.every((gate) => P7_MANDATORY_CASES.some((item) => item.gates.includes(gate))), "P7 mandatory registry contains an unused gate");
   assert(packageJson.scripts?.["release:pe-p7-workforce-learning"] === "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts", "release:pe-p7-workforce-learning command is missing or ambiguous");
-  assert(CURRENT_MIGRATION_HEAD === P7_MIGRATION, `declared migration head is ${CURRENT_MIGRATION_HEAD}, expected ${P7_MIGRATION}`);
+  assert(String(CURRENT_MIGRATION_HEAD).localeCompare(P7_MIGRATION) >= 0, `declared migration head predates ${P7_MIGRATION}: ${CURRENT_MIGRATION_HEAD}`);
   assert(Object.keys(workforcePackage.dependencies ?? {}).length === 0 && Object.keys(workforcePackage.devDependencies ?? {}).length === 0, "@finnor/workforce must remain a pure dependency-free package");
 
   for (const contract of ["AgentProfile", "AgentProfileRevision", "AgentCapabilityGrant", "WorkforceAssignment", "AssignmentEligibility", "AssignmentScore", "LearningObservation", "LearningProposal", "LearningRevision"]) {

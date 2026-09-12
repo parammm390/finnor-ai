@@ -12,6 +12,10 @@ const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim()
 
 let clientPromise: Promise<SupabaseClient> | null = null
 
+export function isSupabaseBrowserConfigured(): boolean {
+  return url.length > 0 && anonKey.length > 0
+}
+
 /**
  * The real browser client is shared exactly as before, but the SDK is only
  * fetched when authentication is actually needed (session restoration or a
@@ -19,6 +23,9 @@ let clientPromise: Promise<SupabaseClient> | null = null
  * before rendering the non-authenticated Thread.
  */
 export function getSupabaseBrowser(): Promise<SupabaseClient> {
+  if (!isSupabaseBrowserConfigured()) {
+    return Promise.reject(new Error("JARVIS authentication is not configured for this deployment."))
+  }
   if (!clientPromise) {
     clientPromise = import("@supabase/supabase-js").then(({ createClient }) =>
       createClient(url, anonKey, {

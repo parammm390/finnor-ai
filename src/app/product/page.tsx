@@ -3,15 +3,15 @@ import type { Metadata } from "next";
 import FinnorMarketingPage from "@/components/marketing/FinnorMarketingPage";
 
 export const metadata: Metadata = {
-  title: "Product | Customized Operating & Execution System",
+  title: "Product | PE Decision + Execution Infrastructure",
   description:
-    "FINNOR is the configured operating and execution layer for a water-treatment company. JARVIS is the command and work surface for directing it.",
+    "FINNOR joins canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers in JARVIS.",
   alternates: { canonical: "https://finnorai.com/product" },
   openGraph: {
     title: "Product | FINNOR",
-    description: "The customized operating and execution layer behind JARVIS for water-treatment companies.",
+    description: "The source-backed Private Equity decision and execution layer behind JARVIS.",
     url: "https://finnorai.com/product",
-    images: [{ url: "https://finnorai.com/og-image.svg", width: 1200, height: 630, alt: "FINNOR governed execution layer" }],
+    images: [{ url: "https://finnorai.com/og-image.svg", width: 1200, height: 630, alt: "FINNOR Private Equity decision and execution product" }],
   },
 };
 

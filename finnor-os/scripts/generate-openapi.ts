@@ -237,6 +237,23 @@ const WorkforceConfigureProfileSchema = z.object({
 const WorkforceReviewProposalSchema = z.object({ decision: z.enum(["promote", "reject"]) }).strict();
 const WorkforceReassignSchema = z.object({ note: z.string().trim().min(1).max(2_000).optional() }).strict();
 
+const RawActivityItemSchema = z.object({
+  source: z.enum(["action_log", "workflow_step", "computer_step", "work_event", "call"]),
+  id: z.string().uuid(),
+  occurredAt: z.string().datetime({ offset: true }),
+  detail: z.record(z.unknown()),
+}).strict();
+const RawActivityPageSchema = z.object({
+  items: z.array(RawActivityItemSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+}).strict();
+const SemanticActivityInputSchema = z.object({
+  root: peWorldRoot,
+  asOf: z.string().datetime({ offset: true }).optional(),
+  limit: z.number().int().min(1).max(1_000).optional(),
+}).strict();
+
 const s = (schema: z.ZodTypeAny) => zodToJsonSchema(schema, { $refStrategy: "none" });
 const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schema: s(schema) } } });
 const secured = [{ bearerAuth: [] }];
@@ -284,7 +301,9 @@ const paths = {
   "/api/dlq/{id}/discard": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized dead-letter discard recorded" } } } },
   "/api/corrections": { get: { security: secured, responses: { "200": { description: "Tenant-scoped corrections" } } }, post: { security: secured, responses: { "201": { description: "Correction recorded" } } } },
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
-  "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped operational activity" } } } },
+  "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
+  "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context"] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow pause" } } } },
   "/api/workflows/runs/{id}/resume": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow resume" } } } },

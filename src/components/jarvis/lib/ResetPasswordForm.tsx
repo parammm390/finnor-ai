@@ -17,7 +17,17 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    void getSupabaseBrowser().then((supabaseBrowser) => supabaseBrowser.auth.getSession()).then(({ data }) => setRecoverySession(Boolean(data.session)))
+    let active = true
+    void getSupabaseBrowser()
+      .then((supabaseBrowser) => supabaseBrowser.auth.getSession())
+      .then(({ data, error: sessionError }) => {
+        if (sessionError) throw sessionError
+        if (active) setRecoverySession(Boolean(data.session))
+      })
+      .catch((cause) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+      })
+    return () => { active = false }
   }, [])
 
   async function requestReset(e: React.FormEvent): Promise<void> {
@@ -25,16 +35,18 @@ export function ResetPasswordForm() {
     if (busy) return
     setBusy(true)
     setError(null)
-    const supabaseBrowser = await getSupabaseBrowser()
-    const { error: resetError } = await supabaseBrowser.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/jarvis/reset-password`,
-    })
-    setBusy(false)
-    if (resetError) {
-      setError(resetError.message)
-      return
+    try {
+      const supabaseBrowser = await getSupabaseBrowser()
+      const { error: resetError } = await supabaseBrowser.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/jarvis/reset-password`,
+      })
+      if (resetError) throw resetError
+      setMessage("If that address has a JARVIS account, a password-reset link is on its way.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+    } finally {
+      setBusy(false)
     }
-    setMessage("If that address has a JARVIS account, a password-reset link is on its way.")
   }
 
   async function setNewPassword(e: React.FormEvent): Promise<void> {
@@ -42,14 +54,16 @@ export function ResetPasswordForm() {
     if (busy) return
     setBusy(true)
     setError(null)
-    const supabaseBrowser = await getSupabaseBrowser()
-    const { error: updateError } = await supabaseBrowser.auth.updateUser({ password })
-    setBusy(false)
-    if (updateError) {
-      setError(updateError.message)
-      return
+    try {
+      const supabaseBrowser = await getSupabaseBrowser()
+      const { error: updateError } = await supabaseBrowser.auth.updateUser({ password })
+      if (updateError) throw updateError
+      router.push("/jarvis")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+    } finally {
+      setBusy(false)
     }
-    router.push("/jarvis")
   }
 
   return (

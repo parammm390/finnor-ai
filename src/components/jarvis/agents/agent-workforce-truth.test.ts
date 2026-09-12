@@ -9,15 +9,14 @@ describe("JARVIS governed workforce truth", () => {
   it("has no static fleet authority and reads the source-backed workforce projection", () => {
     expect(existsSync(join(root, "src/components/jarvis/agents/agent-fleet.ts"))).toBe(false)
     expect(surface).not.toContain("AGENT_FLEET")
-    expect(surface).toContain("businessProjections.workforceStatus()")
-    expect(surface).toContain('data-source="api:read-models/workforce-status"')
+    expect(surface).toContain("useWorkforceStatus")
+    expect(surface).toContain("profileIds.has(worker.id)")
+    expect(surface).toContain("assignmentNodes.has(assignment.id)")
   })
 
-  it("renders every explicit source-backed status without a health claim", () => {
-    for (const status of ["unconfigured", "idle", "working", "waiting", "blocked", "failed", "unavailable"]) {
-      expect(surface).toContain(status)
-    }
+  it("never substitutes static agents or inferred health for P7 truth", () => {
     expect(surface).not.toMatch(/Five real calling agents|Fifty-nine registered actions|integrationsProjection|voiceAssistants/)
-    expect(surface).toContain("no inferred health")
+    expect(surface).toContain("No workforce state inferred")
+    expect(surface).toContain("No decorative or static agent persona is shown")
   })
 })

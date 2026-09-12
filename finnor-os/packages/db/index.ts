@@ -228,22 +228,28 @@ export async function closePool(): Promise<void> {
 
 export const PHASE5_CUTOVER_PROTOCOL = 5 as const;
 
-export interface ProductRuntimeAuthority {
+export interface ProductRuntimeAuthoritySnapshot {
   epoch: number;
-  state: "preparing" | "water_intake_frozen" | "water_retired";
-  activeProductVertical: "private_equity";
+  state: string;
+  activeProductVertical: string;
   minimumCutoverProtocol: number;
   waterIntakeFrozenAt: string | null;
   waterRetiredAt: string | null;
 }
 
-/** Read the one durable product authority. Every executable runtime role calls this
- * boundary; missing migration/state fails closed instead of falling back to Water. */
-export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAuthority> {
+export interface ProductRuntimeAuthority extends ProductRuntimeAuthoritySnapshot {
+  state: "preparing" | "water_intake_frozen" | "water_retired";
+  activeProductVertical: "private_equity";
+}
+
+/** Read the persisted authority row without treating its values as executable.
+ * Readiness uses this snapshot so a wrong or transitional value remains visible
+ * in deployment truth instead of being collapsed into an "unavailable" error. */
+export async function readProductRuntimeAuthoritySnapshot(): Promise<ProductRuntimeAuthoritySnapshot | null> {
   const result = await getPool().query<{
     epoch: number;
-    state: ProductRuntimeAuthority["state"];
-    active_product_vertical: "private_equity";
+    state: string;
+    active_product_vertical: string;
     minimum_cutover_protocol: number;
     water_intake_frozen_at: Date | null;
     water_retired_at: Date | null;
@@ -254,9 +260,7 @@ export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAutho
       WHERE authority_key='product'`,
   );
   const row = result.rows[0];
-  if (!row || row.epoch < PHASE5_CUTOVER_PROTOCOL || row.active_product_vertical !== "private_equity") {
-    throw new Error("Product runtime authority is unavailable");
-  }
+  if (!row) return null;
   return {
     epoch: Number(row.epoch),
     state: row.state,
@@ -265,6 +269,22 @@ export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAutho
     waterIntakeFrozenAt: row.water_intake_frozen_at?.toISOString() ?? null,
     waterRetiredAt: row.water_retired_at?.toISOString() ?? null,
   };
+}
+
+/** Read the one durable product authority. Every executable runtime role calls this
+ * boundary; missing migration/state fails closed instead of falling back to Water. */
+export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAuthority> {
+  const row = await readProductRuntimeAuthoritySnapshot();
+  if (
+    !row
+    || row.epoch < PHASE5_CUTOVER_PROTOCOL
+    || row.minimumCutoverProtocol < PHASE5_CUTOVER_PROTOCOL
+    || row.activeProductVertical !== "private_equity"
+    || !["preparing", "water_intake_frozen", "water_retired"].includes(row.state)
+  ) {
+    throw new Error("Product runtime authority is unavailable");
+  }
+  return row as ProductRuntimeAuthority;
 }
 
 export interface CutoverHeartbeatInput {

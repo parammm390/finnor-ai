@@ -54,7 +54,7 @@ for (const route of routes) {
       metadata.canonical === expectedCanonical &&
       !/public demo|missed[- ]call|dispatch ai|voice agent/i.test(searchableMetadata) &&
       structuredDataValid &&
-      product?.category === "Customized AI operating and execution system for water treatment companies" &&
+      product?.category === "Private Equity decision + execution infrastructure" &&
       product?.offers?.price === "30000",
   });
 }

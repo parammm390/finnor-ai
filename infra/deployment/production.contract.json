@@ -8,7 +8,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0129_phase7_governed_workforce_learning.sql",
+    "requiredMigrationHead": "0130_phase8_cutover_runtime_head_compatibility.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -16,7 +16,7 @@
       "FINNOR_ENVIRONMENT",
       "FINNOR_RELEASE_SOURCE"
     ],
-    "requiredComponents": ["frontend", "api", "worker"],
+    "requiredComponents": ["frontend", "api", "worker", "supplierCanaryApp", "supplierCanaryAuth"],
     "concurrencyGroup": "finnor-production-release"
   },
   "topology": {
@@ -90,6 +90,28 @@
       "separateDeployment": false,
       "releaseIdentity": "worker",
       "requiredCapability": "orchestration"
+    },
+    "supplierCanaryApp": {
+      "provider": "vercel",
+      "projectName": "finnor-supplier-canary-app",
+      "projectId": "prj_iSGx5g2TJZvd4A9A6axc5zI6pIwq",
+      "organizationId": "team_TlTo8L6Rvgb0H7uJh0G5GLDD",
+      "releaseWorkingDirectory": "finnor-os/apps/supplier-canary",
+      "installCommand": "npm ci",
+      "productionUrl": "https://finnor-supplier-canary-app.vercel.app",
+      "releasePath": "/health",
+      "portalRole": "app"
+    },
+    "supplierCanaryAuth": {
+      "provider": "vercel",
+      "projectName": "finnor-supplier-canary-auth",
+      "projectId": "prj_oWBIhCasKxOH5hGEzXdbZlxqNQt2",
+      "organizationId": "team_TlTo8L6Rvgb0H7uJh0G5GLDD",
+      "releaseWorkingDirectory": "finnor-os/apps/supplier-canary",
+      "installCommand": "npm ci",
+      "productionUrl": "https://finnor-supplier-canary-auth.vercel.app",
+      "releasePath": "/health",
+      "portalRole": "auth"
     },
     "database": {
       "provider": "supabase-postgres",

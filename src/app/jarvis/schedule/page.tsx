@@ -1,12 +1,5 @@
-import type { Metadata } from "next"
-import DispatchFieldSurface from "@/components/jarvis/panels/DispatchFieldSurface"
-import { BusinessWorldScene } from "@/components/jarvis/BusinessWorldScene"
+import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
-  title: "JARVIS — Schedule",
-  description: "Dispatch Field, stored routes, and technician My-Day in FINNOR JARVIS.",
-}
-
-export default function SchedulePage() {
-  return <><BusinessWorldScene scene="schedule" /><DispatchFieldSurface /></>
+export default function RetiredScheduleRoute() {
+  redirect("/jarvis/work")
 }

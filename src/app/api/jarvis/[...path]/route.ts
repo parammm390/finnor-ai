@@ -16,25 +16,19 @@ function osApi(): string | undefined {
   return process.env.NEXT_PUBLIC_OS_API_URL
 }
 
-const READ_MODEL_VIEWS = new Set([
-  "pipeline-health",
-  "activity-snapshot",
-  "technician-load",
-  "stock-risk",
-  "cash-collections",
-  "service-due",
-  "sla-breaches",
-  "follow-up-debt",
-  "data-quality",
-  "work-cases",
-  "household-360",
-  "reliability",
-  "readiness",
-  "readiness-slo",
-  "failure-injections",
-  "workforce-status",
+const COMPANY_BRAIN_OPERATIONS = new Set([
+  "roots",
+  "projection",
+  "search",
+  "object",
+  "traverse",
+  "provenance",
+  "history",
+  "evidence-lineage",
+  "decision-lineage",
+  "actions",
+  "context",
 ])
-const RESOURCE_KINDS = new Set(["households", "inventory", "invoices", "technicians", "visits", "compliance-policy", "workflows"])
 
 function isPublicGet(segments: string[]): boolean {
   const [a] = segments
@@ -42,98 +36,23 @@ function isPublicGet(segments: string[]): boolean {
   return false
 }
 
-const RUN_CONTROL_VERBS = new Set(["pause", "resume", "cancel", "retry", "escalate"])
-
 function isAllowedGet(segments: string[]): boolean {
-  const [a, b, c] = segments
-  if (segments.length === 1 && a === "stats") return true
+  const [a, b] = segments
   if (segments.length === 1 && a === "health") return true
-  if (segments.length === 2 && a === "actions" && b === "pending") return true
-  if (segments.length === 2 && a === "workflows" && b === "runs") return true
-  if (segments.length === 1 && a === "events") return true
-  if (segments.length === 1 && (a === "business-world" || a === "operational-deltas")) return true
-  if (segments.length === 1 && a === "employees") return true
-  if (segments.length === 2 && a === "read-models" && READ_MODEL_VIEWS.has(b!)) return true
-  if (segments.length === 1 && a === "comms") return true
-  if (segments.length === 1 && a === "insights") return true
-  if (segments.length === 2 && a === "setup" && b === "status") return true
-  if (segments.length === 2 && a === "integrations" && b === "status") return true
-  if (segments.length === 2 && a === "resources" && RESOURCE_KINDS.has(b!)) return true
-  if (segments.length === 1 && a === "audit") return true
-  // Phase 7 (the cockpit): "Why?" receipt lookups, the caller's own role, the daily
-  // briefing, the data-quality/contradiction queue, the DLQ browser, and corrections.
-  if (segments.length === 1 && a === "receipts") return true
-  if (segments.length === 2 && a === "receipts") return true
   if (segments.length === 1 && a === "me") return true
-  if (segments.length === 1 && a === "overview") return true
-  if (segments.length === 1 && a === "dlq") return true
-  if (segments.length === 2 && a === "dlq") return true
-  if (segments.length === 1 && a === "corrections") return true
-  // D1.T2/T3: pulse bar (/api/vitals) and activity theater (/api/activity) both need
-  // to reach through here — flagged as a real gap by C1's own session (this proxy's
-  // allowlist never grew to cover A2.T5/T6's routes when they shipped) and closed now
-  // that D1 actually consumes them.
-  if (segments.length === 1 && a === "vitals") return true
+  // Raw activity remains an explicitly diagnostic endpoint. The primary PE
+  // Activity Theater uses the semantic-activity projection below.
   if (segments.length === 1 && a === "activity") return true
-  if (segments.length === 1 && a === "user-prefs") return true
   if (segments.length === 1 && a === "workspace-config") return true
-  if (segments.length === 2 && a === "user-prefs" && b === "digest") return true
-  if (segments.length === 2 && a === "data-quality" && b === "findings") return true
-  if (segments.length === 2 && a === "dispatch" && b === "map") return true
-  if (segments.length === 2 && a === "technician" && b === "my-day") return true
-  if (segments.length === 3 && a === "policies") return true
-  if (segments.length === 2 && a === "price-book") return true
-  if (segments.length === 2 && a === "documents") return true
-  // jarvis-v3 P3.T5: the instruction lifecycle trace (§7.1) — GET /instructions/:id
-  // and GET /instructions/:id/events?after=. Deliberately does NOT include
-  // "stream" — that path is served by the dedicated, non-buffering
-  // src/app/api/jarvis/stream/route.ts (P3.T10), which Next.js's own static-segment
-  // routing resolves in preference to this catch-all for the exact path
-  // /api/jarvis/stream; it never reaches isAllowedGet at all.
-  if (segments.length === 2 && a === "instructions") return true
-  if (segments.length === 3 && a === "instructions" && c === "events") return true
-  if (segments.length === 1 && a === "works") return true
-  if (segments.length === 2 && a === "works") return true
-  if (segments.length === 1 && a === "threads") return true
-  if (segments.length === 2 && a === "threads") return true
-  if (segments.length === 3 && a === "works" && c === "execution") return true
-  if (segments.length === 3 && a === "works" && c === "objective") return true
-  if (segments.length === 2 && a === "operations") return true
-  if (segments.length === 3 && a === "computer" && b === "runs") return true
-  if (segments.length === 2 && a === "workforce" && b === "profiles") return true
+  if (segments.length === 2 && a === "read-models" && b === "workforce-status") return true
   return false
 }
 
 function isAllowedPost(segments: string[]): boolean {
-  const [a, b, c, d] = segments
+  const [a, b] = segments
   if (segments.length === 1 && a === "actions") return true
-  if (segments.length === 1 && a === "threads") return true
-  if (segments.length === 1 && a === "objectives") return true
-  if (segments.length === 1 && a === "queries") return true
-  if (segments.length === 2 && a === "dispatch" && b === "map") return true
-  if (segments.length === 3 && a === "actions" && (c === "confirm" || c === "reject" || c === "escalate" || c === "revert")) return true
-  if (segments.length === 3 && a === "instructions" && c === "cancel") return true
-  if (segments.length === 3 && a === "works" && c === "retry") return true
-  if (segments.length === 3 && a === "works" && c === "objective") return true
-  if (segments.length === 3 && a === "works" && c === "handoff") return true
-  if (segments.length === 3 && a === "operations" && c === "retry") return true
-  if (segments.length === 4 && a === "computer" && b === "runs" && d === "cancel") return true
-  // Phase 7: run controls (owner-only server-side via canApprove) and DLQ replay/
-  // discard (owner-only) both need the frontend to reach them at all first.
-  if (segments.length === 4 && a === "workflows" && b === "runs" && RUN_CONTROL_VERBS.has(d!)) return true
-  if (segments.length === 4 && a === "workflows" && b === "steps" && d === "compensate") return true
-  if (segments.length === 3 && a === "dlq" && (c === "replay" || c === "discard")) return true
-  if (segments.length === 1 && a === "corrections") return true
-  if (segments.length === 4 && a === "data-quality" && b === "findings" && d === "resolve") return true
-  if (segments.length === 2 && a === "technician" && b === "my-day") return true
-  if (segments.length === 4 && a === "policies" && d === "simulate") return true
-  if (segments.length === 1 && a === "push-subscriptions") return true
-  // D8: owner/Dealer-Zero authorization remains entirely in finnor-os; this proxy
-  // only exposes the one existing, read-only time-compression route.
-  if (segments.length === 2 && a === "dealer-zero" && b === "time-compression") return true
-  if (segments.length === 2 && a === "workforce" && b === "profiles") return true
-  if (segments.length === 3 && a === "workforce" && b === "proposals") return true
-  if (segments.length === 4 && a === "workforce" && b === "assignments" && d === "reassign") return true
+  if (segments.length === 2 && a === "company-brain" && COMPANY_BRAIN_OPERATIONS.has(b!)) return true
+  if (segments.length === 1 && a === "semantic-activity") return true
   return false
 }
 
@@ -244,8 +163,7 @@ async function doForward(
       init.body = body.length > 0 ? body : "{}";
     }
     const upstream = await fetch(url.toString(), init);
-    // Keep this byte-preserving: the allowlist includes the tenant-scoped
-    // documents endpoint, whose response is a PDF rather than JSON.
+    // Keep the proxy byte-preserving even though active P8 projections are JSON.
     const body = await upstream.arrayBuffer();
     return new Response(body, {
       status: upstream.status,
@@ -294,13 +212,12 @@ async function forwardTest(req: NextRequest, segments: string[], method: "GET" |
   }
 }
 
-// Next 16 supplies a Promise here, while the route unit tests (and older Next
-// runtimes) call handlers with the already-resolved object. Accept both at the
-// boundary and normalize once so the implementation stays version-compatible.
-type JarvisRouteContext = { params: Promise<{ path: string[] }> | { path: string[] } };
+// Next 16's route contract supplies dynamic params asynchronously. Keep the
+// exported handlers exact so generated production route types fail closed on drift.
+type JarvisRouteContext = { params: Promise<{ path: string[] }> };
 
 export async function GET(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await Promise.resolve(params)).path;
+  const segments = (await params).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedGet(segments)) return proxyError("Not found", 404);
 
@@ -321,7 +238,7 @@ export async function GET(req: NextRequest, { params }: JarvisRouteContext): Pro
 }
 
 export async function POST(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await Promise.resolve(params)).path;
+  const segments = (await params).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
   if (!isAllowedPost(segments)) return proxyError("Not found", 404);
 
@@ -331,18 +248,12 @@ export async function POST(req: NextRequest, { params }: JarvisRouteContext): Pr
   return doForward(req, segments, "POST", auth);
 }
 
-// D6.T1: user preferences are the caller's own record. Keep the proxy surface as
-// narrow as the backend route: no generic PUT/DELETE tunnel is introduced.
-function isUserPrefs(segments: string[]): boolean {
-  return segments.length === 1 && (segments[0] === "user-prefs" || segments[0] === "push-subscriptions");
-}
-
 function isAllowedPut(segments: string[]): boolean {
-  return isUserPrefs(segments) || (segments.length === 1 && segments[0] === "workspace-config") || (segments.length === 3 && segments[0] === "policies") || (segments.length === 2 && segments[0] === "price-book");
+  return segments.length === 1 && segments[0] === "workspace-config";
 }
 
 export async function PUT(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await Promise.resolve(params)).path;
+  const segments = (await params).path;
   if (!validSegments(segments) || !validQuery(req.nextUrl) || !isAllowedPut(segments)) return proxyError("Not found", 404);
   if (hasTestKey(req)) return forwardTest(req, segments, "PUT");
   const auth = hasBearer(req);
@@ -351,10 +262,7 @@ export async function PUT(req: NextRequest, { params }: JarvisRouteContext): Pro
 }
 
 export async function DELETE(req: NextRequest, { params }: JarvisRouteContext): Promise<Response> {
-  const segments = (await Promise.resolve(params)).path;
-  if (!validSegments(segments) || !validQuery(req.nextUrl) || !isUserPrefs(segments)) return proxyError("Not found", 404);
-  if (hasTestKey(req)) return forwardTest(req, segments, "DELETE");
-  const auth = hasBearer(req);
-  if (!auth) return proxyError("Sign in required", 401);
-  return doForward(req, segments, "DELETE", auth);
+  const segments = (await params).path;
+  if (!validSegments(segments) || !validQuery(req.nextUrl)) return proxyError("Invalid request", 400);
+  return proxyError("Not found", 404);
 }

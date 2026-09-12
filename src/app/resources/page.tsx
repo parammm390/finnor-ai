@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { ResourcesHub } from "@/components/resources/ResourcesHub";
+import { PrivateEquityResource } from "@/components/resources/PrivateEquityResource";
 
 export const metadata: Metadata = {
   title: "FINNOR Field Notes",
   description:
-    "Practical guidance for evaluating, configuring and deploying a FINNOR operating and execution system inside a water treatment company.",
+    "Practical guidance for evaluating and deploying FINNOR Private Equity decision and execution infrastructure.",
   alternates: {
     canonical: "https://finnorai.com/resources",
   },
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         url: "https://finnorai.com/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "FINNOR field notes for water treatment operators",
+        alt: "FINNOR Private Equity decision and execution field notes",
       },
     ],
   },
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FINNOR Field Notes",
     description:
-      "Company deployment, operating scope, authority, recovery and evidence for water treatment operators.",
+      "PE truth, decision lineage, authority, recovery, evidence, receipts, and production activation.",
     images: ["https://finnorai.com/og-image.svg"],
   },
 };
 
 export default function ResourcesPage() {
-  return <ResourcesHub />;
+  return <PrivateEquityResource kind="hub" />;
 }

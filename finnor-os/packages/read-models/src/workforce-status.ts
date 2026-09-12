@@ -68,6 +68,7 @@ function assignmentSummary(row: typeof workforceAssignments.$inferSelect): Workf
     state: row.state,
     attempt: row.attempt,
     assignmentReason: row.assignmentReason,
+    previousAssignmentId: row.previousAssignmentId,
     reassignmentReason: row.reassignmentReason,
     domainActionId: row.domainActionId,
     startedAt: row.startedAt?.toISOString() ?? null,

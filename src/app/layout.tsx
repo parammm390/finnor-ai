@@ -41,17 +41,19 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://finnorai.com"),
   applicationName: "FINNOR",
   title: {
-    default: "FINNOR | AI Operating & Execution System for Water Treatment",
+    default: "FINNOR | Private Equity Decision + Execution Infrastructure",
     template: "%s | FINNOR",
   },
   description:
-    "FINNOR is a customized AI operating and execution system for water treatment companies. JARVIS is the command surface for coordinated work, approvals, recovery and evidence.",
+    "FINNOR connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce.",
   keywords: [
-    "water treatment operating system",
-    "AI execution system",
-    "custom water treatment operations system",
-    "water treatment company operations",
-    "governed AI operations",
+    "private equity decision infrastructure",
+    "private equity execution infrastructure",
+    "deal truth",
+    "underwriting lineage",
+    "investment committee governance",
+    "private equity workflow",
+    "governed AI workforce",
     "JARVIS command surface",
     "FINNOR",
   ],
@@ -63,9 +65,9 @@ export const metadata: Metadata = {
     canonical: "https://finnorai.com/",
   },
   openGraph: {
-    title: "FINNOR | Built Around How Your Company Operates",
+    title: "FINNOR | Private Equity Decision + Execution Infrastructure",
     description:
-      "A customized AI operating and execution system for water treatment companies. Production deployments start around $30,000.",
+      "Canonical deal truth, underwriting lineage, IC governance, governed execution, evidence, receipts, and governed AI workers in one inspectable operating surface.",
     url: "https://finnorai.com/",
     siteName: "FINNOR",
     images: [
@@ -73,16 +75,16 @@ export const metadata: Metadata = {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "FINNOR customized AI operating and execution system for water treatment companies",
+        alt: "FINNOR Private Equity decision and execution infrastructure",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FINNOR | Built Around How Your Company Operates",
+    title: "FINNOR | Private Equity Decision + Execution Infrastructure",
     description:
-      "Customized AI operating and execution systems for water treatment companies. Deployments start around $30,000.",
+      "Connect deal truth, underwriting, IC decisions, governed Work, evidence, receipts, and AI workers without losing lineage or authority.",
     images: ["/og-image.svg"],
   },
   robots: {
@@ -121,7 +123,7 @@ export default function RootLayout({
                   url: "https://finnorai.com",
                   email: "param@finnorai.com",
                   description:
-                    "FINNOR configures and deploys customized AI operating and execution systems for water treatment companies.",
+                    "FINNOR builds Private Equity decision and execution infrastructure around canonical deal truth, underwriting lineage, IC governance, Work, evidence, and governed AI workers.",
                   sameAs: ["https://www.linkedin.com/in/param-dave16"],
                 },
                 {
@@ -137,9 +139,9 @@ export default function RootLayout({
                   "@type": "WebPage",
                   "@id": "https://finnorai.com/#webpage",
                   url: "https://finnorai.com",
-                  name: "FINNOR | AI Operating & Execution System for Water Treatment",
+                  name: "FINNOR | Private Equity Decision + Execution Infrastructure",
                   description:
-                    "FINNOR is configured around a water treatment company's workflows, systems, locations, roles, authority policies, channels and operating surfaces.",
+                    "FINNOR connects source-backed PE objects, underwriting lineage, investment committee governance, Work and planning, authority, evidence, receipts, and governed agents.",
                   isPartOf: { "@id": "https://finnorai.com/#website" },
                   about: { "@id": "https://finnorai.com/#organization" },
                   inLanguage: "en-US",
@@ -148,13 +150,13 @@ export default function RootLayout({
                   "@type": "Product",
                   "@id": "https://finnorai.com/#product",
                   name: "FINNOR",
-                  category: "Customized AI operating and execution system for water treatment companies",
+                  category: "Private Equity decision + execution infrastructure",
                   description:
-                    "A company-specific operating and execution layer coordinating customers, work, schedule, inventory, quotes, communication, money, research, agents, approvals, recovery and evidence where configured.",
+                    "Source-backed infrastructure joining canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence, receipts, and governed AI workers.",
                   brand: { "@id": "https://finnorai.com/#organization" },
                   audience: {
                     "@type": "BusinessAudience",
-                    audienceType: "Water treatment company owners and operators",
+                    audienceType: "Private equity investment and operating teams",
                   },
                   offers: {
                     "@type": "Offer",

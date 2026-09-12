@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { publicEnv, serverEnv } from "@/lib/env"
+import { serverEnv } from "@/lib/env"
 import { getReleaseMetadata } from "@/lib/release"
 
 export const runtime = "nodejs"
@@ -10,23 +10,13 @@ export async function GET() {
   const release = getReleaseMetadata("finnor-frontend")
   const supabase = await checkSupabase()
   const services = {
-    gemini_profile_generation: Boolean(serverEnv.geminiApiKey),
-    supabase_persistence: supabase.reachable,
-    supabase_configured: supabase.configured,
-    vapi_browser_calling: Boolean(publicEnv.vapiPublicKey && publicEnv.vapiAssistantId),
-    vapi_server_webhook_secret: Boolean(serverEnv.vapiWebhookSecret),
-    contact_email_notification: Boolean(serverEnv.gmailUser && serverEnv.gmailAppPassword),
-    demo_mock_mode: publicEnv.demoMockMode,
+    pe_concierge_model: Boolean(serverEnv.groqApiKey || serverEnv.geminiApiKey),
+    operating_review_persistence: supabase.reachable,
+    operating_review_email: Boolean(serverEnv.gmailUser && serverEnv.gmailAppPassword),
   }
-
-  const readyForProduction =
-    services.gemini_profile_generation &&
-    services.supabase_persistence &&
-    services.vapi_browser_calling
 
   return NextResponse.json({
     ok: true,
-    readyForProduction,
     services,
     supabase,
     release,
@@ -46,7 +36,7 @@ async function checkSupabase() {
         autoRefreshToken: false,
       },
     })
-    const { error } = await client.from("demo_leads").select("id").limit(1)
+    const { error } = await client.from("leads").select("id").limit(1)
 
     if (error) {
       return {

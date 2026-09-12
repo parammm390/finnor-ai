@@ -34,14 +34,16 @@ export function LoginForm() {
     if (busy) return
     setBusy(true)
     setError(null)
-    const supabaseBrowser = await getSupabaseBrowser()
-    const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email: email.trim(), password })
-    setBusy(false)
-    if (signInError) {
-      setError(signInError.message)
-      return
+    try {
+      const supabaseBrowser = await getSupabaseBrowser()
+      const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email: email.trim(), password })
+      if (signInError) throw signInError
+      router.push("/jarvis")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "JARVIS sign-in is unavailable.")
+    } finally {
+      setBusy(false)
     }
-    router.push("/jarvis")
   }
 
   return (

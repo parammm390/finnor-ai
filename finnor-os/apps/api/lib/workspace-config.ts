@@ -6,6 +6,8 @@ export const WorkspaceSurfaceSchema = z.enum(["home", "work", "deals", "agents"]
 export const WORKSPACE_SURFACES = WorkspaceSurfaceSchema.options;
 export const ExperienceRoleSchema = z.enum(["owner"]);
 export const EXPERIENCE_ROLES = ExperienceRoleSchema.options;
+export const ExperienceSceneSchema = z.enum(["ready", "listening", "plan", "approval", "working", "outcome", "recovery"]);
+export const EXPERIENCE_SCENES = ExperienceSceneSchema.options;
 
 export const ExperienceMetricKeySchema = z.enum([
   "pending_approvals",
@@ -118,9 +120,15 @@ export const TenantExperienceManifestV3Schema = z.object({
 });
 
 export type TenantExperienceManifestV3 = z.infer<typeof TenantExperienceManifestV3Schema>;
-export type TenantExperienceManifestV2 = TenantExperienceManifestV3;
 export type WorkspaceConfig = TenantExperienceManifestV3;
+export type TenantWorkspaceConfig = TenantExperienceManifestV3;
+export type WorkspaceSurfaceKey = z.infer<typeof WorkspaceSurfaceSchema>;
 export type ExperienceRole = z.infer<typeof ExperienceRoleSchema>;
+export type ExperienceScene = z.infer<typeof ExperienceSceneSchema>;
+export type ExperienceMetricKey = z.infer<typeof ExperienceMetricKeySchema>;
+export type ExperienceQuickActionKey = z.infer<typeof ExperienceQuickActionKeySchema>;
+export type ExperienceProjectionKey = z.infer<typeof ExperienceProjectionKeySchema>;
+export type ExperienceAttentionCategory = z.infer<typeof ExperienceAttentionCategorySchema>;
 
 export const DEFAULT_WORKSPACE_CONFIG: TenantExperienceManifestV3 = {
   version: 3,
@@ -166,6 +174,8 @@ export const DEFAULT_WORKSPACE_CONFIG: TenantExperienceManifestV3 = {
   scenes: Object.fromEntries(["ready", "listening", "plan", "approval", "working", "outcome", "recovery"].map((key) => [key, { detail: "balanced", emphasis: "evidence" }])) as TenantExperienceManifestV3["scenes"],
   extensions: {},
 };
+
+export const DEFAULT_TENANT_WORKSPACE_CONFIG = DEFAULT_WORKSPACE_CONFIG;
 
 export const WorkspaceConfigSchema = TenantExperienceManifestV3Schema;
 

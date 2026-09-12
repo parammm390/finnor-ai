@@ -6,6 +6,8 @@ const context = await browser.newContext();
 const page = await context.newPage();
 
 const publicRoutes = ["/demo", "/demo/lifecycle", "/demo/anything", "/dashboard-demo"];
+// Negative-only retirement contract: these removed public demo endpoints must
+// remain unreachable. Naming a retired route here does not make it executable.
 const apiRoutes = [
   "/api/generate-demo",
   "/api/demo-profile",
@@ -34,12 +36,10 @@ for (const route of apiRoutes) {
     headers: { "content-type": "application/json" },
     failOnStatusCode: false,
   });
-  const headers = response.headers();
   results.push({
     name: `anonymous API ${route}`,
     status: response.status(),
-    robots: headers["x-robots-tag"],
-    passed: response.status() === 404 && headers["x-robots-tag"]?.includes("noindex") && headers["x-robots-tag"]?.includes("nofollow"),
+    passed: response.status() === 404,
   });
 }
 

@@ -40,6 +40,61 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/customers",
+        destination: "/jarvis/deals",
+        permanent: true,
+      },
+      {
+        source: "/schedule",
+        destination: "/jarvis/work",
+        permanent: true,
+      },
+      {
+        source: "/money",
+        destination: "/jarvis/deals",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/customers",
+        destination: "/jarvis/deals",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/schedule",
+        destination: "/jarvis/work",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/money",
+        destination: "/jarvis/deals",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/bridge",
+        destination: "/jarvis",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/classic",
+        destination: "/jarvis",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/next",
+        destination: "/jarvis",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/showtime",
+        destination: "/jarvis",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/stage",
+        destination: "/jarvis",
+        permanent: true,
+      },
+      {
         source: "/demo",
         destination: "/product",
         permanent: true,

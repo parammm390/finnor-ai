@@ -48,6 +48,15 @@ async function beat(): Promise<void> {
     service: "worker",
     capabilities: meta.capabilities,
   });
+  // The canonical production contract embeds the orchestrator in this worker
+  // process.  Attest that owned runtime role separately so the Phase-5 cutover
+  // barrier proves the real topology instead of waiting for a process that the
+  // deployment contract explicitly says does not exist.
+  await recordCutoverCompatibleHeartbeat({
+    ...common,
+    service: "orchestrator",
+    capabilities: ["planning", "authority", "private-equity", ...meta.capabilities],
+  });
   // The scheduler is co-owned by this persistent process today, but has a separate
   // provenance row so a future topology split cannot silently bypass the cutover.
   await recordCutoverCompatibleHeartbeat({

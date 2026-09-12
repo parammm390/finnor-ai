@@ -6,11 +6,11 @@ import { faqItems } from "@/content/commercial-truth";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Direct answers about FINNOR, JARVIS, company-specific configuration, intelligence policies, text and voice scope, deployment work and pricing from $30,000.",
+    "Direct answers about FINNOR, JARVIS, Company Brain, PE lineage, tenant isolation, authority, governed agents, deployment, and pricing.",
   alternates: { canonical: "https://finnorai.com/faq" },
   openGraph: {
     title: "FAQ | FINNOR",
-    description: "The product, configuration, authority, deployment and pricing answers behind FINNOR.",
+    description: "The product, PE truth, authority, lineage, deployment, and pricing answers behind FINNOR.",
     url: "https://finnorai.com/faq",
     images: [{ url: "https://finnorai.com/og-image.svg", width: 1200, height: 630, alt: "FINNOR FAQ" }],
   },

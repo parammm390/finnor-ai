@@ -75,6 +75,18 @@ describe.skipIf(!available)("worker heartbeat", () => {
       source: "test",
       traceable: true,
     });
+    const cutoverRoles = await getPool().query<{ service: string; release_sha: string; migration_head: string }>(
+      `SELECT service,release_sha,migration_head
+         FROM service_release_heartbeats
+        WHERE instance_id=$1 AND service=ANY($2::text[])
+        ORDER BY service`,
+      [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner"]],
+    );
+    expect(cutoverRoles.rows).toEqual([
+      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0130_/) },
+      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0130_/) },
+      { service: "worker", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0130_/) },
+    ]);
   });
 
   it("no-ops HEALTHCHECK_PING_URL silently when unset — never throws, never fakes a ping", async () => {

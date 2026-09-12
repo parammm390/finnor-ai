@@ -2,6 +2,7 @@ import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
+import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -28,7 +29,14 @@ async function fetchRelease(component) {
   return body
 }
 
-const [frontend, api] = await Promise.all([fetchRelease("frontend"), fetchRelease("api")])
+const [frontend, api, supplierCanaryApp, supplierCanaryAuth] = await Promise.all([
+  fetchRelease("frontend"),
+  fetchRelease("api"),
+  fetchRelease("supplierCanaryApp"),
+  fetchRelease("supplierCanaryAuth"),
+])
+assertSupplierCanaryRelease("supplierCanaryApp", supplierCanaryApp, expected, contract.topology.supplierCanaryApp, contract.release.requiredMigrationHead)
+assertSupplierCanaryRelease("supplierCanaryAuth", supplierCanaryAuth, expected, contract.topology.supplierCanaryAuth, contract.release.requiredMigrationHead)
 
 process.loadEnvFile(resolve(databaseEnvPath))
 const databaseUrl = process.env.MIGRATIONS_DATABASE_URL
@@ -109,13 +117,15 @@ for (const capability of ["jobs", "orchestration", "realtime", "sse"]) {
   if (!gateway.capabilities?.includes(capability)) throw new Error(`worker SSE gateway is missing ${capability} capability`)
 }
 
-const observed = { frontend, api, worker: workerRelease, migrationHead }
+const observed = { frontend, api, worker: workerRelease, supplierCanaryApp, supplierCanaryAuth, migrationHead }
 assertRuntimeParity(contract, expected, observed)
 console.log(JSON.stringify({
   ok: true,
   commitSha: expected.commitSha,
   frontend: { service: frontend.service, commitSha: frontend.commitSha, deploymentId: frontend.deploymentId },
   api: { service: api.service, commitSha: api.commitSha, deploymentId: api.deploymentId },
+  supplierCanaryApp: { commitSha: supplierCanaryApp.commitSha, deploymentId: supplierCanaryApp.deploymentId, role: supplierCanaryApp.role },
+  supplierCanaryAuth: { commitSha: supplierCanaryAuth.commitSha, deploymentId: supplierCanaryAuth.deploymentId, role: supplierCanaryAuth.role },
   worker: { commitSha: workerRelease.commitSha, heartbeatAgeSeconds, capabilities: workerRelease.capabilities },
   realtimeGateway: { url: worker.sseGatewayUrl, commitSha: gateway.release.commitSha, capabilities: gateway.capabilities },
   orchestrator: { mode: contract.topology.orchestrator.mode, releaseIdentity: contract.topology.orchestrator.releaseIdentity },

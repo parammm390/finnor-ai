@@ -24,11 +24,11 @@ export async function POST(request: Request) {
     const email = cleanString(formData.get("email"), 180)
     const company = cleanString(formData.get("company"), 160)
     const phone = cleanString(formData.get("phone"), 80)
-    const callVolume = cleanString(formData.get("call_volume"), 120)
+    const workflow = cleanString(formData.get("workflow"), 500)
 
-    if (!name || !email || !callVolume) {
+    if (!name || !email || !workflow) {
       return NextResponse.json(
-        { error: "Name, email, and call volume are required." },
+        { error: "Name, email, and PE workflow are required." },
         { status: 400 }
       )
     }
@@ -37,8 +37,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 })
     }
 
-    await persistContactLead({ name, email, company, phone, callVolume })
-    await sendContactNotification({ name, email, company, phone, callVolume })
+    await persistContactLead({ name, email, company, phone, workflow })
+    await sendContactNotification({ name, email, company, phone, workflow })
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -55,13 +55,13 @@ async function persistContactLead({
   email,
   company,
   phone,
-  callVolume,
+  workflow,
 }: {
   name: string
   email: string
   company: string
   phone: string
-  callVolume: string
+  workflow: string
 }) {
   if (!serverEnv.supabaseUrl || !serverEnv.supabaseServiceRoleKey) {
     console.info("FINNOR contact form: Supabase is not configured; skipping database insert.")
@@ -77,7 +77,7 @@ async function persistContactLead({
 
   const { error } = await supabase
     .from("leads")
-    .insert([{ name, email, company, phone, message: callVolume, status: "new" }])
+    .insert([{ name, email, company, phone, message: workflow, status: "new" }])
 
   if (error) {
     console.info("FINNOR contact form: Supabase insert skipped after database error.")
@@ -89,13 +89,13 @@ async function sendContactNotification({
   email,
   company,
   phone,
-  callVolume,
+  workflow,
 }: {
   name: string
   email: string
   company: string
   phone: string
-  callVolume: string
+  workflow: string
 }) {
   if (!serverEnv.gmailUser || !serverEnv.gmailAppPassword) {
     console.info("FINNOR contact form: Gmail notification is not configured; skipping email.")
@@ -116,21 +116,21 @@ async function sendContactNotification({
       to: "param@finnorai.com",
       subject: `New Lead: ${name} from ${company || "Website"}`,
       text: [
-        "New emergency dispatch workflow review request",
+        "New Private Equity operating review request",
         `Name: ${name}`,
         `Email: ${email}`,
         `Phone: ${phone || "Not provided"}`,
         `Company: ${company || "Not provided"}`,
-        `Weekly no-water emergency call volume: ${callVolume}`,
+        `PE workflow: ${workflow}`,
       ].join("\n"),
       html: `
-        <h2>New emergency dispatch workflow review request</h2>
+        <h2>New Private Equity operating review request</h2>
         <p><strong>Name:</strong> ${escapeHtml(name)}</p>
         <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         <p><strong>Phone:</strong> ${escapeHtml(phone || "Not provided")}</p>
         <p><strong>Company:</strong> ${escapeHtml(company || "Not provided")}</p>
-        <h3>Weekly no-water emergency call volume:</h3>
-        <p>${escapeHtml(callVolume)}</p>
+        <h3>PE workflow:</h3>
+        <p>${escapeHtml(workflow)}</p>
       `,
     })
   } catch (error) {

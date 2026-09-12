@@ -1,113 +1,72 @@
 "use client"
 
-// D6.T2 — role-first landing scenes. The backend remains authoritative for every
-// permission; this only selects a useful first surface after /api/me has resolved the
-// signed-in role. A saved homepage overrides the role default only when it is a scene
-// that role may actually use, so a stale preference never turns into a courtesy-based
-// authorization leak.
+import { Activity, ArrowRight, BrainCircuit, CheckCircle2, CircleAlert, Network, Workflow } from "lucide-react"
+import { CompanyBrainGraph } from "./pe/CompanyBrainGraph"
+import { CompanyBrainInspector } from "./pe/CompanyBrainInspector"
+import { PeCommandComposer } from "./pe/PeCommandComposer"
+import { PeOwnerBoundary, PeSourceState } from "./pe/PeSurfaceFrame"
+import { PeRootPicker } from "./pe/PeRootPicker"
+import { PeSurfaceMotion } from "./pe/PeSurfaceMotion"
+import { SemanticActivityTheater } from "./pe/SemanticActivityTheater"
+import { usePeOperatingContext } from "./pe/PeOperatingContextProvider"
+import { humanize } from "./pe/contracts"
+import { peProjectionMetrics } from "./pe/projection-metrics"
+import { useCompanyBrainProjection, useSemanticActivity } from "./pe/use-pe-data"
 
-import { useEffect, useState } from "react"
-import dynamic from "next/dynamic"
-import { Map, Wrench } from "lucide-react"
-import { useJarvisAuth } from "./lib/jarvis-auth"
-import { jarvisGet } from "./lib/api"
-import { roleLandingFor, type SavedHomepage } from "./lib/role-landing"
-import { SinceYouWereAway } from "./SinceYouWereAway"
-import { PushOptIn } from "./PushOptIn"
-import { CustomCursor } from "./CustomCursor"
-import DispatchFieldSurface from "./panels/DispatchFieldSurface"
-import { OperationalSurfaceNav } from "./surfaces/OperationalSurfaceNav"
-import { useWorkspaceConfig } from "./WorkspaceConfigProvider"
-import { TenantReadyExperience } from "./experience/TenantReadyExperience"
-import "./jarvis-theme.css"
-
-// The canonical owner Thread is the dominant interaction surface, but it is
-// still a client-only graph. Keep it out of the initial `/jarvis` route bundle
-// so the shell can establish auth/public-preview posture before loading the
-// liveframe implementation. The loading surface is intentionally compact and
-// truthful; it does not present private facts or imply a workflow state.
-const InstructionThreadBridge = dynamic(
-  () => import("./bridge/ThreadBridge").then((m) => m.InstructionThreadBridge),
-  {
-    loading: () => (
-      <div className="flex min-h-screen items-center justify-center bg-[#04070f] px-6 text-center text-white">
-        <div>
-          <div className="j-fs-micro font-black uppercase tracking-[0.24em] text-cyan-200">JARVIS</div>
-          <p className="mt-2 j-fs-sm text-[color:var(--j-text-dim)]">Preparing the instruction thread…</p>
-        </div>
-      </div>
-    ),
-  },
-)
-const ApprovalCockpit = dynamic(() => import("./bridge/ApprovalCockpit").then((m) => m.ApprovalCockpit), { ssr: false })
-const DispatchMap = dynamic(() => import("./panels/DispatchMap").then((m) => m.DispatchMap), { ssr: false })
-const MyDay = dynamic(() => import("./panels/MyDay").then((m) => m.MyDay), { ssr: false })
-
-type Prefs = { homepage: SavedHomepage; density: "comfortable" | "compact"; accent: string | null }
-
-function SceneFrame({ children, accent, density, landing }: { children: React.ReactNode; accent: string | null; density: Prefs["density"]; landing: Exclude<ReturnType<typeof roleLandingFor>, "home" | "schedule"> }) {
-  return <div className="jarvis-root min-h-screen bg-[var(--j-bg)] text-[color:var(--j-text)]" data-tenant-accent={accent ?? undefined} data-jarvis-role-landing={landing} data-jarvis-density={density}><OperationalSurfaceNav active="schedule" /><div className="fixed right-3 top-3 z-50"><PushOptIn /></div>{children}</div>
+function semanticCount(value: number | null): string | number {
+  return value === null ? "UNKNOWN" : value
 }
 
-function RoleLanding() {
-  const { session, role, roleLoading, roleError, retryRole, authError, retryAuth } = useJarvisAuth()
-  const { config } = useWorkspaceConfig()
-  const [prefs, setPrefs] = useState<Prefs | null>(null)
-  useEffect(() => {
-    // Preferences are private user data. Wait for the same authenticated role
-    // projection that gates every role scene; session restoration alone is not a
-    // sufficient authority boundary for this request.
-    if (!session || !role || roleLoading || roleError) { setPrefs(null); return }
-    let cancelled = false
-    void jarvisGet<{ prefs: Prefs }>("user-prefs").then((response) => { if (!cancelled) setPrefs(response.prefs) }).catch(() => { if (!cancelled) setPrefs({ homepage: null, density: "comfortable", accent: null }) })
-    return () => { cancelled = true }
-  }, [session, role, roleLoading, roleError])
-  // A public JARVIS Thread is safe before session restoration; private requests
-  // keep failing closed until the bearer is present. Only wait for a role once a
-  // real session has been restored, avoiding an avoidable blank first paint.
-  if (authError) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#04070f] px-6 text-center">
-        <h1 className="text-lg font-black text-white">JARVIS could not restore sign-in</h1>
-        <p className="max-w-md j-fs-sm text-[color:var(--j-text-dim)]">{authError}</p>
-        <button type="button" onClick={retryAuth} className="rounded-full bg-teal-300 px-4 py-1.5 j-fs-micro font-black text-slate-950 hover:bg-teal-200">Retry connection</button>
-      </div>
-    )
-  }
-  if (session && roleError && !role) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#04070f] px-6 text-center">
-        <h1 className="text-lg font-black text-white">JARVIS could not load your workspace</h1>
-        <p className="max-w-md j-fs-sm text-[color:var(--j-text-dim)]">{roleError}</p>
-        <button type="button" onClick={retryRole} className="rounded-full bg-teal-300 px-4 py-1.5 j-fs-micro font-black text-slate-950 hover:bg-teal-200">Retry connection</button>
-      </div>
-    )
-  }
-  // Keep an already-authorized surface mounted during same-user token refreshes;
-  // roleLoading is background revalidation once `role` is known.
-  if (session && !role) return <div className="flex min-h-screen items-center justify-center bg-[#04070f] text-white">Waking JARVIS…</div>
-  if (!session) return <InstructionThreadBridge standalone={false} />
-  // The owner lands in the canonical Instruction Thread: the same kernel owns
-  // realtime traces, scoped approvals, execution state, voice handoff, and the
-  // spatial shell. The older two-rail Bridge remains available at /jarvis/bridge
-  // for its own explicit route and does not compete with this product surface.
-  if (role === "owner") return <InstructionThreadBridge standalone={false} />
-  const selected = roleLandingFor(role!, prefs?.homepage ?? null, config.roles[role!].startView)
-  const density = prefs?.density ?? "comfortable"
-  if (selected === "schedule") {
-    return <div data-jarvis-role-landing="schedule" data-jarvis-density={density}><DispatchFieldSurface /></div>
-  }
-  if (selected === "dispatch-map") {
-    return <SceneFrame accent={prefs?.accent ?? null} density={density} landing={selected}><main className="jarvis-role-landing__stage mx-auto min-h-screen max-w-7xl p-5 md:p-8" data-jarvis-density={density}><SinceYouWereAway /><header><div className="j-label flex items-center gap-2"><Map className="h-4 w-4" /> Dispatcher scene</div><h1 className="mt-1 text-2xl font-black">Dispatch and approvals</h1></header><TenantReadyExperience role="dispatcher" compact /><DispatchMap /><ApprovalCockpit /></main></SceneFrame>
-  }
-  return <SceneFrame accent={prefs?.accent ?? null} density={density} landing="my-day"><main className="jarvis-role-landing__stage mx-auto min-h-screen max-w-lg p-5 md:p-8" data-jarvis-density={density}><SinceYouWereAway /><header><div className="j-label flex items-center gap-2"><Wrench className="h-4 w-4" /> Technician scene</div><h1 className="mt-1 text-2xl font-black">Your assigned day</h1></header><TenantReadyExperience role="technician" compact /><MyDay /></main></SceneFrame>
+function OwnerHome() {
+  const operating = usePeOperatingContext()
+  const brain = useCompanyBrainProjection(operating.context.root)
+  const activity = useSemanticActivity(operating.context.root)
+  const metrics = brain.data ? peProjectionMetrics(brain.data, activity.data) : null
+
+  return (
+    <PeSurfaceMotion>
+      <main className="pe-home">
+        <section className="pe-home__hero">
+          <div className="pe-home__hero-copy" data-pe-hero-enter>
+            <span className="pe-kicker">FINNOR · PRIVATE EQUITY DECISION + EXECUTION INFRASTRUCTURE</span>
+            <h1>One command surface for the full investment decision.</h1>
+            <p>Inspect canonical deal truth, trace evidence into decisions, and move approved work through execution without separating the operating context from its proof.</p>
+          </div>
+          <div data-pe-hero-enter><PeCommandComposer surface="home" /></div>
+          <div data-pe-hero-enter><PeRootPicker compact /></div>
+        </section>
+
+        <div className="pe-context-marquee" aria-label="Canonical system owners"><div>{["P1 · PE REALITY", "P4 · UNDERWRITING", "P5 · IC GOVERNANCE", "P6 · WORK + PROOF", "P7 · GOVERNED WORKFORCE", "COMPANY BRAIN · READ PROJECTION", "SEMANTIC ACTIVITY · DETERMINISTIC"].concat(["P1 · PE REALITY", "P4 · UNDERWRITING", "P5 · IC GOVERNANCE", "P6 · WORK + PROOF"]).map((label, index) => <span key={`${label}:${index}`}><i />{label}</span>)}</div></div>
+
+        {!operating.context.root ? <section className="pe-home__no-context pe-scale-reveal"><BrainCircuit size={24} /><span className="pe-kicker">SOURCE-BACKED CONTEXT REQUIRED</span><h2>Select a Strategy, Opportunity, or Deal root.</h2><p>JARVIS will not manufacture the Strategy → Opportunity → Deal → Investment Case chain from URL parameters. The selected root is resolved tenant-safely before any projection is shown.</p></section> : null}
+        {operating.validationStatus === "invalid" ? <PeSourceState title="Operating context rejected" detail={operating.validationError ?? "The selected object or Work does not belong to this authenticated PE root."} /> : null}
+        {brain.status === "error" ? <PeSourceState title="Company Brain unavailable" detail={brain.error ?? "The root projection failed."} retry={brain.reload} /> : null}
+        {brain.status === "loading" && !brain.data ? <div className="pe-loading"><span className="pe-state__pulse" /> Resolving P1–P7 into one inspectable world…</div> : null}
+
+        {brain.data && metrics ? <>
+          <section className="pe-home__metrics pe-scale-reveal" aria-label="Root-scoped operating metrics">
+            <article className="pe-metric pe-metric--hero"><span><Network size={15} /> Closing checks</span><strong>{metrics.closingChecks.ready}<small> / {metrics.closingChecks.recorded}</small></strong><p>Satisfied, waived, or verified canonical closing objects. This is not a close-eligibility claim.</p></article>
+            <article className="pe-metric"><span>Open deals</span><strong>{metrics.openDeals}</strong><p>Active Deal objects in this root.</p></article>
+            <article className="pe-metric"><span>Open requests</span><strong>{metrics.openRequests}</strong><p>Open or acknowledged diligence requests.</p></article>
+            <article className="pe-metric"><span>Critical risks</span><strong>{metrics.criticalDealRisks}</strong><p>Open risks with persisted critical severity.</p></article>
+            <article className="pe-metric"><span>Approval actions</span><strong>{metrics.pendingApprovalActions}</strong><p>Root-linked DomainActions in pending state.</p></article>
+            <article className="pe-metric pe-metric--activity"><span><Activity size={14} /> Semantic movement</span><div><b><CircleAlert size={12} /> {semanticCount(metrics.needsAttention)} attention</b><b><Workflow size={12} /> {semanticCount(metrics.inMotion)} in motion</b><b><CheckCircle2 size={12} /> {semanticCount(metrics.verifiedOutcomes)} verified</b></div><p>{activity.data ? "Exact semantic events, not raw telemetry rows." : "Semantic source unresolved; no zero count is inferred."}</p></article>
+          </section>
+
+          <section className="pe-home__brain" data-pe-pin-zone>
+            <div><header className="pe-section-heading"><div><span className="pe-kicker">CURRENT CONTEXT</span><h2>{humanize(brain.data.root.entityType)} · one connected operating world.</h2></div><p>{brain.data.nodes.length} objects · {brain.data.edges.length} sourced relationships · {brain.data.temporal.completeness}</p></header><CompanyBrainGraph projection={brain.data} /></div>
+            <div data-pe-pin-inspector><CompanyBrainInspector projection={brain.data} /></div>
+          </section>
+
+          {activity.status === "error" ? <PeSourceState title="Semantic Activity unavailable" detail={activity.error ?? "The deterministic activity projection failed."} retry={activity.reload} /> : null}
+          {activity.data ? <SemanticActivityTheater projection={activity.data} /> : activity.status === "loading" ? <div className="pe-loading"><span className="pe-state__pulse" /> Building semantic activity from canonical change records…</div> : null}
+          <section className="pe-home__cta pe-scale-reveal"><div><span className="pe-kicker">NEXT OPERATING MOVE</span><h2>Keep the object, Work, evidence, and authority chain together.</h2><p>Use Deals for object context, Work for plans and proof, and Agents for governed assignment and learning. The selected canonical root travels with you.</p></div><a href="#company-brain-graph">Return to Company Brain <ArrowRight size={14} /></a></section>
+        </> : null}
+      </main>
+    </PeSurfaceMotion>
+  )
 }
 
 export default function PersonalizedHome() {
-  return (
-    <div className="jarvis-cursor-zone min-h-screen">
-      <CustomCursor />
-      <RoleLanding />
-    </div>
-  )
+  return <PeOwnerBoundary active="home"><OwnerHome /></PeOwnerBoundary>
 }

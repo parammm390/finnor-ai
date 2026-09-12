@@ -36,7 +36,11 @@ describe.skipIf(!available)("API dependency readiness", () => {
     const ready = await readiness();
     expect(ready.status).toBe(200);
     const body = await ready.json();
-    expect(body).toMatchObject({ ok: true, service: "finnor-api", checks: { workerFleet: { ok: true, detail: 1 } } });
+    expect(body).toMatchObject({
+      ok: true,
+      service: "finnor-api",
+      checks: { workerFleet: { ok: true, detail: { compatibleWorkers: 1 } } },
+    });
     expect(JSON.stringify(body)).not.toMatch(/password|accessToken|refreshToken|apiKey|cookie/i);
   });
 });

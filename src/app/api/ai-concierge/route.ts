@@ -27,7 +27,7 @@ const DEFAULT_FIELDS: ConciergeCollectedFields = {
   role: "",
   email: "",
   pain: "",
-  locations: "",
+  operatingScope: "",
   currentSetup: "",
   desiredSystem: "",
   suggestedPlan: "Not enough detail",
@@ -70,7 +70,7 @@ function normalizeCollectedFields(
     role: cleanString(fields.role, 120),
     email: cleanString(fields.email, 180),
     pain: cleanString(fields.pain, 220),
-    locations: cleanString(fields.locations, 80),
+    operatingScope: cleanString(fields.operatingScope, 80),
     currentSetup: cleanString(fields.currentSetup, 220),
     desiredSystem: cleanString(fields.desiredSystem, 160),
     suggestedPlan: normalizePlan(fields.suggestedPlan),
@@ -79,9 +79,9 @@ function normalizeCollectedFields(
 
 function normalizePlan(value: unknown): ConciergeCollectedFields["suggestedPlan"] {
   const plan = cleanString(value, 40).toLowerCase()
-  if (plan.includes("first") || plan.includes("chain")) return "First certified chain"
-  if (plan.includes("multi")) return "Multi-location deployment"
-  if (plan.includes("company") || plan.includes("deployment")) return "Company deployment"
+  if (plan.includes("chain") || plan.includes("certified")) return "Certified PE chain"
+  if (plan.includes("multi") || plan.includes("fund")) return "Multi-fund deployment"
+  if (plan.includes("firm") || plan.includes("deployment")) return "Firm deployment"
   return "Not enough detail"
 }
 

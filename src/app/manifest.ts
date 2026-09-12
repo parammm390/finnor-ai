@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FINNOR — AI Operating & Execution System for Water Treatment",
+    name: "FINNOR — Private Equity Decision + Execution Infrastructure",
     short_name: "FINNOR",
     description:
-      "A customized operating and execution system configured around how a water treatment company actually runs.",
+      "Canonical deal truth, underwriting lineage, IC governance, governed execution, evidence, receipts, and governed AI workers.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8faf9",

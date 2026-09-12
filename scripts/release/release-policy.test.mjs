@@ -58,7 +58,7 @@ test("production history is accepted only with forward repair; unknown and newer
   assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0110_future.sql"], "0110_future.sql"), /forward repair/)
 })
 
-test("the Phase 5 production contract is AWS ECS with no active Azure target", () => {
+test("the Phase 8 production contract retains AWS ECS and requires both PE supplier canaries", () => {
   const worker = contract.topology.worker
   assert.equal(worker.provider, "aws-ecs-fargate")
   assert.equal(worker.accountId, "601804670058")
@@ -66,6 +66,9 @@ test("the Phase 5 production contract is AWS ECS with no active Azure target", (
   assert.equal(worker.clusterName, "finnor-production")
   assert.equal(worker.serviceName, "finnor-worker")
   assert.equal(worker.sseGatewayUrl, "https://realtime.finnorai.com")
+  assert.deepEqual(contract.release.requiredComponents, ["frontend", "api", "worker", "supplierCanaryApp", "supplierCanaryAuth"])
+  assert.equal(contract.topology.supplierCanaryApp.portalRole, "app")
+  assert.equal(contract.topology.supplierCanaryAuth.portalRole, "auth")
   assert.ok(contract.forbiddenActiveProviders.includes("azure"))
   assert.doesNotMatch(JSON.stringify(worker), /azure|systemd|RunCommand|cloudapp\.azure/i)
 })
@@ -100,13 +103,16 @@ test("worker health and heartbeat guards bind the exact certified P7 release", (
   assert.throws(() => assertWorkerHeartbeat({ ...heartbeat, deploymentId: "azure:old" }, expected, contract.release.requiredMigrationHead), /heartbeat/)
 })
 
-test("active release workflow is AWS-only and includes the P7 certification gate", () => {
+test("active release workflow retains the AWS worker and adds the governed Phase 8 cutover", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
   assert.doesNotMatch(workflow, /azure\/login|AZURE_|deploy-azure|RunCommand|cloudapp\.azure/i)
   assert.match(workflow, /aws-actions\/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c/)
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-worker\.mjs/)
+  assert.match(workflow, /deploy-production\.mjs supplierCanaryApp/)
+  assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
+  assert.match(workflow, /run-p8-production-water-retirement\.mjs/)
   assert.match(workflow, /phase5-readiness/)
   assert.match(workflow, /release:pe-p7-workforce-learning/)
   assert.match(workflow, /phase6-conversation-context-kernel\.test\.ts/)
@@ -118,6 +124,8 @@ test("runtime parity requires the embedded orchestrator and exact migration", ()
     frontend: { ...expected, traceable: true },
     api: { ...expected, traceable: true },
     worker: { ...expected, traceable: true, capabilities: ["jobs", "orchestration", "realtime", "sse"] },
+    supplierCanaryApp: { ...expected, traceable: true },
+    supplierCanaryAuth: { ...expected, traceable: true },
     migrationHead: contract.release.requiredMigrationHead,
   }
   assert.doesNotThrow(() => assertRuntimeParity(contract, expected, observed))

@@ -25,6 +25,7 @@ import {
 } from "@finnor/shared-types";
 import { causalReplayProjection } from "@finnor/read-models";
 import { closePool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { migrate, type MigrationFile } from "../../packages/db/migrate";
 import { EXECUTABLE_ACTION_COUNT } from "./action-hardening-spec";
 import { verifyPeDomainBoundary } from "./verify-pe-domain-boundary";
@@ -283,7 +284,7 @@ async function installCompatibleHeartbeats(client: pg.Client, releaseSha = RELEA
         (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,
          migration_head,capabilities,environment,last_beat_at,cutover_protocol,product_epoch)
        VALUES ($1,$2,$3,'pe5-build','5.0.0','pe5-certification','pe5-local',$4,'{}','certification',now(),5,5)`,
-      [role, `${role}-compatible`, releaseSha, MIGRATION_HEAD],
+      [role, `${role}-compatible`, releaseSha, CURRENT_MIGRATION_HEAD],
     );
   }
 }

@@ -1,5 +1,5 @@
+import crypto from "node:crypto"
 import { NextResponse } from "next/server"
-import { requestIpHash } from "@/lib/demo/identity"
 
 type Bucket = {
   count: number
@@ -47,6 +47,13 @@ export function rateLimit(request: Request, options: RateLimitOptions) {
 function buildKey(request: Request, name: string) {
   const ipHash = requestIpHash(request) || "no-ip"
   return `${name}:${ipHash}`
+}
+
+function requestIpHash(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for") || ""
+  const realIp = request.headers.get("x-real-ip") || ""
+  const ip = forwardedFor.split(",")[0]?.trim() || realIp.trim()
+  return ip ? crypto.createHash("sha256").update(ip).digest("hex").slice(0, 32) : ""
 }
 
 function cleanupBuckets(now: number) {

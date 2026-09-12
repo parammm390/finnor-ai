@@ -68,6 +68,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
+      - run: npm --prefix .. run workspace:check
       - run: npm ci
       # B7.T1: route guards are inventory, not tribal knowledge. Fail before tests
       # whenever a route is added or its visible guard pattern changes without the

@@ -3,6 +3,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { migrate } from "../../packages/db/migrate";
 import { MIGRATIONS } from "../../packages/db/migrations-bundle";
+import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 
 const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@127.0.0.1:5432/finnor";
 const P7_MIGRATION = "0129_phase7_governed_workforce_learning.sql";
@@ -139,8 +140,8 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
     } finally { await source.end(); }
   }, 30_000);
 
-  it("applies only P7 and preserves populated P1-P6 Work, ObjectiveLoop, PlanRevision, and ObjectiveStep truth", () => {
-    expect(appliedUpgrade).toEqual([P7_MIGRATION]);
+  it("applies P7 plus later forward repairs and preserves populated P1-P6 Work, ObjectiveLoop, PlanRevision, and ObjectiveStep truth", () => {
+    expect(appliedUpgrade).toEqual(MIGRATIONS.filter(({ name }) => name >= P7_MIGRATION).map(({ name }) => name));
     expect(afterFingerprint).toBe(beforeFingerprint);
   });
 
@@ -186,6 +187,6 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
     expect(appliedFresh).toEqual(MIGRATIONS.map(({ name }) => name));
     expect(await migrate(freshUrl, MIGRATIONS)).toEqual([]);
     const head = await freshClient.query<{ name: string }>("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1");
-    expect(head.rows[0]?.name).toBe(P7_MIGRATION);
+    expect(head.rows[0]?.name).toBe(CURRENT_MIGRATION_HEAD);
   });
 });

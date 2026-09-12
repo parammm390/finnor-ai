@@ -382,7 +382,179 @@
         ],
         "responses": {
           "200": {
-            "description": "Tenant-scoped operational activity"
+            "description": "Tenant-scoped raw diagnostic activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "action_log",
+                              "workflow_step",
+                              "computer_step",
+                              "work_event",
+                              "call"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "occurredAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "id",
+                          "occurredAt",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor",
+                    "hasMore"
+                  ],
+                  "additionalProperties": false,
+                  "$schema": "http://json-schema.org/draft-07/schema#"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/semantic-activity": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "asOf": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  }
+                },
+                "required": [
+                  "root"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "404": {
+            "description": "PE root absent from the authenticated tenant"
+          }
+        }
+      }
+    },
+    "/api/company-brain/{operation}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "roots",
+                "projection",
+                "search",
+                "object",
+                "traverse",
+                "provenance",
+                "history",
+                "evidence-lineage",
+                "decision-lineage",
+                "available-actions",
+                "context"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant-scoped Company Brain operation"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "404": {
+            "description": "Root or object absent from the authenticated tenant"
           }
         }
       }
