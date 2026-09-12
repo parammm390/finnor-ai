@@ -28,13 +28,13 @@ describe("production-correctness pending approvals", () => {
   it("uses keyset pagination and one bulk authority projection per API page", async () => {
     const route = await readFile(new URL("../../apps/api/app/api/actions/pending/route.ts", import.meta.url), "utf8");
     const authority = await readFile(new URL("../../packages/authority/src/index.ts", import.meta.url), "utf8");
-    const jarvisClient = await readFile(new URL("../../../src/lib/jarvis-client.ts", import.meta.url), "utf8");
+    const consoleApi = await readFile(new URL("../../apps/console/lib/api.ts", import.meta.url), "utf8");
 
     expect(route).toContain(".limit(limit + 1)");
     expect(route).toContain("nextCursor");
     expect(route).toContain("eligibleApproversForActions(ctx.tenantId, actionIds)");
     expect(route).not.toContain("eligibleApproversForAction(ctx.tenantId");
     expect(authority).toContain("loadAuthorities(db, tenantId, candidates.map");
-    expect(jarvisClient).toContain("response.page.nextCursor");
+    expect(consoleApi).toContain("response.page.nextCursor");
   });
 });

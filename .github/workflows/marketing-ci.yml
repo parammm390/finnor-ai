@@ -67,10 +67,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # Runs against the production build via `next start` (playwright.config.ts's
       # webServer), not `next dev` — closer to what's actually deployed.
-      # jarvis-authenticated.spec.ts's real-login flows skip cleanly here (no
+      # The Phase 8 cutover spec's authenticated flows skip cleanly here (no
       # TEST_OWNER_EMAIL/TEST_OWNER_PASSWORD secret configured yet — see
       # finnor-os/docs/owner-actions.md for why a real credential isn't faked);
-      # jarvis-public.spec.ts's 10 tests run for real.
+      # its public shell, redirect, and honest-demo assertions run for real.
       #
       # Start+wait+test all in ONE step, deliberately: `npm run start &` in its own
       # separate `run:` step looked right (that step even reported success, and a
@@ -117,7 +117,7 @@ jobs:
           # The authenticated and labelled-fixture suites have separate release
           # gates and require their own credentials/build flags; running every e2e
           # file here caused hundreds of intentional skips and fixture timeouts.
-          npx playwright test e2e/jarvis-public.spec.ts --reporter=list > playwright.log 2>&1
+          npx playwright test e2e/phase8-product-cutover.spec.ts --reporter=list > playwright.log 2>&1
           test_status=$?
           kill "$server_pid" 2>/dev/null || true
           if [ "$lighthouse_status" -ne 0 ] || [ "$test_status" -ne 0 ]; then
