@@ -73,7 +73,6 @@ const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
 
 const requiredRuntimeRoles = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
-const persistentRuntimeRoles = ["api", "worker", "orchestrator", "scheduler-owner"]
 
 async function readAuthority({ forUpdate = false } = {}) {
   const result = await client.query(
@@ -257,9 +256,9 @@ try {
   const operationalCensusBefore = await readWaterOperationalCensus(client)
   const blockersBefore = await readBlockers()
   const freshBefore = await readFreshRuntimeRows()
-  if (authorityBefore.state !== "water_retired") {
-    assertCompatibleRuntimeRows(freshBefore, persistentRuntimeRoles, authorityBefore.epoch)
-  }
+  // ECS rolling replacement can leave the previous task's heartbeat fresh for
+  // up to 90 seconds. The strict all-role, single-release assertion below in
+  // awaitPreCutoverFleet waits for that overlap to clear before any mutation.
 
   let output
   if (!apply) {

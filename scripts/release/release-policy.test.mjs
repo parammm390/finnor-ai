@@ -155,6 +155,14 @@ test("supplier canary verification honors Vercel deployment protection", () => {
   assert.match(protection, /x-vercel-protection-bypass/)
 })
 
+test("Water retirement waits for rolling ECS heartbeat overlap before freeze", () => {
+  const retirement = readFileSync(new URL("./run-p8-production-water-retirement.mjs", import.meta.url), "utf8")
+  assert.match(retirement, /const freshBefore = await readFreshRuntimeRows\(\)/)
+  assert.match(retirement, /awaitPreCutoverFleet\(currentSurfaces, Number\(authorityBefore\.epoch\)\)/)
+  assert.match(retirement, /strict all-role, single-release assertion below/)
+  assert.doesNotMatch(retirement, /assertCompatibleRuntimeRows\(freshBefore,/)
+})
+
 test("runtime parity requires the embedded orchestrator and exact migration", () => {
   const observed = {
     frontend: { ...expected, traceable: true },
