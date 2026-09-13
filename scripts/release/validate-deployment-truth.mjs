@@ -42,7 +42,7 @@ const migrationPath = join(repoRoot, "finnor-os/packages/db/migrations", contrac
 required(existsSync(migrationPath), `required migration does not exist: ${relative(repoRoot, migrationPath)}`)
 const repositoryMigrationHead = readdirSync(join(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort().at(-1)
 required(repositoryMigrationHead === contract.release.requiredMigrationHead, `production contract migration head ${contract.release.requiredMigrationHead} differs from repository head ${repositoryMigrationHead ?? "<missing>"}`)
-for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-worker.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
+for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-worker.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 
 const dockerfile = read("finnor-os/Dockerfile.worker")
 const dockerignore = read("finnor-os/.dockerignore")
@@ -67,6 +67,7 @@ const activeFiles = [
   "scripts/release/preflight-production.mjs",
   "scripts/release/deploy-aws-worker.mjs",
   "scripts/release/verify-production-parity.mjs",
+  "scripts/release/vercel-protection.mjs",
   "scripts/release/verify-supplier-canary-release.mjs",
   "scripts/release/run-p8-production-water-retirement.mjs",
   "scripts/release/deploy-production.mjs",

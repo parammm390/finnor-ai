@@ -183,7 +183,10 @@ jobs:
       AWS_ROLE_ARN: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
       AWS_REGION: us-east-1
       FINNOR_RELEASE_SOURCE: github-actions
-      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
+      VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET }}
+      VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
+      VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
+      VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -199,7 +202,7 @@ jobs:
 
       - name: Require production credentials before any mutation
         run: |
-          for name in VERCEL_TOKEN AWS_ROLE_ARN; do
+          for name in VERCEL_TOKEN AWS_ROLE_ARN VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET VERCEL_API_AUTOMATION_BYPASS_SECRET VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET; do
             test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
           done
 
@@ -389,8 +392,8 @@ jobs:
 
       - name: Verify frontend deployment
         run: |
-          node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
-          node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production frontend
+          node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production frontend
 
       - name: Deploy prepared API
         id: api
@@ -403,8 +406,8 @@ jobs:
 
       - name: Verify API deployment
         run: |
-          node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
-          node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+          node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production api
+          node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production api
 
       - name: Deploy AWS ECS worker and embedded orchestrator
         run: |
@@ -425,6 +428,6 @@ jobs:
 
       - name: Verify final PE product authority readiness
         run: |
-          node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA"
-          node scripts/release/verify-production-readiness.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA"
+          node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" api
+          node scripts/release/verify-production-readiness.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" api
           npm --prefix finnor-os run release:p8-runtime-contract -- --readiness-url https://api-psi-brown-95.vercel.app

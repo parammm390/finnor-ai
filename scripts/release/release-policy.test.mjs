@@ -116,6 +116,12 @@ test("active release workflow retains the AWS worker and adds the governed Phase
   assert.match(workflow, /phase5-readiness/)
   assert.match(workflow, /release:pe-p7-workforce-learning/)
   assert.match(workflow, /phase6-conversation-context-kernel\.test\.ts/)
+  for (const envName of [
+    "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
+    "VERCEL_API_AUTOMATION_BYPASS_SECRET",
+    "VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET",
+    "VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET",
+  ]) assert.match(workflow, new RegExp(envName))
   assert.doesNotMatch(workflow, /FINNOR_CORE_CERTIFICATION_FILE=|release:certify -- core/)
 })
 
@@ -129,10 +135,24 @@ test("supplier canary builds are isolated from the finnor-os workspace lockfile"
   assert.match(deployScript, /vercel", deployArgs, buildDir/)
 })
 
+test("isolated supplier canary builds preserve canonical Vercel routing", () => {
+  const deployScript = readFileSync(new URL("./deploy-production.mjs", import.meta.url), "utf8")
+  const canaryConfig = JSON.parse(readFileSync(new URL("../../finnor-os/apps/supplier-canary/vercel.json", import.meta.url), "utf8"))
+  assert.ok(Array.isArray(canaryConfig.rewrites) && canaryConfig.rewrites.length > 0)
+  assert.ok(canaryConfig.rewrites.some((rewrite) => rewrite.source === "/(.*)" && rewrite.destination === "/api/index.mjs"))
+  assert.match(deployScript, /let buildConfig = \{ installCommand: app\.installCommand \}/)
+  assert.match(deployScript, /if \(isolateCanaryBuild\)/)
+  assert.match(deployScript, /JSON\.parse\(readFileSync\(join\(appDir, "vercel\.json"\), "utf8"\)\)/)
+  assert.match(deployScript, /\.\.\.canonicalConfig, installCommand: app\.installCommand/)
+})
+
 test("supplier canary verification honors Vercel deployment protection", () => {
   const verifier = readFileSync(new URL("./verify-supplier-canary-release.mjs", import.meta.url), "utf8")
-  assert.match(verifier, /VERCEL_AUTOMATION_BYPASS_SECRET/)
-  assert.match(verifier, /x-vercel-protection-bypass/)
+  const protection = readFileSync(new URL("./vercel-protection.mjs", import.meta.url), "utf8")
+  assert.match(verifier, /vercelProtectionHeaders\(component\)/)
+  assert.match(protection, /VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET/)
+  assert.match(protection, /VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET/)
+  assert.match(protection, /x-vercel-protection-bypass/)
 })
 
 test("runtime parity requires the embedded orchestrator and exact migration", () => {

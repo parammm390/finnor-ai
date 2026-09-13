@@ -1,18 +1,15 @@
-const [baseUrl, expectedSha] = process.argv.slice(2)
+import { vercelProtectionHeaders } from "./vercel-protection.mjs"
+
+const [baseUrl, expectedSha, component = "api"] = process.argv.slice(2)
 
 if (!baseUrl || !expectedSha) {
-  console.error("Usage: node scripts/release/verify-production-readiness.mjs <api-url> <commit-sha>")
+  console.error("Usage: node scripts/release/verify-production-readiness.mjs <api-url> <commit-sha> [api]")
   process.exit(2)
 }
 
-const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
 const url = `${baseUrl.replace(/\/$/, "")}/api/ready`
 const response = await fetch(url, {
-  headers: {
-    accept: "application/json",
-    "cache-control": "no-cache",
-    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
-  },
+  headers: vercelProtectionHeaders(component),
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)

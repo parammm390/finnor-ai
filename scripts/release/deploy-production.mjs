@@ -82,7 +82,7 @@ if (isolateCanaryBuild) {
   })
   cpSync(appDir, buildDir, {
     recursive: true,
-    filter: (source) => !source.split("/").includes(".vercel"),
+    filter: (source) => !/(^|[/\\])(?:\.vercel|node_modules)(?:[/\\]|$)/.test(source),
   })
 }
 const tokenArgs = process.env.VERCEL_TOKEN ? ["--token", process.env.VERCEL_TOKEN] : []
@@ -102,7 +102,15 @@ const env = {
 if (!deployOnly) {
   run("vercel", ["pull", "--yes", "--environment=production", ...tokenArgs], buildDir, env)
   const localConfig = join(buildDir, ".vercel", "finnor-release.vercel.json")
-  writeFileSync(localConfig, `${JSON.stringify({ installCommand: app.installCommand }, null, 2)}\n`)
+  let buildConfig = { installCommand: app.installCommand }
+  if (isolateCanaryBuild) {
+    const canonicalConfig = JSON.parse(readFileSync(join(appDir, "vercel.json"), "utf8"))
+    if (!canonicalConfig || typeof canonicalConfig !== "object" || Array.isArray(canonicalConfig)) {
+      throw new Error(`${appName} vercel.json must contain an object configuration`)
+    }
+    buildConfig = { ...canonicalConfig, installCommand: app.installCommand }
+  }
+  writeFileSync(localConfig, `${JSON.stringify(buildConfig, null, 2)}\n`)
   run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig, ...tokenArgs], buildDir, env)
   const buildChanges = worktreeStatus(repoRoot)
   if (buildChanges) throw new Error(`The ${appName} build changed release source:\n${buildChanges}`)

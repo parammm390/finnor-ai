@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
+import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -17,11 +18,7 @@ const expected = expectedRelease(gitRelease.head, process.env.FINNOR_RELEASE_SOU
 async function fetchRelease(component) {
   const target = contract.topology[component]
   const response = await fetch(`${target.productionUrl}${target.releasePath}`, {
-    headers: {
-      accept: "application/json", "cache-control": "no-cache",
-      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
-        ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET.trim() } : {}),
-    },
+    headers: vercelProtectionHeaders(component),
     signal: AbortSignal.timeout(20_000),
   })
   const body = await response.json().catch(() => null)

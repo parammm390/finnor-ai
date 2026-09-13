@@ -1,18 +1,15 @@
-const [baseUrl, expectedSha, expectedBuildId, expectedVersion, expectedEnvironment = "production"] = process.argv.slice(2)
+import { vercelProtectionHeaders } from "./vercel-protection.mjs"
+
+const [baseUrl, expectedSha, expectedBuildId, expectedVersion, expectedEnvironment = "production", component = "api"] = process.argv.slice(2)
 
 if (!baseUrl || !expectedSha || !expectedBuildId || !expectedVersion) {
-  console.error("Usage: node scripts/release/verify-live-release.mjs <url> <commit-sha> <build-id> <version> [environment]")
+  console.error("Usage: node scripts/release/verify-live-release.mjs <url> <commit-sha> <build-id> <version> [environment] [frontend|api]")
   process.exit(2)
 }
 
 const url = `${baseUrl.replace(/\/$/, "")}/api/release`
-const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
 const response = await fetch(url, {
-  headers: {
-    accept: "application/json",
-    "cache-control": "no-cache",
-    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
-  },
+  headers: vercelProtectionHeaders(component),
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)

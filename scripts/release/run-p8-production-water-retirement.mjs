@@ -15,6 +15,7 @@ import {
   writeTenantDispositions,
 } from "./p8-water-retirement-store.mjs"
 import { assertCanonicalRelease, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
+import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const databaseEnvIndex = process.argv.indexOf("--database-env")
@@ -36,15 +37,9 @@ assertCanonicalRelease(gitRelease)
 const expected = expectedRelease(gitRelease.head, process.env.FINNOR_RELEASE_SOURCE || "github-actions")
 const migrationHead = contract.release.requiredMigrationHead
 const minimumProtocol = 5
-const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
-
-async function fetchJson(url, { allowUnavailable = false } = {}) {
+async function fetchJson(url, component, { allowUnavailable = false } = {}) {
   const response = await fetch(url, {
-    headers: {
-      accept: "application/json",
-      "cache-control": "no-cache",
-      ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
-    },
+    headers: vercelProtectionHeaders(component),
     signal: AbortSignal.timeout(20_000),
   })
   const body = await response.json().catch(() => null)
@@ -59,9 +54,9 @@ async function inspectReleaseSurfaces() {
   const authTarget = contract.topology.supplierCanaryAuth
   const apiTarget = contract.topology.api
   const [app, auth, apiReady] = await Promise.all([
-    fetchJson(`${appTarget.productionUrl}${appTarget.releasePath}`),
-    fetchJson(`${authTarget.productionUrl}${authTarget.releasePath}`),
-    fetchJson(`${apiTarget.productionUrl}${apiTarget.readinessPath}`, { allowUnavailable: true }),
+    fetchJson(`${appTarget.productionUrl}${appTarget.releasePath}`, "supplierCanaryApp"),
+    fetchJson(`${authTarget.productionUrl}${authTarget.releasePath}`, "supplierCanaryAuth"),
+    fetchJson(`${apiTarget.productionUrl}${apiTarget.readinessPath}`, "api", { allowUnavailable: true }),
   ])
   assertSupplierCanaryRelease("supplierCanaryApp", app.body, expected, appTarget, migrationHead, minimumProtocol)
   assertSupplierCanaryRelease("supplierCanaryAuth", auth.body, expected, authTarget, migrationHead, minimumProtocol)
@@ -193,7 +188,7 @@ async function awaitFinalConvergence(initialSurfaces, activatedEpoch) {
     finalRows = await readFreshRuntimeRows()
     try {
       assertCompatibleRuntimeRows(finalRows, requiredRuntimeRoles, activatedEpoch)
-      const readiness = await fetchJson(`${contract.topology.api.productionUrl}${contract.topology.api.readinessPath}`, { allowUnavailable: true })
+      const readiness = await fetchJson(`${contract.topology.api.productionUrl}${contract.topology.api.readinessPath}`, "api", { allowUnavailable: true })
       if (readiness.body.ok === true) {
         finalReady = readiness.body
         lastError = null

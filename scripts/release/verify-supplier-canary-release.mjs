@@ -1,5 +1,6 @@
 import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
 import { loadContract } from "./release-policy.mjs"
+import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 
 const [component, baseUrl, commitSha, buildId, version] = process.argv.slice(2)
 if (!["supplierCanaryApp", "supplierCanaryAuth"].includes(component) || !baseUrl || !commitSha || !buildId || !version) {
@@ -17,13 +18,8 @@ const expected = {
   source: process.env.FINNOR_RELEASE_SOURCE || "github-actions",
 }
 const url = `${baseUrl.replace(/\/$/, "")}${target.releasePath}`
-const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
 const response = await fetch(url, {
-  headers: {
-    accept: "application/json",
-    "cache-control": "no-cache",
-    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
-  },
+  headers: vercelProtectionHeaders(component),
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)
