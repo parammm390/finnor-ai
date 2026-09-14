@@ -15,6 +15,14 @@ import {
   executeAttentionQueueQuery,
 } from "@finnor/read-models";
 import { getProjection } from "@finnor/projections";
+import { PeDomainError, peTransaction, type PeMutationContext } from "@finnor/private-equity";
+
+async function requirePrivateEquityProduct(ctx: PeMutationContext["auth"]): Promise<void> {
+  // P8 owns the active-product authority. Reuse that exact transactional guard
+  // before exposing P9's unrooted firm attention/workforce views; otherwise a
+  // tenant that has not been cut over can leak legacy Work into the PE shell.
+  await peTransaction({ auth: ctx }, async () => undefined, { readOnly: true });
+}
 
 const VIEWS: Record<string, (tenantId: string, searchParams: URLSearchParams) => Promise<unknown>> = {
   // B1.T3: these 3 are served from the CQRS cache (self-healing on a cold miss), not
@@ -53,6 +61,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ view: st
     const ctx = await requireContext(req);
     const { view } = await params;
     const searchParams = new URL(req.url).searchParams;
+    if (view === "attention" || view === "workforce-status") {
+      await requirePrivateEquityProduct(ctx);
+    }
     if (view === "attention") {
       const requested = Number(searchParams.get("limit") ?? 100);
       const limit = Number.isFinite(requested) ? Math.min(100, Math.max(1, Math.floor(requested))) : 100;
@@ -77,6 +88,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ view: st
     const data = await fn(ctx.tenantId, searchParams);
     return Response.json({ view, data });
   } catch (err) {
+    if (err instanceof PeDomainError) {
+      return Response.json(
+        { error: err.message, code: err.code, details: err.details },
+        { status: 422, headers: { "Cache-Control": "private, no-store" } },
+      );
+    }
     return errorResponse(err);
   }
 }
