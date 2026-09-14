@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   P8_WATER_TENANT_DISPOSITIONS,
+  assertAlreadyRetiredWaterTenantCensus,
   assertExactWaterTenantCensus,
   assertSupplierCanaryRelease,
   assertZeroWaterRetirementBlockers,
@@ -31,6 +32,21 @@ test("the P8 disposition census accepts only the four audited historical fixture
   assert.throws(() => assertExactWaterTenantCensus([...census, { ...census[0], tenant_id: "10000000-0000-4000-8000-000000000001" }]), /census changed/)
   assert.throws(() => assertExactWaterTenantCensus(census.map((row, index) => index === 2 ? { ...row, name: "Customer" } : row)), /name/)
   assert.throws(() => assertExactWaterTenantCensus(census.map((row, index) => index === 1 ? { ...row, simulator_enabled: false } : row)), /simulator_enabled/)
+})
+
+test("the already-retired census accepts disabled legacy modes and rejects re-enabled execution", () => {
+  const retiredCensus = census.map((row, index) => ({
+    ...row,
+    is_dealer_zero: false,
+    simulator_enabled: false,
+    training_mode: false,
+    classification: P8_WATER_TENANT_DISPOSITIONS[index].classification,
+    authorized: true,
+  }))
+  assert.equal(assertAlreadyRetiredWaterTenantCensus(retiredCensus).length, 4)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus(retiredCensus.map((row, index) => index === 1 ? { ...row, is_dealer_zero: true } : row)), /execution mode remains enabled/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus(retiredCensus.map((row, index) => index === 0 ? { ...row, authorized: false } : row)), /authorized/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus(retiredCensus.map((row, index) => index === 2 ? { ...row, classification: "UNKNOWN" } : row)), /classification/)
 })
 
 test("supplier canary proof is exact-release, role, migration, and protocol locked", () => {

@@ -56,6 +56,32 @@ export function assertExactWaterTenantCensus(rows) {
   return P8_WATER_TENANT_DISPOSITIONS
 }
 
+// Once the retirement barrier has committed, the historical tenant identities
+// intentionally remain Water while their executable legacy modes are disabled.
+// The already-applied release path must validate that post-retirement shape
+// rather than re-demanding the pre-retirement Dealer Zero/simulator flags.
+export function assertAlreadyRetiredWaterTenantCensus(rows) {
+  if (!Array.isArray(rows)) throw new Error("Water tenant census is unavailable")
+  const expectedById = new Map(P8_WATER_TENANT_DISPOSITIONS.map((row) => [row.tenantId, row]))
+  if (rows.length !== expectedById.size) {
+    throw new Error(`Retired Water tenant census changed: expected ${expectedById.size}, observed ${rows.length}`)
+  }
+  for (const row of rows) {
+    const expected = expectedById.get(row.tenant_id)
+    if (!expected) throw new Error(`Unclassified retired Water tenant ${row.tenant_id} is present`)
+    requireEqual(`${row.tenant_id} name`, row.name, expected.name)
+    requireEqual(`${row.tenant_id} vertical`, row.vertical_key, "water")
+    requireEqual(`${row.tenant_id} source_system`, row.source_system, expected.sourceSystem)
+    requireEqual(`${row.tenant_id} created_by`, row.created_by, expected.createdBy)
+    requireEqual(`${row.tenant_id} classification`, row.classification, expected.classification)
+    requireEqual(`${row.tenant_id} authorized`, row.authorized, true)
+    if (row.is_dealer_zero === true || row.simulator_enabled === true || row.training_mode === true) {
+      throw new Error(`${row.tenant_id} legacy Water execution mode remains enabled after retirement`)
+    }
+  }
+  return P8_WATER_TENANT_DISPOSITIONS
+}
+
 export function assertReleaseIdentity(label, release, expected) {
   if (!release || typeof release !== "object") throw new Error(`${label} release evidence is unavailable`)
   for (const field of ["commitSha", "buildId", "version", "environment", "source"]) {

@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   P8_WATER_TENANT_DISPOSITIONS,
+  assertAlreadyRetiredWaterTenantCensus,
   assertExactWaterTenantCensus,
   assertReleaseIdentity,
   assertSupplierCanaryRelease,
@@ -252,7 +253,11 @@ try {
     throw new Error("Product authority vertical or cutover protocol is incompatible")
   }
   const census = await readWaterTenantCensus()
-  assertExactWaterTenantCensus(census)
+  if (authorityBefore.state === "water_retired") {
+    assertAlreadyRetiredWaterTenantCensus(census)
+  } else {
+    assertExactWaterTenantCensus(census)
+  }
   const operationalCensusBefore = await readWaterOperationalCensus(client)
   const blockersBefore = await readBlockers()
   const freshBefore = await readFreshRuntimeRows()
