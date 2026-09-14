@@ -5,6 +5,11 @@ on:
     workflows: ["production-release"]
     types: [completed]
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/phase9-production-pe-bootstrap.yml"
+      - "scripts/release/bootstrap-phase9-production-pe.mjs"
 
 concurrency:
   group: phase9-production-pe-bootstrap
@@ -15,7 +20,7 @@ permissions:
 
 jobs:
   bootstrap:
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -27,10 +32,10 @@ jobs:
       FINNOR_PHASE9_PE_CLIENT_KEY: ${{ vars.FINNOR_PHASE9_PE_CLIENT_KEY || 'finnor-internal-pe-production' }}
       FINNOR_PHASE9_PE_TENANT_NAME: ${{ vars.FINNOR_PHASE9_PE_TENANT_NAME || 'Finnor Private Equity Internal' }}
     steps:
-      - name: Checkout exact released source
+      - name: Checkout bootstrap source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
