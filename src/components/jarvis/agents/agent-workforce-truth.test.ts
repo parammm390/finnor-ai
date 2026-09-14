@@ -9,14 +9,14 @@ describe("JARVIS governed workforce truth", () => {
   it("has no static fleet authority and reads the source-backed workforce projection", () => {
     expect(existsSync(join(root, "src/components/jarvis/agents/agent-fleet.ts"))).toBe(false)
     expect(surface).not.toContain("AGENT_FLEET")
-    expect(surface).toContain("useWorkforceStatus")
-    expect(surface).toContain("profileIds.has(worker.id)")
-    expect(surface).toContain("assignmentNodes.has(assignment.id)")
+    expect(surface).toContain("usePeProductData")
+    expect(surface).toContain("profileById.has(worker.id)")
+    expect(surface).toContain("rootWorkIds.has(worker.latestAssignment.workId)")
   })
 
   it("never substitutes static agents or inferred health for P7 truth", () => {
     expect(surface).not.toMatch(/Five real calling agents|Fifty-nine registered actions|integrationsProjection|voiceAssistants/)
-    expect(surface).toContain("No workforce state inferred")
-    expect(surface).toContain("No decorative or static agent persona is shown")
+    expect(surface).toContain("UNKNOWN")
+    expect(surface).toContain("No static persona, decorative agent, or tenant-wide worker was substituted")
   })
 })

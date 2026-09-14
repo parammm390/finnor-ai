@@ -1,8 +1,8 @@
 "use client"
 
 // Phase 1.3/1.4: real Supabase session state for the JARVIS frontend. Logged-out
-// visitors keep seeing the labeled sample-data view (unchanged from before); a real
-// session unlocks live data by having api.ts forward its access token to the proxy,
+// visitors see only the closed signed-out boundary; a real session unlocks live data
+// by having api.ts forward its access token to the proxy,
 // which forwards it to the finnor-os backend's own requireContext/RBAC — no new
 // authorization logic lives here or in the proxy, only session plumbing.
 
@@ -68,9 +68,8 @@ const JarvisAuthContext = createContext<JarvisAuthState>({ session: null, loadin
 
 export function JarvisAuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  // The signed-out command center is intentionally public and every private API is
-  // still backend-gated. Rendering it while Supabase restores a session avoids a
-  // blank full-screen LCP delay for every cold public visit.
+  // The authenticated product stays closed until Supabase resolves. Every private
+  // API remains backend-gated and no sample business facts are rendered.
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
   const [authRetry, setAuthRetry] = useState(0)

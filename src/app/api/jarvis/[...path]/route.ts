@@ -44,7 +44,13 @@ function isAllowedGet(segments: string[]): boolean {
   // Activity Theater uses the semantic-activity projection below.
   if (segments.length === 1 && a === "activity") return true
   if (segments.length === 1 && a === "workspace-config") return true
-  if (segments.length === 2 && a === "read-models" && b === "workforce-status") return true
+  if (segments.length === 2 && a === "read-models" && (b === "workforce-status" || b === "attention")) return true
+  if (segments.length === 1 && a === "works") return true
+  if (segments.length === 2 && a === "works") return true
+  if (segments.length === 3 && a === "investment-cases" && segments[2] === "underwriting") return true
+  if (segments.length === 4 && a === "underwriting" && b === "runs" && segments[3] === "explain") return true
+  if (segments.length === 3 && a === "underwriting" && b === "runs" && segments[2] === "diff") return true
+  if (segments.length === 4 && a === "private-equity" && b === "ic" && segments[2] === "cases") return true
   return false
 }
 

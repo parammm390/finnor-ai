@@ -108,9 +108,10 @@ const WORLD_COLLECTIONS: Array<[PeEntityType, keyof PeWorldState]> = [
 ];
 
 const FACT_KEYS = [
-  "state", "status", "version", "revision", "graphVersion", "summary", "description", "codeName",
+  "state", "status", "version", "revision", "graphVersion", "summary", "description", "requestText", "conditionText", "itemText", "codeName",
   "targetClosingAt", "actualCloseAt", "signedLoiAt", "kind", "role", "priority", "severity", "materiality",
   "dueAt", "targetAt", "required", "requiredForClose", "late", "overdue", "validity", "resultHash",
+  "ownerPartyType", "ownerPartyId", "responsibleDealPartyId", "verifiedByEmployeeId",
   "semanticHash", "contentHash", "versionNumber", "sourceType", "sourceSystem", "observedAt", "retrievedAt",
   "computedAt", "finalizedAt", "completedAt", "runtimeStatus", "profileStatus", "currentLoad", "attempt",
   "capability", "nodeKind", "reason", "relationship", "truthStatus", "mappingStatus", "conflictState",
@@ -155,7 +156,7 @@ function humanize(value: string): string {
 }
 
 function labelOf(type: CompanyBrainObjectRef["type"], row: Record<string, unknown>, id: string): string {
-  for (const key of ["name", "title", "question", "condition", "statement", "item", "objective", "key", "assumptionKey", "decision", "actionType", "kind"]) {
+  for (const key of ["name", "title", "question", "conditionText", "condition", "statement", "itemText", "item", "requestText", "description", "objective", "key", "assumptionKey", "decision", "actionType", "kind"]) {
     const value = text(row[key]);
     if (value) return value;
   }

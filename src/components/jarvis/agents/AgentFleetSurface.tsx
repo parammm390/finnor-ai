@@ -1,64 +1,101 @@
 "use client"
 
 import { useMemo } from "react"
-import { Activity, ArrowRight, Bot, CircleDot, ShieldCheck, Sparkles } from "lucide-react"
-import { CompanyBrainInspector } from "../pe/CompanyBrainInspector"
-import { PeOwnerBoundary, PeSourceState } from "../pe/PeSurfaceFrame"
-import { PeRootPicker } from "../pe/PeRootPicker"
-import { PeSurfaceMotion } from "../pe/PeSurfaceMotion"
+import { Bot, ShieldCheck } from "lucide-react"
+import { usePeProductData } from "../product/ProductDataProvider"
+import { workObjectiveLabel } from "../product/deal-model"
+import { DataTable, EmptyState, EntityLink, ErrorState, PageHeader, Skeleton, Status, TruthState } from "../product/primitives"
 import { usePeOperatingContext } from "../pe/PeOperatingContextProvider"
-import { humanize, isInspectionTarget, refKey, type CompanyBrainNode, type WorkforceAssignmentProjection, type WorkforceWorkerProjection } from "../pe/contracts"
-import { useCompanyBrainProjection, useWorkforceStatus } from "../pe/use-pe-data"
+import { humanize, isInspectionTarget, refKey, type CompanyBrainEdge, type CompanyBrainNode, type WorkforceAssignmentProjection, type WorkforceWorkerProjection } from "../pe/contracts"
 
-function displayTime(value: string | null): string {
-  if (!value) return "Not recorded"
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.valueOf()) ? "Not recorded" : parsed.toLocaleString()
-}
-
-function displayRate(value: number | null): string {
+function rate(value: number | null): string {
   return value === null ? "UNKNOWN" : `${Math.round(value * 100)}%`
 }
 
-function AgentRailRow({ worker, node, active }: { worker: WorkforceWorkerProjection; node: CompanyBrainNode; active: boolean }) {
-  const operating = usePeOperatingContext()
-  if (!isInspectionTarget(node.inspectionTarget)) return null
-  return <button type="button" data-active={active ? "true" : "false"} onClick={() => operating.inspect(node.inspectionTarget, node.ref)}><span className="pe-agent-glyph"><Bot size={15} /><i /></span><span><strong>{worker.name}</strong><small>{worker.runtimeStatus} · revision {worker.activeRevision?.revision ?? "none"}</small></span><ArrowRight size={12} /></button>
+function failureReason(assignment: WorkforceAssignmentProjection | null, attention: string | null): string {
+  if (attention) return attention
+  if (!assignment?.failure) return assignment?.reassignmentReason ?? "No recorded blocker"
+  const code = typeof assignment.failure.code === "string" ? assignment.failure.code : null
+  const message = typeof assignment.failure.message === "string" ? assignment.failure.message : null
+  return [code, message].filter(Boolean).join(" · ") || "Recorded assignment failure"
 }
 
-function Assignment({ assignment, node }: { assignment: WorkforceAssignmentProjection; node: CompanyBrainNode }) {
-  const operating = usePeOperatingContext()
-  if (!isInspectionTarget(node.inspectionTarget)) return null
-  return <button type="button" className="pe-assignment" data-state={assignment.state} onClick={() => operating.inspect(node.inspectionTarget, node.ref)}><span><b>{humanize(assignment.capability)}</b><em>{assignment.state}</em></span><p>Work {assignment.workId.slice(0, 8)}… · PlanNode {assignment.planNodeId.slice(0, 8)}…</p><small>attempt {assignment.attempt} · {assignment.assignmentReason}</small></button>
+function assignmentLabel(assignment: WorkforceAssignmentProjection | null, nodes: CompanyBrainNode[]): string {
+  if (!assignment) return "No current assignment"
+  return nodes.find((node) => node.type === "plan_node" && node.ref.id === assignment.planNodeId)?.label ?? `${humanize(assignment.nodeKind)} assignment`
 }
 
-function AgentStage({ worker, assignments, assignmentNodes }: { worker: WorkforceWorkerProjection; assignments: WorkforceAssignmentProjection[]; assignmentNodes: Map<string, CompanyBrainNode> }) {
-  const current = assignments.filter((assignment) => ["queued", "claimed", "running", "waiting"].includes(assignment.state))
-  return <section className="pe-agent-stage pe-scale-reveal"><header><div><span className="pe-agent-glyph"><Bot size={16} /><i /></span><span><small>SELECTED AGENT PROFILE</small><h2>{worker.name}</h2><p>{worker.key} · {worker.profileStatus} · {worker.runtimeStatus}</p></span></div><strong>{worker.currentLoad}<small> / {worker.activeRevision?.maxConcurrentAssignments ?? "UNKNOWN"} active load</small></strong></header><div className="pe-agent-stage__authority"><ShieldCheck size={15} /><p>Capability grants permit attempts only. P6 selection, Policy, Authority, BusinessEffect, receipts, and proof remain authoritative.</p></div><div className="pe-agent-stage__grid"><section><header><CircleDot size={13} /><b>Current ownership</b><span>{current.length}</span></header>{current.length ? current.map((assignment) => { const node = assignmentNodes.get(assignment.id); return node ? <Assignment key={assignment.id} assignment={assignment} node={node} /> : null }) : <p>Known empty: no current root-linked assignment.</p>}</section><section><header><ShieldCheck size={13} /><b>Exact grants</b><span>{worker.activeRevision ? worker.activeRevision.capabilityGrants.length : "UNKNOWN"}</span></header>{worker.activeRevision ? worker.activeRevision.capabilityGrants.map((grant) => <div className="pe-agent-contract" key={`${grant.kind}:${grant.capability}`}><span>{grant.kind}</span><strong>{humanize(grant.capability)}</strong></div>) : <p>No active immutable AgentProfileRevision is recorded.</p>}</section><section><header><Activity size={13} /><b>Verified metrics</b><span>{worker.metrics.length}</span></header>{worker.metrics.length ? worker.metrics.map((metric) => <div className="pe-agent-contract" key={`${metric.agentRevisionId}:${metric.capability}:${metric.contextClass}`}><span>{metric.sampleState}</span><strong>{humanize(metric.capability)} · {metric.verifiedCompletionCount}/{metric.qualityAttemptCount} verified · {displayRate(metric.verifiedCompletionRate)}</strong></div>) : <p>No verified metric slice is available. Performance remains UNKNOWN.</p>}</section><section><header><Sparkles size={13} /><b>Assignment history</b><span>{assignments.length}</span></header>{assignments.length ? assignments.map((assignment) => { const node = assignmentNodes.get(assignment.id); return node ? <Assignment key={assignment.id} assignment={assignment} node={node} /> : null }) : <p>Known empty: no root-linked assignment history.</p>}</section></div><footer>Active revision: {worker.activeRevision?.id ?? "not recorded"} · source as of {displayTime(worker.latestAssignment?.updatedAt ?? null)}</footer></section>
+function connectedNodes(nodes: CompanyBrainNode[], edges: CompanyBrainEdge[], start: CompanyBrainNode, depth = 4): CompanyBrainNode[] {
+  const index = new Map(nodes.map((node) => [refKey(node.ref), node]))
+  const visited = new Set([refKey(start.ref)])
+  let frontier = new Set(visited)
+  for (let level = 0; level < depth; level += 1) {
+    const next = new Set<string>()
+    for (const edge of edges) {
+      const from = refKey(edge.fromRef)
+      const to = refKey(edge.toRef)
+      if (frontier.has(from) && !visited.has(to)) next.add(to)
+      if (frontier.has(to) && !visited.has(from)) next.add(from)
+    }
+    if (!next.size) break
+    next.forEach((key) => visited.add(key))
+    frontier = next
+  }
+  return [...visited].flatMap((key) => index.get(key) ? [index.get(key)!] : [])
 }
 
-function AgentWorkspace() {
+function AgentRow({ worker, profile, nodes, edges, dealNode }: { worker: WorkforceWorkerProjection; profile: CompanyBrainNode; nodes: CompanyBrainNode[]; edges: CompanyBrainEdge[]; dealNode: CompanyBrainNode | null }) {
   const operating = usePeOperatingContext()
-  const brain = useCompanyBrainProjection(operating.context.root)
-  const workforce = useWorkforceStatus(Boolean(operating.context.root))
-  const profileNodes = useMemo(() => brain.data?.nodes.filter((node) => node.type === "agent_profile") ?? [], [brain.data])
-  const profileIds = useMemo(() => new Set(profileNodes.map((node) => node.ref.id)), [profileNodes])
-  const assignmentNodes = useMemo(() => new Map((brain.data?.nodes.filter((node) => node.type === "agent_assignment") ?? []).map((node) => [node.ref.id, node])), [brain.data])
-  const workers = useMemo(() => workforce.data?.workers.filter((worker) => profileIds.has(worker.id)) ?? [], [profileIds, workforce.data])
-  const selectedProfileId = operating.context.selectedObject?.type === "agent_profile" ? operating.context.selectedObject.id : operating.inspection?.kind === "agent" ? operating.inspection.agentProfileId : null
-  const selected = workers.find((worker) => worker.id === selectedProfileId) ?? null
-  const assignments = selected ? workforce.data?.assignments.filter((assignment) => assignment.agentProfileId === selected.id && assignmentNodes.has(assignment.id)) ?? [] : []
-
-  return <PeSurfaceMotion><main className="pe-agents"><header className="pe-agents__hero" data-pe-hero-enter><div><span className="pe-kicker">P7 · GOVERNED WORKFORCE + LEARNING</span><h1>Worker identity is explicit. Human authority stays human.</h1><p>Only AgentProfiles and assignments connected to Work in the selected PE root are rendered.</p></div><div className="pe-agents__truth"><Bot size={18} /><span><b>{workforce.status === "ready" ? `${workers.length} root-linked worker${workers.length === 1 ? "" : "s"}` : "Source unresolved"}</b><small>{workforce.data ? `${workforce.data.sourceStatus.status} bounded view · ${displayTime(workforce.data.sourceStatus.asOf)}` : "No workforce state inferred"}</small></span></div></header><section className="pe-agents__layout" data-pe-pin-zone><aside className="pe-agents__rail"><PeRootPicker compact /><div className="pe-agent-list"><header><span>AI WORKERS</span><b>{brain.data ? workers.length : "—"}</b></header>{workers.map((worker) => { const node = profileNodes.find((candidate) => candidate.ref.id === worker.id); return node ? <AgentRailRow key={worker.id} worker={worker} node={node} active={selected?.id === worker.id} /> : null })}{brain.status === "ready" && workforce.status === "ready" && workers.length === 0 ? <p>Known empty: no configured worker has a persisted assignment to this root.</p> : null}</div></aside><div className="pe-agents__center">
-    {!operating.context.root ? <section className="pe-home__no-context"><Bot size={22} /><span className="pe-kicker">NO ROOT SELECTED</span><h2>Select a canonical PE context.</h2><p>Tenant-wide workers are not substituted for a missing root relationship.</p></section> : null}
-    {brain.status === "error" ? <PeSourceState title="Company Brain unavailable" detail={brain.error ?? "P7 composition could not be resolved."} retry={brain.reload} /> : null}
-    {workforce.status === "error" ? <PeSourceState title="Workforce read unavailable" detail={workforce.error ?? "The canonical P7 read model failed."} retry={workforce.reload} /> : null}
-    {(brain.status === "loading" || workforce.status === "loading") ? <div className="pe-loading"><span className="pe-state__pulse" /> Resolving governed workforce…</div> : null}
-    {brain.data && workforce.data && !selected ? <section className="pe-home__no-context"><CircleDot size={20} /><span className="pe-kicker">AGENT SELECTION</span><h2>{workers.length ? "Choose an exact AgentProfile." : "No root-linked agent is recorded."}</h2><p>{workers.length ? "The profile, immutable revision, grants, assignments, and verified learning remain separate objects." : "No decorative or static agent persona is shown."}</p></section> : null}
-    {selected ? <AgentStage worker={selected} assignments={assignments} assignmentNodes={assignmentNodes} /> : null}
-  </div><div data-pe-pin-inspector>{brain.data ? <CompanyBrainInspector projection={brain.data} /> : <aside className="pe-inspector"><div className="pe-inspector__empty"><strong>No inspectable AgentProfile</strong><p>Select a PE root and source-backed worker.</p></div></aside>}</div></section></main></PeSurfaceMotion>
+  const product = usePeProductData()
+  const assignment = worker.latestAssignment
+  const assignmentNode = assignment ? nodes.find((node) => node.type === "agent_assignment" && node.ref.id === assignment.id) : null
+  const workNode = assignment ? nodes.find((node) => node.type === "work" && node.ref.id === assignment.workId) : null
+  const attention = assignment ? product.attention.data?.items.find((item) => item.workId === assignment.workId) ?? null : null
+  const metrics = worker.metrics.filter((metric) => !assignment || metric.capability === assignment.capability)
+  const verified = metrics.reduce((sum, item) => sum + item.verifiedCompletionCount, 0)
+  const attempts = metrics.reduce((sum, item) => sum + item.qualityAttemptCount, 0)
+  const quality = metrics.find((item) => item.sampleState === "KNOWN")
+  const proposal = product.workforce.data?.proposals.find((item) => item.targetId === worker.id || item.targetAgentRevisionId === worker.activeRevision?.id)
+  const learning = product.workforce.data?.learningRevisions.find((item) => item.targetAgentProfileId === worker.id)
+  const evidenceAndOutcomes = assignmentNode ? connectedNodes(nodes, edges, assignmentNode).filter((node) => ["evidence_source", "evidence_version", "document", "document_version", "business_effect", "decision_receipt", "completion_proof"].includes(node.type)) : []
+  const firstOutcome = evidenceAndOutcomes.find((node) => ["completion_proof", "decision_receipt", "business_effect"].includes(node.type)) ?? evidenceAndOutcomes[0]
+  return <tr>
+    <td>{isInspectionTarget(profile.inspectionTarget) ? <EntityLink onOpen={() => operating.inspect(profile.inspectionTarget, profile.ref)}><span className="pw-agent-name"><Bot size={14} /><strong>{worker.name}</strong></span></EntityLink> : worker.name}<small className="pw-cell-meta"><Status value={worker.runtimeStatus} /></small></td>
+    <td>{assignment ? humanize(assignment.capability) : worker.activeRevision?.capabilityGrants.length ? worker.activeRevision.capabilityGrants.slice(0, 2).map((grant) => humanize(grant.capability)).join(", ") : "No active capability grant"}</td>
+    <td>{assignmentNode && isInspectionTarget(assignmentNode.inspectionTarget) ? <EntityLink onOpen={() => operating.inspect(assignmentNode.inspectionTarget, assignmentNode.ref)}>{assignmentLabel(assignment, nodes)}</EntityLink> : assignmentLabel(assignment, nodes)}</td>
+    <td>{assignment && dealNode && isInspectionTarget(dealNode.inspectionTarget) ? <EntityLink onOpen={() => operating.inspect(dealNode.inspectionTarget, dealNode.ref)}>{dealNode.label}</EntityLink> : assignment ? "Deal label unavailable" : "No active Deal assignment"}</td>
+    <td>{workNode ? <EntityLink onOpen={() => operating.inspect(workNode.inspectionTarget, workNode.ref)}>{workObjectiveLabel(workNode, nodes, edges)}</EntityLink> : assignment ? "Linked Work label unavailable" : "No active Work"}</td>
+    <td><Status value={assignment?.state ?? worker.runtimeStatus} /></td>
+    <td>{attention?.nextHumanBoundary.description ?? (assignment?.state === "waiting" ? "Waiting boundary is recorded; inspect Work for exact condition." : "No active human boundary")}</td>
+    <td>{failureReason(assignment?.state === "failed" || assignment?.state === "reassigned" ? assignment : null, attention?.reason ?? null)}</td>
+    <td>{firstOutcome && isInspectionTarget(firstOutcome.inspectionTarget) ? <EntityLink onOpen={() => operating.inspect(firstOutcome.inspectionTarget, firstOutcome.ref)}>{humanize(firstOutcome.type)}</EntityLink> : attempts ? `${verified}/${attempts} verified` : "UNKNOWN"}<small className="pw-cell-meta">{evidenceAndOutcomes.length ? `${evidenceAndOutcomes.length} persisted evidence / outcome object(s) · ${verified}/${attempts} quality completions verified` : "No recorded evidence or verified outcome link"}</small></td>
+    <td>{quality ? `${rate(quality.verifiedCompletionRate)} verified · ${rate(quality.qualityFailureRate)} quality failure` : "UNKNOWN"}</td>
+    <td>{proposal ? <><Status value={proposal.status} /><small className="pw-cell-meta">{proposal.sampleSize} evidence samples</small></> : learning ? "Promoted learning revision" : "No proposed learning change"}</td>
+  </tr>
 }
 
 export default function AgentFleetSurface() {
-  return <PeOwnerBoundary active="agents"><AgentWorkspace /></PeOwnerBoundary>
+  const product = usePeProductData()
+  const operating = usePeOperatingContext()
+  const nodes = useMemo(() => product.brain.data?.nodes ?? [], [product.brain.data])
+  const profileNodes = useMemo(() => nodes.filter((node) => node.type === "agent_profile"), [nodes])
+  const profileById = useMemo(() => new Map(profileNodes.map((node) => [node.ref.id, node])), [profileNodes])
+  const rootWorkIds = useMemo(() => new Set(nodes.filter((node) => node.type === "work").map((node) => node.ref.id)), [nodes])
+  const workers = useMemo(() => (product.workforce.data?.workers ?? []).filter((worker) => {
+    if (!profileById.has(worker.id)) return false
+    return !worker.latestAssignment || rootWorkIds.has(worker.latestAssignment.workId)
+  }), [product.workforce.data, profileById, rootWorkIds])
+  const dealNode = nodes.find((node) => node.type === "pe_deal") ?? null
+  const edges = product.brain.data?.edges ?? []
+
+  return <main className="pw-page pw-agents-page">
+    <PageHeader eyebrow="AGENTS · GOVERNED WORKFORCE" title="Business-shaped AI workforce" description="AgentProfile identity, immutable capabilities, assignments, human boundaries, verified quality, and learning remain distinct source-backed objects." actions={<span className="pw-authority-chip"><ShieldCheck size={14} /> Human authority remains backend-owned</span>} />
+    {!operating.context.root ? <EmptyState title="Select a Deal or PE root" detail="Tenant-wide agents are not substituted without an exact persisted relationship to the current context." /> : null}
+    {(product.brain.status === "loading" || product.workforce.status === "loading") && !product.workforce.data ? <Skeleton rows={8} label="Resolving governed workforce" /> : null}
+    {product.brain.status === "error" && !product.brain.data ? <ErrorState title="Company Brain unavailable" detail={product.brain.error ?? "Agent relationships could not be resolved."} state={product.brain.truthState} onRetry={product.brain.reload} /> : null}
+    {product.workforce.status === "error" ? <ErrorState title={product.workforce.data ? "Showing stale workforce data" : "Workforce read unavailable"} detail={product.workforce.error ?? "The canonical P7 read model failed."} state={product.workforce.data ? "STALE" : product.workforce.truthState} onRetry={product.workforce.reload} /> : null}
+    {product.brain.data && product.workforce.data && workers.length ? <><section className="pw-agent-summary"><article><span>Root-linked workers</span><strong>{workers.length}</strong><TruthState state={product.workforce.truthState} compact /></article><article><span>Active assignments</span><strong>{workers.filter((worker) => worker.latestAssignment && ["queued", "claimed", "running", "waiting"].includes(worker.latestAssignment.state)).length}</strong><Status value="GOVERNED" /></article><article><span>Blocked / failed</span><strong>{workers.filter((worker) => worker.latestAssignment && ["failed", "reassigned"].includes(worker.latestAssignment.state)).length}</strong><Status value={workers.some((worker) => worker.latestAssignment && ["failed", "reassigned"].includes(worker.latestAssignment.state)) ? "ATTENTION" : "KNOWN EMPTY"} /></article></section>
+      <DataTable label="Business-shaped governed AI workforce"><thead><tr><th>Agent</th><th>Capability</th><th>Current assignment</th><th>Deal</th><th>Work</th><th>Progress</th><th>Human boundary</th><th>Blocked reason</th><th>Evidence / outcome</th><th>Quality</th><th>Learning</th></tr></thead><tbody>{workers.map((worker) => <AgentRow key={worker.id} worker={worker} profile={profileById.get(worker.id)!} nodes={nodes} edges={edges} dealNode={dealNode} />)}</tbody></DataTable>
+    </> : product.brain.data && product.workforce.data ? <EmptyState icon={<Bot size={20} />} title="Known empty: no root-linked governed worker" detail="No static persona, decorative agent, or tenant-wide worker was substituted." /> : null}
+  </main>
 }

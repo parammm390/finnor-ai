@@ -9,6 +9,8 @@ import {
 } from "./contracts"
 
 export const EMPTY_PE_CONTEXT: PeOperatingContext = { root: null, selectedObject: null, workId: null }
+export const DEAL_SECTION_KEYS = ["overview", "underwriting", "diligence", "ic", "evidence", "closing", "work", "activity"] as const
+export type DealSectionKey = (typeof DEAL_SECTION_KEYS)[number]
 
 function parseJson(value: string | null): unknown {
   if (!value) return null
@@ -30,6 +32,27 @@ export function readPeOperatingContext(params: Pick<URLSearchParams, "get">): Pe
 export function readInspectionTarget(params: Pick<URLSearchParams, "get">): InspectionTarget | null {
   const target = parseJson(params.get("inspect"))
   return isInspectionTarget(target) ? target : null
+}
+
+export function rootFromDealPath(pathname: string): PeWorldRootRef | null {
+  const match = /^\/jarvis\/deals\/([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})(?:\/|$)/i.exec(pathname)
+  return match?.[1] ? { entityType: "pe_deal", entityId: match[1] } : null
+}
+
+export function dealSectionForTarget(target: InspectionTarget, subjectRef?: CompanyBrainObjectRef): DealSectionKey {
+  if (target.kind === "underwriting") return "underwriting"
+  if (target.kind === "ic") return "ic"
+  if (target.kind === "evidence" || target.kind === "document") return "evidence"
+  if (["work", "plan_revision", "plan_node", "domain_action", "business_effect", "decision_receipt", "completion_proof", "assignment", "attention"].includes(target.kind)) return "work"
+  const ref = target.kind === "brain_object" ? target.ref : target.kind === "pe_context" ? target.objectRef : subjectRef
+  if (!ref) return "overview"
+  if (ref.namespace === "underwriting") return "underwriting"
+  if (ref.namespace === "planning" || ["work", "domain_action", "business_effect", "decision_receipt", "completion_proof", "attention", "agent_assignment"].includes(ref.type)) return "work"
+  if (["document", "document_version", "evidence_source", "evidence_version", "source_observation", "source_coverage", "source_conflict", "pe_document_link", "pe_evidence_link"].includes(ref.type)) return "evidence"
+  if (ref.type.startsWith("pe_ic_")) return "ic"
+  if (["pe_workstream", "pe_request", "pe_deliverable", "pe_finding", "pe_deal_risk", "pe_finding_risk_link", "pe_dependency", "pe_milestone"].includes(ref.type)) return "diligence"
+  if (ref.type === "pe_closing_condition" || ref.type === "pe_closing_item") return "closing"
+  return "overview"
 }
 
 export function inspectionSurface(target: InspectionTarget): "/jarvis" | "/jarvis/deals" | "/jarvis/work" | "/jarvis/agents" {
@@ -85,7 +108,7 @@ export function withPeOperatingContext(href: string, context: PeOperatingContext
   const [withoutHash, hash] = href.split("#", 2)
   const [path, query] = withoutHash!.split("?", 2)
   const params = new URLSearchParams(query ?? "")
-  for (const key of ["root", "object", "workId", "inspect"]) params.delete(key)
+  for (const key of ["root", "object", "workId", "inspect", "inspectorTab"]) params.delete(key)
   if (context.root) params.set("root", JSON.stringify(context.root))
   if (context.selectedObject) params.set("object", JSON.stringify(context.selectedObject))
   if (context.workId) params.set("workId", context.workId)
@@ -94,10 +117,16 @@ export function withPeOperatingContext(href: string, context: PeOperatingContext
   return `${path}${suffix}${hash ? `#${hash}` : ""}`
 }
 
-export function inspectionHref(context: PeOperatingContext, target: InspectionTarget, subjectRef?: CompanyBrainObjectRef): string | null {
+export function inspectionHref(context: PeOperatingContext, target: InspectionTarget, subjectRef?: CompanyBrainObjectRef, currentPath?: string): string | null {
   const next = contextForInspection(context, target, subjectRef)
   if (!next.root) return null
-  return withPeOperatingContext(inspectionSurface(target), next, target)
+  const surface = inspectionSurface(target)
+  const path = surface === "/jarvis/deals" && next.root.entityType === "pe_deal"
+    ? `/jarvis/deals/${next.root.entityId}/${dealSectionForTarget(target, subjectRef)}`
+    : surface === "/jarvis/deals" && currentPath?.startsWith("/jarvis/deals/")
+      ? currentPath
+      : surface
+  return withPeOperatingContext(path, next, target)
 }
 
 export function rootContext(root: PeWorldRootRef): PeOperatingContext {

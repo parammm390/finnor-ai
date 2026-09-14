@@ -32,6 +32,34 @@ const IC_SOURCE_TYPES = [
   "private_equity:pe_decision", "private_equity:pe_finding",
 ].map(q);
 
+// These allowlists mirror the canonical table constraints/registry rather than
+// only the original P2 Deal-child subset. P1 extended both link tables to its
+// investment cognition objects, and P5 registered its consequential process
+// objects as Work-attachable. A valid persisted row must never make projection
+// construction fail merely because the UI registry lagged the canonical owner.
+const DOCUMENT_LINK_SOURCE_TYPES = [
+  "private_equity:pe_deal", "private_equity:pe_request", "private_equity:pe_deliverable",
+  "private_equity:pe_finding", "private_equity:pe_closing_condition", "private_equity:pe_closing_item",
+  "private_equity:pe_strategy", "private_equity:pe_opportunity", "private_equity:pe_investment_case",
+  "private_equity:pe_thesis", "private_equity:pe_assumption", "private_equity:pe_decision",
+].map(q);
+
+const EVIDENCE_LINK_SOURCE_TYPES = [
+  "private_equity:pe_deal", "private_equity:pe_finding", "private_equity:pe_deal_risk",
+  "private_equity:pe_closing_condition", "private_equity:pe_closing_item", "private_equity:pe_strategy",
+  "private_equity:pe_opportunity", "private_equity:pe_investment_case", "private_equity:pe_thesis",
+  "private_equity:pe_assumption", "private_equity:pe_decision",
+].map(q);
+
+const WORK_ATTACHABLE_TYPES = [
+  "private_equity:pe_opportunity", "private_equity:pe_deal", "private_equity:pe_investment_case",
+  "private_equity:pe_thesis", "private_equity:pe_assumption", "private_equity:pe_decision",
+  "private_equity:pe_workstream", "private_equity:pe_request", "private_equity:pe_deliverable",
+  "private_equity:pe_finding", "private_equity:pe_deal_risk", "private_equity:pe_milestone",
+  "private_equity:pe_closing_condition", "private_equity:pe_closing_item", "private_equity:pe_ic_case",
+  "private_equity:pe_ic_question", "private_equity:pe_ic_condition",
+].map(q);
+
 const registry: CompanyBrainRelationshipRegistration[] = [
   {
     kind: "strategy_opportunity", fromTypes: [q("private_equity:pe_strategy")], toTypes: [q("private_equity:pe_opportunity")], direction: "outbound",
@@ -78,11 +106,11 @@ const registry: CompanyBrainRelationshipRegistration[] = [
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_dependencies", columns: ["id", "blocker_type", "blocker_id", "blocked_type", "blocked_id"] }], resolver: "PeWorldState.dependencies", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
   },
   {
-    kind: "document_link", fromTypes: [q("private_equity:pe_deal"), q("private_equity:pe_request"), q("private_equity:pe_deliverable"), q("private_equity:pe_finding"), q("private_equity:pe_closing_condition"), q("private_equity:pe_closing_item")], toTypes: [q("core:document")], direction: "outbound",
+    kind: "document_link", fromTypes: DOCUMENT_LINK_SOURCE_TYPES, toTypes: [q("core:document")], direction: "outbound",
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_document_links", columns: ["id", "entity_type", "entity_id", "document_id"] }], resolver: "PeWorldState.documentLinks", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
   },
   {
-    kind: "evidence_link", fromTypes: [q("private_equity:pe_finding"), q("private_equity:pe_deal_risk"), q("private_equity:pe_closing_condition"), q("private_equity:pe_closing_item")], toTypes: [q("core:evidence_source"), q("core:evidence_version")], direction: "outbound",
+    kind: "evidence_link", fromTypes: EVIDENCE_LINK_SOURCE_TYPES, toTypes: [q("core:evidence_source"), q("core:evidence_version")], direction: "outbound",
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_evidence_links", columns: ["id", "entity_type", "entity_id", "evidence_source_id", "evidence_version_id"] }], resolver: "PeWorldState.evidenceLinks", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
   },
   {
@@ -102,7 +130,7 @@ const registry: CompanyBrainRelationshipRegistration[] = [
     sourceOwner: "@finnor/db", persistedSources: [{ table: "external_ref_observations", columns: ["id", "canonical_entity_type", "canonical_entity_id"] }], resolver: "PeWorldState.observedEvidence", tenantRule: "authenticated_tenant_only", historyBehavior: "immutable", inspectionBehavior: "source_row",
   },
   {
-    kind: "work_entity_link", fromTypes: [q("private_equity:pe_strategy"), q("private_equity:pe_opportunity"), q("private_equity:pe_deal"), ...DEAL_CHILD_TYPES], toTypes: [q("core:work")], direction: "outbound",
+    kind: "work_entity_link", fromTypes: WORK_ATTACHABLE_TYPES, toTypes: [q("core:work")], direction: "outbound",
     sourceOwner: "@finnor/db", persistedSources: [{ table: "work_entity_links", columns: ["id", "entity_type", "entity_id", "work_id"] }], resolver: "PeWorldState.workLinks", tenantRule: "authenticated_tenant_only", historyBehavior: "created_at_bounded", inspectionBehavior: "source_row",
   },
   {

@@ -36,9 +36,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Phase 8 JARVIS proxy boundary", () => {
-  it("allows only the active PE read surface", async () => {
-    for (const path of ["me", "workspace-config", "activity", "read-models/workforce-status"]) {
+describe("Phase 9 JARVIS proxy boundary", () => {
+  it("allows only the active PE product read contracts", async () => {
+    for (const path of ["me", "workspace-config", "activity", "read-models/workforce-status", "read-models/attention", "works", "works/11111111-1111-4111-8111-111111111111", "investment-cases/11111111-1111-4111-8111-111111111111/underwriting", "underwriting/runs/11111111-1111-4111-8111-111111111111/explain", "underwriting/runs/diff", "private-equity/ic/cases/11111111-1111-4111-8111-111111111111"]) {
       expect((await GET(request("GET", path, { headers: AUTH }), params(path))).status, path).toBe(200)
     }
     for (const path of ["read-models/household-360", "dispatch/map", "resources/inventory", "dealer-zero/time-compression", "stats"]) {

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useJarvisAuth } from "../lib/jarvis-auth"
 import { jarvisPost } from "../lib/api"
-import { contextForInspection, inspectionHref, readInspectionTarget, readPeOperatingContext, withPeOperatingContext } from "./context-routing"
+import { contextForInspection, inspectionHref, readInspectionTarget, readPeOperatingContext, rootFromDealPath, withPeOperatingContext } from "./context-routing"
 import type { CompanyBrainObjectRef, InspectionTarget, PeOperatingContext, PeWorldRootRef } from "./contracts"
 
 type ValidationStatus = "idle" | "validating" | "valid" | "invalid"
@@ -15,7 +15,7 @@ interface PeOperatingContextState {
   validationStatus: ValidationStatus
   validationError: string | null
   selectRoot: (root: PeWorldRootRef) => void
-  inspect: (target: InspectionTarget, subjectRef?: CompanyBrainObjectRef) => boolean
+  inspect: (target: InspectionTarget, subjectRef?: CompanyBrainObjectRef, rootOverride?: PeWorldRootRef) => boolean
   setWork: (workId: string | null) => void
   clearInspection: () => void
   clearContext: () => void
@@ -28,7 +28,17 @@ export function PeOperatingContextProvider({ children }: { children: ReactNode }
   const pathname = usePathname()
   const params = useSearchParams()
   const { session } = useJarvisAuth()
-  const context = useMemo(() => readPeOperatingContext(params), [params])
+  const context = useMemo(() => {
+    const fromQuery = readPeOperatingContext(params)
+    const fromPath = rootFromDealPath(pathname)
+    if (!fromPath) return fromQuery
+    const sameRoot = fromQuery.root?.entityType === fromPath.entityType && fromQuery.root.entityId === fromPath.entityId
+    return {
+      root: fromPath,
+      selectedObject: sameRoot ? fromQuery.selectedObject : null,
+      workId: sameRoot ? fromQuery.workId : null,
+    }
+  }, [params, pathname])
   const inspection = useMemo(() => readInspectionTarget(params), [params])
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>("idle")
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -52,20 +62,36 @@ export function PeOperatingContextProvider({ children }: { children: ReactNode }
     return () => { active = false }
   }, [context, session])
 
-  const replaceContext = useCallback((next: PeOperatingContext, target: InspectionTarget | null = null) => {
-    router.push(withPeOperatingContext(`${pathname}?${params.toString()}`, next, target), { scroll: false })
+  const replaceContext = useCallback((next: PeOperatingContext, target: InspectionTarget | null = null, path = pathname) => {
+    const href = withPeOperatingContext(`${path}?${params.toString()}`, next, target)
+    // Root/object/Work/Inspector selection is URL state, not a new server page.
+    // Commit same-path transitions synchronously so a rapid close-then-open cannot
+    // let an older async flight response erase the newer InspectionTarget. Next's
+    // native-history integration keeps useSearchParams and browser back/forward in
+    // sync while the mounted shell and providers remain intact.
+    if (typeof window !== "undefined" && path === pathname) window.history.pushState(null, "", href)
+    else router.push(href, { scroll: false })
   }, [params, pathname, router])
 
   const selectRoot = useCallback((root: PeWorldRootRef) => {
-    replaceContext({ root, selectedObject: null, workId: null })
-  }, [replaceContext])
+    const path = pathname.startsWith("/jarvis/deals/") && root.entityType === "pe_deal"
+      ? `/jarvis/deals/${root.entityId}/overview`
+      : pathname.startsWith("/jarvis/deals/") ? "/jarvis/deals" : pathname
+    replaceContext({ root, selectedObject: null, workId: null }, null, path)
+  }, [pathname, replaceContext])
 
-  const inspect = useCallback((target: InspectionTarget, subjectRef?: CompanyBrainObjectRef): boolean => {
-    const href = inspectionHref(context, target, subjectRef)
+  const inspect = useCallback((target: InspectionTarget, subjectRef?: CompanyBrainObjectRef, rootOverride?: PeWorldRootRef): boolean => {
+    const rootChanged = rootOverride && (context.root?.entityType !== rootOverride.entityType || context.root.entityId !== rootOverride.entityId)
+    const base = rootOverride
+      ? { root: rootOverride, selectedObject: rootChanged ? null : context.selectedObject, workId: rootChanged ? null : context.workId }
+      : context
+    const href = inspectionHref(base, target, subjectRef, pathname)
     if (!href) return false
-    router.push(href, { scroll: false })
+    const nextPathname = new URL(href, window.location.href).pathname
+    if (nextPathname === pathname) window.history.pushState(null, "", href)
+    else router.push(href, { scroll: false })
     return true
-  }, [context, router])
+  }, [context, pathname, router])
 
   const setWork = useCallback((workId: string | null) => {
     replaceContext({ ...context, workId })

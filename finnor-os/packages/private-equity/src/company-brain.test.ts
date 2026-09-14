@@ -62,6 +62,27 @@ describe("Company Brain relationship registry", () => {
       asOf: at,
     })).toThrow(/unregistered persisted source/);
   });
+
+  it("accepts the P1 link and Work source types registered by canonical persistence", () => {
+    const document = refFor("core:document", "22222222-2222-4222-8222-222222222222");
+    const work = refFor("core:work", "22222222-2222-4222-8222-222222222223");
+    const investmentCase = refFor("private_equity:pe_investment_case");
+    const icCase = refFor("private_equity:pe_ic_case", "11111111-1111-4111-8111-111111111112");
+    expect(createCompanyBrainEdge({
+      kind: "document_link",
+      fromRef: investmentCase,
+      toRef: document,
+      sourceRef: { owner: "@finnor/private-equity", table: "pe_document_links", id: "33333333-3333-4333-8333-333333333333" },
+      asOf: at,
+    }).fromRef).toEqual(investmentCase);
+    expect(createCompanyBrainEdge({
+      kind: "work_entity_link",
+      fromRef: icCase,
+      toRef: work,
+      sourceRef: { owner: "@finnor/db", table: "work_entity_links", id: "33333333-3333-4333-8333-333333333334" },
+      asOf: at,
+    }).fromRef).toEqual(icCase);
+  });
 });
 
 function world(): PeWorldState {
@@ -75,13 +96,17 @@ function world(): PeWorldState {
     opportunities: [{ id: "10000000-0000-4000-8000-000000000002", strategyId: "10000000-0000-4000-8000-000000000001", name: "Project Atlas", state: "qualified", version: 3 }],
     deals: [{ id: "10000000-0000-4000-8000-000000000003", opportunityId: "10000000-0000-4000-8000-000000000002", name: "Atlas", status: "active", version: 4 }],
     investmentCases: [{ id: "10000000-0000-4000-8000-000000000004", dealId: "10000000-0000-4000-8000-000000000003", title: "Base case", state: "active", version: 1 }],
-    theses: [], assumptions: [], decisions: [], decisionEffectLinks: [], dealParties: [], workstreams: [], requests: [], deliverables: [],
+    theses: [], assumptions: [], decisions: [], decisionEffectLinks: [], dealParties: [], workstreams: [],
+    requests: [{ id: "10000000-0000-4000-8000-000000000025", dealId: "10000000-0000-4000-8000-000000000003", requestText: "Provide the signed renewal schedule", state: "open", version: 1 }],
+    deliverables: [{ id: "10000000-0000-4000-8000-000000000026", dealId: "10000000-0000-4000-8000-000000000003", description: "Signed renewal schedule", kind: "data_room_schedule", state: "expected", version: 1 }],
     findings: [
       { id: "10000000-0000-4000-8000-000000000005", dealId: "10000000-0000-4000-8000-000000000003", title: "Revenue quality", state: "open", version: 1 },
       { id: "10000000-0000-4000-8000-000000000006", dealId: "10000000-0000-4000-8000-000000000003", title: "Same label", state: "open", version: 1 },
     ],
     dealRisks: [{ id: "10000000-0000-4000-8000-000000000007", dealId: "10000000-0000-4000-8000-000000000003", title: "Same label", state: "open", version: 1 }],
-    findingRiskLinks: [], dependencies: [], milestones: [], closingConditions: [], closingItems: [],
+    findingRiskLinks: [], dependencies: [], milestones: [],
+    closingConditions: [{ id: "10000000-0000-4000-8000-000000000027", dealId: "10000000-0000-4000-8000-000000000003", conditionText: "Renewal evidence is verified", ownerPartyType: "employee", ownerPartyId: "10000000-0000-4000-8000-000000000024", state: "evidence_pending", version: 2 }],
+    closingItems: [{ id: "10000000-0000-4000-8000-000000000028", dealId: "10000000-0000-4000-8000-000000000003", itemText: "Renewal evidence is indexed", state: "verified", version: 3 }],
     documents: [{ id: "10000000-0000-4000-8000-000000000008", title: "QoE report", kind: "report", createdAt: at }],
     evidence: [{ sourceId: "10000000-0000-4000-8000-000000000009", versionId: "10000000-0000-4000-8000-000000000010", sourceType: "document", versionNumber: 1, contentHash: "hash", asOf: at, retrievedAt: at }],
     observedEvidence: [], sourceCoverage: [], sourceCoverageWarnings: [], unresolvedProviderObservations: 0, ambiguousProviderObservations: 0,
@@ -126,6 +151,10 @@ describe("Company Brain projection", () => {
     expect(projection.edges.some((edge) => edge.relationship === "plan_dependency" && edge.sourceRef.fieldPath === "plan_graph.edges[0]")).toBe(true);
     expect(projection.edges.some((edge) => edge.relationship === "action_effect" && edge.sourceRef.table === "business_effects")).toBe(true);
     expect(projection.edges.some((edge) => edge.relationship === "effect_receipt" && edge.sourceRef.table === "decision_receipts")).toBe(true);
+    expect(projection.nodes.find((node) => node.type === "pe_request")?.label).toBe("Provide the signed renewal schedule");
+    expect(projection.nodes.find((node) => node.type === "pe_deliverable")?.label).toBe("Signed renewal schedule");
+    expect(projection.nodes.find((node) => node.type === "pe_closing_condition")).toMatchObject({ label: "Renewal evidence is verified", facts: expect.arrayContaining([expect.objectContaining({ key: "conditionText", value: "Renewal evidence is verified" }), expect.objectContaining({ key: "ownerPartyId", value: "10000000-0000-4000-8000-000000000024" })]) });
+    expect(projection.nodes.find((node) => node.type === "pe_closing_item")?.label).toBe("Renewal evidence is indexed");
   });
 
   it("does not infer a relationship from matching labels or chronology", () => {

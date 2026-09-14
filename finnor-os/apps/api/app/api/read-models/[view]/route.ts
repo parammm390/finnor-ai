@@ -12,6 +12,7 @@ import {
   workCases,
   workCasesPage,
   workforceStatus,
+  executeAttentionQueueQuery,
 } from "@finnor/read-models";
 import { getProjection } from "@finnor/projections";
 
@@ -51,11 +52,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ view: st
   try {
     const ctx = await requireContext(req);
     const { view } = await params;
+    const searchParams = new URL(req.url).searchParams;
+    if (view === "attention") {
+      const requested = Number(searchParams.get("limit") ?? 100);
+      const limit = Number.isFinite(requested) ? Math.min(100, Math.max(1, Math.floor(requested))) : 100;
+      const data = await executeAttentionQueueQuery(
+        ctx.tenantId,
+        { intent: "attention_queue", page: { limit } },
+        { employeeId: ctx.employeeId, userId: ctx.userId, verticalKey: "private_equity", maxRows: limit },
+        new Date(),
+      );
+      return Response.json({ view, data }, { headers: { "Cache-Control": "private, no-store" } });
+    }
     const fn = VIEWS[view];
     if (!fn) {
       return Response.json({ error: `Unknown read-model "${view}". Valid views: ${Object.keys(VIEWS).join(", ")}` }, { status: 404 });
     }
-    const searchParams = new URL(req.url).searchParams;
     if (view === "work-cases") {
       const rawLimit = searchParams.get("limit");
       const limit = rawLimit === null ? undefined : Number(rawLimit);

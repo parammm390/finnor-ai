@@ -27,6 +27,7 @@
     "db:generate": "drizzle-kit generate --config packages/db/drizzle.config.ts",
     "db:migrate": "tsx packages/db/migrate.ts",
     "db:seed": "tsx packages/db/seed.ts",
+    "db:seed:p9-e2e": "tsx scripts/seed-phase9-e2e.ts",
     "db:bundle": "tsx scripts/bundle-migrations.ts",
     "db:create-user": "tsx scripts/create-user.ts",
     "authz:matrix": "tsx scripts/generate-authz-matrix.ts",

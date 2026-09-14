@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import AgentFleetSurface from "@/components/jarvis/agents/AgentFleetSurface"
 
 export const metadata: Metadata = {
-  title: "JARVIS — Agents",
-  description: "Source-backed governed AI worker identities, assignments, and verified learning evidence.",
+  title: "Agents — FINNOR",
+  description: "Business-shaped governed workers, assignments, human boundaries, evidence, quality, and learning.",
 }
 
 export default function AgentsPage() {

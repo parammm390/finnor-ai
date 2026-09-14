@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test"
+import { loadEnvConfig } from "@next/env"
 
-// Phase 8 route and surface verification. Defaults to an isolated local Next server;
+loadEnvConfig(process.cwd())
+
+// Phase 9 route, interaction, and visual verification. Defaults to an isolated local Next server;
 // PLAYWRIGHT_BASE_URL may point the same assertions at a deployed release.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000"
 

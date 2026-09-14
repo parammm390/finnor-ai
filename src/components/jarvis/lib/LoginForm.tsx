@@ -16,6 +16,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -27,16 +28,23 @@ export function LoginForm() {
   useEffect(() => {
     if (emailRef.current?.value) setEmail(emailRef.current.value)
     if (passwordRef.current?.value) setPassword(passwordRef.current.value)
+    setHydrated(true)
   }, [])
 
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     if (busy) return
+    // Read the native controls at the authority boundary. This also covers a
+    // password manager or a very fast fill that lands before React state has
+    // observed the input events during hydration.
+    const submittedEmail = emailRef.current?.value.trim() ?? email.trim()
+    const submittedPassword = passwordRef.current?.value ?? password
+    if (!submittedEmail || !submittedPassword) return
     setBusy(true)
     setError(null)
     try {
       const supabaseBrowser = await getSupabaseBrowser()
-      const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email: email.trim(), password })
+      const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email: submittedEmail, password: submittedPassword })
       if (signInError) throw signInError
       router.push("/jarvis")
     } catch (cause) {
@@ -88,7 +96,7 @@ export function LoginForm() {
           {error && <div className="rounded-lg border border-red-400/30 bg-red-400/5 px-3 py-2 j-fs-micro text-red-300">{error}</div>}
           <button
             type="submit"
-            disabled={busy || !email.trim() || !password}
+            disabled={busy || !hydrated}
             className="h-10 w-full rounded-xl bg-teal-300 j-fs-sm font-black text-slate-950 transition hover:bg-teal-200 disabled:opacity-40"
           >
             {busy ? "Signing in…" : "Sign in"}
