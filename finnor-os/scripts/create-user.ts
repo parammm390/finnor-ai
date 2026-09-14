@@ -4,7 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 import { closePool } from "@finnor/db";
 import { ensureTenantUser, type TenantUserRole } from "./tenant-user";
 
-const DEFAULT_TENANT_ID = "00000000-0000-4000-8000-000000000001";
 const VALID_ROLES: TenantUserRole[] = ["owner"];
 
 function parseArgs(): { email: string; role: TenantUserRole; tenantId: string; resetPassword: boolean } {
@@ -12,15 +11,15 @@ function parseArgs(): { email: string; role: TenantUserRole; tenantId: string; r
     const [key, ...rest] = arg.replace(/^--/, "").split("=");
     return [key, rest.join("=")];
   }));
-  if (!args.email || !args.email.includes("@")) {
-    throw new Error("Usage: --email=you@example.com [--role=owner] [--tenant=<uuid>] [--reset-password]");
+  if (!args.email || !args.email.includes("@") || !args.tenant) {
+    throw new Error("Usage: --email=you@example.com --tenant=<uuid> [--role=owner] [--reset-password]");
   }
   const role = (args.role ?? "owner") as TenantUserRole;
   if (!VALID_ROLES.includes(role)) throw new Error(`--role must be one of ${VALID_ROLES.join(", ")}`);
   return {
     email: args.email,
     role,
-    tenantId: args.tenant ?? DEFAULT_TENANT_ID,
+    tenantId: args.tenant,
     resetPassword: "reset-password" in args,
   };
 }
