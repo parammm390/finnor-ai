@@ -1,11 +1,11 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
-import { Check, ChevronDown, ChevronUp, Settings2, X } from "lucide-react"
+import { Check, Settings2, X } from "lucide-react"
 import { useJarvisAuth } from "./lib/jarvis-auth"
 import { jarvisGet, jarvisPut } from "./lib/api"
 import { onBusinessInvalidation } from "./lib/business-invalidation"
-import { DEFAULT_TENANT_WORKSPACE_CONFIG, WORKSPACE_SURFACES, normalizeWorkspaceConfig, type TenantWorkspaceConfig, type WorkspaceSurfaceKey } from "./lib/workspace-config"
+import { DEFAULT_TENANT_WORKSPACE_CONFIG, normalizeWorkspaceConfig, type TenantWorkspaceConfig } from "./lib/workspace-config"
 import "./jarvis-theme.css"
 
 type ConfigStatus = "idle" | "loading" | "ready" | "saving" | "error"
@@ -34,14 +34,6 @@ export function WorkspaceSettingsButton({ compact = false }: { compact?: boolean
   const workspace = useWorkspaceConfig()
   if (!workspace.editable) return null
   return <button type="button" className="jarvis-workspace-settings-button" data-compact={compact ? "true" : undefined} onClick={workspace.openSettings} aria-label="Open workspace settings" title="Workspace settings"><Settings2 size={15} aria-hidden /><span>{compact ? "" : "Workspace"}</span></button>
-}
-
-function move<T>(values: T[], from: number, direction: -1 | 1): T[] {
-  const to = from + direction
-  if (to < 0 || to >= values.length) return values
-  const next = [...values]
-  ;[next[from], next[to]] = [next[to]!, next[from]!]
-  return next
 }
 
 function WorkspaceSettingsDrawer() {
@@ -79,26 +71,13 @@ function WorkspaceSettingsDrawer() {
     const ok = await save(draft)
     setSaved(ok)
   }
-  const setSurface = (surface: WorkspaceSurfaceKey, enabled: boolean) => setDraft((current) => ({
-    ...current,
-    enabledSurfaces: enabled ? Array.from(new Set([...current.enabledSurfaces, surface])) : current.enabledSurfaces.filter((item) => item !== surface),
-    roles: Object.fromEntries((Object.entries(current.roles) as Array<[keyof TenantWorkspaceConfig["roles"], TenantWorkspaceConfig["roles"][keyof TenantWorkspaceConfig["roles"]]]>).map(([role, roleConfig]) => [role, {
-      ...roleConfig,
-      visibleSurfaces: enabled
-        ? role === "owner" ? Array.from(new Set([...roleConfig.visibleSurfaces, surface])) : roleConfig.visibleSurfaces
-        : roleConfig.visibleSurfaces.filter((item) => item !== surface),
-    }])) as TenantWorkspaceConfig["roles"],
-  }))
-
   return (
     <div className="jarvis-workspace-settings-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeSettings() }}>
       <aside className="jarvis-workspace-settings" role="dialog" aria-modal="true" aria-labelledby="jarvis-workspace-settings-title">
         <header><div><span>Tenant workspace</span><h2 id="jarvis-workspace-settings-title">Operational presentation</h2><p>Small, tenant-wide controls only. Authority and backend behavior do not change here.</p></div><button ref={closeButtonRef} type="button" onClick={closeSettings} aria-label="Close workspace settings"><X size={17} /></button></header>
         <form onSubmit={submit}>
-          <section><div className="jarvis-workspace-settings__heading"><strong>Enabled surfaces</strong><span>Home always stays available</span></div><div className="jarvis-workspace-settings__checks">{WORKSPACE_SURFACES.map((surface) => <label key={surface}><input type="checkbox" checked={draft.enabledSurfaces.includes(surface)} disabled={surface === "home"} onChange={(event) => setSurface(surface, event.target.checked)} /><span>{draft.terminology[surface]}</span></label>)}</div></section>
-          <section><div className="jarvis-workspace-settings__heading"><strong>Terminology</strong><span>Navigation language, 24 characters maximum</span></div><div className="jarvis-workspace-settings__terms">{WORKSPACE_SURFACES.map((surface) => <label key={surface}><span>{surface}</span><input value={draft.terminology[surface]} maxLength={24} required onChange={(event) => setDraft((current) => ({ ...current, terminology: { ...current.terminology, [surface]: event.target.value } }))} /></label>)}</div></section>
+          <section><div className="jarvis-workspace-settings__heading"><strong>Canonical navigation</strong><span>Home · Deals · Work · Agents</span></div><p>Workspace V3 fixes the institutional operating surfaces and their order. Tenant preferences cannot hide, rename, or reorder them.</p></section>
           <section className="jarvis-workspace-settings__split"><div><div className="jarvis-workspace-settings__heading"><strong>Voice availability</strong></div><label className="jarvis-workspace-settings__toggle"><input type="checkbox" checked={draft.voiceEnabled} onChange={(event) => setDraft((current) => ({ ...current, voiceEnabled: event.target.checked }))} /><span>Voice command input</span></label></div><div><div className="jarvis-workspace-settings__heading"><strong>Inspector visibility</strong></div><label className="jarvis-workspace-settings__toggle"><input type="checkbox" checked={draft.visibility.policy} onChange={(event) => setDraft((current) => ({ ...current, visibility: { ...current.visibility, policy: event.target.checked } }))} /><span>Policy context</span></label><label className="jarvis-workspace-settings__toggle"><input type="checkbox" checked={draft.visibility.authority} onChange={(event) => setDraft((current) => ({ ...current, visibility: { ...current.visibility, authority: event.target.checked } }))} /><span>Authority context</span></label></div></section>
-          <section><div className="jarvis-workspace-settings__heading"><strong>Navigation priority</strong><span>Move the most-used surfaces upward</span></div><ol className="jarvis-workspace-settings__priority">{draft.navigationPriority.map((surface, index) => <li key={surface}><span>{String(index + 1).padStart(2, "0")}</span><strong>{draft.terminology[surface]}</strong><button type="button" disabled={index === 0} onClick={() => setDraft((current) => ({ ...current, navigationPriority: move(current.navigationPriority, index, -1) }))} aria-label={`Move ${draft.terminology[surface]} up`}><ChevronUp size={14} /></button><button type="button" disabled={index === draft.navigationPriority.length - 1} onClick={() => setDraft((current) => ({ ...current, navigationPriority: move(current.navigationPriority, index, 1) }))} aria-label={`Move ${draft.terminology[surface]} down`}><ChevronDown size={14} /></button></li>)}</ol></section>
           <section><div className="jarvis-workspace-settings__heading"><strong>Brand tokens</strong><span>Bounded tokens, never arbitrary CSS</span></div><div className="jarvis-workspace-settings__brand"><label><span>Accent</span><select value={draft.brand.accent} onChange={(event) => setDraft((current) => ({ ...current, brand: { ...current.brand, accent: event.target.value as TenantWorkspaceConfig["brand"]["accent"] } }))}><option value="cyan">Cyan</option><option value="teal">Teal</option><option value="amber">Amber</option><option value="violet">Violet</option></select></label><label><span>Corner tone</span><select value={draft.brand.radius} onChange={(event) => setDraft((current) => ({ ...current, brand: { ...current.brand, radius: event.target.value as TenantWorkspaceConfig["brand"]["radius"] } }))}><option value="soft">Soft</option><option value="precise">Precise</option></select></label><label><span>Mark</span><input value={draft.brand.mark} maxLength={3} required onChange={(event) => setDraft((current) => ({ ...current, brand: { ...current.brand, mark: event.target.value } }))} /></label></div></section>
           {error && <p className="jarvis-workspace-settings__error" role="alert">{error}</p>}
           <footer><span>{saved ? <><Check size={13} /> Saved for this tenant</> : "Presentation only · policy remains authoritative"}</span><button type="button" onClick={closeSettings}>Cancel</button><button type="submit" disabled={status === "saving"}>{status === "saving" ? "Saving…" : "Save workspace"}</button></footer>
