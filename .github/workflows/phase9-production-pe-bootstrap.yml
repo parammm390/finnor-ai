@@ -10,6 +10,11 @@ on:
     paths:
       - ".github/workflows/phase9-production-pe-bootstrap.yml"
       - "scripts/release/bootstrap-phase9-production-pe.mjs"
+      - "scripts/release/seed-phase9-production-fixture.mjs"
+      - "scripts/release/phase9-live-cert-user.mjs"
+      - "finnor-os/scripts/seed-phase9-e2e.ts"
+      - "e2e/phase9-institutional-workstation.spec.ts"
+      - "e2e/fixtures/phase9.ts"
 
 concurrency:
   group: phase9-production-pe-bootstrap
@@ -22,7 +27,7 @@ jobs:
   bootstrap:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     environment: production
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -31,6 +36,7 @@ jobs:
       FINNOR_PHASE9_PE_TENANT_ID: ${{ vars.FINNOR_PHASE9_PE_TENANT_ID || '7d57aa44-df32-4ff7-87e8-e0b8236d9c31' }}
       FINNOR_PHASE9_PE_CLIENT_KEY: ${{ vars.FINNOR_PHASE9_PE_CLIENT_KEY || 'finnor-internal-pe-production' }}
       FINNOR_PHASE9_PE_TENANT_NAME: ${{ vars.FINNOR_PHASE9_PE_TENANT_NAME || 'Finnor Private Equity Internal' }}
+      PLAYWRIGHT_BASE_URL: https://finnorai.com
     steps:
       - name: Checkout bootstrap source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -42,12 +48,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: finnor-os/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
 
       - name: Require protected production access
         run: test -n "$VERCEL_TOKEN"
 
-      - name: Install workspace dependencies
+      - name: Install backend workspace dependencies
         run: npm ci
         working-directory: finnor-os
 
@@ -73,7 +81,36 @@ jobs:
             --database-env finnor-os/apps/api/.vercel/.env.production.local \
             --apply
 
-      - name: Verify bootstrap is idempotent
+      - name: Verify identity bootstrap is idempotent
         run: |
           node scripts/release/bootstrap-phase9-production-pe.mjs \
             --database-env finnor-os/apps/api/.vercel/.env.production.local
+
+      - name: Seed and verify complete canonical Phase 9 PE graph
+        run: |
+          node scripts/release/seed-phase9-production-fixture.mjs \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local
+
+      - name: Prepare disposable authenticated live-cert owner
+        run: |
+          node scripts/release/phase9-live-cert-user.mjs \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local
+
+      - name: Install frontend certification dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium for live product certification
+        run: npx playwright install --with-deps chromium
+
+      - name: Certify every current Phase 9 surface against production
+        run: |
+          npx playwright test e2e/phase9-institutional-workstation.spec.ts \
+            --project=desktop-chromium \
+            --reporter=line
+
+      - name: Disable disposable live-cert identity
+        if: ${{ always() }}
+        run: |
+          node scripts/release/phase9-live-cert-user.mjs \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --cleanup
