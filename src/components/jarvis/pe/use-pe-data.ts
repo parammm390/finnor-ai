@@ -74,6 +74,7 @@ function useRetainedResource<T>({ enabled, resourceKey, tag, load, stateFor, con
     if (!retained) {
       setData(null)
       setDataKey(null)
+      setTruthState("UNKNOWN")
       setLastConfirmedAt(null)
     }
     let active = true
