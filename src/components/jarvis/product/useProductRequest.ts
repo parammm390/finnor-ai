@@ -34,7 +34,11 @@ export function useProductRequest<T>(options: {
       return
     }
     const cached = retained.current?.key === key ? retained.current.data : null
-    if (!cached) setData(null)
+    if (!cached) {
+      setData(null)
+      setTruthState("UNKNOWN")
+      setLastConfirmedAt(null)
+    }
     let active = true
     setStatus("loading"); setError(null); setErrorValue(null)
     void loadRef.current().then((value) => {
@@ -45,6 +49,7 @@ export function useProductRequest<T>(options: {
       if (!active) return
       const fallback = retained.current?.key === key ? retained.current.data : null
       setData(fallback); setStatus("error"); setError(cause instanceof Error ? cause.message : "Canonical source request failed."); setErrorValue(cause); setTruthState(unavailableState(cause, Boolean(fallback)))
+      if (!fallback) setLastConfirmedAt(null)
     })
     return () => { active = false }
   }, [enabled, key, revision])
