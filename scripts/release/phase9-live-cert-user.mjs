@@ -18,10 +18,33 @@ function arg(name) {
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
+function messageOf(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isProviderRestriction(error) {
+  return /exceed_egress_quota|project is restricted|remove spend caps|upgrade their plan/i.test(messageOf(error));
+}
+
+function providerBlocked(error) {
+  const detail = messageOf(error);
+  console.error(JSON.stringify({
+    ok: false,
+    code: "SUPABASE_AUTH_PROVIDER_BLOCKED",
+    provider: "supabase",
+    retryableAfterProviderRecovery: true,
+    detail,
+  }));
+  throw new Error(`SUPABASE_AUTH_PROVIDER_BLOCKED: ${detail}`);
+}
+
 async function findAuthUser(admin, email) {
   for (let page = 1; page <= 20; page += 1) {
     const { data, error } = await admin.listUsers({ page, perPage: 1000 });
-    if (error) throw error;
+    if (error) {
+      if (isProviderRestriction(error)) providerBlocked(error);
+      throw error;
+    }
     const user = data.users.find((candidate) => candidate.email?.toLowerCase() === email.toLowerCase());
     if (user) return user;
     if (data.users.length < 1000) return null;
@@ -58,24 +81,46 @@ async function main() {
     );
     if (tenant.rows[0]?.vertical_key !== "private_equity") throw new Error("Certification identity target is not a Private Equity tenant");
 
-    const existingAuth = await findAuthUser(supabase.auth.admin, email);
     if (process.argv.includes("--cleanup")) {
-      if (existingAuth) {
-        const { error } = await supabase.auth.admin.deleteUser(existingAuth.id);
-        if (error) throw error;
+      let authCleanup = "not_found";
+      let authCleanupError = null;
+      try {
+        const existingAuth = await findAuthUser(supabase.auth.admin, email);
+        if (existingAuth) {
+          const { error } = await supabase.auth.admin.deleteUser(existingAuth.id);
+          if (error) throw error;
+          authCleanup = "deleted";
+        }
+      } catch (error) {
+        authCleanupError = messageOf(error);
+        authCleanup = isProviderRestriction(error) || /SUPABASE_AUTH_PROVIDER_BLOCKED/.test(authCleanupError)
+          ? "provider_blocked"
+          : "failed";
       }
+
+      // Application access is disabled regardless of provider health. This makes the
+      // cleanup fail-safe: a Supabase outage/quota event cannot leave a cert identity
+      // authorized inside FINNOR even when the external auth deletion cannot run.
       await client.query("UPDATE finnor_os.users SET status='suspended' WHERE lower(email)=lower($1)", [email]);
-      console.log(JSON.stringify({ ok: true, mode: "cleanup", email, tenantId }));
+      console.log(JSON.stringify({ ok: authCleanup !== "failed", mode: "cleanup", email, tenantId, authCleanup, authCleanupError }));
+      if (authCleanup === "failed") throw new Error(`Supabase auth cleanup failed after FINNOR access was suspended: ${authCleanupError}`);
       return;
     }
 
+    const existingAuth = await findAuthUser(supabase.auth.admin, email);
     const password = `${randomBytes(27).toString("base64url")}Aa1!`;
     if (existingAuth) {
       const { error } = await supabase.auth.admin.updateUserById(existingAuth.id, { password, email_confirm: true });
-      if (error) throw error;
+      if (error) {
+        if (isProviderRestriction(error)) providerBlocked(error);
+        throw error;
+      }
     } else {
       const { error } = await supabase.auth.admin.createUser({ email, password, email_confirm: true });
-      if (error) throw error;
+      if (error) {
+        if (isProviderRestriction(error)) providerBlocked(error);
+        throw error;
+      }
     }
 
     const appUser = await client.query(
