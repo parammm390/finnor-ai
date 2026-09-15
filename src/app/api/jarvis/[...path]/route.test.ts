@@ -47,7 +47,7 @@ describe("Phase 9 JARVIS proxy boundary", () => {
   })
 
   it("allows the exact Company Brain, semantic Activity, action, and Workspace V3 write paths", async () => {
-    for (const operation of ["roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "actions", "context"]) {
+    for (const operation of ["roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context"]) {
       const path = `company-brain/${operation}`
       expect((await POST(request("POST", path, { headers: AUTH, body: {} }), params(path))).status, path).toBe(200)
     }
