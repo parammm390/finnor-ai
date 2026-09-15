@@ -91,18 +91,28 @@ jobs:
           node scripts/release/seed-phase9-production-fixture.mjs \
             --database-env finnor-os/apps/api/.vercel/.env.production.local
 
-      - name: Prepare disposable authenticated live-cert owner
-        run: |
-          node scripts/release/phase9-live-cert-user.mjs \
-            --database-env finnor-os/apps/api/.vercel/.env.production.local
-
       - name: Install frontend certification dependencies
         run: npm ci --no-audit --no-fund
 
       - name: Install Chromium for live product certification
         run: npx playwright install --with-deps chromium
 
-      - name: Certify every current Phase 9 surface against production
+      - name: Certify live signed-out Phase 9 shell before auth provider gate
+        env:
+          TEST_OWNER_EMAIL: ""
+          TEST_OWNER_PASSWORD: ""
+        run: |
+          npx playwright test e2e/phase9-institutional-workstation.spec.ts \
+            --project=desktop-chromium \
+            --grep "keeps one persistent signed-out product shell" \
+            --reporter=line
+
+      - name: Prepare disposable authenticated live-cert owner
+        run: |
+          node scripts/release/phase9-live-cert-user.mjs \
+            --database-env finnor-os/apps/api/.vercel/.env.production.local
+
+      - name: Certify every current authenticated Phase 9 surface against production
         run: |
           npx playwright test e2e/phase9-institutional-workstation.spec.ts \
             --project=desktop-chromium \
