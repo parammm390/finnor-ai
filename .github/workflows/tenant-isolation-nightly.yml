@@ -5,9 +5,13 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: tenant-isolation-nightly
+  cancel-in-progress: false
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: finnor-os
@@ -19,13 +23,11 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
-      - name: Probe production and staging tenant isolation
+      - name: Probe production and staging PE tenant isolation
         env:
           STAGING_API_URL: ${{ secrets.TENANT_PROBE_STAGING_API_URL }}
           PRODUCTION_API_URL: ${{ secrets.TENANT_PROBE_PRODUCTION_API_URL }}
           TENANT_A_PROBE_JWT: ${{ secrets.TENANT_PROBE_A_JWT }}
           TENANT_B_PROBE_JWT: ${{ secrets.TENANT_PROBE_B_JWT }}
-          PRODUCTION_TENANT_A_MARKER_HOUSEHOLD_ID: ${{ secrets.TENANT_PROBE_PRODUCTION_MARKER_HOUSEHOLD_ID }}
-          STAGING_TENANT_A_MARKER_HOUSEHOLD_ID: ${{ secrets.TENANT_PROBE_STAGING_MARKER_HOUSEHOLD_ID }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx tsx scripts/probe-tenant-isolation.ts
