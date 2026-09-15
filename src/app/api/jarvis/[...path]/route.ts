@@ -26,7 +26,7 @@ const COMPANY_BRAIN_OPERATIONS = new Set([
   "history",
   "evidence-lineage",
   "decision-lineage",
-  "actions",
+  "available-actions",
   "context",
 ])
 
