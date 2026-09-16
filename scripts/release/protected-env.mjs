@@ -1,12 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs"
-import { createRequire } from "node:module"
 import { resolve } from "node:path"
-
-const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
-const { parse } = requireFromOs("dotenv")
+import { parseEnv } from "node:util"
 
 export function readProtectedEnv(path) {
-  return parse(readFileSync(resolve(path)))
+  return parseEnv(readFileSync(resolve(path), "utf8"))
 }
 
 export function readProtectedEnvValue(path, key, { fallbackKey } = {}) {
