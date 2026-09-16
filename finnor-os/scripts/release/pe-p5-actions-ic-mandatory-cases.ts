@@ -331,7 +331,7 @@ export const P5_MANDATORY_CASE_GROUPS: Readonly<Record<P5MandatoryCaseCategory, 
     "P2 deterministic certification and integration regressions remain green.",
     "P3 deterministic certification and integration regressions remain green.",
     "P4 deterministic certification and integration regressions remain green.",
-    "Historical release:pe5 evidence remains intact while release:pe-p5-actions-ic is unambiguous and production release remains gated by literal /GOAL.",
+    "The current release:pe-p5-actions-ic evidence is unambiguous and production release remains governed by the shared certified-release preflight.",
   ],
   performance_limits: [
     "Loading the complete IC aggregate stays inside its measured release guardrail.",

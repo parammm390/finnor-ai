@@ -20,7 +20,7 @@ const checks = {
   http: response.ok,
   ready: body?.ok === true,
   finalPeGateRequired: authority?.finalPeGateRequired === true,
-  authorityState: authority?.state === "water_retired",
+  authorityStatus: authority?.status === "active",
   activeProductVertical: authority?.activeProductVertical === "private_equity",
   authorityCheck: body?.checks?.productAuthority?.ok === true,
   runtimeEpoch: body?.checks?.runtimeEpoch?.ok === true,
@@ -40,7 +40,7 @@ console.log(JSON.stringify({
   url,
   checks,
   authority: {
-    state: authority.state,
+    status: authority.status,
     activeProductVertical: authority.activeProductVertical,
     epoch: authority.epoch,
     minimumCutoverProtocol: authority.minimumCutoverProtocol,

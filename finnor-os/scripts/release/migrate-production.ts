@@ -99,7 +99,13 @@ async function main(): Promise<void> {
     await pool.end();
   }
 
-  console.log(JSON.stringify({ ok: true, applied, workspaceV3, langGraphSchemaReady: true }));
+  console.log(JSON.stringify({
+    ok: true,
+    appliedCount: applied.length,
+    migrationHead: applied.at(-1) ?? null,
+    workspaceV3,
+    langGraphSchemaReady: true,
+  }));
 }
 
 void main().catch((error) => {

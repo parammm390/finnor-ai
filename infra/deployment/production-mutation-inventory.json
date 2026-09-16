@@ -8,7 +8,7 @@
       "path": ".github/workflows/production-release.yml",
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-service-deploy", "product-authority-update"],
+      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-service-deploy"],
       "authorization": "finnor-production-mutation-authorization.v1",
       "serialization": "finnor-production-release"
     },
@@ -49,13 +49,21 @@
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
-      "id": "product-authority-cutover",
+      "id": "legacy-product-authority-cutover",
       "path": "scripts/release/run-p8-production-water-retirement.mjs",
-      "supportingPaths": ["scripts/release/p8-water-retirement-store.mjs"],
-      "classification": "PRODUCTION_MUTATOR",
-      "state": "ACTIVE",
-      "operations": ["product-authority-update"],
-      "authorization": "finnor-production-mutation-authorization.v1"
+      "supportingPaths": [
+        "scripts/release/p8-water-retirement-store.mjs",
+        "scripts/release/p8-water-retirement-store.d.mts",
+        "scripts/release/p8-water-retirement-policy.mjs",
+        "scripts/release/p8-water-allowlist.json",
+        "scripts/release/verify-p8-zero-resurrection.mjs",
+        "finnor-os/scripts/release/run-pe5-water-retirement-certification.ts",
+        "finnor-os/scripts/release/verify-p8-runtime-contract.ts",
+        "finnor-os/tests/integration/water-retirement-forward-head.test.ts"
+      ],
+      "classification": "ONE_TIME_MUTATOR",
+      "state": "RETIRED",
+      "reason": "The historical product cutover completed; no active release may replay or re-certify it."
     },
     {
       "id": "phase9-bootstrap-workflow",
@@ -126,10 +134,8 @@
         "finnor-os/scripts/release/run-pe-p1-world-truth-certification.ts",
         "finnor-os/scripts/release/run-pe-p4-underwriting-certification.ts",
         "finnor-os/scripts/release/run-pe-p5-actions-ic-certification.ts",
-        "finnor-os/scripts/release/run-pe5-water-retirement-certification.ts",
         "finnor-os/scripts/release/staging-guards.ts",
         "finnor-os/scripts/release/verify-action-manifest.ts",
-        "finnor-os/scripts/release/verify-p8-runtime-contract.ts",
         "finnor-os/scripts/release/verify-pe-domain-boundary.ts"
       ],
       "classification": "READ_ONLY",
@@ -144,7 +150,7 @@
         "scripts/release/verify-production-parity.mjs",
         "scripts/release/verify-production-readiness.mjs",
         "scripts/release/verify-supplier-canary-release.mjs",
-        "scripts/release/verify-p8-zero-resurrection.mjs",
+        "scripts/release/release-evidence-policy.mjs",
         "scripts/release/verify-release.mjs",
         "scripts/release/validate-deployment-truth.mjs",
         "scripts/release/release-policy.mjs",
@@ -157,9 +163,7 @@
       "id": "release-authorization-support",
       "paths": [
         "infra/deployment/production-mutation-inventory.json",
-        "scripts/release/p8-water-allowlist.json",
-        "scripts/release/p8-water-retirement-policy.mjs",
-        "scripts/release/p8-water-retirement-store.d.mts",
+        "infra/deployment/release-toolchain.json",
         "scripts/release/pr-verdict-policy.mjs",
         "scripts/release/production-mutation-guard.d.mts",
         "scripts/release/production-mutation-guard.mjs",
@@ -174,7 +178,7 @@
     {
       "id": "release-harness-tests",
       "paths": [
-        "scripts/release/p8-water-retirement-policy.test.mjs",
+        "scripts/release/release-evidence-policy.test.mjs",
         "scripts/release/pr-verdict-policy.test.mjs",
         "scripts/release/production-mutation-guard.test.mjs",
         "scripts/release/protected-env.test.mjs",
@@ -191,13 +195,22 @@
         ".github/workflows/marketing-ci.yml",
         ".github/workflows/security.yml",
         ".github/workflows/pr-verdict.yml",
-        ".github/workflows/dealer-zero-replay.yml",
         ".github/workflows/k6-nightly-lite.yml",
         ".github/workflows/planner-live-evals.yml",
         ".github/workflows/tenant-isolation-nightly.yml"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"
+    },
+    {
+      "id": "legacy-receipt-replay",
+      "paths": [
+        ".github/workflows/dealer-zero-replay.yml",
+        "finnor-os/scripts/replay-dealer-zero.ts"
+      ],
+      "classification": "READ_ONLY",
+      "state": "RETIRED",
+      "reason": "The synthetic field-service replay is not part of the Private Equity release or PR verdict."
     },
     {
       "id": "declarative-production-source",

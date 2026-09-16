@@ -1,12 +1,6 @@
-# CI for the marketing site (repo root) — Phase 7 §7.9/§7.10 (JARVIS 95% MAESTRO
-# PACK): "truthfulness enforcement in CI" and "Playwright suite green in CI" both
-# need an actual CI job, not just a clean local run. Scoped to paths OUTSIDE
-# finnor-os/ (that repo has its own workflow, ci.yml) so the two don't trigger on
-# each other's changes.
+# Reusable root application certification for the universal PR verdict and the
+# exact post-merge production release.
 name: marketing-ci
-# Release audit marker: this workflow file is intentionally touched for the
-# audited production push so marketing parity runs on the same commit as CI.
-# Keep this marker synchronized on each release-fix push.
 on:
   workflow_call:
     secrets:
@@ -14,9 +8,6 @@ on:
         required: false
       TEST_OWNER_PASSWORD:
         required: false
-  push:
-    branches: [main]
-    paths-ignore: ["finnor-os/**"]
 permissions:
   contents: read
 concurrency:
@@ -46,6 +37,10 @@ jobs:
           # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on
           # the hosted runner before any of this workflow's actual checks run.
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       # The root app's typed JARVIS client imports the canonical Work projection
@@ -55,8 +50,8 @@ jobs:
       # `any` cascade.
       - name: Install Finnor OS type dependencies
         run: npm ci --prefix finnor-os --no-audit --no-fund
-      # Phase 7 §7.8: no-restricted-properties(Math.random) under src/components/
-      # jarvis and src/app/jarvis, defined in .eslintrc.cjs — this is what actually
+      # The current no-restricted-properties(Math.random) policy under
+      # src/components/jarvis and src/app/jarvis lives in .eslintrc.cjs; this is what
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
       - run: npm run lint
@@ -71,7 +66,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # Runs against the production build via `next start` (playwright.config.ts's
       # webServer), not `next dev` — closer to what's actually deployed.
-      # The Phase 8 cutover spec's authenticated flows skip cleanly here (no
+      # The Private Equity product contract's authenticated flows skip cleanly here (no
       # TEST_OWNER_EMAIL/TEST_OWNER_PASSWORD secret configured yet — see
       # finnor-os/docs/owner-actions.md for why a real credential isn't faked);
       # its public shell, redirect, and honest-demo assertions run for real.
@@ -121,7 +116,7 @@ jobs:
           # The authenticated and labelled-fixture suites have separate release
           # gates and require their own credentials/build flags; running every e2e
           # file here caused hundreds of intentional skips and fixture timeouts.
-          npx playwright test e2e/phase8-product-cutover.spec.ts --reporter=list > playwright.log 2>&1
+          npx playwright test e2e/private-equity-product-contract.spec.ts --reporter=list > playwright.log 2>&1
           test_status=$?
           kill "$server_pid" 2>/dev/null || true
           if [ "$lighthouse_status" -ne 0 ] || [ "$test_status" -ne 0 ]; then

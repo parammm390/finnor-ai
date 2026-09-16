@@ -1,4 +1,4 @@
-import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
+import { assertSupplierCanaryRelease } from "./release-evidence-policy.mjs"
 import { loadContract } from "./release-policy.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 

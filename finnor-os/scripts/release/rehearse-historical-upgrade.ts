@@ -1,6 +1,7 @@
-/** Disposable regression for the production lineage deployed before PE Phase 5.
- * Downloads immutable historical SQL; never reads production credentials. */
+/** Disposable regression for the pre-current production lineage.
+ * Reads immutable SQL from the pinned local Git commit; never reads production credentials. */
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -23,10 +24,14 @@ async function main() {
   const directory = fileURLToPath(new URL("../../packages/db/migrations/", import.meta.url));
   const current: MigrationFile[] = await Promise.all((await readdir(directory)).filter((name) => name.endsWith(".sql")).sort()
     .map(async (name) => ({ name, sql: await readFile(join(directory, name), "utf8") })));
-  const historical = await Promise.all(historicalNames.map(async (name) => {
-    const response = await fetch(`https://raw.githubusercontent.com/parammm390/finnor-ai/${historicalCommit}/finnor-os/packages/db/migrations/${name}`, { signal: AbortSignal.timeout(30_000) });
-    if (!response.ok) throw new Error(`Historical migration ${name}: HTTP ${response.status}`);
-    return { name, sql: await response.text() };
+  const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
+  const historical = historicalNames.map((name) => ({
+    name,
+    sql: execFileSync("git", ["show", `${historicalCommit}:finnor-os/packages/db/migrations/${name}`], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      maxBuffer: 2 * 1024 * 1024,
+    }),
   }));
   const server = createServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -54,7 +59,7 @@ async function main() {
       `);
     } finally { await client.end(); }
     await migrate(url, historical);
-    console.log("Historical 0104–0108 schema installed");
+    console.log("Pinned historical production lineage installed");
     const applied = await migrate(url, current);
     assert(applied.includes("0109_atomic_water_runtime_retirement.sql"));
     assert.deepEqual(await migrate(url, current), []);
@@ -66,7 +71,13 @@ async function main() {
     } finally { await verification.end(); }
     await embedded.createDatabase("fresh");
     assert.equal((await migrate(`postgres://finnor:finnor@127.0.0.1:${port}/fresh`, current)).length, current.length);
-    console.log(JSON.stringify({ ok: true, historicalCommit, applied, rerun: "no-op" }));
+    console.log(JSON.stringify({
+      ok: true,
+      historicalCommit,
+      appliedCount: applied.length,
+      currentHead: current.at(-1)?.name,
+      rerun: "no-op",
+    }));
   } finally {
     await embedded.stop();
   }

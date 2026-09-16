@@ -23,7 +23,6 @@ the platform default because no `timeout-minutes` value is set.
 | Security secrets | repository root | `gitleaks/gitleaks-action@v2` | GitHub default | security.yml |
 | Security dependencies | repository root | `google/osv-scanner-action` with `--lockfile=finnor-os/package-lock.json` | GitHub default | security.yml |
 | Tenant isolation | `finnor-os` | `npx tsx scripts/probe-tenant-isolation.ts` | scheduled/manual; staging and production credentials required | tenant-isolation-nightly.yml |
-| Dealer replay | `finnor-os` | workflow command in `dealer-zero-replay.yml` | workflow-specific | dealer-zero-replay.yml |
 | Load | `finnor-os` | workflow command in `k6-nightly-lite.yml` | workflow-specific | k6-nightly-lite.yml |
 | Marketing CI | repository root | workflow commands in `marketing-ci.yml` | workflow-specific | marketing-ci.yml |
 | Planner live evals | `finnor-os` | `npm run eval:planner:live` | credentials required; not a local CI substitute | planner-live-evals.yml |

@@ -221,7 +221,7 @@ try {
         to_regclass('finnor_os.import_entity_refs') IS NOT NULL AS import_entity_refs,
         EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='finnor_os' AND table_name='tenant_integrations' AND column_name='credential_ref') AS tenant_credentials
     `)
-    if (Object.values(shape.rows[0] ?? {}).some((value) => value !== true)) throw new Error("production Phase 1–3 schema shape is inconsistent")
+    if (Object.values(shape.rows[0] ?? {}).some((value) => value !== true)) throw new Error("canonical production schema shape is inconsistent")
   }
   const counts = await client.query(`
     SELECT

@@ -1,4 +1,4 @@
-import { CURRENT_MIGRATION_HEAD, PHASE5_CUTOVER_PROTOCOL, getPool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, MINIMUM_PRODUCT_RUNTIME_PROTOCOL, getPool } from "@finnor/db";
 
 export interface WorkerFleetReadiness {
   migrationHead: string | null;
@@ -58,7 +58,7 @@ export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.
          WHERE cutover_protocol<greatest($3,coalesce((SELECT minimum_cutover_protocol FROM authority),$3))
        )::int AS incompatible_protocol_runtimes
        FROM fresh`,
-    [CURRENT_MIGRATION_HEAD, expectedReleaseSha, PHASE5_CUTOVER_PROTOCOL, CUTOVER_RUNTIME_SERVICES],
+    [CURRENT_MIGRATION_HEAD, expectedReleaseSha, MINIMUM_PRODUCT_RUNTIME_PROTOCOL, CUTOVER_RUNTIME_SERVICES],
   );
   const row = result.rows[0];
   return {

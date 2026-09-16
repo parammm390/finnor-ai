@@ -226,7 +226,7 @@ export async function closePool(): Promise<void> {
   }
 }
 
-export const PHASE5_CUTOVER_PROTOCOL = 5 as const;
+export const MINIMUM_PRODUCT_RUNTIME_PROTOCOL = 5 as const;
 
 export interface ProductRuntimeAuthoritySnapshot {
   epoch: number;
@@ -277,8 +277,8 @@ export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAutho
   const row = await readProductRuntimeAuthoritySnapshot();
   if (
     !row
-    || row.epoch < PHASE5_CUTOVER_PROTOCOL
-    || row.minimumCutoverProtocol < PHASE5_CUTOVER_PROTOCOL
+    || row.epoch < MINIMUM_PRODUCT_RUNTIME_PROTOCOL
+    || row.minimumCutoverProtocol < MINIMUM_PRODUCT_RUNTIME_PROTOCOL
     || row.activeProductVertical !== "private_equity"
     || !["preparing", "water_intake_frozen", "water_retired"].includes(row.state)
   ) {
@@ -329,7 +329,7 @@ export async function recordCutoverCompatibleHeartbeat(input: CutoverHeartbeatIn
       input.deploymentId ?? null,
       input.capabilities ?? [],
       input.environment,
-      PHASE5_CUTOVER_PROTOCOL,
+      MINIMUM_PRODUCT_RUNTIME_PROTOCOL,
       authority.epoch,
     ],
   );

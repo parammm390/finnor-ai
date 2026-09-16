@@ -18,7 +18,7 @@ export interface FinalPeReadinessEvaluation {
 
 /** Only an explicitly deployed production environment gets the final-PE gate.
  * NODE_ENV is intentionally excluded: local `next build/start` also sets it to
- * production and must not require a fabricated retired authority. */
+ * production and must not require fabricated product authority. */
 export function isFinalPeProductionEnvironment(explicitEnvironment: string | null): boolean {
   return explicitEnvironment?.trim().toLowerCase() === "production";
 }

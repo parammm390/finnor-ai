@@ -2,7 +2,7 @@ import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
-import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
+import { assertSupplierCanaryRelease } from "./release-evidence-policy.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
 
