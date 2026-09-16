@@ -44,10 +44,6 @@ Parameters:
     Type: String
     Default: production
     Description: GitHub deployment environment bound to the OIDC role.
-  GitHubWorkflowName:
-    Type: String
-    Default: production-release
-    Description: Exact GitHub Actions workflow name permitted to assume the production role.
   ImageUri:
     Type: String
     Description: Immutable ECR image URI including its digest.
@@ -258,7 +254,7 @@ Resources:
       com.aws.cloudformation.Context:
         why: short-lived production release identity; GitHub OIDC over stored AWS keys
         must:
-          - trust binds immutable repo + owner IDs, main ref, production env, and canonical workflow
+          - AWS-supported sub binds immutable repo + owner IDs and the production environment
           - audience remains sts.amazonaws.com
         mutable: change-with-constraints
         mutability:
@@ -278,11 +274,6 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}'
-                token.actions.githubusercontent.com:repository_id: !Ref GitHubRepositoryId
-                token.actions.githubusercontent.com:repository_owner_id: !Ref GitHubOwnerId
-                token.actions.githubusercontent.com:ref: refs/heads/main
-                token.actions.githubusercontent.com:environment: !Ref GitHubEnvironment
-                token.actions.githubusercontent.com:workflow: !Ref GitHubWorkflowName
       Policies:
         - PolicyName: finnor-github-actions-release
           PolicyDocument:
