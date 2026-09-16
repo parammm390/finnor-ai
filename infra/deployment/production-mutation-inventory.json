@@ -149,6 +149,7 @@
         "scripts/release/verify-live-release.mjs",
         "scripts/release/verify-production-parity.mjs",
         "scripts/release/verify-production-readiness.mjs",
+        "scripts/release/production-readiness-policy.mjs",
         "scripts/release/verify-supplier-canary-release.mjs",
         "scripts/release/release-evidence-policy.mjs",
         "scripts/release/verify-release.mjs",
@@ -181,6 +182,7 @@
         "scripts/release/release-evidence-policy.test.mjs",
         "scripts/release/pr-verdict-policy.test.mjs",
         "scripts/release/production-mutation-guard.test.mjs",
+        "scripts/release/production-readiness-policy.test.mjs",
         "scripts/release/protected-env.test.mjs",
         "scripts/release/release-policy.test.mjs",
         "scripts/release/supplier-canary-health.test.mjs"

@@ -17,7 +17,7 @@
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
     "release:mutation-inventory": "node scripts/release/validate-production-mutation-inventory.mjs",
     "release:preflight": "npm run release:truth && npm run test:release",
-    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-evidence-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
+    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-evidence-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
