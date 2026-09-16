@@ -6,6 +6,8 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { assertAlbTargetsHealthy, assertAwsTarget, assertAwsWorkerHealth, assertCanonicalRelease, assertEcsDeploymentStable, assertFreshAwsPreflight, assertWorkerHeartbeat, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
+import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
+import { readProtectedEnvValue } from "./protected-env.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -27,6 +29,7 @@ const evidence = JSON.parse(readFileSync(resolve(evidencePath), "utf8"))
 const contractBytes = readFileSync(resolve(repoRoot, "infra/deployment/production.contract.json"))
 const contractHash = createHash("sha256").update(contractBytes).digest("hex")
 assertFreshAwsPreflight(evidence, { commitSha: gitRelease.head, contractHash })
+await authorizeProductionMutation("aws-service-deploy")
 
 const awsRegion = worker.region
 function awsJson(service, args, timeout = 60_000) {
@@ -183,9 +186,7 @@ try {
   const gateway = await gatewayResponse.json().catch(() => null)
   assertAwsWorkerHealth({ status: gatewayResponse.status, body: gateway, expected })
 
-  process.loadEnvFile(resolve(databaseEnvPath))
-  const databaseUrl = process.env.MIGRATIONS_DATABASE_URL || process.env.DATABASE_URL
-  if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL or DATABASE_URL is required for worker heartbeat verification")
+  const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL", { fallbackKey: "DATABASE_URL" })
   const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
   const pg = requireFromOs("pg")
   const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })

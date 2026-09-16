@@ -6,6 +6,7 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import pg from "pg";
+import { assertNotProductionDatabaseTarget } from "../packages/db/production-target-guard";
 
 function arg(name: string): string {
   const value = process.argv.slice(2).find((entry) => entry.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -25,6 +26,7 @@ async function main(): Promise<void> {
   const envFile = arg("preview-env");
   const cwd = arg("vercel-cwd");
   const adminUrl = await databaseUrl(envFile);
+  assertNotProductionDatabaseTarget(adminUrl, "preview role configuration");
   const password = randomBytes(32).toString("base64url");
   const admin = new pg.Client({ connectionString: adminUrl, ssl: { rejectUnauthorized: false } });
   await admin.connect();

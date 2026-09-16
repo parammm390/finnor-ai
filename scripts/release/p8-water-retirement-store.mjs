@@ -1,4 +1,11 @@
 import { P8_WATER_TENANT_DISPOSITIONS } from "./p8-water-retirement-policy.mjs"
+import { assertProductionMutationCapability } from "./production-mutation-guard.mjs"
+
+function requireMutationCapability(client, capability) {
+  const host = String(client?.connectionParameters?.host ?? "").toLowerCase()
+  if (["localhost", "127.0.0.1", "::1"].includes(host)) return
+  assertProductionMutationCapability(capability, "product-authority-update")
+}
 
 function statusMap(rows, section) {
   return Object.fromEntries(
@@ -149,7 +156,8 @@ export async function readWaterOperationalCensus(client, {
   }
 }
 
-export async function writeTenantDispositions(client, { actor, authorizationRef }) {
+export async function writeTenantDispositions(client, { actor, authorizationRef, productionMutationCapability }) {
+  requireMutationCapability(client, productionMutationCapability)
   const obligations = JSON.stringify([
     "preserve_historical_truth",
     "prevent_future_water_execution",
@@ -174,7 +182,9 @@ export async function drainAuditedWaterFixtures(client, {
   authorizationRef,
   releaseSha,
   tenantIds = P8_WATER_TENANT_DISPOSITIONS.map((row) => row.tenantId),
+  productionMutationCapability,
 }) {
+  requireMutationCapability(client, productionMutationCapability)
   const actions = await client.query(
     `WITH targets AS MATERIALIZED (
        SELECT id,tenant_id,status

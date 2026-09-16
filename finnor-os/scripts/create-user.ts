@@ -3,6 +3,7 @@ import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import { closePool } from "@finnor/db";
 import { ensureTenantUser, type TenantUserRole } from "./tenant-user";
+import { assertNotProductionDatabaseTarget, assertNotProductionSupabaseTarget } from "../packages/db/production-target-guard";
 
 const VALID_ROLES: TenantUserRole[] = ["owner"];
 
@@ -29,6 +30,8 @@ async function main(): Promise<void> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY must be set");
+  assertNotProductionDatabaseTarget(process.env.DATABASE_URL, "direct user provisioning");
+  assertNotProductionSupabaseTarget(url, "direct user provisioning");
   const supabase = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false } });
   const result = await ensureTenantUser(input, { auth: supabase.auth.admin });
 

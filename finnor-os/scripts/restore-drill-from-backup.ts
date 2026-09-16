@@ -16,6 +16,7 @@ import pg from "pg";
 import { migrate } from "../packages/db/migrate";
 import { restoreAllTables, type DatabaseDump } from "../packages/db/backup";
 import { backupStorageConfig, downloadLatestBackup } from "../packages/tools/src/backup-storage-github";
+import { assertNotProductionDatabaseTarget } from "../packages/db/production-target-guard";
 
 const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const DRILL_DB = `finnor_restore_drill_${Date.now()}`;
@@ -45,6 +46,7 @@ async function smokeCheck(url: string): Promise<{ ok: boolean; detail: string }>
 }
 
 async function main(): Promise<void> {
+  assertNotProductionDatabaseTarget(SOURCE_URL, "backup restore drill database server");
   const cfg = backupStorageConfig();
   if (!cfg) {
     console.error("[restore-drill] BACKUP_GITHUB_TOKEN/BACKUP_GITHUB_REPO not set — nothing to download. Not a drill failure, just unconfigured.");

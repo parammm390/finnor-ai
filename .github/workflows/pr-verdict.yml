@@ -1,0 +1,103 @@
+name: universal-pr-verdict
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: pr-verdict-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    name: classify-required-scope
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.scope.outputs.backend }}
+      root: ${{ steps.scope.outputs.root }}
+      dependencies: ${{ steps.scope.outputs.dependencies }}
+      files_b64: ${{ steps.scope.outputs.files_b64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - id: scope
+        name: Classify the exact pull-request diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from "node:child_process"
+          const { appendFileSync } = await import("node:fs")
+          const { classifyPullRequestFiles, encodeChangedFiles } = await import("./scripts/release/pr-verdict-policy.mjs")
+          const bytes = execFileSync("git", ["diff", "--name-only", "-z", "--diff-filter=ACDMRT", process.env.BASE_SHA, process.env.HEAD_SHA])
+          const files = bytes.toString("utf8").split("\0").filter(Boolean)
+          const { backend, root, dependencies } = classifyPullRequestFiles(files)
+          const output = process.env.GITHUB_OUTPUT
+          appendFileSync(output, `backend=${backend}\nroot=${root}\ndependencies=${dependencies}\nfiles_b64=${encodeChangedFiles(files)}\n`)
+          NODE
+
+  backend:
+    name: applicable-backend-gates
+    needs: classify
+    if: ${{ needs.classify.outputs.backend == 'true' }}
+    uses: ./.github/workflows/ci.yml
+
+  root:
+    name: applicable-root-gates
+    needs: classify
+    if: ${{ needs.classify.outputs.root == 'true' }}
+    uses: ./.github/workflows/marketing-ci.yml
+
+  security:
+    name: universal-security-gates
+    needs: classify
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/security.yml
+    with:
+      run_dependency_scan: ${{ needs.classify.outputs.dependencies == 'true' }}
+
+  verdict:
+    name: required-pr-verdict
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [classify, backend, root, security]
+    env:
+      CLASSIFY_RESULT: ${{ needs.classify.result }}
+      BACKEND_APPLICABLE: ${{ needs.classify.outputs.backend }}
+      BACKEND_RESULT: ${{ needs.backend.result }}
+      ROOT_APPLICABLE: ${{ needs.classify.outputs.root }}
+      ROOT_RESULT: ${{ needs.root.result }}
+      DEPENDENCY_APPLICABLE: ${{ needs.classify.outputs.dependencies }}
+      SECURITY_RESULT: ${{ needs.security.result }}
+      FILES_B64: ${{ needs.classify.outputs.files_b64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Emit the stable required verdict
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from "node:fs"
+          import { decodeChangedFiles, evaluateRequiredPrVerdict } from "./scripts/release/pr-verdict-policy.mjs"
+          const applicable = (value) => value === "true"
+          const { verdict, failures } = evaluateRequiredPrVerdict({
+            files: decodeChangedFiles(process.env.FILES_B64),
+            classifyResult: process.env.CLASSIFY_RESULT,
+            backendApplicable: applicable(process.env.BACKEND_APPLICABLE),
+            backendResult: process.env.BACKEND_RESULT,
+            rootApplicable: applicable(process.env.ROOT_APPLICABLE),
+            rootResult: process.env.ROOT_RESULT,
+            dependencyApplicable: applicable(process.env.DEPENDENCY_APPLICABLE),
+            securityResult: process.env.SECURITY_RESULT,
+          })
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n\`\`\`json\n${JSON.stringify(verdict, null, 2)}\n\`\`\`\n`)
+          console.log(JSON.stringify(verdict))
+          if (failures.length) throw new Error(`required PR verdict failed: ${failures.join(", ")}`)
+          NODE

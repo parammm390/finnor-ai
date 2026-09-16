@@ -10,6 +10,7 @@ import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { seed } from "../../packages/db/seed";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
+import { assertNotProductionDatabaseTarget } from "../../packages/db/production-target-guard";
 import {
   P7_GATE_IDS,
   P7_MANDATORY_CASES,
@@ -174,6 +175,7 @@ async function freePort(): Promise<number> {
 
 async function sourceDatabase(): Promise<{ url: string; mode: "configured" | "embedded"; cleanup: () => Promise<void> }> {
   const configured = process.env.DATABASE_URL ?? "postgres://finnor:finnor@127.0.0.1:5432/finnor";
+  assertNotProductionDatabaseTarget(configured, "P7 certification database server");
   if (await canConnect(configured)) return { url: configured, mode: "configured", cleanup: async () => undefined };
   const directory = await mkdtemp(join(tmpdir(), "finnor-p7-cert-pg-"));
   const port = await freePort();

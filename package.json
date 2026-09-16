@@ -16,9 +16,10 @@
     "test:e2e:ui": "playwright test --ui",
     "release:verify": "node scripts/release/verify-release.mjs",
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
+    "release:mutation-inventory": "node scripts/release/validate-production-mutation-inventory.mjs",
     "release:p0-p4-lineage": "node scripts/release/verify-p0-p4-lineage.mjs",
     "release:p0-p6-lineage": "npm run p6:lineage --prefix finnor-os",
-  "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-policy.test.mjs"
+  "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-policy.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

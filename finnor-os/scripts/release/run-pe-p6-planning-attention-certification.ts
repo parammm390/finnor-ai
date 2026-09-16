@@ -7,6 +7,7 @@ import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { seed } from "../../packages/db/seed";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
+import { assertNotProductionDatabaseTarget } from "../../packages/db/production-target-guard";
 import {
   P6_GATE_IDS,
   P6_MANDATORY_CASE_COUNT,
@@ -319,6 +320,7 @@ function command(label: string, executable: string, args: readonly string[], tim
 
 async function main(): Promise<void> {
   const started = Date.now();
+  assertNotProductionDatabaseTarget(SOURCE_DATABASE_URL, "P6 certification database server");
   await requireDatabase(SOURCE_DATABASE_URL);
   const certificationDatabase = await createCertificationDatabase();
   DATABASE_URL = certificationDatabase.url;

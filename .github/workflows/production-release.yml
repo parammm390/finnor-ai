@@ -3,7 +3,6 @@ name: production-release
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 
 concurrency:
   group: finnor-production-release
@@ -11,13 +10,11 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   canonical-graph-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: production
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -100,6 +97,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -108,6 +108,9 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
@@ -162,10 +165,35 @@ jobs:
         run: npm run release:pe-p7-workforce-learning
         working-directory: finnor-os
 
+  root-release-gate:
+    uses: ./.github/workflows/marketing-ci.yml
+
+  post-merge-certification:
+    name: post-merge-certification
+    needs: [canonical-graph-gate, phase5-readiness, root-release-gate]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Certify the exact merged SHA before production authority exists
+        env:
+          CANONICAL_RESULT: ${{ needs.canonical-graph-gate.result }}
+          PHASE5_RESULT: ${{ needs.phase5-readiness.result }}
+          ROOT_RESULT: ${{ needs.root-release-gate.result }}
+        run: |
+          test "$CANONICAL_RESULT" = success
+          test "$PHASE5_RESULT" = success
+          test "$ROOT_RESULT" = success
+          printf '{"schema":"finnor-post-merge-certification.v1","sha":"%s","runId":"%s","runAttempt":"%s","result":"PASS"}\n' \
+            "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
+
   release:
-    needs: [canonical-graph-gate, phase5-readiness]
+    needs: [post-merge-certification]
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -179,18 +207,14 @@ jobs:
           --health-timeout 5s --health-retries 10
     environment: production
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      AWS_ROLE_ARN: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
-      AWS_REGION: us-east-1
       FINNOR_RELEASE_SOURCE: github-actions
-      VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET }}
-      VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
-      VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
-      VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -199,31 +223,46 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-
-      - name: Require production credentials before any mutation
-        run: |
-          for name in VERCEL_TOKEN AWS_ROLE_ARN VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET VERCEL_API_AUTOMATION_BYPASS_SECRET VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET; do
-            test -n "${!name:-}" || { echo "::error::$name is missing from the production environment"; exit 1; }
-          done
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install pinned Vercel CLI
         run: npm install --global vercel@50.15.1
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install API/workspace dependencies
         run: npm ci
         working-directory: finnor-os
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Verify dependency manifests remain source-locked
         run: git diff --exit-code -- package.json package-lock.json finnor-os/package.json finnor-os/package-lock.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Validate canonical deployment truth
         run: node scripts/release/validate-deployment-truth.mjs
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Release governance regression tests
         run: node --test scripts/release/release-policy.test.mjs
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Derive commit-locked release metadata
         run: |
@@ -234,21 +273,17 @@ jobs:
           echo "FINNOR_BUILD_ID=finnor-$short" >> "$GITHUB_ENV"
           echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
           echo "FINNOR_ENVIRONMENT=production" >> "$GITHUB_ENV"
+          region="$(node -e 'const c=require("./infra/deployment/production.contract.json"); process.stdout.write(c.topology.worker.region)')"
+          echo "AWS_REGION=$region" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Verify clean canonical Git source
         run: node scripts/release/verify-release.mjs
-
-      - name: Authenticate exact AWS account with GitHub OIDC
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Verify exact AWS account and region
-        run: |
-          account="$(aws sts get-caller-identity --query Account --output text)"
-          test "$account" = "601804670058"
-          test "$AWS_REGION" = "us-east-1"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Frontend quality gate
         run: |
@@ -256,10 +291,16 @@ jobs:
           npx tsc --noEmit -p tsconfig.json
           npm run test:unit
           npm run typecheck --prefix finnor-os
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: API typecheck gate
         run: npm run typecheck
         working-directory: finnor-os
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Prepare disposable worker smoke database
         run: |
@@ -269,30 +310,24 @@ jobs:
           npm run setup:langgraph
         working-directory: finnor-os
         env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
           DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
 
-      - name: Build, smoke-test, and push exact worker image to ECR
+      - name: Build and smoke-test exact worker image without production credentials
         run: |
           set -euo pipefail
           image="finnor-worker:${FINNOR_COMMIT_SHA}"
           container_id=""
           cleanup() { if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null 2>&1 || true; fi; }
           trap cleanup EXIT
-          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
-          existing_digest="$(aws ecr describe-images --repository-name finnor-worker --query "imageDetails[?contains(imageTags || \`[]\`, '${FINNOR_COMMIT_SHA}')].imageDigest | [0]" --output text)"
-          if test "$existing_digest" != "None" -a -n "$existing_digest"; then
-            # A rerun must use the already published immutable image for this SHA.
-            docker pull "$registry/finnor-worker@$existing_digest"
-            docker tag "$registry/finnor-worker@$existing_digest" "$image"
-          else
-            docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
-          fi
+          docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
           for attempt in $(seq 1 30); do
             pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
             sleep 2
           done
           pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
+          supabase_url="$(node -e 'const fs=require("node:fs"); const contract=JSON.parse(fs.readFileSync("infra/deployment/production.contract.json","utf8")); process.stdout.write(contract.topology.database.supabaseUrl);')"
           container_id="$(docker run --detach --network host \
             --env NODE_ENV=test \
             --env FINNOR_ENVIRONMENT=production \
@@ -305,7 +340,7 @@ jobs:
             --env SECRETS_PROVIDER=env \
             --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
             --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
-            --env SUPABASE_URL=https://kpxrnonhnhexutvdywbh.supabase.co \
+            --env SUPABASE_URL="$supabase_url" \
             --env JARVIS_SSE_ALLOWED_ORIGINS=https://finnorai.com \
             --env WORKER_CONCURRENCY=2 \
             --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=1 \
@@ -320,42 +355,133 @@ jobs:
           docker stop --time 30 "$container_id" >/dev/null
           test "$(docker inspect --format '{{.State.ExitCode}}' "$container_id")" = "0"
           container_id=""
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Verify product-runtime release policy without production credentials
+        run: npm run release:p8-zero-resurrection
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Build commit-locked production artifacts before any database or AWS credential
+        run: |
+          node scripts/release/deploy-production.mjs frontend --prepare-only
+          node scripts/release/deploy-production.mjs api --prepare-only
+          node scripts/release/verify-release.mjs
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Issue exact certified production mutation authorization
+        run: |
+          authorization="$RUNNER_TEMP/production-mutation-authorization.json"
+          node scripts/release/production-mutation-guard.mjs issue --output "$authorization"
+          echo "FINNOR_MUTATION_AUTHORIZATION=$authorization" >> "$GITHUB_ENV"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Authenticate exact AWS project with GitHub OIDC for ECR
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        with:
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
+          aws-region: ${{ env.AWS_REGION }}
+          inline-session-policy: >-
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecr:GetAuthorizationToken","ecr:BatchCheckLayerAvailability","ecr:BatchGetImage","ecr:CompleteLayerUpload","ecr:DescribeImages","ecr:DescribeRepositories","ecr:GetDownloadUrlForLayer","ecr:InitiateLayerUpload","ecr:PutImage","ecr:UploadLayerPart"],"Resource":"*"}]}
+
+      - name: Publish or reuse exact worker image in ECR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          expected_account="$(node -e 'const c=require("./infra/deployment/production.contract.json"); process.stdout.write(c.topology.worker.accountId)')"
+          expected_region="$(node -e 'const c=require("./infra/deployment/production.contract.json"); process.stdout.write(c.topology.worker.region)')"
+          test "$account" = "$expected_account"
+          test "$AWS_REGION" = "$expected_region"
+          image="finnor-worker:${FINNOR_COMMIT_SHA}"
+          registry="$account.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          existing_digest="$(aws ecr describe-images --repository-name finnor-worker --query "imageDetails[?contains(imageTags || \`[]\`, '${FINNOR_COMMIT_SHA}')].imageDigest | [0]" --output text)"
           if test "$existing_digest" = "None" -o -z "$existing_digest"; then
+            node scripts/release/production-mutation-guard.mjs authorize ecr-publish
+            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+            trap 'docker logout "$registry" >/dev/null 2>&1 || true' EXIT
             docker tag "$image" "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
             docker push "$registry/finnor-worker:${FINNOR_COMMIT_SHA}"
+            docker logout "$registry" >/dev/null
+            trap - EXIT
+          else
+            echo "Reusing immutable ECR image $existing_digest for $FINNOR_COMMIT_SHA"
           fi
           digest="$(aws ecr describe-images --repository-name finnor-worker --image-ids imageTag="$FINNOR_COMMIT_SHA" --query 'imageDetails[0].imageDigest' --output text)"
           test "$digest" != "None" -a -n "$digest"
           echo "FINNOR_ECR_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
           echo "FINNOR_ECR_IMAGE_URI=$registry/finnor-worker@$digest" >> "$GITHUB_ENV"
 
+      - name: Clear ECR AWS credentials before non-AWS steps
+        run: |
+          echo "AWS_ACCESS_KEY_ID=" >> "$GITHUB_ENV"
+          echo "AWS_SECRET_ACCESS_KEY=" >> "$GITHUB_ENV"
+          echo "AWS_SESSION_TOKEN=" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
       - name: Pull protected production database configuration
         run: |
-          VERCEL_ORG_ID="$(node -p "require('../../../infra/deployment/production.contract.json').topology.api.organizationId")"
-          VERCEL_PROJECT_ID="$(node -p "require('../../../infra/deployment/production.contract.json').topology.api.projectId")"
+          config_dir="$RUNNER_TEMP/finnor-production-config"
+          mkdir -p "$config_dir"
+          VERCEL_ORG_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.organizationId")"
+          VERCEL_PROJECT_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.projectId")"
           export VERCEL_ORG_ID VERCEL_PROJECT_ID
-          vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
-        working-directory: finnor-os/apps/api
+          (cd "$config_dir" && vercel pull --yes --environment=production)
+          protected_env="$config_dir/.vercel/.env.production.local"
+          test -s "$protected_env"
+          chmod 600 "$protected_env"
+          echo "FINNOR_PROTECTED_DATABASE_ENV=$protected_env" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Authenticate exact AWS project with GitHub OIDC for preflight
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        with:
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
+          aws-region: ${{ env.AWS_REGION }}
+          inline-session-policy: >-
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecr:DescribeImages","ecr:DescribeRepositories","ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","elasticloadbalancing:DescribeLoadBalancers","elasticloadbalancing:DescribeTargetGroups","elasticloadbalancing:DescribeListeners","elasticloadbalancing:DescribeLoadBalancerAttributes","ec2:DescribeSecurityGroups","ec2:DescribeNatGateways"],"Resource":"*"}]}
 
       - name: Preflight every AWS, Vercel, and database production target
         run: |
           node scripts/release/preflight-production.mjs \
-            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
             --image-digest "$FINNOR_ECR_IMAGE_DIGEST" \
             --output-file "$RUNNER_TEMP/production-preflight.json"
           echo "FINNOR_PREFLIGHT_EVIDENCE=$RUNNER_TEMP/production-preflight.json" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Clear preflight AWS credentials before non-AWS mutation steps
+        run: |
+          echo "AWS_ACCESS_KEY_ID=" >> "$GITHUB_ENV"
+          echo "AWS_SECRET_ACCESS_KEY=" >> "$GITHUB_ENV"
+          echo "AWS_SESSION_TOKEN=" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Bind canonical realtime gateway into Vercel production
         run: node scripts/release/configure-vercel-realtime.mjs --apply
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build commit-locked production artifacts before database mutation
-        run: |
-          npm run release:p8-zero-resurrection
-          node scripts/release/deploy-production.mjs frontend --prepare-only
-          node scripts/release/deploy-production.mjs api --prepare-only
-          node scripts/release/verify-release.mjs
-
-      - name: Deploy and verify Private Equity supplier canary app
+      - name: Deploy Private Equity supplier canary app
         id: supplier_canary_app
         run: |
           set -o pipefail
@@ -363,10 +489,21 @@ jobs:
           url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/supplier-canary-app-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify Private Equity supplier canary app
+        run: |
+          url="${{ steps.supplier_canary_app.outputs.url }}"
           node scripts/release/verify-supplier-canary-release.mjs supplierCanaryApp "$url" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
           node scripts/release/verify-supplier-canary-release.mjs supplierCanaryApp https://finnor-supplier-canary-app.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Deploy and verify Private Equity supplier canary auth
+      - name: Deploy Private Equity supplier canary auth
         id: supplier_canary_auth
         run: |
           set -o pipefail
@@ -374,12 +511,25 @@ jobs:
           url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/supplier-canary-auth-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify Private Equity supplier canary auth
+        run: |
+          url="${{ steps.supplier_canary_auth.outputs.url }}"
           node scripts/release/verify-supplier-canary-release.mjs supplierCanaryAuth "$url" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
           node scripts/release/verify-supplier-canary-release.mjs supplierCanaryAuth https://finnor-supplier-canary-auth.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
 
       - name: Migrate production database
-        run: npm run release:migrate:production -- apps/api/.vercel/.env.production.local
+        run: npm run release:migrate:production -- "$FINNOR_PROTECTED_DATABASE_ENV"
         working-directory: finnor-os
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Deploy prepared frontend
         id: frontend
@@ -389,11 +539,18 @@ jobs:
           url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/frontend-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Verify frontend deployment
         run: |
           node scripts/release/verify-live-release.mjs "${{ steps.frontend.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production frontend
           node scripts/release/verify-live-release.mjs https://finnorai.com "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production frontend
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET }}
 
       - name: Deploy prepared API
         id: api
@@ -403,31 +560,73 @@ jobs:
           url="$(node -e 'const fs=require("node:fs"); const result=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!result.deploymentUrl) process.exit(1); process.stdout.write(result.deploymentUrl)' "$RUNNER_TEMP/api-release.json")"
           test -n "$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Verify API deployment
         run: |
           node scripts/release/verify-live-release.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production api
           node scripts/release/verify-live-release.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" "$FINNOR_BUILD_ID" "$FINNOR_VERSION" production api
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Authenticate exact AWS project with GitHub OIDC for ECS
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        with:
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
+          aws-region: ${{ env.AWS_REGION }}
+          inline-session-policy: >-
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","ecs:DescribeTasks","ecs:ListTasks","ecs:RegisterTaskDefinition","ecs:UpdateService","elasticloadbalancing:DescribeTargetHealth","logs:DescribeLogStreams","logs:GetLogEvents","iam:PassRole"],"Resource":"*"}]}
 
       - name: Deploy AWS ECS worker and embedded orchestrator
         run: |
           node scripts/release/deploy-aws-worker.mjs \
             --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
-            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
             --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Clear ECS AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=" >> "$GITHUB_ENV"
+          echo "AWS_SECRET_ACCESS_KEY=" >> "$GITHUB_ENV"
+          echo "AWS_SESSION_TOKEN=" >> "$GITHUB_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Verify cross-runtime release and migration parity
-        run: node scripts/release/verify-production-parity.mjs --database-env finnor-os/apps/api/.vercel/.env.production.local
+        run: node scripts/release/verify-production-parity.mjs --database-env "$FINNOR_PROTECTED_DATABASE_ENV"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
 
       - name: Execute governed Phase 8 Water retirement protocol
         run: |
           node scripts/release/run-p8-production-water-retirement.mjs \
-            --database-env finnor-os/apps/api/.vercel/.env.production.local \
+            --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
             --apply \
             --authorization-ref "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
 
       - name: Verify final PE product authority readiness
         run: |
           node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" api
           node scripts/release/verify-production-readiness.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" api
           npm --prefix finnor-os run release:p8-runtime-contract -- --readiness-url https://api-psi-brown-95.vercel.app
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
