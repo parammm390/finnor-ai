@@ -106,6 +106,11 @@ requireInvariant(read("scripts/release/pr-verdict-policy.mjs").includes('applica
 requireInvariant(read(".github/workflows/security.yml").includes("workflow_call:"), "security gates are not composed by the universal verdict")
 requireInvariant(verdict.includes("uses: ./.github/workflows/security.yml"), "universal verdict does not run gitleaks on every PR")
 
+const tenantProbeWorkflow = read(".github/workflows/tenant-isolation-nightly.yml")
+requireInvariant(tenantProbeWorkflow.includes("production.contract.json').topology.api.productionUrl"), "tenant-isolation probe does not derive the canonical production API from the deployment contract")
+requireInvariant(!tenantProbeWorkflow.includes("STAGING_API_URL") && !tenantProbeWorkflow.includes("TENANT_PROBE_PRODUCTION_API_URL"), "tenant-isolation probe still depends on a stale external URL secret")
+requireInvariant(!existsSync(resolve(repoRoot, ".github/workflows/k6-nightly-lite.yml")) && !existsSync(resolve(repoRoot, ".github/workflows/planner-live-evals.yml")), "retired field-service nightly workflow was restored")
+
 for (const path of [
   "finnor-os/packages/db/migrate.ts",
   "finnor-os/packages/db/drizzle.config.ts",

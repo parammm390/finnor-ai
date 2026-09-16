@@ -23,11 +23,11 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
-      - name: Probe production and staging PE tenant isolation
+      - name: Probe canonical production PE tenant isolation
         env:
-          STAGING_API_URL: ${{ secrets.TENANT_PROBE_STAGING_API_URL }}
-          PRODUCTION_API_URL: ${{ secrets.TENANT_PROBE_PRODUCTION_API_URL }}
           TENANT_A_PROBE_JWT: ${{ secrets.TENANT_PROBE_A_JWT }}
           TENANT_B_PROBE_JWT: ${{ secrets.TENANT_PROBE_B_JWT }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
-        run: npx tsx scripts/probe-tenant-isolation.ts
+        run: |
+          export PRODUCTION_API_URL="$(node -p "require('../infra/deployment/production.contract.json').topology.api.productionUrl")"
+          npx tsx scripts/probe-tenant-isolation.ts

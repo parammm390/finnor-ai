@@ -22,10 +22,8 @@ the platform default because no `timeout-minutes` value is set.
 | Policy coverage | `finnor-os` | `npm run policy:lint` | script-defined | finnor-os package.json |
 | Security secrets | repository root | `gitleaks/gitleaks-action@v2` | GitHub default | security.yml |
 | Security dependencies | repository root | `google/osv-scanner-action` with `--lockfile=finnor-os/package-lock.json` | GitHub default | security.yml |
-| Tenant isolation | `finnor-os` | `npx tsx scripts/probe-tenant-isolation.ts` | scheduled/manual; staging and production credentials required | tenant-isolation-nightly.yml |
-| Load | `finnor-os` | workflow command in `k6-nightly-lite.yml` | workflow-specific | k6-nightly-lite.yml |
+| Tenant isolation | `finnor-os` | `npx tsx scripts/probe-tenant-isolation.ts` | scheduled/manual; canonical production URL comes from the deployment contract and two production probe JWTs are required | tenant-isolation-nightly.yml |
 | Marketing CI | repository root | workflow commands in `marketing-ci.yml` | workflow-specific | marketing-ci.yml |
-| Planner live evals | `finnor-os` | `npm run eval:planner:live` | credentials required; not a local CI substitute | planner-live-evals.yml |
 
 Commands that mutate a database are safe to execute only against the disposable CI database declared
 in `.github/workflows/ci.yml` or an independently verified non-production environment.

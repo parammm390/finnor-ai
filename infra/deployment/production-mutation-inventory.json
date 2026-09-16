@@ -197,12 +197,22 @@
         ".github/workflows/marketing-ci.yml",
         ".github/workflows/security.yml",
         ".github/workflows/pr-verdict.yml",
-        ".github/workflows/k6-nightly-lite.yml",
-        ".github/workflows/planner-live-evals.yml",
         ".github/workflows/tenant-isolation-nightly.yml"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"
+    },
+    {
+      "id": "legacy-field-service-nightlies",
+      "paths": [
+        ".github/workflows/k6-nightly-lite.yml",
+        ".github/workflows/planner-live-evals.yml",
+        "finnor-os/scripts/k6-load-test.js",
+        "finnor-os/scripts/eval-planner.ts"
+      ],
+      "classification": "READ_ONLY",
+      "state": "RETIRED",
+      "reason": "The deleted load and credentialed planner harnesses exercised the retired field-service/Water product and no longer represent the active Private Equity runtime. Deterministic planner coverage remains required in every backend certification."
     },
     {
       "id": "legacy-receipt-replay",

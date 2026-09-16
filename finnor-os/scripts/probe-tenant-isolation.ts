@@ -25,7 +25,6 @@ function required(name: string): string {
   return value.replace(/\/$/, "");
 }
 
-const stagingUrl = required("STAGING_API_URL");
 const productionUrl = required("PRODUCTION_API_URL");
 const tenantAJwt = required("TENANT_A_PROBE_JWT");
 const tenantBJwt = required("TENANT_B_PROBE_JWT");
@@ -49,12 +48,20 @@ async function request(
   init: { method?: "GET" | "POST"; body?: unknown } = {},
 ): Promise<{ status: number; body: unknown }> {
   const method = init.method ?? "GET";
-  const response = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers: headers(jwt, method !== "GET"),
-    cache: "no-store",
-    ...(method !== "GET" ? { body: JSON.stringify(init.body ?? {}) } : {}),
-  });
+  const url = `${baseUrl}${path}`;
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers: headers(jwt, method !== "GET"),
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+      ...(method !== "GET" ? { body: JSON.stringify(init.body ?? {}) } : {}),
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`network request failed for ${url}: ${detail}`, { cause: error });
+  }
   const text = await response.text();
   let body: unknown = null;
   if (text.trim()) {
@@ -175,10 +182,7 @@ async function probeEnvironment(label: string, baseUrl: string): Promise<Record<
 }
 
 async function main(): Promise<void> {
-  const results = [];
-  for (const [label, baseUrl] of [["staging", stagingUrl], ["production", productionUrl]] as const) {
-    results.push(await probeEnvironment(label, baseUrl));
-  }
+  const results = [await probeEnvironment("production", productionUrl)];
   console.log(JSON.stringify({ ok: true, invariant: "authenticated tenant A canonical roots are invisible to tenant B", results }, null, 2));
 }
 

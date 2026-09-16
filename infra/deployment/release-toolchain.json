@@ -27,16 +27,6 @@
       "uses": "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml",
       "version": "v2.6.0",
       "sha": "a345acffa64b0eaede81a3d9aae6141214d9c8fc"
-    },
-    {
-      "uses": "grafana/setup-k6-action",
-      "version": "v1.2.1",
-      "sha": "db07bd9765aac508ef18982e52ab937fe633a065"
-    },
-    {
-      "uses": "actions/upload-artifact",
-      "version": "v7.0.1",
-      "sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
     }
   ]
 }

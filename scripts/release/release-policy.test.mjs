@@ -172,6 +172,19 @@ test("legacy product cutover remains retired and absent from every active releas
   assert.doesNotMatch(activeSources, /run-p8-production-water-retirement|release:p8-zero-resurrection|release:pe5|release:p8-runtime-contract|product-authority-update/i)
 })
 
+test("retired field-service nightlies cannot masquerade as Private Equity release coverage", () => {
+  const inventory = JSON.parse(readFileSync(new URL("../../infra/deployment/production-mutation-inventory.json", import.meta.url), "utf8"))
+  const retired = inventory.entries.find((entry) => entry.id === "legacy-field-service-nightlies")
+  assert.equal(retired.classification, "READ_ONLY")
+  assert.equal(retired.state, "RETIRED")
+  for (const path of retired.paths) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, `${path} must remain deleted`)
+  }
+  const tenantProbe = readFileSync(new URL("../../.github/workflows/tenant-isolation-nightly.yml", import.meta.url), "utf8")
+  assert.match(tenantProbe, /production\.contract\.json'\)\.topology\.api\.productionUrl/)
+  assert.doesNotMatch(tenantProbe, /STAGING_API_URL|TENANT_PROBE_PRODUCTION_API_URL/)
+})
+
 test("runtime parity requires the embedded orchestrator and exact migration", () => {
   const observed = {
     frontend: { ...expected, traceable: true },
