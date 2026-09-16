@@ -5,6 +5,7 @@ import { promises as dns } from "node:dns"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { readProtectedEnvValue } from "./protected-env.mjs"
 import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -195,9 +196,7 @@ if (!realtimeDnsMatches) {
 }
 if (!realtimeDnsMatches) throw new Error(`realtime.finnorai.com does not resolve to ALB ${loadBalancer.DNSName}`)
 
-process.loadEnvFile(resolve(databaseEnvPath))
-const databaseUrl = process.env.MIGRATIONS_DATABASE_URL
-if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL is missing from the protected environment")
+const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
 const parsedDatabaseUrl = new URL(databaseUrl)
 if (parsedDatabaseUrl.hostname !== contract.topology.database.host) throw new Error(`database host ${parsedDatabaseUrl.hostname} differs from the canonical contract`)
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))

@@ -251,6 +251,14 @@ Resources:
     Metadata:
       AWSToolsMetrics:
         AWSAgentToolkit: aws-cloudformation@2
+      com.aws.cloudformation.Context:
+        why: short-lived production release identity; GitHub OIDC over stored AWS keys
+        must:
+          - AWS-supported sub binds immutable repo + owner IDs and the production environment
+          - audience remains sts.amazonaws.com
+        mutable: change-with-constraints
+        mutability:
+          AssumeRolePolicyDocument: change-with-constraints
     Properties:
       RoleName: finnor-github-actions-deploy
       Description: GitHub main OIDC deployment role for FINNOR ECR and ECS releases.

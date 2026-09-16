@@ -8,8 +8,12 @@ name: marketing-ci
 # audited production push so marketing parity runs on the same commit as CI.
 # Keep this marker synchronized on each release-fix push.
 on:
-  pull_request:
-    paths-ignore: ["finnor-os/**"]
+  workflow_call:
+    secrets:
+      TEST_OWNER_EMAIL:
+        required: false
+      TEST_OWNER_PASSWORD:
+        required: false
   push:
     branches: [main]
     paths-ignore: ["finnor-os/**"]

@@ -2,6 +2,8 @@ import { execFileSync, spawnSync } from "node:child_process"
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
+import { sanitizeVercelBuildEnvironment } from "./protected-env.mjs"
 import { worktreeStatus } from "./worktree-state.mjs"
 
 const appName = process.argv[2]
@@ -39,8 +41,7 @@ function git(args) {
 }
 
 function run(command, args, cwd, env) {
-  const safeArgs = args.map((arg, index) => args[index - 1] === "--token" ? "<redacted>" : arg === "--token" ? arg : arg)
-  console.log(`$ ${command} ${safeArgs.join(" ")}`)
+  console.log(`$ ${command} ${args.join(" ")}`)
   const result = spawnSync(command, args, {
     cwd,
     env,
@@ -59,13 +60,14 @@ const remoteMain = git(["ls-remote", "origin", "refs/heads/main"]).split(/\s+/)[
 const buildId = process.env.FINNOR_BUILD_ID || `finnor-${commitSha.slice(0, 12)}`
 const version = process.env.FINNOR_VERSION || `0.1.0+${commitSha.slice(0, 12)}`
 const environment = "production"
-const source = process.env.FINNOR_RELEASE_SOURCE || (process.env.GITHUB_ACTIONS === "true" ? "github-actions" : "codex-governed-release")
+const source = process.env.FINNOR_RELEASE_SOURCE || (prepareOnly ? "local-read-only" : "")
 
 if (!/^[0-9a-f]{40}$/.test(commitSha)) throw new Error(`HEAD is not a full commit SHA: ${commitSha}`)
 if (dirty) throw new Error(`Refusing to deploy a dirty worktree:\n${dirty}`)
 if (remoteMain !== commitSha) throw new Error(`Refusing to deploy ${commitSha}; origin/main is ${remoteMain || "missing"}`)
 if (buildId !== `finnor-${commitSha.slice(0, 12)}`) throw new Error(`FINNOR_BUILD_ID must be commit-derived: ${buildId}`)
 if (!version.endsWith(`+${commitSha.slice(0, 12)}`)) throw new Error(`FINNOR_VERSION must be commit-derived: ${version}`)
+if (!prepareOnly && source !== "github-actions") throw new Error("Production deployment is restricted to the certified GitHub Actions release")
 
 const appDir = resolve(repoRoot, app.directory)
 // Vercel's local build bootstrap can discover the parent finnor-os workspace
@@ -85,7 +87,6 @@ if (isolateCanaryBuild) {
     filter: (source) => !/(^|[/\\])(?:\.vercel|node_modules)(?:[/\\]|$)/.test(source),
   })
 }
-const tokenArgs = process.env.VERCEL_TOKEN ? ["--token", process.env.VERCEL_TOKEN] : []
 const env = {
   ...process.env,
   // Vercel treats VERCEL_ORG_ID and VERCEL_PROJECT_ID as a pair. Scope every
@@ -98,9 +99,46 @@ const env = {
   FINNOR_ENVIRONMENT: environment,
   FINNOR_RELEASE_SOURCE: source,
 }
+const secretNames = [
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_URL",
+  "VERCEL_TOKEN",
+  "GH_TOKEN",
+  "GITHUB_TOKEN",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "AWS_SESSION_TOKEN",
+  "FINNOR_MUTATION_AUTHORIZATION",
+  "FINNOR_PROTECTED_DATABASE_ENV",
+  "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
+  "VERCEL_API_AUTOMATION_BYPASS_SECRET",
+  "VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET",
+  "VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET",
+]
+function withoutSecrets(sourceEnv, keep = []) {
+  const result = { ...sourceEnv }
+  for (const name of secretNames) if (!keep.includes(name)) delete result[name]
+  return result
+}
 
 if (!deployOnly) {
-  run("vercel", ["pull", "--yes", "--environment=production", ...tokenArgs], buildDir, env)
+  const pullDir = mkdtempSync(join(tmpdir(), "finnor-vercel-pull-"))
+  let buildEnvironment
+  try {
+    run("vercel", ["pull", "--yes", "--environment=production"], pullDir, withoutSecrets(env, ["VERCEL_TOKEN"]))
+    buildEnvironment = sanitizeVercelBuildEnvironment(join(pullDir, ".vercel", ".env.production.local"), {
+      FINNOR_COMMIT_SHA: commitSha,
+      FINNOR_BUILD_ID: buildId,
+      FINNOR_VERSION: version,
+      FINNOR_ENVIRONMENT: environment,
+      FINNOR_RELEASE_SOURCE: source,
+    })
+    rmSync(join(buildDir, ".vercel"), { recursive: true, force: true })
+    cpSync(join(pullDir, ".vercel"), join(buildDir, ".vercel"), { recursive: true })
+  } finally {
+    rmSync(pullDir, { recursive: true, force: true })
+  }
+  console.log(`Sanitized Vercel build environment: retained ${buildEnvironment.retained}, removed ${buildEnvironment.removed} non-build values`)
   const localConfig = join(buildDir, ".vercel", "finnor-release.vercel.json")
   let buildConfig = { installCommand: app.installCommand }
   if (isolateCanaryBuild) {
@@ -111,7 +149,7 @@ if (!deployOnly) {
     buildConfig = { ...canonicalConfig, installCommand: app.installCommand }
   }
   writeFileSync(localConfig, `${JSON.stringify(buildConfig, null, 2)}\n`)
-  run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig, ...tokenArgs], buildDir, env)
+  run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig], buildDir, withoutSecrets(env))
   const buildChanges = worktreeStatus(repoRoot)
   if (buildChanges) throw new Error(`The ${appName} build changed release source:\n${buildChanges}`)
 }
@@ -120,6 +158,7 @@ if (prepareOnly) {
   process.exit(0)
 }
 
+await authorizeProductionMutation("vercel-production-deploy")
 const deployArgs = [
   "deploy", "--prebuilt", "--prod", "--yes",
   "--meta", `finnorCommitSha=${commitSha}`,
@@ -138,9 +177,8 @@ const deployArgs = [
   "--env", `FINNOR_VERSION=${version}`,
   "--env", `FINNOR_ENVIRONMENT=${environment}`,
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
-  ...tokenArgs,
 ]
-const deployOutput = run("vercel", deployArgs, buildDir, env)
+const deployOutput = run("vercel", deployArgs, buildDir, withoutSecrets(env, ["VERCEL_TOKEN"]))
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
 const productionUrls = [...deployOutput.matchAll(/^\s*Production:\s+(https:\/\/[^\s)]+)/gm)].map((match) => match[1].replace(/[.,]+$/, ""))
 const deploymentUrl = productionUrls.at(-1) ?? urls.findLast((url) => url.includes(".vercel.app"))

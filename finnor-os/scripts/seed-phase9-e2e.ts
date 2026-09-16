@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import pg from "pg";
+import { assertDisposableDatabaseTarget } from "../packages/db/production-target-guard";
 import {
   closePool,
   completeWorkPlanRevision,
@@ -67,7 +68,7 @@ import {
 import { GOLDEN_UNDERWRITING_CASES, type GoldenLboCase } from "../tests/underwriting-corpus/golden-cases";
 
 const ADMIN_URL = process.env.DATABASE_URL;
-if (!ADMIN_URL) throw new Error("DATABASE_URL is required");
+assertDisposableDatabaseTarget(ADMIN_URL, "Phase 9 e2e fixture");
 
 const ownerEmail = process.env.TEST_OWNER_EMAIL;
 if (!ownerEmail) throw new Error("TEST_OWNER_EMAIL is required so the authenticated browser maps to the disposable fixture owner");

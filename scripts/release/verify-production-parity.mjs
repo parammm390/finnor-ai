@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
+import { readProtectedEnvValue } from "./protected-env.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -35,9 +36,7 @@ const [frontend, api, supplierCanaryApp, supplierCanaryAuth] = await Promise.all
 assertSupplierCanaryRelease("supplierCanaryApp", supplierCanaryApp, expected, contract.topology.supplierCanaryApp, contract.release.requiredMigrationHead)
 assertSupplierCanaryRelease("supplierCanaryAuth", supplierCanaryAuth, expected, contract.topology.supplierCanaryAuth, contract.release.requiredMigrationHead)
 
-process.loadEnvFile(resolve(databaseEnvPath))
-const databaseUrl = process.env.MIGRATIONS_DATABASE_URL
-if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL is missing")
+const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })

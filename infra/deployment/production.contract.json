@@ -5,6 +5,8 @@
     "remote": "origin",
     "branch": "main",
     "repository": "parammm390/finnor-ai",
+    "repositoryId": "1306076635",
+    "repositoryOwnerId": "221117685",
     "requireCleanWorktree": true
   },
   "release": {
@@ -17,7 +19,23 @@
       "FINNOR_RELEASE_SOURCE"
     ],
     "requiredComponents": ["frontend", "api", "worker", "supplierCanaryApp", "supplierCanaryAuth"],
-    "concurrencyGroup": "finnor-production-release"
+    "concurrencyGroup": "finnor-production-release",
+    "mutationAuthorization": {
+      "schema": "finnor-production-mutation-authorization.v1",
+      "workflowPath": ".github/workflows/production-release.yml",
+      "workflowName": "production-release",
+      "oidcAudience": "finnor-production-mutation.v1",
+      "maxAgeSeconds": 7200,
+      "certificationJobs": ["post-merge-certification"],
+      "allowedOperations": [
+        "ecr-publish",
+        "vercel-environment-update",
+        "vercel-production-deploy",
+        "database-migrate",
+        "aws-service-deploy",
+        "product-authority-update"
+      ]
+    }
   },
   "topology": {
     "frontend": {

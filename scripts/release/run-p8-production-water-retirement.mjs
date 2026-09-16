@@ -17,6 +17,8 @@ import {
 } from "./p8-water-retirement-store.mjs"
 import { assertCanonicalRelease, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
+import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
+import { readProtectedEnvValue } from "./protected-env.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const databaseEnvIndex = process.argv.indexOf("--database-env")
@@ -31,6 +33,7 @@ if (!databaseEnvPath || (apply && !authorizationRef)) {
 }
 if (apply && process.env.GITHUB_ACTIONS !== "true") throw new Error("Production Water retirement mutation is restricted to the protected GitHub Actions release")
 if (apply && process.env.FINNOR_ENVIRONMENT !== "production") throw new Error("Production Water retirement requires FINNOR_ENVIRONMENT=production")
+const productionMutationCapability = apply ? await authorizeProductionMutation("product-authority-update") : undefined
 
 const contract = loadContract()
 const gitRelease = readGitRelease(repoRoot, contract)
@@ -66,9 +69,7 @@ async function inspectReleaseSurfaces() {
   return { app: app.body, auth: auth.body, apiReady: apiReady.body }
 }
 
-process.loadEnvFile(resolve(databaseEnvPath))
-const databaseUrl = process.env.MIGRATIONS_DATABASE_URL
-if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL is missing from the protected production environment")
+const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
@@ -330,7 +331,7 @@ try {
         }
         const lockedCensus = await readWaterTenantCensus()
         assertExactWaterTenantCensus(lockedCensus)
-        await writeTenantDispositions(client, { actor, authorizationRef })
+        await writeTenantDispositions(client, { actor, authorizationRef, productionMutationCapability })
         await upsertSupplierCanaryHeartbeat(currentSurfaces, lockedAuthority.epoch)
         assertCompatibleRuntimeRows(await readFreshRuntimeRows(), requiredRuntimeRoles, lockedAuthority.epoch)
         frozenEpoch = Number(lockedAuthority.epoch)
@@ -372,13 +373,14 @@ try {
           throw new Error("Water drain requires the committed frozen authority state")
         }
         assertExactWaterTenantCensus(await readWaterTenantCensus())
-        await writeTenantDispositions(client, { actor, authorizationRef })
+        await writeTenantDispositions(client, { actor, authorizationRef, productionMutationCapability })
         await upsertSupplierCanaryHeartbeat(currentSurfaces, frozenEpoch)
         assertCompatibleRuntimeRows(await readFreshRuntimeRows(), requiredRuntimeRoles, frozenEpoch)
         drain = await drainAuditedWaterFixtures(client, {
           actor,
           authorizationRef,
           releaseSha: expected.commitSha,
+          productionMutationCapability,
         })
         const zeroCensus = assertZeroWaterRetirementBlockers(await readBlockers())
         const activationEvidence = {

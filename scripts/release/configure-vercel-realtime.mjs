@@ -1,4 +1,5 @@
 import { loadContract } from "./release-policy.mjs"
+import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 
 const contract = loadContract()
 const target = contract.topology.frontend
@@ -23,6 +24,7 @@ if (productionEntries.length !== 1 || !productionEntries[0].id) throw new Error(
 const entry = productionEntries[0]
 const expected = contract.topology.worker.sseGatewayUrl
 if (apply) {
+  await authorizeProductionMutation("vercel-environment-update")
   await request(`/v9/projects/${target.projectId}/env/${entry.id}?teamId=${target.organizationId}`, {
     method: "PATCH",
     body: JSON.stringify({ key: entry.key, value: expected, target: ["production"], type: entry.type === "sensitive" ? "sensitive" : "encrypted" }),

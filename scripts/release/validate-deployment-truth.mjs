@@ -51,6 +51,10 @@ for (const invariant of [".env", ".vercel", "node_modules", ".git"]) required(do
 
 const cfn = read("infra/aws/finnor-production.yaml")
 for (const invariant of ["AWSAgentToolkit: aws-cloudformation@2", "AWS::ECR::Repository", "ImageTagMutability: IMMUTABLE", "AWS::ECS::Cluster", "AWS::ECS::Service", "AWS::ElasticLoadBalancingV2::LoadBalancer", "AWS::ElasticLoadBalancingV2::Listener", "HealthCheckPath: /healthz", "AssignPublicIp: ENABLED", "MinimumHealthyPercent: 100", "MaximumPercent: 200", "RetentionInDays: 7"]) required(cfn.includes(invariant), `AWS CloudFormation template lost ${invariant}`)
+for (const claim of ["aud", "sub"]) required(cfn.includes(`token.actions.githubusercontent.com:${claim}`), `GitHub OIDC trust omits AWS-supported ${claim}`)
+required(cfn.includes("repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}"), "GitHub OIDC subject no longer binds immutable repository identity and production environment")
+for (const unsupportedClaim of ["repository_id", "repository_owner_id", "ref", "environment", "workflow"]) required(!cfn.includes(`token.actions.githubusercontent.com:${unsupportedClaim}:`), `GitHub OIDC trust uses AWS-unsupported claim ${unsupportedClaim}`)
+required(cfn.includes("AWS-supported sub binds immutable repo + owner IDs and the production environment"), "GitHub OIDC role context no longer records its trust invariant")
 
 const workflow = read(".github/workflows/production-release.yml")
 const workflowDirectory = join(repoRoot, ".github/workflows")
@@ -58,7 +62,7 @@ for (const workflowName of readdirSync(workflowDirectory).filter((name) => /\.ya
   const workflowText = readFileSync(join(workflowDirectory, workflowName), "utf8")
   for (const match of workflowText.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)$/gm)) {
     const actionRef = match[1]
-    required(/@[0-9a-f]{40}$/i.test(actionRef), `${workflowName} uses a mutable GitHub Action ref: ${actionRef}`)
+    required(actionRef.startsWith("./.github/workflows/") || /@[0-9a-f]{40}$/i.test(actionRef), `${workflowName} uses a mutable GitHub Action ref: ${actionRef}`)
   }
 }
 const activeFiles = [

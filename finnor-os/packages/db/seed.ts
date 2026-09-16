@@ -3,12 +3,13 @@
 import pg from "pg";
 import { fileURLToPath } from "node:url";
 import { pgConnectionConfig } from "./index";
+import { assertNotProductionDatabaseTarget } from "./production-target-guard";
 
 export const SEED_TENANT_ID = "00000000-0000-4000-8000-000000000001";
 export const SEED_OWNER_EMAIL = "owner@private-equity.finnor.local";
 
 export async function seed(databaseUrl = process.env.DATABASE_URL): Promise<void> {
-  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  assertNotProductionDatabaseTarget(databaseUrl, "development seed");
   const client = new pg.Client(pgConnectionConfig(databaseUrl));
   await client.connect();
   try {

@@ -11,6 +11,7 @@ import { closePool } from "@finnor/db";
 import { allMicrosoft365SourceCapabilities } from "@finnor/provider-microsoft365";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { migrate, type MigrationFile } from "../../packages/db/migrate";
+import { assertNotProductionDatabaseTarget } from "../../packages/db/production-target-guard";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, "../..");
@@ -803,6 +804,7 @@ async function main(): Promise<void> {
   const liveConfig = liveConfiguration();
   let liveResult: CertificationResult = "BLOCKED-EXTERNAL-CERTIFICATION";
   if (liveConfig.configured) {
+    assertNotProductionDatabaseTarget(process.env.P2_M365_LIVE_DATABASE_URL, "P2 live certification");
     commands.liveMicrosoft = await runCommand(bin("vitest"), [
       "run", "tests/live/microsoft365-nervous-system.live.test.ts", "--reporter=dot", "--maxWorkers=1",
     ], {

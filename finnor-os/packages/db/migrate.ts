@@ -6,6 +6,12 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { pgConnectionConfig } from "./index";
+import { isCanonicalProductionDatabaseTarget } from "./production-target-guard";
+import {
+  assertProductionMutationCapability,
+  authorizeProductionMutation,
+  type ProductionMutationAuthorizationResult,
+} from "../../../scripts/release/production-mutation-guard.mjs";
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), "migrations");
 
@@ -17,8 +23,13 @@ export interface MigrationFile {
 export async function migrate(
   databaseUrl = process.env.DATABASE_URL,
   bundled?: MigrationFile[],
+  productionMutationCapability?: ProductionMutationAuthorizationResult,
 ): Promise<string[]> {
   if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  if (isCanonicalProductionDatabaseTarget(databaseUrl)) {
+    const capability = productionMutationCapability ?? await authorizeProductionMutation("database-migrate");
+    assertProductionMutationCapability(capability, "database-migrate");
+  }
   const client = new pg.Client(pgConnectionConfig(databaseUrl));
   await client.connect();
   const applied: string[] = [];

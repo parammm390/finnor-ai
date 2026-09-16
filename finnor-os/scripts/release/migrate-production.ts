@@ -2,7 +2,7 @@
  * deployment. The release workflow pulls this secret from the protected Vercel
  * project; this script never prints the URL and refuses local database targets. */
 
-import { config } from "dotenv";
+import { parse } from "dotenv";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,7 @@ import { migrate } from "@finnor/db/migrate";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import pg from "pg";
 import { repairWorkspaceV3Rows } from "./workspace-v3-repair";
+import { authorizeProductionMutation } from "../../../scripts/release/production-mutation-guard.mjs";
 
 async function main(): Promise<void> {
   const envPath = process.argv[2];
@@ -24,6 +25,7 @@ async function main(): Promise<void> {
   if (!evidencePath || !commitSha) {
     throw new Error("Production migration requires FINNOR_PREFLIGHT_EVIDENCE and FINNOR_COMMIT_SHA");
   }
+  const productionMutationCapability = await authorizeProductionMutation("database-migrate");
   const [evidenceRaw, contractRaw] = await Promise.all([
     readFile(evidencePath, "utf8"),
     readFile(fileURLToPath(new URL("../../../infra/deployment/production.contract.json", import.meta.url))),
@@ -76,9 +78,8 @@ async function main(): Promise<void> {
     throw new Error("Production migration refused: preflight evidence is stale or does not match this release/topology");
   }
 
-  const loaded = config({ path: envPath });
-  if (loaded.error) throw new Error(`Unable to load protected production environment: ${loaded.error.message}`);
-  const databaseUrl = process.env.MIGRATIONS_DATABASE_URL;
+  const protectedEnvironment = parse(await readFile(envPath));
+  const databaseUrl = protectedEnvironment.MIGRATIONS_DATABASE_URL;
   if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL is missing from the protected production environment");
 
   const parsed = new URL(databaseUrl);
@@ -89,8 +90,8 @@ async function main(): Promise<void> {
     throw new Error(`Refusing migration for unknown database host ${parsed.hostname}`);
   }
 
-  const applied = await migrate(databaseUrl);
-  const workspaceV3 = await repairWorkspaceV3Rows(databaseUrl);
+  const applied = await migrate(databaseUrl, undefined, productionMutationCapability);
+  const workspaceV3 = await repairWorkspaceV3Rows(databaseUrl, productionMutationCapability);
   const pool = new pg.Pool(pgConnectionConfig(databaseUrl));
   try {
     await new PostgresSaver(pool, undefined, { schema: "finnor_langgraph" }).setup();

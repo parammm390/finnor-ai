@@ -1,0 +1,210 @@
+{
+  "schema": "finnor-production-mutation-inventory.v1",
+  "globalConcurrencyGroup": "finnor-production-release",
+  "breakGlassRetained": false,
+  "entries": [
+    {
+      "id": "canonical-production-release",
+      "path": ".github/workflows/production-release.yml",
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-service-deploy", "product-authority-update"],
+      "authorization": "finnor-production-mutation-authorization.v1",
+      "serialization": "finnor-production-release"
+    },
+    {
+      "id": "vercel-production-deployments",
+      "path": "scripts/release/deploy-production.mjs",
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["vercel-production-deploy"],
+      "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "vercel-realtime-environment",
+      "path": "scripts/release/configure-vercel-realtime.mjs",
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["vercel-environment-update"],
+      "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "production-database-migration",
+      "path": "finnor-os/scripts/release/migrate-production.ts",
+      "supportingPaths": [
+        "finnor-os/packages/db/migrate.ts",
+        "finnor-os/scripts/release/workspace-v3-repair.ts"
+      ],
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["database-migrate"],
+      "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "ecs-worker-deployment",
+      "path": "scripts/release/deploy-aws-worker.mjs",
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["aws-service-deploy"],
+      "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "product-authority-cutover",
+      "path": "scripts/release/run-p8-production-water-retirement.mjs",
+      "supportingPaths": ["scripts/release/p8-water-retirement-store.mjs"],
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["product-authority-update"],
+      "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "phase9-bootstrap-workflow",
+      "path": ".github/workflows/phase9-production-pe-bootstrap.yml",
+      "classification": "ONE_TIME_MUTATOR",
+      "state": "RETIRED",
+      "reason": "Initial owner/fixture/auth bootstrap completed; automatic production mutation is no longer legitimate."
+    },
+    {
+      "id": "phase9-owner-bootstrap",
+      "path": "scripts/release/bootstrap-phase9-production-pe.mjs",
+      "classification": "ONE_TIME_MUTATOR",
+      "state": "RETIRED"
+    },
+    {
+      "id": "phase9-production-fixture",
+      "path": "scripts/release/seed-phase9-production-fixture.mjs",
+      "classification": "ONE_TIME_MUTATOR",
+      "state": "RETIRED"
+    },
+    {
+      "id": "phase9-production-auth-user",
+      "path": "scripts/release/phase9-live-cert-user.mjs",
+      "classification": "ONE_TIME_MUTATOR",
+      "state": "RETIRED"
+    },
+    {
+      "id": "direct-database-tooling",
+      "paths": [
+        "finnor-os/packages/db/drizzle.config.ts",
+        "finnor-os/packages/db/seed.ts",
+        "finnor-os/packages/orchestration/src/graph/setup.ts",
+        "finnor-os/apps/api/app/api/admin/migrate/route.ts",
+        "finnor-os/scripts/configure-a5-preview-app-role.ts",
+        "finnor-os/scripts/install-vertical-fixture-seam.ts",
+        "finnor-os/scripts/guard-staging.ts",
+        "finnor-os/scripts/seed-phase9-e2e.ts",
+        "finnor-os/scripts/restore-drill-from-backup.ts",
+        "finnor-os/scripts/release/run-bedrock-live-smoke.ts",
+        "finnor-os/scripts/release/run-pe-p2-m365-nervous-system-certification.ts",
+        "finnor-os/scripts/release/run-pe-p3-artifact-os-certification.ts",
+        "finnor-os/scripts/release/run-pe-p6-planning-attention-certification.ts",
+        "finnor-os/scripts/release/run-pe-p7-workforce-learning-certification.ts"
+      ],
+      "classification": "READ_ONLY",
+      "state": "PRODUCTION_BLOCKED",
+      "reason": "These tools may mutate disposable or explicitly non-production targets, but the canonical production database target is rejected before mutation."
+    },
+    {
+      "id": "direct-user-provisioning",
+      "path": "finnor-os/scripts/create-user.ts",
+      "supportingPaths": ["finnor-os/scripts/tenant-user.ts"],
+      "classification": "READ_ONLY",
+      "state": "PRODUCTION_BLOCKED",
+      "reason": "Canonical production database and Supabase project targets are rejected before any admin call."
+    },
+    {
+      "id": "local-release-certification",
+      "paths": [
+        "finnor-os/scripts/release/action-hardening-spec.ts",
+        "finnor-os/scripts/release/discover-action-registry.ts",
+        "finnor-os/scripts/release/generate-environment-contract.ts",
+        "finnor-os/scripts/release/pe-p4-underwriting-mandatory-cases.ts",
+        "finnor-os/scripts/release/pe-p5-actions-ic-mandatory-cases.ts",
+        "finnor-os/scripts/release/pe-p6-planning-attention-mandatory-cases.ts",
+        "finnor-os/scripts/release/pe-p7-workforce-learning-mandatory-cases.ts",
+        "finnor-os/scripts/release/rehearse-historical-upgrade.ts",
+        "finnor-os/scripts/release/run-pe-p1-world-truth-certification.ts",
+        "finnor-os/scripts/release/run-pe-p4-underwriting-certification.ts",
+        "finnor-os/scripts/release/run-pe-p5-actions-ic-certification.ts",
+        "finnor-os/scripts/release/run-pe5-water-retirement-certification.ts",
+        "finnor-os/scripts/release/staging-guards.ts",
+        "finnor-os/scripts/release/verify-action-manifest.ts",
+        "finnor-os/scripts/release/verify-p8-runtime-contract.ts",
+        "finnor-os/scripts/release/verify-pe-domain-boundary.ts"
+      ],
+      "classification": "READ_ONLY",
+      "state": "PRODUCTION_BLOCKED",
+      "reason": "These scripts write only repository evidence or disposable/local certification databases; scripts that accept external live targets use the production target guard and are inventoried separately."
+    },
+    {
+      "id": "production-preflight-and-verification",
+      "paths": [
+        "scripts/release/preflight-production.mjs",
+        "scripts/release/verify-live-release.mjs",
+        "scripts/release/verify-production-parity.mjs",
+        "scripts/release/verify-production-readiness.mjs",
+        "scripts/release/verify-supplier-canary-release.mjs",
+        "scripts/release/verify-p8-zero-resurrection.mjs",
+        "scripts/release/verify-release.mjs",
+        "scripts/release/validate-deployment-truth.mjs",
+        "scripts/release/release-policy.mjs",
+        "scripts/release/vercel-protection.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "release-authorization-support",
+      "paths": [
+        "infra/deployment/production-mutation-inventory.json",
+        "scripts/release/p8-water-allowlist.json",
+        "scripts/release/p8-water-retirement-policy.mjs",
+        "scripts/release/p8-water-retirement-store.d.mts",
+        "scripts/release/pr-verdict-policy.mjs",
+        "scripts/release/production-mutation-guard.d.mts",
+        "scripts/release/production-mutation-guard.mjs",
+        "scripts/release/protected-env.mjs",
+        "scripts/release/validate-production-mutation-inventory.mjs",
+        "scripts/release/worktree-state.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Authorization, policy, target-sanitization, and inventory support code has no independent production write entry point."
+    },
+    {
+      "id": "release-harness-tests",
+      "paths": [
+        "scripts/release/p8-water-retirement-policy.test.mjs",
+        "scripts/release/pr-verdict-policy.test.mjs",
+        "scripts/release/production-mutation-guard.test.mjs",
+        "scripts/release/protected-env.test.mjs",
+        "scripts/release/release-policy.test.mjs",
+        "scripts/release/supplier-canary-health.test.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "TEST_ONLY"
+    },
+    {
+      "id": "release-certification-workflows",
+      "paths": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/marketing-ci.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/pr-verdict.yml",
+        ".github/workflows/dealer-zero-replay.yml",
+        ".github/workflows/k6-nightly-lite.yml",
+        ".github/workflows/planner-live-evals.yml",
+        ".github/workflows/tenant-isolation-nightly.yml"
+      ],
+      "classification": "READ_ONLY",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "declarative-production-source",
+      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json"],
+      "classification": "READ_ONLY",
+      "state": "DECLARATIVE_SOURCE_ONLY",
+      "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."
+    }
+  ]
+}

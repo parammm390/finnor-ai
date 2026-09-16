@@ -3,15 +3,7 @@
 # NOTE: this repo lives at finnor-os/ inside the FINNOR repository, so paths are scoped.
 name: finnor-os-ci
 on:
-  pull_request:
-    paths:
-      - "finnor-os/**"
-      - ".github/workflows/**"
-      - "infra/deployment/**"
-      - "scripts/release/**"
-      - "package.json"
-      - "package-lock.json"
-      - "JARVIS-CREDENTIALS-LEDGER.md"
+  workflow_call:
   push:
     branches: [main]
     paths:

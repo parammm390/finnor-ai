@@ -7,8 +7,10 @@
 import { closePool } from "@finnor/db";
 import { getCheckpointer } from "./checkpointer";
 import { fileURLToPath } from "node:url";
+import { assertNotProductionDatabaseTarget } from "../../../db/production-target-guard";
 
 export async function setupLangGraphCheckpointer(): Promise<void> {
+  assertNotProductionDatabaseTarget(process.env.DATABASE_URL, "LangGraph schema setup");
   await getCheckpointer().setup();
 }
 

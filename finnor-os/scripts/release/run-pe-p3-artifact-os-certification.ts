@@ -12,6 +12,7 @@ import { closePool } from "@finnor/db";
 import { ARTIFACT_LIMITS } from "@finnor/ooxml";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { migrate, type MigrationFile } from "../../packages/db/migrate";
+import { assertNotProductionDatabaseTarget } from "../../packages/db/production-target-guard";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, "../..");
@@ -1163,6 +1164,7 @@ async function main(): Promise<void> {
   const liveConfig = liveConfiguration();
   let liveResult: LiveOfficeResult = "BLOCKED_EXTERNAL_OFFICE_CERTIFICATION";
   if (liveConfig.configured) {
+    assertNotProductionDatabaseTarget(process.env.P3_OFFICE_LIVE_DATABASE_URL, "P3 live Office certification");
     commands.liveOffice = await runCommand(bin("vitest"), [
       "run",
       "tests/live/microsoft-artifact-os.live.test.ts",

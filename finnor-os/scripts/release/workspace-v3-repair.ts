@@ -1,6 +1,11 @@
 import pg from "pg";
 import { z } from "zod";
 import { pgConnectionConfig } from "@finnor/db";
+import { isCanonicalProductionDatabaseTarget } from "../../packages/db/production-target-guard";
+import {
+  assertProductionMutationCapability,
+  type ProductionMutationAuthorizationResult,
+} from "../../../scripts/release/production-mutation-guard.mjs";
 import {
   DEFAULT_WORKSPACE_CONFIG,
   EXPERIENCE_SCENES,
@@ -97,7 +102,13 @@ export interface WorkspaceV3RepairReport {
   verifiedV3: number;
 }
 
-export async function repairWorkspaceV3Rows(databaseUrl: string): Promise<WorkspaceV3RepairReport> {
+export async function repairWorkspaceV3Rows(
+  databaseUrl: string,
+  productionMutationCapability?: ProductionMutationAuthorizationResult,
+): Promise<WorkspaceV3RepairReport> {
+  if (isCanonicalProductionDatabaseTarget(databaseUrl)) {
+    assertProductionMutationCapability(productionMutationCapability, "database-migrate");
+  }
   const client = new pg.Client(pgConnectionConfig(databaseUrl));
   await client.connect();
   try {

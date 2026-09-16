@@ -11,22 +11,23 @@ jobs:
     defaults:
       run:
         working-directory: finnor-os
-    env:
-      BASE_URL: ${{ secrets.K6_STAGING_BASE_URL }}
-      TENANT_ID: ${{ secrets.K6_STAGING_TENANT_ID }}
-      AUTH_BEARER_TOKEN: ${{ secrets.K6_STAGING_AUTH_BEARER_TOKEN }}
-      MARKETING_WEBHOOK_SECRET: ${{ secrets.K6_STAGING_MARKETING_WEBHOOK_SECRET }}
-      VERCEL_BYPASS_SECRET: ${{ secrets.K6_STAGING_VERCEL_BYPASS_SECRET }}
-      INBOX_RATE: "5"
-      READ_VUS: "20"
-      APPROVAL_RATE: "5"
-      LOAD_DURATION: "60s"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Refuse an unconfigured run
-        run: test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$MARKETING_WEBHOOK_SECRET"
       - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
-      - run: k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
+      - name: Run the configured staging load probe
+        env:
+          BASE_URL: ${{ secrets.K6_STAGING_BASE_URL }}
+          TENANT_ID: ${{ secrets.K6_STAGING_TENANT_ID }}
+          AUTH_BEARER_TOKEN: ${{ secrets.K6_STAGING_AUTH_BEARER_TOKEN }}
+          MARKETING_WEBHOOK_SECRET: ${{ secrets.K6_STAGING_MARKETING_WEBHOOK_SECRET }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.K6_STAGING_VERCEL_BYPASS_SECRET }}
+          INBOX_RATE: "5"
+          READ_VUS: "20"
+          APPROVAL_RATE: "5"
+          LOAD_DURATION: "60s"
+        run: |
+          test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$MARKETING_WEBHOOK_SECRET"
+          k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
