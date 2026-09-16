@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0130_phase8_cutover_runtime_head_compatibility.sql",
+    "requiredMigrationHead": "0131_private_equity_release_baseline.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -32,8 +32,7 @@
         "vercel-environment-update",
         "vercel-production-deploy",
         "database-migrate",
-        "aws-service-deploy",
-        "product-authority-update"
+        "aws-service-deploy"
       ]
     }
   },

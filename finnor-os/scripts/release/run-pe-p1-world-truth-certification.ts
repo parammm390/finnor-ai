@@ -439,7 +439,6 @@ async function main(): Promise<void> {
     await embedded.stop().catch(() => undefined);
   }
 
-  commands.phase5Regression = await runCommand(bin("tsx"), ["scripts/release/run-pe5-water-retirement-certification.ts"]);
   await access(resolve(ROOT, "packages/private-equity/src/world-repository.ts"));
   await access(resolve(ROOT, "packages/private-equity/src/world-state.ts"));
 
@@ -467,7 +466,7 @@ async function main(): Promise<void> {
     history_table_exists: { status: "PASS", evidence: databaseInvariants },
     happy_path: { status: "PASS", evidence: "Strategy through semantic Decision integration path" },
     openapi_generates: { status: "PASS", evidence: "commands.openapi" },
-    existing_pe_tests: { status: "PASS", evidence: "commands.pePhaseRegression and commands.phase5Regression" },
+    existing_pe_tests: { status: "PASS", evidence: "commands.pePhaseRegression and commands.boundary" },
     source_truth_regression: { status: "PASS", evidence: "commands.sourceTruthRegression and P1 temporal observation assertions" },
     new_repository_files_exist: { status: "PASS", evidence: ["world-repository.ts", "world-state.ts"] },
     world_state_query_returns: { status: "PASS", evidence: "P1 three-root operational-query integration assertion" },
@@ -534,7 +533,7 @@ async function main(): Promise<void> {
       "packages/private-equity/src/epistemic.ts", "packages/private-equity/src/operational-queries.ts",
       "packages/private-equity/src/index.ts", "packages/shared-types/src/operational-queries.ts",
       "packages/orchestration/src/fast-read-lane.ts", "scripts/generate-openapi.ts",
-      "scripts/release/verify-pe-domain-boundary.ts", "scripts/release/run-pe5-water-retirement-certification.ts",
+      "scripts/release/verify-pe-domain-boundary.ts",
       "tests/unit/private-equity-state-machines.test.ts", "tests/unit/private-equity-epistemic.test.ts",
       "tests/unit/openapi-operational-query-contract.test.ts", "tests/unit/pe5-runtime-boundary.test.ts",
       "tests/integration/private-equity-phase2.test.ts", "tests/integration/private-equity-phase3.test.ts",

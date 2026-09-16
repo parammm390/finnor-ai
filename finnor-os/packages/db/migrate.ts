@@ -82,7 +82,7 @@ export async function migrate(
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   migrate()
     .then((applied) => {
-      console.log(applied.length ? `Applied: ${applied.join(", ")}` : "Already up to date");
+      console.log(applied.length ? `Applied ${applied.length} migration(s); head: ${applied.at(-1)}` : "Already up to date");
       process.exit(0);
     })
     .catch((err) => {

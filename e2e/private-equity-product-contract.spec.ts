@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-test.describe("Phase 8 public and JARVIS cutover", () => {
+test.describe("Private Equity public and JARVIS product contract", () => {
   test("public product declares the PE category and labels its demonstration honestly", async ({ page }) => {
     await page.goto("/")
     await expect(page.getByText("Private Equity decision + execution infrastructure", { exact: true }).first()).toBeVisible()

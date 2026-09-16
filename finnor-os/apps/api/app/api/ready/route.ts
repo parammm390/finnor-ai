@@ -1,6 +1,6 @@
 import {
   CURRENT_MIGRATION_HEAD,
-  PHASE5_CUTOVER_PROTOCOL,
+  MINIMUM_PRODUCT_RUNTIME_PROTOCOL,
   readProductRuntimeAuthoritySnapshot,
   recordCutoverCompatibleHeartbeat,
   type ProductRuntimeAuthoritySnapshot,
@@ -32,8 +32,8 @@ export async function GET(): Promise<Response> {
 
   if (
     authority
-    && authority.epoch >= PHASE5_CUTOVER_PROTOCOL
-    && authority.minimumCutoverProtocol >= PHASE5_CUTOVER_PROTOCOL
+    && authority.epoch >= MINIMUM_PRODUCT_RUNTIME_PROTOCOL
+    && authority.minimumCutoverProtocol >= MINIMUM_PRODUCT_RUNTIME_PROTOCOL
     && authority.activeProductVertical === "private_equity"
     && ["preparing", "water_intake_frozen", "water_retired"].includes(authority.state)
   ) {
@@ -86,12 +86,10 @@ export async function GET(): Promise<Response> {
   checks.productAuthority = {
     ok: finalPe.productAuthority,
     detail: {
-      state: authority?.state ?? null,
+      status: finalPe.productAuthority ? "active" : "inactive",
       activeProductVertical: authority?.activeProductVertical ?? null,
       epoch: authority?.epoch ?? null,
       minimumCutoverProtocol: authority?.minimumCutoverProtocol ?? null,
-      waterIntakeFrozenAt: authority?.waterIntakeFrozenAt ?? null,
-      waterRetiredAt: authority?.waterRetiredAt ?? null,
       finalPeGateRequired: finalPe.finalPeGateRequired,
     },
   };

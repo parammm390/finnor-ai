@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readFileSync, mkdtempSync, writeFileSync, utimesSync, mkdirSync, rmSync } from "node:fs"
+import { existsSync, readFileSync, mkdtempSync, writeFileSync, utimesSync, mkdirSync, rmSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -58,7 +58,7 @@ test("production history is accepted only with forward repair; unknown and newer
   assert.throws(() => assertMigrationLineage(HISTORICAL_PRODUCTION_MIGRATIONS, ["0110_future.sql"], "0110_future.sql"), /forward repair/)
 })
 
-test("the Phase 8 production contract retains AWS ECS and requires both PE supplier canaries", () => {
+test("the current Private Equity production contract retains AWS ECS and both supplier canaries", () => {
   const worker = contract.topology.worker
   assert.equal(worker.provider, "aws-ecs-fargate")
   assert.equal(worker.accountId, "601804670058")
@@ -94,7 +94,7 @@ test("ECR, freshness, ECS, and ALB guards reject unsafe evidence", () => {
   assert.throws(() => assertAlbTargetsHealthy([]), /healthy/)
 })
 
-test("worker health and heartbeat guards bind the exact certified P7 release", () => {
+test("worker health and heartbeat guards bind the exact certified release", () => {
   const body = { ok: true, realtime: true, capabilities: ["jobs", "orchestration", "realtime", "sse"], release: expected }
   assert.doesNotThrow(() => assertAwsWorkerHealth({ status: 200, body, expected }))
   assert.throws(() => assertAwsWorkerHealth({ status: 200, body: { ...body, release: { ...expected, commitSha: "b".repeat(40) } }, expected }), /exact release/)
@@ -103,19 +103,19 @@ test("worker health and heartbeat guards bind the exact certified P7 release", (
   assert.throws(() => assertWorkerHeartbeat({ ...heartbeat, deploymentId: "azure:old" }, expected, contract.release.requiredMigrationHead), /heartbeat/)
 })
 
-test("active release workflow retains the AWS worker and adds the governed Phase 8 cutover", () => {
+test("active release workflow composes current gates and retains the governed AWS worker", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
   assert.doesNotMatch(workflow, /azure\/login|AZURE_|deploy-azure|RunCommand|cloudapp\.azure/i)
-  assert.match(workflow, /aws-actions\/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c/)
+  assert.match(workflow, /aws-actions\/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd/)
+  assert.match(workflow, /backend-release-gate:[\s\S]*uses: \.\/\.github\/workflows\/ci\.yml/)
+  assert.match(workflow, /root-release-gate:[\s\S]*uses: \.\/\.github\/workflows\/marketing-ci\.yml/)
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-worker\.mjs/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryApp/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
-  assert.match(workflow, /run-p8-production-water-retirement\.mjs/)
-  assert.match(workflow, /phase5-readiness/)
-  assert.match(workflow, /release:pe-p7-workforce-learning/)
-  assert.match(workflow, /phase6-conversation-context-kernel\.test\.ts/)
+  assert.match(workflow, /Verify current Private Equity production readiness/)
+  assert.doesNotMatch(workflow, /run-p8-production-water-retirement|release:p8-zero-resurrection|phase5-readiness|phase6-conversation-context-kernel/i)
   for (const envName of [
     "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
     "VERCEL_API_AUTOMATION_BYPASS_SECRET",
@@ -155,12 +155,21 @@ test("supplier canary verification honors Vercel deployment protection", () => {
   assert.match(protection, /x-vercel-protection-bypass/)
 })
 
-test("Water retirement waits for rolling ECS heartbeat overlap before freeze", () => {
-  const retirement = readFileSync(new URL("./run-p8-production-water-retirement.mjs", import.meta.url), "utf8")
-  assert.match(retirement, /const freshBefore = await readFreshRuntimeRows\(\)/)
-  assert.match(retirement, /awaitPreCutoverFleet\(currentSurfaces, Number\(authorityBefore\.epoch\)\)/)
-  assert.match(retirement, /strict all-role, single-release assertion below/)
-  assert.doesNotMatch(retirement, /assertCompatibleRuntimeRows\(freshBefore,/)
+test("legacy product cutover remains retired and absent from every active release surface", () => {
+  const inventory = JSON.parse(readFileSync(new URL("../../infra/deployment/production-mutation-inventory.json", import.meta.url), "utf8"))
+  const legacy = inventory.entries.find((entry) => entry.id === "legacy-product-authority-cutover")
+  assert.equal(legacy.classification, "ONE_TIME_MUTATOR")
+  assert.equal(legacy.state, "RETIRED")
+  for (const path of [legacy.path, ...legacy.supportingPaths]) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, `${path} must remain deleted`)
+  }
+  const activeSources = [
+    readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8"),
+    readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../../finnor-os/package.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../../infra/deployment/production.contract.json", import.meta.url), "utf8"),
+  ].join("\n")
+  assert.doesNotMatch(activeSources, /run-p8-production-water-retirement|release:p8-zero-resurrection|release:pe5|release:p8-runtime-contract|product-authority-update/i)
 })
 
 test("runtime parity requires the embedded orchestrator and exact migration", () => {

@@ -92,7 +92,7 @@ async function runCommand(
   args: readonly string[],
   options: { cwd?: string; timeoutMs?: number; vitest?: boolean; env?: Partial<NodeJS.ProcessEnv> } = {},
 ): Promise<CommandEvidence> {
-  console.log(`P7_COMMAND_START ${label}`);
+  console.log(`WORKFORCE_COMMAND_START ${label}`);
   const started = Date.now();
   const chunks: Buffer[] = [];
   let timedOut = false;
@@ -133,17 +133,17 @@ async function runCommand(
     outputLines: output.trim() ? output.trim().split(/\r?\n/).length : 0,
     ...(options.vitest ? { tests: parseVitest(output, label) } : {}),
   };
-  console.log(`P7_COMMAND_PASS ${label} ${evidence.durationMs}ms${evidence.tests ? ` ${evidence.tests.passed}/${evidence.tests.total} tests` : ""}`);
+  console.log(`WORKFORCE_COMMAND_PASS ${label} ${evidence.durationMs}ms${evidence.tests ? ` ${evidence.tests.passed}/${evidence.tests.total} tests` : ""}`);
   return evidence;
 }
 
 async function runGate(id: P7GateId, commands: Array<() => Promise<CommandEvidence>>, facts?: Record<string, unknown>): Promise<GateEvidence> {
-  console.log(`P7_GATE_START ${id}`);
+  console.log(`WORKFORCE_GATE_START ${id}`);
   const started = Date.now();
   const evidence: CommandEvidence[] = [];
   for (const command of commands) evidence.push(await command());
   const result: GateEvidence = { id, status: "PASS", durationMs: Date.now() - started, evidence, ...(facts ? { facts } : {}) };
-  console.log(`P7_GATE_PASS ${id} ${result.durationMs}ms`);
+  console.log(`WORKFORCE_GATE_PASS ${id} ${result.durationMs}ms`);
   return result;
 }
 
@@ -175,7 +175,7 @@ async function freePort(): Promise<number> {
 
 async function sourceDatabase(): Promise<{ url: string; mode: "configured" | "embedded"; cleanup: () => Promise<void> }> {
   const configured = process.env.DATABASE_URL ?? "postgres://finnor:finnor@127.0.0.1:5432/finnor";
-  assertNotProductionDatabaseTarget(configured, "P7 certification database server");
+  assertNotProductionDatabaseTarget(configured, "workforce certification database server");
   if (await canConnect(configured)) return { url: configured, mode: "configured", cleanup: async () => undefined };
   const directory = await mkdtemp(join(tmpdir(), "finnor-p7-cert-pg-"));
   const port = await freePort();
@@ -257,16 +257,16 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     attention: "packages/read-models/src/attention-query.ts",
     migration: `packages/db/migrations/${P7_MIGRATION}`,
     openapi: "openapi.json",
+    productDataProvider: "../src/components/jarvis/product/ProductDataProvider.tsx",
+    workforceHook: "../src/components/jarvis/pe/use-pe-data.ts",
     configureRoute: "apps/api/app/api/workforce/profiles/route.ts",
     reassignRoute: "apps/api/app/api/workforce/assignments/[id]/reassign/route.ts",
     proposalRoute: "apps/api/app/api/workforce/proposals/[id]/route.ts",
   } as const;
   const source = Object.fromEntries(await Promise.all(Object.entries(paths).map(async ([key, path]) => [key, await readFile(resolve(ROOT, path), "utf8")]))) as Record<keyof typeof paths, string>;
   const frontend = await readFile(resolve(REPOSITORY_ROOT, "src/components/jarvis/agents/AgentFleetSurface.tsx"), "utf8");
-  // Phase 8 owns the browser contract in the PE surface contracts module; the
-  // former monolithic root jarvis-client.ts was deliberately deleted during the
-  // surface cutover. Keep this release gate pointed at the live typed contract
-  // instead of resurrecting that retired client path.
+  // The current product data provider owns the browser contract; keep this gate
+  // pointed at that live typed path instead of a retired monolithic client.
   const peContracts = await readFile(resolve(REPOSITORY_ROOT, "src/components/jarvis/pe/contracts.ts"), "utf8");
   const packageJson = JSON.parse(source.package) as { scripts?: Record<string, string> };
   const workforcePackage = JSON.parse(source.workforcePackage) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
@@ -278,7 +278,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   assert(P7_MANDATORY_CASES.every((item) => item.gates.length > 0), "P7 mandatory registry contains an unmapped case");
   assert(!P7_MANDATORY_CASES.some((item) => /\b(?:TODO|SKIP(?:PED)?|PLACEHOLDER|NOT.CONFIGURED)\b/i.test(`${item.id} ${item.statement}`)), "P7 mandatory registry contains a disguised non-gate");
   assert(P7_GATE_IDS.every((gate) => P7_MANDATORY_CASES.some((item) => item.gates.includes(gate))), "P7 mandatory registry contains an unused gate");
-  assert(packageJson.scripts?.["release:pe-p7-workforce-learning"] === "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts", "release:pe-p7-workforce-learning command is missing or ambiguous");
+  assert(packageJson.scripts?.["release:workforce-learning"] === "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts", "release:workforce-learning command is missing or ambiguous");
   assert(String(CURRENT_MIGRATION_HEAD).localeCompare(P7_MIGRATION) >= 0, `declared migration head predates ${P7_MIGRATION}: ${CURRENT_MIGRATION_HEAD}`);
   assert(Object.keys(workforcePackage.dependencies ?? {}).length === 0 && Object.keys(workforcePackage.devDependencies ?? {}).length === 0, "@finnor/workforce must remain a pure dependency-free package");
 
@@ -306,19 +306,22 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   for (const route of ["/api/workforce/profiles", "/api/workforce/assignments/{id}/reassign", "/api/workforce/proposals/{id}", "/api/queries"]) assert(source.openapi.includes(`\"${route}\"`), `OpenAPI is missing ${route}`);
   assert(source.configureRoute.includes("configureAgentProfile") && source.reassignRoute.includes("reassignWorkforceAssignment") && source.proposalRoute.includes("promoteLearningProposal"), "P7 API routes are not bound to governed runtime functions");
   await access(resolve(REPOSITORY_ROOT, "src/components/jarvis/agents/agent-fleet.ts")).then(() => { throw new Error("static frontend agent-fleet authority still exists"); }, () => undefined);
-  // Phase 8 replaced the former AGENT_FLEET/browser projection with the typed
-  // PE workforce read hook. Certify the actual live contract: source status is
-  // surfaced, unresolved workforce state is explicit, and no decorative health
-  // value can be rendered when the backend projection is unavailable.
+  // Certify the actual live provider path: the governed workforce hook feeds the
+  // product provider, unresolved state is explicit, and no decorative persona is
+  // rendered when the backend projection is unavailable.
   assert(
     !frontend.includes("AGENT_FLEET") &&
-      frontend.includes("useWorkforceStatus") &&
-      frontend.includes("workforce.data.sourceStatus") &&
-      frontend.includes("No workforce state inferred") &&
-      frontend.includes("No decorative or static agent persona"),
+      frontend.includes("usePeProductData") &&
+      frontend.includes('product.workforce.status === "error"') &&
+      frontend.includes("product.workforce.data") &&
+      frontend.includes("No static persona, decorative agent, or tenant-wide worker was substituted") &&
+      source.productDataProvider.includes("useWorkforceStatus") &&
+      source.productDataProvider.includes("const workforce = useWorkforceStatus") &&
+      source.workforceHook.includes("export function useWorkforceStatus") &&
+      source.workforceHook.includes("stateFor: workforceState"),
     "JARVIS workforce surface is not backend-truth-only",
   );
-  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("worker.profileStatus"), "JARVIS workforce surface does not render the canonical worker status fields");
+  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("profileById.has(worker.id)"), "JARVIS workforce surface does not bind canonical worker and profile status");
   for (const status of ["idle", "working", "waiting", "blocked", "failed", "unavailable"]) assert(peContracts.includes(`\"${status}\"`), `workforce contract omits ${status}`);
   assert(peContracts.includes('configurationState: "configured" | "unconfigured"'), "workforce contract omits explicit configuration state");
   assert(peContracts.includes('status: "complete" | "partial"') && peContracts.includes("truncatedSources"), "PE browser contract does not preserve workforce source completeness");
@@ -356,11 +359,11 @@ async function main(): Promise<void> {
     databaseUrl = certificationDatabase.url;
     const gates = new Map<P7GateId, GateEvidence>();
 
-    console.log("P7_GATE_START architecture");
+    console.log("WORKFORCE_GATE_START architecture");
     const architectureStarted = Date.now();
     const architecture = await inspectArchitecture();
     gates.set("architecture", { id: "architecture", status: "PASS", durationMs: Date.now() - architectureStarted, evidence: [], facts: architecture });
-    console.log(`P7_GATE_PASS architecture ${Date.now() - architectureStarted}ms`);
+    console.log(`WORKFORCE_GATE_PASS architecture ${Date.now() - architectureStarted}ms`);
 
     gates.set("typecheck-contracts", await runGate("typecheck-contracts", [
       command("openapi-generate", "npm", ["run", "openapi"], 300_000),
@@ -425,11 +428,11 @@ async function main(): Promise<void> {
     if (certificationDatabase) await certificationDatabase.cleanup().catch(() => undefined);
     await source.cleanup().catch(() => undefined);
   }
-  assert(finalResult, "P7 certification finished without a result");
-  console.log(`P7_CERTIFICATION ${JSON.stringify(finalResult)}`);
+  assert(finalResult, "workforce certification finished without a result");
+  console.log(`WORKFORCE_CERTIFICATION ${JSON.stringify(finalResult)}`);
 }
 
 main().catch((error) => {
-  console.error(`P7_CERTIFICATION_FAIL ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
-  process.exitCode = 1;
+  console.error(`WORKFORCE_CERTIFICATION_FAIL ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+  process.exit(1);
 });
