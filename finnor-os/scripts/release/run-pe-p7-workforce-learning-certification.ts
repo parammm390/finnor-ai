@@ -368,7 +368,9 @@ async function main(): Promise<void> {
     gates.set("typecheck-contracts", await runGate("typecheck-contracts", [
       command("openapi-generate", "npm", ["run", "openapi"], 300_000),
       command("nested-typecheck", BIN("tsc"), ["-p", "tsconfig.json", "--pretty", "false"], 300_000),
-      command("root-typecheck", BIN("tsc"), ["-p", resolve(REPOSITORY_ROOT, "tsconfig.json"), "--noEmit", "--pretty", "false"], 300_000),
+      // The universal root gate owns the root application typecheck and build.
+      // Re-running it here couples this backend-only certificate to a second
+      // workspace install without adding coverage to the protected verdict.
       command("authz-matrix", "npm", ["run", "authz:matrix:check"], 300_000),
       command("action-manifest", "npm", ["run", "release:manifest"], 300_000),
       command("diff-check", "git", ["diff", "--check"], 60_000, REPOSITORY_ROOT),

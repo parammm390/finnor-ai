@@ -77,5 +77,29 @@ jobs:
       # The historical context-kernel fixture exercises a removed field-service
       # domain and is retained only as non-release reference coverage.
       - run: npm test -- --exclude tests/integration/historical-conversation-context-kernel.test.ts
-      - name: Governed workforce and learning certification
-        run: npm run release:workforce-learning
+
+  workforce-certification:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+      AUTH_DEV_BYPASS: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run release:workforce-learning
