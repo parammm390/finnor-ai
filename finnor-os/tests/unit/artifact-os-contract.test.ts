@@ -98,7 +98,7 @@ describe("P3 Artifact OS architecture and workspace contract", () => {
     const worker = read("apps/worker/src/index.ts");
     const sourceSync = read("apps/worker/src/handlers/sync-source.ts");
 
-    expect(worker).toContain('queue.register("materialize_artifact_version", materializeArtifactVersion)');
+    expect(worker).toContain('queue.register("materialize_artifact_version", materializeArtifactVersion, PRODUCTION_JOB_CONTRACTS.materialize_artifact_version)');
     expect(sourceSync).toContain('"materialize_artifact_version",');
     expect(sourceSync).toContain("artifact-materialize:");
     expect(handler).toContain("d.archived_at IS NULL");

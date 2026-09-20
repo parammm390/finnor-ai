@@ -299,7 +299,7 @@
     {
       "gate": "dlq_redrive_and_causal_replay",
       "files": [
-        "tests/integration/poison-job-replay-drill.test.ts",
+        "tests/integration/dlq-routes.test.ts",
         "tests/integration/causal-replay.test.ts"
       ]
     },

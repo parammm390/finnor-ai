@@ -230,6 +230,12 @@ export async function resolveProviderRootReconciliationTx(db: Db, observation: P
     status: "resolved",
     resolvedAt: new Date(observation.retrievedAt),
     resolution: { mechanism: "deterministic_provider_root_resolution", observationKey: providerObservationKey(observation) },
+    resolutionOutcome: "happened_as_intended",
+    resolutionEvidence: { observationKey: providerObservationKey(observation), providerIdentity: identity },
+    resolvedBy: "system:provider-root-observer",
+    resolutionProvider: observation.provider,
+    resolutionIntegrationId: observation.integrationId,
+    version: sql`${reconciliationCases.version} + 1`,
   }).where(and(
     eq(reconciliationCases.tenantId, observation.tenantId),
     eq(reconciliationCases.integrationId, observation.integrationId),

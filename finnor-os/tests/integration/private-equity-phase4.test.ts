@@ -9,7 +9,7 @@ import {
   communicationDeliveries,
   decisionReceipts,
   domainActions,
-  integrationOperations,
+  externalOperations,
   receiveWork,
   workAggregate,
   workEventWaits,
@@ -148,10 +148,13 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       eq(domainActions.tenantId, tenantA), eq(domainActions.id, actionId),
     )).limit(1));
     expect(action?.businessEffectId).toBeTruthy();
-    const [operation] = await withTenant(tenantA, (db) => db.select({ id: integrationOperations.id }).from(integrationOperations).where(and(
-      eq(integrationOperations.tenantId, tenantA), eq(integrationOperations.businessEffectId, action!.businessEffectId!),
+    const [operation] = await withTenant(tenantA, (db) => db.select({ operationKey: externalOperations.operationKey }).from(externalOperations).where(and(
+      eq(externalOperations.tenantId, tenantA),
+      eq(externalOperations.businessEffectId, action!.businessEffectId!),
+      eq(externalOperations.integrationId, communicationIntegration),
+      eq(externalOperations.domainActionId, actionId),
     )).limit(1));
-    expect(operation?.id).toBeTruthy();
+    expect(operation?.operationKey).toBeTruthy();
     await settleExternalEffectObservation({
       tenantId: tenantA,
       businessEffectId: action!.businessEffectId!,
@@ -164,7 +167,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       expected: { status: "sent", providerRef },
       observed: { status: "sent", providerRef },
       evidence: { mechanism: "read_after_write" },
-    }, { integrationOperationId: operation!.id, domainActionId: actionId });
+    }, { externalOperationKey: operation!.operationKey, domainActionId: actionId });
   }
 
   beforeAll(async () => {
@@ -453,7 +456,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
         effect: "consequential",
         retrySafety: "repeatable",
         idempotency: { mode: "inherently_idempotent" },
-        verification: "acknowledgement",
+        verification: "webhook_or_readback",
       },
       piiAllowlist: ["tenantId", "to", "subject", "body"],
       retryPolicy: { attempts: 1, baseDelayMs: 1, timeoutMs: 1_000 },
@@ -600,7 +603,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       eq(domainActions.tenantId, tenantA), eq(domainActions.workId, objective.workId), eq(domainActions.actionType, "create_deal_request"),
     ))))[0]!;
     requestId = requestAction.id;
-    expect(await driveDurableAction(tenantA, requestId, shadowTools)).toMatchObject({ status: "success", output: { canonicalMutationOwner: "createRequest" } });
+    const requestExecution = await driveDurableAction(tenantA, requestId, shadowTools);
+    expect(requestExecution, JSON.stringify(requestExecution)).toMatchObject({ status: "success", output: { canonicalMutationOwner: "createRequest" } });
 
     expect(await runtime.runObjectiveIteration({ tenantId: tenantA, workId: objective.workId, objectiveLoopId: objective.objectiveLoopId })).toBe("awaiting_approval");
     let sendActions = await withTenant(tenantA, (db) => db.select().from(domainActions).where(and(
@@ -609,7 +613,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     expect(sendActions).toHaveLength(1);
     const firstSendActionId = sendActions[0]!.id;
     await approve(runtime, firstSendActionId);
-    expect(await driveDurableAction(tenantA, firstSendActionId, shadowTools)).toMatchObject({
+    const firstSendExecution = await driveDurableAction(tenantA, firstSendActionId, shadowTools);
+    expect(firstSendExecution, JSON.stringify(firstSendExecution)).toMatchObject({
       status: "failure",
       error: "Action remained executing",
     });

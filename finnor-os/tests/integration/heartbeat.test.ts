@@ -8,6 +8,7 @@ import { migrate } from "../../packages/db/migrate";
 import { getPool, closePool, workerHeartbeat } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { startHeartbeat, WORKER_HEARTBEAT_ID } from "../../apps/worker/src/heartbeat";
+import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 
@@ -83,9 +84,9 @@ describe.skipIf(!available)("worker heartbeat", () => {
       [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner"]],
     );
     expect(cutoverRoles.rows).toEqual([
-      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
-      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
-      { service: "worker", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
+      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+      { service: "worker", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
     ]);
   });
 
