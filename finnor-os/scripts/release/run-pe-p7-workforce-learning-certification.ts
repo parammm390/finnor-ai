@@ -257,6 +257,8 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     attention: "packages/read-models/src/attention-query.ts",
     migration: `packages/db/migrations/${P7_MIGRATION}`,
     openapi: "openapi.json",
+    productDataProvider: "../src/components/jarvis/product/ProductDataProvider.tsx",
+    workforceHook: "../src/components/jarvis/pe/use-pe-data.ts",
     configureRoute: "apps/api/app/api/workforce/profiles/route.ts",
     reassignRoute: "apps/api/app/api/workforce/assignments/[id]/reassign/route.ts",
     proposalRoute: "apps/api/app/api/workforce/proposals/[id]/route.ts",
@@ -306,19 +308,21 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   for (const route of ["/api/workforce/profiles", "/api/workforce/assignments/{id}/reassign", "/api/workforce/proposals/{id}", "/api/queries"]) assert(source.openapi.includes(`\"${route}\"`), `OpenAPI is missing ${route}`);
   assert(source.configureRoute.includes("configureAgentProfile") && source.reassignRoute.includes("reassignWorkforceAssignment") && source.proposalRoute.includes("promoteLearningProposal"), "P7 API routes are not bound to governed runtime functions");
   await access(resolve(REPOSITORY_ROOT, "src/components/jarvis/agents/agent-fleet.ts")).then(() => { throw new Error("static frontend agent-fleet authority still exists"); }, () => undefined);
-  // Phase 8 replaced the former AGENT_FLEET/browser projection with the typed
-  // PE workforce read hook. Certify the actual live contract: source status is
-  // surfaced, unresolved workforce state is explicit, and no decorative health
-  // value can be rendered when the backend projection is unavailable.
+  // The current product data provider owns the browser contract; keep this gate
+  // pointed at that live typed path instead of a retired monolithic client.
   assert(
     !frontend.includes("AGENT_FLEET") &&
-      frontend.includes("useWorkforceStatus") &&
-      frontend.includes("workforce.data.sourceStatus") &&
-      frontend.includes("No workforce state inferred") &&
-      frontend.includes("No decorative or static agent persona"),
+      frontend.includes("usePeProductData") &&
+      frontend.includes('product.workforce.status === "error"') &&
+      frontend.includes("product.workforce.data") &&
+      frontend.includes("No static persona, decorative agent, or tenant-wide worker was substituted") &&
+      source.productDataProvider.includes("useWorkforceStatus") &&
+      source.productDataProvider.includes("const workforce = useWorkforceStatus") &&
+      source.workforceHook.includes("export function useWorkforceStatus") &&
+      source.workforceHook.includes("stateFor: workforceState"),
     "JARVIS workforce surface is not backend-truth-only",
   );
-  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("worker.profileStatus"), "JARVIS workforce surface does not render the canonical worker status fields");
+  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("profileById.has(worker.id)"), "JARVIS workforce surface does not bind canonical worker and profile status");
   for (const status of ["idle", "working", "waiting", "blocked", "failed", "unavailable"]) assert(peContracts.includes(`\"${status}\"`), `workforce contract omits ${status}`);
   assert(peContracts.includes('configurationState: "configured" | "unconfigured"'), "workforce contract omits explicit configuration state");
   assert(peContracts.includes('status: "complete" | "partial"') && peContracts.includes("truncatedSources"), "PE browser contract does not preserve workforce source completeness");
