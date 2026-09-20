@@ -332,11 +332,18 @@ Resources:
                   - ecs:DeleteService
                   - ecs:DeregisterTaskDefinition
                   - ecs:DescribeClusters
+                  - ecs:DescribeServiceDeployments
                   - ecs:DescribeServices
                   - ecs:DescribeTaskDefinition
                   - ecs:DescribeTasks
+                  - ecs:ListClusters
+                  - ecs:ListServiceDeployments
+                  - ecs:ListServices
+                  - ecs:ListTagsForResource
                   - ecs:ListTasks
+                  - ecs:ListTaskDefinitions
                   - ecs:RegisterTaskDefinition
+                  - ecs:StopServiceDeployment
                   - ecs:TagResource
                   - ecs:UntagResource
                   - ecs:UpdateClusterSettings
@@ -346,9 +353,13 @@ Resources:
                 Effect: Allow
                 Action:
                   - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:DescribeListenerAttributes
                   - elasticloadbalancing:DescribeTargetGroups
                   - elasticloadbalancing:DescribeListeners
                   - elasticloadbalancing:DescribeLoadBalancerAttributes
+                  - elasticloadbalancing:DescribeRules
+                  - elasticloadbalancing:DescribeTags
+                  - elasticloadbalancing:DescribeTargetGroupAttributes
                   - elasticloadbalancing:DescribeTargetHealth
                   - elasticloadbalancing:AddTags
                   - elasticloadbalancing:CreateRule
@@ -360,11 +371,13 @@ Resources:
                   - elasticloadbalancing:ModifyTargetGroup
                   - elasticloadbalancing:ModifyTargetGroupAttributes
                   - elasticloadbalancing:RemoveTags
+                  - elasticloadbalancing:SetRulePriorities
                 Resource: '*'
               - Sid: NetworkInspection
                 Effect: Allow
                 Action:
                   - ec2:DescribeSecurityGroups
+                  - ec2:DescribeInstances
                   - ec2:DescribeNatGateways
                   - ec2:DescribeSubnets
                   - ec2:DescribeVpcs
@@ -383,19 +396,19 @@ Resources:
                 Resource: '*'
               - Sid: ComputeScaling
                 Effect: Allow
-                Action: [application-autoscaling:RegisterScalableTarget, application-autoscaling:DeregisterScalableTarget, application-autoscaling:PutScalingPolicy, application-autoscaling:DeleteScalingPolicy, application-autoscaling:DescribeScalableTargets, application-autoscaling:DescribeScalingPolicies]
+                Action: [application-autoscaling:RegisterScalableTarget, application-autoscaling:DeregisterScalableTarget, application-autoscaling:PutScalingPolicy, application-autoscaling:DeleteScalingPolicy, application-autoscaling:DescribeScalableTargets, application-autoscaling:DescribeScalingPolicies, application-autoscaling:DescribeScheduledActions]
                 Resource: '*'
               - Sid: ComputeAlarms
                 Effect: Allow
-                Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:TagResource, cloudwatch:UntagResource]
+                Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:ListTagsForResource, cloudwatch:TagResource, cloudwatch:UntagResource]
                 Resource: !Sub 'arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:finnor-*'
               - Sid: ComputeRoleLifecycle
                 Effect: Allow
-                Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies]
+                Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:UpdateRoleDescription, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies]
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*'
               - Sid: ComputePolicyLifecycle
                 Effect: Allow
-                Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy]
+                Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListEntitiesForPolicy, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy]
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/finnor-compute-*'
               - Sid: ComputeServiceLinkedRoles
                 Effect: Allow
