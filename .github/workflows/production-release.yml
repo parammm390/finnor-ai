@@ -370,7 +370,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Verify product-runtime release policy without production credentials
-        run: npm run release:p8-zero-resurrection
+        run: node scripts/release/verify-p8-zero-resurrection.mjs
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""

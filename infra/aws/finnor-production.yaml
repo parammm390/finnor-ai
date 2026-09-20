@@ -339,6 +339,7 @@ Resources:
                   - ecs:RegisterTaskDefinition
                   - ecs:TagResource
                   - ecs:UntagResource
+                  - ecs:UpdateClusterSettings
                   - ecs:UpdateService
                 Resource: '*'
               - Sid: LoadBalancerHealth
@@ -390,7 +391,7 @@ Resources:
                 Resource: !Sub 'arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:finnor-*'
               - Sid: ComputeRoleLifecycle
                 Effect: Allow
-                Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies]
+                Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies]
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*'
               - Sid: ComputePolicyLifecycle
                 Effect: Allow
