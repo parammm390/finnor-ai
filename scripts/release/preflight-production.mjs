@@ -287,7 +287,13 @@ try {
       (SELECT count(*)::int FROM finnor_os.work_orders) AS work_orders
   `)
   businessCounts = counts.rows[0]
-  if (Number(businessCounts?.tenants ?? 0) < 1 || Number(businessCounts?.users ?? 0) < 1) throw new Error("production database has no tenant/user business data")
+  // Tenant/user presence is an onboarding/product-readiness concern, not an
+  // infrastructure deployability invariant.  A new production project may be
+  // structurally ready before its first customer is provisioned.  Authenticated
+  // product requests remain fail-closed at resolveTenantFromBearerToken(), which
+  // requires an application identity mapped to a tenant.  Keep these counts in
+  // the preflight evidence for operators, but do not couple AWS/Vercel/DB
+  // release mutations to customer data existence.
   await client.query("ROLLBACK")
 } finally {
   await client.end()
