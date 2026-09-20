@@ -89,6 +89,7 @@ jobs:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       FINNOR_CHAOS_TEST_CONTEXT: "1"
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
+      FINNOR_SCOPE2_FORCE_EMBEDDED: "1"
       FINNOR_RELEASE_SOURCE: github-actions
       NODE_ENV: test
       AUTH_DEV_BYPASS: "1"
