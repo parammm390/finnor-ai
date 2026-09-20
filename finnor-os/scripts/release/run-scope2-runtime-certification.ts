@@ -216,7 +216,14 @@ async function freePort(): Promise<number> {
 async function sourceDatabase(): Promise<{ url: string; mode: "configured" | "embedded"; cleanup: () => Promise<void> }> {
   const configured = process.env.DATABASE_URL ?? "postgres://finnor:finnor@127.0.0.1:5432/finnor";
   assertNotProductionDatabaseTarget(configured, "Scope-2 certification database server");
-  if (await canConnect(configured)) return { url: configured, mode: "configured", cleanup: async () => undefined };
+  // The real-session gate opens one admin connection plus SESSION_COUNT
+  // independent backend sessions.  CI's disposable postgres service keeps the
+  // image default max_connections=100, which cannot host that certified 101+
+  // session proof.  The release workflow opts into this same-engine embedded
+  // path with max_connections=240 instead of silently weakening the proof or
+  // relying on a runner-specific service configuration.
+  const forceEmbedded = process.env.FINNOR_SCOPE2_FORCE_EMBEDDED === "1";
+  if (!forceEmbedded && await canConnect(configured)) return { url: configured, mode: "configured", cleanup: async () => undefined };
   const directory = await mkdtemp(join(tmpdir(), "finnor-scope2-cert-pg-"));
   const port = await freePort();
   const embedded = new EmbeddedPostgres({
