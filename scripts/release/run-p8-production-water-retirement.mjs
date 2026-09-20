@@ -104,6 +104,16 @@ async function readWaterTenantCensus() {
   return result.rows
 }
 
+async function readWaterRetirementDispositions() {
+  const result = await client.query(
+    `SELECT tenant_id::text AS tenant_id,classification,authorized,authorization_ref,
+            obligations,classified_by,classified_at,updated_at
+       FROM finnor_os.water_tenant_retirement_dispositions
+      ORDER BY tenant_id`,
+  )
+  return result.rows
+}
+
 async function readBlockers() {
   return (await client.query("SELECT * FROM finnor_os.water_retirement_blockers() ORDER BY category")).rows
 }
@@ -264,8 +274,14 @@ try {
     throw new Error("Product authority vertical or cutover protocol is incompatible")
   }
   const census = await readWaterTenantCensus()
+  const retirementDispositions = authorityBefore.state === "water_retired"
+    ? await readWaterRetirementDispositions()
+    : undefined
   if (authorityBefore.state === "water_retired") {
-    assertAlreadyRetiredWaterTenantCensus(census)
+    assertAlreadyRetiredWaterTenantCensus(census, {
+      activationTenantCensus: authorityBefore.activation_evidence?.tenantCensus,
+      dispositionRows: retirementDispositions,
+    })
   } else {
     assertExactWaterTenantCensus(census)
   }

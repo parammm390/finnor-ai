@@ -37,6 +37,73 @@ function requireEqual(label, actual, expected) {
   if (actual !== expected) throw new Error(`${label}: expected ${String(expected)}, observed ${String(actual)}`)
 }
 
+const REQUIRED_RETIREMENT_OBLIGATIONS = Object.freeze([
+  "preserve_historical_truth",
+  "prevent_future_water_execution",
+  "terminalize_only_audited_test_or_synthetic_work",
+])
+
+function expectedTenantCensus() {
+  return P8_WATER_TENANT_DISPOSITIONS.map(({ tenantId, classification }) => ({ tenantId, classification }))
+}
+
+function assertPreservedTenantCensus(rows, label, getRow) {
+  if (!Array.isArray(rows)) throw new Error(`${label} is unavailable`)
+  const expectedById = new Map(expectedTenantCensus().map((row) => [row.tenantId, row]))
+  if (rows.length !== expectedById.size) {
+    throw new Error(`${label} changed: expected ${expectedById.size}, observed ${rows.length}`)
+  }
+  const observedIds = new Set()
+  for (const row of rows) {
+    const observed = getRow(row)
+    if (observedIds.has(observed.tenantId)) throw new Error(`Duplicate retired Water tenant ${observed.tenantId} is present in ${label}`)
+    observedIds.add(observed.tenantId)
+    const expected = expectedById.get(observed.tenantId)
+    if (!expected) throw new Error(`Unclassified retired Water tenant ${observed.tenantId} is present in ${label}`)
+    requireEqual(`${observed.tenantId} ${label} classification`, observed.classification, expected.classification)
+  }
+  for (const tenantId of expectedById.keys()) {
+    if (!observedIds.has(tenantId)) throw new Error(`Retired Water tenant ${tenantId} is missing from ${label}`)
+  }
+}
+
+/**
+ * An already-retired authority is allowed to outlive its historical tenant rows.
+ * In that case, the durable authority snapshot and the audited disposition
+ * ledger must both preserve the exact four identities before a PE-only release
+ * may proceed. This never applies while Water is preparing or being retired.
+ */
+export function assertPreservedRetiredWaterEvidence({ activationTenantCensus, dispositionRows } = {}) {
+  assertPreservedTenantCensus(
+    activationTenantCensus,
+    "retirement authority tenant census",
+    (row) => ({ tenantId: row?.tenantId, classification: row?.classification }),
+  )
+  assertPreservedTenantCensus(
+    dispositionRows,
+    "retirement disposition ledger",
+    (row) => ({ tenantId: row?.tenant_id, classification: row?.classification }),
+  )
+
+  for (const row of dispositionRows) {
+    const tenantId = row?.tenant_id
+    requireEqual(`${tenantId} disposition authorized`, row?.authorized, true)
+    if (typeof row?.authorization_ref !== "string" || row.authorization_ref.trim() === "") {
+      throw new Error(`${tenantId} disposition authorization reference is unavailable`)
+    }
+    if (typeof row?.classified_by !== "string" || row.classified_by.trim() === "") {
+      throw new Error(`${tenantId} disposition classifier is unavailable`)
+    }
+    const obligations = Array.isArray(row?.obligations) ? row.obligations : []
+    for (const obligation of REQUIRED_RETIREMENT_OBLIGATIONS) {
+      if (!obligations.includes(obligation)) {
+        throw new Error(`${tenantId} disposition is missing obligation ${obligation}`)
+      }
+    }
+  }
+  return P8_WATER_TENANT_DISPOSITIONS
+}
+
 export function assertExactWaterTenantCensus(rows) {
   if (!Array.isArray(rows)) throw new Error("Water tenant census is unavailable")
   const expectedById = new Map(P8_WATER_TENANT_DISPOSITIONS.map((row) => [row.tenantId, row]))
@@ -60,8 +127,9 @@ export function assertExactWaterTenantCensus(rows) {
 // intentionally remain Water while their executable legacy modes are disabled.
 // The already-applied release path must validate that post-retirement shape
 // rather than re-demanding the pre-retirement Dealer Zero/simulator flags.
-export function assertAlreadyRetiredWaterTenantCensus(rows) {
+export function assertAlreadyRetiredWaterTenantCensus(rows, preservedEvidence) {
   if (!Array.isArray(rows)) throw new Error("Water tenant census is unavailable")
+  if (rows.length === 0) return assertPreservedRetiredWaterEvidence(preservedEvidence)
   const expectedById = new Map(P8_WATER_TENANT_DISPOSITIONS.map((row) => [row.tenantId, row]))
   if (rows.length !== expectedById.size) {
     throw new Error(`Retired Water tenant census changed: expected ${expectedById.size}, observed ${rows.length}`)

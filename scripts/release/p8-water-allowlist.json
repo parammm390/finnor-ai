@@ -77,11 +77,6 @@
       "reason": "Database boundary reads the existing authority, records protocol heartbeats, and denies retired execution."
     },
     {
-      "path": "finnor-os/packages/db/migrations-bundle.ts",
-      "category": "history",
-      "reason": "Generated immutable migration ledger is retained for deterministic database reconstruction and audit."
-    },
-    {
       "path": "finnor-os/packages/db/schema.ts",
       "category": "history",
       "reason": "Typed mappings retain historical canonical rows required for immutable reads and retirement blockers."
