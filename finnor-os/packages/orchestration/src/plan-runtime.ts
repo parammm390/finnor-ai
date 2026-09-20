@@ -11,7 +11,7 @@ import {
   withTenant,
 } from "@finnor/db";
 import type { DomainAction, DomainPolicy, TenantContext } from "@finnor/shared-types";
-import { sha256, type PlanActionNode, type PlanViolation } from "@finnor/planning";
+import { DETERMINISTIC_PLAN_COMPILER_VERSION, sha256, type PlanActionNode, type PlanViolation } from "@finnor/planning";
 import { buildCommandGraph, groundEntitiesWithDb } from "./compiler";
 import type { PlanningResult } from "./planner";
 
@@ -133,6 +133,7 @@ export async function selectPlanRevision(params: {
     planGraph: selected.graph,
     score: selected.score,
     semanticHash: selected.graph.semanticHash,
+    compilerVersion: DETERMINISTIC_PLAN_COMPILER_VERSION,
   });
   return { planRevisionId: revision.id, planRevision: revision.revision, planSemanticHash: revision.semanticHash, graph: selected.graph };
 }
@@ -210,7 +211,7 @@ export async function selectAndMaterializePlan(params: Parameters<typeof selectP
     return db.select().from(domainActions).where(and(
       eq(domainActions.tenantId, params.tenantContext.tenantId),
       eq(domainActions.planRevisionId, revision.id),
-    ));
+    )).limit(actionNodes.length);
   });
   const byNode = new Map(rows.map((row) => [row.planNodeId, row]));
   const ordered = actionNodes.map((node) => byNode.get(node.id)).filter((row): row is NonNullable<typeof row> => Boolean(row));

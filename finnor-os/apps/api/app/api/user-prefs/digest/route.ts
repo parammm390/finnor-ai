@@ -2,7 +2,7 @@
 // own last_seen_at marker. First visits say so plainly instead of inventing a delta.
 
 import { domainActions, userPrefs, withTenant } from "@finnor/db";
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 
 export async function GET(req: Request): Promise<Response> {
@@ -14,8 +14,8 @@ export async function GET(req: Request): Promise<Response> {
       const since = prefs?.lastSeenAt ?? null;
       const window = since ? gte(domainActions.createdAt, since) : undefined;
       const [newActions, pendingActions, latest] = await Promise.all([
-        db.select({ id: domainActions.id }).from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), window)).then((rows) => rows.length),
-        db.select({ id: domainActions.id }).from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), eq(domainActions.status, "pending"))).then((rows) => rows.length),
+        db.select({ count: sql<number>`count(*)::int` }).from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), window)).then(([row]) => Number(row?.count ?? 0)),
+        db.select({ count: sql<number>`count(*)::int` }).from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), eq(domainActions.status, "pending"))).then(([row]) => Number(row?.count ?? 0)),
         db.select({ id: domainActions.id, actionType: domainActions.actionType, summary: domainActions.summary, createdAt: domainActions.createdAt }).from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), window)).orderBy(desc(domainActions.createdAt)).limit(3),
       ]);
       // Persist the marker only after the read completed, keeping the next comparison

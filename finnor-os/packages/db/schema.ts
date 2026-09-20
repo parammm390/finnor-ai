@@ -1144,6 +1144,13 @@ export const workObjectiveLoops = pgTable(
     maxQueries: integer("max_queries").notNull().default(12),
     maxPlannerFailures: integer("max_planner_failures").notNull().default(3),
     maxConsecutiveNoProgress: integer("max_consecutive_no_progress").notNull().default(3),
+    maxParallelNodes: integer("max_parallel_nodes").notNull().default(4),
+    nodeAttemptCount: integer("node_attempt_count").notNull().default(0),
+    maxNodeAttempts: integer("max_node_attempts").notNull().default(100),
+    waitCount: integer("wait_count").notNull().default(0),
+    maxWaits: integer("max_waits").notNull().default(12),
+    maxEstimatedCostMicros: bigint("max_estimated_cost_micros", { mode: "number" }).notNull().default(5_000_000),
+    reservedEstimatedCostMicros: bigint("reserved_estimated_cost_micros", { mode: "number" }).notNull().default(0),
     deadlineAt: timestamp("deadline_at", { withTimezone: true }).notNull().default(sql`now() + interval '7 days'`),
     nextRunAt: timestamp("next_run_at", { withTimezone: true }),
     reason: text("reason"),
@@ -1422,7 +1429,7 @@ export const communicationsLog = pgTable("communications_log", {
   direction: text("direction", { enum: ["inbound", "outbound"] }).notNull(),
   content: text("content").notNull(),
   timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("communications_log_tenant_timestamp_id_idx").on(t.tenantId, t.timestamp, t.id)]);
 
 export const domainPolicies = pgTable(
   "domain_policies",
@@ -1500,6 +1507,8 @@ export const workPlanRevisions = pgTable(
     worldSnapshotHash: text("world_snapshot_hash").notNull(),
     graphHash: text("graph_hash").notNull(),
     semanticHash: text("semantic_hash").notNull(),
+    compilerVersion: text("compiler_version"),
+    revisionTransition: jsonb("revision_transition"),
     completionProof: jsonb("completion_proof"),
     selectedAt: timestamp("selected_at", { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -1594,6 +1603,8 @@ export const workforceAssignments = pgTable(
     planNodeId: text("plan_node_id").notNull(),
     objectiveLoopId: uuid("objective_loop_id").references(() => workObjectiveLoops.id),
     objectiveStepId: uuid("objective_step_id"),
+    objectiveRevision: integer("objective_revision"),
+    nodeAttempt: integer("node_attempt"),
     agentProfileId: uuid("agent_profile_id").notNull().references(() => agentProfiles.id),
     agentRevisionId: uuid("agent_revision_id").notNull().references(() => agentProfileRevisions.id),
     capability: text("capability").notNull(),
@@ -1754,6 +1765,9 @@ export const domainActions = pgTable(
     index("domain_actions_tenant_status_idx").on(t.tenantId, t.status),
     index("domain_actions_tenant_plan_idx").on(t.tenantId, t.planId),
     index("domain_actions_tenant_plan_revision_idx").on(t.tenantId, t.planRevisionId),
+    index("domain_actions_tenant_work_created_id_idx").on(t.tenantId, t.workId, t.createdAt, t.id),
+    index("domain_actions_tenant_instruction_created_id_idx").on(t.tenantId, t.instructionId, t.createdAt, t.id),
+    index("domain_actions_tenant_plan_created_id_idx").on(t.tenantId, t.planId, t.createdAt, t.id),
     unique("domain_actions_plan_node_unique").on(t.planRevisionId, t.planNodeId),
     index("domain_actions_work_idx").on(t.workId),
     unique("domain_actions_objective_step_idx").on(t.objectiveStepId),
@@ -1813,6 +1827,19 @@ export const workObjectiveSteps = pgTable(
     domainActionId: uuid("domain_action_id").references(() => domainActions.id),
     planRevisionId: uuid("plan_revision_id").references(() => workPlanRevisions.id),
     planNodeId: text("plan_node_id"),
+    objectiveRevision: integer("objective_revision"),
+    attemptNumber: integer("attempt_number").default(1),
+    executionRole: text("execution_role", { enum: ["controller", "node"] }),
+    executionState: text("execution_state", { enum: ["scheduled", "claimed", "running", "waiting", "completed", "failed", "reconciliation_required", "cancelled", "superseded"] }),
+    claimOwner: text("claim_owner"),
+    claimUntil: timestamp("claim_until", { withTimezone: true }),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    recoveryParentStepId: uuid("recovery_parent_step_id"),
+    verificationResult: jsonb("verification_result"),
+    resourceKeys: text("resource_keys").array().notNull().default([]),
+    budgetReservationKind: text("budget_reservation_kind", { enum: ["query", "action", "wait", "check"] }),
+    estimatedCostReservationMicros: bigint("estimated_cost_reservation_micros", { mode: "number" }).notNull().default(0),
+    budgetReservedAt: timestamp("budget_reserved_at", { withTimezone: true }),
     observation: jsonb("observation"),
     progressMade: boolean("progress_made"),
     iterationOutcome: text("iteration_outcome", { enum: ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] }),
@@ -1831,8 +1858,47 @@ export const workObjectiveSteps = pgTable(
     unique("work_objective_steps_query_idx").on(t.queryExecutionId),
     index("work_objective_steps_tenant_loop_idx").on(t.tenantId, t.objectiveLoopId, t.stepNumber),
     index("work_objective_steps_tenant_outcome_idx").on(t.tenantId, t.iterationOutcome, t.completedAt),
+    uniqueIndex("work_objective_steps_plan_node_attempt_idx").on(t.planRevisionId, t.planNodeId, t.attemptNumber)
+      .where(sql`${t.planRevisionId} IS NOT NULL AND ${t.attemptNumber} IS NOT NULL`),
+    index("work_objective_steps_claimable_idx").on(t.tenantId, t.planRevisionId, t.executionState, t.claimUntil, t.stepNumber, t.id)
+      .where(sql`${t.executionRole} = 'node' AND ${t.completedAt} IS NULL`),
+    index("work_objective_steps_loop_revision_idx").on(t.tenantId, t.objectiveLoopId, t.objectiveRevision, t.executionState, t.stepNumber, t.id),
     index("work_objective_steps_workforce_boundary_idx").on(t.tenantId, t.startedAt, t.id)
       .where(sql`${t.iterationOutcome} in ('waiting','blocked') and ${t.observation} ? 'workforceStatus'`),
+  ],
+);
+
+/** Scope-1 append-only orchestration recovery semantics. Runtime/effect truth is
+ * referenced, never copied or re-owned here. */
+export const workRecoveryDecisions = pgTable(
+  "work_recovery_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    workId: uuid("work_id").notNull().references(() => works.id),
+    objectiveLoopId: uuid("objective_loop_id").notNull().references(() => workObjectiveLoops.id),
+    objectiveRevision: integer("objective_revision").notNull(),
+    planRevisionId: uuid("plan_revision_id").notNull().references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id").notNull(),
+    objectiveStepId: uuid("objective_step_id").references(() => workObjectiveSteps.id),
+    attemptNumber: integer("attempt_number").notNull(),
+    recoveryParentStepId: uuid("recovery_parent_step_id").references(() => workObjectiveSteps.id),
+    authorityDecisionId: uuid("authority_decision_id").references(() => authorityDecisions.id),
+    domainActionId: uuid("domain_action_id").references(() => domainActions.id),
+    businessEffectId: uuid("business_effect_id").references(() => businessEffects.id),
+    verificationResult: jsonb("verification_result"),
+    decision: text("decision", { enum: ["retry", "wait", "reconcile", "replan", "escalate", "compensate", "cancel", "terminal_failure", "continue"] }).notNull(),
+    cause: text("cause", { enum: ["failure", "stale", "timeout", "divergence", "unknown_outcome", "budget", "deadline", "cancellation", "observation"] }).notNull(),
+    reason: text("reason").notNull(),
+    context: jsonb("context").notNull(),
+    decisionKey: text("decision_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("work_recovery_decisions_tenant_id_id_key").on(t.tenantId, t.id),
+    unique("work_recovery_decisions_tenant_key").on(t.tenantId, t.decisionKey),
+    index("work_recovery_decisions_work_idx").on(t.tenantId, t.workId, t.createdAt, t.id),
+    index("work_recovery_decisions_attempt_idx").on(t.tenantId, t.planRevisionId, t.planNodeId, t.attemptNumber, t.createdAt, t.id),
   ],
 );
 
@@ -2041,7 +2107,10 @@ export const actionLog = pgTable(
     output: jsonb("output").notNull().default({}),
     timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("action_log_action_idx").on(t.domainActionId)],
+  (t) => [
+    index("action_log_action_idx").on(t.domainActionId),
+    index("action_log_tenant_action_timestamp_id_idx").on(t.tenantId, t.domainActionId, t.timestamp, t.id),
+  ],
 );
 
 export const embeddings = pgTable(
@@ -2245,12 +2314,14 @@ export const rolePermissions = pgTable("role_permissions", {
   canApprove: boolean("can_approve").notNull().default(false),
 });
 
-// Postgres-backed job queue (§15–16). Not tenant-scoped: payloads carry tenant_id,
-// workers re-establish tenant context per job.
+// Postgres-backed canonical job queue (§15–16 + Scope 3). Physical queue rows are
+// not RLS-scoped, but tenant identity and compute classification are durable,
+// indexed columns; hot claims never parse payload JSON for either concern.
 export const jobs = pgTable(
   "jobs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").references(() => tenants.id),
     type: text("type").notNull(),
     payload: jsonb("payload").notNull().default({}),
     status: text("status", { enum: ["queued", "running", "completed", "failed", "dead_letter", "quarantined"] })
@@ -2269,12 +2340,159 @@ export const jobs = pgTable(
     leaseOwner: text("lease_owner"),
     leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
     leaseHeartbeatAt: timestamp("lease_heartbeat_at", { withTimezone: true }),
+    protocolVersion: integer("protocol_version").notNull().default(1),
+    retrySafety: text("retry_safety", {
+      enum: ["pure", "locally_idempotent", "durably_effect_guarded", "reconcilable", "unsafe_legacy"],
+    }).notNull().default("unsafe_legacy"),
+    claimToken: uuid("claim_token"),
+    claimFence: bigint("claim_fence", { mode: "number" }).notNull().default(0),
+    workloadClass: text("workload_class", { enum: ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] }).notNull().default("BACKGROUND"),
+    classificationPolicyRevision: integer("classification_policy_revision").notNull().default(0),
+    classificationReason: text("classification_reason").notNull().default("legacy-safe-default:migration"),
+    tenantScope: text("tenant_scope", { enum: ["tenant", "global"] }).notNull().default("global"),
+    tenantKey: text("tenant_key").notNull().default("__global__"),
+    tenantIdentitySource: text("tenant_identity_source", { enum: ["durable_column", "legacy_payload", "global", "missing"] }).notNull().default("global"),
+    obligationKind: text("obligation_kind", { enum: ["required", "coalescible"] }).notNull().default("required"),
+    requiredComputeEpoch: integer("required_compute_epoch").notNull().default(1),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull().defaultNow(),
+    capacityDeferCount: integer("capacity_defer_count").notNull().default(0),
+    capacityDeferredAt: timestamp("capacity_deferred_at", { withTimezone: true }),
+    capacityDeferReason: text("capacity_defer_reason"),
   },
   (t) => [
     index("jobs_status_run_at_idx").on(t.status, t.runAt),
     index("jobs_expired_lease_idx").on(t.leaseExpiresAt).where(sql`${t.status} = 'running'`),
+    index("jobs_claim_compatibility_idx").on(t.type, t.protocolVersion, t.status, t.runAt).where(sql`${t.status} = 'queued'`),
+    index("jobs_tenant_status_idx").on(t.tenantId, t.status, t.runAt).where(sql`${t.tenantId} IS NOT NULL`),
+    index("jobs_class_claim_idx").on(t.workloadClass, t.status, t.runAt, t.priority, t.tenantKey, t.id).where(sql`${t.status} = 'queued'`),
+    index("jobs_class_tenant_due_idx").on(t.workloadClass, t.tenantKey, t.runAt, t.id).where(sql`${t.status} = 'queued'`),
+    index("jobs_class_expired_lease_idx").on(t.workloadClass, t.leaseExpiresAt, t.id).where(sql`${t.status} = 'running'`),
+    index("jobs_class_tenant_running_idx").on(t.workloadClass, t.tenantKey, t.status, t.id).where(sql`${t.status} = 'running'`),
+    index("jobs_class_terminal_metrics_idx").on(t.workloadClass, t.completedAt, t.id).where(sql`${t.status} in ('completed','dead_letter','quarantined')`),
   ],
 );
+
+/** Physical queue delivery history. Scope-1 work_objective_steps remains the owner
+ * of semantic PlanNode attempts; this table records only runtime claim/delivery. */
+export const jobDeliveryAttempts = pgTable(
+  "job_delivery_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobId: uuid("job_id").notNull().references(() => jobs.id),
+    tenantId: uuid("tenant_id").references(() => tenants.id),
+    claimToken: uuid("claim_token").notNull().unique(),
+    claimFence: bigint("claim_fence", { mode: "number" }).notNull(),
+    workerId: text("worker_id").notNull(),
+    protocolVersion: integer("protocol_version").notNull(),
+    retrySafety: text("retry_safety", {
+      enum: ["pure", "locally_idempotent", "durably_effect_guarded", "reconcilable", "unsafe_legacy"],
+    }).notNull(),
+    outcome: text("outcome", {
+      enum: ["claimed", "running", "completed", "known_failed", "lease_lost", "reconciliation_required", "dead_lettered"],
+    }).notNull().default("claimed"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    failureKind: text("failure_kind"),
+    failureDetail: text("failure_detail"),
+  },
+  (t) => [
+    unique("job_delivery_attempts_job_fence_key").on(t.jobId, t.claimFence),
+    index("job_delivery_attempts_job_history_idx").on(t.jobId, t.claimFence),
+    index("job_delivery_attempts_tenant_open_idx").on(t.tenantId, t.startedAt, t.id).where(sql`${t.finishedAt} IS NULL AND ${t.tenantId} IS NOT NULL`),
+  ],
+);
+
+export const computeJobTypePolicies = pgTable("compute_job_type_policies", {
+  jobType: text("job_type").primaryKey(),
+  defaultClass: text("default_class", { enum: ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] }).notNull(),
+  allowedClasses: text("allowed_classes", { enum: ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] }).array().notNull(),
+  classificationRule: text("classification_rule", { enum: ["fixed", "trusted_lane"] }).notNull(),
+  tenantScope: text("tenant_scope", { enum: ["tenant", "global"] }).notNull(),
+  obligationKind: text("obligation_kind", { enum: ["required", "coalescible"] }).notNull(),
+  policyRevision: integer("policy_revision").notNull(),
+  rationale: text("rationale").notNull(),
+  active: boolean("active").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const computePlaneCutover = pgTable("compute_plane_cutover", {
+  singleton: boolean("singleton").primaryKey().default(true),
+  state: text("state", { enum: ["preparing", "authoritative"] }).notNull().default("preparing"),
+  acceptedJobEpoch: integer("accepted_job_epoch").notNull().default(1),
+  minimumClaimEpoch: integer("minimum_claim_epoch").notNull().default(1),
+  enforceKnownJobTypes: boolean("enforce_known_job_types").notNull().default(false),
+  legacyTenantWritesAllowed: boolean("legacy_tenant_writes_allowed").notNull().default(true),
+  activatedReleaseSha: text("activated_release_sha"),
+  activatedAt: timestamp("activated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const computeTenantClaimState = pgTable(
+  "compute_tenant_claim_state",
+  {
+    workloadClass: text("workload_class", { enum: ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] }).notNull(),
+    tenantKey: text("tenant_key").notNull(),
+    tenantId: uuid("tenant_id").references(() => tenants.id),
+    lastClaimedAt: timestamp("last_claimed_at", { withTimezone: true }),
+    claimCount: bigint("claim_count", { mode: "number" }).notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.workloadClass, t.tenantKey] })],
+);
+
+export const computeControlLeases = pgTable("compute_control_leases", {
+  leaseName: text("lease_name").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  leaseToken: uuid("lease_token").notNull().unique(),
+  fence: bigint("fence", { mode: "number" }).notNull(),
+  acquiredAt: timestamp("acquired_at", { withTimezone: true }).notNull().defaultNow(),
+  heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+export const computeResourcePolicies = pgTable("compute_resource_policies", {
+  resourceKey: text("resource_key").primaryKey(),
+  capacity: integer("capacity").notNull(),
+  perTenantCapacity: integer("per_tenant_capacity").notNull(),
+  interactiveReserve: integer("interactive_reserve").notNull().default(0),
+  leaseSeconds: integer("lease_seconds").notNull().default(60),
+  nextFence: bigint("next_fence", { mode: "number" }).notNull().default(1),
+  source: text("source").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const computeResourceLeases = pgTable(
+  "compute_resource_leases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resourceKey: text("resource_key").notNull().references(() => computeResourcePolicies.resourceKey),
+    tenantKey: text("tenant_key").notNull(),
+    workloadClass: text("workload_class", { enum: ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] }).notNull(),
+    units: integer("units").notNull().default(1),
+    ownerId: text("owner_id").notNull(),
+    leaseToken: uuid("lease_token").notNull().unique(),
+    fence: bigint("fence", { mode: "number" }).notNull(),
+    jobId: uuid("job_id").references(() => jobs.id),
+    jobClaimToken: uuid("job_claim_token"),
+    acquiredAt: timestamp("acquired_at", { withTimezone: true }).notNull().defaultNow(),
+    heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    releaseReason: text("release_reason"),
+  },
+  (t) => [index("compute_resource_leases_active_idx").on(t.resourceKey, t.expiresAt, t.workloadClass, t.tenantKey).where(sql`${t.releasedAt} IS NULL`)],
+);
+
+export const computeTelemetryPublications = pgTable("compute_telemetry_publications", {
+  publisherId: text("publisher_id").primaryKey(),
+  releaseSha: text("release_sha").notNull(),
+  status: text("status", { enum: ["healthy", "degraded"] }).notNull(),
+  snapshot: jsonb("snapshot").notNull().default({}),
+  publishedAt: timestamp("published_at", { withTimezone: true }).notNull().defaultNow(),
+  error: text("error"),
+});
 
 // Upgrade 6: the minimum durable business-operation envelope for work that cannot
 // safely complete inside one approval request. Domain actions remain the authority
@@ -2355,6 +2573,7 @@ export const businessOperationTargets = pgTable(
     unique("business_operation_targets_idempotency_idx").on(t.idempotencyKey),
     index("business_operation_targets_operation_status_idx").on(t.operationId, t.status, t.nextAttemptAt),
     index("business_operation_targets_tenant_target_idx").on(t.tenantId, t.targetId),
+    index("business_operation_targets_tenant_operation_ordinal_id_idx").on(t.tenantId, t.operationId, t.ordinal, t.id),
   ],
 );
 
@@ -2464,8 +2683,13 @@ export const webhookReceipts = pgTable("webhook_receipts", {
 });
 
 export const externalOperations = pgTable("external_operations", {
+  id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
-  domainActionId: uuid("domain_action_id").notNull().references(() => domainActions.id),
+  domainActionId: uuid("domain_action_id").references(() => domainActions.id),
+  ownerType: text("owner_type", {
+    enum: ["domain_action", "integration_subscription", "computer_run", "artifact_operation", "system_job"],
+  }).notNull().default("domain_action"),
+  ownerKey: text("owner_key").notNull(),
   operationKey: text("operation_key").notNull(),
   // The exact ToolRegistry integration selected for this attempt. Historical rows
   // remain null rather than being guessed from action type or current tenant config.
@@ -2479,9 +2703,36 @@ export const externalOperations = pgTable("external_operations", {
   externalObservedAt: timestamp("external_observed_at", { withTimezone: true }),
   verificationStatus: text("verification_status", { enum: ["not_required", "awaiting_observation", "verified", "divergent", "unknown"] }).notNull().default("not_required"),
   observation: jsonb("observation"),
+  protocolVersion: integer("protocol_version").notNull().default(1),
+  targetKey: text("target_key"),
+  executionState: text("execution_state", {
+    enum: [
+      "claimed", "provider_in_flight", "provider_acknowledged", "awaiting_observation",
+      "verified", "divergent", "known_failed", "unknown_outcome",
+      "reconciliation_required", "reconciled", "compensated",
+    ],
+  }).notNull().default("claimed"),
+  retrySafety: text("retry_safety", {
+    enum: ["first_invocation_only", "provider_idempotent", "readback_required", "repeatable", "prohibited", "unknown"],
+  }).notNull().default("unknown"),
+  providerIdempotencyMode: text("provider_idempotency_mode", {
+    enum: ["provider_key", "readback", "inherently_idempotent", "none", "unknown"],
+  }).notNull().default("unknown"),
+  providerIdempotencyKey: text("provider_idempotency_key"),
+  providerIdempotencyScope: text("provider_idempotency_scope"),
+  providerIdempotencyExpiresAt: timestamp("provider_idempotency_expires_at", { withTimezone: true }),
+  verificationMode: text("verification_mode", {
+    enum: ["acknowledgement", "readback", "webhook_or_readback", "none"],
+  }).notNull().default("readback"),
+  historyComplete: boolean("history_complete").notNull().default(false),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  version: integer("version").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  unique("external_operations_owner_key").on(t.tenantId, t.ownerType, t.ownerKey, t.operationKey),
+  unique("external_operations_tenant_id_id_key").on(t.tenantId, t.id),
+]);
 
 // Workflow engine state machines (§14): explicit state + transition history per subject.
 export const workflowStates = pgTable("workflow_states", {
@@ -3354,6 +3605,8 @@ export const commands = pgTable(
     executionClass: text("execution_class"),
     authorizedAt: timestamp("authorized_at", { withTimezone: true }),
     cancellationRequestedAt: timestamp("cancellation_requested_at", { withTimezone: true }),
+    protocolVersion: integer("protocol_version").notNull().default(1),
+    commandHash: text("command_hash"),
     // Created already-approved — approval happens upstream of this runtime.
     status: text("status", { enum: ["approved", "running", "completed", "failed", "cancelled"] })
       .notNull()
@@ -3384,6 +3637,7 @@ export const workflowRuns = pgTable("workflow_runs", {
   // callers condition their UPDATE on the version they last read so two concurrent
   // control calls can't both believe they made the transition.
   version: integer("version").notNull().default(1),
+  protocolVersion: integer("protocol_version").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -3441,12 +3695,51 @@ export const workflowSteps = pgTable(
     claimedAt: timestamp("claimed_at", { withTimezone: true }),
     effectCommitAt: timestamp("effect_commit_at", { withTimezone: true }),
     cancellationRequestedAt: timestamp("cancellation_requested_at", { withTimezone: true }),
+    protocolVersion: integer("protocol_version").notNull().default(1),
+    claimToken: uuid("claim_token"),
+    claimFence: bigint("claim_fence", { mode: "number" }).notNull().default(0),
+    claimOwner: text("claim_owner"),
+    leaseHeartbeatAt: timestamp("lease_heartbeat_at", { withTimezone: true }),
+    causalReadyAt: timestamp("causal_ready_at", { withTimezone: true }),
+    executionEligibleAt: timestamp("execution_eligible_at", { withTimezone: true }),
+    eligibilityEvidence: jsonb("eligibility_evidence"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("workflow_steps_run_sequence_idx").on(t.workflowRunId, t.sequence),
     check("workflow_steps_dispatch_generation_check", sql`${t.dispatchGeneration} >= 0`),
+    index("workflow_steps_claim_fence_idx").on(t.tenantId, t.id, t.dispatchGeneration, t.claimFence).where(sql`${t.status} = 'leased'`),
+  ],
+);
+
+/** One physical workflow-step claim. It is deliberately below the Scope-1 semantic
+ * attempt and is fenced by token + monotonic fence + dispatch generation. */
+export const workflowStepClaims = pgTable(
+  "workflow_step_claims",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    workflowStepId: uuid("workflow_step_id").notNull().references(() => workflowSteps.id),
+    jobDeliveryAttemptId: uuid("job_delivery_attempt_id").references(() => jobDeliveryAttempts.id),
+    claimToken: uuid("claim_token").notNull().unique(),
+    claimFence: bigint("claim_fence", { mode: "number" }).notNull(),
+    dispatchGeneration: integer("dispatch_generation").notNull(),
+    protocolVersion: integer("protocol_version").notNull(),
+    workerId: text("worker_id").notNull(),
+    outcome: text("outcome", {
+      enum: ["claimed", "attempted", "completed", "known_failed", "lease_lost", "superseded", "awaiting_observation", "reconciliation_required"],
+    }).notNull().default("claimed"),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }).notNull().defaultNow(),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
+    heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (t) => [
+    unique("workflow_step_claims_step_fence_key").on(t.workflowStepId, t.claimFence),
+    unique("workflow_step_claims_tenant_id_key").on(t.tenantId, t.id),
+    index("workflow_step_claims_step_history_idx").on(t.tenantId, t.workflowStepId, t.claimFence),
+    index("workflow_step_claims_open_idx").on(t.tenantId, t.heartbeatAt, t.id).where(sql`${t.finishedAt} IS NULL`),
   ],
 );
 
@@ -3477,6 +3770,78 @@ export const integrationOperations = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique("integration_operations_step_key_idx").on(t.workflowStepId, t.operationKey)],
+);
+
+/** A legally-authorized try of one logical externalOperations member. This runtime
+ * retry-safety record is not a second owner for Scope-1 semantic attempts. */
+export const providerOperationAttempts = pgTable(
+  "provider_operation_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    externalOperationId: uuid("external_operation_id").notNull().references(() => externalOperations.id),
+    workflowStepClaimId: uuid("workflow_step_claim_id").references(() => workflowStepClaims.id),
+    ordinal: integer("ordinal").notNull(),
+    protocolVersion: integer("protocol_version").notNull(),
+    authorizationBasis: text("authorization_basis", {
+      enum: ["initial", "provider_idempotency", "verified_absent", "definite_pre_dispatch_failure", "definite_rejection", "inherently_repeatable", "operator_resolution"],
+    }).notNull(),
+    status: text("status", {
+      enum: [
+        "claimed", "provider_in_flight", "provider_acknowledged", "awaiting_observation",
+        "verified", "divergent", "known_failed", "unknown_outcome",
+        "reconciliation_required", "reconciled", "compensated",
+      ],
+    }).notNull().default("claimed"),
+    claimToken: uuid("claim_token").notNull().unique(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    outcomeDetail: jsonb("outcome_detail"),
+  },
+  (t) => [
+    unique("provider_operation_attempts_operation_ordinal_key").on(t.externalOperationId, t.ordinal),
+    unique("provider_operation_attempts_tenant_id_key").on(t.tenantId, t.id),
+    index("provider_operation_attempts_operation_history_idx").on(t.tenantId, t.externalOperationId, t.ordinal),
+  ],
+);
+
+/** One physical request boundary. A wrappedCall retry is another row, as is any
+ * separately instrumented SDK/HTTP retry beneath it. */
+export const providerInvocations = pgTable(
+  "provider_invocations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    providerOperationAttemptId: uuid("provider_operation_attempt_id").notNull().references(() => providerOperationAttempts.id),
+    ordinal: integer("ordinal").notNull(),
+    provider: text("provider").notNull(),
+    integrationId: uuid("integration_id"),
+    transportLayer: text("transport_layer", {
+      enum: ["wrapped_call", "sdk", "http_client", "provider_adapter", "fake_provider"],
+    }).notNull(),
+    requestHash: text("request_hash").notNull(),
+    providerIdempotencyKey: text("provider_idempotency_key"),
+    providerIdempotencyScope: text("provider_idempotency_scope"),
+    providerIdempotencyExpiresAt: timestamp("provider_idempotency_expires_at", { withTimezone: true }),
+    outcome: text("outcome", {
+      enum: ["prepared", "request_may_have_left", "provider_acknowledged", "definite_rejection", "definite_pre_dispatch_failure", "unknown_outcome"],
+    }).notNull().default("prepared"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    requestMayHaveLeftAt: timestamp("request_may_have_left_at", { withTimezone: true }),
+    providerAcknowledgedAt: timestamp("provider_acknowledged_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    providerRequestId: text("provider_request_id"),
+    failureKind: text("failure_kind"),
+    receipt: jsonb("receipt"),
+  },
+  (t) => [
+    unique("provider_invocations_attempt_ordinal_key").on(t.providerOperationAttemptId, t.ordinal),
+    unique("provider_invocations_tenant_id_key").on(t.tenantId, t.id),
+    index("provider_invocations_attempt_history_idx").on(t.tenantId, t.providerOperationAttemptId, t.ordinal),
+    index("provider_invocations_possible_effect_idx").on(t.tenantId, t.startedAt, t.id).where(
+      sql`${t.requestMayHaveLeftAt} IS NOT NULL AND ${t.outcome} IN ('request_may_have_left','unknown_outcome')`,
+    ),
+  ],
 );
 
 // Side effects queued in the same transaction as the state change that produced them.
@@ -3535,10 +3900,19 @@ export const reconciliationCases = pgTable("reconciliation_cases", {
   businessEffectId: uuid("business_effect_id"),
   integrationId: uuid("integration_id"),
   sourceLinkId: uuid("source_link_id"),
+  relatedExternalOperationId: uuid("related_external_operation_id").references(() => externalOperations.id),
   classification: text("classification"),
   authoritativeSide: text("authoritative_side", { enum: ["finnor", "external", "manual"] }),
   details: jsonb("details").notNull().default({}),
   resolution: jsonb("resolution"),
+  version: integer("version").notNull().default(1),
+  resolutionOutcome: text("resolution_outcome", {
+    enum: ["happened_as_intended", "definitely_did_not_happen", "happened_differently", "still_unknowable", "legally_compensatable"],
+  }),
+  resolutionEvidence: jsonb("resolution_evidence"),
+  resolvedBy: text("resolved_by"),
+  resolutionProvider: text("resolution_provider"),
+  resolutionIntegrationId: uuid("resolution_integration_id"),
   status: text("status", { enum: ["open", "resolved"] }).notNull().default("open"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
@@ -3554,8 +3928,50 @@ export const compensationCases = pgTable("compensation_cases", {
   reason: text("reason").notNull(),
   status: text("status", { enum: ["pending", "succeeded", "failed"] }).notNull().default("pending"),
   details: jsonb("details").notNull().default({}),
+  version: integer("version").notNull().default(1),
+  initiatedBy: text("initiated_by"),
+  authorityDecisionId: uuid("authority_decision_id").references(() => authorityDecisions.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+});
+
+/** Append-only authorization and outcome evidence for consequential runtime operator
+ * controls. Scope-1 workRecoveryDecisions remains the owner of REPLAN/ESCALATE/CANCEL. */
+export const runtimeOperatorControls = pgTable(
+  "runtime_operator_controls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    controlKey: text("control_key").notNull(),
+    controlType: text("control_type", {
+      enum: ["step_redrive", "dlq_replay", "dlq_discard", "reconciliation_resolution", "compensation_initiation"],
+    }).notNull(),
+    actorId: text("actor_id").notNull(),
+    authorityDecisionId: uuid("authority_decision_id").references(() => authorityDecisions.id),
+    targetType: text("target_type", {
+      enum: ["workflow_step", "dead_letter", "reconciliation_case", "compensation_case"],
+    }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    expectedVersion: integer("expected_version").notNull(),
+    observedFence: bigint("observed_fence", { mode: "number" }),
+    requestHash: text("request_hash").notNull(),
+    reason: text("reason").notNull(),
+    evidence: jsonb("evidence").notNull(),
+    outcome: text("outcome", { enum: ["applied", "conflict", "rejected", "blocked"] }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("runtime_operator_controls_tenant_control_key").on(t.tenantId, t.controlKey),
+    unique("runtime_operator_controls_tenant_id_key").on(t.tenantId, t.id),
+    index("runtime_operator_controls_target_idx").on(t.tenantId, t.targetType, t.targetId, t.createdAt, t.id),
+  ],
+);
+
+export const runtimeSubstrateRetirements = pgTable("runtime_substrate_retirements", {
+  substrate: text("substrate").primaryKey(),
+  retiredAt: timestamp("retired_at", { withTimezone: true }).notNull().defaultNow(),
+  retiredBy: text("retired_by").notNull(),
+  evidence: jsonb("evidence").notNull(),
 });
 
 // Phase 2 (JARVIS 95% MAESTRO PACK §2.2): one receipt per executed action — created at
@@ -3705,6 +4121,7 @@ export const deadLetters = pgTable(
     // DLQ row cold. Recomputed on every triage tick, so no history is lost by overwriting.
     suggestedDisposition: text("suggested_disposition", { enum: ["replay", "discard", "escalate"] }),
     suggestionReason: text("suggestion_reason"),
+    version: integer("version").notNull().default(1),
   },
   (t) => [index("dead_letters_tenant_status_idx").on(t.tenantId, t.status)],
 );
@@ -4249,7 +4666,11 @@ export const instructionEvents = pgTable(
     payload: jsonb("payload").notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("instruction_events_instruction_seq_idx").on(t.instructionId, t.seq), index("instruction_events_tenant_idx").on(t.tenantId)],
+  (t) => [
+    unique("instruction_events_instruction_seq_idx").on(t.instructionId, t.seq),
+    index("instruction_events_tenant_idx").on(t.tenantId),
+    index("instruction_events_tenant_instruction_seq_idx").on(t.tenantId, t.instructionId, t.seq),
+  ],
 );
 
 // Phase 2 Universal Action + Delegation Fabric. Delivery state is deliberately
@@ -4636,6 +5057,9 @@ export const workEventWaits = pgTable(
     workId: uuid("work_id").notNull().references(() => works.id),
     objectiveLoopId: uuid("objective_loop_id").notNull().references(() => workObjectiveLoops.id),
     objectiveStepId: uuid("objective_step_id").notNull().references(() => workObjectiveSteps.id),
+    planRevisionId: uuid("plan_revision_id").references(() => workPlanRevisions.id),
+    planNodeId: text("plan_node_id"),
+    objectiveRevision: integer("objective_revision"),
     status: text("status", { enum: ["waiting", "satisfied", "timed_out", "cancelled"] }).notNull().default("waiting"),
     expectedEventType: text("expected_event_type").notNull(),
     subjectType: text("subject_type"),
@@ -4671,6 +5095,7 @@ export const workEventWaits = pgTable(
     index("work_event_waits_tenant_match_idx").on(t.tenantId, t.status, t.expectedEventType, t.earliestAt),
     index("work_event_waits_tenant_deadline_idx").on(t.tenantId, t.status, t.deadlineAt).where(sql`${t.deadlineAt} IS NOT NULL`),
     index("work_event_waits_tenant_work_idx").on(t.tenantId, t.workId, t.createdAt),
+    index("work_event_waits_plan_node_idx").on(t.tenantId, t.planRevisionId, t.planNodeId, t.status),
   ],
 );
 

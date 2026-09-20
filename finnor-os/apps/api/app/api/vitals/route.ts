@@ -7,6 +7,7 @@
 import { getPool, withTenant, authProfiles, deadLetters, tenantIntegrations } from "@finnor/db";
 import { and, eq, sql } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../lib/auth";
+import { readComputePressureSignals } from "../../../lib/backpressure";
 
 // A worker beats every 30s (apps/worker/src/heartbeat.ts) — 3x that cadence is enough
 // slack for a slow tick without calling a merely-jittery worker unhealthy.
@@ -18,7 +19,6 @@ const HEARTBEAT_STALE_AFTER_SECONDS = 90;
 const SCAN_JOB_TYPES = [
   "recover_objectives",
   "recover_computer_tasks",
-  "relay_outbox_events",
   "scan_approval_expiry",
   "scan_reliability_alerts",
   "scan_integration_health",
@@ -35,7 +35,7 @@ export async function GET(req: Request): Promise<Response> {
   try {
     const ctx = await requireContext(req);
 
-    const [queueRow, heartbeatRow, dlqRows, scanRows, historicalIntegrationRows, connectionRows] = await Promise.all([
+    const [queueRow, heartbeatRow, dlqRows, scanRows, historicalIntegrationRows, connectionRows, computeRows] = await Promise.all([
       getPool().query<{ depth: string; oldest_pending_age_seconds: number | null }>(
         `SELECT count(*)::int AS depth, extract(epoch FROM (now() - min(run_at)))::int AS oldest_pending_age_seconds
          FROM jobs WHERE status = 'queued' AND run_at <= now()`,
@@ -47,7 +47,7 @@ export async function GET(req: Request): Promise<Response> {
                 (array_agg(release_sha ORDER BY last_beat_at DESC))[1] AS release_sha,
                 (array_agg(migration_head ORDER BY last_beat_at DESC))[1] AS migration_head
            FROM service_release_heartbeats
-          WHERE service='worker'`,
+          WHERE service IN ('worker','compute-realtime','compute-interactive','compute-background','compute-heavy')`,
       ),
       withTenant(ctx.tenantId, (db) =>
         db
@@ -79,6 +79,8 @@ export async function GET(req: Request): Promise<Response> {
         lastVerifiedAt: authProfiles.lastVerifiedAt,
         errorCode: authProfiles.lastConnectionErrorCode,
       }).from(authProfiles).where(eq(authProfiles.tenantId, ctx.tenantId))),
+      Promise.all((["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"] as const)
+        .map((workloadClass) => readComputePressureSignals(ctx.tenantId, workloadClass))),
     ]);
 
     const heartbeatAgeSeconds = heartbeatRow.rows[0]?.age_seconds ?? null;
@@ -86,6 +88,7 @@ export async function GET(req: Request): Promise<Response> {
     const integrationHealthRows = historicalIntegrationRows.filter((row) =>
       row.capability === "communications" && ["vapi", "resend", "native"].includes(row.binding),
     );
+    const computeClasses = Object.fromEntries(computeRows.map((row) => [row.workloadClass, row]));
 
     return Response.json(
       {
@@ -100,6 +103,11 @@ export async function GET(req: Request): Promise<Response> {
           instances: heartbeatRow.rows[0]?.instances ?? 0,
           releaseSha: heartbeatRow.rows[0]?.release_sha ?? null,
           migrationHead: heartbeatRow.rows[0]?.migration_head ?? null,
+        },
+        compute: {
+          cutoverState: computeRows.find((row) => row.cutoverState !== "unknown")?.cutoverState ?? "unknown",
+          telemetryDegraded: computeRows.some((row) => row.telemetryStatus !== "healthy"),
+          classes: computeClasses,
         },
         dlq: { openCount: dlqRows[0]?.count ?? 0 },
         capabilities: {

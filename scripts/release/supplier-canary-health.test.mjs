@@ -37,7 +37,7 @@ function withEnvironment(values, run) {
   }
 }
 
-test("supplier canary health exposes exact current release provenance", () => {
+test("supplier canary health exposes exact Phase 8 release provenance", () => {
   withEnvironment({
     PORTAL_ROLE: "app",
     CANARY_SIGNING_KEY: "test-key",
@@ -63,7 +63,7 @@ test("supplier canary health exposes exact current release provenance", () => {
       environment: "production",
       source: "github-actions",
       deploymentId: "dpl_exact",
-      migrationHead: "0131_private_equity_release_baseline.sql",
+      migrationHead: "0135_source_compatibility_runtime_parity.sql",
       cutoverProtocol: 5,
       traceable: true,
     })

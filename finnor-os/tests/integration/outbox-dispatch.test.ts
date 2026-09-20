@@ -1,142 +1,121 @@
-// Phase 2 (§2.3) outbox dispatch acceptance: exactly-once claiming under concurrency,
-// terminal/exhausted-retryable failures land in dead_letters, and an unrecognized
-// envelope version is rejected without ever being handed to the deliverer.
+// Scope 2 retirement acceptance. The historical outbox relay was a dormant,
+// non-delivering substrate. Migration 0137 retires it only after a transactional
+// zero-obligation inspection and permanently rejects new work rather than
+// fabricating delivered state.
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
+import { sql } from "drizzle-orm";
+import {
+  closePool,
+  jobs,
+  outboxEvents,
+  runtimeSubstrateRetirements,
+  withTenant,
+} from "@finnor/db";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, outboxEvents, deadLetters } from "@finnor/db";
-import { eq, inArray } from "drizzle-orm";
-import { enqueueOutboxEvent, relayOutboxEvents, type OutboxDeliverer } from "@finnor/workflow-runtime";
+import { seed, SEED_TENANT_ID } from "../../packages/db/seed";
+import { enqueueOutboxEvent } from "@finnor/workflow-runtime";
 
-const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const TENANT_ID = "00000000-0000-4000-8000-0000000000e8";
+const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 
 async function dbUp(): Promise<boolean> {
-  const c = new pg.Client({ connectionString: SUPER_URL, connectionTimeoutMillis: 2000 });
+  const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2_000 });
   try {
-    await c.connect();
-    await c.end();
+    await client.connect();
     return true;
   } catch {
     return false;
+  } finally {
+    await client.end().catch(() => undefined);
   }
 }
+
 const available = await dbUp();
 
-async function makeEvent(eventType: string, envelopeVersion = 1): Promise<string> {
-  const { outboxEventId } = await withTenant(TENANT_ID, (db) =>
-    enqueueOutboxEvent(db, { tenantId: TENANT_ID, eventType, payload: { probe: eventType } }),
-  );
-  if (envelopeVersion !== 1) {
-    await withTenant(TENANT_ID, (db) => db.update(outboxEvents).set({ envelopeVersion }).where(eq(outboxEvents.id, outboxEventId)));
+function errorChain(error: unknown): string {
+  const messages: string[] = [];
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current);
+    messages.push(current.message);
+    current = current.cause;
   }
-  return outboxEventId;
+  return messages.join("\ncaused by: ");
 }
 
-describe.skipIf(!available)("outbox dispatch (§2.3)", () => {
+async function expectDatabaseRejection(work: Promise<unknown>, pattern: RegExp): Promise<void> {
+  try {
+    await work;
+  } catch (error) {
+    expect(errorChain(error)).toMatch(pattern);
+    return;
+  }
+  throw new Error(`Expected database operation to reject with ${pattern}`);
+}
+
+describe.skipIf(!available)("retired outbox and untracked provider jobs", () => {
   beforeAll(async () => {
-    process.env.DATABASE_URL = SUPER_URL;
-    await migrate(SUPER_URL);
-    await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "Outbox Test Dealer" }).onConflictDoNothing());
+    process.env.DATABASE_URL = DB_URL;
+    await migrate(DB_URL);
+    await seed(DB_URL);
   });
+
   afterAll(async () => {
-    await withTenant(TENANT_ID, async (db) => {
-      await db.delete(deadLetters).where(eq(deadLetters.tenantId, TENANT_ID));
-      await db.delete(outboxEvents).where(eq(outboxEvents.tenantId, TENANT_ID));
-    });
     await closePool();
   });
 
-  it("delivers a pending event and marks it delivered", async () => {
-    const id = await makeEvent("probe.delivered");
-    const seen: string[] = [];
-    const deliverer: OutboxDeliverer = { async deliver(eventType) { seen.push(eventType); } };
-    const result = await relayOutboxEvents(TENANT_ID, deliverer);
-    expect(result.delivered).toBeGreaterThanOrEqual(1);
-    expect(seen).toContain("probe.delivered");
-    const [row] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, id)));
-    expect(row!.status).toBe("delivered");
+  it("preserves the transactional zero-obligation evidence recorded at retirement", async () => {
+    const rows = await withTenant(SEED_TENANT_ID, (db) => db.select().from(runtimeSubstrateRetirements));
+    const outbox = rows.find((row) => row.substrate === "outbox");
+    const providerJobs = rows.find((row) => row.substrate === "untracked_provider_jobs");
+
+    expect(outbox?.retiredBy).toBe("migration:0137_scope2_durable_runtime");
+    expect(outbox?.evidence).toMatchObject({
+      unresolvedEvents: 0,
+      openDeadLetters: 0,
+      openReconciliationCases: 0,
+      inspection: "transactional deployment guard",
+    });
+    expect(providerJobs?.evidence).toMatchObject({
+      unresolvedJobs: 0,
+      openDeliveryAttempts: 0,
+      inspection: "transactional deployment guard",
+    });
   });
 
-  it("N concurrent relayers deliver each pending event exactly once (SKIP LOCKED proof)", async () => {
-    const ids = await Promise.all(Array.from({ length: 8 }, (_, i) => makeEvent(`probe.concurrent.${i}`)));
-    const deliveryCountByKey = new Map<string, number>();
-    const deliverer: OutboxDeliverer = {
-      async deliver(_eventType, _payload, opts) {
-        deliveryCountByKey.set(opts.idempotencyKey, (deliveryCountByKey.get(opts.idempotencyKey) ?? 0) + 1);
-        // Simulate real delivery latency so concurrent claims actually overlap in time.
-        await new Promise((r) => setTimeout(r, 20));
-      },
-    };
-    // 5 concurrent "workers" all racing to relay the same tenant's pending events.
-    await Promise.all(Array.from({ length: 5 }, () => relayOutboxEvents(TENANT_ID, deliverer)));
+  it("rejects both direct and helper-mediated creation of new outbox obligations", async () => {
+    await expectDatabaseRejection(withTenant(SEED_TENANT_ID, (db) => db.insert(outboxEvents).values({
+      tenantId: SEED_TENANT_ID,
+      eventType: "must.not.exist",
+      payload: { probe: true },
+    })), /outbox substrate is retired/i);
 
-    for (const id of ids) {
-      expect(deliveryCountByKey.get(id)).toBe(1);
-    }
-    const rows = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(inArray(outboxEvents.id, ids)));
-    expect(rows.every((r) => r.status === "delivered")).toBe(true);
+    await expectDatabaseRejection(withTenant(SEED_TENANT_ID, (db) => enqueueOutboxEvent(db, {
+      tenantId: SEED_TENANT_ID,
+      eventType: "must.not.exist.via.helper",
+      payload: { probe: true },
+    })), /outbox substrate is retired/i);
+
+    const count = await withTenant(SEED_TENANT_ID, (db) => db.execute<{ count: number }>(
+      sql`SELECT count(*)::int AS count FROM ${outboxEvents}`,
+    ));
+    expect(count.rows[0]?.count).toBe(0);
   });
 
-  it("a terminal error dead-letters immediately, without waiting for 3 attempts", async () => {
-    const id = await makeEvent("probe.terminal");
-    const deliverer: OutboxDeliverer = {
-      async deliver() {
-        const err = new Error("invalid payload shape") as Error & { kind: string };
-        err.kind = "validation";
-        throw err;
-      },
-    };
-    await relayOutboxEvents(TENANT_ID, deliverer);
-    const [row] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, id)));
-    expect(row!.status).toBe("failed");
-    const [dl] = await withTenant(TENANT_ID, (db) => db.select().from(deadLetters).where(eq(deadLetters.relatedOutboxEventId, id)));
-    expect(dl!.errorKind).toBe("validation");
-    expect(dl!.replayable).toBe(false);
-    expect(dl!.status).toBe("open");
-  });
-
-  it("a retryable error backs off and only dead-letters after exhausting attempts", async () => {
-    const id = await makeEvent("probe.retryable");
-    const deliverer: OutboxDeliverer = {
-      async deliver() {
-        throw new Error("provider timeout");
-      },
-    };
-    // 1st attempt: retried (attempts=1 < MAX 3).
-    await relayOutboxEvents(TENANT_ID, deliverer);
-    let [row] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, id)));
-    expect(row!.status).toBe("pending");
-    expect(row!.nextAttemptAt).not.toBeNull();
-
-    // Force the backoff window open so the next relay pass can reclaim it immediately.
-    await withTenant(TENANT_ID, (db) => db.update(outboxEvents).set({ nextAttemptAt: null }).where(eq(outboxEvents.id, id)));
-    await relayOutboxEvents(TENANT_ID, deliverer); // attempts=2
-    await withTenant(TENANT_ID, (db) => db.update(outboxEvents).set({ nextAttemptAt: null }).where(eq(outboxEvents.id, id)));
-    await relayOutboxEvents(TENANT_ID, deliverer); // attempts=3 -> exhausted -> dead-lettered
-
-    [row] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, id)));
-    expect(row!.status).toBe("failed");
-    const [dl] = await withTenant(TENANT_ID, (db) => db.select().from(deadLetters).where(eq(deadLetters.relatedOutboxEventId, id)));
-    expect(dl!.errorKind).toBe("retryable");
-    expect(dl!.replayable).toBe(true);
-  });
-
-  it("an unrecognized envelope version is rejected into dead_letters without ever reaching the deliverer", async () => {
-    const id = await makeEvent("probe.future-version", 999);
-    let called = false;
-    const deliverer: OutboxDeliverer = {
-      async deliver() {
-        called = true;
-      },
-    };
-    await relayOutboxEvents(TENANT_ID, deliverer);
-    expect(called).toBe(false);
-    const [row] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, id)));
-    expect(row!.status).toBe("failed");
-    const [dl] = await withTenant(TENANT_ID, (db) => db.select().from(deadLetters).where(eq(deadLetters.relatedOutboxEventId, id)));
-    expect(dl!.errorKind).toBe("terminal");
-    expect(dl!.lastError).toMatch(/not recognized/);
+  it.each([
+    "voice_confirm_request",
+    "voice_notify_failure",
+    "send_push_notification",
+    "send_resend_email",
+    "backup_db",
+  ])("rejects retired provider job type %s before it becomes durable work", async (type) => {
+    await expectDatabaseRejection(withTenant(SEED_TENANT_ID, (db) => db.insert(jobs).values({
+      tenantId: SEED_TENANT_ID,
+      type,
+      payload: { tenantId: SEED_TENANT_ID },
+      idempotencyKey: `retired:${type}:${crypto.randomUUID()}`,
+    })), /provider job .* is retired/i);
   });
 });

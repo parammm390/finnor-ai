@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => {
     correlationId: "test-correlation",
   }));
   const enforceRouteRateLimit = vi.fn(async () => undefined);
-  const enforceBatchBackpressure = vi.fn(async () => undefined);
+  const enforceBatchBackpressure = vi.fn(async () => ({ action: "admit", saturated: false, reasons: [] }));
   const receiveWork = vi.fn(async () => ({
     workId: "00000000-0000-4000-8000-0000000000a3",
     workInputId: "00000000-0000-4000-8000-0000000000a4",
@@ -131,11 +131,17 @@ describe("POST /api/actions deterministic-vs-planner controls", () => {
     expect((await response.json()).query).toMatchObject({ result: { intent: "company_context" } });
   });
 
-  it("keeps mutation/advice instructions on the ordinary planner path with both planner gates", async () => {
+  it("keeps mutation/advice instructions on the planner path and observes pressure without rejecting accepted Work", async () => {
     const response = await actionsPOST(request("Record a diligence finding for the Apex deal"));
     expect(response.status).toBe(201);
     expect(mocks.enforceRouteRateLimit).toHaveBeenCalledTimes(1);
     expect(mocks.enforceBatchBackpressure).toHaveBeenCalledTimes(1);
+    expect(mocks.enforceBatchBackpressure).toHaveBeenCalledWith({
+      tenantId: "00000000-0000-4000-8000-0000000000a1",
+      workloadClass: "INTERACTIVE",
+      phase: "after_acceptance",
+      obligationKind: "required",
+    });
     expect(mocks.handleInstructionResult).toHaveBeenCalledWith(
       "Record a diligence finding for the Apex deal",
       expect.anything(),

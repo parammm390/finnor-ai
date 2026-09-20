@@ -1,6 +1,7 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   enqueueJob,
+  externalOperations,
   resolveTenantVertical,
   withTenant,
   withTenantTransaction,
@@ -24,8 +25,19 @@ import {
   resolveMicrosoftProviderAuthContext,
 } from "@finnor/security";
 import type { Microsoft365SourceKind, SourceRecoveryStrength } from "@finnor/shared-types";
-import { logWithTrace } from "@finnor/tools";
-import { sql } from "drizzle-orm";
+import {
+  awaitOwnedExternalOperationResolution,
+  claimOwnedExternalOperation,
+  logWithTrace,
+  markProviderRequestMayHaveLeft,
+  prepareProviderInvocation,
+  reconcileOwnedExternalOperation,
+  recordOwnedExternalOperationResult,
+  recordProviderInvocationAcknowledged,
+  recordProviderInvocationFailure,
+  type ExternalOperationRow,
+} from "@finnor/tools";
+import { and, eq, sql } from "drizzle-orm";
 import { RetryableJobError, type JobHandler } from "../queue";
 
 const MICROSOFT_PROVIDER = "microsoft_graph" as const;
@@ -76,6 +88,7 @@ interface SubscriptionRow {
   lease_owner: string | null;
   lease_expires_at: Date | null;
   created_at: Date;
+  metadata: Record<string, unknown>;
 }
 
 interface ActionBase {
@@ -90,13 +103,18 @@ interface ActionBase {
 }
 
 type MaintenanceAction =
-  | (ActionBase & { kind: "create"; clientState: string; requestedAt: Date })
-  | (ActionBase & { kind: "reconcile_create"; clientStateHash: string })
-  | (ActionBase & { kind: "renew"; providerSubscriptionId: string; requestedAt: Date })
-  | (ActionBase & { kind: "delete"; providerSubscriptionId: string | null; clientStateHash?: string; providerAlreadyExpired: boolean });
+  | (ActionBase & { kind: "create"; operationKey: string; generation: number; clientState: string; clientStateHash: string; requestedAt: Date })
+  | (ActionBase & { kind: "reconcile_create"; operationKey: string; generation: number; clientStateHash: string })
+  | (ActionBase & { kind: "renew"; operationKey: string; providerSubscriptionId: string; previousExpirationAt: Date | null; requestedAt: Date })
+  | (ActionBase & { kind: "delete"; operationKey: string; providerSubscriptionId: string | null; clientStateHash?: string; providerAlreadyExpired: boolean });
 
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function provisioningGeneration(metadata: Record<string, unknown>): number {
+  const value = metadata.provisioningGeneration;
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0 && value <= 999_999 ? value : 1;
 }
 
 function sameSet(left: readonly string[], right: readonly string[]): boolean {
@@ -255,7 +273,7 @@ async function prepareAction(
     }
     const currentResult = await client.query<SubscriptionRow>(
       `SELECT id,provider_subscription_id,status,expiration_at,renew_at,created_at_provider,
-              client_state_hash,recovery_state,lease_owner,lease_expires_at,created_at
+              client_state_hash,recovery_state,lease_owner,lease_expires_at,created_at,metadata
          FROM finnor_os.integration_subscriptions
         WHERE tenant_id=$1::uuid AND source_scope_id=$2::uuid
           AND status=ANY($3::text[])
@@ -302,6 +320,7 @@ async function prepareAction(
         ...base,
         rowId: current.id,
         kind: "delete",
+        operationKey: `subscription-delete:${current.id}:${current.provider_subscription_id ?? current.client_state_hash}`,
         providerSubscriptionId: current.provider_subscription_id,
         ...(!current.provider_subscription_id ? { clientStateHash: current.client_state_hash } : {}),
         providerAlreadyExpired: !current.expiration_at || current.expiration_at <= now,
@@ -341,15 +360,38 @@ async function prepareAction(
             WHERE tenant_id=$1::uuid AND id=$2::uuid`,
           [tenantId, current.id, owner, new Date(now.getTime() + LEASE_MS)],
         );
-        return { ...base, rowId: current.id, kind: "delete", providerSubscriptionId: current.provider_subscription_id, providerAlreadyExpired: false };
+        return {
+          ...base,
+          rowId: current.id,
+          kind: "delete",
+          operationKey: `subscription-delete:${current.id}:${current.provider_subscription_id}`,
+          providerSubscriptionId: current.provider_subscription_id,
+          providerAlreadyExpired: false,
+        };
       }
+      const pendingRenewal = object(current.metadata).pendingRenewal;
+      const persistedRequestedAt = pendingRenewal && typeof pendingRenewal === "object" && !Array.isArray(pendingRenewal)
+        && typeof (pendingRenewal as Record<string, unknown>).requestedAt === "string"
+        ? new Date(String((pendingRenewal as Record<string, unknown>).requestedAt))
+        : now;
+      const requestedAt = Number.isNaN(persistedRequestedAt.getTime()) ? now : persistedRequestedAt;
+      const operationKey = `subscription-renew:${current.id}:${requestedAt.toISOString()}`;
       await client.query(
         `UPDATE finnor_os.integration_subscriptions
-            SET status='renewing',lease_owner=$3,lease_expires_at=$4,failure_code=NULL,updated_at=clock_timestamp()
+            SET status='renewing',lease_owner=$3,lease_expires_at=$4,failure_code=NULL,
+                metadata=jsonb_set(metadata,'{pendingRenewal}',$5::jsonb,true),updated_at=clock_timestamp()
           WHERE tenant_id=$1::uuid AND id=$2::uuid`,
-        [tenantId, current.id, owner, new Date(now.getTime() + LEASE_MS)],
+        [tenantId, current.id, owner, new Date(now.getTime() + LEASE_MS), JSON.stringify({ requestedAt: requestedAt.toISOString(), operationKey })],
       );
-      return { ...base, rowId: current.id, kind: "renew", providerSubscriptionId: current.provider_subscription_id, requestedAt: now };
+      return {
+        ...base,
+        rowId: current.id,
+        kind: "renew",
+        operationKey,
+        providerSubscriptionId: current.provider_subscription_id,
+        previousExpirationAt: current.expiration_at,
+        requestedAt,
+      };
     }
 
     if (current) {
@@ -359,7 +401,15 @@ async function prepareAction(
           WHERE tenant_id=$1::uuid AND id=$2::uuid`,
         [tenantId, current.id, owner, new Date(now.getTime() + LEASE_MS)],
       );
-      return { ...base, rowId: current.id, kind: "reconcile_create", clientStateHash: current.client_state_hash };
+      const generation = provisioningGeneration(object(current.metadata));
+      return {
+        ...base,
+        rowId: current.id,
+        kind: "reconcile_create",
+        operationKey: `subscription-create:${current.id}:${generation}`,
+        generation,
+        clientStateHash: current.client_state_hash,
+      };
     }
 
     const generated = generateSubscriptionClientState();
@@ -382,30 +432,46 @@ async function prepareAction(
         JSON.stringify({ provisioningGeneration: 1 }),
       ],
     );
-    return { ...base, needsRecovery, rowId: created.rows[0]!.id, kind: "create", clientState: generated.plaintext, requestedAt: now };
+    return {
+      ...base,
+      needsRecovery,
+      rowId: created.rows[0]!.id,
+      kind: "create",
+      operationKey: `subscription-create:${created.rows[0]!.id}:1`,
+      generation: 1,
+      clientState: generated.plaintext,
+      clientStateHash: generated.hash,
+      requestedAt: now,
+    };
   });
 }
 
 async function resetProvisioning(action: Extract<MaintenanceAction, { kind: "reconcile_create" }>): Promise<Extract<MaintenanceAction, { kind: "create" }>> {
   const generated = generateSubscriptionClientState();
   const requestedAt = new Date();
+  const generation = action.generation + 1;
   await withTenantTransaction(action.tenantId, {}, async (_db, client) => {
     const updated = await client.query(
       `UPDATE finnor_os.integration_subscriptions
           SET status='provisioning',client_state_hash=$4,provider_subscription_id=NULL,
               expiration_at=NULL,renew_at=NULL,created_at_provider=NULL,last_renewed_at=NULL,
               lease_expires_at=$5,failure_code=NULL,
-              metadata=jsonb_set(metadata,'{provisioningGeneration}',to_jsonb(
-                CASE WHEN coalesce(metadata->>'provisioningGeneration','') ~ '^[0-9]{1,6}$'
-                  THEN LEAST((metadata->>'provisioningGeneration')::int+1,999999) ELSE 2 END
-              ),true),
+              metadata=jsonb_set(metadata,'{provisioningGeneration}',to_jsonb($6::int),true),
               updated_at=clock_timestamp()
         WHERE tenant_id=$1::uuid AND id=$2::uuid AND lease_owner=$3 AND provider_subscription_id IS NULL`,
-      [action.tenantId, action.rowId, action.owner, generated.hash, new Date(requestedAt.getTime() + LEASE_MS)],
+      [action.tenantId, action.rowId, action.owner, generated.hash, new Date(requestedAt.getTime() + LEASE_MS), generation],
     );
     if (updated.rowCount !== 1) throw new Error("Microsoft provisioning lease was lost before retry");
   });
-  return { ...action, kind: "create", clientState: generated.plaintext, requestedAt };
+  return {
+    ...action,
+    kind: "create",
+    operationKey: `subscription-create:${action.rowId}:${generation}`,
+    generation,
+    clientState: generated.plaintext,
+    clientStateHash: generated.hash,
+    requestedAt,
+  };
 }
 
 async function persistCreated(
@@ -453,10 +519,10 @@ async function persistCreated(
       ...(action.needsRecovery ? { forceRecovery: true } : {}),
     };
     await client.query(
-      `INSERT INTO finnor_os.jobs(type,payload,idempotency_key,lane,priority)
-       VALUES ('sync_source',$1::jsonb,$2,'batch',50)
+      `INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority)
+       VALUES ($3::uuid,'sync_source',$1::jsonb,$2,'batch',50)
        ON CONFLICT (idempotency_key) DO NOTHING`,
-      [JSON.stringify(payload), `source-sync:${action.tenantId}:${action.sourceScopeId}:subscription:${subscription.id}`],
+      [JSON.stringify(payload), `source-sync:${action.tenantId}:${action.sourceScopeId}:subscription:${subscription.id}`, action.tenantId],
     );
   });
 }
@@ -471,7 +537,8 @@ async function persistRenewed(
     const updated = await client.query(
       `UPDATE finnor_os.integration_subscriptions
           SET status='active',expiration_at=$5,renew_at=$6,last_renewed_at=$7,
-              failure_code=NULL,lease_owner=NULL,lease_expires_at=NULL,updated_at=clock_timestamp()
+              failure_code=NULL,lease_owner=NULL,lease_expires_at=NULL,
+              metadata=metadata-'pendingRenewal',updated_at=clock_timestamp()
         WHERE tenant_id=$1::uuid AND id=$2::uuid AND lease_owner=$3 AND provider_subscription_id=$4`,
       [action.tenantId, action.rowId, action.owner, action.providerSubscriptionId, expiration, renewAt, action.requestedAt],
     );
@@ -593,6 +660,148 @@ async function markProviderSubscriptionRemoved(
   });
 }
 
+function hashMutationRequest(request: Record<string, unknown>): string {
+  return createHash("sha256").update(JSON.stringify(request)).digest("hex");
+}
+
+function subscriptionEvidence(subscription: MicrosoftGraphSubscription): Record<string, unknown> {
+  return {
+    providerSubscriptionId: subscription.id,
+    resource: subscription.resource,
+    changeType: subscription.changeType,
+    expirationDateTime: subscription.expirationDateTime,
+    observedAt: new Date().toISOString(),
+  };
+}
+
+function knownGraphFailure(error: unknown): { kind: string; message: string; definitePreDispatch: boolean; definiteRejection: boolean } {
+  if (!(error instanceof MicrosoftGraphError)) {
+    return {
+      kind: "provider_adapter_failure",
+      message: error instanceof Error ? error.message : "Microsoft Graph mutation failed",
+      definitePreDispatch: false,
+      definiteRejection: false,
+    };
+  }
+  return {
+    kind: error.kind,
+    message: error.message,
+    // Input/configuration rejection happens before fetch. A network/timeout error
+    // with no status is deliberately *not* called pre-dispatch: bytes may have left.
+    definitePreDispatch: error.kind === "blocked_config" && error.status === null,
+    // A received 4xx response proves this particular request was rejected. It does
+    // not claim anything about an earlier invocation of the same logical operation.
+    definiteRejection: error.status !== null && error.status >= 400 && error.status < 500 && error.status !== 408,
+  };
+}
+
+async function loadSubscriptionOperation(action: MaintenanceAction): Promise<ExternalOperationRow | null> {
+  const rows = await withTenant(action.tenantId, (db) => db.select().from(externalOperations).where(and(
+    eq(externalOperations.tenantId, action.tenantId),
+    eq(externalOperations.ownerType, "integration_subscription"),
+    eq(externalOperations.ownerKey, action.rowId),
+    eq(externalOperations.operationKey, action.operationKey),
+  )).limit(1));
+  return rows[0] ?? null;
+}
+
+interface TrackedMutationResult<T> {
+  operation: ExternalOperationRow;
+  output?: T;
+  dispatched: boolean;
+}
+
+async function dispatchTrackedSubscriptionMutation<T>(
+  action: MaintenanceAction,
+  request: Record<string, unknown>,
+  targetKey: string,
+  invoke: () => Promise<T>,
+  receipt: (output: T) => Record<string, unknown>,
+): Promise<TrackedMutationResult<T>> {
+  const requestHash = hashMutationRequest(request);
+  const claim = await claimOwnedExternalOperation(
+    action.tenantId,
+    { type: "integration_subscription", key: action.rowId },
+    action.operationKey,
+    requestHash,
+    MICROSOFT_PROVIDER,
+    undefined,
+    undefined,
+    {
+      protocolVersion: 2,
+      targetKey,
+      integrationId: action.integrationId,
+      retrySafety: "readback_required",
+      verification: "readback",
+      sourceTruthRequired: false,
+      idempotency: {
+        mode: "readback",
+        scope: `tenant-integration:${action.integrationId}:microsoft-graph-subscriptions`,
+      },
+    },
+  );
+  if (!claim.claimed) {
+    if (claim.existing.requestHash !== requestHash) {
+      throw new Error("Microsoft subscription logical operation was reused with a different immutable request");
+    }
+    return {
+      operation: await awaitOwnedExternalOperationResolution(action.tenantId, claim.existing),
+      dispatched: false,
+    };
+  }
+
+  const context = {
+    tenantId: action.tenantId,
+    providerOperationAttemptId: claim.providerOperationAttemptId,
+    provider: MICROSOFT_PROVIDER,
+    ...(claim.operation.integrationId ? { integrationId: claim.operation.integrationId } : {}),
+    requestHash,
+    ...(claim.operation.providerIdempotencyKey ? { providerIdempotencyKey: claim.operation.providerIdempotencyKey } : {}),
+    ...(claim.operation.providerIdempotencyScope ? { providerIdempotencyScope: claim.operation.providerIdempotencyScope } : {}),
+    ...(claim.operation.providerIdempotencyExpiresAt ? { providerIdempotencyExpiresAt: claim.operation.providerIdempotencyExpiresAt } : {}),
+    transportLayer: "http_client" as const,
+  };
+  const invocationId = await prepareProviderInvocation(context, 1);
+  await markProviderRequestMayHaveLeft(action.tenantId, invocationId);
+  let output: T;
+  try {
+    // MicrosoftGraphClient has mutation auth-retry disabled. Therefore this call is
+    // exactly one physical consequential HTTP request, represented by invocationId.
+    output = await invoke();
+  } catch (error) {
+    await recordProviderInvocationFailure(context, invocationId, knownGraphFailure(error));
+    throw error;
+  }
+  const providerReceipt = receipt(output);
+  await recordProviderInvocationAcknowledged(context, invocationId, providerReceipt);
+  const operation = await recordOwnedExternalOperationResult(
+    action.tenantId,
+    claim.operation.id,
+    "succeeded",
+    providerReceipt,
+    claim.providerOperationAttemptId,
+  );
+  if (!operation) throw new Error("Microsoft subscription operation result could not be persisted");
+  return { operation, output, dispatched: true };
+}
+
+async function reconcileSubscriptionOperation(
+  action: MaintenanceAction,
+  operation: ExternalOperationRow | null,
+  status: "succeeded" | "failed",
+  evidence: Record<string, unknown>,
+): Promise<void> {
+  if (!operation) return;
+  if (operation.executionState === "reconciled"
+      && operation.status === status
+      && operation.verificationStatus === "verified") return;
+  await reconcileOwnedExternalOperation(action.tenantId, operation.id, status, evidence);
+}
+
+function unresolvedProviderOperation(message: string): RetryableJobError {
+  return new RetryableJobError(message, 30_000);
+}
+
 async function maintainOne(payload: Record<string, unknown>, tenantId: string, sourceScopeId: string): Promise<void> {
   const owner = `${process.pid}:${randomUUID()}`;
   const reason = typeof payload.reason === "string" ? payload.reason : null;
@@ -615,37 +824,83 @@ async function maintainOne(payload: Record<string, unknown>, tenantId: string, s
       if (!providerSubscriptionId && action.clientStateHash) {
         providerSubscriptionId = (await transport.findCreatedByClientStateHash(action.scope, action.clientStateHash))?.id ?? null;
       }
-      if (providerSubscriptionId && (!action.providerAlreadyExpired || !action.providerSubscriptionId)) {
-        await transport.delete(providerSubscriptionId);
+      if (providerSubscriptionId) {
+        const deletion = await dispatchTrackedSubscriptionMutation<void>(
+          action,
+          { method: "DELETE", providerSubscriptionId },
+          providerSubscriptionId,
+          () => transport.delete(providerSubscriptionId!),
+          () => ({ providerSubscriptionId, providerAcknowledgedDelete: true }),
+        );
+        const observed = await transport.read(providerSubscriptionId, action.scope);
+        if (observed) {
+          throw unresolvedProviderOperation("Microsoft Graph delete remains unverified; the provider object is still observable");
+        }
+        await reconcileSubscriptionOperation(action, deletion.operation, "succeeded", {
+          providerSubscriptionId,
+          readback: "absent",
+          observedAt: new Date().toISOString(),
+        });
       }
       await persistDisabled(action);
       log.info({ event: "m365_subscription_disabled", sourceScopeId }, "Microsoft Graph subscription disabled");
       return;
     }
     if (action.kind === "reconcile_create") {
+      const operation = await loadSubscriptionOperation(action);
       const existing = await transport.findCreatedByClientStateHash(action.scope, action.clientStateHash);
       if (existing && Date.parse(existing.expirationDateTime) > Date.now()) {
+        await reconcileSubscriptionOperation(action, operation, "succeeded", {
+          ...subscriptionEvidence(existing),
+          readback: "matched_client_state_hash",
+        });
         await persistCreated(action, existing, new Date());
         log.info({ event: "m365_subscription_create_reconciled", sourceScopeId }, "Recovered Microsoft Graph create result after local uncertainty");
         return;
       }
+      await reconcileSubscriptionOperation(action, operation, "failed", {
+        clientStateHash: action.clientStateHash,
+        readback: "definitely_absent",
+        observedAt: new Date().toISOString(),
+      });
       action = await resetProvisioning(action);
     }
     if (action.kind === "create") {
-      let created: MicrosoftGraphSubscription | null = null;
-      try {
-        created = await transport.create(action.scope, {
-          changeTypes: microsoft365SubscriptionChangeTypes(action.scope),
-          notificationUrl: process.env.MICROSOFT_GRAPH_WEBHOOK_URL ?? "",
-          lifecycleNotificationUrl: process.env.MICROSOFT_GRAPH_WEBHOOK_URL ?? "",
-          requestedExpirationAt: requestedExpiration(action.scope, action.requestedAt),
-          clientState: action.clientState,
-        }, action.requestedAt);
-        await persistCreated(action, created, action.requestedAt);
-      } catch (error) {
-        if (created) await transport.delete(created.id).catch(() => undefined);
-        throw error;
+      const createAction = action;
+      const notificationUrl = process.env.MICROSOFT_GRAPH_WEBHOOK_URL ?? "";
+      const desiredExpirationAt = requestedExpiration(createAction.scope, createAction.requestedAt);
+      const creation = await dispatchTrackedSubscriptionMutation(
+        createAction,
+        {
+          method: "POST",
+          resource: microsoft365SubscriptionResource(createAction.scope),
+          changeTypes: microsoft365SubscriptionChangeTypes(createAction.scope),
+          notificationUrl,
+          lifecycleNotificationUrl: notificationUrl,
+          requestedExpirationAt: desiredExpirationAt,
+          clientStateHash: createAction.clientStateHash,
+        },
+        microsoft365SubscriptionResource(createAction.scope),
+        () => transport.create(createAction.scope, {
+          changeTypes: microsoft365SubscriptionChangeTypes(createAction.scope),
+          notificationUrl,
+          lifecycleNotificationUrl: notificationUrl,
+          requestedExpirationAt: desiredExpirationAt,
+          clientState: createAction.clientState,
+        }, createAction.requestedAt),
+        subscriptionEvidence,
+      );
+      const created = creation.output
+        ? await transport.read(creation.output.id, createAction.scope)
+        : await transport.findCreatedByClientStateHash(createAction.scope, createAction.clientStateHash);
+      if (!created) {
+        throw unresolvedProviderOperation("Microsoft Graph create was attempted but exact provider readback has not verified the subscription");
       }
+      await reconcileSubscriptionOperation(createAction, creation.operation, "succeeded", {
+        ...subscriptionEvidence(created),
+        readback: creation.output ? "exact_provider_id" : "matched_client_state_hash",
+      });
+      await persistCreated(createAction, created, createAction.requestedAt);
       log.info({
         event: "m365_subscription_created",
         metric: "m365_subscription_expiry_margin",
@@ -654,13 +909,44 @@ async function maintainOne(payload: Record<string, unknown>, tenantId: string, s
       }, "Microsoft Graph subscription created before initial synchronization");
       return;
     }
-    const renewed = await transport.renew(
-      action.providerSubscriptionId,
-      action.scope,
-      requestedExpiration(action.scope, action.requestedAt),
-      action.requestedAt,
+    if (action.kind !== "renew") throw new Error("Microsoft subscription maintenance reached an invalid action state");
+    const renewAction = action;
+    const desiredExpirationAt = requestedExpiration(renewAction.scope, renewAction.requestedAt);
+    const renewal = await dispatchTrackedSubscriptionMutation(
+      renewAction,
+      { method: "PATCH", providerSubscriptionId: renewAction.providerSubscriptionId, requestedExpirationAt: desiredExpirationAt },
+      renewAction.providerSubscriptionId,
+      () => transport.renew(
+        renewAction.providerSubscriptionId,
+        renewAction.scope,
+        desiredExpirationAt,
+        renewAction.requestedAt,
+      ),
+      subscriptionEvidence,
     );
-    await persistRenewed(action, renewed);
+    const renewed = await transport.read(renewAction.providerSubscriptionId, renewAction.scope);
+    if (!renewed) {
+      if (renewal.dispatched) {
+        throw unresolvedProviderOperation("Microsoft Graph renewal acknowledgement could not yet be verified by exact readback");
+      }
+      throw new MicrosoftGraphError("not_found", "Microsoft Graph subscription is absent during renewal reconciliation", 404, false);
+    }
+    const recordedExpiration = renewal.output?.expirationDateTime
+      ?? (renewal.operation.response && typeof renewal.operation.response === "object"
+        ? (renewal.operation.response as Record<string, unknown>).expirationDateTime
+        : undefined);
+    const observedExpiration = Date.parse(renewed.expirationDateTime);
+    const advancedBeyondPrior = renewAction.previousExpirationAt !== null
+      && observedExpiration > renewAction.previousExpirationAt.getTime();
+    if ((typeof recordedExpiration === "string" && renewed.expirationDateTime !== recordedExpiration)
+        || (recordedExpiration === undefined && renewal.operation.executionState !== "reconciled" && !advancedBeyondPrior)) {
+      throw unresolvedProviderOperation("Microsoft Graph renewal remains unresolved; readback does not prove this logical operation changed expiration");
+    }
+    await reconcileSubscriptionOperation(renewAction, renewal.operation, "succeeded", {
+      ...subscriptionEvidence(renewed),
+      readback: "exact_provider_id",
+    });
+    await persistRenewed(renewAction, renewed);
     log.info({
       event: "m365_subscription_renewal_success",
       metric: "m365_subscription_expiry_margin",

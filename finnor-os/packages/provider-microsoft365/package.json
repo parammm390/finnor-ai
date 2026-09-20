@@ -7,6 +7,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "@aws-sdk/client-sts": "^3.1086.0",
+    "@finnor/db": "*",
     "@finnor/security": "*",
     "@finnor/shared-types": "*"
   }

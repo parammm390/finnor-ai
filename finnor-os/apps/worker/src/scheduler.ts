@@ -12,7 +12,7 @@
 // window" atomic and safe under multiple ticker instances — never a separate
 // read-last-run-then-write-last-run pair, which would race.
 
-import { enqueueJob, getPool, readProductRuntimeAuthority } from "@finnor/db";
+import { enqueueJob, getPool, readProductRuntimeAuthority, startComputeControlLeadership, type ComputeControlLeadership } from "@finnor/db";
 import { getLogger } from "@finnor/tools";
 import { RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
 
@@ -51,12 +51,13 @@ async function activeTenantIds(): Promise<string[]> {
 
 /** One tick: for every tenant, try to enqueue every scan. Idempotent per (scan,
  *  tenant, window) — safe to call as often as you like, cheap to call redundantly. */
-export async function scheduleTick(scans: ScheduledScan[]): Promise<void> {
+export async function scheduleTick(scans: ScheduledScan[], stillOwned: () => boolean = () => true): Promise<void> {
   const retired = scans.find((scan) => isRetiredWaterJob(scan.type));
   if (retired) throw new RetiredVerticalError("water");
   const tenantIds = await activeTenantIds();
   for (const tenantId of tenantIds) {
     for (const scan of scans) {
+      if (!stillOwned()) return;
       const bucket = dateBucket(scan.intervalHours);
       await enqueueJob(scan.type, scan.payload(tenantId), `scan:${scan.type}:${tenantId}:${bucket}`);
     }
@@ -68,26 +69,39 @@ export async function scheduleTick(scans: ScheduledScan[]): Promise<void> {
  *  it just needs to be frequent enough that no window is missed (a 15-minute ticker
  *  comfortably covers hourly-or-slower scans without meaningfully increasing DB load,
  *  since a no-op tick is a handful of ON CONFLICT DO NOTHING inserts). */
-export function startScheduler(scans: ScheduledScan[], tickMs = 15 * 60_000, signal?: AbortSignal): void {
+export function startScheduler(scans: ScheduledScan[], tickMs = 15 * 60_000, signal?: AbortSignal): ComputeControlLeadership {
+  const ownerId = process.env.FINNOR_WORKER_INSTANCE_ID?.trim() || `scheduler:${process.pid}`;
+  let lastScheduleAt = 0;
+  let tickRunning = false;
+  let leadership: ComputeControlLeadership | null = null;
   const tick = async () => {
-    if (signal?.aborted) return;
+    if (signal?.aborted || !leadership?.isLeader() || tickRunning) return;
+    tickRunning = true;
     try {
-      await scheduleTick(scans);
+      // The old monolith continues scheduling during the preparing phase.  The
+      // class service takes over only after release convergence activates the
+      // compute epoch fence; the durable lease then prevents N× tenant scans.
+      const state = await getPool().query<{ state: string }>(
+        "SELECT state FROM compute_plane_cutover WHERE singleton=true",
+      );
+      if (state.rows[0]?.state !== "authoritative") return;
+      if (Date.now() - lastScheduleAt < tickMs) return;
+      await scheduleTick(scans, () => leadership?.isLeader() === true && !signal?.aborted);
+      lastScheduleAt = Date.now();
     } catch (err) {
       getLogger().error({ err: err instanceof Error ? err.message : String(err) }, "[scheduler] tick failed");
+    } finally {
+      tickRunning = false;
     }
   };
-  void tick(); // run once immediately on boot, don't wait a full interval for the first pass
-  const handle = setInterval(tick, tickMs);
-  signal?.addEventListener("abort", () => clearInterval(handle));
+  leadership = startComputeControlLeadership("proactive-scheduler", ownerId, signal, () => { void tick(); });
+  const handle = setInterval(() => { void tick(); }, Math.min(tickMs, 30_000));
+  signal?.addEventListener("abort", () => clearInterval(handle), { once: true });
+  return leadership;
 }
 
-/** A4.T4: same idempotent-bucket mechanism as scheduleTick, but for a GLOBAL job type
- *  (no tenant loop) — worker_heartbeat.ts writes its own row directly instead of going
- *  through the job queue at all; backup_db is different: it's genuinely long-running
- *  and failure-prone (a real network call to GitHub), so it deliberately goes through
- *  the job queue's own attempt/backoff/dead-letter machinery rather than a bare
- *  setInterval callback that would just swallow a failure. */
+/** Same idempotent-bucket mechanism as scheduleTick for a registered GLOBAL job type.
+ * Callers still need an audited job contract; this utility grants no retry safety. */
 export function startGlobalScheduler(type: string, intervalHours: number, tickMs = 15 * 60_000, signal?: AbortSignal): void {
   const tick = async () => {
     if (signal?.aborted) return;

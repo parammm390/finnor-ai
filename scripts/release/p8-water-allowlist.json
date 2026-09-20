@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "path": "finnor-os/apps/api/app/api/integrations/status/route.ts",
+      "category": "history",
+      "reason": "Read-only integration status explicitly excludes historical vertical configuration."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/ready/route.ts",
+      "category": "retirement",
+      "reason": "Production readiness must expose and enforce the existing retirement authority states."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/setup/status/route.ts",
+      "category": "history",
+      "reason": "Read-only setup status excludes historical vertical policies and action types."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/webhooks/esign/route.ts",
+      "category": "deny_guard",
+      "reason": "Legacy e-sign delivery is authenticated, receipted, and quarantined without execution."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/webhooks/ghl/route.ts",
+      "category": "deny_guard",
+      "reason": "Legacy GHL delivery is authenticated, receipted, and quarantined without execution."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/webhooks/marketing/route.ts",
+      "category": "deny_guard",
+      "reason": "Legacy marketing delivery is authenticated, receipted, and quarantined without execution."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/webhooks/payment/route.ts",
+      "category": "deny_guard",
+      "reason": "Legacy payment delivery is authenticated, receipted, and quarantined without execution."
+    },
+    {
+      "path": "finnor-os/apps/api/lib/product-readiness.ts",
+      "category": "retirement",
+      "reason": "The final PE release gate must compare the persisted authority to the retired terminal state."
+    },
+    {
+      "path": "finnor-os/apps/api/lib/retired-water-webhook.ts",
+      "category": "deny_guard",
+      "reason": "Shared legacy-webhook boundary verifies provenance and persists quarantine receipts only."
+    },
+    {
+      "path": "finnor-os/apps/worker/src/handlers/run-workflow-step.ts",
+      "category": "deny_guard",
+      "reason": "Workflow dispatch preserves historical labels solely to reject retired steps before execution."
+    },
+    {
+      "path": "finnor-os/apps/worker/src/handlers/scan-integration-health.ts",
+      "category": "history",
+      "reason": "Health scanning leaves historical integration evidence readable but excludes it from active scans."
+    },
+    {
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "category": "deny_guard",
+      "reason": "Queue claim and enqueue boundaries reject and quarantine every retired job identifier."
+    },
+    {
+      "path": "finnor-os/apps/worker/src/scheduler.ts",
+      "category": "deny_guard",
+      "reason": "Scheduler boundary rejects all job identifiers recorded in the retirement deny ledger."
+    },
+    {
+      "path": "finnor-os/packages/data-platform/src/source-truth.ts",
+      "category": "deny_guard",
+      "reason": "Canonical source writes reject entity types owned by the retired vertical."
+    },
+    {
+      "path": "finnor-os/packages/db/index.ts",
+      "category": "retirement",
+      "reason": "Database boundary reads the existing authority, records protocol heartbeats, and denies retired execution."
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "category": "history",
+      "reason": "Generated immutable migration ledger is retained for deterministic database reconstruction and audit."
+    },
+    {
+      "path": "finnor-os/packages/db/schema.ts",
+      "category": "history",
+      "reason": "Typed mappings retain historical canonical rows required for immutable reads and retirement blockers."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
+      "category": "deny_guard",
+      "reason": "Conversation extraction explicitly refuses to reinterpret historical resource nouns as active parties."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "category": "deny_guard",
+      "reason": "Fast read routing rejects retired queries, parties, and entity types before dispatch."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/graph/allowlist-executor.ts",
+      "category": "deny_guard",
+      "reason": "Graph executor refuses startup if a retired action is registered as executable."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/index.ts",
+      "category": "deny_guard",
+      "reason": "Central orchestration execution and recovery boundaries reject retired action identities."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/planner.ts",
+      "category": "deny_guard",
+      "reason": "Planner rejects retired action identifiers before constructing executable proposals."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/planning-health.ts",
+      "category": "history",
+      "reason": "Planning health documents that historical integration configuration is excluded from active health."
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/workflow.ts",
+      "category": "deny_guard",
+      "reason": "Workflow compatibility boundary maps retired workflow attempts to terminal rejection only."
+    },
+    {
+      "path": "finnor-os/packages/policy-schema/src/index.ts",
+      "category": "deny_guard",
+      "reason": "Instruction schema omits the historical extension before policy or action lookup can occur."
+    },
+    {
+      "path": "finnor-os/packages/read-models/src/work-cases.ts",
+      "category": "history",
+      "reason": "Historical Work inspection preserves immutable legacy entity links without an execution path."
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/company-graph.ts",
+      "category": "deny_guard",
+      "reason": "Active Company Graph types explicitly exclude the retired vertical extension."
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "category": "deny_guard",
+      "reason": "Active operational query union documents that retired intents exist only in the deny ledger."
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/retired-water.ts",
+      "category": "retirement",
+      "reason": "Canonical Phase-5 deny ledger names historical actions, queries, jobs, workflows, and deleted paths."
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/vertical-runtime.ts",
+      "category": "deny_guard",
+      "reason": "Vertical runtime constant supports explicit terminal rejection and never executable registration."
+    },
+    {
+      "path": "finnor-os/packages/tools/src/emulators/apply-env-faults.ts",
+      "category": "deny_guard",
+      "reason": "Emulator startup refuses fault-injection configuration for retired capability names."
+    },
+    {
+      "path": "finnor-os/packages/tools/src/logger.ts",
+      "category": "history",
+      "reason": "PII redaction retains historical field paths so immutable evidence cannot leak through logs."
+    },
+    {
+      "path": "finnor-os/packages/tools/src/source-truth-health.ts",
+      "category": "history",
+      "reason": "Source-health projection excludes immutable-era integration configuration from active readiness."
+    },
+    {
+      "path": "finnor-os/packages/workflow-runtime/src/commands.ts",
+      "category": "deny_guard",
+      "reason": "Workflow command intake rejects every workflow identity from the retirement ledger."
+    },
+    {
+      "path": "finnor-os/packages/workflow-runtime/src/dlq.ts",
+      "category": "deny_guard",
+      "reason": "Dead-letter replay rejects historical jobs and actions instead of resurrecting execution."
+    },
+    {
+      "path": "finnor-os/packages/workflow-runtime/src/run-controls.ts",
+      "category": "deny_guard",
+      "reason": "Run-control mutations reject historical workflow instances before any state transition."
+    },
+    {
+      "path": "finnor-os/packages/workflow-runtime/src/steps.ts",
+      "category": "deny_guard",
+      "reason": "Workflow step execution rejects historical actions and workflows at every dispatch boundary."
+    }
+  ]
+}

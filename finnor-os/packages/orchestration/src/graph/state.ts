@@ -17,10 +17,8 @@ export const GateStateAnnotation = Annotation.Root({
   groundingError: Annotation<{ code: string; message: string; details: Record<string, unknown> } | undefined>,
   decision: Annotation<"approve" | "reject" | undefined>,
   result: Annotation<ExecutionResult | undefined>,
-  // Phase 16(e): threaded from DomainAction.correlationId at invoke time (see
-  // graph/executor.ts) so the gate node's voice_confirm_request/voice_notify_failure
-  // enqueues can tag it too — optional, so existing checkpointed runs without it
-  // (started before this field existed) simply resume with it undefined.
+  // Threaded from DomainAction.correlationId at invoke time for logs and durable
+  // receipts. Existing checkpointed runs without it resume with it undefined.
   correlationId: Annotation<string | undefined>,
   workId: Annotation<string | undefined>,
   initiatedBy: Annotation<string | undefined>,

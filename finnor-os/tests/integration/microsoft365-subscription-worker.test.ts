@@ -186,26 +186,29 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
 
   it("creates the subscription before queueing initial sync, persists only the clientState hash, renews without plaintext, and disables without deleting history", async () => {
     const calls: Array<{ method: string; url: string; body: Record<string, unknown> }> = [];
+    let providerSubscription: Record<string, unknown> | null = null;
     vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? "GET";
       const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
       calls.push({ method, url, body });
-      if (method === "POST") return Response.json({
-        id: `provider-created-${sourceScopeId}`,
-        resource: body.resource,
-        changeType: body.changeType,
-        expirationDateTime: body.expirationDateTime,
-        notificationUrl: body.notificationUrl,
-        lifecycleNotificationUrl: body.lifecycleNotificationUrl,
-      }, { status: 201 });
-      if (method === "PATCH") return Response.json({
-        id: `provider-created-${sourceScopeId}`,
-        resource: "users/mailbox-worker/mailFolders/folder-worker/messages",
-        changeType: "created,updated,deleted",
-        expirationDateTime: body.expirationDateTime,
-      });
-      if (method === "DELETE") return new Response(null, { status: 204 });
+      if (method === "POST" || method === "PATCH") {
+        providerSubscription = {
+          id: `provider-created-${sourceScopeId}`,
+          resource: body.resource ?? "users/mailbox-worker/mailFolders/folder-worker/messages",
+          changeType: body.changeType ?? "created,updated,deleted",
+          expirationDateTime: body.expirationDateTime,
+          ...(method === "POST" ? { notificationUrl: body.notificationUrl, lifecycleNotificationUrl: body.lifecycleNotificationUrl } : {}),
+        };
+        return Response.json(providerSubscription, { status: method === "POST" ? 201 : 200 });
+      }
+      if (method === "GET") return providerSubscription
+        ? Response.json(providerSubscription)
+        : Response.json({ error: { code: "ResourceNotFound" } }, { status: 404 });
+      if (method === "DELETE") {
+        providerSubscription = null;
+        return new Response(null, { status: 204 });
+      }
       throw new Error(`Unexpected Graph subscription call ${method} ${url}`);
     }));
 
@@ -283,21 +286,29 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
     expect(graph).toHaveBeenCalledTimes(1);
   });
 
-  it("best-effort deletes a remote create when the local active commit fails and never claims active", async () => {
+  it("reconciles a remote create after the local active commit fails without issuing a duplicate create", async () => {
     const methods: string[] = [];
-    vi.stubGlobal("fetch", vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+    let providerSubscription: Record<string, unknown> | null = null;
+    let clientState = "";
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
       const method = init?.method ?? "GET";
       methods.push(method);
       if (method === "POST") {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
-        return Response.json({
+        clientState = String(body.clientState);
+        providerSubscription = {
           id: `provider-orphan-${sourceScopeId}`,
           resource: body.resource,
           changeType: body.changeType,
           expirationDateTime: body.expirationDateTime,
-        }, { status: 201 });
+        };
+        return Response.json(providerSubscription, { status: 201 });
       }
-      if (method === "DELETE") return new Response(null, { status: 204 });
+      if (method === "GET" && url.includes("/subscriptions?")) return Response.json({
+        value: providerSubscription ? [{ ...providerSubscription, clientState }] : [],
+      });
+      if (method === "GET" && providerSubscription) return Response.json(providerSubscription);
       throw new Error("unexpected call");
     }));
     await admin.query(`CREATE OR REPLACE FUNCTION finnor_os.test_reject_m365_active() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -308,7 +319,7 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
     await admin.query("CREATE TRIGGER test_reject_m365_active BEFORE UPDATE ON finnor_os.integration_subscriptions FOR EACH ROW EXECUTE FUNCTION finnor_os.test_reject_m365_active()");
     try {
       await expect(maintainIntegrationSubscriptions(job)).rejects.toBeInstanceOf(RetryableJobError);
-      expect(methods).toEqual(["POST", "DELETE"]);
+      expect(methods).toEqual(["POST", "GET"]);
       const [subscription] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions)
         .where(eq(integrationSubscriptions.sourceScopeId, sourceScopeId)));
       expect(subscription?.status).not.toBe("active");
@@ -317,6 +328,12 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
       await admin.query("DROP TRIGGER IF EXISTS test_reject_m365_active ON finnor_os.integration_subscriptions");
       await admin.query("DROP FUNCTION IF EXISTS finnor_os.test_reject_m365_active()");
     }
+    await maintainIntegrationSubscriptions(job);
+    const [reconciled] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions)
+      .where(eq(integrationSubscriptions.sourceScopeId, sourceScopeId)));
+    expect(reconciled).toMatchObject({ status: "active", providerSubscriptionId: `provider-orphan-${sourceScopeId}` });
+    expect(methods.filter((method) => method === "POST")).toHaveLength(1);
+    expect(methods).not.toContain("DELETE");
   });
 
   it.each([
@@ -345,14 +362,19 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
       expirationAt: new Date(Date.now() - 1_000),
       renewAt: new Date(Date.now() - 60_000),
     })));
+    let providerSubscription: Record<string, unknown> | null = null;
     vi.stubGlobal("fetch", vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      const method = init?.method ?? "GET";
+      if (method === "GET" && providerSubscription) return Response.json(providerSubscription);
+      if (method !== "POST") throw new Error(`Unexpected Graph subscription call ${method}`);
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
-      return Response.json({
+      providerSubscription = {
         id: `provider-replacement-${sourceScopeId}`,
         resource: body.resource,
         changeType: body.changeType,
         expirationDateTime: body.expirationDateTime,
-      }, { status: 201 });
+      };
+      return Response.json(providerSubscription, { status: 201 });
     }));
     await maintainIntegrationSubscriptions(job);
     const rows = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions)

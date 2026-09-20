@@ -41,8 +41,9 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
   const nodeId = `node-${randomUUID()}`;
   let upgradeClient: pg.Client;
   let freshClient: pg.Client;
-  let beforeFingerprint = "";
-  let afterFingerprint = "";
+  type Snapshot = Record<"work" | "loop" | "plan" | "step", Record<string, unknown>>;
+  let beforeSnapshot: Snapshot;
+  let afterSnapshot: Snapshot;
   let appliedUpgrade: string[] = [];
   let appliedFresh: string[] = [];
 
@@ -111,18 +112,30 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
        VALUES($1,$2,$3,$4,1,'p7-upgrade-step','deciding',$5,$6)`,
       [stepId, tenantId, loopId, workId, planId, nodeId],
     );
-    const fingerprint = async () => (await upgradeClient.query<{ hash: string }>(
-      `SELECT encode(public.digest(convert_to(jsonb_build_object(
-        'work',(SELECT to_jsonb(work_row)-ARRAY['updated_at'] FROM finnor_os.works work_row WHERE id=$1),
-        'loop',(SELECT to_jsonb(loop_row)-ARRAY['updated_at'] FROM finnor_os.work_objective_loops loop_row WHERE id=$2),
-        'plan',(SELECT to_jsonb(plan_row) FROM finnor_os.work_plan_revisions plan_row WHERE id=$3),
-        'step',(SELECT to_jsonb(step_row) FROM finnor_os.work_objective_steps step_row WHERE id=$4)
-      )::text,'UTF8'),'sha256'),'hex') hash`,
+    const snapshot = async (): Promise<Snapshot> => (await upgradeClient.query<Snapshot>(
+      `SELECT
+        (SELECT to_jsonb(work_row)-'updated_at' FROM finnor_os.works work_row WHERE id=$1) AS work,
+        (SELECT to_jsonb(loop_row)-'updated_at' FROM finnor_os.work_objective_loops loop_row WHERE id=$2) AS loop,
+        (SELECT to_jsonb(plan_row) FROM finnor_os.work_plan_revisions plan_row WHERE id=$3) AS plan,
+        (SELECT to_jsonb(step_row) FROM finnor_os.work_objective_steps step_row WHERE id=$4) AS step`,
       [workId, loopId, planId, stepId],
-    )).rows[0]!.hash;
-    beforeFingerprint = await fingerprint();
+    )).rows[0]!;
+    beforeSnapshot = await snapshot();
     appliedUpgrade = await migrate(upgradeUrl, MIGRATIONS);
-    afterFingerprint = await fingerprint();
+    const after = await snapshot();
+    // Later migrations add columns to these rows. Compare every pre-upgrade
+    // value, including nested JSON, without mistaking additive schema for a
+    // mutation of P1-P6 truth.
+    afterSnapshot = {} as Snapshot;
+    for (const section of ["work", "loop", "plan", "step"] as const) {
+      const original = beforeSnapshot[section];
+      const current = after[section];
+      if (!original || !current) throw new Error(`Missing ${section} row during P7 upgrade`);
+      afterSnapshot[section] = Object.fromEntries(Object.keys(original).map((key) => {
+        if (!(key in current)) throw new Error(`P7 upgrade removed ${section}.${key}`);
+        return [key, current[key]];
+      }));
+    }
 
     appliedFresh = await migrate(freshUrl, MIGRATIONS);
     freshClient = new pg.Client({ connectionString: freshUrl });
@@ -142,7 +155,7 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
 
   it("applies P7 plus later forward repairs and preserves populated P1-P6 Work, ObjectiveLoop, PlanRevision, and ObjectiveStep truth", () => {
     expect(appliedUpgrade).toEqual(MIGRATIONS.filter(({ name }) => name >= P7_MIGRATION).map(({ name }) => name));
-    expect(afterFingerprint).toBe(beforeFingerprint);
+    expect(afterSnapshot).toEqual(beforeSnapshot);
   });
 
   it("does not invent worker, assignment, observation, proposal, or learning history", async () => {

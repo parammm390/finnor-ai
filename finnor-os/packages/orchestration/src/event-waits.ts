@@ -51,6 +51,9 @@ export async function objectiveWakeContext(tenantId: string, objectiveLoopId: st
       wait: {
         id: wait.id,
         status: wait.status,
+        planRevisionId: wait.planRevisionId,
+        planNodeId: wait.planNodeId,
+        objectiveRevision: wait.objectiveRevision,
         expectedEventType: wait.expectedEventType,
         conditionSummary: wait.conditionSummary,
         deadlineAt: wait.deadlineAt?.toISOString() ?? null,

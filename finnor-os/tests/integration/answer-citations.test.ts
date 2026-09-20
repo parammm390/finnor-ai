@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, workflowSteps, workflowRuns, commands, decisionReceipts } from "@finnor/db";
+import { withTenant, closePool, tenants, workflowStepClaims, workflowSteps, workflowRuns, commands, decisionReceipts } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { submitCommand, claimStep, completeStep } from "@finnor/workflow-runtime";
 
@@ -32,6 +32,7 @@ describe.skipIf(!available)("workflow receipt citations", () => {
   afterAll(async () => {
     await withTenant(TENANT_ID, async (db) => {
       await db.delete(decisionReceipts).where(eq(decisionReceipts.tenantId, TENANT_ID));
+      await db.delete(workflowStepClaims).where(eq(workflowStepClaims.tenantId, TENANT_ID));
       await db.delete(workflowSteps).where(eq(workflowSteps.tenantId, TENANT_ID));
       await db.delete(workflowRuns).where(eq(workflowRuns.tenantId, TENANT_ID));
       await db.delete(commands).where(eq(commands.tenantId, TENANT_ID));

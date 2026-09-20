@@ -1,8 +1,8 @@
 // Upgrade 9: the smallest governed objective loop that sits inside Durable Work.
 //
 // This is deliberately a controller over proven primitives, not another agent
-// framework. Every iteration performs one canonical inspection, asks for exactly one
-// bounded decision, routes reads through the Operational Query Plane, routes writes
+// framework. Every iteration performs one canonical inspection, reserves one bounded
+// ready frontier, routes reads through the Operational Query Plane, routes writes
 // through the existing typed action/executor boundary, observes the durable result,
 // and ends in one explicit state before another job may be scheduled.
 
@@ -11,11 +11,13 @@ import { z } from "zod";
 import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import type { DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
 import {
+  MAX_HIGH_EGRESS_ROWS,
   activeWorkPlanRevision,
   beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
   completeWorkPlanRevision,
   finishWorkPlannerAttempt as finishCanonicalWorkPlannerAttempt,
   domainActions,
+  decisionReceipts,
   domainPolicyRevisions,
   authorityApprovalRequests,
   authorityApprovalRequestSteps,
@@ -41,6 +43,7 @@ import {
   workEvents,
   workInputs,
   workPlanRevisions,
+  workRecoveryDecisions,
   workforceAssignments,
   works,
   pendingConfirmations,
@@ -77,6 +80,8 @@ import { plannerActionTypesForVertical, planningCapabilitiesForVertical } from "
 import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { PlanCompilationError, deterministicPlanActionId, selectPlanRevision } from "./plan-runtime";
 import { resolvePlanProgress, type PlanReplanCause } from "./plan-progress";
+import { irreversibleEffectReplayFence, reserveReadyPlanFrontier, type FrontierReservationResult } from "./orchestration-kernel";
+import { decideRecovery, verificationResult as buildVerificationResult, type VerificationResult } from "./orchestration-protocol";
 import { planningHealthForAction, requiredPlanningHealthCapability } from "./planning-health";
 import { queryAuthorityRequest } from "./authority-runtime";
 import { groundEntitiesWithDb } from "./compiler";
@@ -413,6 +418,7 @@ async function scheduleIterationTx(
     eq(workObjectiveSteps.tenantId, loop.tenantId),
     eq(workObjectiveSteps.objectiveLoopId, loop.id),
     sql`${workObjectiveSteps.completedAt} IS NULL`,
+    sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')`,
   )).orderBy(desc(workObjectiveSteps.stepNumber)).limit(1);
   const nextStep = unfinished?.stepNumber ?? loop.stepCount + 1;
   const scope = and(
@@ -439,6 +445,7 @@ async function scheduleIterationTx(
     ...(correlationId ? { _correlationId: correlationId } : {}),
   };
   const [inserted] = await db.insert(jobs).values({
+    tenantId: loop.tenantId,
     type: "run_objective_iteration",
     payload,
     runAt,
@@ -685,13 +692,39 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
     if (!loop) throw new Error("Objective loop not found");
     if (["blocked", "completed", "failed", "cancelled"].includes(loop.state)) return { loop, step: null, terminal: true } as const;
     if (expectedRevision !== undefined && expectedRevision !== loop.revision) return { loop, step: null, terminal: true } as const;
-    if (loop.leaseUntil && loop.leaseUntil > new Date() && loop.leaseOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
-    const [unfinished] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.objectiveLoopId, loop.id), sql`${workObjectiveSteps.completedAt} IS NULL`)).orderBy(desc(workObjectiveSteps.stepNumber)).limit(1);
+    const [unfinished] = await db.select().from(workObjectiveSteps).where(and(
+      eq(workObjectiveSteps.tenantId, tenantId),
+      eq(workObjectiveSteps.objectiveLoopId, loop.id),
+      sql`${workObjectiveSteps.completedAt} IS NULL`,
+      expectedStepNumber !== undefined
+        ? eq(workObjectiveSteps.stepNumber, expectedStepNumber)
+        : sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')`,
+    )).orderBy(desc(workObjectiveSteps.stepNumber)).limit(1);
     if (expectedStepNumber !== undefined && ((unfinished && unfinished.stepNumber !== expectedStepNumber) || (!unfinished && loop.stepCount >= expectedStepNumber))) {
       return { loop, step: null, terminal: true } as const;
     }
     const leaseUntil = new Date(Date.now() + 30_000);
     if (unfinished) {
+      if (unfinished.executionRole === "node") {
+        if (unfinished.objectiveRevision !== loop.revision || !unfinished.planRevisionId || !unfinished.planNodeId) return { loop, step: null, terminal: true } as const;
+        const [activePlan] = await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
+          eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, unfinished.planRevisionId), eq(workPlanRevisions.status, "active"),
+        )).limit(1);
+        if (!activePlan || ["cancelled", "superseded", "completed", "failed", "reconciliation_required"].includes(unfinished.executionState ?? "")) return { loop, step: null, terminal: true } as const;
+        if (unfinished.claimUntil && unfinished.claimUntil > new Date() && unfinished.claimOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
+        const [claimedStep] = await db.update(workObjectiveSteps).set({
+          executionState: "claimed", claimOwner: leaseOwner, claimUntil: leaseUntil,
+          claimedAt: sql`coalesce(${workObjectiveSteps.claimedAt}, now())`,
+        }).where(and(
+          eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, unfinished.id),
+          eq(workObjectiveSteps.objectiveRevision, loop.revision), sql`${workObjectiveSteps.completedAt} IS NULL`,
+          sql`(${workObjectiveSteps.claimUntil} IS NULL OR ${workObjectiveSteps.claimUntil} <= now() OR ${workObjectiveSteps.claimOwner}=${leaseOwner})`,
+        )).returning();
+        return claimedStep
+          ? { loop: { ...loop, leaseOwner, leaseUntil }, step: claimedStep, terminal: false } as const
+          : { loop, step: null, terminal: true } as const;
+      }
+      if (loop.leaseUntil && loop.leaseUntil > new Date() && loop.leaseOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
       const [leased] = await db.update(workObjectiveLoops).set({ leaseOwner, leaseUntil, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning();
       return { loop: leased!, step: unfinished, terminal: false } as const;
     }
@@ -704,6 +737,10 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
       stepNumber,
       idempotencyKey: `revision:${loop.revision}:step:${stepNumber}`,
       phase: "inspecting",
+      objectiveRevision: loop.revision,
+      attemptNumber: 1,
+      executionRole: "controller",
+      executionState: "running",
     }).returning();
     if (!step) throw new Error("Unable to persist objective iteration");
     const [updated] = await db.update(workObjectiveLoops).set({ stepCount: stepNumber, state: "continue", nextRunAt: null, leaseOwner, leaseUntil, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning();
@@ -712,15 +749,25 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
 }
 
 async function releaseLease(tenantId: string, loopId: string, leaseOwner: string): Promise<void> {
-  await withTenant(tenantId, (db) => db.update(workObjectiveLoops).set({ leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId), eq(workObjectiveLoops.leaseOwner, leaseOwner))));
+  await withTenant(tenantId, async (db) => {
+    await db.update(workObjectiveLoops).set({ leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId), eq(workObjectiveLoops.leaseOwner, leaseOwner)));
+    await db.update(workObjectiveSteps).set({ executionState: "scheduled", claimOwner: null, claimUntil: null }).where(and(
+      eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.objectiveLoopId, loopId), eq(workObjectiveSteps.claimOwner, leaseOwner),
+      inArray(workObjectiveSteps.executionState, ["claimed", "running"]), sql`${workObjectiveSteps.completedAt} IS NULL`,
+    ));
+  });
 }
 
 async function currentIterationState(tenantId: string, loopId: string, stepId: string, revision: number, leaseOwner: string): Promise<{ current: boolean; state: ObjectiveIterationOutcome }> {
   return withTenant(tenantId, async (db) => {
     const [loop] = await db.select({ state: workObjectiveLoops.state, revision: workObjectiveLoops.revision, leaseOwner: workObjectiveLoops.leaseOwner }).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId))).limit(1);
-    const [step] = await db.select({ completedAt: workObjectiveSteps.completedAt }).from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, stepId))).limit(1);
+    const [step] = await db.select({ completedAt: workObjectiveSteps.completedAt, executionRole: workObjectiveSteps.executionRole, objectiveRevision: workObjectiveSteps.objectiveRevision, claimOwner: workObjectiveSteps.claimOwner, claimUntil: workObjectiveSteps.claimUntil, planRevisionId: workObjectiveSteps.planRevisionId }).from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, stepId))).limit(1);
     if (!loop) throw new Error("Objective loop disappeared while checking its iteration lease");
-    return { current: loop.revision === revision && loop.leaseOwner === leaseOwner && !step?.completedAt, state: loop.state };
+    const planCurrent = !step?.planRevisionId || Boolean((await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, step.planRevisionId), eq(workPlanRevisions.status, "active"))).limit(1))[0]);
+    const ownershipCurrent = step?.executionRole === "node"
+      ? step.objectiveRevision === revision && step.claimOwner === leaseOwner && Boolean(step.claimUntil && step.claimUntil > new Date())
+      : loop.leaseOwner === leaseOwner;
+    return { current: loop.revision === revision && ownershipCurrent && planCurrent && !step?.completedAt && !["blocked", "completed", "failed", "cancelled"].includes(loop.state), state: loop.state };
   });
 }
 
@@ -963,6 +1010,93 @@ function recoveryKind(decision: ObjectiveDecision | undefined): "retry" | "repla
   return null;
 }
 
+async function deriveVerificationResultTx(db: Db, params: {
+  tenantId: string;
+  step: typeof workObjectiveSteps.$inferSelect;
+  queryExecutionId?: string | null;
+  domainActionId?: string | null;
+  successVerification?: ObjectiveSuccessVerification;
+  failure?: unknown;
+}): Promise<{ result: VerificationResult | null; authorityDecisionId: string | null }> {
+  const planRevisionId = params.step.planRevisionId;
+  const planNodeId = params.step.planNodeId;
+  const attemptNumber = params.step.attemptNumber ?? 1;
+  if (!planRevisionId || !planNodeId) return { result: null, authorityDecisionId: null };
+  const establishedAt = new Date().toISOString();
+  if (params.successVerification) {
+    const state = params.successVerification.state === "verified" ? "verified" : "inconclusive";
+    return {
+      result: buildVerificationResult({
+        state,
+        planRevisionId,
+        planNodeId,
+        attemptNumber,
+        subject: { kind: "objective", id: params.step.objectiveLoopId },
+        observationRefs: [],
+        verifier: { kind: "objective_condition", rule: "accepted_objective_success_condition_v1" },
+        establishedAt,
+        evidence: params.successVerification,
+      }),
+      authorityDecisionId: null,
+    };
+  }
+  const queryExecutionId = params.queryExecutionId ?? params.step.queryExecutionId;
+  if (queryExecutionId) {
+    return {
+      result: buildVerificationResult({
+        state: params.failure ? "inconclusive" : "verified",
+        planRevisionId,
+        planNodeId,
+        attemptNumber,
+        subject: { kind: "query", id: queryExecutionId },
+        observationRefs: [{ type: "work_query_execution", id: queryExecutionId }],
+        verifier: { kind: "deterministic_rule", rule: "operational_query_terminal_receipt_v1" },
+        establishedAt,
+        evidence: { failure: params.failure ?? null },
+      }),
+      authorityDecisionId: null,
+    };
+  }
+  const domainActionId = params.domainActionId ?? params.step.domainActionId;
+  if (!domainActionId) return { result: null, authorityDecisionId: null };
+  const [[action], [effect], receiptRows, [plan]] = await Promise.all([
+    db.select({ authorityDecisionId: domainActions.authorityDecisionId, status: domainActions.status }).from(domainActions).where(and(
+      eq(domainActions.tenantId, params.tenantId), eq(domainActions.id, domainActionId),
+    )).limit(1),
+    db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, params.tenantId), eq(businessEffects.domainActionId, domainActionId))).limit(1),
+    db.select({ id: decisionReceipts.id, finalizedAt: decisionReceipts.finalizedAt }).from(decisionReceipts).where(and(
+      eq(decisionReceipts.tenantId, params.tenantId), eq(decisionReceipts.domainActionId, domainActionId),
+    )),
+    db.select({ planGraph: workPlanRevisions.planGraph }).from(workPlanRevisions).where(and(
+      eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, planRevisionId),
+    )).limit(1),
+  ]);
+  const planNode = plan ? graphFromPersistence(plan.planGraph).nodes.find((node) => node.id === planNodeId) : null;
+  const receiptVerified = planNode?.observation.source === "decision_receipt" && receiptRows.some((receipt) => receipt.finalizedAt);
+  const state: VerificationResult["state"] = receiptVerified || effect?.status === "verified" ? "verified"
+    : effect?.status === "divergent" ? "divergent"
+      : "inconclusive";
+  return {
+    result: buildVerificationResult({
+      state,
+      planRevisionId,
+      planNodeId,
+      attemptNumber,
+      subject: { kind: "action", id: domainActionId, ...(effect ? { businessEffectId: effect.id } : {}) },
+      observationRefs: [
+        ...(effect ? [{ type: "business_effect", id: effect.id }] : []),
+        ...receiptRows.map((receipt) => ({ type: "decision_receipt", id: receipt.id })),
+      ],
+      verifier: receiptVerified
+        ? { kind: "deterministic_rule", rule: "finalized_decision_receipt_v1" }
+        : { kind: effect ? "provider_readback" : "deterministic_rule", rule: "business_effect_verification_v1" },
+      establishedAt,
+      evidence: { actionStatus: action?.status ?? null, effectStatus: effect?.status ?? null, effectVerification: effect?.verification ?? null },
+    }),
+    authorityDecisionId: action?.authorityDecisionId ?? null,
+  };
+}
+
 async function finishIteration(params: {
   tenantId: string;
   loop: typeof workObjectiveLoops.$inferSelect;
@@ -998,22 +1132,46 @@ async function finishIteration(params: {
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, params.loop.id)).limit(1);
     if (!current) throw new Error("Objective loop disappeared while finishing an iteration");
-    const [currentStep] = await db.select({ completedAt: workObjectiveSteps.completedAt }).from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id))).limit(1);
-    if (current.revision !== params.loop.revision || current.leaseOwner !== params.loop.leaseOwner || currentStep?.completedAt) {
+    const [currentStep] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id))).limit(1);
+    const nodeAttempt = currentStep?.executionRole === "node";
+    const [boundPlan] = currentStep?.planRevisionId ? await db.select({
+      id: workPlanRevisions.id,
+      status: workPlanRevisions.status,
+      completionProof: workPlanRevisions.completionProof,
+    }).from(workPlanRevisions).where(and(
+      eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, currentStep.planRevisionId),
+    )).limit(1) : [];
+    // The completion path atomically seals the PlanRevision before it finalizes
+    // the ObjectiveStep/loop. Treat that exact verified terminal transition as
+    // current; every other non-active revision remains fenced.
+    const boundCompletion = isRecord(boundPlan?.completionProof) ? boundPlan.completionProof : null;
+    const planCurrent = !currentStep?.planRevisionId || boundPlan?.status === "active"
+      || (params.outcome === "completed" && boundPlan?.status === "completed" && boundCompletion?.verified === true);
+    const ownsAttempt = nodeAttempt
+      ? currentStep?.objectiveRevision === current.revision && currentStep?.claimOwner === params.loop.leaseOwner
+        && Boolean(currentStep.claimUntil && currentStep.claimUntil > new Date())
+      : current.leaseOwner === params.loop.leaseOwner;
+    if (current.revision !== params.loop.revision || !ownsAttempt || !planCurrent || currentStep?.completedAt) {
       return { outcome: current.state, loop: current, superseded: true as const };
     }
-    const nextNoProgress = params.outcome === "continue"
+    const nextNoProgress = nodeAttempt ? current.consecutiveNoProgress : params.outcome === "continue"
       ? (params.progressMade ? 0 : current.consecutiveNoProgress + 1)
       : current.consecutiveNoProgress;
-    let outcome = params.outcome;
+    let stepOutcome = params.outcome;
     let reason = params.reason;
-    if (outcome === "continue" && current.stepCount >= current.maxSteps) {
-      outcome = "blocked";
+    if (!nodeAttempt && stepOutcome === "continue" && current.stepCount >= current.maxSteps) {
+      stepOutcome = "blocked";
       reason = `Objective stopped at the configured ${current.maxSteps}-step limit.`;
-    } else if (outcome === "continue" && nextNoProgress >= current.maxConsecutiveNoProgress) {
-      outcome = "blocked";
+    } else if (!nodeAttempt && stepOutcome === "continue" && nextNoProgress >= current.maxConsecutiveNoProgress) {
+      stepOutcome = "blocked";
       reason = `Objective stopped after ${nextNoProgress} consecutive iterations without observed progress.`;
     }
+    // A node-level failure/wait is durable evidence for the next controller
+    // recovery/frontier decision. It must not overwrite the whole Objective while
+    // independent branches are still running.
+    let outcome: ObjectiveIterationOutcome = nodeAttempt && ["blocked", "failed", "waiting", "awaiting_approval"].includes(stepOutcome)
+      ? "continue"
+      : stepOutcome;
     // The ObjectiveLoop lease owner is also the P7 assignment fencing token.
     // Finalize ownership in this same transaction as the P6 step so a crash can
     // expose neither a completed step with a running owner nor the inverse.
@@ -1021,56 +1179,73 @@ async function finishIteration(params: {
       eq(workforceAssignments.tenantId, params.tenantId),
       eq(workforceAssignments.objectiveStepId, params.step.id),
       eq(workforceAssignments.state, "running"),
-      eq(workforceAssignments.leaseOwner, current.leaseOwner!),
+      eq(workforceAssignments.leaseOwner, params.loop.leaseOwner!),
     )).limit(1);
     if (activeAssignment) {
-      const assignmentWaiting = outcome === "waiting" || outcome === "awaiting_approval";
-      const assignmentCancelled = outcome === "cancelled";
-      const assignmentFailed = outcome === "failed" || outcome === "blocked" || Boolean(params.failure);
+      const assignmentWaiting = stepOutcome === "waiting" || stepOutcome === "awaiting_approval";
+      const assignmentCancelled = stepOutcome === "cancelled";
+      const assignmentFailed = stepOutcome === "failed" || stepOutcome === "blocked" || Boolean(params.failure);
       await db.update(workforceAssignments).set({
         state: assignmentWaiting ? "waiting" : assignmentCancelled ? "cancelled" : assignmentFailed ? "failed" : "completed",
         leaseOwner: null,
         leaseUntil: null,
         domainActionId: params.domainActionId ?? null,
         completedAt: assignmentWaiting ? null : new Date(),
-        failure: assignmentFailed ? bounded({ code: outcome === "blocked" ? "OBJECTIVE_BLOCKED" : "OBJECTIVE_STEP_FAILED", reason, detail: params.failure ?? null }, 16_000) as object : null,
+        failure: assignmentFailed ? bounded({ code: stepOutcome === "blocked" ? "OBJECTIVE_BLOCKED" : "OBJECTIVE_STEP_FAILED", reason, detail: params.failure ?? null }, 16_000) as object : null,
         updatedAt: new Date(),
       }).where(and(
         eq(workforceAssignments.id, activeAssignment.id),
         eq(workforceAssignments.state, "running"),
-        eq(workforceAssignments.leaseOwner, current.leaseOwner!),
+        eq(workforceAssignments.leaseOwner, params.loop.leaseOwner!),
       ));
     }
-    if (params.step.planRevisionId && (outcome === "blocked" || outcome === "failed" || outcome === "cancelled")) {
+    if (!nodeAttempt && params.step.planRevisionId && (outcome === "blocked" || outcome === "failed" || outcome === "cancelled")) {
       await db.update(workPlanRevisions).set({ status: outcome === "failed" ? "failed" : "blocked" }).where(and(
         eq(workPlanRevisions.tenantId, params.tenantId),
         eq(workPlanRevisions.id, params.step.planRevisionId),
         eq(workPlanRevisions.status, "active"),
       ));
     }
+    const verification = await deriveVerificationResultTx(db, {
+      tenantId: params.tenantId,
+      step: currentStep!,
+      queryExecutionId: params.queryExecutionId,
+      domainActionId: params.domainActionId,
+      successVerification: params.successVerification,
+      failure: params.failure,
+    });
+    const executionState = stepOutcome === "cancelled" ? "cancelled"
+      : stepOutcome === "blocked" || stepOutcome === "failed" ? "failed"
+        : stepOutcome === "waiting" || stepOutcome === "awaiting_approval" ? "waiting"
+          : verification.result?.state === "inconclusive" && params.domainActionId ? "reconciliation_required"
+            : "completed";
     await db.update(workObjectiveSteps).set({
       phase: "finished",
-      decisionKind: params.decision?.kind ?? (outcome === "waiting" ? "wait" : outcome === "completed" ? "complete" : outcome === "blocked" ? "block" : outcome === "failed" ? "fail" : null),
+      decisionKind: params.decision?.kind ?? (stepOutcome === "waiting" ? "wait" : stepOutcome === "completed" ? "complete" : stepOutcome === "blocked" ? "block" : stepOutcome === "failed" ? "fail" : null),
       decision: params.decision ?? null,
       decisionReason: reason,
-      authorityDecisionId: params.authorityDecisionId ?? null,
+      authorityDecisionId: params.authorityDecisionId ?? verification.authorityDecisionId,
       queryExecutionId: params.queryExecutionId ?? null,
       domainActionId: params.domainActionId ?? null,
       planRevisionId: params.planRevisionId ?? params.step.planRevisionId ?? null,
       planNodeId: params.planNodeId ?? params.step.planNodeId ?? null,
       observation: bounded(params.observation),
       progressMade: params.progressMade,
-      iterationOutcome: outcome,
+      iterationOutcome: stepOutcome,
       scheduledFor: params.scheduledFor ?? null,
       failure: params.failure ? bounded(params.failure, 16_000) : null,
       recoveryKind: recoveryKind(params.decision),
       successVerification: params.successVerification ?? null,
+      verificationResult: verification.result,
+      executionState,
+      claimOwner: null,
+      claimUntil: null,
       completedAt: new Date(),
     }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id)));
     const [updated] = await db.update(workObjectiveLoops).set({
       state: outcome,
-      actionCount: current.actionCount + (params.actionIncrement ?? 0),
-      queryCount: current.queryCount + (params.queryIncrement ?? 0),
+      actionCount: current.actionCount + (currentStep?.budgetReservedAt ? 0 : (params.actionIncrement ?? 0)),
+      queryCount: current.queryCount + (currentStep?.budgetReservedAt ? 0 : (params.queryIncrement ?? 0)),
       consecutiveNoProgress: nextNoProgress,
       nextRunAt: params.scheduledFor ?? null,
       reason,
@@ -1080,18 +1255,21 @@ async function finishIteration(params: {
       successVerifiedAt: outcome === "completed" ? new Date() : current.successVerifiedAt,
       completedAt: outcome === "completed" || outcome === "failed" || outcome === "cancelled" ? new Date() : null,
       cancelledAt: outcome === "cancelled" ? new Date() : current.cancelledAt,
-      leaseOwner: null,
-      leaseUntil: null,
+      leaseOwner: nodeAttempt ? current.leaseOwner : null,
+      leaseUntil: nodeAttempt ? current.leaseUntil : null,
       updatedAt: new Date(),
     }).where(eq(workObjectiveLoops.id, current.id)).returning();
     let finalLoop = updated!;
     let wakeClaimedDuringWaitCreation = false;
-    if ((outcome === "waiting" || outcome === "awaiting_approval") && params.durableWait) {
+    if ((stepOutcome === "waiting" || stepOutcome === "awaiting_approval") && params.durableWait) {
       const created = await createWorkEventWaitTx(db, {
         tenantId: params.tenantId,
         workId: current.workId,
         objectiveLoopId: current.id,
         objectiveStepId: params.step.id,
+        planRevisionId: params.planRevisionId ?? params.step.planRevisionId ?? null,
+        planNodeId: params.planNodeId ?? params.step.planNodeId ?? null,
+        objectiveRevision: params.step.objectiveRevision ?? current.revision,
         waitFor: params.durableWait.waitFor,
         conditionSummary: params.durableWait.conditionSummary,
         earliestAt: params.durableWait.earliestAt,
@@ -1289,7 +1467,7 @@ async function objectivePlanningInputs(params: {
   const vertical = await resolveTenantVertical(params.tenantId);
   const manifest = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey);
   const actionTypes = manifest.filter((item) => item.kind === "action" && item.available).map((item) => item.capability);
-  const [input, policyRows, revisions, effectRows] = await Promise.all([
+  const [input, policyRowsPlus, revisionsPlus, effectRowsPlus] = await Promise.all([
     withTenant(params.tenantId, async (db) => {
       const [row] = await db.select().from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
         .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
@@ -1299,9 +1477,10 @@ async function objectivePlanningInputs(params: {
       eq(domainPolicyRevisions.tenantId, params.tenantId),
       inArray(domainPolicyRevisions.actionType, actionTypes),
       lte(domainPolicyRevisions.effectiveFrom, new Date()),
-    )).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version))),
+    )).orderBy(desc(domainPolicyRevisions.effectiveFrom), desc(domainPolicyRevisions.version)).limit(MAX_HIGH_EGRESS_ROWS + 1)),
     withTenant(params.tenantId, (db) => db.select({ id: workPlanRevisions.id, planGraph: workPlanRevisions.planGraph })
-      .from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId)))),
+      .from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId)))
+      .orderBy(desc(workPlanRevisions.selectedAt), desc(workPlanRevisions.id)).limit(MAX_HIGH_EGRESS_ROWS + 1)),
     withTenant(params.tenantId, (db) => {
       return db.select({
         id: businessEffects.id,
@@ -1311,9 +1490,16 @@ async function objectivePlanningInputs(params: {
       }).from(domainActions).innerJoin(businessEffects, and(
         eq(businessEffects.tenantId, params.tenantId),
         eq(businessEffects.domainActionId, domainActions.id),
-      )).where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.workId, params.workId)));
+      )).where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.workId, params.workId)))
+        .orderBy(asc(businessEffects.createdAt), asc(businessEffects.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
     }),
   ]);
+  if (policyRowsPlus.length > MAX_HIGH_EGRESS_ROWS || revisionsPlus.length > MAX_HIGH_EGRESS_ROWS || effectRowsPlus.length > MAX_HIGH_EGRESS_ROWS) {
+    throw new Error(`Objective planning evidence exceeded ${MAX_HIGH_EGRESS_ROWS} rows; planning is stopped until the Work history is narrowed`);
+  }
+  const policyRows = policyRowsPlus;
+  const revisions = revisionsPlus;
+  const effectRows = effectRowsPlus;
   if (!input) throw new Error("Objective planning requires a durable WorkInput");
   const effectivePolicies = policyRows.filter((row, index, all) => all.findIndex((candidate) => candidate.actionType === row.actionType) === index);
   const graphByRevision = new Map(revisions.map((row) => [row.id, graphFromPersistence(row.planGraph)]));
@@ -1432,6 +1618,20 @@ async function consequentialDispatchViolation(params: {
 }): Promise<string | null> {
   const currentPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
   if (!currentPlan || currentPlan.id !== params.planRevisionId) return "The PlanRevision is no longer active";
+  if (params.node.irreversible) {
+    const replayFence = await irreversibleEffectReplayFence({
+      tenantId: params.tenantId,
+      workId: params.workId,
+      currentPlanRevisionId: params.planRevisionId,
+      nodeSemanticHash: params.node.semanticHash,
+    });
+    if (replayFence?.state === "verified") {
+      return `A semantically identical irreversible BusinessEffect is already VERIFIED (${replayFence.businessEffectId})`;
+    }
+    if (replayFence?.state === "unknown_outcome") {
+      return `A semantically identical irreversible BusinessEffect has an unknown external outcome (${replayFence.businessEffectId}); reconciliation is required`;
+    }
+  }
   const snapshot = isRecord(currentPlan.planningSnapshot) ? currentPlan.planningSnapshot as unknown as PlanningWorldSnapshot : null;
   if (!snapshot || snapshot.workId !== params.workId) return "The active PlanRevision snapshot is malformed or Work-scoped incorrectly";
   const current = await withTenant(params.tenantId, async (db) => {
@@ -1521,10 +1721,25 @@ export class ObjectiveLoopRuntime {
     const loop = claimed.loop;
     const step = claimed.step;
     if (loop.workId !== params.workId) throw new Error("Objective job Work does not match its loop");
-    if (step.stepNumber > loop.maxSteps) {
+    if (step.executionRole !== "node" && step.stepNumber > loop.maxSteps) {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective stopped at the configured ${loop.maxSteps}-step limit.`, progressMade: false })).outcome;
     }
     if (new Date() >= loop.deadlineAt) {
+      const deadlinePlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+      if (deadlinePlan) {
+        // Persist deterministic recovery semantics before the controller records
+        // the terminal loop transition. The scheduler will classify this as a
+        // deadline recovery and cannot reserve new work past the deadline.
+        await reserveReadyPlanFrontier({
+          tenantId: params.tenantId,
+          workId: params.workId,
+          objectiveLoopId: loop.id,
+          expectedObjectiveRevision: loop.revision,
+          planRevisionId: deadlinePlan.id,
+          ...(step.executionRole === "node" ? {} : { controllerStepId: step.id }),
+          maxReady: loop.maxParallelNodes,
+        });
+      }
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "failed", reason: "Objective deadline expired before another safe step could begin.", progressMade: false, failure: { deadlineAt: loop.deadlineAt.toISOString() } })).outcome;
     }
     const { ctx, work } = await workerContext(params.tenantId, params.workId);
@@ -1554,7 +1769,7 @@ export class ObjectiveLoopRuntime {
     await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ inspection: bounded(inspection, 128_000) as object, inspectionHash, phase: "deciding" }).where(eq(workObjectiveSteps.id, step.id)));
     await markObjectiveWakeConsumed(params.tenantId, loop.id, loop.revision);
 
-    const unresolved = unresolvedEffect(inspection);
+    const unresolved = params.workforceAssignmentId ? null : unresolvedEffect(inspection);
     if (unresolved) {
       return (await finishIteration({
         tenantId: params.tenantId, loop, step, outcome: unresolved.outcome, reason: unresolved.reason,
@@ -1605,6 +1820,9 @@ export class ObjectiveLoopRuntime {
     let activeGraph: PlanGraph | null = null;
     let activeNode: PlanNode | null = null;
     let replanCause: PlanReplanCause = "observation";
+    let prefetchedReservation: FrontierReservationResult | null = null;
+    const canonicalController = params.deferToWorkforceJob && !params.workforceAssignmentId
+      && !this.compatibilityPlanner && step.executionRole !== "node";
     if (active) {
       activeGraph = graphFromPersistence(active.planGraph);
       if (step.planRevisionId === active.id && step.planNodeId) {
@@ -1612,6 +1830,68 @@ export class ObjectiveLoopRuntime {
         // the same immutable node and deterministic action/query idempotency key.
         activeNode = activeGraph.nodes.find((node) => node.id === step.planNodeId)
           ?? (() => { throw new Error("Objective step references a node outside its active PlanRevision"); })();
+      } else if (canonicalController) {
+        // For the production path, the durable frontier reservation is the sole
+        // scheduling authority. It sees in-flight claims as well as completed
+        // observations, so independent branches are neither serialized nor
+        // accidentally duplicated by a controller-only compatibility projection.
+        const reservation = await reserveReadyPlanFrontier({
+          tenantId: params.tenantId,
+          workId: params.workId,
+          objectiveLoopId: loop.id,
+          expectedObjectiveRevision: loop.revision,
+          planRevisionId: active.id,
+          controllerStepId: step.id,
+          maxReady: loop.maxParallelNodes,
+        });
+        if (reservation.state === "reserved") {
+          prefetchedReservation = reservation;
+          activeNode = reservation.reservations[0]!.unit.node;
+        } else if (reservation.state === "waiting") {
+          return (await finishIteration({
+            tenantId: params.tenantId,
+            loop,
+            step,
+            outcome: "waiting",
+            reason: "At least one exact logical PlanNode attempt or durable correlation is still in progress.",
+            nextStep: "Resume from its generation-pinned completion or wake event.",
+            observation: { canonicalInspectionHash: inspectionHash, frontier: reservation.frontier },
+            progressMade: false,
+          })).outcome;
+        } else if (reservation.state === "exhausted") {
+          return (await finishIteration({
+            tenantId: params.tenantId,
+            loop,
+            step,
+            outcome: "blocked",
+            reason: reservation.frontier.reason,
+            nextStep: "Produce a verified CompletionProof or explicitly repair the plan lineage.",
+            observation: { canonicalInspectionHash: inspectionHash, frontier: reservation.frontier },
+            progressMade: false,
+          })).outcome;
+        } else if (reservation.recoveryDecision.decision === "replan") {
+          replanCause = ["observation", "failure", "stale", "timeout"].includes(reservation.frontier.cause)
+            ? reservation.frontier.cause as PlanReplanCause
+            : "observation";
+        } else {
+          const recoveryOutcome: ObjectiveIterationOutcome = reservation.recoveryDecision.decision === "cancel" ? "cancelled"
+            : reservation.recoveryDecision.decision === "terminal_failure" ? "failed"
+              : reservation.recoveryDecision.decision === "reconcile" || reservation.recoveryDecision.decision === "wait" ? "waiting"
+                : "blocked";
+          return (await finishIteration({
+            tenantId: params.tenantId,
+            loop,
+            step,
+            outcome: recoveryOutcome,
+            reason: reservation.recoveryDecision.reason,
+            nextStep: reservation.recoveryDecision.decision === "reconcile"
+              ? "Reconcile external reality from canonical provider or BusinessEffect evidence before any retry."
+              : "Resolve the durable RecoveryDecision before continuation.",
+            observation: { canonicalInspectionHash: inspectionHash, recoveryDecisionId: reservation.recoveryDecision.id, recovery: reservation.recoveryDecision.context },
+            progressMade: false,
+            failure: recoveryOutcome === "failed" ? reservation.recoveryDecision.context : undefined,
+          })).outcome;
+        }
       } else if (!this.compatibilityPlanner) {
         // The compatibility planner is a deterministic fixture/legacy adapter that
         // proposes exactly one material decision per call. It still compiles through
@@ -1753,13 +2033,15 @@ export class ObjectiveLoopRuntime {
         decision = planNode.kind === "check" && compatibilityDecision && ["complete", "block", "fail"].includes(compatibilityDecision.kind)
           ? compatibilityDecision
           : planDecision(planNode);
-        await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
-          planRevisionId,
-          planNodeId: planNode.id,
-          decisionKind: decision.kind,
-          decision,
-          decisionReason: decision.reason,
-        }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, step.id))));
+        if (!params.deferToWorkforceJob || params.workforceAssignmentId || this.compatibilityPlanner) {
+          await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
+            planRevisionId,
+            planNodeId: planNode.id,
+            decisionKind: decision.kind,
+            decision,
+            decisionReason: decision.reason,
+          }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, step.id))));
+        }
         await finishCanonicalWorkPlannerAttempt({
           tenantId: params.tenantId,
           attemptId: canonicalAttempt.id,
@@ -1785,6 +2067,82 @@ export class ObjectiveLoopRuntime {
         await releaseLease(params.tenantId, loop.id, leaseOwner);
         throw error;
       }
+    }
+
+    if (params.deferToWorkforceJob && !params.workforceAssignmentId && !this.compatibilityPlanner && step.executionRole !== "node") {
+      const reservation = prefetchedReservation ?? await reserveReadyPlanFrontier({
+        tenantId: params.tenantId,
+        workId: params.workId,
+        objectiveLoopId: loop.id,
+        expectedObjectiveRevision: loop.revision,
+        planRevisionId,
+        controllerStepId: step.id,
+        maxReady: loop.maxParallelNodes,
+      });
+      if (reservation.state === "reserved") {
+        const [reservedLoop] = await withTenant(params.tenantId, (db) => db.select().from(workObjectiveLoops).where(and(
+          eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id),
+        )).limit(1));
+        if (!reservedLoop || reservedLoop.revision !== loop.revision) return reservedLoop?.state ?? loop.state;
+        let assigned = 0;
+        let humanRequired = 0;
+        let failed = 0;
+        for (const item of reservation.reservations) {
+          const requested = await requestWorkforceAssignment({
+            tenantId: params.tenantId,
+            workId: params.workId,
+            planRevisionId,
+            node: item.unit.node,
+            objectiveLoop: reservedLoop,
+            objectiveStepId: item.step.id,
+            plugins: this.plugins,
+          });
+          if (requested.status === "assigned") {
+            assigned += 1;
+            continue;
+          }
+          if (requested.status === "human_required") humanRequired += 1;
+          else failed += 1;
+          await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
+            phase: requested.status === "human_required" ? "observing" : "finished",
+            executionState: requested.status === "human_required" ? "waiting" : "failed",
+            iterationOutcome: requested.status === "human_required" ? "waiting" : "blocked",
+            observation: { workforceStatus: requested.status, ineligibility: requested.ineligibility },
+            failure: requested.status === "human_required" ? null : { code: "WORKFORCE_ASSIGNMENT_UNAVAILABLE", reason: requested.reason },
+            decisionReason: requested.reason,
+            completedAt: requested.status === "human_required" ? null : new Date(),
+          }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, item.step.id), sql`${workObjectiveSteps.completedAt} IS NULL`)));
+        }
+        if (assigned === 0 && humanRequired > 0 && failed === 0) {
+          await withTenant(params.tenantId, (db) => db.update(workObjectiveLoops).set({
+            state: "waiting",
+            reason: "Every ready PlanNode requires an authenticated human boundary.",
+            nextStep: "A human must act through the canonical Authority boundary before continuation.",
+            nextRunAt: null,
+            updatedAt: new Date(),
+          }).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id), eq(workObjectiveLoops.revision, loop.revision))));
+          return "waiting";
+        }
+        if (failed > 0) await scheduleIteration(reservedLoop, new Date(), params.workId);
+        return "continue";
+      }
+      // A concurrent worker/wake/control transition may consume the frontier after
+      // inspection. Retire this controller without advancing canonical Work; node
+      // completion or an exact wake owns the next delivery.
+      await withTenant(params.tenantId, async (db) => {
+        await db.update(workObjectiveSteps).set({
+          phase: "finished",
+          executionState: "completed",
+          iterationOutcome: reservation.state === "waiting" ? "waiting" : "continue",
+          decisionReason: "reason" in reservation.frontier ? reservation.frontier.reason : "The frontier changed before controller retirement.",
+          observation: { frontierState: reservation.frontier.state },
+          completedAt: new Date(),
+        }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, step.id), sql`${workObjectiveSteps.completedAt} IS NULL`));
+        await db.update(workObjectiveLoops).set({ leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(and(
+          eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id), eq(workObjectiveLoops.leaseOwner, leaseOwner),
+        ));
+      });
+      return reservation.state === "waiting" ? "waiting" : reservation.state === "recovery" ? "continue" : loop.state;
     }
 
     await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
@@ -1986,7 +2344,7 @@ export class ObjectiveLoopRuntime {
       if (planNode.kind !== "query" || planningHash(planNode.request) !== planningHash(decision.request)) {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "The query does not exactly match the selected immutable PlanGraph node.", decision, progressMade: false })).outcome;
       }
-      if (loop.queryCount >= loop.maxQueries) {
+      if (loop.queryCount >= loop.maxQueries && step.budgetReservationKind !== "query") {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective exhausted its ${loop.maxQueries}-query budget.`, decision, progressMade: false })).outcome;
       }
       const validated = validateOperationalQueryRequest(decision.request);
@@ -2021,7 +2379,7 @@ export class ObjectiveLoopRuntime {
       }
     }
 
-    if (loop.actionCount >= loop.maxActions) {
+    if (loop.actionCount >= loop.maxActions && step.budgetReservationKind !== "action") {
       return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective exhausted its ${loop.maxActions}-action budget.`, decision, progressMade: false })).outcome;
     }
     if (planNode.kind !== "action" || planNode.actionType !== decision.actionType || planningHash(planNode.groundedPayload) !== planningHash(decision.payload)) {
@@ -2122,6 +2480,9 @@ export async function controlWorkObjective(params: {
 }): Promise<typeof workObjectiveLoops.$inferSelect> {
   let cancellationAlreadyRecorded = false;
   const loop = await withTenant(params.tenantId, async (db) => {
+    // Global Objective lock order is ObjectiveLoop -> PlanRevision -> logical /
+    // physical attempts. Scheduler reservation and iteration finalization already
+    // use this order; worker claims take compatible shared generation locks.
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!current) throw new Error("Work has no objective loop");
@@ -2131,6 +2492,89 @@ export async function controlWorkObjective(params: {
     }
     if (current.state === "completed" || current.state === "cancelled") {
       throw new Error(`${current.state === "completed" ? "Completed" : "Cancelled"} objective cannot be ${params.command === "cancel" ? "cancelled" : "continued or redirected"}`);
+    }
+    // Serialize control with scheduler/claim/effect generation checks. If effect
+    // commit won first, the subsequent effect read observes that fact; if control
+    // wins, no stale command may cross the provider boundary.
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR UPDATE`);
+    const [activePlan] = await db.select().from(workPlanRevisions).where(and(
+      eq(workPlanRevisions.tenantId, params.tenantId),
+      eq(workPlanRevisions.workId, params.workId),
+      eq(workPlanRevisions.status, "active"),
+    )).limit(1);
+    const controlledNodeSteps = activePlan ? await db.select().from(workObjectiveSteps).where(and(
+      eq(workObjectiveSteps.tenantId, params.tenantId),
+      eq(workObjectiveSteps.objectiveLoopId, current.id),
+      eq(workObjectiveSteps.planRevisionId, activePlan.id),
+      eq(workObjectiveSteps.executionRole, "node"),
+      sql`(${workObjectiveSteps.completedAt} IS NULL OR (${workObjectiveSteps.domainActionId} IS NOT NULL AND ${workObjectiveSteps.executionState} IN ('scheduled','claimed','running','waiting','reconciliation_required')))`,
+    )) : [];
+    const actionIds = controlledNodeSteps.flatMap((candidate) => candidate.domainActionId ? [candidate.domainActionId] : []);
+    const actionRows = actionIds.length > 0
+      ? await db.select().from(domainActions).where(and(eq(domainActions.tenantId, params.tenantId), inArray(domainActions.id, actionIds)))
+      : [];
+    const effectRows = actionIds.length > 0
+      ? await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, params.tenantId), inArray(businessEffects.domainActionId, actionIds)))
+      : [];
+    const actionById = new Map(actionRows.map((candidate) => [candidate.id, candidate]));
+    const effectByActionId = new Map(effectRows.flatMap((candidate) => candidate.domainActionId ? [[candidate.domainActionId, candidate] as const] : []));
+    const ambiguousStepIds: string[] = [];
+    const safeCompletedActionStepIds: string[] = [];
+    if (activePlan) {
+      const graph = graphFromPersistence(activePlan.planGraph);
+      for (const attempt of controlledNodeSteps) {
+        const node = graph.nodes.find((candidate) => candidate.id === attempt.planNodeId);
+        if (!node || !attempt.planNodeId || !attempt.attemptNumber) continue;
+        const action = attempt.domainActionId ? actionById.get(attempt.domainActionId) : undefined;
+        const effect = attempt.domainActionId ? effectByActionId.get(attempt.domainActionId) : undefined;
+        const effectUncertain = Boolean(effect && ["executing", "executed", "partially_verified", "unverified", "reconciliation_required"].includes(effect.status));
+        const unknownExternalOutcome = node.kind === "action" && (
+          effectUncertain || (Boolean(action?.executionStartedAt) && !effect)
+          || attempt.executionState === "reconciliation_required"
+        );
+        const verification = isRecord(attempt.verificationResult) ? attempt.verificationResult : null;
+        const verificationState = verification && ["verified", "divergent", "inconclusive"].includes(String(verification.state))
+          ? verification.state as VerificationResult["state"]
+          : null;
+        const semantic = decideRecovery({
+          workId: params.workId,
+          objectiveRevision: current.revision,
+          planRevisionId: activePlan.id,
+          node,
+          objectiveStepId: attempt.id,
+          recoveryParentStepId: attempt.recoveryParentStepId ?? attempt.id,
+          attemptNumber: attempt.attemptNumber,
+          cause: params.command === "cancel" || params.command === "interrupt" ? "cancellation" : "stale",
+          reason: `Logical attempt stopped by ${params.command} from ${params.actorId}.`,
+          verificationState,
+          authorityState: params.command === "redirect" || params.command === "continue" ? "stale" : "unknown",
+          cancelled: params.command === "cancel" || params.command === "interrupt",
+          unknownExternalOutcome,
+          verifiedIrreversibleEffect: node.kind === "action" && node.irreversible && effect?.status === "verified",
+        });
+        if (semantic.kind === "reconcile") ambiguousStepIds.push(attempt.id);
+        else if (attempt.completedAt && attempt.domainActionId) safeCompletedActionStepIds.push(attempt.id);
+        await db.insert(workRecoveryDecisions).values({
+          tenantId: params.tenantId,
+          workId: params.workId,
+          objectiveLoopId: current.id,
+          objectiveRevision: current.revision,
+          planRevisionId: activePlan.id,
+          planNodeId: node.id,
+          objectiveStepId: attempt.id,
+          attemptNumber: attempt.attemptNumber,
+          recoveryParentStepId: semantic.recoveryParentStepId,
+          authorityDecisionId: attempt.authorityDecisionId ?? action?.authorityDecisionId ?? null,
+          domainActionId: attempt.domainActionId,
+          businessEffectId: effect?.id ?? null,
+          verificationResult: verification,
+          decision: semantic.kind,
+          cause: semantic.cause,
+          reason: semantic.reason,
+          context: semantic,
+          decisionKey: semantic.decisionKey,
+        }).onConflictDoNothing({ target: [workRecoveryDecisions.tenantId, workRecoveryDecisions.decisionKey] });
+      }
     }
     await db.update(workPlanRevisions).set({
       status: params.command === "interrupt" || params.command === "cancel" ? "blocked" : "superseded",
@@ -2181,11 +2625,43 @@ export async function controlWorkObjective(params: {
         }
       }
     }
+    if (ambiguousStepIds.length > 0) {
+      await db.update(workObjectiveSteps).set({
+        phase: "finished",
+        executionState: "reconciliation_required",
+        iterationOutcome: "waiting",
+        decisionReason: `External outcome requires reconciliation after ${params.command} from ${params.actorId}.`,
+        progressMade: false,
+        claimOwner: null,
+        claimUntil: null,
+        completedAt: new Date(),
+      }).where(and(
+        eq(workObjectiveSteps.tenantId, params.tenantId),
+        inArray(workObjectiveSteps.id, ambiguousStepIds),
+      ));
+    }
+    if (safeCompletedActionStepIds.length > 0) {
+      await db.update(workObjectiveSteps).set({
+        phase: "finished",
+        executionState: params.command === "cancel" || params.command === "interrupt" ? "cancelled" : "superseded",
+        iterationOutcome: params.command === "cancel" ? "cancelled" : "blocked",
+        decisionReason: `Pre-invocation action attempt stopped by ${params.command} from ${params.actorId}.`,
+        progressMade: false,
+        claimOwner: null,
+        claimUntil: null,
+      }).where(and(
+        eq(workObjectiveSteps.tenantId, params.tenantId),
+        inArray(workObjectiveSteps.id, safeCompletedActionStepIds),
+      ));
+    }
     await db.update(workObjectiveSteps).set({
       phase: "finished",
+      executionState: params.command === "cancel" || params.command === "interrupt" ? "cancelled" : "superseded",
       iterationOutcome: params.command === "cancel" ? "cancelled" : "blocked",
       decisionReason: `Iteration superseded by ${params.command} from ${params.actorId}.`,
       progressMade: false,
+      claimOwner: null,
+      claimUntil: null,
       completedAt: new Date(),
     }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, current.id), sql`${workObjectiveSteps.completedAt} IS NULL`));
     if (params.command === "interrupt") {
@@ -2246,7 +2722,10 @@ export async function recoverRunnableObjectives(tenantId: string): Promise<numbe
       eq(workEventWaits.objectiveLoopId, loop.id),
       eq(workEventWaits.status, "waiting"),
     )).limit(1));
-    if (openWait) continue;
+    // One waiting branch must not serialize independent ready branches. Node-level
+    // waits leave the loop in `continue`; a loop-level waiting/approval state still
+    // waits for its exact correlation before another controller is enqueued.
+    if (openWait && loop.state !== "continue") continue;
     const due = loop.state === "continue" || (loop.state === "waiting" && (!loop.nextRunAt || loop.nextRunAt <= new Date()));
     if (due) {
       await scheduleIteration(loop, new Date(), loop.workId);

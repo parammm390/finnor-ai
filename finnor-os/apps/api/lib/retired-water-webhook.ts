@@ -101,7 +101,7 @@ export async function quarantineRetiredWaterWebhook(
   if (!verify(req, rawBody, json)) {
     logWithTrace({ route: `webhooks/${provider}` }).warn(
       { event: "webhook_signature_rejected", provider },
-      "rejected retired provider webhook: bad signature",
+      "rejected retired Water webhook: bad signature",
     );
     return Response.json({ error: "Bad signature" }, { status: 401 });
   }

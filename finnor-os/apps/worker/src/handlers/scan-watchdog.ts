@@ -15,11 +15,11 @@
 //    signal fires EARLIER (half that timeout) and only nudges — never changes status —
 //    so it can't race or duplicate that scan's own transition.
 
-import { withTenant, workflowRuns, workflowSteps, decisionReceipts, domainActions, domainPolicies, domainPolicyRevisions, enqueueJob, getPool } from "@finnor/db";
-import { and, eq, lt, isNull, sql } from "drizzle-orm";
+import { MAX_BACKGROUND_SCAN_BATCH, withTenant, workflowRuns, workflowSteps, decisionReceipts, domainActions, domainPolicies, domainPolicyRevisions, enqueueJob, getPool } from "@finnor/db";
+import { and, asc, eq, gt, lt, isNull, or, sql } from "drizzle-orm";
 import { enqueueStep, isRunPastWatchdogDeadline, stuckRunDeadlineHours, workflowStepJobKey } from "@finnor/workflow-runtime";
 import { appendEpisode, readEpisodes } from "@finnor/memory";
-import { Sentry } from "@finnor/tools";
+import { recoverStaleProviderOperations, Sentry } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 
 // Conservative first-pass thresholds, not fabricated p95s. Active product single-action
@@ -32,7 +32,7 @@ const UNFINALIZED_RECEIPT_MINUTES = 60;
 const AGING_APPROVAL_NUDGE_FRACTION = 0.5;
 
 export interface WatchdogFinding {
-  kind: "stuck_run" | "orphaned_step" | "unfinalized_receipt" | "aging_approval_nudge";
+  kind: "stuck_run" | "orphaned_step" | "unfinalized_receipt" | "aging_approval_nudge" | "stale_provider_operation";
   tenantId: string;
   refId: string;
   domainActionId?: string;
@@ -111,55 +111,79 @@ async function detectUnfinalizedReceipts(tenantId: string): Promise<WatchdogFind
   }));
 }
 
+async function recoverAbandonedProviderOperations(tenantId: string): Promise<WatchdogFinding[]> {
+  const recovery = await recoverStaleProviderOperations(tenantId);
+  return recovery.operationIds.map((operationId) => ({
+    kind: "stale_provider_operation" as const,
+    tenantId,
+    refId: operationId,
+    detail: {
+      inspected: recovery.inspected,
+      knownFailedBeforeEgress: recovery.knownFailedBeforeEgress,
+      acknowledgementResumed: recovery.acknowledgementResumed,
+      reconciliationRequired: recovery.reconciliationRequired,
+    },
+  }));
+}
+
 /** Nudge only — never touches domain_actions.status (scan-approval-expiry.ts owns that
  *  transition). Deduped via an action_log episode so a tenant's pending action gets
  *  exactly one nudge, not one per scan tick until it either clears or expires. */
 async function detectAndNudgeAgingApprovals(tenantId: string): Promise<WatchdogFinding[]> {
-  const pending = await withTenant(tenantId, (db) =>
-    db
-      .select({
-        id: domainActions.id,
-        actionType: domainActions.actionType,
-        createdAt: domainActions.createdAt,
-        summary: domainActions.summary,
-        confirmationTimeoutHours: domainPolicyRevisions.confirmationTimeoutHours,
-        legacyConfirmationTimeoutHours: domainPolicies.confirmationTimeoutHours,
-      })
-      .from(domainActions)
-      .leftJoin(domainPolicyRevisions, and(
-        eq(domainActions.policyId, domainPolicyRevisions.policyId),
-        eq(domainActions.policyVersion, domainPolicyRevisions.version),
-      ))
-      .leftJoin(domainPolicies, eq(domainActions.policyId, domainPolicies.id))
-      .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.status, "pending"))),
-  );
-  if (pending.length === 0) return [];
-
   const findings: WatchdogFinding[] = [];
-  for (const row of pending) {
-    const timeoutHours = row.confirmationTimeoutHours ?? row.legacyConfirmationTimeoutHours ?? 24;
-    const nudgeAtHours = timeoutHours * AGING_APPROVAL_NUDGE_FRACTION;
-    if (hoursSince(row.createdAt) < nudgeAtHours) continue;
+  let cursor: { createdAt: Date; id: string } | null = null;
+  while (true) {
+    const pendingPlus = await withTenant(tenantId, (db) =>
+      db
+        .select({
+          id: domainActions.id,
+          actionType: domainActions.actionType,
+          createdAt: domainActions.createdAt,
+          summary: domainActions.summary,
+          confirmationTimeoutHours: domainPolicyRevisions.confirmationTimeoutHours,
+          legacyConfirmationTimeoutHours: domainPolicies.confirmationTimeoutHours,
+        })
+        .from(domainActions)
+        .leftJoin(domainPolicyRevisions, and(
+          eq(domainActions.policyId, domainPolicyRevisions.policyId),
+          eq(domainActions.policyVersion, domainPolicyRevisions.version),
+        ))
+        .leftJoin(domainPolicies, eq(domainActions.policyId, domainPolicies.id))
+        .where(and(
+          eq(domainActions.tenantId, tenantId),
+          eq(domainActions.status, "pending"),
+          cursor ? or(
+            gt(domainActions.createdAt, cursor.createdAt),
+            and(eq(domainActions.createdAt, cursor.createdAt), gt(domainActions.id, cursor.id)),
+          ) : undefined,
+        ))
+        .orderBy(asc(domainActions.createdAt), asc(domainActions.id))
+        .limit(MAX_BACKGROUND_SCAN_BATCH + 1),
+    );
+    const pending = pendingPlus.slice(0, MAX_BACKGROUND_SCAN_BATCH);
+    for (const row of pending) {
+      const timeoutHours = row.confirmationTimeoutHours ?? row.legacyConfirmationTimeoutHours ?? 24;
+      const nudgeAtHours = timeoutHours * AGING_APPROVAL_NUDGE_FRACTION;
+      if (hoursSince(row.createdAt) < nudgeAtHours) continue;
 
-    const episodes = await readEpisodes(tenantId, { domainActionId: row.id, limit: 50 });
-    if (episodes.some((e) => e.step === "watchdog_nudge_sent")) continue; // already nudged once
+      const episodes = await readEpisodes(tenantId, { domainActionId: row.id, limit: 50 });
+      if (episodes.some((e) => e.step === "watchdog_nudge_sent")) continue; // already nudged once
 
-    findings.push({
-      kind: "aging_approval_nudge",
-      tenantId,
-      refId: row.id,
-      domainActionId: row.id,
-      detail: { actionType: row.actionType, timeoutHours, nudgeAtHours: Math.round(nudgeAtHours * 10) / 10 },
-    });
-    await appendEpisode(tenantId, row.id, "watchdog_nudge_sent", {}, { nudgeAtHours });
-    await enqueueJob(
-      "voice_notify_failure",
-      {
+      findings.push({
+        kind: "aging_approval_nudge",
         tenantId,
-        script: `Just a heads up — a request to ${row.actionType.replaceAll("_", " ")}${row.summary ? ` (${row.summary})` : ""} is still waiting on your approval. No rush, it's not expired yet — just didn't want it to slip by unnoticed.`,
-      },
-      `watchdog-nudge:${row.id}`,
-    ).catch(() => undefined); // notification trouble must never block the scan itself
+        refId: row.id,
+        domainActionId: row.id,
+        detail: { actionType: row.actionType, timeoutHours, nudgeAtHours: Math.round(nudgeAtHours * 10) / 10 },
+      });
+      await appendEpisode(tenantId, row.id, "watchdog_nudge_sent", {}, { nudgeAtHours });
+      // The durable attention item is already visible. Scope 2 retired the direct
+      // voice nudge because it had no logical provider-operation owner.
+    }
+    if (pending.length === 0) break;
+    const last = pending.at(-1);
+    if (pendingPlus.length <= MAX_BACKGROUND_SCAN_BATCH || !last) break;
+    cursor = { createdAt: last.createdAt, id: last.id };
   }
   return findings;
 }
@@ -169,20 +193,21 @@ async function detectAndNudgeAgingApprovals(tenantId: string): Promise<WatchdogF
  *  yet: safe to reset and re-enqueue" branch. Everything else here only reads + reports;
  *  the handler below is the thin, untested-by-design wiring that alerts on it. */
 export async function detectWatchdogFindings(tenantId: string): Promise<WatchdogFinding[]> {
-  const [stuckRuns, orphanedSteps, unfinalizedReceipts, agingNudges] = await Promise.all([
+  const [stuckRuns, orphanedSteps, unfinalizedReceipts, agingNudges, staleProviderOperations] = await Promise.all([
     detectStuckRuns(tenantId),
     detectAndHealOrphanedSteps(tenantId),
     detectUnfinalizedReceipts(tenantId),
     detectAndNudgeAgingApprovals(tenantId),
+    recoverAbandonedProviderOperations(tenantId),
   ]);
-  return [...stuckRuns, ...orphanedSteps, ...unfinalizedReceipts, ...agingNudges];
+  return [...stuckRuns, ...orphanedSteps, ...unfinalizedReceipts, ...agingNudges, ...staleProviderOperations];
 }
 
 function severityFor(kind: WatchdogFinding["kind"]): "warning" | "error" {
   // A stuck run or an unfinalized receipt is a real reliability defect worth paging on;
   // an orphaned step self-heals the moment this scan finds it, and a nudge is routine —
   // both stay at "warning" (visible, not urgent).
-  return kind === "stuck_run" ? "error" : "warning";
+  return kind === "stuck_run" || kind === "stale_provider_operation" ? "error" : "warning";
 }
 
 export const scanWatchdog: JobHandler = async (payload) => {
@@ -191,19 +216,14 @@ export const scanWatchdog: JobHandler = async (payload) => {
 
   const findings = await detectWatchdogFindings(tenantId);
   for (const finding of findings) {
-    if (finding.kind === "aging_approval_nudge") continue; // already reported via voice_notify_failure, not an alert
+    // The approval record and watchdog episode are the durable attention surface.
+    // Scope 2 intentionally retired the untracked voice-provider mutation.
+    if (finding.kind === "aging_approval_nudge") continue;
     Sentry.captureMessage(`watchdog:${finding.kind}:tenant:${tenantId}`, {
       level: severityFor(finding.kind),
       extra: finding.detail,
       tags: { watchdog_kind: finding.kind, tenant_id: tenantId },
     });
-    if (severityFor(finding.kind) === "error") {
-      await enqueueJob(
-        "send_push_notification",
-        { tenantId, kind: "watchdog-critical", actionId: finding.domainActionId, body: `Watchdog found ${finding.kind.replaceAll("_", " ")}.` },
-        `push:watchdog-critical:${tenantId}:${finding.kind}:${finding.refId}`,
-      ).catch(() => undefined);
-    }
     if (finding.domainActionId) {
       await appendEpisode(tenantId, finding.domainActionId, "watchdog_finding", {}, { kind: finding.kind, ...finding.detail }).catch(() => undefined);
     }

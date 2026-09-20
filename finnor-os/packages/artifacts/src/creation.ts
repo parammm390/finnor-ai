@@ -14,6 +14,7 @@ import {
   MicrosoftDriveArtifactTransport,
   MicrosoftGraphClient,
   MicrosoftGraphError,
+  type MicrosoftGraphMutationAudit,
   type MicrosoftDriveCreateInput,
   type MicrosoftDriveItemMetadata,
 } from "@finnor/provider-microsoft365";
@@ -23,10 +24,20 @@ import {
   type MicrosoftGraphAuthContext,
 } from "@finnor/security";
 import { ensure, writeZip, type SemanticIR } from "@finnor/ooxml";
+import {
+  claimOwnedExternalOperation,
+  markOwnedExternalOperationDivergent,
+  readOwnedExternalOperation,
+  reconcileOwnedExternalOperation,
+  recordOwnedExternalOperationResult,
+  type ClaimedProviderOperation,
+  type ExternalOperationRow,
+} from "@finnor/tools";
 import type { ArtifactActor } from "./service";
 import { ingestArtifact, interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot } from "./service";
 import { classifyReadback } from "./publication";
 import { recordArtifactMetric } from "./telemetry";
+import { artifactOperationRequestHash, microsoftGraphMutationAudit } from "./provider-operation";
 
 export type CreatableArtifactKind = "xlsx" | "docx" | "pptx";
 
@@ -110,19 +121,27 @@ export interface ArtifactProviderCreateTransport {
 }
 
 export interface ArtifactProviderCreationDependencies {
-  transport(input: { actor: ArtifactActor; integrationId: string; mode: ArtifactCreateWriteMode }): Promise<ArtifactProviderCreateTransport>;
+  transport(input: {
+    actor: ArtifactActor;
+    integrationId: string;
+    mode: ArtifactCreateWriteMode;
+    mutationAudit?: MicrosoftGraphMutationAudit;
+  }): Promise<ArtifactProviderCreateTransport>;
   enqueue(type: string, payload: Record<string, unknown>, idempotencyKey: string, correlationId?: string): Promise<void>;
 }
 
 export const defaultArtifactProviderCreationDependencies: ArtifactProviderCreationDependencies = {
-  async transport({ actor, integrationId, mode }) {
+  async transport({ actor, integrationId, mode, mutationAudit }) {
     let auth: MicrosoftGraphAuthContext;
     if (mode === "APP_ONLY_FILE_CREATE") {
       auth = await resolveMicrosoftProviderAuthContext({ tenantId: actor.tenantId, integrationId });
     } else {
       auth = await resolveMicrosoftDelegatedAuthContext({ tenantId: actor.tenantId, principalId: actor.employeeId ?? actor.userId });
     }
-    return new MicrosoftDriveArtifactTransport(new MicrosoftGraphClient(auth), mode === "APP_ONLY_FILE_CREATE" ? "app_only" : "delegated");
+    return new MicrosoftDriveArtifactTransport(
+      new MicrosoftGraphClient(auth, { ...(mutationAudit ? { mutationAudit } : {}) }),
+      mode === "APP_ONLY_FILE_CREATE" ? "app_only" : "delegated",
+    );
   },
   enqueue: (type, payload, idempotencyKey, correlationId) => enqueueJob(type, payload, idempotencyKey, correlationId, "interactive", 80),
 };
@@ -144,6 +163,48 @@ interface PreparedProviderCreation {
     mode: ArtifactCreateWriteMode;
     conflictBehavior: "fail";
   };
+}
+
+const providerCreationOperationKey = (creationId: string): string => `artifact-create:${creationId}`;
+
+function providerCreationRequestHash(prepared: PreparedProviderCreation): string {
+  return artifactOperationRequestHash({
+    creationId: prepared.id,
+    integrationId: prepared.input.integrationId,
+    driveId: prepared.input.driveId,
+    parentItemId: prepared.input.parentItemId,
+    name: prepared.input.name,
+    conflictBehavior: prepared.input.conflictBehavior,
+    localVersionId: prepared.input.localVersionId,
+    semanticHash: prepared.local.ir.semanticHash,
+  });
+}
+
+async function claimProviderCreationOperation(
+  actor: ArtifactActor,
+  prepared: PreparedProviderCreation,
+  requestHash: string,
+) {
+  return claimOwnedExternalOperation(
+    actor.tenantId,
+    { type: "artifact_operation", key: prepared.id },
+    providerCreationOperationKey(prepared.id),
+    requestHash,
+    "microsoft_graph",
+    undefined,
+    undefined,
+    {
+      protocolVersion: 2,
+      targetKey: `${prepared.input.driveId}/${prepared.input.parentItemId}/${prepared.input.name}`,
+      integrationId: prepared.input.integrationId,
+      retrySafety: "readback_required",
+      verification: "readback",
+      idempotency: {
+        mode: "readback",
+        scope: `tenant-integration:${prepared.input.integrationId}:drive-item-path`,
+      },
+    },
+  );
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -347,6 +408,19 @@ export async function publishNewArtifactToMicrosoft(
     return result;
   }
 
+  const providerRequestHash = providerCreationRequestHash(prepared);
+  const owner = { type: "artifact_operation" as const, key: prepared.id };
+  let providerOperation: ExternalOperationRow | null = await readOwnedExternalOperation(
+    actor.tenantId,
+    owner,
+    providerCreationOperationKey(prepared.id),
+  );
+  if (providerOperation && providerOperation.requestHash !== providerRequestHash) {
+    throw new Error("Artifact creation logical operation conflicts with immutable provider intent");
+  }
+  let providerClaim: ClaimedProviderOperation | null = null;
+  let mutationAudit: ReturnType<typeof microsoftGraphMutationAudit> | null = null;
+  let providerMutationEntered = false;
   let effectiveStatus = prepared.status;
   let transport: ArtifactProviderCreateTransport | undefined;
   try {
@@ -376,7 +450,64 @@ export async function publishNewArtifactToMicrosoft(
     }
 
     if (shouldCreate) {
+      const claim = await claimProviderCreationOperation(actor, prepared, providerRequestHash);
+      if (!claim.claimed) {
+        providerOperation = claim.existing;
+        try {
+          acknowledged = await transport.metadataByPath({
+            driveId: input.driveId,
+            parentItemId: input.parentItemId,
+            name: input.name,
+          });
+          readback = await transport.download({ driveId: input.driveId, itemId: acknowledged.id });
+          const recovered = classifyReadback(
+            prepared.local.ir,
+            await interpret(readback.bytes, { fileName: readback.metadata.name }),
+          );
+          if (recovered.status === "verification_failed") {
+            await markOwnedExternalOperationDivergent(actor.tenantId, providerOperation.id, {
+              verification: recovered.status,
+              driveItemId: acknowledged.id,
+              diff: recovered.diff,
+            });
+            return finishProviderCreateConflict(actor, prepared, "PROVIDER_CREATE_TARGET_OCCUPIED", recovered.diff);
+          }
+          providerOperation = await reconcileOwnedExternalOperation(actor.tenantId, providerOperation.id, "succeeded", {
+            verification: recovered.status,
+            driveItemId: acknowledged.id,
+            eTag: readback.metadata.eTag,
+          });
+          shouldCreate = false;
+        } catch (error) {
+          if (error instanceof MicrosoftGraphError && error.kind === "not_found") {
+            await withTenant(actor.tenantId, (db) => updateProviderCreation(db, actor, prepared.id, {
+              status: "unknown_delivery",
+              failure: "PROVIDER_OPERATION_UNRESOLVED_READBACK_ABSENT",
+            }));
+            return (await readArtifactProviderCreation(actor, input.documentId, prepared.id))!;
+          }
+          throw error;
+        }
+      } else {
+        providerClaim = claim;
+        providerOperation = claim.operation;
+        mutationAudit = microsoftGraphMutationAudit({
+          tenantId: actor.tenantId,
+          claim,
+          logicalRequestHash: providerRequestHash,
+        });
+        transport = await dependencies.transport({
+          actor,
+          integrationId: input.integrationId,
+          mode: input.mode,
+          mutationAudit,
+        });
+      }
+    }
+
+    if (shouldCreate) {
       try {
+        providerMutationEntered = true;
         acknowledged = await transport.createFile({
           driveId: input.driveId,
           parentItemId: input.parentItemId,
@@ -390,6 +521,21 @@ export async function publishNewArtifactToMicrosoft(
         }
         throw error;
       }
+      if (!providerClaim || !providerOperation) throw new Error("Artifact creation provider claim was lost");
+      providerOperation = await recordOwnedExternalOperationResult(
+        actor.tenantId,
+        providerOperation.id,
+        "succeeded",
+        {
+          provider: "microsoft_graph",
+          driveItemId: acknowledged.id,
+          eTag: acknowledged.eTag ?? null,
+          cTag: acknowledged.cTag ?? null,
+          providerVersionId: acknowledged.providerVersionId ?? null,
+        },
+        providerClaim.providerOperationAttemptId,
+      );
+      if (!providerOperation) throw new Error("Artifact creation provider acknowledgement was not persisted");
     }
     ensure(acknowledged?.id, "PROVIDER_CREATE_ACKNOWLEDGEMENT_MISSING");
 
@@ -431,6 +577,29 @@ export async function publishNewArtifactToMicrosoft(
     if (!readback) readback = await transport.download({ driveId: input.driveId, itemId: prepared.providerItemId });
     const readbackIR = await interpret(readback.bytes, { fileName: readback.metadata.name });
     const verification = classifyReadback(prepared.local.ir, readbackIR);
+    if (providerOperation) {
+      if (verification.status === "verification_failed") {
+        providerOperation = await markOwnedExternalOperationDivergent(
+          actor.tenantId,
+          providerOperation.id,
+          {
+            verification: verification.status,
+            driveItemId: readback.metadata.id,
+            eTag: readback.metadata.eTag,
+            readbackSemanticHash: readbackIR.semanticHash,
+            diff: verification.diff,
+          },
+          providerClaim?.providerOperationAttemptId,
+        );
+      } else if (providerOperation.executionState !== "reconciled" && providerOperation.executionState !== "verified") {
+        providerOperation = await reconcileOwnedExternalOperation(actor.tenantId, providerOperation.id, "succeeded", {
+          verification: verification.status,
+          driveItemId: readback.metadata.id,
+          eTag: readback.metadata.eTag,
+          readbackSemanticHash: readbackIR.semanticHash,
+        });
+      }
+    }
     await withTenant(actor.tenantId, async (db) => {
       const version = await appendDocumentVersion(db, {
         tenantId: actor.tenantId,
@@ -486,6 +655,15 @@ export async function publishNewArtifactToMicrosoft(
     return result;
   } catch (error) {
     if (terminal.has(effectiveStatus)) throw error;
+    if (providerClaim && providerOperation && mutationAudit?.preparedInvocationCount() === 0) {
+      await recordOwnedExternalOperationResult(
+        actor.tenantId,
+        providerOperation.id,
+        providerMutationEntered ? "unknown" : "failed",
+        { failure: safeCreationFailure(error), definitePreDispatch: !providerMutationEntered },
+        providerClaim.providerOperationAttemptId,
+      ).catch(() => undefined);
+    }
     if (effectiveStatus !== "prepared") {
       const status = error instanceof MicrosoftGraphError && error.retryable ? "unknown_delivery" : "verification_failed";
       await withTenant(actor.tenantId, (db) => updateProviderCreation(db, actor, prepared.id, {

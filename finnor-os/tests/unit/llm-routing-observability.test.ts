@@ -15,6 +15,7 @@ vi.mock("@finnor/db", () => {
     decisionReceipts: {},
     llmCalls: {},
     tenantLlmBudgets: {},
+    ComputeCapacityUnavailableError: class extends Error {},
   };
 });
 

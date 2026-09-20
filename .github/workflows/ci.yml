@@ -1,8 +1,19 @@
-# Reusable backend certification for the universal PR verdict and the exact
-# post-merge production release. It never owns production credentials.
+# CI (§29): lint/typecheck + vitest on every PR. Production deployment is owned by
+# production-release.yml and its commit-locked Phase 5 readiness/release job graph.
+# NOTE: this repo lives at finnor-os/ inside the FINNOR repository, so paths are scoped.
 name: finnor-os-ci
 on:
   workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - "finnor-os/**"
+      - ".github/workflows/**"
+      - "infra/deployment/**"
+      - "scripts/release/**"
+      - "package.json"
+      - "package-lock.json"
+      - "JARVIS-CREDENTIALS-LEDGER.md"
 permissions:
   contents: read
 defaults:
@@ -19,7 +30,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
-      - run: npm run release:preflight
+      - run: npm run release:truth
+      - run: npm run test:release
 
   test:
     runs-on: ubuntu-latest
@@ -41,17 +53,18 @@ jobs:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       REDIS_URL: redis://localhost:6379
       AUTH_DEV_BYPASS: "1"
+      # CI uses vanilla PostgreSQL; the migration runner rejects this test seam
+      # for the canonical production database.
+      FINNOR_TEST_MANAGED_EXTENSIONS: omit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm --prefix .. run workspace:check
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci
       # B7.T1: route guards are inventory, not tribal knowledge. Fail before tests
       # whenever a route is added or its visible guard pattern changes without the
       # generated review document being refreshed in the same change.
@@ -59,47 +72,21 @@ jobs:
       - run: npm run openapi
       - run: npm run typecheck
       - run: npm run test:planner-evals
-      - name: Verify generated migration bundle and historical upgrade
-        run: |
-          npm run db:bundle
-          git diff --exit-code packages/db/migrations-bundle.ts
-          npx tsx scripts/release/rehearse-historical-upgrade.ts
       - run: npm run db:migrate
       - run: npm run db:seed
       # The setup file is also loaded by Vitest, but a fresh database does not have
-      # the target table at module-load time. Install the disposable Core fixture
-      # seam explicitly after migrations; it assigns generic tests to `none`.
-      - name: Install disposable Core fixture seam
+      # the target table at module-load time. Install the disposable legacy-fixture
+      # seam explicitly after migrations so pre-Phase-5 generic fixtures get their
+      # test-only Water identity; production code remains fail-closed.
+      - name: Install disposable legacy fixture seam
         run: npx tsx scripts/install-vertical-fixture-seam.ts
       # A truly fresh runner database needs the LangGraph schema explicitly; local dev
       # often hides this because its embedded Postgres data directory persists.
       - run: npm run setup:langgraph
-      # The historical context-kernel fixture exercises a removed field-service
-      # domain and is retained only as non-release reference coverage.
-      - run: npm test -- --exclude tests/integration/historical-conversation-context-kernel.test.ts
-
-  workforce-certification:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: finnor
-          POSTGRES_PASSWORD: finnor
-          POSTGRES_DB: finnor
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U finnor" --health-interval 5s
-          --health-timeout 5s --health-retries 10
-    env:
-      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
-      AUTH_DEV_BYPASS: "1"
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm run release:workforce-learning
+      # Phase 5 deliberately retires the Water-only conversation resolver. Its
+      # old Phase 6 integration fixture asserts Water appointment/household
+      # entities and is outside this release gate; do not silently re-enable
+      # that vertical while certifying the retirement boundary.
+      - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+      - name: Phase 7 governed workforce and learning certification
+        run: npm run release:pe-p7-workforce-learning

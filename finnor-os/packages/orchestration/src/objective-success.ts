@@ -13,6 +13,7 @@ import type {
   CanonicalOperationalQueryRequest,
 } from "@finnor/shared-types";
 import {
+  MAX_HIGH_EGRESS_ROWS,
   businessEffects,
   businessOperations,
   computerArtifacts,
@@ -211,12 +212,19 @@ export async function inspectCurrentObjectiveSuccessState(
   objectiveLoopId: string,
 ): Promise<ObjectiveSuccessInspection> {
   return withTenant(tenantId, async (db) => {
-    const actions = await db.select({ id: domainActions.id, status: domainActions.status })
+    const bounded = <T>(table: string, rows: T[]): T[] => {
+      if (rows.length > MAX_HIGH_EGRESS_ROWS) {
+        throw new Error(`Objective success read exceeded ${MAX_HIGH_EGRESS_ROWS} rows for ${table}; completion is stopped until the evidence is narrowed`);
+      }
+      return rows;
+    };
+    const actions = bounded("domain_actions", await db.select({ id: domainActions.id, status: domainActions.status })
       .from(domainActions)
       .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, workId)))
-      .orderBy(asc(domainActions.createdAt));
+      .orderBy(asc(domainActions.createdAt), asc(domainActions.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1));
     const actionIds = actions.map((row) => row.id);
-    const effects = actionIds.length === 0 ? [] : await db.select({
+    const effects = actionIds.length === 0 ? [] : bounded("business_effects", await db.select({
       id: businessEffects.id,
       status: businessEffects.status,
       effect: businessEffects.effect,
@@ -224,28 +232,31 @@ export async function inspectCurrentObjectiveSuccessState(
     }).from(businessEffects).where(and(
       eq(businessEffects.tenantId, tenantId),
       inArray(businessEffects.domainActionId, actionIds),
-    )).orderBy(asc(businessEffects.createdAt));
-    const operations = await db.select({ id: businessOperations.id, status: businessOperations.status })
+    )).orderBy(asc(businessEffects.createdAt), asc(businessEffects.id)).limit(MAX_HIGH_EGRESS_ROWS + 1));
+    const operations = bounded("business_operations", await db.select({ id: businessOperations.id, status: businessOperations.status })
       .from(businessOperations)
       .where(and(eq(businessOperations.tenantId, tenantId), eq(businessOperations.workId, workId)))
-      .orderBy(asc(businessOperations.createdAt));
-    const delegationRows = await db.select({
+      .orderBy(asc(businessOperations.createdAt), asc(businessOperations.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1));
+    const delegationRows = bounded("delegations", await db.select({
       id: delegations.id,
       status: delegations.status,
       acknowledgedAt: delegations.acknowledgedAt,
       acceptedAt: delegations.acceptedAt,
       completedAt: delegations.completedAt,
-    }).from(delegations).where(and(eq(delegations.tenantId, tenantId), eq(delegations.workId, workId))).orderBy(asc(delegations.createdAt));
-    const runRows = await db.select({ id: computerRuns.id, status: computerRuns.status, result: computerRuns.result })
+    }).from(delegations).where(and(eq(delegations.tenantId, tenantId), eq(delegations.workId, workId))).orderBy(asc(delegations.createdAt), asc(delegations.id)).limit(MAX_HIGH_EGRESS_ROWS + 1));
+    const runRows = bounded("computer_runs", await db.select({ id: computerRuns.id, status: computerRuns.status, result: computerRuns.result })
       .from(computerRuns)
       .where(and(eq(computerRuns.tenantId, tenantId), eq(computerRuns.workId, workId)))
-      .orderBy(asc(computerRuns.createdAt));
+      .orderBy(asc(computerRuns.createdAt), asc(computerRuns.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1));
     const runIds = runRows.map((row) => row.id);
-    const artifacts = runIds.length === 0 ? [] : await db.select({ id: computerArtifacts.id, runId: computerArtifacts.runId })
+    const artifacts = runIds.length === 0 ? [] : bounded("computer_artifacts", await db.select({ id: computerArtifacts.id, runId: computerArtifacts.runId })
       .from(computerArtifacts)
       .where(and(eq(computerArtifacts.tenantId, tenantId), inArray(computerArtifacts.runId, runIds)))
-      .orderBy(asc(computerArtifacts.createdAt));
-    const waits = await db.select({
+      .orderBy(asc(computerArtifacts.createdAt), asc(computerArtifacts.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1));
+    const waits = bounded("work_event_waits", await db.select({
       id: workEventWaits.id,
       status: workEventWaits.status,
       expectedEventType: workEventWaits.expectedEventType,
@@ -253,17 +264,17 @@ export async function inspectCurrentObjectiveSuccessState(
     }).from(workEventWaits).where(and(
       eq(workEventWaits.tenantId, tenantId),
       eq(workEventWaits.objectiveLoopId, objectiveLoopId),
-    )).orderBy(asc(workEventWaits.createdAt));
+    )).orderBy(asc(workEventWaits.createdAt), asc(workEventWaits.id)).limit(MAX_HIGH_EGRESS_ROWS + 1));
     const matchedEventIds = waits.flatMap((row) => row.matchedEventId ? [row.matchedEventId] : []);
     const eventScope = matchedEventIds.length > 0
       ? or(eq(integrationEvents.workId, workId), inArray(integrationEvents.id, matchedEventIds))!
       : eq(integrationEvents.workId, workId);
-    const events = await db.select({
+    const events = bounded("integration_events", await db.select({
       id: integrationEvents.id,
       eventType: integrationEvents.eventType,
       status: integrationEvents.status,
       workId: integrationEvents.workId,
-    }).from(integrationEvents).where(and(eq(integrationEvents.tenantId, tenantId), eventScope)).orderBy(asc(integrationEvents.receivedAt));
+    }).from(integrationEvents).where(and(eq(integrationEvents.tenantId, tenantId), eventScope)).orderBy(asc(integrationEvents.receivedAt), asc(integrationEvents.id)).limit(MAX_HIGH_EGRESS_ROWS + 1));
     return {
       actions,
       operations,

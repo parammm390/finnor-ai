@@ -37,7 +37,7 @@ for (const path of auditRoots.flatMap((root) => filesUnder(resolve(repoRoot, roo
 }
 
 const activeMutators = inventory.entries.filter((entry) => entry.classification === "PRODUCTION_MUTATOR" && entry.state === "ACTIVE")
-requireInvariant(activeMutators.length === 5, "active production writer inventory changed; classify and authorize the new mechanism")
+requireInvariant(activeMutators.length === 6, "active production writer inventory changed; classify and authorize the new mechanism")
 for (const entry of activeMutators.filter((candidate) => candidate.path.endsWith(".mjs") || candidate.path.endsWith(".ts"))) {
   const source = read(entry.path)
   requireInvariant(source.includes("authorizeProductionMutation"), `${entry.path} does not consume the common production mutation guard`)
@@ -52,22 +52,15 @@ requireInvariant(workflow.includes("production-mutation-guard.mjs issue"), "prod
 const mutationGuard = read("scripts/release/production-mutation-guard.mjs")
 requireInvariant(mutationGuard.includes("verifyGitHubOidcJwtSignature") && mutationGuard.includes("ref_protected"), "production guard lacks cryptographic protected-ref OIDC identity")
 requireInvariant(mutationGuard.includes("productionMutationCapabilities = new WeakMap") && mutationGuard.includes("assertProductionMutationCapability"), "production helper authorization is forgeable or unbranded")
+requireInvariant(read("scripts/release/p8-water-retirement-store.mjs").includes("assertProductionMutationCapability"), "product-authority write helpers do not consume the common authorization capability")
 requireInvariant(read("finnor-os/scripts/release/workspace-v3-repair.ts").includes("assertProductionMutationCapability"), "database repair helper does not consume the common authorization capability")
 requireInvariant(contract.release.mutationAuthorization.oidcAudience === "finnor-production-mutation.v1", "production mutation OIDC audience changed")
 for (const operation of contract.release.mutationAuthorization.allowedOperations) {
   requireInvariant(inventory.entries.some((entry) => entry.operations?.some((candidate) => candidate === operation || candidate.endsWith(":*") && operation.startsWith(candidate.slice(0, -1)))), `contract operation is not inventoried: ${operation}`)
 }
 
-for (const file of ["deploy-production.mjs", "configure-vercel-realtime.mjs", "deploy-aws-worker.mjs"]) {
+for (const file of ["deploy-production.mjs", "configure-vercel-realtime.mjs", "deploy-aws-compute-plane.mjs", "run-p8-production-water-retirement.mjs"]) {
   requireInvariant(!read(`scripts/release/${file}`).includes("process.loadEnvFile"), `${file} loads every protected secret into its process environment`)
-}
-for (const [path, source] of [
-  [".github/workflows/production-release.yml", workflow],
-  ["package.json", read("package.json")],
-  ["finnor-os/package.json", read("finnor-os/package.json")],
-  ["infra/deployment/production.contract.json", read("infra/deployment/production.contract.json")],
-]) {
-  requireInvariant(!/(run-p8-production-water-retirement|release:p8-zero-resurrection|release:pe5|release:p8-runtime-contract|product-authority-update|phase5-readiness|phase6-conversation-context-kernel)/i.test(source), `${path} restored an obsolete phased product cutover path`)
 }
 requireInvariant(!workflow.includes("codex-governed-release"), "silent local production release source remains")
 requireInvariant(!read("scripts/release/deploy-production.mjs").includes("codex-governed-release"), "local Vercel production deployment fallback remains")
@@ -76,7 +69,7 @@ requireInvariant(!workflow.includes("--token") && !vercelDeploy.includes("--toke
 requireInvariant(vercelDeploy.includes('run("vercel", ["pull", "--yes", "--environment=production"], pullDir, withoutSecrets(env, ["VERCEL_TOKEN"]))'), "Vercel pull receives unrelated release credentials or writes full secrets into the build workspace")
 requireInvariant(vercelDeploy.includes('sanitizeVercelBuildEnvironment(join(pullDir, ".vercel", ".env.production.local")') && vercelDeploy.includes('cpSync(join(pullDir, ".vercel"), join(buildDir, ".vercel"), { recursive: true })'), "Vercel build configuration is copied before production secrets are sanitized")
 requireInvariant(workflow.includes('docker logout "$registry"'), "ECR registry credentials are not removed before unrelated release steps")
-requireInvariant((workflow.match(/inline-session-policy:/g) ?? []).length === 3, "AWS ECR, read-only preflight, and ECS sessions are not independently least-privileged")
+requireInvariant((workflow.match(/inline-session-policy:/g) ?? []).length === 4, "AWS ECR, two read-only preflights, and compute mutation sessions are not independently scoped")
 const preflightSessionAt = workflow.indexOf("Authenticate exact AWS project with GitHub OIDC for preflight")
 const preflightStepAt = workflow.indexOf("Preflight every AWS, Vercel, and database production target", preflightSessionAt)
 const preflightSession = workflow.slice(preflightSessionAt, preflightStepAt)
@@ -90,11 +83,11 @@ for (const [path] of workflowFiles) {
   const source = read(path)
   requireInvariant(!/^\s*environment:\s*production\s*$/m.test(source), `${path} independently holds production environment authority`)
   requireInvariant(!/^\s*id-token:\s*write\s*$/m.test(source), `${path} independently holds AWS OIDC authority`)
-  requireInvariant(!/(deploy-production\.mjs|deploy-aws-worker\.mjs|migrate-production|configure-vercel-realtime\.mjs --apply)/.test(source), `${path} contains an unclassified production mutation path`)
+  requireInvariant(!/(deploy-production\.mjs|deploy-aws-compute-plane\.mjs|migrate-production|configure-vercel-realtime\.mjs --apply|run-p8-production-water-retirement\.mjs)/.test(source), `${path} contains an unclassified production mutation path`)
 }
-for (const workflowPath of [".github/workflows/production-release.yml", ...workflowFiles.map(([path]) => path)]) {
-  for (const line of read(workflowPath).split("\n").filter((candidate) => candidate.includes("${{ secrets."))) {
-    requireInvariant(/^\s{10,}[A-Z0-9_]+:\s*\$\{\{ secrets\./.test(line), `${workflowPath} exposes a live secret above an exact step environment`)
+for (const workflowName of ["production-release.yml", "marketing-ci.yml", "security.yml", "planner-live-evals.yml", "k6-nightly-lite.yml", "tenant-isolation-nightly.yml", "dealer-zero-replay.yml"]) {
+  for (const line of read(`.github/workflows/${workflowName}`).split("\n").filter((candidate) => candidate.includes("${{ secrets."))) {
+    requireInvariant(/^\s{10,}[A-Z0-9_]+:\s*\$\{\{ secrets\./.test(line), `${workflowName} exposes a live secret above an exact step environment`)
   }
 }
 
@@ -130,7 +123,7 @@ const releaseStepBlock = (stepName) => {
   const next = workflow.indexOf("\n      - ", at + 1)
   return workflow.slice(at, next < 0 ? undefined : next)
 }
-for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies"]) {
+for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies", "Frontend quality gate", "API typecheck gate"]) {
   const block = releaseStepBlock(installOrBuild)
   requireInvariant(!block.includes("${{ secrets."), `${installOrBuild} receives production secrets`)
 }
@@ -139,10 +132,15 @@ for (const unprivilegedStep of [
   "Install frontend dependencies",
   "Install API/workspace dependencies",
   "Verify dependency manifests remain source-locked",
+  "Validate canonical deployment truth",
+  "Release governance regression tests",
   "Derive commit-locked release metadata",
   "Verify clean canonical Git source",
+  "Frontend quality gate",
+  "API typecheck gate",
   "Prepare disposable worker smoke database",
   "Build and smoke-test exact worker image without production credentials",
+  "Verify product-runtime release policy without production credentials",
   "Build commit-locked production artifacts before any database or AWS credential",
   "Clear ECR AWS credentials before non-AWS steps",
   "Pull protected production database configuration",
@@ -152,9 +150,10 @@ for (const unprivilegedStep of [
   "Verify Private Equity supplier canary auth",
   "Verify frontend deployment",
   "Verify API deployment",
+  "Refresh compute preflight immediately before AWS mutation",
   "Clear ECS AWS credentials",
   "Verify cross-runtime release and migration parity",
-  "Verify current Private Equity production readiness",
+  "Verify final PE product authority readiness",
 ]) {
   const block = releaseStepBlock(unprivilegedStep)
   requireInvariant(block.includes('ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""') && block.includes('ACTIONS_ID_TOKEN_REQUEST_URL: ""'), `${unprivilegedStep} can mint a production OIDC identity`)

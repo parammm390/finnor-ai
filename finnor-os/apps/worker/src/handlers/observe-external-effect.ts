@@ -11,7 +11,7 @@ import { materializeSourceRecord, observeExternalEffect } from "@finnor/data-pla
 import { createSourceAdapterRegistry, IntegrationError } from "@finnor/tools";
 import { settleExternalEffectObservation } from "@finnor/orchestration";
 import type { BusinessEffectSet, ExternalEffectObservation } from "@finnor/shared-types";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { JobHandler } from "../queue";
 import { loadSourceCredentialContext } from "./sync-source";
 
@@ -36,32 +36,11 @@ async function reschedule(
   );
 }
 
-async function pendingEffectObservations(tenantId: string, businessEffectId: string): Promise<number> {
-  const [external, integration] = await Promise.all([
-    withTenant(tenantId, (db) => db.select({ id: externalOperations.domainActionId }).from(externalOperations).where(and(
-      eq(externalOperations.tenantId, tenantId),
-      eq(externalOperations.businessEffectId, businessEffectId),
-      eq(externalOperations.status, "succeeded"),
-      sql`${externalOperations.integrationId} IS NOT NULL`,
-      ne(externalOperations.verificationStatus, "verified"),
-    ))),
-    withTenant(tenantId, (db) => db.select({ id: integrationOperations.id }).from(integrationOperations).where(and(
-      eq(integrationOperations.tenantId, tenantId),
-      eq(integrationOperations.businessEffectId, businessEffectId),
-      eq(integrationOperations.status, "succeeded"),
-      sql`${integrationOperations.integrationId} IS NOT NULL`,
-      ne(integrationOperations.verificationStatus, "verified"),
-    ))),
-  ]);
-  return external.length + integration.length;
-}
-
 export const observeExternalEffectHandler: JobHandler = async (payload) => {
   const tenantId = typeof payload.tenantId === "string" ? payload.tenantId : "";
   const integrationOperationId = typeof payload.integrationOperationId === "string" ? payload.integrationOperationId : undefined;
   const domainActionId = typeof payload.domainActionId === "string" ? payload.domainActionId : undefined;
   const externalOperationKey = typeof payload.externalOperationKey === "string" ? payload.externalOperationKey : undefined;
-  const finalizeOnly = payload.finalizeOnly === true;
   const attempt = Math.max(1, Number(payload.attempt ?? 1));
   if (!tenantId || (!integrationOperationId && !(domainActionId && externalOperationKey))) {
     throw new Error("observe_external_effect requires an exact integration or external operation identity");
@@ -97,7 +76,7 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
         eq(externalOperations.operationKey, externalOperationKey!),
       )).limit(1)))[0];
   if (!operation?.businessEffectId || !operation.integrationId || !operation.provider) return;
-  if (operation.verificationStatus === "divergent" || (operation.verificationStatus === "verified" && !finalizeOnly)) return;
+  if (operation.verificationStatus === "divergent" || operation.verificationStatus === "verified") return;
 
   const [effectRow, integration] = await Promise.all([
     withTenant(tenantId, (db) => db.select({ effect: businessEffects.effect }).from(businessEffects).where(and(
@@ -108,29 +87,6 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
     )).limit(1)).then((rows) => rows[0]),
   ]);
   if (!effectRow || !integration || integration.binding !== operation.provider) throw new Error("Observation operation/effect/integration linkage is invalid");
-  if (finalizeOnly && operation.verificationStatus === "verified") {
-    const remaining = await pendingEffectObservations(tenantId, operation.businessEffectId);
-    if (remaining > 0) {
-      if (attempt < 10) return reschedule(payload, tenantId, integrationOperationId ?? `${domainActionId}:${externalOperationKey}`, attempt);
-      const prior = object(operation.observation) as unknown as ExternalEffectObservation;
-      await settleExternalEffectObservation({
-        tenantId,
-        businessEffectId: operation.businessEffectId,
-        integrationId: integration.id,
-        provider: integration.binding,
-        externalObjectType: typeof prior.externalObjectType === "string" ? prior.externalObjectType : "unknown",
-        observedAt: new Date().toISOString(),
-        classification: "unknown",
-        expected: {},
-        evidence: { mechanism: "poll" },
-      }, { integrationOperationId, domainActionId, externalOperationKey });
-      return;
-    }
-    const prior = object(operation.observation) as unknown as ExternalEffectObservation;
-    if (prior.classification !== "present") return;
-    await settleExternalEffectObservation(prior, { integrationOperationId, domainActionId, externalOperationKey });
-    return;
-  }
   const registry = createSourceAdapterRegistry();
   let adapter;
   try {
@@ -193,30 +149,6 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
       definitelyAbsent: !record && attempt >= 5,
       evidence: { mechanism: "read_after_write" },
     });
-    if (observation.classification === "present") {
-      const operationPatch = {
-        externalObservedAt: new Date(observation.observedAt),
-        verificationStatus: "verified" as const,
-        observation,
-        updatedAt: new Date(),
-      };
-      if (integrationOperationId) await withTenant(tenantId, (db) => db.update(integrationOperations).set(operationPatch).where(and(
-        eq(integrationOperations.tenantId, tenantId),
-        eq(integrationOperations.id, integrationOperationId),
-        eq(integrationOperations.businessEffectId, operation.businessEffectId!),
-      )));
-      if (externalOperationKey && domainActionId) await withTenant(tenantId, (db) => db.update(externalOperations).set(operationPatch).where(and(
-        eq(externalOperations.tenantId, tenantId),
-        eq(externalOperations.domainActionId, domainActionId),
-        eq(externalOperations.operationKey, externalOperationKey),
-        eq(externalOperations.businessEffectId, operation.businessEffectId!),
-      )));
-      const remaining = await pendingEffectObservations(tenantId, operation.businessEffectId);
-      if (remaining > 0) {
-        await reschedule({ ...payload, finalizeOnly: true }, tenantId, integrationOperationId ?? `${domainActionId}:${externalOperationKey}`, attempt);
-        return;
-      }
-    }
     await settleExternalEffectObservation(observation, { integrationOperationId, domainActionId, externalOperationKey });
   } catch (error) {
     const retryable = error instanceof IntegrationError && error.retryable;

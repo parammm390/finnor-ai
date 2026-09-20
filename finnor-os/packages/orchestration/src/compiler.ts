@@ -947,17 +947,91 @@ function valuesMatch(expected: Record<string, unknown>, current: Record<string, 
 }
 
 export async function recordBusinessEffectOutcome(tenantId: string, effect: BusinessEffectSet, result: ExecutionResult): Promise<BusinessEffectVerification> {
-  const requiresExternalObservation = effect.operation.external && Boolean((await withTenant(tenantId, (db) => db.select({
-    id: externalOperations.domainActionId,
-  }).from(externalOperations).where(and(
-    eq(externalOperations.tenantId, tenantId),
-    eq(externalOperations.businessEffectId, effect.id),
-    eq(externalOperations.status, "succeeded"),
-    sql`${externalOperations.integrationId} IS NOT NULL`,
-  )).limit(1)))[0]);
+  const [currentEffect, operationMembers] = await Promise.all([
+    withTenant(tenantId, (db) => db.select({
+      status: businessEffects.status,
+      verification: businessEffects.verification,
+    }).from(businessEffects).where(and(
+      eq(businessEffects.tenantId, tenantId),
+      eq(businessEffects.id, effect.id),
+    )).limit(1).then((rows) => rows[0])),
+    withTenant(tenantId, (db) => db.select({
+      executionState: externalOperations.executionState,
+      integrationId: externalOperations.integrationId,
+      response: externalOperations.response,
+    }).from(externalOperations).where(and(
+      eq(externalOperations.tenantId, tenantId),
+      eq(externalOperations.businessEffectId, effect.id),
+    ))),
+  ]);
+  if (currentEffect?.status === "verified" || currentEffect?.status === "compensated") {
+    return currentEffect.verification as BusinessEffectVerification
+      ?? {
+        state: currentEffect.status === "verified" ? "verified" : "partially_verified",
+        basis: "Persisted Effect truth is monotonic",
+        checkedAt: new Date().toISOString(),
+      };
+  }
+  const memberSummary = operationMembers.reduce((summary, member) => {
+    const response = member.response && typeof member.response === "object" && !Array.isArray(member.response)
+      ? member.response as Record<string, unknown> : {};
+    if (member.executionState === "verified"
+        || (member.executionState === "reconciled" && response.reconciliationOutcome === "happened_as_intended")) summary.verified += 1;
+    else if (member.executionState === "known_failed"
+        || (member.executionState === "reconciled" && response.reconciliationOutcome === "definitely_did_not_happen")) summary.knownFailed += 1;
+    else if (member.executionState === "unknown_outcome" || member.executionState === "reconciliation_required") summary.uncertain += 1;
+    else if (member.executionState === "divergent") summary.divergent += 1;
+    else summary.incomplete += 1;
+    if (member.integrationId) summary.requiresObservation += 1;
+    return summary;
+  }, { verified: 0, knownFailed: 0, uncertain: 0, divergent: 0, incomplete: 0, requiresObservation: 0 });
+  const requiresExternalObservation = effect.operation.external
+    && memberSummary.requiresObservation > 0
+    && memberSummary.verified < operationMembers.length;
   let verification: BusinessEffectVerification;
   let status: typeof businessEffects.$inferSelect.status;
-  if (result.errorKind === "unknown_outcome") {
+  if (effect.operation.external && operationMembers.length > 0 && memberSummary.uncertain > 0) {
+    verification = {
+      state: "reconciliation_required",
+      basis: "At least one logical provider-operation member has an unknown outcome; no member may be blindly replayed",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "reconciliation_required";
+  } else if (effect.operation.external && operationMembers.length > 0 && memberSummary.divergent > 0) {
+    verification = {
+      state: "divergent",
+      basis: "At least one logical provider-operation member diverged from the authorized intent",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "divergent";
+  } else if (effect.operation.external && operationMembers.length > 0 && memberSummary.verified === operationMembers.length) {
+    verification = {
+      state: "verified",
+      basis: "Every logical provider-operation member is verified under its declared verification contract",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "verified";
+  } else if (effect.operation.external && operationMembers.length > 0
+      && memberSummary.knownFailed === operationMembers.length && result.status !== "success") {
+    verification = {
+      state: "unverified",
+      basis: "Every logical provider-operation member is known not to have produced the intended state",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "failed";
+  } else if (effect.operation.external && operationMembers.length > 0) {
+    verification = {
+      state: "partially_verified",
+      basis: "Logical provider-operation members are only partially settled; verified members remain final and are not replay candidates",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "partially_verified";
+  } else if (result.errorKind === "unknown_outcome") {
     verification = { state: "reconciliation_required", basis: "Provider outcome is unknown; consequential retry is prohibited until reconciliation", checkedAt: new Date().toISOString(), observed: result.output };
     status = "reconciliation_required";
   } else if (result.status !== "success") {
@@ -1028,16 +1102,27 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
     verification = { state: "unverified", basis: "Execution completed but this action has no deterministic after-state verifier", checkedAt: new Date().toISOString(), observed: result.output };
     status = "unverified";
   }
-  await withTenant(tenantId, async (db) => {
-    await db.update(businessEffects).set({ status, observedResult: result.output, verification, observedAt: new Date() }).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, effect.id)));
+  const persistedVerification = await withTenant(tenantId, async (db) => {
+    const [updated] = await db.update(businessEffects).set({ status, observedResult: result.output, verification, observedAt: new Date() }).where(and(
+      eq(businessEffects.tenantId, tenantId),
+      eq(businessEffects.id, effect.id),
+      sql`${businessEffects.status} NOT IN ('verified','compensated')`,
+    )).returning({ verification: businessEffects.verification });
+    const finalVerification = (updated?.verification as BusinessEffectVerification | null)
+      ?? (await db.select({ verification: businessEffects.verification }).from(businessEffects).where(and(
+        eq(businessEffects.tenantId, tenantId),
+        eq(businessEffects.id, effect.id),
+      )).limit(1))[0]?.verification as BusinessEffectVerification | undefined
+      ?? verification;
     const [receipt] = await db.select({ id: decisionReceipts.id }).from(decisionReceipts)
       .where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.domainActionId, effect.source.domainActionId)))
       .orderBy(desc(decisionReceipts.createdAt)).limit(1);
-    if (receipt) await db.update(decisionReceipts).set({ businessEffectId: effect.id, executedEffectHash: effect.semanticHash, verification }).where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.id, receipt.id)));
-    if (verification.state === "reconciliation_required") {
+    if (receipt) await db.update(decisionReceipts).set({ businessEffectId: effect.id, executedEffectHash: effect.semanticHash, verification: finalVerification }).where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.id, receipt.id)));
+    if (finalVerification.state === "reconciliation_required") {
       const [existing] = await db.select({ id: reconciliationCases.id }).from(reconciliationCases).where(and(eq(reconciliationCases.tenantId, tenantId), eq(reconciliationCases.businessEffectId, effect.id), eq(reconciliationCases.status, "open"))).limit(1);
-      if (!existing) await db.insert(reconciliationCases).values({ tenantId, businessEffectId: effect.id, caseType: "unknown_delivery", details: { domainActionId: effect.source.domainActionId, businessEffectHash: effect.semanticHash, basis: verification.basis } });
+      if (!existing) await db.insert(reconciliationCases).values({ tenantId, businessEffectId: effect.id, caseType: "unknown_delivery", details: { domainActionId: effect.source.domainActionId, businessEffectHash: effect.semanticHash, basis: finalVerification.basis } });
     }
+    return finalVerification;
   });
-  return verification;
+  return persistedVerification;
 }

@@ -4,6 +4,10 @@ import {
   awaitExternalOperationResolution,
   claimExternalOperation,
   markExternalOperationUnknown,
+  markProviderRequestMayHaveLeft,
+  prepareProviderInvocation,
+  recordProviderInvocationAcknowledged,
+  recordProviderInvocationFailure,
   reconcileExternalOperation,
 } from "@finnor/tools";
 import type { ComputerAuthorizedEffect, ComputerRunStatus } from "@finnor/shared-types";
@@ -351,7 +355,22 @@ export class ComputerRunner {
           await verifyCurrentProfile(run);
           const operationKey = computerEffectOperationKey(authorized);
           const effectHash = authorizedEffectHash(authorized);
-          const claim = await claimExternalOperation(tenantId, run.domainActionId, operationKey, effectHash);
+          const claim = await claimExternalOperation(
+            tenantId,
+            run.domainActionId,
+            operationKey,
+            effectHash,
+            `computer:${run.provider}`,
+            run.businessEffectId ?? undefined,
+            run.authProfileRef,
+            {
+              protocolVersion: 2,
+              targetKey: `${run.application}:${authorized.target.kind}:${authorized.target.identifier}`,
+              retrySafety: "readback_required",
+              idempotency: { mode: "readback", scope: "tenant/application-account/effect" },
+              verification: "readback",
+            },
+          );
           if (!claim.claimed) {
             const settled = await awaitExternalOperationResolution(tenantId, run.domainActionId, operationKey, claim.existing);
             if (settled.status === "succeeded") {
@@ -365,17 +384,50 @@ export class ComputerRunner {
           }
           run = await transitionComputerRun(tenantId, runId, "running", { effectStatus: "dispatching", effectOperationKey: operationKey });
           const effectStep = await beginComputerStep({ tenantId, runId, phase: "running", operation, summary: decision.summary, pageUrl: observation.url, effectCandidateHash: effectHash, authorityDecisionId });
+          const invocationContext = {
+            tenantId,
+            providerOperationAttemptId: claim.providerOperationAttemptId,
+            provider: `computer:${run.provider}`,
+            requestHash: effectHash,
+            transportLayer: "provider_adapter" as const,
+          };
+          const invocationId = await prepareProviderInvocation(invocationContext, 1);
+          // Playwright/Steel cannot expose the target application's exact network
+          // write boundary. Mark conservatively before the UI primitive: a crash
+          // can never hide a possible external effect.
+          await markProviderRequestMayHaveLeft(tenantId, invocationId);
           try {
             const output = await provider.perform(session, decision.primitive, origins);
             await storePrimitiveArtifacts(run, effectStep.id, output);
+            await recordProviderInvocationAcknowledged(invocationContext, invocationId, {
+              pageUrl: output.pageUrl ?? observation.url,
+              adapter: run.provider,
+            }, { advanceLogicalOperation: false });
             // Dispatch success is not business success. Mark unknown until post-state
             // observation proves the exact authorized change.
-            await markExternalOperationUnknown(tenantId, run.domainActionId, operationKey, { dispatched: true, pageUrl: output.pageUrl ?? observation.url });
+            await markExternalOperationUnknown(
+              tenantId,
+              run.domainActionId,
+              operationKey,
+              { dispatched: true, pageUrl: output.pageUrl ?? observation.url },
+              claim.providerOperationAttemptId,
+            );
             run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown", effectOperationKey: operationKey });
             await finishComputerStep(tenantId, effectStep.id, "succeeded", { dispatched: true, awaitingPostStateVerification: true }, output.pageUrl);
             observation = await provider.observe(session, origins);
           } catch (error) {
-            await markExternalOperationUnknown(tenantId, run.domainActionId, operationKey, { dispatchStarted: true });
+            await recordProviderInvocationFailure(invocationContext, invocationId, {
+              kind: "unknown_outcome",
+              message: error instanceof Error ? error.message : "Computer provider primitive failed after dispatch began",
+              definitePreDispatch: false,
+            });
+            await markExternalOperationUnknown(
+              tenantId,
+              run.domainActionId,
+              operationKey,
+              { dispatchStarted: true },
+              claim.providerOperationAttemptId,
+            );
             run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown", effectOperationKey: operationKey });
             await finishComputerStep(tenantId, effectStep.id, "failed", { outcomeUnknown: true });
             observation = await provider.observe(session, origins).catch(() => observation);

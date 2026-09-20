@@ -11,7 +11,7 @@
 // report null until that key exists, not a fake "pending" placeholder).
 
 import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog } from "@finnor/db";
-import { inArray, desc, eq, and, lt, or } from "drizzle-orm";
+import { inArray, desc, asc, eq, and, lt, or } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
 import { extractPredicted } from "../../../../lib/predicted-outcome";
 import { eligibleApproversForActions } from "@finnor/authority";
@@ -87,13 +87,14 @@ export async function GET(req: Request): Promise<Response> {
     const effectRows = actionIds.length > 0 ? await withTenant(ctx.tenantId, (db) => db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, ctx.tenantId), inArray(businessEffects.domainActionId, actionIds)))) : [];
     const effectByActionId = new Map(effectRows.flatMap((row) => row.domainActionId ? [[row.domainActionId, row] as const] : []));
     // A domain action can have more than one receipt (each reflection-retry step opens
-    // its own, per Task 2.5) — order by created desc and keep only the first (latest)
-    // one seen per action id, in plain JS rather than a window-function query.
+    // its own, per Task 2.5). DISTINCT ON makes PostgreSQL discard older receipts
+    // before they cross the network; keeping the latest row in JavaScript after an
+    // unbounded fetch was a direct egress regression.
     const receiptByActionId = new Map<string, ReceiptSummary>();
     if (actionIds.length > 0) {
       const receiptRows: ReceiptSummary[] = await withTenant(ctx.tenantId, (db) =>
         db
-          .select({
+          .selectDistinctOn([decisionReceipts.domainActionId], {
             id: decisionReceipts.id,
             domainActionId: decisionReceipts.domainActionId,
             objective: decisionReceipts.objective,
@@ -103,8 +104,9 @@ export async function GET(req: Request): Promise<Response> {
             createdAt: decisionReceipts.createdAt,
           })
           .from(decisionReceipts)
-          .where(inArray(decisionReceipts.domainActionId, actionIds))
-          .orderBy(desc(decisionReceipts.createdAt)),
+          .where(and(eq(decisionReceipts.tenantId, ctx.tenantId), inArray(decisionReceipts.domainActionId, actionIds)))
+          .orderBy(asc(decisionReceipts.domainActionId), desc(decisionReceipts.createdAt), desc(decisionReceipts.id))
+          .limit(actionIds.length),
       );
       for (const r of receiptRows) {
         if (r.domainActionId && !receiptByActionId.has(r.domainActionId)) receiptByActionId.set(r.domainActionId, r);
@@ -113,14 +115,15 @@ export async function GET(req: Request): Promise<Response> {
 
     const criticByActionId = new Map<string, CriticSummary>();
     if (actionIds.length > 0) {
-      // Latest critic_review episode per action, same "order desc, keep first seen"
-      // pattern as the receipt lookup above.
+      // Latest critic_review episode per action. DISTINCT ON keeps the query's
+      // result cardinality bounded by the page's action ids in PostgreSQL.
       const criticRows = await withTenant(ctx.tenantId, (db) =>
         db
-          .select({ domainActionId: actionLog.domainActionId, output: actionLog.output, timestamp: actionLog.timestamp })
+          .selectDistinctOn([actionLog.domainActionId], { domainActionId: actionLog.domainActionId, output: actionLog.output, timestamp: actionLog.timestamp })
           .from(actionLog)
-          .where(and(inArray(actionLog.domainActionId, actionIds), eq(actionLog.step, "critic_review")))
-          .orderBy(desc(actionLog.timestamp)),
+          .where(and(eq(actionLog.tenantId, ctx.tenantId), inArray(actionLog.domainActionId, actionIds), eq(actionLog.step, "critic_review")))
+          .orderBy(asc(actionLog.domainActionId), desc(actionLog.timestamp), desc(actionLog.id))
+          .limit(actionIds.length),
       );
       for (const cr of criticRows) {
         if (criticByActionId.has(cr.domainActionId)) continue;

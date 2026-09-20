@@ -4,12 +4,11 @@
 // the gate clears, on any path.
 
 import type { DomainAction, DomainPolicy, ExecutionResult } from "@finnor/shared-types";
-import { withTenant, domainActions, enqueueJob, reconcileWorkStatus, transitionWork } from "@finnor/db";
+import { withTenant, domainActions, reconcileWorkStatus, transitionWork } from "@finnor/db";
 import { appendEpisode } from "@finnor/memory";
 import { eq, and } from "drizzle-orm";
-import { ScopedToolRegistry, tenantProviderConfigured, type ToolRegistry } from "@finnor/tools";
+import { ScopedToolRegistry, type ToolRegistry } from "@finnor/tools";
 import type { PluginRegistry } from "./plugin-registry";
-import { diagnoseFailure, buildConfirmationScript } from "./voice";
 import { advanceWorkflowForActionRequired } from "./workflow";
 import { classifyExecutionFailure, executePluginViaRuntime } from "./runtime-bridge";
 import { finalizeReceipt, openReceipt } from "@finnor/workflow-runtime";
@@ -174,22 +173,9 @@ export class GatedExecutor implements Executor {
           .where(and(eq(domainActions.id, action.id), eq(domainActions.tenantId, action.tenantId)));
       });
       await appendEpisode(action.tenantId, action.id, "gate", {}, { gated: true, summary: effect?.approval.summary ?? draft.summary, businessEffectId: effect?.id ?? null, semanticHash: effect?.semanticHash ?? null });
-      await enqueueJob(
-        "send_push_notification",
-        { tenantId: action.tenantId, kind: "approval-needed", actionId: action.id, body: effect?.approval.summary ?? draft.summary },
-        `push:approval-needed:${action.id}`,
-        action.correlationId,
-      ).catch(() => undefined); // a push is a nudge, never the gate itself
-      // Voice-native confirmation: if Vapi is configured, have it read the draft to the
-      // owner and capture the spoken yes/no. The queue UI remains the audit/fallback view.
-      if (await tenantProviderConfigured(action.tenantId, "vapi")) {
-        await enqueueJob(
-          "voice_confirm_request",
-          { tenantId: action.tenantId, actionId: action.id, script: buildConfirmationScript(effect?.approval.summary ?? draft.summary) },
-          `voice-confirm:${action.id}`,
-          action.correlationId,
-        ).catch(() => undefined); // queue trouble must never break the gate itself
-      }
+      // The durable queue/attention surface is the approval notification. Legacy
+      // direct Web Push and Vapi nudge jobs were retired in Scope 2 because they
+      // could issue an untracked provider mutation outside the Effect Protocol.
       // Stop here. Execution resumes only via POST /actions/:id/confirm or a spoken yes.
       return {
         status: "success",
@@ -318,16 +304,6 @@ export class GatedExecutor implements Executor {
       if (workflow.advanced.length > 0) {
         await appendEpisode(action.tenantId, action.id, "workflow", {}, { advanced: workflow.advanced });
       }
-    }
-    if (finalStatus === "blocked_integration_unavailable" && await tenantProviderConfigured(action.tenantId, "vapi")) {
-      // Spoken failure diagnosis: name the failing integration out loud, in addition to
-      // the audit entry and the blocked queue card. Never instead of them.
-      await enqueueJob(
-        "voice_notify_failure",
-        { tenantId: action.tenantId, actionId: action.id, script: diagnoseFailure(result.error, action.actionType) },
-        `voice-fail:${action.id}`,
-        action.correlationId,
-      ).catch(() => undefined);
     }
     return result;
   }

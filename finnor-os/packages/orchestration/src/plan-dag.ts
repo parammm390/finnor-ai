@@ -3,7 +3,7 @@
 // module only decides which draft is eligible to enter that existing gated path.
 
 import { and, eq, inArray } from "drizzle-orm";
-import { domainActions, withTenant } from "@finnor/db";
+import { MAX_HIGH_EGRESS_ROWS, domainActions, withTenant } from "@finnor/db";
 import type { DomainAction } from "@finnor/shared-types";
 import type { ExecutionResult } from "@finnor/shared-types";
 import { diffPrediction } from "./prediction-diff";
@@ -45,9 +45,16 @@ function toDomainAction(row: typeof domainActions.$inferSelect): DomainAction {
 
 /** Returns only same-tenant draft nodes whose every prerequisite completed. */
 export async function readyPlanActions(tenantId: string, planId: string): Promise<DomainAction[]> {
-  const rows = await withTenant(tenantId, (db) =>
-    db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.planId, planId))),
+  const rowsPlus = await withTenant(tenantId, (db) =>
+    db.select().from(domainActions)
+      .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.planId, planId)))
+      .orderBy(domainActions.createdAt, domainActions.id)
+      .limit(MAX_HIGH_EGRESS_ROWS + 1),
   );
+  if (rowsPlus.length > MAX_HIGH_EGRESS_ROWS) {
+    throw new Error(`Plan ${planId} exceeds the bounded readiness read; execution is stopped until it is narrowed`);
+  }
+  const rows = rowsPlus;
   const completed = new Set(rows.filter((row) => row.status === "completed").map((row) => row.id));
   return rows
     .filter((row) => row.status === "draft" && row.dependsOn.every((dependency) => completed.has(dependency)))
@@ -57,20 +64,20 @@ export async function readyPlanActions(tenantId: string, planId: string): Promis
 /** Defensive readiness check before a plan action reaches the normal executor. */
 export async function isPlanActionReady(tenantId: string, actionId: string): Promise<boolean> {
   const [row] = await withTenant(tenantId, (db) =>
-    db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId))),
+    db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId))).limit(1),
   );
   if (!row || !row.planId || row.dependsOn.length === 0) return Boolean(row);
   const prerequisiteRows = await withTenant(tenantId, (db) =>
     db.select({ id: domainActions.id, status: domainActions.status }).from(domainActions).where(
       and(eq(domainActions.tenantId, tenantId), inArray(domainActions.id, row.dependsOn)),
-    ),
+    ).limit(row.dependsOn.length),
   );
   return prerequisiteRows.length === row.dependsOn.length && prerequisiteRows.every((dependency) => dependency.status === "completed");
 }
 
 export async function planIdForAction(tenantId: string, actionId: string): Promise<string | null> {
   const [row] = await withTenant(tenantId, (db) =>
-    db.select({ planId: domainActions.planId }).from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId))),
+    db.select({ planId: domainActions.planId }).from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId))).limit(1),
   );
   return row?.planId ?? null;
 }
@@ -79,7 +86,7 @@ export async function planIdForAction(tenantId: string, actionId: string): Promi
 export async function recordPredictionDiff(action: DomainAction, result: ExecutionResult): Promise<void> {
   if (result.output.gated || result.output.pendingConfirmation) return;
   const [row] = await withTenant(action.tenantId, (db) =>
-    db.select({ predictedReceipt: domainActions.predictedReceipt, predictionDiff: domainActions.predictionDiff }).from(domainActions).where(and(eq(domainActions.tenantId, action.tenantId), eq(domainActions.id, action.id))),
+    db.select({ predictedReceipt: domainActions.predictedReceipt, predictionDiff: domainActions.predictionDiff }).from(domainActions).where(and(eq(domainActions.tenantId, action.tenantId), eq(domainActions.id, action.id))).limit(1),
   );
   if (!row?.predictedReceipt || row.predictionDiff) return;
   const receipt = row.predictedReceipt as { simulation?: { predicted?: { expectedResult?: Record<string, unknown> } } };

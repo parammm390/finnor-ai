@@ -264,11 +264,11 @@ export class MicrosoftDelegatedExcelTransport {
     return requiredString(response.value.id, "workbook session ID");
   }
 
-  async readRange(driveId: string, itemId: string, worksheetId: string, address: string, sessionId: string): Promise<Record<string, unknown>> {
+  async readRange(driveId: string, itemId: string, worksheetId: string, address: string, sessionId?: string): Promise<Record<string, unknown>> {
     const response = await this.client.requestJson<Record<string, unknown>>({
       operation: "excel_read_range",
       pathOrUrl: workbookRangePath(driveId, itemId, worksheetId, address),
-      headers: { "workbook-session-id": sessionId },
+      ...(sessionId ? { headers: { "workbook-session-id": sessionId } } : {}),
       maxResponseBytes: 1_048_576,
     });
     return response.value;

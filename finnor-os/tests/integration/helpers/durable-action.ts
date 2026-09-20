@@ -6,7 +6,7 @@ import {
 } from "@finnor/db";
 import { executeAuthorizedEffectStep } from "@finnor/orchestration";
 import type { ToolRegistry } from "@finnor/tools";
-import { claimStep } from "@finnor/workflow-runtime";
+import { claimStep, stepFence } from "@finnor/workflow-runtime";
 import { runWorkflowStep } from "../../../apps/worker/src/handlers/run-workflow-step";
 import { and, asc, desc, eq } from "drizzle-orm";
 import type { ExecutionResult } from "@finnor/shared-types";
@@ -29,7 +29,7 @@ export async function driveDurableAction(
     for (const step of pending) {
       if (tools && step.stepType === "execute_authorized_effect") {
         const claimed = await claimStep(tenantId, step.id);
-        if (claimed) await executeAuthorizedEffectStep(tenantId, step.id, { tools });
+        if (claimed) await executeAuthorizedEffectStep(tenantId, step.id, { tools }, stepFence(claimed));
       } else {
         await runWorkflowStep({ tenantId, workflowStepId: step.id });
       }

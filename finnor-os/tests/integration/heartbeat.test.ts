@@ -5,9 +5,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { CURRENT_MIGRATION_HEAD, getPool, closePool, workerHeartbeat } from "@finnor/db";
+import { getPool, closePool, workerHeartbeat } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { startHeartbeat, WORKER_HEARTBEAT_ID } from "../../apps/worker/src/heartbeat";
+import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 

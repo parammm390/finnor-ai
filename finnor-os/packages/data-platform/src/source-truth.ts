@@ -287,7 +287,13 @@ async function resolveSourceCases(db: Db, record: CanonicalSourceRecord, sourceL
   await db.update(reconciliationCases).set({
     status: "resolved",
     resolution: { mechanism: "source_reconciled", observedAt: record.observedAt },
+    resolutionOutcome: "happened_as_intended",
+    resolutionEvidence: { sourceLinkId, observedAt: record.observedAt, observedHash: sourceTruthHash(record.data) },
+    resolvedBy: "system:source-truth-observer",
+    resolutionProvider: record.provider,
+    resolutionIntegrationId: record.integrationId,
     resolvedAt: new Date(),
+    version: sql`${reconciliationCases.version} + 1`,
   }).where(and(
     eq(reconciliationCases.tenantId, record.tenantId),
     eq(reconciliationCases.integrationId, record.integrationId),

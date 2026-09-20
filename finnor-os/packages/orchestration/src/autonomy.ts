@@ -10,6 +10,7 @@ import type {
   TenantContext,
 } from "@finnor/shared-types";
 import {
+  MAX_HIGH_EGRESS_ROWS,
   actionLog,
   authorityStates,
   autonomyEvaluations,
@@ -278,18 +279,29 @@ export async function evaluateOutcomeAutonomyReadiness(tenantId: string, packId:
   const definition = OUTCOME_PACK_DEFINITIONS[packId];
   const fingerprint = outcomePackFingerprint(definition);
   const rows = await withTenant(tenantId, async (db) => {
-    const runs = await db.select().from(outcomePackRuns).where(and(eq(outcomePackRuns.tenantId, tenantId), eq(outcomePackRuns.packId, packId), eq(outcomePackRuns.packVersion, definition.version)));
+    const runsPlus = await db.select().from(outcomePackRuns).where(and(eq(outcomePackRuns.tenantId, tenantId), eq(outcomePackRuns.packId, packId), eq(outcomePackRuns.packVersion, definition.version))).orderBy(desc(outcomePackRuns.createdAt), desc(outcomePackRuns.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const runs = runsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
     const workIds = runs.map((run) => run.workId);
-    const actions = workIds.length === 0 ? [] : await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), inArray(domainActions.workId, workIds)));
+    const actionsPlus = workIds.length === 0 ? [] : await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), inArray(domainActions.workId, workIds))).orderBy(desc(domainActions.createdAt), desc(domainActions.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const actions = actionsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
     const actionIds = actions.map((action) => action.id);
-    const effects = actionIds.length === 0 ? [] : await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), inArray(businessEffects.domainActionId, actionIds)));
+    const effectsPlus = actionIds.length === 0 ? [] : await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), inArray(businessEffects.domainActionId, actionIds))).orderBy(desc(businessEffects.createdAt), desc(businessEffects.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const effects = effectsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
     const effectIds = effects.map((effect) => effect.id);
-    const evaluations = await db.select().from(autonomyEvaluations).where(and(eq(autonomyEvaluations.tenantId, tenantId), inArray(autonomyEvaluations.outcomePackRunId, runs.length ? runs.map((run) => run.id) : ["00000000-0000-0000-0000-000000000000"])));
-    const certifications = await db.select().from(outcomePackCertifications).where(and(eq(outcomePackCertifications.tenantId, tenantId), eq(outcomePackCertifications.packId, packId), eq(outcomePackCertifications.fingerprint, fingerprint))).orderBy(desc(outcomePackCertifications.certifiedAt));
-    const compensations = effectIds.length === 0 ? [] : await db.select().from(compensationCases).where(and(eq(compensationCases.tenantId, tenantId), or(inArray(compensationCases.businessEffectId, effectIds), inArray(compensationCases.compensationEffectId, effectIds))));
-    const reconciliations = effectIds.length === 0 ? [] : await db.select().from(reconciliationCases).where(and(eq(reconciliationCases.tenantId, tenantId), inArray(reconciliationCases.businessEffectId, effectIds)));
-    const operationRows = effectIds.length === 0 ? [] : await db.select({ businessEffectId: integrationOperations.businessEffectId, operationKey: integrationOperations.operationKey }).from(integrationOperations).where(and(eq(integrationOperations.tenantId, tenantId), inArray(integrationOperations.businessEffectId, effectIds)));
-    return { runs, actions, effects, evaluations, certifications, compensations, reconciliations, operationRows };
+    const evaluationsPlus = await db.select().from(autonomyEvaluations).where(and(eq(autonomyEvaluations.tenantId, tenantId), inArray(autonomyEvaluations.outcomePackRunId, runs.length ? runs.map((run) => run.id) : ["00000000-0000-0000-0000-000000000000"]))).orderBy(desc(autonomyEvaluations.evaluatedAt), desc(autonomyEvaluations.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const evaluations = evaluationsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    const certificationsPlus = await db.select().from(outcomePackCertifications).where(and(eq(outcomePackCertifications.tenantId, tenantId), eq(outcomePackCertifications.packId, packId), eq(outcomePackCertifications.fingerprint, fingerprint))).orderBy(desc(outcomePackCertifications.certifiedAt), desc(outcomePackCertifications.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const certifications = certificationsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    const compensationsPlus = effectIds.length === 0 ? [] : await db.select().from(compensationCases).where(and(eq(compensationCases.tenantId, tenantId), or(inArray(compensationCases.businessEffectId, effectIds), inArray(compensationCases.compensationEffectId, effectIds)))).orderBy(desc(compensationCases.createdAt), desc(compensationCases.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const compensations = compensationsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    const reconciliationsPlus = effectIds.length === 0 ? [] : await db.select().from(reconciliationCases).where(and(eq(reconciliationCases.tenantId, tenantId), inArray(reconciliationCases.businessEffectId, effectIds))).orderBy(desc(reconciliationCases.createdAt), desc(reconciliationCases.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const reconciliations = reconciliationsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    const operationRowsPlus = effectIds.length === 0 ? [] : await db.select({ businessEffectId: integrationOperations.businessEffectId, operationKey: integrationOperations.operationKey }).from(integrationOperations).where(and(eq(integrationOperations.tenantId, tenantId), inArray(integrationOperations.businessEffectId, effectIds))).orderBy(desc(integrationOperations.createdAt), desc(integrationOperations.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const operationRows = operationRowsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    return {
+      runs, actions, effects, evaluations, certifications, compensations, reconciliations, operationRows,
+      truncated: [runsPlus, actionsPlus, effectsPlus, evaluationsPlus, certificationsPlus, compensationsPlus, reconciliationsPlus, operationRowsPlus].some((rows) => rows.length > MAX_HIGH_EGRESS_ROWS),
+    };
   });
   const totalRuns = rows.runs.filter((run) => ["completed", "failed", "blocked", "cancelled"].includes(run.status)).length;
   const verifiedRunRows = rows.runs.filter((run) => run.status === "completed" && record(run.finalVerification).state === "verified");
@@ -328,6 +340,7 @@ export async function evaluateOutcomeAutonomyReadiness(tenantId: string, packId:
   };
   const currentLiveCertification = rows.certifications.some((certification) => certification.status === "LIVE_TEST_PASS" && (certification.level === "live_provider" || certification.level === "production") && certification.validUntil > new Date() && certification.criticalViolations === 0 && !certification.suspendedAt);
   const gates: OutcomeAutonomyReadiness["gates"] = [
+    { code: "BOUNDED_EVIDENCE_READ", passed: !rows.truncated, observed: rows.truncated, required: false },
     { code: "MIN_VERIFIED_SAMPLE", passed: verifiedRuns >= 20, observed: verifiedRuns, required: 20 },
     { code: "FULL_VERIFICATION_COVERAGE", passed: metrics.verificationCoverage === 1, observed: metrics.verificationCoverage, required: 1 },
     { code: "FULL_VERIFIED_EFFECT_COVERAGE", passed: metrics.verifiedEffectCoverage === 1, observed: metrics.verifiedEffectCoverage, required: 1 },

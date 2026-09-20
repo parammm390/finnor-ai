@@ -6,6 +6,10 @@ import { commands, workflowRuns, workflowSteps, domainActions, jobs, type Db } f
 import { and, eq } from "drizzle-orm";
 import { workflowStepJobKey } from "./job-identity";
 import { isRetiredWaterAction, isRetiredWaterWorkflow, RetiredVerticalError } from "@finnor/shared-types";
+import { createHash } from "node:crypto";
+import { maybeChaosKill } from "./chaos";
+
+export const SCOPE2_RUNTIME_PROTOCOL_VERSION = 2;
 
 export interface StepDefinition {
   stepType: string;
@@ -51,16 +55,56 @@ export interface SubmitCommandResult {
   alreadyExisted: boolean;
 }
 
-async function enqueueFirstStepTx(db: Db, tenantId: string, stepId: string, dispatchGeneration: number, correlationId?: string): Promise<void> {
+function stable(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${stable(child)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function commandHash(params: SubmitCommandParams): string {
+  const immutable = {
+    commandType: params.commandType,
+    payload: params.payload,
+    workflowType: params.workflowType,
+    steps: params.steps,
+    requestedBy: params.requestedBy ?? null,
+    domainActionId: params.domainActionId ?? null,
+    businessEffectId: params.businessEffectId ?? null,
+    authorizedEffectHash: params.authorizedEffectHash ?? null,
+    authorityDecisionId: params.authorityDecisionId ?? null,
+    authorityRevision: params.authorityRevision ?? null,
+    policyId: params.policyId ?? null,
+    policyVersion: params.policyVersion ?? null,
+    executionClass: params.executionClass ?? null,
+    workId: params.workId ?? null,
+  };
+  return `sha256:${createHash("sha256").update(stable(immutable)).digest("hex")}`;
+}
+
+async function enqueueFirstStepTx(
+  db: Db,
+  tenantId: string,
+  stepId: string,
+  dispatchGeneration: number,
+  protocolVersion: number,
+  correlationId?: string,
+): Promise<void> {
   const payload = correlationId
     ? { tenantId, workflowStepId: stepId, workflowStepGeneration: dispatchGeneration, _correlationId: correlationId }
     : { tenantId, workflowStepId: stepId, workflowStepGeneration: dispatchGeneration };
   await db.insert(jobs).values({
-    type: "run_workflow_step",
+    tenantId,
+    type: protocolVersion >= SCOPE2_RUNTIME_PROTOCOL_VERSION ? "run_workflow_step_v2" : "run_workflow_step",
     payload,
     idempotencyKey: workflowStepJobKey(tenantId, stepId, dispatchGeneration),
     lane: "interactive",
     priority: 100,
+    protocolVersion,
+    retrySafety: "durably_effect_guarded",
   }).onConflictDoNothing({ target: jobs.idempotencyKey });
 }
 
@@ -76,15 +120,18 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
     ? await db.select({ workId: domainActions.workId }).from(domainActions).where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.id, params.domainActionId))).limit(1)
     : [];
   const workId = params.workId ?? originAction?.workId ?? null;
+  const immutableCommandHash = commandHash({ ...params, workId: workId ?? undefined });
   if (params.idempotencyKey) {
     const [existingCommand] = await db
       .select()
       .from(commands)
       .where(and(eq(commands.tenantId, params.tenantId), eq(commands.idempotencyKey, params.idempotencyKey)));
     if (existingCommand) {
-      if ((params.businessEffectId ?? null) !== (existingCommand.businessEffectId ?? null)
-          || (params.authorizedEffectHash ?? null) !== (existingCommand.authorizedEffectHash ?? null)) {
-        throw new Error("Command idempotency conflict: durable authorization is bound to a different Business Effect");
+      if (existingCommand.protocolVersion >= SCOPE2_RUNTIME_PROTOCOL_VERSION
+          ? existingCommand.commandHash !== immutableCommandHash
+          : (params.businessEffectId ?? null) !== (existingCommand.businessEffectId ?? null)
+            || (params.authorizedEffectHash ?? null) !== (existingCommand.authorizedEffectHash ?? null)) {
+        throw new Error("Command idempotency conflict: immutable command semantics differ");
       }
       const [run] = await db.select().from(workflowRuns).where(eq(workflowRuns.commandId, existingCommand.id));
       if (!run) throw new Error("Durable command exists without its workflow run");
@@ -92,7 +139,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
       const steps = run ? await db.select().from(workflowSteps).where(eq(workflowSteps.workflowRunId, run.id)) : [];
       const first = steps.sort((a, b) => a.sequence - b.sequence)[0];
       if (first && first.status === "pending" && params.enqueueFirstStep !== false) {
-        await enqueueFirstStepTx(db, params.tenantId, first.id, first.dispatchGeneration, params.correlationId);
+        await enqueueFirstStepTx(db, params.tenantId, first.id, first.dispatchGeneration, first.protocolVersion, params.correlationId);
       }
       return {
         commandId: existingCommand.id,
@@ -118,6 +165,8 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
       policyVersion: params.policyVersion ?? null,
       executionClass: params.executionClass ?? null,
       authorizedAt: params.authorizedAt ?? new Date(),
+      protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+      commandHash: immutableCommandHash,
       status: "approved",
     } as const;
   const insertedCommands = params.idempotencyKey
@@ -133,7 +182,14 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
 
   const [run] = await db
     .insert(workflowRuns)
-    .values({ tenantId: params.tenantId, commandId: command!.id, workId, workflowType: params.workflowType, status: "running" })
+    .values({
+      tenantId: params.tenantId,
+      commandId: command!.id,
+      workId,
+      workflowType: params.workflowType,
+      status: "running",
+      protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+    })
     .returning();
 
   const stepRows = await db
@@ -149,6 +205,15 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
         correlationId: params.correlationId ?? null,
         domainActionId: params.domainActionId ?? null,
         businessEffectId: params.businessEffectId ?? null,
+        protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+        // Runtime sequence causality is recorded separately from Authority/budget
+        // eligibility. Scope-1 remains the owner of upstream PlanGraph causality.
+        causalReadyAt: i === 0 ? new Date() : null,
+        eligibilityEvidence: i === 0 ? {
+          version: 1,
+          causalSource: params.domainActionId ? "authorized_domain_action_dispatch" : "durable_command_submission",
+          authorityIsNotCausality: true,
+        } : null,
       })),
     )
     .returning();
@@ -159,8 +224,12 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
     // This insert uses the caller's Db transaction. A committed command can never
     // exist without its executable first job, and a rolled-back approval leaves
     // neither command nor job behind.
-    await enqueueFirstStepTx(db, params.tenantId, stepRows[0].id, stepRows[0].dispatchGeneration, params.correlationId);
+    await enqueueFirstStepTx(db, params.tenantId, stepRows[0].id, stepRows[0].dispatchGeneration, stepRows[0].protocolVersion, params.correlationId);
   }
+
+  // Real SIGKILL certification point while the caller's tenant transaction is still
+  // open. PostgreSQL must roll back the command, run, steps and first job together.
+  maybeChaosKill("command_pre_commit");
 
   return {
     commandId: command!.id,

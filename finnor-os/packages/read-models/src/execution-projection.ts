@@ -261,7 +261,9 @@ function workflowControls(status: ExecutionWorkflow["status"], id: string, versi
 
 export async function executionActionTypes(tenantId: string, workId: string): Promise<Array<{ id: string; actionType: string; status: DomainActionStatus }>> {
   return withTenant(tenantId, (db) => db.select({ id: domainActions.id, actionType: domainActions.actionType, status: domainActions.status })
-    .from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, workId))));
+    .from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, workId)))
+    .orderBy(asc(domainActions.createdAt), asc(domainActions.id))
+    .limit(ACTION_LIMIT + 1));
 }
 
 /** One bounded read model over existing durable execution truth. */
@@ -434,7 +436,9 @@ export async function executionProjection(
     const integrationsByStep = new Map<string, typeof integrationRows>();
     for (const operation of integrationRows) integrationsByStep.set(operation.workflowStepId, [...(integrationsByStep.get(operation.workflowStepId) ?? []), operation]);
     const externalByAction = new Map<string, typeof externalRows>();
-    for (const operation of externalRows) externalByAction.set(operation.domainActionId, [...(externalByAction.get(operation.domainActionId) ?? []), operation]);
+    for (const operation of externalRows) if (operation.domainActionId) {
+      externalByAction.set(operation.domainActionId, [...(externalByAction.get(operation.domainActionId) ?? []), operation]);
+    }
     const reconByStep = new Map(reconRows.map((row) => [row.relatedStepId!, row]));
     const compensationByStep = new Map(compensationRows.map((row) => [row.workflowStepId, row]));
     const logsByAction = new Map<string, typeof actionLogRows>();

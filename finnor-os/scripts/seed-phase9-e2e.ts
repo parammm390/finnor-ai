@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import pg from "pg";
-import { assertDisposableDatabaseTarget } from "../packages/db/production-target-guard";
 import {
   closePool,
   completeWorkPlanRevision,
@@ -66,9 +65,10 @@ import {
   type StandardLboModelConfig,
 } from "@finnor/underwriting";
 import { GOLDEN_UNDERWRITING_CASES, type GoldenLboCase } from "../tests/underwriting-corpus/golden-cases";
+import { assertDisposableDatabaseTarget } from "../packages/db/production-target-guard";
 
 const ADMIN_URL = process.env.DATABASE_URL;
-assertDisposableDatabaseTarget(ADMIN_URL, "Phase 9 e2e fixture");
+assertDisposableDatabaseTarget(ADMIN_URL, "Phase 9 browser fixture seed");
 
 const ownerEmail = process.env.TEST_OWNER_EMAIL;
 if (!ownerEmail) throw new Error("TEST_OWNER_EMAIL is required so the authenticated browser maps to the disposable fixture owner");

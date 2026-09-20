@@ -95,17 +95,16 @@ export async function reliability(tenantId: string, windowDays = 1): Promise<Rel
       total: sql<number>`count(*)::int`,
       finalized: sql<number>`count(*) filter (where ${decisionReceipts.finalizedAt} is not null)::int`,
     }).from(decisionReceipts).where(and(eq(decisionReceipts.tenantId, tenantId), gte(decisionReceipts.createdAt, cutoff)));
-    const predictionRows = await db.select({ actionType: domainActions.actionType, diff: domainActions.predictionDiff })
-      .from(domainActions).where(and(eq(domainActions.tenantId, tenantId), isNotNull(domainActions.predictionDiff), gte(domainActions.createdAt, cutoff)));
-    const aggregate = new Map<string, { comparedFields: number; matchedFields: number }>();
-    for (const row of predictionRows) {
-      const diff = row.diff as { compared?: number; matched?: number };
-      if (!diff.compared) continue;
-      const current = aggregate.get(row.actionType) ?? { comparedFields: 0, matchedFields: 0 };
-      current.comparedFields += diff.compared;
-      current.matchedFields += diff.matched ?? 0;
-      aggregate.set(row.actionType, current);
-    }
+    // Prediction accuracy is already an additive metric. Aggregate the numeric
+    // fields in PostgreSQL so a long-lived tenant cannot make this health read
+    // transfer every historical prediction_diff JSON document to the worker.
+    const predictionRows = await db.select({
+      actionType: domainActions.actionType,
+      comparedFields: sql<number>`coalesce(sum(case when jsonb_typeof(${domainActions.predictionDiff}->'compared') = 'number' then (${domainActions.predictionDiff}->>'compared')::int else 0 end), 0)::int`,
+      matchedFields: sql<number>`coalesce(sum(case when jsonb_typeof(${domainActions.predictionDiff}->'matched') = 'number' then (${domainActions.predictionDiff}->>'matched')::int else 0 end), 0)::int`,
+    }).from(domainActions)
+      .where(and(eq(domainActions.tenantId, tenantId), isNotNull(domainActions.predictionDiff), gte(domainActions.createdAt, cutoff)))
+      .groupBy(domainActions.actionType);
     return {
       tenantId,
       windowDays,
@@ -116,8 +115,7 @@ export async function reliability(tenantId: string, windowDays = 1): Promise<Rel
       reconciliationBacklog: recon!.count,
       dlqDepth: dlq!.count,
       receiptCompleteness: receipts!.total > 0 ? receipts!.finalized / receipts!.total : null,
-      predictionAccuracy: [...aggregate.entries()].map(([actionType, item]) => ({
-        actionType,
+      predictionAccuracy: predictionRows.map((item) => ({
         ...item,
         accuracy: item.comparedFields > 0 ? item.matchedFields / item.comparedFields : null,
       })),

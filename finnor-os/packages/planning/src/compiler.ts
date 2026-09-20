@@ -20,6 +20,10 @@ import type {
   RecoverySpec,
 } from "./contracts";
 
+/** Persisted with every newly selected PlanRevision. Bump only when accepted
+ * graph semantics or deterministic scoring/validation rules change. */
+export const DETERMINISTIC_PLAN_COMPILER_VERSION = "planning-compiler-v2-scope1-frontier";
+
 function violation(candidateKey: string, code: PlanViolationCode, message: string, nodeKey?: string, path?: string): PlanViolation {
   return { candidateKey, code, message, ...(nodeKey ? { nodeKey } : {}), ...(path ? { path } : {}) };
 }
@@ -400,6 +404,8 @@ function compileOne(input: {
       expectedEffects: expectedEffects(node),
       observation: defaultObservation(node, node.kind === "check" ? knownCriteria.get(node.criterionId) : undefined, facts),
       recovery: defaultRecovery(node, facts),
+      estimatedCostMicros: facts?.estimatedCostMicros ?? null,
+      estimatedLatencyMs: facts?.estimatedLatencyMs ?? null,
       semanticHash: semanticByKey.get(node.key)!,
     };
     if (node.kind === "action") return {

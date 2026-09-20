@@ -83,7 +83,7 @@ Every row has one strict payload schema, pre-authority Deal/Work/entity/version/
 | provider_acknowledgement_observation_and_reconciliation | `tests/integration/external-effect-observation.test.ts` |
 | computer_authorized_effect_identity_restart_and_readback | `tests/integration/computer-execution-fabric.test.ts` |
 | durable_effect_approval_receipt_and_reconciliation_bridge | `tests/integration/single-action-runtime-bridge.test.ts` |
-| dlq_redrive_and_causal_replay | `tests/integration/poison-job-replay-drill.test.ts`<br>`tests/integration/causal-replay.test.ts` |
+| dlq_redrive_and_causal_replay | `tests/integration/dlq-routes.test.ts`<br>`tests/integration/causal-replay.test.ts` |
 | universal_actions_escalation_and_water_preservation | `tests/integration/universal-action-fabric.test.ts`<br>`tests/unit/universal-actions-contract.test.ts` |
 
 ## Release gates

@@ -261,6 +261,7 @@ export async function queueComputerRun(
       status: "succeeded", summary: "Queued governed computer task", detail: {}, completedAt: new Date(),
     });
     await db.insert(jobs).values({
+      tenantId,
       type: "run_computer_task",
       payload: { tenantId, runId: created.id },
       idempotencyKey: `computer-run:${created.id}`,
@@ -541,6 +542,7 @@ export async function recoverComputerRunJobs(tenantId: string): Promise<{ queued
       )).limit(1);
       if (pending) continue;
       await db.insert(jobs).values({
+        tenantId,
         type: "run_computer_task",
         payload: { tenantId, runId: run.id, recovery: true },
         // A completed recovery job must not suppress a later repair attempt. The

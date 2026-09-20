@@ -26,7 +26,8 @@ export const criticReview: JobHandler = async (payload) => {
     const [r] = await db
       .select()
       .from(domainActions)
-      .where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
+      .where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)))
+      .limit(1);
     return r ?? null;
   });
   // Already decided by the time this fired (a fast human beat us here) — nothing

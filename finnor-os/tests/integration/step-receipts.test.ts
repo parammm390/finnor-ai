@@ -5,9 +5,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, workflowSteps, workflowRuns, commands, decisionReceipts, integrationOperations } from "@finnor/db";
+import { withTenant, closePool, tenants, workflowSteps, workflowStepClaims, workflowRuns, commands, decisionReceipts, integrationOperations } from "@finnor/db";
 import { eq } from "drizzle-orm";
-import { submitCommand, claimStep, completeStep, failStep } from "@finnor/workflow-runtime";
+import { submitCommand, claimStep, completeStep, failStep, redriveStepTx } from "@finnor/workflow-runtime";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000000ea";
@@ -51,6 +51,7 @@ describe.skipIf(!available)("receipts wired into the engine (§2.4)", () => {
         await db.delete(decisionReceipts).where(eq(decisionReceipts.workflowStepId, s.id));
         await db.delete(integrationOperations).where(eq(integrationOperations.workflowStepId, s.id));
       }
+      await db.delete(workflowStepClaims).where(eq(workflowStepClaims.tenantId, TENANT_ID));
       await db.delete(workflowSteps).where(eq(workflowSteps.tenantId, TENANT_ID));
       await db.delete(workflowRuns).where(eq(workflowRuns.tenantId, TENANT_ID));
       await db.delete(commands).where(eq(commands.tenantId, TENANT_ID));
@@ -100,9 +101,11 @@ describe.skipIf(!available)("receipts wired into the engine (§2.4)", () => {
     const submitted = await newCommand("step-receipts-retry");
     const stepId = submitted.stepIds[0]!;
     await claimStep(TENANT_ID, stepId);
-    // Simulate a stale-lease recovery resetting the step back to pending, then reclaiming.
-    await withTenant(TENANT_ID, (db) => db.update(workflowSteps).set({ status: "pending" }).where(eq(workflowSteps.id, stepId)));
-    await claimStep(TENANT_ID, stepId);
+    // Use the canonical fenced redrive. It closes the first claim history row,
+    // advances the dispatch generation, and clears ownership atomically.
+    const redriven = await withTenant(TENANT_ID, (db) => redriveStepTx(db, TENANT_ID, stepId));
+    expect(redriven?.dispatchGeneration).toBe(1);
+    await claimStep(TENANT_ID, stepId, 1);
 
     const rows = await withTenant(TENANT_ID, (db) => db.select().from(decisionReceipts).where(eq(decisionReceipts.workflowStepId, stepId)));
     expect(rows).toHaveLength(1);

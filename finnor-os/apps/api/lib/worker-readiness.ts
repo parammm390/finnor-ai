@@ -1,8 +1,12 @@
-import { CURRENT_MIGRATION_HEAD, MINIMUM_PRODUCT_RUNTIME_PROTOCOL, getPool } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, PHASE5_CUTOVER_PROTOCOL, getPool } from "@finnor/db";
 
 export interface WorkerFleetReadiness {
   migrationHead: string | null;
   healthyWorkers: number;
+  legacyCompatibleWorkers?: number;
+  computeCutoverState?: "preparing" | "authoritative";
+  computeClassCounts?: Record<"REALTIME" | "INTERACTIVE" | "BACKGROUND" | "HEAVY", number>;
+  computeReady?: boolean;
   freshRuntimes: number;
   releaseShas: string[];
   productEpochs: number[];
@@ -12,13 +16,19 @@ export interface WorkerFleetReadiness {
   incompatibleProtocolRuntimes: number;
 }
 
-const CUTOVER_RUNTIME_SERVICES = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"] as const;
+const CUTOVER_RUNTIME_SERVICES = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner", "compute-realtime", "compute-interactive", "compute-background", "compute-heavy"] as const;
 
 /** The API and worker use one release/migration identity for readiness. */
 export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.FINNOR_COMMIT_SHA?.trim() || null): Promise<WorkerFleetReadiness> {
   const result = await getPool().query<{
     migration_head: string | null;
+    compute_cutover_state: "preparing" | "authoritative";
     healthy_workers: number;
+    legacy_compatible_workers: number;
+    realtime_workers: number;
+    interactive_workers: number;
+    background_workers: number;
+    heavy_workers: number;
     fresh_runtimes: number;
     release_shas: string[] | null;
     product_epochs: number[] | null;
@@ -31,6 +41,8 @@ export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.
        SELECT epoch,minimum_cutover_protocol
          FROM finnor_os.product_runtime_authority
         WHERE authority_key='product'
+     ), compute_cutover AS (
+       SELECT state FROM finnor_os.compute_plane_cutover WHERE singleton=true
      ), fresh AS (
        SELECT h.*
          FROM finnor_os.service_release_heartbeats h
@@ -39,13 +51,31 @@ export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.
      )
      SELECT
        (SELECT max(name) FROM finnor_os._migrations) AS migration_head,
+       (SELECT state FROM compute_cutover) AS compute_cutover_state,
        count(*) FILTER (
-         WHERE service='worker'
+         WHERE ((SELECT state FROM compute_cutover)='preparing' AND service='worker'
+             OR (SELECT state FROM compute_cutover)='authoritative' AND service IN ('compute-realtime','compute-interactive','compute-background','compute-heavy'))
            AND migration_head=$1
            AND ($2::text IS NULL OR release_sha=$2)
            AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority))
            AND product_epoch=(SELECT epoch FROM authority)
        )::int AS healthy_workers,
+       count(*) FILTER (WHERE service='worker'
+         AND migration_head>='0137_scope2_durable_runtime.sql'
+         AND product_epoch=(SELECT epoch FROM authority)
+         AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority)))::int AS legacy_compatible_workers,
+       count(*) FILTER (WHERE service='compute-realtime' AND migration_head=$1
+         AND ($2::text IS NULL OR release_sha=$2) AND product_epoch=(SELECT epoch FROM authority)
+         AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority)))::int AS realtime_workers,
+       count(*) FILTER (WHERE service='compute-interactive' AND migration_head=$1
+         AND ($2::text IS NULL OR release_sha=$2) AND product_epoch=(SELECT epoch FROM authority)
+         AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority)))::int AS interactive_workers,
+       count(*) FILTER (WHERE service='compute-background' AND migration_head=$1
+         AND ($2::text IS NULL OR release_sha=$2) AND product_epoch=(SELECT epoch FROM authority)
+         AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority)))::int AS background_workers,
+       count(*) FILTER (WHERE service='compute-heavy' AND migration_head=$1
+         AND ($2::text IS NULL OR release_sha=$2) AND product_epoch=(SELECT epoch FROM authority)
+         AND cutover_protocol>=greatest($3,(SELECT minimum_cutover_protocol FROM authority)))::int AS heavy_workers,
        count(*)::int AS fresh_runtimes,
        coalesce(array_agg(DISTINCT release_sha ORDER BY release_sha)
          FILTER (WHERE release_sha IS NOT NULL),ARRAY[]::text[]) AS release_shas,
@@ -58,12 +88,22 @@ export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.
          WHERE cutover_protocol<greatest($3,coalesce((SELECT minimum_cutover_protocol FROM authority),$3))
        )::int AS incompatible_protocol_runtimes
        FROM fresh`,
-    [CURRENT_MIGRATION_HEAD, expectedReleaseSha, MINIMUM_PRODUCT_RUNTIME_PROTOCOL, CUTOVER_RUNTIME_SERVICES],
+    [CURRENT_MIGRATION_HEAD, expectedReleaseSha, PHASE5_CUTOVER_PROTOCOL, CUTOVER_RUNTIME_SERVICES],
   );
   const row = result.rows[0];
+  const computeClassCounts = {
+    REALTIME: Number(row?.realtime_workers ?? 0),
+    INTERACTIVE: Number(row?.interactive_workers ?? 0),
+    BACKGROUND: Number(row?.background_workers ?? 0),
+    HEAVY: Number(row?.heavy_workers ?? 0),
+  };
   return {
     migrationHead: row?.migration_head ?? null,
     healthyWorkers: Number(row?.healthy_workers ?? 0),
+    legacyCompatibleWorkers: Number(row?.legacy_compatible_workers ?? 0),
+    computeCutoverState: row?.compute_cutover_state ?? "preparing",
+    computeClassCounts,
+    computeReady: Object.values(computeClassCounts).every((count) => count >= 1),
     freshRuntimes: Number(row?.fresh_runtimes ?? 0),
     releaseShas: row?.release_shas ?? [],
     productEpochs: (row?.product_epochs ?? []).map(Number),
@@ -89,9 +129,12 @@ export async function requireWorkerFleetReady(): Promise<void> {
   } catch {
     throw workerUnavailable("Worker fleet readiness could not be verified");
   }
-  if (readiness.migrationHead !== CURRENT_MIGRATION_HEAD || readiness.healthyWorkers < 1) {
+  const eligible = readiness.computeCutoverState === "authoritative"
+    ? readiness.computeReady === true
+    : (readiness.legacyCompatibleWorkers ?? 0) >= 1 || readiness.computeReady === true;
+  if (readiness.migrationHead !== CURRENT_MIGRATION_HEAD || !eligible) {
     throw workerUnavailable(
-      `Worker fleet is unavailable (migration=${readiness.migrationHead ?? "none"}, healthyWorkers=${readiness.healthyWorkers})`,
+      `Compute fleet is unavailable (migration=${readiness.migrationHead ?? "none"}, cutover=${readiness.computeCutoverState ?? "unknown"}, classCounts=${JSON.stringify(readiness.computeClassCounts ?? {})})`,
     );
   }
 }

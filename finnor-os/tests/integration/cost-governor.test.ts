@@ -3,7 +3,7 @@ import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
 import { closePool, decisionReceipts, domainActions, llmCalls, tenantLlmBudgets, withTenant } from "@finnor/db";
 import { eq } from "drizzle-orm";
-import { LLMBudgetDeferredError, registerProvider, resolveProvider, type LLMProvider } from "@finnor/tools";
+import { LLMBudgetDeferredError, LLMBudgetUnknownUsageError, registerProvider, resolveProvider, type LLMProvider } from "@finnor/tools";
 import { openReceipt } from "@finnor/workflow-runtime";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -59,5 +59,25 @@ describe.skipIf(!available)("B5 cost governor", () => {
     expect(row?.status).toBe("deferred");
     const [receipt] = await withTenant(TENANT_ID, (db) => db.select().from(decisionReceipts).where(eq(decisionReceipts.domainActionId, action!.id)));
     expect((receipt?.failure as { errorKind?: string } | null)?.errorKind).toBe("config");
+  });
+
+  it("treats completed calls with unknown token usage as unknown, never as zero", async () => {
+    await withTenant(TENANT_ID, (db) => db.insert(tenantLlmBudgets)
+      .values({ tenantId: TENANT_ID, dailyTokenBudget: 1_000, softLimitPercent: 80 })
+      .onConflictDoUpdate({ target: tenantLlmBudgets.tenantId, set: { dailyTokenBudget: 1_000 } }));
+    await withTenant(TENANT_ID, (db) => db.insert(llmCalls).values({
+      tenantId: TENANT_ID, traceId: "b5-unknown-usage", purpose: "critic",
+      provider: "unknown-usage-fixture", model: "unknown", status: "completed",
+      inputTokens: null, outputTokens: null, costUsd: null, detail: {},
+    }));
+    await expect(resolveProvider("test-cost").complete({
+      system: "x", user: "y", tenantId: TENANT_ID, traceId: "b5-unknown-guard", purpose: "critic",
+    })).rejects.toBeInstanceOf(LLMBudgetUnknownUsageError);
+    const [unknown] = await withTenant(TENANT_ID, (db) => db.select().from(llmCalls).where(eq(llmCalls.traceId, "b5-unknown-usage")));
+    expect(unknown?.inputTokens).toBeNull();
+    expect(unknown?.outputTokens).toBeNull();
+    expect(unknown?.costUsd).toBeNull();
+    const [deferred] = await withTenant(TENANT_ID, (db) => db.select().from(llmCalls).where(eq(llmCalls.traceId, "b5-unknown-guard")));
+    expect(deferred?.status).toBe("deferred");
   });
 });

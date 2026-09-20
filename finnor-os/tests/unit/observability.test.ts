@@ -39,6 +39,7 @@ describe("observability — Sentry wiring", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}).passthrough(),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       retryPolicy: { attempts: 1, baseDelayMs: 1, timeoutMs: 500 },
       async run() {
         throw new Error("boom");
@@ -60,6 +61,7 @@ describe("observability — Sentry wiring", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}).passthrough(),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       async run() {
         return { ok: true };
       },

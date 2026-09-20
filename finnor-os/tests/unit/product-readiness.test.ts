@@ -5,7 +5,7 @@ import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import type { WorkerFleetReadiness } from "../../apps/api/lib/worker-readiness";
 
 const SHA = "a".repeat(40);
-const activeAuthority: ProductRuntimeAuthoritySnapshot = {
+const retiredAuthority: ProductRuntimeAuthoritySnapshot = {
   epoch: 5,
   state: "water_retired",
   activeProductVertical: "private_equity",
@@ -28,7 +28,7 @@ const convergedFleet: WorkerFleetReadiness = {
 function evaluate(overrides: Partial<Parameters<typeof evaluateFinalPeReadiness>[0]> = {}) {
   return evaluateFinalPeReadiness({
     explicitEnvironment: "production",
-    authority: activeAuthority,
+    authority: retiredAuthority,
     fleet: convergedFleet,
     expectedReleaseSha: SHA,
     releaseTraceable: true,
@@ -36,15 +36,13 @@ function evaluate(overrides: Partial<Parameters<typeof evaluateFinalPeReadiness>
   });
 }
 
-describe("current Private Equity production readiness", () => {
-  it("rejects incomplete legacy authority states", () => {
-    for (const state of ["preparing", "water_intake_frozen"] as const) {
-      expect(evaluate({ authority: { ...activeAuthority, state } }).productAuthority).toBe(false);
-    }
+describe("P8 final PE production readiness", () => {
+  it.each(["preparing", "water_intake_frozen"])("rejects %s authority", (state) => {
+    expect(evaluate({ authority: { ...retiredAuthority, state } }).productAuthority).toBe(false);
   });
 
   it("rejects a wrong active vertical and a missing authority row", () => {
-    expect(evaluate({ authority: { ...activeAuthority, activeProductVertical: "water" } }).productAuthority).toBe(false);
+    expect(evaluate({ authority: { ...retiredAuthority, activeProductVertical: "water" } }).productAuthority).toBe(false);
     expect(evaluate({ authority: null }).productAuthority).toBe(false);
   });
 
@@ -65,7 +63,7 @@ describe("current Private Equity production readiness", () => {
     }
   });
 
-  it("accepts only the converged active Private Equity production fleet", () => {
+  it("accepts only a converged water_retired/private_equity production fleet", () => {
     expect(evaluate()).toEqual({
       finalPeGateRequired: true,
       productAuthority: true,
@@ -76,7 +74,7 @@ describe("current Private Equity production readiness", () => {
 
   it("does not infer the final production gate from NODE_ENV", () => {
     expect(explicitDeploymentEnvironment({ NODE_ENV: "production" })).toBeNull();
-    expect(evaluate({ explicitEnvironment: null, authority: { ...activeAuthority, state: "preparing" }, fleet: null })).toEqual({
+    expect(evaluate({ explicitEnvironment: null, authority: { ...retiredAuthority, state: "preparing" }, fleet: null })).toEqual({
       finalPeGateRequired: false,
       productAuthority: true,
       runtimeEpoch: true,

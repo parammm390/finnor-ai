@@ -6,7 +6,18 @@ import type { ToolCallResult, RetryPolicy } from "./wrap";
 import { wrappedCall, DEFAULT_RETRY } from "./wrap";
 import { createHash } from "node:crypto";
 import { ensureSecretsLoaded, minimizeExternalInput } from "@finnor/security";
-import { claimExternalOperation, recordExternalOperationResult, awaitExternalOperationResolution, markExternalOperationUnknown } from "./idempotent-call";
+import {
+  claimExternalOperation,
+  recordExternalOperationResult,
+  awaitExternalOperationResolution,
+  markExternalOperationUnknown,
+  prepareProviderInvocation,
+  markProviderRequestMayHaveLeft,
+  recordProviderInvocationAcknowledged,
+  recordProviderInvocationFailure,
+  type ExternalOperationContract,
+  type ProviderInvocationContext,
+} from "./idempotent-call";
 import { initObservability, Sentry } from "./observability";
 
 /** Trusted execution metadata injected by an action/workflow boundary. It is never
@@ -22,6 +33,19 @@ export interface ToolRuntimeContext {
    * providers cannot replace it through their payload. */
   businessEffectId?: string;
   businessEffectHash?: string;
+  workflowStepClaimId?: string;
+  providerOperationAttemptId?: string;
+  providerOperationRequestHash?: string;
+  providerIdempotencyKey?: string;
+  providerIdempotencyScope?: string;
+  providerIdempotencyExpiresAt?: Date;
+}
+
+export interface ToolExecutionContract {
+  effect: "read_only" | "consequential";
+  retrySafety: ExternalOperationContract["retrySafety"];
+  idempotency: ExternalOperationContract["idempotency"];
+  verification: "acknowledgement" | "readback" | "webhook_or_readback" | "none";
 }
 
 export interface Tool {
@@ -30,6 +54,7 @@ export interface Tool {
   inputSchema: z.ZodTypeAny;
   integration: string;
   retryPolicy?: RetryPolicy;
+  execution: ToolExecutionContract;
   /** Fields actually forwarded to this external provider. Omitted = today's
    *  pass-through behavior (opt-in per tool). Every builtin tool schema uses
    *  .passthrough(), so without this a stray field (deal notes, an SSN some
@@ -60,6 +85,12 @@ export class ToolRegistry {
    * call. Inputs, credentials, and provider responses are deliberately absent. */
   integrationFor(name: string): string | null {
     return this.tools.get(name)?.integration ?? null;
+  }
+
+  executionContractFor(name: string): ToolExecutionContract | null {
+    const tool = this.tools.get(name);
+    if (!tool) return null;
+    return tool.execution;
   }
 
   /** Trusted execution metadata is absent on an unscoped registry. Plugins may read
@@ -97,6 +128,16 @@ export class ToolRegistry {
     if (!tool) {
       return { ok: false, output: {}, error: `Unknown tool: ${name}` };
     }
+    const executionContract = this.executionContractFor(name)!;
+    if (executionContract.effect === "consequential" && (!runtime.tenantId
+        || !runtime.providerOperationAttemptId || !runtime.providerOperationRequestHash)) {
+      return {
+        ok: false,
+        output: {},
+        error: `Consequential tool ${name} requires a durable logical operation and provider-operation attempt`,
+        errorKind: "conflict",
+      };
+    }
     const effectiveInput = runtime.tenantId ? { ...input, tenantId: runtime.tenantId } : input;
     const parsed = tool.inputSchema.safeParse(effectiveInput);
     if (!parsed.success) {
@@ -108,10 +149,39 @@ export class ToolRegistry {
     }
     const safeInput = tool.piiAllowlist ? minimizeExternalInput(parsed.data, tool.piiAllowlist) : parsed.data;
     const start = Date.now();
+    const invocationContext: ProviderInvocationContext | null = executionContract.effect === "consequential"
+      ? {
+          tenantId: runtime.tenantId!,
+          providerOperationAttemptId: runtime.providerOperationAttemptId!,
+          provider: tool.integration,
+          requestHash: runtime.providerOperationRequestHash!,
+          ...(runtime.providerIdempotencyKey ? { providerIdempotencyKey: runtime.providerIdempotencyKey } : {}),
+          ...(runtime.providerIdempotencyScope ? { providerIdempotencyScope: runtime.providerIdempotencyScope } : {}),
+          ...(runtime.providerIdempotencyExpiresAt ? { providerIdempotencyExpiresAt: runtime.providerIdempotencyExpiresAt } : {}),
+          transportLayer: "wrapped_call",
+        }
+      : null;
+    const providerIdempotencyActive = executionContract.idempotency.mode === "inherently_idempotent"
+      || (executionContract.idempotency.mode === "provider_key"
+        && Boolean(runtime.providerIdempotencyKey)
+        && runtime.providerIdempotencyExpiresAt !== undefined
+        && runtime.providerIdempotencyExpiresAt.getTime() > Date.now());
     const result = await wrappedCall(
       tool.integration,
       () => Object.keys(runtime).length > 0 ? tool.run(safeInput, runtime) : tool.run(safeInput),
       tool.retryPolicy ?? DEFAULT_RETRY,
+      {
+        consequential: executionContract.effect === "consequential",
+        providerIdempotencyActive,
+        ...(invocationContext ? {
+          audit: {
+            prepare: (ordinal: number) => prepareProviderInvocation(invocationContext, ordinal),
+            requestMayHaveLeft: (invocationId: string) => markProviderRequestMayHaveLeft(invocationContext.tenantId, invocationId),
+            acknowledged: (invocationId: string, output: Record<string, unknown>) => recordProviderInvocationAcknowledged(invocationContext, invocationId, output),
+            failed: (invocationId: string, failure: { kind: string; message: string; definitePreDispatch: boolean; definiteRejection?: boolean }) => recordProviderInvocationFailure(invocationContext, invocationId, failure),
+          },
+        } : {}),
+      },
     );
     const ms = Date.now() - start;
     Sentry.addBreadcrumb({ category: "tool", message: name, data: { integration: tool.integration, ok: result.ok, ms } });
@@ -129,35 +199,27 @@ export interface ToolCallContext {
   authProfileRef?: string;
   businessEffectId?: string;
   businessEffectHash?: string;
+  workflowStepClaimId?: string;
   /** Deterministic namespace for independently queued targets/batches of one action. */
   operationKeyPrefix?: string;
 }
 
 /**
- * Wraps a real ToolRegistry with an idempotency claim against the external_operations
- * ledger (packages/db/schema.ts) — one row per (domainActionId, tool-name+call-index),
- * so a retried execution (reflection retry, a resumed LangGraph thread) never re-fires
- * a side effect that already SUCCEEDED, while a call that previously FAILED is always
- * allowed to actually retry (that's exactly what reflection is for — a failed attempt
- * didn't deliver anything, so re-running it isn't a duplicate). Subclasses ToolRegistry
- * (not a duck-typed wrapper) because `tools` is a private field — every plugin's
- * `execute(draft, tools: ToolRegistry)` already accepts this structurally, so this
- * requires zero plugin signature changes. Constructed fresh per action execution at
- * the two chokepoints that call plugin.execute() — GatedExecutor and
- * makeExecuteNode() — after the confirmation gate has already cleared. Relies on
- * plugins' execute() being deterministic (same draft → same sequence of tool calls),
- * which holds for every plugin in this codebase today — a retry's Nth call lands on
- * the same operationKey as the original attempt's Nth call.
+ * Consequential calls are admitted only through an explicit semantic member key and
+ * the canonical external_operations ledger. DomainAction remains the Scope-1 owner;
+ * this wrapper adds the logical provider operation, its legally-authorized runtime
+ * attempt, and audited physical invocations beneath it. A failed/unknown operation is
+ * not replayed merely because delivery or reflection retried: reclaim requires durable
+ * proof (pre-dispatch failure, definite rejection, verified absence, active provider
+ * idempotency, inherent repeatability, or governed operator resolution).
+ *
+ * Read-only calls retain the legacy call-index fallback because they cannot create an
+ * external business effect. Consequential `call()` fails closed and callers must use
+ * `callIdempotent()` with target/member identity stable across restart and refactoring.
  */
 export class ScopedToolRegistry extends ToolRegistry {
-  // Per-instance call counter, not per-tool: several plugins (bulk_notify_existing_
-  // customers, proposal-batch) call the SAME tool once per target in a loop within one
-  // execute() — keying purely on tool name would make target #2's send look like a
-  // duplicate of target #1's and silently skip it. A fresh ScopedToolRegistry is
-  // constructed per execute() call (see executor.ts/graph/nodes.ts), so a reflection
-  // retry that replays the same deterministic call sequence lands on the SAME
-  // operationKey per call, letting claimExternalOperation's failed->retry logic work
-  // per-call: a call that already succeeded is never re-run, one that failed is.
+  // This counter is reachable only for non-consequential compatibility calls. It is
+  // never accepted as the identity of a consequential provider operation.
   private callIndex = 0;
 
   constructor(
@@ -179,6 +241,10 @@ export class ScopedToolRegistry extends ToolRegistry {
     return this.base.integrationFor(name);
   }
 
+  override executionContractFor(name: string): ToolExecutionContract | null {
+    return this.base.executionContractFor(name);
+  }
+
   override runtimeContext(): Readonly<ToolRuntimeContext> {
     return Object.freeze({
       tenantId: this.ctx.tenantId,
@@ -189,15 +255,30 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.authProfileRef ? { authProfileRef: this.ctx.authProfileRef } : {}),
       ...(this.ctx.businessEffectId ? { businessEffectId: this.ctx.businessEffectId } : {}),
       ...(this.ctx.businessEffectHash ? { businessEffectHash: this.ctx.businessEffectHash } : {}),
+      ...(this.ctx.workflowStepClaimId ? { workflowStepClaimId: this.ctx.workflowStepClaimId } : {}),
     });
   }
 
   override async call(name: string, input: Record<string, unknown>): Promise<ToolCallResult> {
+    const contract = this.base.executionContractFor(name);
+    if (contract?.effect === "consequential") {
+      return {
+        ok: false,
+        output: {},
+        error: `Consequential tool ${name} requires callIdempotent() with a stable semantic member key`,
+        errorKind: "conflict",
+      };
+    }
+    if (contract?.effect === "read_only") {
+      return this.base.callWithRuntimeContext(name, input, this.runtimeContext());
+    }
     const operationKey = `${this.ctx.operationKeyPrefix ? `${this.ctx.operationKeyPrefix}:` : ""}${name}:${this.callIndex++}`;
     return this.callForOperation(name, input, operationKey);
   }
 
   override async callIdempotent(name: string, input: Record<string, unknown>, semanticKey: string): Promise<ToolCallResult> {
+    const contract = this.base.executionContractFor(name);
+    if (contract?.effect === "read_only") return this.base.callWithRuntimeContext(name, input, this.runtimeContext());
     const safeKey = createHash("sha256").update(semanticKey).digest("hex").slice(0, 32);
     const operationKey = `${this.ctx.operationKeyPrefix ? `${this.ctx.operationKeyPrefix}:` : ""}${name}:semantic:${safeKey}`;
     return this.callForOperation(name, input, operationKey);
@@ -207,6 +288,10 @@ export class ScopedToolRegistry extends ToolRegistry {
     const requestHash = hashInput(input);
     const declaredProvider = this.base.integrationFor(name) ?? undefined;
     const provider = declaredProvider;
+    const executionContract = this.base.executionContractFor(name);
+    if (!executionContract) {
+      return { ok: false, output: {}, error: `Unknown tool: ${name}`, errorKind: "validation" };
+    }
     const claim = await claimExternalOperation(
       this.ctx.tenantId,
       this.ctx.domainActionId,
@@ -215,6 +300,14 @@ export class ScopedToolRegistry extends ToolRegistry {
       provider,
       this.ctx.businessEffectId,
       this.ctx.authProfileRef,
+      {
+        protocolVersion: 2,
+        targetKey: operationKey,
+        workflowStepClaimId: this.ctx.workflowStepClaimId,
+        retrySafety: executionContract.retrySafety,
+        idempotency: executionContract.idempotency,
+        verification: executionContract.verification,
+      },
     );
     if (!claim.claimed) {
       if (claim.existing.requestHash !== requestHash) {
@@ -251,22 +344,23 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.authProfileRef ? { authProfileRef: this.ctx.authProfileRef } : {}),
       ...(this.ctx.businessEffectId ? { businessEffectId: this.ctx.businessEffectId } : {}),
       ...(this.ctx.businessEffectHash ? { businessEffectHash: this.ctx.businessEffectHash } : {}),
+      ...(this.ctx.workflowStepClaimId ? { workflowStepClaimId: this.ctx.workflowStepClaimId } : {}),
+      providerOperationAttemptId: claim.providerOperationAttemptId,
+      providerOperationRequestHash: requestHash,
+      ...(claim.operation.providerIdempotencyKey ? { providerIdempotencyKey: claim.operation.providerIdempotencyKey } : {}),
+      ...(claim.operation.providerIdempotencyScope ? { providerIdempotencyScope: claim.operation.providerIdempotencyScope } : {}),
+      ...(claim.operation.providerIdempotencyExpiresAt ? { providerIdempotencyExpiresAt: claim.operation.providerIdempotencyExpiresAt } : {}),
     });
-    const operation = await recordExternalOperationResult(
+    await recordExternalOperationResult(
       this.ctx.tenantId,
       this.ctx.domainActionId,
       operationKey,
       result.ok ? "succeeded" : result.errorKind === "unknown_outcome" ? "unknown" : "failed",
       result.ok ? result.output : { ...result.output, ...(result.error ? { error: result.error } : {}), ...(result.errorKind ? { errorKind: result.errorKind } : {}) },
+      claim.providerOperationAttemptId,
     );
-    if (result.ok && operation?.verificationStatus === "awaiting_observation" && this.ctx.businessEffectId) {
-      const { enqueueJob } = await import("@finnor/db");
-      await enqueueJob(
-        "observe_external_effect",
-        { tenantId: this.ctx.tenantId, externalOperationKey: operation.operationKey, domainActionId: this.ctx.domainActionId, attempt: 1 },
-        `observe-effect:${this.ctx.tenantId}:${this.ctx.domainActionId}:${operation.operationKey}:1`,
-      );
-    }
+    // The acknowledgement/result persistence boundary atomically inserts any
+    // required observation job. Never create a post-commit scheduling window here.
     return result;
   }
 }

@@ -9,6 +9,9 @@ import * as schema from "./schema";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
+import { classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
+export { MAX_BACKGROUND_SCAN_BATCH, MAX_HIGH_EGRESS_ROWS, MAX_INSTRUCTION_EVENT_PAGE, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
+import { MAX_HIGH_EGRESS_ROWS, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import {
   CANONICAL_ENTITY_TYPES,
   assertExecutableVertical,
@@ -30,6 +33,9 @@ import {
 export * from "./schema";
 export * from "./migration-head";
 export * from "./event-fabric";
+export * from "./compute-contract";
+export * from "./compute-control";
+export * from "./compute-governor";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;
@@ -226,7 +232,7 @@ export async function closePool(): Promise<void> {
   }
 }
 
-export const MINIMUM_PRODUCT_RUNTIME_PROTOCOL = 5 as const;
+export const PHASE5_CUTOVER_PROTOCOL = 5 as const;
 
 export interface ProductRuntimeAuthoritySnapshot {
   epoch: number;
@@ -277,8 +283,8 @@ export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAutho
   const row = await readProductRuntimeAuthoritySnapshot();
   if (
     !row
-    || row.epoch < MINIMUM_PRODUCT_RUNTIME_PROTOCOL
-    || row.minimumCutoverProtocol < MINIMUM_PRODUCT_RUNTIME_PROTOCOL
+    || row.epoch < PHASE5_CUTOVER_PROTOCOL
+    || row.minimumCutoverProtocol < PHASE5_CUTOVER_PROTOCOL
     || row.activeProductVertical !== "private_equity"
     || !["preparing", "water_intake_frozen", "water_retired"].includes(row.state)
   ) {
@@ -288,7 +294,8 @@ export async function readProductRuntimeAuthority(): Promise<ProductRuntimeAutho
 }
 
 export interface CutoverHeartbeatInput {
-  service: "api" | "worker" | "orchestrator" | "supplier-canary" | "scheduler-owner";
+  service: "api" | "worker" | "orchestrator" | "supplier-canary" | "scheduler-owner"
+    | "compute-realtime" | "compute-interactive" | "compute-background" | "compute-heavy";
   instanceId: string;
   releaseSha: string;
   buildId: string;
@@ -305,33 +312,44 @@ export interface CutoverHeartbeatInput {
  * The activation function independently validates freshness, protocol, migration,
  * and a single shared release across every required role. */
 export async function recordCutoverCompatibleHeartbeat(input: CutoverHeartbeatInput): Promise<void> {
+  await recordCutoverCompatibleHeartbeats([input]);
+}
+
+/** One authority read and one batched upsert per process heartbeat, independent
+ * of how many truthful runtime roles that process owns. */
+export async function recordCutoverCompatibleHeartbeats(inputs: readonly CutoverHeartbeatInput[]): Promise<void> {
+  if (inputs.length === 0) return;
   const authority = await readProductRuntimeAuthority();
   await getPool().query(
     `INSERT INTO finnor_os.service_release_heartbeats
        (service,instance_id,release_sha,build_id,version,release_source,core_certification_id,
         migration_head,deployment_id,capabilities,environment,cutover_protocol,product_epoch,last_beat_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now())
+     SELECT item.service,item.instance_id,item.release_sha,item.build_id,item.version,
+            item.release_source,item.core_certification_id,item.migration_head,
+            item.deployment_id,item.capabilities,item.environment,$2::int,$3::int,now()
+       FROM jsonb_to_recordset($1::jsonb) AS item(
+         service text,instance_id text,release_sha text,build_id text,version text,
+         release_source text,core_certification_id text,migration_head text,
+         deployment_id text,capabilities text[],environment text)
      ON CONFLICT (service,instance_id) DO UPDATE SET
        release_sha=EXCLUDED.release_sha,build_id=EXCLUDED.build_id,version=EXCLUDED.version,
        release_source=EXCLUDED.release_source,core_certification_id=EXCLUDED.core_certification_id,
        migration_head=EXCLUDED.migration_head,deployment_id=EXCLUDED.deployment_id,
        capabilities=EXCLUDED.capabilities,environment=EXCLUDED.environment,
        cutover_protocol=EXCLUDED.cutover_protocol,product_epoch=EXCLUDED.product_epoch,last_beat_at=now()`,
-    [
-      input.service,
-      input.instanceId,
-      input.releaseSha,
-      input.buildId,
-      input.version,
-      input.releaseSource,
-      input.coreCertificationId ?? null,
-      input.migrationHead ?? CURRENT_MIGRATION_HEAD,
-      input.deploymentId ?? null,
-      input.capabilities ?? [],
-      input.environment,
-      MINIMUM_PRODUCT_RUNTIME_PROTOCOL,
-      authority.epoch,
-    ],
+    [JSON.stringify(inputs.map((input) => ({
+      service: input.service,
+      instance_id: input.instanceId,
+      release_sha: input.releaseSha,
+      build_id: input.buildId,
+      version: input.version,
+      release_source: input.releaseSource,
+      core_certification_id: input.coreCertificationId ?? null,
+      migration_head: input.migrationHead ?? CURRENT_MIGRATION_HEAD,
+      deployment_id: input.deploymentId ?? null,
+      capabilities: input.capabilities ?? [],
+      environment: input.environment,
+    }))), PHASE5_CUTOVER_PROTOCOL, authority.epoch],
   );
 }
 
@@ -477,12 +495,16 @@ export async function enqueueJob(
   if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
     throw new RetiredVerticalError("water");
   }
-  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
+  const classification = classifyTrustedJobInstance({ type, lane });
+  const tenantId = typeof payload.tenantId === "string" ? payload.tenantId : null;
+  if (classification.tenantScope === "tenant" && !tenantId) throw new Error(`${type} requires durable tenant identity`);
+  if (isProductionJobType(type) && classification.tenantScope === "global" && tenantId) throw new Error(`${type} is global and cannot carry tenant identity`);
+  if (tenantId) await resolveTenantVertical(tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
-    `INSERT INTO jobs (type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO jobs (tenant_id, type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (idempotency_key) DO NOTHING`,
-    [type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority],
+    [tenantId, type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority],
   );
 }
 
@@ -501,13 +523,17 @@ export async function enqueueJobAt(
   if (isRetiredWaterJob(type) || (typeof payload.actionType === "string" && isRetiredWaterAction(payload.actionType))) {
     throw new RetiredVerticalError("water");
   }
-  if (typeof payload.tenantId === "string") await resolveTenantVertical(payload.tenantId);
+  const classification = classifyTrustedJobInstance({ type, lane });
+  const tenantId = typeof payload.tenantId === "string" ? payload.tenantId : null;
+  if (classification.tenantScope === "tenant" && !tenantId) throw new Error(`${type} requires durable tenant identity`);
+  if (isProductionJobType(type) && classification.tenantScope === "global" && tenantId) throw new Error(`${type} is global and cannot carry tenant identity`);
+  if (tenantId) await resolveTenantVertical(tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   await getPool().query(
-    `INSERT INTO jobs (type, payload, run_at, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO jobs (tenant_id, type, payload, run_at, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (idempotency_key) DO UPDATE SET run_at=LEAST(jobs.run_at, EXCLUDED.run_at)
      WHERE jobs.status='queued'`,
-    [type, JSON.stringify(fullPayload), runAt, idempotencyKey, lane, priority],
+    [tenantId, type, JSON.stringify(fullPayload), runAt, idempotencyKey, lane, priority],
   );
 }
 
@@ -518,15 +544,32 @@ export async function businessOperationAggregate(tenantId: string, operationId: 
     const [operation] = await db.select().from(schema.businessOperations)
       .where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.id, operationId))).limit(1);
     if (!operation) return null;
-    const targets = await db.select().from(schema.businessOperationTargets)
+    const targetsPlus = await db.select().from(schema.businessOperationTargets)
       .where(and(eq(schema.businessOperationTargets.tenantId, tenantId), eq(schema.businessOperationTargets.operationId, operationId)))
-      .orderBy(asc(schema.businessOperationTargets.ordinal));
-    const events = await db.select().from(schema.businessOperationEvents)
+      .orderBy(asc(schema.businessOperationTargets.ordinal), asc(schema.businessOperationTargets.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const eventsPlus = await db.select().from(schema.businessOperationEvents)
       .where(and(eq(schema.businessOperationEvents.tenantId, tenantId), eq(schema.businessOperationEvents.operationId, operationId)))
-      .orderBy(asc(schema.businessOperationEvents.sequence));
+      .orderBy(asc(schema.businessOperationEvents.sequence), asc(schema.businessOperationEvents.id))
+      .limit(MAX_HIGH_EGRESS_ROWS + 1);
+    const targets = targetsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
+    const events = eventsPlus.slice(0, MAX_HIGH_EGRESS_ROWS);
     const [receipt] = await db.select().from(schema.decisionReceipts)
       .where(and(eq(schema.decisionReceipts.tenantId, tenantId), eq(schema.decisionReceipts.operationId, operationId))).limit(1);
-    return { operation, targets, events, receipt: receipt ?? null };
+    return {
+      operation,
+      targets,
+      events,
+      receipt: receipt ?? null,
+      read: {
+        limit: MAX_HIGH_EGRESS_ROWS,
+        complete: targetsPlus.length <= MAX_HIGH_EGRESS_ROWS && eventsPlus.length <= MAX_HIGH_EGRESS_ROWS,
+        truncatedTables: [
+          ...(targetsPlus.length > MAX_HIGH_EGRESS_ROWS ? ["business_operation_targets"] : []),
+          ...(eventsPlus.length > MAX_HIGH_EGRESS_ROWS ? ["business_operation_events"] : []),
+        ],
+      },
+    };
   });
 }
 
@@ -1202,6 +1245,79 @@ export interface PersistSelectedWorkPlanParams {
   planGraph: object;
   score: object;
   semanticHash: string;
+  compilerVersion?: string;
+}
+
+type PlanNodeProjection = { id: string; semanticHash: string; kind: string };
+
+function persistedPlanNodes(value: unknown): PlanNodeProjection[] {
+  const nodes = jsonObject(value).nodes;
+  if (!Array.isArray(nodes)) return [];
+  return nodes.flatMap((value) => {
+    const node = jsonObject(value);
+    return typeof node.id === "string" && typeof node.semanticHash === "string" && typeof node.kind === "string"
+      ? [{ id: node.id, semanticHash: node.semanticHash, kind: node.kind }]
+      : [];
+  }).sort((left, right) => left.semanticHash.localeCompare(right.semanticHash) || left.id.localeCompare(right.id));
+}
+
+async function planRevisionTransition(
+  db: Db,
+  params: PersistSelectedWorkPlanParams,
+  parent: typeof schema.workPlanRevisions.$inferSelect | undefined,
+): Promise<Record<string, unknown>> {
+  const currentNodes = persistedPlanNodes(params.planGraph);
+  if (!parent) {
+    const body = {
+      version: 1,
+      parentRevisionId: null,
+      cause: params.reason,
+      worldSnapshot: { from: null, to: String(jsonObject(params.planningSnapshot).semanticHash ?? "") },
+      preservedCompletedNodes: [],
+      preservedNodes: [],
+      invalidatedNodes: [],
+      supersededPendingNodes: [],
+      newNodes: currentNodes.map((node) => ({ nodeId: node.id, semanticHash: node.semanticHash, kind: node.kind })),
+    };
+    return { ...body, transitionHash: `sha256:${provenanceHash(body)}` };
+  }
+  const parentNodes = persistedPlanNodes(parent.planGraph);
+  const parentBySemantic = new Map(parentNodes.map((node) => [node.semanticHash, node]));
+  const currentBySemantic = new Map(currentNodes.map((node) => [node.semanticHash, node]));
+  const completedSteps = await db.select({
+    planNodeId: schema.workObjectiveSteps.planNodeId,
+    iterationOutcome: schema.workObjectiveSteps.iterationOutcome,
+    failure: schema.workObjectiveSteps.failure,
+    completedAt: schema.workObjectiveSteps.completedAt,
+    verificationResult: schema.workObjectiveSteps.verificationResult,
+    successVerification: schema.workObjectiveSteps.successVerification,
+  }).from(schema.workObjectiveSteps).where(and(
+    eq(schema.workObjectiveSteps.tenantId, params.tenantId),
+    eq(schema.workObjectiveSteps.workId, params.workId),
+    eq(schema.workObjectiveSteps.planRevisionId, parent.id),
+    sql`${schema.workObjectiveSteps.completedAt} IS NOT NULL`,
+  ));
+  const safelyCompleted = new Set(completedSteps.filter((step) => {
+    const verification = jsonObject(step.verificationResult ?? step.successVerification);
+    return verification.state === "verified"
+      || (["continue", "completed"].includes(step.iterationOutcome ?? "") && Object.keys(jsonObject(step.failure)).length === 0);
+  }).map((step) => step.planNodeId).filter((id): id is string => Boolean(id)));
+  const preservedNodes = currentNodes.flatMap((node) => {
+    const previous = parentBySemantic.get(node.semanticHash);
+    return previous ? [{ parentNodeId: previous.id, nodeId: node.id, semanticHash: node.semanticHash, kind: node.kind }] : [];
+  });
+  const body = {
+    version: 1,
+    parentRevisionId: parent.id,
+    cause: params.reason,
+    worldSnapshot: { from: parent.worldSnapshotHash, to: String(jsonObject(params.planningSnapshot).semanticHash ?? "") },
+    preservedCompletedNodes: preservedNodes.filter((node) => safelyCompleted.has(node.parentNodeId)),
+    preservedNodes,
+    invalidatedNodes: parentNodes.filter((node) => !currentBySemantic.has(node.semanticHash)).map((node) => ({ nodeId: node.id, semanticHash: node.semanticHash, kind: node.kind })),
+    supersededPendingNodes: parentNodes.filter((node) => !safelyCompleted.has(node.id)).map((node) => ({ nodeId: node.id, semanticHash: node.semanticHash, kind: node.kind })),
+    newNodes: currentNodes.filter((node) => !parentBySemantic.has(node.semanticHash)).map((node) => ({ nodeId: node.id, semanticHash: node.semanticHash, kind: node.kind })),
+  };
+  return { ...body, transitionHash: `sha256:${provenanceHash(body)}` };
 }
 
 /** Atomically selects one immutable graph. A competing planner may replay the same
@@ -1239,6 +1355,7 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
       eq(schema.workPlanRevisions.status, "active"),
     )).limit(1);
     const parentId = params.parentRevisionId ?? null;
+    let transitionParent = active;
     if (active && active.id !== parentId) throw new Error("A different active PlanRevision already owns this Work");
     if (!active && parentId) {
       const [historicalParent] = await db.select().from(schema.workPlanRevisions).where(and(
@@ -1253,6 +1370,7 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
       if (!historicalParent || latestHistorical?.id !== historicalParent.id || !["superseded", "blocked", "failed"].includes(historicalParent.status)) {
         throw new Error("Replanning parent is not the latest resumable historical PlanRevision");
       }
+      transitionParent = historicalParent;
     }
     if (active) {
       await db.update(schema.workPlanRevisions).set({ status: "superseded" }).where(and(
@@ -1260,11 +1378,30 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
         eq(schema.workPlanRevisions.id, active.id),
         eq(schema.workPlanRevisions.status, "active"),
       ));
+      // Plan replacement fences both physical ownership (the P7 status trigger)
+      // and the exact logical attempts. Historical successful/verified attempts
+      // remain immutable evidence; only unfinished attempts are retired.
+      await db.update(schema.workObjectiveSteps).set({
+        phase: "finished",
+        executionState: "superseded",
+        iterationOutcome: "blocked",
+        decisionReason: `Logical attempt superseded by child PlanRevision selected for ${params.reason}.`,
+        failure: { code: "PLAN_SUPERSEDED", planRevisionId: active.id, cause: params.reason },
+        claimOwner: null,
+        claimUntil: null,
+        completedAt: new Date(),
+      }).where(and(
+        eq(schema.workObjectiveSteps.tenantId, params.tenantId),
+        eq(schema.workObjectiveSteps.workId, params.workId),
+        eq(schema.workObjectiveSteps.planRevisionId, active.id),
+        sql`${schema.workObjectiveSteps.completedAt} IS NULL`,
+      ));
     }
     const [latest] = await db.select({ revision: sql<number>`coalesce(max(${schema.workPlanRevisions.revision}),0)::int` })
       .from(schema.workPlanRevisions).where(and(eq(schema.workPlanRevisions.tenantId, params.tenantId), eq(schema.workPlanRevisions.workId, params.workId)));
     const revision = (latest?.revision ?? 0) + 1;
     if ((revision === 1) !== (parentId === null)) throw new Error("Only the first PlanRevision may omit a parent");
+    const transition = await planRevisionTransition(db, params, transitionParent);
     const [created] = await db.insert(schema.workPlanRevisions).values({
       tenantId: params.tenantId,
       workId: params.workId,
@@ -1290,6 +1427,8 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
       worldSnapshotHash: String(jsonObject(params.planningSnapshot).semanticHash ?? ""),
       graphHash: params.semanticHash,
       semanticHash: params.semanticHash,
+      compilerVersion: params.compilerVersion ?? "unknown-legacy-compiler",
+      revisionTransition: boundedJson(transition, 131_072) as object,
     }).returning();
     if (!created) throw new Error("Unable to persist selected PlanRevision");
     await db.update(schema.workPlannerAttempts).set({
@@ -1447,18 +1586,53 @@ export async function latestWorkInput(tenantId: string, workId: string): Promise
   return row ?? null;
 }
 
+/** Cheap tenant-scoped existence check for routes that must reconcile before
+ * materializing the full Work aggregate. */
+export async function workExists(tenantId: string, workId: string): Promise<boolean> {
+  const [row] = await withTenant(tenantId, (db) => db.select({ id: schema.works.id }).from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1));
+  return Boolean(row);
+}
+
 /** Recomputes Work from durable child records. This is called after every existing
  * executor/workflow transition, so Work never claims completion while a real run is
  * active or an approval is still outstanding. */
 export async function reconcileWorkStatus(tenantId: string, workId: string): Promise<WorkStatus> {
   const snapshot = await withTenant(tenantId, async (db) => {
-    const actions = await db.select({ id: schema.domainActions.id, status: schema.domainActions.status }).from(schema.domainActions).where(and(eq(schema.domainActions.tenantId, tenantId), eq(schema.domainActions.workId, workId)));
-    const runs = await db.select({ id: schema.workflowRuns.id, status: schema.workflowRuns.status }).from(schema.workflowRuns).where(and(eq(schema.workflowRuns.tenantId, tenantId), eq(schema.workflowRuns.workId, workId)));
-    const repairs = await db.select({ id: schema.planRepairs.id, status: schema.planRepairs.status }).from(schema.planRepairs).where(and(eq(schema.planRepairs.tenantId, tenantId), eq(schema.planRepairs.workId, workId)));
-    const operations = await db.select({ id: schema.businessOperations.id, status: schema.businessOperations.status }).from(schema.businessOperations).where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.workId, workId)));
+    // Reconciliation only needs status predicates and counts. Fetching every child
+    // row here made one status refresh proportional to the entire Work history and
+    // was one of the production paths that could turn append-only tables into an
+    // egress source. Grouping in PostgreSQL preserves the exact state-machine
+    // predicates without moving the history across the network.
+    const actionStatusRows = await db.select({ status: schema.domainActions.status, count: sql<number>`count(*)::int` })
+      .from(schema.domainActions)
+      .where(and(eq(schema.domainActions.tenantId, tenantId), eq(schema.domainActions.workId, workId)))
+      .groupBy(schema.domainActions.status);
+    const runStatusRows = await db.select({ status: schema.workflowRuns.status, count: sql<number>`count(*)::int` })
+      .from(schema.workflowRuns)
+      .where(and(eq(schema.workflowRuns.tenantId, tenantId), eq(schema.workflowRuns.workId, workId)))
+      .groupBy(schema.workflowRuns.status);
+    const repairStatusRows = await db.select({ status: schema.planRepairs.status, count: sql<number>`count(*)::int` })
+      .from(schema.planRepairs)
+      .where(and(eq(schema.planRepairs.tenantId, tenantId), eq(schema.planRepairs.workId, workId)))
+      .groupBy(schema.planRepairs.status);
+    const operationStatusRows = await db.select({ status: schema.businessOperations.status, count: sql<number>`count(*)::int` })
+      .from(schema.businessOperations)
+      .where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.workId, workId)))
+      .groupBy(schema.businessOperations.status);
     const [objectiveLoop] = await db.select({ id: schema.workObjectiveLoops.id, state: schema.workObjectiveLoops.state }).from(schema.workObjectiveLoops).where(and(eq(schema.workObjectiveLoops.tenantId, tenantId), eq(schema.workObjectiveLoops.workId, workId))).limit(1);
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
-    return { actions, runs, repairs, operations, objectiveLoop, work };
+    const statusGroup = (rows: Array<{ status: string; count: number }>) => ({
+      counts: new Map(rows.map((row) => [row.status, Number(row.count)])),
+      total: rows.reduce((total, row) => total + Number(row.count), 0),
+    });
+    return {
+      actions: statusGroup(actionStatusRows),
+      runs: statusGroup(runStatusRows),
+      repairs: statusGroup(repairStatusRows),
+      operations: statusGroup(operationStatusRows),
+      objectiveLoop,
+      work,
+    };
   });
   if (!snapshot.work) throw new Error("Work not found");
   // Terminal parent truth is immutable until an explicit continuation/recovery
@@ -1477,25 +1651,25 @@ export async function reconcileWorkStatus(tenantId: string, workId: string): Pro
     }
     return status;
   }
-  if (snapshot.actions.length === 0 && snapshot.runs.length === 0) return snapshot.work.status;
+  if (snapshot.actions.total === 0 && snapshot.runs.total === 0) return snapshot.work.status;
 
-  const actionStatuses = snapshot.actions.map((row) => row.status);
-  const runStatuses = snapshot.runs.map((row) => row.status);
-  const operationStatuses = snapshot.operations.map((row) => row.status);
+  const has = (group: { counts: Map<string, number> }, statuses: string[]) => statuses.some((status) => (group.counts.get(status) ?? 0) > 0);
+  const all = (group: { counts: Map<string, number>; total: number }, statuses: string[]) =>
+    group.total === 0 || statuses.reduce((count, status) => count + (group.counts.get(status) ?? 0), 0) === group.total;
   let status: WorkStatus;
-  if (snapshot.repairs.some((row) => row.status === "planning" || row.status === "proposed") || operationStatuses.some((value) => value === "needs_human_review")) status = "recovery";
-  else if (operationStatuses.some((value) => ["queued", "running"].includes(value)) || runStatuses.some((value) => ["running", "compensating"].includes(value)) || actionStatuses.some((value) => value === "approved" || value === "executing")) status = "executing";
-  else if (actionStatuses.some((value) => value === "pending" || value === "needs_human_review") || runStatuses.some((value) => value === "paused" || value === "escalated")) status = "awaiting_approval";
-  else if (actionStatuses.some((value) => value === "draft")) status = "actionable";
-  else if (actionStatuses.some((value) => value === "failed" || value === "blocked_integration_unavailable") || runStatuses.some((value) => value === "failed") || operationStatuses.some((value) => value === "failed")) status = "failed";
-  else if (actionStatuses.length > 0 && actionStatuses.every((value) => value === "rejected") && runStatuses.every((value) => value === "cancelled") && operationStatuses.every((value) => value === "cancelled")) status = "cancelled";
-  else if (actionStatuses.length > 0 && actionStatuses.every((value) => value === "completed" || value === "rejected") && runStatuses.every((value) => ["completed", "compensated", "cancelled"].includes(value)) && operationStatuses.every((value) => ["completed", "completed_with_failures", "cancelled"].includes(value))) status = "completed";
+  if (has(snapshot.repairs, ["planning", "proposed"]) || has(snapshot.operations, ["needs_human_review"])) status = "recovery";
+  else if (has(snapshot.operations, ["queued", "running"]) || has(snapshot.runs, ["running", "compensating"]) || has(snapshot.actions, ["approved", "executing"])) status = "executing";
+  else if (has(snapshot.actions, ["pending", "needs_human_review"]) || has(snapshot.runs, ["paused", "escalated"])) status = "awaiting_approval";
+  else if (has(snapshot.actions, ["draft"])) status = "actionable";
+  else if (has(snapshot.actions, ["failed", "blocked_integration_unavailable"]) || has(snapshot.runs, ["failed"]) || has(snapshot.operations, ["failed"])) status = "failed";
+  else if (snapshot.actions.total > 0 && all(snapshot.actions, ["rejected"]) && all(snapshot.runs, ["cancelled"]) && all(snapshot.operations, ["cancelled"])) status = "cancelled";
+  else if (snapshot.actions.total > 0 && all(snapshot.actions, ["completed", "rejected"]) && all(snapshot.runs, ["completed", "compensated", "cancelled"]) && all(snapshot.operations, ["completed", "completed_with_failures", "cancelled"])) status = "completed";
   else status = snapshot.work.status;
 
   const counts = {
-    actions: actionStatuses.reduce<Record<string, number>>((acc, value) => ({ ...acc, [value]: (acc[value] ?? 0) + 1 }), {}),
-    workflows: runStatuses.reduce<Record<string, number>>((acc, value) => ({ ...acc, [value]: (acc[value] ?? 0) + 1 }), {}),
-    operations: operationStatuses.reduce<Record<string, number>>((acc, value) => ({ ...acc, [value]: (acc[value] ?? 0) + 1 }), {}),
+    actions: Object.fromEntries(snapshot.actions.counts),
+    workflows: Object.fromEntries(snapshot.runs.counts),
+    operations: Object.fromEntries(snapshot.operations.counts),
   };
   if (status !== snapshot.work.status) {
     await transitionWork(tenantId, workId, status, "children_reconciled", counts, status === "completed" || status === "cancelled" ? { finalOutcome: counts } : status === "failed" ? { failure: counts } : {});
@@ -1514,56 +1688,70 @@ export type WorkAggregate = Record<string, unknown> & {
   objectiveLoop: typeof schema.workObjectiveLoops.$inferSelect | null;
   objectiveSteps: Array<typeof schema.workObjectiveSteps.$inferSelect>;
   objectivePlannerAttempts: Array<typeof schema.workObjectivePlannerAttempts.$inferSelect>;
+  workforceAssignments: Array<typeof schema.workforceAssignments.$inferSelect>;
+  recoveryDecisions: Array<typeof schema.workRecoveryDecisions.$inferSelect>;
   eventWaits: Array<typeof schema.workEventWaits.$inferSelect>;
   wakeClaims: Array<typeof schema.workWakeClaims.$inferSelect>;
   integrationEvents: Array<typeof schema.integrationEvents.$inferSelect>;
+  read: {
+    limit: number;
+    complete: boolean;
+    truncatedTables: string[];
+  };
 };
 
 export async function workAggregate(tenantId: string, workId: string): Promise<WorkAggregate | null> {
   return withTenant(tenantId, async (db) => {
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
     if (!work) return null;
-    const inputs = await db.select().from(schema.workInputs).where(eq(schema.workInputs.workId, workId)).orderBy(asc(schema.workInputs.createdAt));
-    const plannerAttempts = await db.select().from(schema.workPlannerAttempts).where(eq(schema.workPlannerAttempts.workId, workId)).orderBy(asc(schema.workPlannerAttempts.attempt));
-    const planRevisions = await db.select().from(schema.workPlanRevisions).where(and(eq(schema.workPlanRevisions.tenantId, tenantId), eq(schema.workPlanRevisions.workId, workId))).orderBy(asc(schema.workPlanRevisions.revision));
-    const events = await db.select().from(schema.workEvents).where(eq(schema.workEvents.workId, workId)).orderBy(asc(schema.workEvents.seq));
-    const actions = await db.select().from(schema.domainActions).where(eq(schema.domainActions.workId, workId)).orderBy(asc(schema.domainActions.createdAt));
+    const truncatedTables: string[] = [];
+    const bounded = <T>(table: string, rows: T[]): T[] => {
+      if (rows.length > MAX_WORK_AGGREGATE_ROWS) truncatedTables.push(table);
+      return rows.slice(0, MAX_WORK_AGGREGATE_ROWS);
+    };
+    const inputs = bounded("work_inputs", await db.select().from(schema.workInputs).where(eq(schema.workInputs.workId, workId)).orderBy(asc(schema.workInputs.createdAt), asc(schema.workInputs.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const plannerAttempts = bounded("work_planner_attempts", await db.select().from(schema.workPlannerAttempts).where(eq(schema.workPlannerAttempts.workId, workId)).orderBy(asc(schema.workPlannerAttempts.attempt), asc(schema.workPlannerAttempts.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const planRevisions = bounded("work_plan_revisions", await db.select().from(schema.workPlanRevisions).where(and(eq(schema.workPlanRevisions.tenantId, tenantId), eq(schema.workPlanRevisions.workId, workId))).orderBy(asc(schema.workPlanRevisions.revision), asc(schema.workPlanRevisions.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const events = bounded("work_events", await db.select().from(schema.workEvents).where(eq(schema.workEvents.workId, workId)).orderBy(asc(schema.workEvents.seq), asc(schema.workEvents.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const actions = bounded("domain_actions", await db.select().from(schema.domainActions).where(eq(schema.domainActions.workId, workId)).orderBy(asc(schema.domainActions.createdAt), asc(schema.domainActions.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
     const actionIds = actions.map((row) => row.id);
-    const businessEffects = actionIds.length === 0 ? [] : await db.select().from(schema.businessEffects).where(and(
+    const businessEffects = actionIds.length === 0 ? [] : bounded("business_effects", await db.select().from(schema.businessEffects).where(and(
       eq(schema.businessEffects.tenantId, tenantId),
       inArray(schema.businessEffects.domainActionId, actionIds),
-    )).orderBy(asc(schema.businessEffects.createdAt));
-    const approvals = actionIds.length === 0 ? [] : await db.select().from(schema.actionLog).where(and(inArray(schema.actionLog.domainActionId, actionIds), inArray(schema.actionLog.step, ["gate", "confirmed", "rejected", "escalated", "policy_ungated_authorized"])) ).orderBy(asc(schema.actionLog.timestamp));
-    const workflowRuns = await db.select().from(schema.workflowRuns).where(eq(schema.workflowRuns.workId, workId)).orderBy(asc(schema.workflowRuns.createdAt));
+    )).orderBy(asc(schema.businessEffects.createdAt), asc(schema.businessEffects.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const approvals = actionIds.length === 0 ? [] : bounded("action_log", await db.select().from(schema.actionLog).where(and(inArray(schema.actionLog.domainActionId, actionIds), inArray(schema.actionLog.step, ["gate", "confirmed", "rejected", "escalated", "policy_ungated_authorized"])) ).orderBy(asc(schema.actionLog.timestamp), asc(schema.actionLog.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const workflowRuns = bounded("workflow_runs", await db.select().from(schema.workflowRuns).where(eq(schema.workflowRuns.workId, workId)).orderBy(asc(schema.workflowRuns.createdAt), asc(schema.workflowRuns.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
     const runIds = workflowRuns.map((row) => row.id);
-    const workflowSteps = runIds.length === 0 ? [] : await db.select().from(schema.workflowSteps).where(inArray(schema.workflowSteps.workflowRunId, runIds)).orderBy(asc(schema.workflowSteps.sequence));
-    const receipts = await db.select().from(schema.decisionReceipts).where(eq(schema.decisionReceipts.workId, workId)).orderBy(asc(schema.decisionReceipts.createdAt));
-    const repairs = await db.select().from(schema.planRepairs).where(eq(schema.planRepairs.workId, workId)).orderBy(asc(schema.planRepairs.createdAt));
-    const queryExecutions = await db.select().from(schema.workQueryExecutions).where(and(
+    const workflowSteps = runIds.length === 0 ? [] : bounded("workflow_steps", await db.select().from(schema.workflowSteps).where(inArray(schema.workflowSteps.workflowRunId, runIds)).orderBy(asc(schema.workflowSteps.sequence), asc(schema.workflowSteps.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const receipts = bounded("decision_receipts", await db.select().from(schema.decisionReceipts).where(eq(schema.decisionReceipts.workId, workId)).orderBy(asc(schema.decisionReceipts.createdAt), asc(schema.decisionReceipts.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const repairs = bounded("plan_repairs", await db.select().from(schema.planRepairs).where(eq(schema.planRepairs.workId, workId)).orderBy(asc(schema.planRepairs.createdAt), asc(schema.planRepairs.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const queryExecutions = bounded("work_query_executions", await db.select().from(schema.workQueryExecutions).where(and(
       eq(schema.workQueryExecutions.tenantId, tenantId),
       eq(schema.workQueryExecutions.workId, workId),
-    )).orderBy(asc(schema.workQueryExecutions.startedAt));
-    const entityLinks = await db.select().from(schema.workEntityLinks).where(and(
+    )).orderBy(asc(schema.workQueryExecutions.startedAt), asc(schema.workQueryExecutions.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const entityLinks = bounded("work_entity_links", await db.select().from(schema.workEntityLinks).where(and(
       eq(schema.workEntityLinks.tenantId, tenantId),
       eq(schema.workEntityLinks.workId, workId),
-    )).orderBy(asc(schema.workEntityLinks.createdAt));
-    const operations = await db.select().from(schema.businessOperations).where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.workId, workId))).orderBy(asc(schema.businessOperations.createdAt));
+    )).orderBy(asc(schema.workEntityLinks.createdAt), asc(schema.workEntityLinks.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const operations = bounded("business_operations", await db.select().from(schema.businessOperations).where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.workId, workId))).orderBy(asc(schema.businessOperations.createdAt), asc(schema.businessOperations.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
     const operationIds = operations.map((operation) => operation.id);
-    const operationTargets = operationIds.length === 0 ? [] : await db.select().from(schema.businessOperationTargets).where(and(eq(schema.businessOperationTargets.tenantId, tenantId), inArray(schema.businessOperationTargets.operationId, operationIds))).orderBy(asc(schema.businessOperationTargets.ordinal));
-    const operationEvents = operationIds.length === 0 ? [] : await db.select().from(schema.businessOperationEvents).where(and(eq(schema.businessOperationEvents.tenantId, tenantId), inArray(schema.businessOperationEvents.operationId, operationIds))).orderBy(asc(schema.businessOperationEvents.sequence));
+    const operationTargets = operationIds.length === 0 ? [] : bounded("business_operation_targets", await db.select().from(schema.businessOperationTargets).where(and(eq(schema.businessOperationTargets.tenantId, tenantId), inArray(schema.businessOperationTargets.operationId, operationIds))).orderBy(asc(schema.businessOperationTargets.ordinal), asc(schema.businessOperationTargets.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const operationEvents = operationIds.length === 0 ? [] : bounded("business_operation_events", await db.select().from(schema.businessOperationEvents).where(and(eq(schema.businessOperationEvents.tenantId, tenantId), inArray(schema.businessOperationEvents.operationId, operationIds))).orderBy(asc(schema.businessOperationEvents.sequence), asc(schema.businessOperationEvents.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
     const [objectiveLoop] = await db.select().from(schema.workObjectiveLoops).where(and(eq(schema.workObjectiveLoops.tenantId, tenantId), eq(schema.workObjectiveLoops.workId, workId))).limit(1);
-    const objectiveSteps = objectiveLoop ? await db.select().from(schema.workObjectiveSteps).where(and(eq(schema.workObjectiveSteps.tenantId, tenantId), eq(schema.workObjectiveSteps.objectiveLoopId, objectiveLoop.id))).orderBy(asc(schema.workObjectiveSteps.stepNumber)) : [];
-    const objectivePlannerAttempts = objectiveLoop ? await db.select().from(schema.workObjectivePlannerAttempts).where(and(eq(schema.workObjectivePlannerAttempts.tenantId, tenantId), eq(schema.workObjectivePlannerAttempts.objectiveLoopId, objectiveLoop.id))).orderBy(asc(schema.workObjectivePlannerAttempts.startedAt)) : [];
-    const eventWaits = await db.select().from(schema.workEventWaits).where(and(eq(schema.workEventWaits.tenantId, tenantId), eq(schema.workEventWaits.workId, workId))).orderBy(asc(schema.workEventWaits.createdAt));
-    const wakeClaims = await db.select().from(schema.workWakeClaims).where(and(eq(schema.workWakeClaims.tenantId, tenantId), eq(schema.workWakeClaims.workId, workId))).orderBy(asc(schema.workWakeClaims.claimedAt));
+    const objectiveSteps = objectiveLoop ? bounded("work_objective_steps", await db.select().from(schema.workObjectiveSteps).where(and(eq(schema.workObjectiveSteps.tenantId, tenantId), eq(schema.workObjectiveSteps.objectiveLoopId, objectiveLoop.id))).orderBy(asc(schema.workObjectiveSteps.stepNumber), asc(schema.workObjectiveSteps.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1)) : [];
+    const objectivePlannerAttempts = objectiveLoop ? bounded("work_objective_planner_attempts", await db.select().from(schema.workObjectivePlannerAttempts).where(and(eq(schema.workObjectivePlannerAttempts.tenantId, tenantId), eq(schema.workObjectivePlannerAttempts.objectiveLoopId, objectiveLoop.id))).orderBy(asc(schema.workObjectivePlannerAttempts.startedAt), asc(schema.workObjectivePlannerAttempts.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1)) : [];
+    const workforceAssignmentRows = bounded("workforce_assignments", await db.select().from(schema.workforceAssignments).where(and(eq(schema.workforceAssignments.tenantId, tenantId), eq(schema.workforceAssignments.workId, workId))).orderBy(asc(schema.workforceAssignments.createdAt), asc(schema.workforceAssignments.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const recoveryDecisions = bounded("work_recovery_decisions", await db.select().from(schema.workRecoveryDecisions).where(and(eq(schema.workRecoveryDecisions.tenantId, tenantId), eq(schema.workRecoveryDecisions.workId, workId))).orderBy(asc(schema.workRecoveryDecisions.createdAt), asc(schema.workRecoveryDecisions.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const eventWaits = bounded("work_event_waits", await db.select().from(schema.workEventWaits).where(and(eq(schema.workEventWaits.tenantId, tenantId), eq(schema.workEventWaits.workId, workId))).orderBy(asc(schema.workEventWaits.createdAt), asc(schema.workEventWaits.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    const wakeClaims = bounded("work_wake_claims", await db.select().from(schema.workWakeClaims).where(and(eq(schema.workWakeClaims.tenantId, tenantId), eq(schema.workWakeClaims.workId, workId))).orderBy(asc(schema.workWakeClaims.claimedAt), asc(schema.workWakeClaims.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
     const wakeEventIds = wakeClaims.map((claim) => claim.integrationEventId);
-    const integrationEvents = await db.select().from(schema.integrationEvents).where(and(
+    const integrationEvents = bounded("integration_events", await db.select().from(schema.integrationEvents).where(and(
       eq(schema.integrationEvents.tenantId, tenantId),
       wakeEventIds.length > 0
         ? or(eq(schema.integrationEvents.workId, workId), inArray(schema.integrationEvents.id, wakeEventIds))
         : eq(schema.integrationEvents.workId, workId),
-    )).orderBy(asc(schema.integrationEvents.occurredAt));
-    return { work, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, eventWaits, wakeClaims, integrationEvents };
+    )).orderBy(asc(schema.integrationEvents.occurredAt), asc(schema.integrationEvents.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
+    return { work, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, workforceAssignments: workforceAssignmentRows, recoveryDecisions, eventWaits, wakeClaims, integrationEvents, read: { limit: MAX_WORK_AGGREGATE_ROWS, complete: truncatedTables.length === 0, truncatedTables } };
   });
 }
 

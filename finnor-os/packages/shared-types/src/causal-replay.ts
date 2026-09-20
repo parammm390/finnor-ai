@@ -142,8 +142,9 @@ export interface CausalReplayProjection {
     nodes: number;
     edges: number;
     actionEvents: number;
+    instructionEvents: number;
     computerArtifacts: number;
   };
-  truncated: { nodes: boolean; edges: boolean; actionEvents: boolean; computerArtifacts: boolean };
+  truncated: { nodes: boolean; edges: boolean; actionEvents: boolean; instructionEvents: boolean; computerArtifacts: boolean };
   asOf: string;
 }

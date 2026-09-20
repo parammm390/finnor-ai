@@ -18,7 +18,7 @@
 
 import { Sentry, circuitSnapshot } from "@finnor/tools";
 import { recordBusinessEvent } from "@finnor/data-platform";
-import { businessEvents, enqueueJob, withTenant } from "@finnor/db";
+import { businessEvents, withTenant } from "@finnor/db";
 import { and, eq, gte } from "drizzle-orm";
 import { secretProviderStatus, ensureSecretsLoaded } from "@finnor/security";
 import { readinessAnomalies, reliability } from "@finnor/read-models";
@@ -100,11 +100,6 @@ export const scanReliabilityAlerts = async (payload: Record<string, unknown>): P
       extra: alert.detail,
       tags: { alert_kind: alert.kind, tenant_id: tenantId },
     });
-    await enqueueJob(
-      "send_push_notification",
-      { tenantId, kind: "slo-burn", body: `${alert.kind.replaceAll("_", " ")} crossed its configured operational threshold.` },
-      `push:slo-burn:${tenantId}:${alert.kind}:${new Date().toISOString().slice(0, 13)}`,
-    ).catch(() => undefined);
   }
   const anomalies = await readinessAnomalies(tenantId);
   for (const anomaly of anomalies) {

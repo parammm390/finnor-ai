@@ -199,6 +199,31 @@ function sameChangeTypes(actual: readonly string[], expected: readonly string[])
 export class Microsoft365SubscriptionTransport {
   constructor(private readonly client: MicrosoftGraphClient) {}
 
+  /** Exact readback for mutation reconciliation. A 404 proves the provider object
+   * is absent at this observation point; callers decide whether that authorizes a
+   * retry of their immutable logical operation. */
+  async read(
+    providerSubscriptionId: string,
+    scope: Microsoft365SourceScope,
+  ): Promise<MicrosoftGraphSubscription | null> {
+    if (!providerSubscriptionId.trim()) throw new MicrosoftGraphError("blocked_config", "Provider subscription ID is required", null, false);
+    try {
+      const response = await this.client.requestJson<Record<string, unknown>>({
+        operation: "m365.subscription.readback",
+        pathOrUrl: `/subscriptions/${encodeURIComponent(providerSubscriptionId)}`,
+        maxResponseBytes: 128 * 1024,
+      });
+      const subscription = validateSubscription(response.value, microsoft365SubscriptionResource(scope));
+      if (subscription.id !== providerSubscriptionId) {
+        throw new MicrosoftGraphError("invalid_response", "Microsoft Graph read back a different subscription identity", response.status, false);
+      }
+      return subscription;
+    } catch (error) {
+      if (error instanceof MicrosoftGraphError && error.kind === "not_found") return null;
+      throw error;
+    }
+  }
+
   async create(
     scope: Microsoft365SourceScope,
     input: Omit<MicrosoftGraphSubscriptionInput, "resource"> & { resource?: string },

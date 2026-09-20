@@ -9,7 +9,7 @@
 // moment a plugin needed an LLM call (the ops-overview grounded-QA action does).
 
 import Groq from "groq-sdk";
-import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets } from "@finnor/db";
+import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets, withGovernedModelInvocation, ComputeCapacityUnavailableError } from "@finnor/db";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { initObservability, Sentry } from "./observability";
 import { orderProvidersByHealth, recordOutcome } from "./provider-health";
@@ -97,6 +97,11 @@ function bedrockApiKey(): string | undefined {
   return process.env.AWS_BEDROCK_API_KEY ?? process.env.AWS_BEARER_TOKEN_BEDROCK;
 }
 
+function assertSelectedAwsRegion(region: string): void {
+  const selected = process.env.AWS_REGION ?? process.env.FINNOR_PROJECT_REGION;
+  if (selected && selected !== region) throw new Error(`Bedrock model region ${region} differs from selected project Region ${selected}`);
+}
+
 /** Fetch with both the caller's signal and the shared absolute deadline. The
  * provider-specific timeout is only a ceiling; fallbacks receive the same
  * deadlineAt and therefore cannot restart the full timeout budget. */
@@ -116,8 +121,14 @@ async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCall
   const timer = setTimeout(() => controller.abort(timerError), budgetMs);
   try {
     const response = await fetch(url, { ...init, signal: controller.signal });
+    // Keep the same physical deadline active through body consumption. Fetch
+    // resolves at headers; without this a stalled response body could outlive
+    // the model permit and be overlapped by its later expiry.
+    const boundedResponse = typeof response.arrayBuffer === "function"
+      ? new Response(await response.arrayBuffer(), { status: response.status, headers: response.headers })
+      : response;
     if (Number.isFinite(normalized.deadlineAt) && Date.now() >= Number(normalized.deadlineAt)) throw new LLMDeadlineExceededError(Number(normalized.deadlineAt));
-    return response;
+    return boundedResponse;
   } catch (error) {
     if (normalized.signal?.aborted) throw normalized.signal.reason ?? Object.assign(new Error("LLM request aborted"), { name: "AbortError" });
     if (Number.isFinite(normalized.deadlineAt) && Date.now() >= Number(normalized.deadlineAt)) {
@@ -141,16 +152,27 @@ export class LLMBudgetDeferredError extends Error {
   }
 }
 
+export class LLMBudgetUnknownUsageError extends Error {
+  constructor(readonly tenantId: string, readonly unmeteredCalls: number) {
+    super(`LLM daily token budget cannot be proven because ${unmeteredCalls} completed call(s) have unknown usage`);
+    this.name = "LLMBudgetUnknownUsageError";
+  }
+}
+
 async function enforceBudget(opts: LLMCallOptions): Promise<void> {
   if (!opts.tenantId || opts.urgent) return;
   const start = new Date(); start.setUTCHours(0, 0, 0, 0);
   const budget = await withTenant(opts.tenantId, async (db) => {
     const [row] = await db.select().from(tenantLlmBudgets).where(eq(tenantLlmBudgets.tenantId, opts.tenantId!));
     if (!row) return null;
-    const [usage] = await db.select({ tokens: sql<number>`coalesce(sum(coalesce(${llmCalls.inputTokens}, 0) + coalesce(${llmCalls.outputTokens}, 0)), 0)` })
+    const [usage] = await db.select({
+      tokens: sql<number>`coalesce(sum(${llmCalls.inputTokens} + ${llmCalls.outputTokens}) FILTER (WHERE ${llmCalls.status}='completed'), 0)`,
+      unknown: sql<number>`count(*) FILTER (WHERE ${llmCalls.status}='completed' AND (${llmCalls.inputTokens} IS NULL OR ${llmCalls.outputTokens} IS NULL))`,
+    })
       .from(llmCalls).where(and(eq(llmCalls.tenantId, opts.tenantId!), gte(llmCalls.createdAt, start)));
-    return { ...row, used: Number(usage?.tokens ?? 0) };
+    return { ...row, used: Number(usage?.tokens ?? 0), unknown: Number(usage?.unknown ?? 0) };
   });
+  if (budget && budget.unknown > 0) throw new LLMBudgetUnknownUsageError(opts.tenantId, budget.unknown);
   if (budget && budget.used >= budget.dailyTokenBudget) throw new LLMBudgetDeferredError(opts.tenantId, budget.used, budget.dailyTokenBudget);
 }
 
@@ -178,9 +200,9 @@ async function recordCall(provider: LLMProvider, opts: LLMCallOptions, status: "
     // operator needs to see. This standalone CONFIG receipt makes that explicit.
     if (status === "deferred" && opts.actionId) {
       await db.insert(decisionReceipts).values({
-        tenantId: opts.tenantId!, domainActionId: opts.actionId, objective: "LLM work deferred by configured daily token budget",
+        tenantId: opts.tenantId!, domainActionId: opts.actionId, objective: "LLM work deferred by a configured resource limit",
         evidence: [], policyApplied: null, riskTier: "low", proposedAction: {}, approval: { required: false },
-        failure: { errorKind: "config", message: String(detail.error ?? "LLM budget reached"), recoveryPath: "Deferred until the next daily budget window." },
+        failure: { errorKind: "config", message: String(detail.error ?? "LLM resource unavailable"), recoveryPath: "Retry when the resource or known-usage budget is available." },
         correlationId: opts.traceId ?? null, finalizedAt: new Date(),
       });
     }
@@ -215,6 +237,7 @@ class OpenAICompatibleProvider implements LLMProvider {
     if (!this.apiKey) throw new Error(`${this.name.toUpperCase()}_API_KEY is not set`);
     this.lastUsage = undefined;
     const model = opts.model ?? this.model;
+    return withGovernedModelInvocation({ provider: this.name, model, tenantId: opts.tenantId, channel: opts.channel }, async () => {
     const res = await fetchWithCallBudget(
       this.endpoint,
       {
@@ -247,6 +270,7 @@ class OpenAICompatibleProvider implements LLMProvider {
       outputTokens: data.usage?.completion_tokens ?? data.usage?.output_tokens ?? null,
     };
     return chatContent(data);
+    });
   }
 }
 
@@ -285,7 +309,9 @@ export class BedrockAnthropicProvider implements LLMProvider {
 
   async complete(opts: LLMCallOptions): Promise<string> {
     if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
+    assertSelectedAwsRegion(this.region);
     this.lastUsage = undefined;
+    return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel }, async () => {
     const res = await fetchWithCallBudget(
       `https://bedrock-runtime.${this.region}.amazonaws.com/model/${this.modelId}/invoke`,
       {
@@ -309,6 +335,7 @@ export class BedrockAnthropicProvider implements LLMProvider {
     const data = (await res.json()) as { content?: Array<{ text?: string }>; usage?: { input_tokens?: number; output_tokens?: number } };
     this.lastUsage = { model: this.modelId, inputTokens: data.usage?.input_tokens ?? null, outputTokens: data.usage?.output_tokens ?? null };
     return data.content?.[0]?.text ?? "";
+    });
   }
 }
 
@@ -332,7 +359,9 @@ export class BedrockConverseProvider implements LLMProvider {
 
   async complete(opts: LLMCallOptions): Promise<string> {
     if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
+    assertSelectedAwsRegion(this.region);
     this.lastUsage = undefined;
+    return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel }, async () => {
     const res = await fetchWithCallBudget(
       `https://bedrock-runtime.${this.region}.amazonaws.com/model/${this.modelId}/converse`,
       {
@@ -356,6 +385,7 @@ export class BedrockConverseProvider implements LLMProvider {
     const data = (await res.json()) as { output?: { message?: { content?: Array<{ text?: string }> } }; usage?: { inputTokens?: number; outputTokens?: number } };
     this.lastUsage = { model: this.modelId, inputTokens: data.usage?.inputTokens ?? null, outputTokens: data.usage?.outputTokens ?? null };
     return data.output?.message?.content?.map((block) => block.text ?? "").join("") ?? "";
+    });
   }
 }
 
@@ -406,8 +436,9 @@ export class CompositeProvider implements LLMProvider {
         if (!p.recordsHealthInternally) recordOutcome(selectedName, true, Date.now() - start);
         return text;
       } catch (err) {
-        if (!p.recordsHealthInternally) recordOutcome(selectedName, false, Date.now() - start);
+        if (!(err instanceof ComputeCapacityUnavailableError) && !p.recordsHealthInternally) recordOutcome(selectedName, false, Date.now() - start);
         lastError = err as Error;
+        if (err instanceof ComputeCapacityUnavailableError && err.resourceKey === "model:global") throw err;
         // A fallback is useful for provider failures, not for an already-aborted
         // voice request. Retrying after a shared deadline only makes latency worse.
         if (isAbortLike(err)) throw err;
@@ -446,7 +477,7 @@ export class GroqProvider implements LLMProvider {
       const timeout = remainingMs(sharedOpts, 8_000);
       if (timeout <= 0) throw new LLMDeadlineExceededError(sharedOpts.deadlineAt ?? Date.now());
       try {
-        const res = await this.client.chat.completions.create(
+        const res = await withGovernedModelInvocation({ provider: "groq", model, tenantId: sharedOpts.tenantId, channel: sharedOpts.channel }, () => this.client.chat.completions.create(
           {
             model,
             messages: [
@@ -458,11 +489,12 @@ export class GroqProvider implements LLMProvider {
             ...(sharedOpts.json ? { response_format: { type: "json_object" as const } } : {}),
           },
           { signal: sharedOpts.signal, timeout },
-        );
+        ));
         this.lastUsage = { model, inputTokens: res.usage?.prompt_tokens ?? null, outputTokens: res.usage?.completion_tokens ?? null };
         return res.choices[0]?.message?.content ?? "";
       } catch (err) {
         lastError = err as Error;
+        if (err instanceof ComputeCapacityUnavailableError) throw err;
         if (isAbortLike(err)) throw err;
         // 429 / 5xx / timeout → next model, next bucket. Hard auth errors don't retry.
         const status = (err as { status?: number }).status;
@@ -484,7 +516,7 @@ const BEDROCK_OPENAI_OSS_MODEL_ID = () => process.env.AWS_BEDROCK_OPENAI_OSS_MOD
 const BEDROCK_NOVA_MICRO_MODEL_ID = () => process.env.AWS_BEDROCK_NOVA_MICRO_MODEL_ID ?? "amazon.nova-micro-v1:0";
 // Qwen 235B is not served from us-east-1. Keep a separate override so the rest of
 // the Bedrock fleet can remain in the deployment's primary region.
-const BEDROCK_QWEN_PLANNING_REGION = () => process.env.AWS_BEDROCK_QWEN_PLANNING_REGION ?? "us-east-2";
+const BEDROCK_QWEN_PLANNING_REGION = () => process.env.AWS_BEDROCK_QWEN_PLANNING_REGION ?? process.env.AWS_REGION ?? "us-east-1";
 
 interface ProviderRegistration {
   factory: () => LLMProvider;
@@ -580,8 +612,10 @@ function withObservability(provider: LLMProvider): LLMProvider {
         const providerName = provider.selectedProviderName ?? provider.name;
         Sentry.addBreadcrumb({ category: "llm", message: providerName, data: { ok: false, ms } });
         Sentry.captureMessage(`llm_failed:${providerName}`, { level: "warning" });
-        if (!provider.recordsHealthInternally) recordOutcome(providerName, false, ms);
-        const deferred = err instanceof LLMBudgetDeferredError;
+        const deferred = err instanceof LLMBudgetDeferredError
+          || err instanceof LLMBudgetUnknownUsageError
+          || err instanceof ComputeCapacityUnavailableError;
+        if (!deferred && !provider.recordsHealthInternally) recordOutcome(providerName, false, ms);
         await recordCall(provider, sharedOpts, deferred ? "deferred" : "failed", { error: (err as Error).message }).catch(() => undefined);
         throw err;
       }

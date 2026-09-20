@@ -232,6 +232,8 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
 
   assert(packageJson.scripts?.["release:pe-p5-actions-ic"] === "tsx scripts/release/run-pe-p5-actions-ic-certification.ts",
     "unambiguous P5 certification command is missing");
+  assert(packageJson.scripts?.["release:pe5"] === "tsx scripts/release/run-pe5-water-retirement-certification.ts",
+    "historical release:pe5 command was changed");
   assert(routeFiles.length === 30 && apiPaths.length === 30, `P5 API route count is source=${routeFiles.length}, OpenAPI=${apiPaths.length}`);
   assert(apiPaths.every((path) => authz.includes(path.replace(/\{([^}]+)\}/g, ":$1"))), "authorization matrix lacks a P5 route");
   assert(PRIVATE_EQUITY_ACTION_COUNT === 24 && EXECUTABLE_ACTION_COUNT === 41 && p5Actions.length === 9,
@@ -264,6 +266,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     p5PlannerSafeActions: p5Actions.map((row) => row.actionType),
     telemetryMetricCount: IC_METRICS.length,
     telemetryMetrics: [...IC_METRICS],
+    historicalReleaseCommand: packageJson.scripts["release:pe5"],
     currentReleaseCommand: packageJson.scripts["release:pe-p5-actions-ic"],
   };
 }
@@ -366,7 +369,7 @@ function evidenceForCategory(category: P5MandatoryCaseCategory): string[] {
     authority_security: ["commands.p5Runtime", "commands.coreRegression", "commands.authzMatrix", "databaseInvariants"],
     concurrency_idempotency_recovery: ["commands.p5Runtime", "commands.p3Regression"],
     api_frontend_contract: ["commands.p5Contract", "commands.openapi", "commands.authzMatrix", "architecture"],
-    migration_regression_release_boundary: ["commands.freshMigration", "commands.p5Upgrade", "commands.releaseBoundary"],
+    migration_regression_release_boundary: ["commands.freshMigration", "commands.p5Upgrade", "commands.releaseBoundary", "commands.historicalPe5"],
     performance_limits: ["commands.p5Runtime.benchmark"],
   };
   return map[category];
@@ -522,12 +525,14 @@ async function main(): Promise<void> {
   commands.p2Certification = await runCommand("p2Certification", "npm", ["run", "release:pe-p2"], { timeoutMs: 900_000 });
   commands.p3Certification = await runCommand("p3Certification", "npm", ["run", "release:pe-p3"], { timeoutMs: 900_000 });
   commands.p4Certification = await runCommand("p4Certification", "npm", ["run", "release:pe-p4-underwriting"], { timeoutMs: 900_000 });
+  commands.historicalPe5 = await runCommand("historicalPe5", "npm", ["run", "release:pe5"], { timeoutMs: 900_000 });
 
   const reportFiles = {
     p1: resolve(OUTPUT_DIR, "pe-p1-world-truth-certification.json"),
     p2: resolve(OUTPUT_DIR, "pe-p2-m365-nervous-system-certification.json"),
     p3: resolve(OUTPUT_DIR, "pe-p3-artifact-os-certification.json"),
     p4: resolve(OUTPUT_DIR, "pe-p4-underwriting-certification.json"),
+    historicalPe5: resolve(OUTPUT_DIR, "pe5-water-retirement-certification.json"),
   };
   const reports = Object.fromEntries(await Promise.all(Object.entries(reportFiles).map(async ([name, path]) => {
     const raw = await readFile(path, "utf8");
@@ -537,11 +542,13 @@ async function main(): Promise<void> {
   assert(reports.p2!.parsed.deterministicResult === "PASS" && reports.p2!.parsed.deterministicMandatoryCases?.passed === 179, "P2 179-case deterministic prerequisite failed");
   assert(reports.p3!.parsed.deterministicResult === "PASS" && reports.p3!.parsed.deterministicMandatoryCases?.passed === 190, "P3 190-case deterministic prerequisite failed");
   assert(reports.p4!.parsed.deterministicResult === "PASS" && reports.p4!.parsed.deterministicMandatoryCases?.passed === 240, "P4 240-case deterministic prerequisite failed");
+  assert(["LOCAL_PASS_PRODUCTION_BLOCKED", "PRODUCTION_OBSERVED_PASS"].includes(reports.historicalPe5!.parsed.status), "historical release:pe5 regression failed");
   const prerequisites = {
     p1: { result: "PASS", cases: 51, reportHash: digest(reports.p1!.raw) },
     p2: { deterministicResult: "PASS", cases: 179, externalResult: reports.p2!.parsed.result, reportHash: digest(reports.p2!.raw) },
     p3: { deterministicResult: "PASS", cases: 190, externalResult: reports.p3!.parsed.result, reportHash: digest(reports.p3!.raw) },
     p4: { deterministicResult: "PASS", cases: 240, externalResult: reports.p4!.parsed.result, reportHash: digest(reports.p4!.raw) },
+    historicalPe5: { result: reports.historicalPe5!.parsed.status, reportHash: digest(reports.historicalPe5!.raw) },
   };
 
   const mandatoryCases = P5_MANDATORY_CASES.map((item) => ({
