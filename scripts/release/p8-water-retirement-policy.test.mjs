@@ -49,6 +49,29 @@ test("the already-retired census accepts disabled legacy modes and rejects re-en
   assert.throws(() => assertAlreadyRetiredWaterTenantCensus(retiredCensus.map((row, index) => index === 2 ? { ...row, classification: "UNKNOWN" } : row)), /classification/)
 })
 
+test("an already-retired empty tenant census requires preserved authority and disposition evidence", () => {
+  const activationTenantCensus = P8_WATER_TENANT_DISPOSITIONS.map(({ tenantId, classification }) => ({ tenantId, classification }))
+  const dispositionRows = P8_WATER_TENANT_DISPOSITIONS.map(({ tenantId, classification }) => ({
+    tenant_id: tenantId,
+    classification,
+    authorized: true,
+    authorization_ref: "https://github.com/parammm390/finnor-ai/actions/runs/34728462290",
+    obligations: [
+      "preserve_historical_truth",
+      "prevent_future_water_execution",
+      "terminalize_only_audited_test_or_synthetic_work",
+    ],
+    classified_by: "p8-production-release:0a65fb8c2a9f55315feaa6a7f6446572b23f49e4",
+  }))
+
+  assert.equal(assertAlreadyRetiredWaterTenantCensus([], { activationTenantCensus, dispositionRows }).length, 4)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus([], { activationTenantCensus: activationTenantCensus.slice(1), dispositionRows }), /authority tenant census changed/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus([], { activationTenantCensus: [...activationTenantCensus.slice(0, 3), activationTenantCensus[0]], dispositionRows }), /Duplicate retired Water tenant/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus([], { activationTenantCensus, dispositionRows: dispositionRows.map((row, index) => index === 0 ? { ...row, authorized: false } : row) }), /disposition authorized/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus([], { activationTenantCensus, dispositionRows: dispositionRows.map((row, index) => index === 1 ? { ...row, obligations: [] } : row) }), /missing obligation/)
+  assert.throws(() => assertAlreadyRetiredWaterTenantCensus([]), /authority tenant census is unavailable/)
+})
+
 test("supplier canary proof is exact-release, role, migration, and protocol locked", () => {
   const target = { portalRole: "app" }
   const body = {

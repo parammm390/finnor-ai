@@ -72,7 +72,12 @@ const requireFromOs = createRequire(new URL("../../finnor-os/package.json", impo
 const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
 
-const requiredRuntimeRoles = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
+const LEGACY_RUNTIME_ROLES = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
+const COMPUTE_RUNTIME_ROLES = [
+  "api", "compute-realtime", "compute-interactive", "compute-background", "compute-heavy",
+  "orchestrator", "supplier-canary", "scheduler-owner",
+]
+let requiredRuntimeRoles = LEGACY_RUNTIME_ROLES
 
 async function readAuthority({ forUpdate = false } = {}) {
   const result = await client.query(
@@ -95,6 +100,16 @@ async function readWaterTenantCensus() {
        LEFT JOIN finnor_os.tenant_settings s ON s.tenant_id=t.id
        LEFT JOIN finnor_os.water_tenant_retirement_dispositions d ON d.tenant_id=t.id
       ORDER BY t.id`,
+  )
+  return result.rows
+}
+
+async function readWaterRetirementDispositions() {
+  const result = await client.query(
+    `SELECT tenant_id::text AS tenant_id,classification,authorized,authorization_ref,
+            obligations,classified_by,classified_at,updated_at
+       FROM finnor_os.water_tenant_retirement_dispositions
+      ORDER BY tenant_id`,
   )
   return result.rows
 }
@@ -242,6 +257,13 @@ async function awaitPreCutoverFleet(initialSurfaces, epoch) {
 const releaseSurfaces = await inspectReleaseSurfaces()
 await client.connect()
 try {
+  const computeCutover = await client.query(
+    "SELECT state FROM finnor_os.compute_plane_cutover WHERE singleton=true",
+  )
+  if (computeCutover.rowCount !== 1) throw new Error("The single compute-plane cutover row is unavailable")
+  requiredRuntimeRoles = computeCutover.rows[0].state === "authoritative"
+    ? COMPUTE_RUNTIME_ROLES
+    : LEGACY_RUNTIME_ROLES
   const head = (await client.query("SELECT max(name) AS name FROM finnor_os._migrations")).rows[0]?.name
   if (head !== migrationHead) throw new Error(`Production migration head ${head ?? "<missing>"} is not ${migrationHead}`)
   const authorityBefore = await readAuthority()
@@ -252,8 +274,14 @@ try {
     throw new Error("Product authority vertical or cutover protocol is incompatible")
   }
   const census = await readWaterTenantCensus()
+  const retirementDispositions = authorityBefore.state === "water_retired"
+    ? await readWaterRetirementDispositions()
+    : undefined
   if (authorityBefore.state === "water_retired") {
-    assertAlreadyRetiredWaterTenantCensus(census)
+    assertAlreadyRetiredWaterTenantCensus(census, {
+      activationTenantCensus: authorityBefore.activation_evidence?.tenantCensus,
+      dispositionRows: retirementDispositions,
+    })
   } else {
     assertExactWaterTenantCensus(census)
   }
