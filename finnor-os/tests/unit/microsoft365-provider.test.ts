@@ -6,6 +6,7 @@ import {
   Microsoft365SubscriptionTransport,
   MicrosoftGraphClient,
   MicrosoftGraphError,
+  type MicrosoftGraphMutationAudit,
   allMicrosoft365SourceCapabilities,
   boundedSubscriptionExpiration,
   clearMicrosoftGraphTokenCache,
@@ -655,6 +656,61 @@ describe("Microsoft Graph failure semantics", () => {
     const client = new MicrosoftGraphClient(auth(), { fetch: vi.fn() });
     await expect(client.requestJson({ operation: "beta", pathOrUrl: "https://graph.microsoft.com/beta/users" }))
       .rejects.toThrow(/v1\.0/i);
+  });
+
+  it("audits every physical upload redirect and never collapses them into one invocation", async () => {
+    const events: string[] = [];
+    let handle = 0;
+    const audit: MicrosoftGraphMutationAudit = {
+      async prepare(input) {
+        handle += 1;
+        events.push(`prepare:${handle}:${input.method}:${input.operation}`);
+        return String(handle);
+      },
+      async markRequestMayHaveLeft(value) { events.push(`left:${value}`); },
+      async acknowledge(value, response) { events.push(`ack:${value}:${response.status}`); },
+      async fail(value, failure) { events.push(`fail:${value}:${failure.status}`); },
+    };
+    let calls = 0;
+    const client = new MicrosoftGraphClient(auth(), {
+      mutationAudit: audit,
+      fetch: async () => {
+        calls += 1;
+        if (calls === 1) return new Response(null, { status: 307, headers: { location: "https://upload.example.com/next" } });
+        return Response.json({ id: "drive-item-a" }, { status: 201 });
+      },
+    });
+    await expect(client.putUploadChunk({
+      operation: "artifact_driveitem_upload_chunk",
+      uploadUrl: "https://upload.example.com/start",
+      bytes: new Uint8Array([1, 2, 3]),
+      start: 0,
+      total: 3,
+    })).resolves.toMatchObject({ status: 201, value: { id: "drive-item-a" } });
+    expect(events).toEqual([
+      "prepare:1:PUT:artifact_driveitem_upload_chunk",
+      "left:1",
+      "ack:1:307",
+      "prepare:2:PUT:artifact_driveitem_upload_chunk",
+      "left:2",
+      "ack:2:201",
+    ]);
+  });
+
+  it("does not hide an unaudited mutation retry behind token refresh", async () => {
+    const events: string[] = [];
+    const audit: MicrosoftGraphMutationAudit = {
+      async prepare() { events.push("prepare"); return "invocation-1"; },
+      async markRequestMayHaveLeft() { events.push("left"); },
+      async acknowledge() { events.push("ack"); },
+      async fail(_handle, failure) { events.push(`fail:${failure.status}:${failure.terminalForLogicalOperation}`); },
+    };
+    const graphFetch = vi.fn(async () => Response.json({ error: { code: "InvalidAuthenticationToken" } }, { status: 401 }));
+    const client = new MicrosoftGraphClient(auth(), { fetch: graphFetch as typeof fetch, mutationAudit: audit });
+    await expect(client.requestJson({ operation: "mutation", pathOrUrl: "/subscriptions/a", method: "PATCH", body: {} }))
+      .rejects.toMatchObject({ kind: "auth" });
+    expect(graphFetch).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(["prepare", "left", "fail:401:true"]);
   });
 });
 

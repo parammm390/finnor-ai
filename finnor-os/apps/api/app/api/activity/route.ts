@@ -120,7 +120,8 @@ export async function GET(req: Request): Promise<Response> {
         db
           .select({ id: domainActions.id, actionType: domainActions.actionType, payload: domainActions.payload })
           .from(domainActions)
-          .where(and(eq(domainActions.tenantId, ctx.tenantId), inArray(domainActions.id, domainActionIds))),
+          .where(and(eq(domainActions.tenantId, ctx.tenantId), inArray(domainActions.id, domainActionIds)))
+          .limit(domainActionIds.length),
       );
       for (const a of actionRows) actionById.set(a.id, { actionType: a.actionType, payload: a.payload });
     }

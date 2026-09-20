@@ -33,9 +33,18 @@ const TEST_JOB_TYPES = [
   "lease_renewal_test",
   "unhandled_test",
   "registered_only_test",
+  "protocol_v2_test",
+  "protocol_future_test",
 ];
 
+const PURE = { protocolVersions: [1] as const, retrySafety: "pure" as const };
+
 async function clearQueueTestJobs(): Promise<void> {
+  await getPool().query(
+    `DELETE FROM job_delivery_attempts
+      WHERE job_id IN (SELECT id FROM jobs WHERE type = ANY($1::text[]))`,
+    [TEST_JOB_TYPES],
+  );
   await getPool().query("DELETE FROM jobs WHERE type = ANY($1::text[])", [TEST_JOB_TYPES]);
 }
 
@@ -55,7 +64,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
     let ran = 0;
     queue.register("test_ok", async () => {
       ran++;
-    });
+    }, PURE);
     await queue.enqueue("test_ok", { hello: "world" });
     expect(await queue.tick()).toBe(true);
     expect(ran).toBe(1);
@@ -65,7 +74,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
 
   it("idempotency key makes double-enqueue a no-op", async () => {
     const queue = new JobQueue();
-    queue.register("test_idem", async () => undefined);
+    queue.register("test_idem", async () => undefined, PURE);
     await queue.enqueue("test_idem", {}, "same-key");
     await queue.enqueue("test_idem", {}, "same-key");
     const { rows } = await getPool().query("SELECT count(*)::int AS n FROM jobs WHERE type = 'test_idem'");
@@ -75,7 +84,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
   it("claims only job types registered by this worker instance", async () => {
     const queue = new JobQueue();
     let ran = 0;
-    queue.register("registered_only_test", async () => { ran++; });
+    queue.register("registered_only_test", async () => { ran++; }, PURE);
     await queue.enqueue("unhandled_test", {}, `unhandled-${Date.now()}`, "interactive", 100);
     await queue.enqueue("registered_only_test", {}, `registered-${Date.now()}`);
 
@@ -92,7 +101,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
     queue.register("test_fail", async () => {
       attempts++;
       throw new Error("simulated failure");
-    });
+    }, PURE);
     await getPool().query(
       `INSERT INTO jobs (type, payload, max_attempts) VALUES ('test_fail', '{}', 2)`,
     );
@@ -115,6 +124,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
       `INSERT INTO jobs (type, payload, status, attempts, max_attempts, started_at)
        VALUES ('crashed_worker', '{}', 'running', 1, 3, now() - interval '10 minutes')`,
     );
+    await getPool().query("UPDATE jobs SET retry_safety='pure' WHERE type='crashed_worker'");
     expect(await queue.recoverExpiredRunningJobs(60)).toBe(1);
     const { rows } = await getPool().query("SELECT status, started_at, last_error FROM jobs WHERE type = 'crashed_worker'");
     expect(rows[0].status).toBe("queued");
@@ -129,6 +139,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
       `INSERT INTO jobs (type, payload, status, attempts, max_attempts, started_at)
        VALUES ('crashed_poison_job', '{}', 'running', 3, 3, now() - interval '10 minutes')`,
     );
+    await getPool().query("UPDATE jobs SET retry_safety='pure' WHERE type='crashed_poison_job'");
     expect(await queue.recoverExpiredRunningJobs(60)).toBe(1);
     const { rows } = await getPool().query("SELECT status FROM jobs WHERE type = 'crashed_poison_job'");
     expect(rows[0].status).toBe("dead_letter");
@@ -150,7 +161,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
     await clearQueueTestJobs();
     const first = new JobQueue(); const second = new JobQueue();
     const completed: string[] = [];
-    for (const queue of [first, second]) queue.register("drain_test", async (payload) => { completed.push(String(payload.id)); });
+    for (const queue of [first, second]) queue.register("drain_test", async (payload) => { completed.push(String(payload.id)); }, PURE);
     await first.enqueue("drain_test", { id: "batch-a" }, undefined, "batch");
     await first.enqueue("drain_test", { id: "interactive" }, undefined, "interactive", 100);
     await first.enqueue("drain_test", { id: "batch-b" }, undefined, "batch");
@@ -175,7 +186,7 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
       queue.register("drain_on_shutdown", async () => {
         resolve();
         await new Promise<void>((done) => { release = done; });
-      });
+      }, PURE);
     });
     await queue.enqueue("drain_on_shutdown", {});
     const loop = queue.runLoop(5, controller.signal, 1);
@@ -200,8 +211,8 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
       executions++;
       started();
       await mayFinish;
-    });
-    contender.register("lease_renewal_test", async () => { executions++; });
+    }, PURE);
+    contender.register("lease_renewal_test", async () => { executions++; }, PURE);
     await owner.enqueue("lease_renewal_test", {});
 
     const running = owner.tick();
@@ -220,5 +231,37 @@ describe.skipIf(!available)("postgres job queue (§32.7)", () => {
     expect(executions).toBe(1);
     const completed = await getPool().query("SELECT status,lease_owner FROM jobs WHERE type='lease_renewal_test'");
     expect(completed.rows[0]).toEqual({ status: "completed", lease_owner: null });
+  });
+
+  it("filters incompatible durable protocol versions before claim", async () => {
+    await clearQueueTestJobs();
+    const queue = new JobQueue("protocol-v2-worker");
+    let executions = 0;
+    queue.register("protocol_v2_test", async (_payload, context) => {
+      executions++;
+      expect(context?.protocolVersion).toBe(2);
+    }, { protocolVersions: [2], retrySafety: "pure" });
+    await queue.enqueue("protocol_v2_test", {}, "protocol-v2", "batch", 0, 2);
+    await getPool().query(
+      `INSERT INTO jobs(type,payload,idempotency_key,protocol_version,retry_safety)
+       VALUES ('protocol_future_test','{}','protocol-future',999,'pure')`,
+    );
+
+    expect(await queue.tick()).toBe(true);
+    expect(executions).toBe(1);
+    expect(await queue.tick()).toBe(false);
+    const { rows } = await getPool().query(
+      "SELECT type,status,attempts FROM jobs WHERE type IN ('protocol_v2_test','protocol_future_test') ORDER BY type",
+    );
+    expect(rows).toEqual([
+      { type: "protocol_future_test", status: "queued", attempts: 0 },
+      { type: "protocol_v2_test", status: "completed", attempts: 1 },
+    ]);
+    const delivery = await getPool().query(
+      `SELECT d.protocol_version,d.outcome,d.worker_id
+         FROM job_delivery_attempts d JOIN jobs j ON j.id=d.job_id
+        WHERE j.type='protocol_v2_test'`,
+    );
+    expect(delivery.rows).toEqual([{ protocol_version: 2, outcome: "completed", worker_id: "protocol-v2-worker" }]);
   });
 });

@@ -48,7 +48,14 @@
     "release:pe-p4-underwriting": "tsx scripts/release/run-pe-p4-underwriting-certification.ts",
     "release:pe-p5-actions-ic": "tsx scripts/release/run-pe-p5-actions-ic-certification.ts",
     "release:pe-p6": "tsx scripts/release/run-pe-p6-planning-attention-certification.ts",
-    "release:workforce-learning": "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts"
+    "release:pe-p7-workforce-learning": "tsx scripts/release/run-pe-p7-workforce-learning-certification.ts",
+    "release:scope1": "tsx scripts/release/run-scope1-orchestration-certification.ts",
+    "release:scope2": "tsx scripts/release/run-scope2-runtime-certification.ts",
+    "release:scope3:focused": "tsx scripts/release/run-scope3-focused-tests.ts",
+    "release:scope3:load": "tsx scripts/release/run-scope3-focused-tests.ts --load",
+    "release:scope3": "tsx scripts/release/run-scope3-compute-certification.ts",
+    "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts",
+    "release:p8-runtime-contract": "tsx scripts/release/verify-p8-runtime-contract.ts"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1086.0",

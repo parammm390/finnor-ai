@@ -116,7 +116,10 @@ export class SteelProvider implements ComputerProvider {
 
   constructor(private readonly options: SteelProviderOptions) {
     if (!options.apiKey.trim()) throw new ComputerProviderError("provider_unavailable", "STEEL_API_KEY is not configured");
-    this.client = options.client ?? new Steel({ steelAPIKey: options.apiKey, ...(options.baseURL ? { baseURL: options.baseURL } : {}), maxRetries: 2 }) as unknown as SteelClientPort;
+    // A Steel SDK retry is a second physical provider request. The durable
+    // computer/effect runtime must decide whether repetition is legal and record
+    // every invocation first, so the SDK is deliberately single-shot here.
+    this.client = options.client ?? new Steel({ steelAPIKey: options.apiKey, ...(options.baseURL ? { baseURL: options.baseURL } : {}), maxRetries: 0 }) as unknown as SteelClientPort;
     this.connect = options.connectOverCDP ?? ((url) => chromium.connectOverCDP(url));
   }
 

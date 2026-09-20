@@ -102,7 +102,7 @@ export function assertFreshAwsPreflight(evidence, { commitSha, contractHash, now
   return ageMs
 }
 
-export function assertAwsWorkerHealth({ status, body, expected, requiredCapabilities = ["jobs", "orchestration", "realtime", "sse"] }) {
+export function assertAwsWorkerHealth({ status, body, expected, requiredCapabilities = ["jobs", "realtime", "sse"] }) {
   if (status !== 200 || body?.ok !== true || body.realtime !== true || body.release?.commitSha !== expected.commitSha) throw new Error("worker /healthz did not prove the exact release")
   for (const [field, value] of [["buildId", expected.buildId], ["version", expected.version], ["environment", expected.environment], ["source", expected.source]]) {
     if (body.release?.[field] !== value) throw new Error(`worker /healthz ${field} mismatch`)
@@ -121,7 +121,7 @@ export function assertAlbTargetsHealthy(targets) {
   if (!Array.isArray(targets) || targets.length === 0 || targets.some((target) => target.TargetHealth?.State !== "healthy")) throw new Error("ALB target did not become healthy")
 }
 
-export function assertWorkerHeartbeat(heartbeat, expected, migrationHead, requiredCapabilities = ["jobs", "orchestration", "realtime", "sse"], coreCertificationId) {
+export function assertWorkerHeartbeat(heartbeat, expected, migrationHead, requiredCapabilities = ["jobs", "realtime", "sse"], coreCertificationId) {
   const releaseSha = heartbeat?.releaseSha ?? heartbeat?.commitSha
   const releaseSource = heartbeat?.releaseSource ?? heartbeat?.source
   const ageSeconds = Number(heartbeat?.ageSeconds)
@@ -132,8 +132,8 @@ export function assertWorkerHeartbeat(heartbeat, expected, migrationHead, requir
 
 export function assertRuntimeParity(contract, expected, observed) {
   const failures = []
-  if (contract.topology.orchestrator.separateDeployment === false && contract.topology.orchestrator.releaseIdentity !== "worker") {
-    failures.push("embedded orchestrator must inherit worker release identity")
+  if (contract.topology.orchestrator.separateDeployment === false && contract.topology.orchestrator.releaseIdentity !== "computeInteractive") {
+    failures.push("embedded orchestrator must inherit INTERACTIVE compute release identity")
   }
   for (const component of contract.release.requiredComponents) {
     const release = observed[component]
@@ -147,8 +147,8 @@ export function assertRuntimeParity(contract, expected, observed) {
     }
     if (release.traceable !== true) failures.push(`${component}: release metadata is not traceable`)
   }
-  if (!observed.worker?.capabilities?.includes(contract.topology.orchestrator.requiredCapability)) {
-    failures.push("worker release does not prove the embedded orchestrator capability")
+  if (!observed.computeInteractive?.capabilities?.includes(contract.topology.orchestrator.requiredCapability)) {
+    failures.push("INTERACTIVE compute release does not prove the embedded orchestrator capability")
   }
   if (observed.migrationHead !== contract.release.requiredMigrationHead) {
     failures.push(`database migration head: ${observed.migrationHead ?? "<missing>"} != ${contract.release.requiredMigrationHead}`)

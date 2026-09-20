@@ -2,9 +2,10 @@ import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { assertCanonicalRelease, assertRuntimeParity, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
-import { assertSupplierCanaryRelease } from "./release-evidence-policy.mjs"
+import { assertSupplierCanaryRelease } from "./p8-water-retirement-policy.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
+import { COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -41,43 +42,47 @@ const requireFromOs = createRequire(new URL("../../finnor-os/package.json", impo
 const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
 await client.connect()
-let workerRelease
+const computeReleases = {}
 let migrationHead
-let heartbeatAgeSeconds
 try {
   const heartbeatDeadline = Date.now() + 120_000
-  let lastHeartbeatObservation = "missing"
+  let lastHeartbeatObservation = "missing compute services"
   while (true) {
     const heartbeat = await client.query(`
-      SELECT release_sha,build_id,version,release_source,core_certification_id,
-             migration_head,deployment_id,capabilities,environment,
+      SELECT service,release_sha,build_id,version,release_source,core_certification_id,
+             migration_head,deployment_id,capabilities,environment,instance_id,
              extract(epoch FROM (now()-last_beat_at))::int AS age_seconds
         FROM finnor_os.service_release_heartbeats
-       WHERE service='worker' AND deployment_id LIKE 'ecs:%'
-       ORDER BY last_beat_at DESC
-       LIMIT 1
-    `)
-    if (heartbeat.rowCount === 1) {
-      const row = heartbeat.rows[0]
-      workerRelease = {
-        commitSha: row.release_sha,
-        buildId: row.build_id,
-        version: row.version,
-        source: row.release_source,
-        coreCertificationId: row.core_certification_id,
-        migrationHead: row.migration_head,
-        deploymentId: row.deployment_id,
-        capabilities: row.capabilities,
-        environment: row.environment,
-        traceable: true,
+       WHERE service=ANY($1::text[]) AND last_beat_at>now()-interval '120 seconds'
+       ORDER BY service,instance_id
+    `, [COMPUTE_CLASSES.map((workloadClass) => contract.topology.computePlane.classes[workloadClass].heartbeatService).concat("worker")])
+    const staleLegacy = heartbeat.rows.filter((row) => row.service === "worker")
+    const failures = []
+    const candidateReleases = {}
+    for (const workloadClass of COMPUTE_CLASSES) {
+      const profile = contract.topology.computePlane.classes[workloadClass]
+      const rows = heartbeat.rows.filter((row) => row.service === profile.heartbeatService)
+      if (rows.length < profile.minTasks) failures.push(`${workloadClass}: ${rows.length} fresh task heartbeats`)
+      for (const row of rows) {
+        const release = {
+          commitSha: row.release_sha, buildId: row.build_id, version: row.version,
+          source: row.release_source, coreCertificationId: row.core_certification_id,
+          migrationHead: row.migration_head, deploymentId: row.deployment_id,
+          capabilities: row.capabilities, environment: row.environment, traceable: true,
+        }
+        if (release.commitSha !== expected.commitSha || release.buildId !== expected.buildId
+          || release.version !== expected.version || release.source !== expected.source
+          || release.environment !== expected.environment || release.migrationHead !== contract.release.requiredMigrationHead
+          || !row.instance_id?.startsWith("ecs:arn:aws:ecs:") || !Number.isFinite(Number(row.age_seconds))
+          || Number(row.age_seconds) > 45) failures.push(`${workloadClass}: mixed, stale, or untraceable task release`)
+        if (!candidateReleases[workloadClass]) candidateReleases[workloadClass] = release
       }
-      heartbeatAgeSeconds = Number(row.age_seconds)
-      const observedCommit = workerRelease.commitSha ?? "<missing>"
-      lastHeartbeatObservation = `commit=${observedCommit}, age=${heartbeatAgeSeconds}s`
-      if (observedCommit === expected.commitSha && Number.isFinite(heartbeatAgeSeconds) && heartbeatAgeSeconds <= 120) break
     }
+    if (staleLegacy.length) failures.push(`${staleLegacy.length} legacy worker heartbeat(s) still fresh`)
+    lastHeartbeatObservation = failures.join("; ") || "all four classes converged"
+    if (failures.length === 0) { Object.assign(computeReleases, candidateReleases); break }
     if (Date.now() >= heartbeatDeadline) {
-      throw new Error(`worker heartbeat did not become fresh for ${expected.commitSha} within 120s (${lastHeartbeatObservation})`)
+      throw new Error(`compute fleet heartbeat parity did not converge within 120s (${lastHeartbeatObservation})`)
     }
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 5_000))
   }
@@ -87,10 +92,8 @@ try {
   await client.end()
 }
 
-// The AWS deployer already proves the exact immutable image, ECS task revision,
-// ALB target health, and public HTTPS health contract before returning success.
-// Post-promotion parity uses two independent runtime signals: the durable worker
-// heartbeat and the public HTTPS gateway health contract.
+// The AWS deployer must prove the immutable image, exact ECS tasks, and ALB
+// target health before this independent DB + public HTTPS parity check runs.
 const worker = contract.topology.worker
 const gatewayResponse = await fetch(`${worker.sseGatewayUrl}/healthz`, {
   headers: { accept: "application/json", "cache-control": "no-cache" },
@@ -98,7 +101,7 @@ const gatewayResponse = await fetch(`${worker.sseGatewayUrl}/healthz`, {
 })
 const gateway = await gatewayResponse.json().catch(() => null)
 if (!gatewayResponse.ok || gateway?.ok !== true || gateway?.realtime !== true || gateway?.release?.commitSha !== expected.commitSha) {
-  throw new Error(`worker SSE gateway parity failed with HTTP ${gatewayResponse.status}`)
+  throw new Error(`REALTIME SSE gateway parity failed with HTTP ${gatewayResponse.status}`)
 }
 for (const [field, value] of [
   ["buildId", expected.buildId],
@@ -106,14 +109,17 @@ for (const [field, value] of [
   ["environment", expected.environment],
 ]) {
   if (gateway?.release?.[field] !== value) {
-    throw new Error(`worker SSE gateway ${field} mismatch: expected ${value}, observed ${gateway?.release?.[field] ?? "<missing>"}`)
+    throw new Error(`REALTIME SSE gateway ${field} mismatch: expected ${value}, observed ${gateway?.release?.[field] ?? "<missing>"}`)
   }
 }
-for (const capability of ["jobs", "orchestration", "realtime", "sse"]) {
-  if (!gateway.capabilities?.includes(capability)) throw new Error(`worker SSE gateway is missing ${capability} capability`)
+for (const capability of ["jobs", "realtime", "sse"]) {
+  if (!gateway.capabilities?.includes(capability)) throw new Error(`REALTIME SSE gateway is missing ${capability} capability`)
 }
+if (gateway.capabilities?.includes("orchestration")) throw new Error("REALTIME gateway must not claim orchestration ownership")
 
-const observed = { frontend, api, worker: workerRelease, supplierCanaryApp, supplierCanaryAuth, migrationHead }
+const observed = { frontend, api, supplierCanaryApp, supplierCanaryAuth, migrationHead,
+  computeRealtime: computeReleases.REALTIME, computeInteractive: computeReleases.INTERACTIVE,
+  computeBackground: computeReleases.BACKGROUND, computeHeavy: computeReleases.HEAVY }
 assertRuntimeParity(contract, expected, observed)
 console.log(JSON.stringify({
   ok: true,
@@ -122,7 +128,10 @@ console.log(JSON.stringify({
   api: { service: api.service, commitSha: api.commitSha, deploymentId: api.deploymentId },
   supplierCanaryApp: { commitSha: supplierCanaryApp.commitSha, deploymentId: supplierCanaryApp.deploymentId, role: supplierCanaryApp.role },
   supplierCanaryAuth: { commitSha: supplierCanaryAuth.commitSha, deploymentId: supplierCanaryAuth.deploymentId, role: supplierCanaryAuth.role },
-  worker: { commitSha: workerRelease.commitSha, heartbeatAgeSeconds, capabilities: workerRelease.capabilities },
+  compute: Object.fromEntries(COMPUTE_CLASSES.map((workloadClass) => [workloadClass, {
+    commitSha: computeReleases[workloadClass]?.commitSha,
+    capabilities: computeReleases[workloadClass]?.capabilities,
+  }])),
   realtimeGateway: { url: worker.sseGatewayUrl, commitSha: gateway.release.commitSha, capabilities: gateway.capabilities },
   orchestrator: { mode: contract.topology.orchestrator.mode, releaseIdentity: contract.topology.orchestrator.releaseIdentity },
   migrationHead,

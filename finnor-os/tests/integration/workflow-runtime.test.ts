@@ -238,9 +238,10 @@ describe.skipIf(!available)("durable execution runtime", () => {
     expect(result.reconciled).toBeGreaterThanOrEqual(1);
 
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(workflowSteps).where(eq(workflowSteps.id, stepId)));
-    // Never silently completed and never silently retried — it stays leased/stale until
-    // the reconciliation_case is resolved by an explicit follow-up.
-    expect(row!.status).toBe("leased");
+    // Never silently completed and never silently retried. Runtime ownership is
+    // released and the step waits on observation/reconciliation; the old fence is
+    // closed so a stale process cannot advance it.
+    expect(row).toMatchObject({ status: "waiting_observation", executionState: "reconciling", claimToken: null });
 
     const cases = await withTenant(TENANT_ID, (db) =>
       db.select().from(reconciliationCases).where(and(eq(reconciliationCases.relatedStepId, stepId), eq(reconciliationCases.caseType, "unknown_delivery"))),

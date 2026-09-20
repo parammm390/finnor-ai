@@ -87,79 +87,8 @@ const ContextSchema = z.object({
   workId: UuidSchema.nullable(),
 }).strict();
 
-// The Company Brain is a projection over canonical owners; it must never advertise a
-// mutation name that the executable domain-plugin registry cannot actually handle.
-// A few early P8 labels used presentation-only aliases (for example
-// `pe.resolve_finding`) that were never executable action types. Keep the exact aliases
-// whose semantics are one-to-one, drop every ambiguous/dead candidate, and let Policy /
-// Authority still decide whether the surviving executable candidate is permitted.
-const EXECUTABLE_PE_ACTIONS = new Set([
-  "open_ic_case",
-  "begin_ic_preparation",
-  "select_ic_memo_version",
-  "select_ic_underwriting_run",
-  "create_ic_question",
-  "attach_ic_question_evidence",
-  "request_ic_memo_review",
-  "satisfy_ic_condition",
-  "prepare_ic_decision_proposal",
-  "open_workstream",
-  "create_deal_request",
-  "submit_deliverable",
-  "record_finding",
-  "resolve_finding",
-  "raise_deal_risk",
-  "resolve_deal_risk",
-  "link_deal_dependency",
-  "mark_dependency_resolved",
-  "create_closing_condition",
-  "submit_condition_evidence",
-  "satisfy_closing_condition",
-  "waive_closing_condition",
-  "verify_closing_item",
-  "declare_deal_closed",
-]);
-
-const COMPANY_BRAIN_ACTION_ALIASES = new Map<string, string>([
-  ["pe.declare_deal_closed", "declare_deal_closed"],
-  ["pe.resolve_finding", "resolve_finding"],
-  ["pe.satisfy_closing_condition", "satisfy_closing_condition"],
-  ["pe.verify_closing_item", "verify_closing_item"],
-]);
-
-function sanitizeActions(value: unknown): unknown[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
-    const action = entry as Record<string, unknown>;
-    if (typeof action.actionType !== "string") return [];
-    const actionType = COMPANY_BRAIN_ACTION_ALIASES.get(action.actionType) ?? action.actionType;
-    if (!EXECUTABLE_PE_ACTIONS.has(actionType)) return [];
-    return [{ ...action, actionType }];
-  });
-}
-
-function sanitizeCompanyBrainContract(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sanitizeCompanyBrainContract);
-  if (!value || typeof value !== "object") return value;
-  const source = value as Record<string, unknown>;
-  const result: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(source)) {
-    if (key === "availableActions") {
-      result[key] = sanitizeActions(item);
-      continue;
-    }
-    if (key === "actions" && source.authorization === "evaluated_at_execution") {
-      result[key] = sanitizeActions(item);
-      continue;
-    }
-    result[key] = sanitizeCompanyBrainContract(item);
-  }
-  return result;
-}
-
 function response(value: unknown, status = 200): Response {
-  return Response.json(sanitizeCompanyBrainContract(value), { status, headers: { "cache-control": "private, no-store" } });
+  return Response.json(value, { status, headers: { "cache-control": "private, no-store" } });
 }
 
 function requestError(error: unknown): Response {

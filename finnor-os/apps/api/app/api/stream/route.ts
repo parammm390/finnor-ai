@@ -18,13 +18,14 @@
 // resume point, not a replay-everything reconnect (no duplicates: verified by
 // this file's own resume logic below, and by e2e/jarvis-stream-route.spec.ts).
 
-import { withTenant, instructionEvents, instructionSessions } from "@finnor/db";
+import { MAX_INSTRUCTION_EVENT_PAGE, withTenant, instructionEvents, instructionSessions } from "@finnor/db";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { requireContext, errorResponse, AuthError } from "../../../lib/auth";
 
 const HEARTBEAT_MS = 25_000;
 const POLL_MS = 500;
 const CEILING_MS = 120_000;
+const EVENT_BATCH_SIZE = MAX_INSTRUCTION_EVENT_PAGE;
 const TERMINAL_PHASES = new Set(["completed", "failed", "cancelled"]);
 
 export async function GET(req: Request): Promise<Response> {
@@ -40,7 +41,7 @@ export async function GET(req: Request): Promise<Response> {
   if (!instructionId) return errorResponse(new AuthError("instructionId is required", 400));
 
   const [session] = await withTenant(ctx.tenantId, (db) =>
-    db.select({ id: instructionSessions.id }).from(instructionSessions).where(and(eq(instructionSessions.id, instructionId), eq(instructionSessions.tenantId, ctx.tenantId))),
+    db.select({ id: instructionSessions.id }).from(instructionSessions).where(and(eq(instructionSessions.id, instructionId), eq(instructionSessions.tenantId, ctx.tenantId))).limit(1),
   );
   if (!session) return Response.json({ error: "Instruction not found" }, { status: 404 });
 
@@ -64,7 +65,8 @@ export async function GET(req: Request): Promise<Response> {
               .select({ seq: instructionEvents.seq, phase: instructionEvents.phase, payload: instructionEvents.payload, createdAt: instructionEvents.createdAt })
               .from(instructionEvents)
               .where(and(eq(instructionEvents.instructionId, instructionId), eq(instructionEvents.tenantId, ctx.tenantId), gt(instructionEvents.seq, lastSeq)))
-              .orderBy(asc(instructionEvents.seq)),
+              .orderBy(asc(instructionEvents.seq))
+              .limit(EVENT_BATCH_SIZE),
           );
           for (const row of rows) {
             if (cancelled) break;

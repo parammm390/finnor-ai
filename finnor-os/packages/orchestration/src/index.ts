@@ -15,6 +15,7 @@ import {
   type Role,
 } from "@finnor/shared-types";
 import {
+  MAX_HIGH_EGRESS_ROWS,
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
   decisionReceipts, planRepairs, enqueueJob, receiveWork, transitionWork,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
@@ -27,7 +28,7 @@ import {
 } from "@finnor/db";
 import { buildMemorySnapshot, appendEpisode, appendShortTerm } from "@finnor/memory";
 import { createDefaultRegistry, type ToolRegistry } from "@finnor/tools";
-import { and, desc, eq, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { selectAndMaterializePlan } from "./plan-runtime";
 import { GatedExecutor, type Executor } from "./executor";
@@ -78,6 +79,8 @@ export * from "./llm";
 export * from "./planner";
 export * from "./plan-runtime";
 export * from "./plan-progress";
+export * from "./orchestration-protocol";
+export * from "./orchestration-kernel";
 export * from "./compiler";
 export * from "./executor";
 export * from "./reflection";
@@ -933,9 +936,8 @@ export class FinnorOrchestrator implements Orchestrator {
           await this.rejectCancelledDrafts(ctx.tenantId, instructionId);
           return;
         }
-        // Phase 16(e): tag this instruction's correlation id onto the action so the
-        // executor's own enqueueJob calls (voice_confirm_request/voice_notify_failure)
-        // can thread it through — in-memory only, never a DB column (see DomainAction.correlationId).
+        // Preserve request correlation through action execution and durable receipts;
+        // this is in-memory compatibility metadata, never mutable execution intent.
         const action: DomainAction = ctx.correlationId ? { ...rawAction, correlationId: ctx.correlationId } : rawAction;
         const policy = await this.loadPolicy(action);
         const readOnlyAnswer = isReadOnlyAnswerAction(action.actionType, undefined, false) && !policy.requiresConfirmation;
@@ -1029,9 +1031,8 @@ export class FinnorOrchestrator implements Orchestrator {
    * skips the LLM planner entirely. For system-originated work (scheduled scans,
    * proactive jobs) where there's no free-text instruction to interpret, only a
    * deterministic decision already made by the caller. This is the shared primitive
-   * every proactive scan handler uses so each one gets a real rendered summary and
-   * (if voice is configured) a real voice_confirm_request job — the same treatment
-   * a human-typed instruction gets, not a hand-inserted row that skips the pipeline.
+   * every proactive scan handler uses so each one gets the same governed action,
+   * receipt, and durable-attention treatment as a human-typed instruction.
    */
   async draftKnownAction(
     actionType: string,
@@ -1234,7 +1235,7 @@ export class FinnorOrchestrator implements Orchestrator {
             .returning()
         : [];
       if (claimed) return { claimed, current: claimed };
-      const [current] = currentBeforeClaim ? [currentBeforeClaim] : await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
+      const [current] = currentBeforeClaim ? [currentBeforeClaim] : await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId))).limit(1);
       return { claimed: null, current };
     });
     if (!row.current) return { status: "failure", output: {}, error: "Action not found" };
@@ -1321,7 +1322,8 @@ export class FinnorOrchestrator implements Orchestrator {
       const [action] = await db
         .select()
         .from(domainActions)
-        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, domainActionId)));
+        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, domainActionId)))
+        .limit(1);
       const [latestReceipt] = await db
         .select()
         .from(decisionReceipts)
@@ -1371,12 +1373,16 @@ export class FinnorOrchestrator implements Orchestrator {
 
     let repairPlannerAttemptId: string | null = null;
     try {
-      const remainder = await withTenant(tenantId, (db) =>
+      const remainderPlus = await withTenant(tenantId, (db) =>
         db
           .select({ actionType: domainActions.actionType, payload: domainActions.payload, status: domainActions.status, dependsOn: domainActions.dependsOn })
           .from(domainActions)
-          .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.planId, sourceAction.planId!), inArray(domainActions.status, ["draft", "pending"]))),
+          .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.planId, sourceAction.planId!), inArray(domainActions.status, ["draft", "pending"])))
+          .orderBy(domainActions.createdAt, domainActions.id)
+          .limit(MAX_HIGH_EGRESS_ROWS + 1),
       );
+      if (remainderPlus.length > MAX_HIGH_EGRESS_ROWS) throw new Error(`Plan repair read exceeded ${MAX_HIGH_EGRESS_ROWS} actions; recovery planning is stopped until the remainder is narrowed`);
+      const remainder = remainderPlus;
       if (remainder.length === 0) {
         await withTenant(tenantId, (db) => db.update(planRepairs).set({ status: "no_remainder", proposedAt: new Date() }).where(eq(planRepairs.id, claim.id)));
         await appendEpisode(tenantId, domainActionId, "plan_repair", { receipt: terminalReceipt }, { status: "no_remainder", sourcePlanId: sourceAction.planId });
@@ -1421,8 +1427,10 @@ export class FinnorOrchestrator implements Orchestrator {
               eq(domainActions.tenantId, tenantId),
               eq(domainActions.planRevisionId, sourceAction.planRevisionId!),
               eq(businessEffects.status, "verified"),
-            )))
+            ))
+            .limit(MAX_HIGH_EGRESS_ROWS + 1))
         : [];
+      if (verifiedNodeRows.length > MAX_HIGH_EGRESS_ROWS) throw new Error(`Plan repair evidence exceeded ${MAX_HIGH_EGRESS_ROWS} actions; recovery planning is stopped until the evidence is narrowed`);
       const verifiedNodeIds = new Set(verifiedNodeRows.flatMap((row) => row.planNodeId ?? []));
       const parentGraph = activeParent?.planGraph && typeof activeParent.planGraph === "object" && !Array.isArray(activeParent.planGraph)
         ? activeParent.planGraph as { nodes?: Array<{ id?: string; semanticHash?: string; kind?: string; irreversible?: boolean }> }
@@ -1614,7 +1622,7 @@ export class FinnorOrchestrator implements Orchestrator {
         const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates).where(eq(authorityStates.tenantId, tenantId)).limit(1);
         if ((state?.revision ?? 1) !== approverAuthority.authorityRevision) return { claimed: null, current: null, staleAuthority: true as const };
       }
-      const [before] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
+      const [before] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId))).limit(1);
       // A completed action is already the durable result of an earlier approval.
       // Replaying the same approval after the owning Work reaches its terminal
       // state is a safe idempotent no-op; do not reinterpret the now-completed
@@ -1654,7 +1662,7 @@ export class FinnorOrchestrator implements Orchestrator {
         )
         .returning();
       if (!claimed) {
-        const [current] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId)));
+        const [current] = await db.select().from(domainActions).where(and(eq(domainActions.id, actionId), eq(domainActions.tenantId, tenantId))).limit(1);
         return { claimed: null, current };
       }
       const [currentRevision] = decision === "approve" && claimed.policyId
@@ -1823,20 +1831,27 @@ export class FinnorOrchestrator implements Orchestrator {
   private async rejectCancelledDrafts(tenantId: string, instructionId: string | undefined): Promise<void> {
     if (!instructionId) return;
     await withTenant(tenantId, async (db) => {
-      const rows = await db
-        .update(domainActions)
-        .set({ status: "rejected" })
-        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.instructionId, instructionId), eq(domainActions.status, "draft")))
-        .returning({ id: domainActions.id });
-      if (rows.length > 0) {
-        await db.insert(actionLog).values(rows.map((row) => ({
-          tenantId,
-          domainActionId: row.id,
-          step: "rejected",
-          input: { by: "instruction_cancel", instructionId },
-          output: { cancelledBeforeDispatch: true },
-        })));
-      }
+      // Keep the cancellation fence and its audit trail in one SQL statement. A
+      // cancelled instruction can own many drafts; returning every id to Node just
+      // to insert one audit row per id recreates the same row-egress failure mode.
+      await db.execute(sql`
+        WITH rejected AS (
+          UPDATE finnor_os.domain_actions
+             SET status = 'rejected'
+           WHERE tenant_id = ${tenantId}::uuid
+             AND instruction_id = ${instructionId}::uuid
+             AND status = 'draft'
+           RETURNING id, tenant_id
+        )
+        INSERT INTO finnor_os.action_log
+          (tenant_id, domain_action_id, step, input, output)
+        SELECT tenant_id,
+               id,
+               'rejected',
+               jsonb_build_object('by', 'instruction_cancel', 'instructionId', ${instructionId}),
+               jsonb_build_object('cancelledBeforeDispatch', true)
+          FROM rejected
+      `);
     });
   }
 

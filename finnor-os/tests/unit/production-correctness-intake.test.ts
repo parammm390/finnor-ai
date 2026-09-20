@@ -66,7 +66,7 @@ const mocks = vi.hoisted(() => {
   }));
   const getOrchestrator = vi.fn(() => ({ handleInstructionResult, startObjective }));
   const enforceRouteRateLimit = vi.fn(async () => undefined);
-  const enforceBatchBackpressure = vi.fn(async () => undefined);
+  const enforceBatchBackpressure = vi.fn(async () => ({ action: "admit", saturated: false, reasons: [] }));
   const recordWorkResponse = vi.fn(async () => undefined);
   const transitionWork = vi.fn(async () => undefined);
   const workAggregate = vi.fn<() => Promise<MockWorkAggregate>>(async () => null);

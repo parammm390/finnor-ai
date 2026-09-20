@@ -7,6 +7,7 @@ import {
   workEventWaits,
   workEvents,
   workObjectiveLoops,
+  workPlanRevisions,
   workWakeClaims,
   works,
 } from "./schema";
@@ -61,6 +62,9 @@ export interface CreateWorkEventWaitInput {
   workId: string;
   objectiveLoopId: string;
   objectiveStepId: string;
+  planRevisionId?: string | null;
+  planNodeId?: string | null;
+  objectiveRevision?: number | null;
   waitFor: WorkEventWaitCriteria;
   conditionSummary: string;
   earliestAt?: Date;
@@ -166,7 +170,15 @@ async function claimWaitWakeTx(
   await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${wait.tenantId} AND ${workObjectiveLoops.id}=${wait.objectiveLoopId} FOR UPDATE`);
   const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, wait.tenantId), eq(workObjectiveLoops.id, wait.objectiveLoopId))).limit(1);
   if (!loop) throw new Error("Event wait Objective Loop disappeared");
-  if (!["waiting", "awaiting_approval"].includes(loop.state)) {
+  const [activePlan] = wait.planRevisionId ? await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
+    eq(workPlanRevisions.tenantId, wait.tenantId),
+    eq(workPlanRevisions.id, wait.planRevisionId),
+    eq(workPlanRevisions.workId, wait.workId),
+    eq(workPlanRevisions.status, "active"),
+  )).limit(1) : [];
+  const staleGeneration = (wait.objectiveRevision !== null && wait.objectiveRevision !== loop.revision)
+    || (wait.planRevisionId !== null && !activePlan);
+  if (["blocked", "completed", "failed", "cancelled"].includes(loop.state) || staleGeneration) {
     await db.update(workEventWaits).set({ status: "cancelled", cancelledAt: new Date(), updatedAt: new Date() })
       .where(and(eq(workEventWaits.tenantId, wait.tenantId), eq(workEventWaits.id, wait.id), eq(workEventWaits.status, "waiting")));
     return null;
@@ -178,10 +190,11 @@ async function claimWaitWakeTx(
     .where(and(eq(workEventWaits.tenantId, wait.tenantId), eq(workEventWaits.id, wait.id), eq(workEventWaits.status, "waiting")))
     .returning();
   if (!claimedWait) return null;
-  const revision = loop.revision + 1;
+  const revision = loop.revision;
   const jobId = randomUUID();
   const [job] = await db.insert(jobs).values({
     id: jobId,
+    tenantId: wait.tenantId,
     type: "run_objective_iteration",
     payload: {
       tenantId: wait.tenantId,
@@ -200,7 +213,6 @@ async function claimWaitWakeTx(
   }).onConflictDoNothing({ target: jobs.idempotencyKey }).returning();
   if (!job) throw new Error("A wake job already exists without its semantic wake claim");
   const [updatedLoop] = await db.update(workObjectiveLoops).set({
-    revision,
     state: "continue",
     nextRunAt: new Date(),
     reason: cause === "event" ? `Matched ${event.eventType}; canonical state must be re-inspected.` : "The durable wait deadline was reached; canonical state must be re-inspected.",
@@ -304,6 +316,9 @@ export async function createWorkEventWaitTx(db: Db, input: CreateWorkEventWaitIn
     workId: input.workId,
     objectiveLoopId: input.objectiveLoopId,
     objectiveStepId: input.objectiveStepId,
+    planRevisionId: input.planRevisionId ?? null,
+    planNodeId: input.planNodeId ?? null,
+    objectiveRevision: input.objectiveRevision ?? null,
     expectedEventType: input.waitFor.eventType.slice(0, 200),
     subjectType: input.waitFor.subject?.type ?? null,
     subjectId: input.waitFor.subject?.id ?? null,
@@ -328,6 +343,7 @@ export async function createWorkEventWaitTx(db: Db, input: CreateWorkEventWaitIn
   if (!stored) throw new Error("Unable to persist durable event wait");
   if (stored.deadlineAt && stored.status === "waiting") {
     await db.insert(jobs).values({
+      tenantId: input.tenantId,
       type: "process_work_event_wait_deadline",
       payload: { tenantId: input.tenantId, waitId: stored.id, _correlationId: input.workId },
       runAt: new Date(stored.deadlineAt.getTime() + WORK_EVENT_WAIT_SETTLEMENT_MS),

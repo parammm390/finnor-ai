@@ -1,5 +1,8 @@
-# Reusable root application certification for the universal PR verdict and the
-# exact post-merge production release.
+# CI for the marketing site (repo root) — Phase 7 §7.9/§7.10 (JARVIS 95% MAESTRO
+# PACK): "truthfulness enforcement in CI" and "Playwright suite green in CI" both
+# need an actual CI job, not just a clean local run. Scoped to paths OUTSIDE
+# finnor-os/ (that repo has its own workflow, ci.yml) so the two don't trigger on
+# each other's changes.
 name: marketing-ci
 on:
   workflow_call:
@@ -8,6 +11,9 @@ on:
         required: false
       TEST_OWNER_PASSWORD:
         required: false
+  push:
+    branches: [main]
+    paths-ignore: ["finnor-os/**"]
 permissions:
   contents: read
 concurrency:
@@ -28,7 +34,7 @@ jobs:
       # run build` with "supabaseUrl is required" without it — reproduced locally
       # by unsetting it, root-caused, not guessed).
       NEXT_PUBLIC_SUPABASE_URL: https://kpxrnonhnhexutvdywbh.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_pL3At585tx6uLFymhYtjbA_HJvVTeWB
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -37,10 +43,6 @@ jobs:
           # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on
           # the hosted runner before any of this workflow's actual checks run.
           node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            finnor-os/package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       # The root app's typed JARVIS client imports the canonical Work projection
@@ -50,8 +52,8 @@ jobs:
       # `any` cascade.
       - name: Install Finnor OS type dependencies
         run: npm ci --prefix finnor-os --no-audit --no-fund
-      # The current no-restricted-properties(Math.random) policy under
-      # src/components/jarvis and src/app/jarvis lives in .eslintrc.cjs; this is what
+      # Phase 7 §7.8: no-restricted-properties(Math.random) under src/components/
+      # jarvis and src/app/jarvis, defined in .eslintrc.cjs — this is what actually
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
       - run: npm run lint

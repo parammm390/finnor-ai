@@ -12,41 +12,183 @@ permissions:
   contents: read
 
 jobs:
-  backend-release-gate:
-    name: backend-release-gate
-    uses: ./.github/workflows/ci.yml
-
-  root-release-gate:
-    name: root-release-gate
-    uses: ./.github/workflows/marketing-ci.yml
-
-  post-merge-certification:
-    name: post-merge-certification
-    needs: [backend-release-gate, root-release-gate]
-    if: ${{ always() }}
+  canonical-graph-gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+      FINNOR_CHAOS_TEST_CONTEXT: "1"
+      FINNOR_TEST_MANAGED_EXTENSIONS: omit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+
+      - name: Install API/workspace dependencies
+        run: npm ci
+        working-directory: finnor-os
+
+      - name: Verify migration bundle parity
+        run: |
+          npm run db:bundle
+          git diff --exit-code packages/db/migrations-bundle.ts
+        working-directory: finnor-os
+
+      - name: Rehearse historical production database upgrade
+        timeout-minutes: 5
+        run: npx tsx scripts/release/rehearse-historical-upgrade.ts
+        working-directory: finnor-os
+
+      - name: Apply schema and checkpointer migrations
+        run: |
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+
+      - name: Seed canonical Private Equity fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
+      - name: Verify canonical traversal and tenant isolation
+        run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts
+        working-directory: finnor-os
+
+  phase5-readiness:
+    needs: canonical-graph-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+      FINNOR_CHAOS_TEST_CONTEXT: "1"
+      FINNOR_TEST_MANAGED_EXTENSIONS: omit
+      FINNOR_RELEASE_SOURCE: github-actions
+      NODE_ENV: test
+      AUTH_DEV_BYPASS: "1"
+      CERTIFICATION_SEED_ALLOWED: "1"
+      CERTIFICATION_TEST_EMAILS: certification@example.invalid
+      CERTIFICATION_TEST_PHONES: "+15550000001"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-
-      - name: Certify the exact merged SHA before production authority exists
         env:
-          BACKEND_RESULT: ${{ needs.backend-release-gate.result }}
-          ROOT_RESULT: ${{ needs.root-release-gate.result }}
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Install frontend dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install API/workspace dependencies
+        run: npm ci
+        working-directory: finnor-os
+
+      - name: Derive commit-locked release metadata
         run: |
-          set -euo pipefail
-          test "$BACKEND_RESULT" = success
-          test "$ROOT_RESULT" = success
           sha="$(git rev-parse HEAD)"
           short="${sha:0:12}"
-          RELEASE_COMMIT_SHA="$sha" \
-          FINNOR_COMMIT_SHA="$sha" \
-          FINNOR_BUILD_ID="finnor-$short" \
-          FINNOR_VERSION="0.1.0+$short" \
-          FINNOR_ENVIRONMENT=production \
-          FINNOR_RELEASE_SOURCE=github-actions \
-            node scripts/release/verify-release.mjs
+          echo "RELEASE_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
+          echo "FINNOR_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
+          echo "FINNOR_BUILD_ID=finnor-$short" >> "$GITHUB_ENV"
+          echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
+
+      - name: Verify clean canonical release source
+        run: npm run release:verify
+        env:
+          FINNOR_ENVIRONMENT: production
+
+      - name: Apply migrations from an empty database
+        run: |
+          npm run db:bundle
+          git diff --exit-code packages/db/migrations-bundle.ts
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+
+      - name: Seed Phase 5 certification fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
+      - name: Install disposable legacy fixture seam
+        run: npx tsx scripts/install-vertical-fixture-seam.ts
+        working-directory: finnor-os
+
+      - name: Phase 5 type, security, runtime, and regression suite
+        run: |
+          npm run openapi
+          npm run typecheck
+          # Phase 5 deliberately retires the Water-only conversation resolver.
+          # Keep the obsolete Phase 6 integration fixture out of this release
+          # gate so certification cannot re-enable retired Water entities.
+          npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts --exclude tests/integration/scope3-compute-plane.test.ts
+          npm run release:manifest
+          npm run release:pe-domain-boundary
+        working-directory: finnor-os
+
+      - name: Phase 7 governed workforce and learning certification
+        run: npm run release:pe-p7-workforce-learning
+        working-directory: finnor-os
+
+      - name: Scope-3 full deterministic compute certification
+        run: npm run release:scope3
+        working-directory: finnor-os
+
+  root-release-gate:
+    uses: ./.github/workflows/marketing-ci.yml
+
+  post-merge-certification:
+    name: post-merge-certification
+    needs: [canonical-graph-gate, phase5-readiness, root-release-gate]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Certify the exact merged SHA before production authority exists
+        env:
+          CANONICAL_RESULT: ${{ needs.canonical-graph-gate.result }}
+          PHASE5_RESULT: ${{ needs.phase5-readiness.result }}
+          ROOT_RESULT: ${{ needs.root-release-gate.result }}
+        run: |
+          test "$CANONICAL_RESULT" = success
+          test "$PHASE5_RESULT" = success
+          test "$ROOT_RESULT" = success
           printf '{"schema":"finnor-post-merge-certification.v1","sha":"%s","runId":"%s","runAttempt":"%s","result":"PASS"}\n' \
             "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
 
@@ -92,7 +234,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install pinned Vercel CLI
-        run: npm install --global vercel@59.18.0 --no-audit --no-fund
+        run: npm install --global vercel@50.15.1
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
@@ -104,7 +246,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
       - name: Install API/workspace dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci
         working-directory: finnor-os
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
@@ -112,6 +254,20 @@ jobs:
 
       - name: Verify dependency manifests remain source-locked
         run: git diff --exit-code -- package.json package-lock.json finnor-os/package.json finnor-os/package-lock.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Validate canonical deployment truth
+        run: node scripts/release/validate-deployment-truth.mjs
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Release governance regression tests
+        run: |
+          node --test scripts/release/release-policy.test.mjs scripts/release/compute-plane-policy.test.mjs
+          node scripts/release/validate-production-mutation-inventory.mjs
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
@@ -137,6 +293,23 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
+      - name: Frontend quality gate
+        run: |
+          npm run lint
+          npx tsc --noEmit -p tsconfig.json
+          npm run test:unit
+          npm run typecheck --prefix finnor-os
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: API typecheck gate
+        run: npm run typecheck
+        working-directory: finnor-os
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
       - name: Prepare disposable worker smoke database
         run: |
           npm run db:bundle
@@ -148,6 +321,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
           DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
+          FINNOR_TEST_MANAGED_EXTENSIONS: omit
 
       - name: Build and smoke-test exact worker image without production credentials
         run: |
@@ -171,19 +345,20 @@ jobs:
             --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" \
             --env FINNOR_VERSION="$FINNOR_VERSION" \
             --env FINNOR_WORKER_DEPLOYMENT_ID=ecs:container-smoke \
-            --env FINNOR_WORKER_CAPABILITIES=jobs,orchestration,computer,event-wake,connection-health,realtime,sse \
+            --env FINNOR_WORKLOAD_CLASS=REALTIME \
+            --env FINNOR_WORKER_CAPABILITIES=jobs,realtime,sse \
             --env SECRETS_PROVIDER=env \
             --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
             --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
             --env SUPABASE_URL="$supabase_url" \
             --env JARVIS_SSE_ALLOWED_ORIGINS=https://finnorai.com \
             --env WORKER_CONCURRENCY=2 \
-            --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=1 \
-            --env FINNOR_DB_POOL_MAX=4 \
+            --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=0 \
+            --env FINNOR_DB_POOL_MAX=1 \
             "$image")"
           ready=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | node -e 'const fs=require("node:fs"); const body=JSON.parse(fs.readFileSync(0,"utf8")); if(body.ok!==true || body.realtime!==true || body.release?.commitSha!==process.env.FINNOR_COMMIT_SHA || body.release?.buildId!==process.env.FINNOR_BUILD_ID || body.release?.version!==process.env.FINNOR_VERSION || !body.capabilities?.includes("orchestration") || !body.capabilities?.includes("sse")) process.exit(1)'; then ready=1; break; fi
+            if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | node -e 'const fs=require("node:fs"); const body=JSON.parse(fs.readFileSync(0,"utf8")); if(body.ok!==true || body.realtime!==true || body.release?.commitSha!==process.env.FINNOR_COMMIT_SHA || body.release?.buildId!==process.env.FINNOR_BUILD_ID || body.release?.version!==process.env.FINNOR_VERSION || !body.capabilities?.includes("jobs") || !body.capabilities?.includes("sse") || body.capabilities?.includes("orchestration")) process.exit(1)'; then ready=1; break; fi
             sleep 2
           done
           if test "$ready" != 1; then docker logs "$container_id" || true; echo "::error::worker container smoke test did not expose /healthz"; exit 1; fi
@@ -194,23 +369,16 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
+      - name: Verify product-runtime release policy without production credentials
+        run: npm run release:p8-zero-resurrection
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
       - name: Build commit-locked production artifacts before any database or AWS credential
         run: |
-          set -euo pipefail
-          frontend_log="$RUNNER_TEMP/frontend-prepare.log"
-          api_log="$RUNNER_TEMP/api-prepare.log"
-          node scripts/release/deploy-production.mjs frontend --prepare-only >"$frontend_log" 2>&1 &
-          frontend_pid=$!
-          node scripts/release/deploy-production.mjs api --prepare-only >"$api_log" 2>&1 &
-          api_pid=$!
-          frontend_status=0
-          api_status=0
-          wait "$frontend_pid" || frontend_status=$?
-          wait "$api_pid" || api_status=$?
-          cat "$frontend_log"
-          cat "$api_log"
-          test "$frontend_status" -eq 0
-          test "$api_status" -eq 0
+          node scripts/release/deploy-production.mjs frontend --prepare-only
+          node scripts/release/deploy-production.mjs api --prepare-only
           node scripts/release/verify-release.mjs
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
@@ -226,7 +394,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Authenticate exact AWS project with GitHub OIDC for ECR
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
@@ -289,12 +457,12 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Authenticate exact AWS project with GitHub OIDC for preflight
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
           inline-session-policy: >-
-            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecr:DescribeImages","ecr:DescribeRepositories","ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","elasticloadbalancing:DescribeLoadBalancers","elasticloadbalancing:DescribeTargetGroups","elasticloadbalancing:DescribeListeners","elasticloadbalancing:DescribeLoadBalancerAttributes","ec2:DescribeSecurityGroups","ec2:DescribeNatGateways"],"Resource":"*"}]}
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["cloudformation:DescribeStacks","ecr:DescribeImages","ecr:DescribeRepositories","ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","elasticloadbalancing:DescribeLoadBalancers","elasticloadbalancing:DescribeTargetGroups","elasticloadbalancing:DescribeListeners","elasticloadbalancing:DescribeLoadBalancerAttributes","ec2:DescribeSecurityGroups","ec2:DescribeNatGateways"],"Resource":"*"}]}
 
       - name: Preflight every AWS, Vercel, and database production target
         run: |
@@ -415,20 +583,52 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
           VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Authenticate exact AWS project with GitHub OIDC for ECS
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+      - name: Authenticate exact AWS project with GitHub OIDC for fresh compute preflight
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
           inline-session-policy: >-
-            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","ecs:DescribeTasks","ecs:ListTasks","ecs:RegisterTaskDefinition","ecs:UpdateService","elasticloadbalancing:DescribeTargetHealth","logs:DescribeLogStreams","logs:GetLogEvents","iam:PassRole"],"Resource":"*"}]}
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["cloudformation:DescribeStacks","ecr:DescribeImages","ecr:DescribeRepositories","ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTaskDefinition","elasticloadbalancing:DescribeLoadBalancers","elasticloadbalancing:DescribeTargetGroups","elasticloadbalancing:DescribeListeners","elasticloadbalancing:DescribeLoadBalancerAttributes","ec2:DescribeSecurityGroups","ec2:DescribeNatGateways"],"Resource":"*"}]}
 
-      - name: Deploy AWS ECS worker and embedded orchestrator
+      - name: Refresh compute preflight immediately before AWS mutation
         run: |
-          node scripts/release/deploy-aws-worker.mjs \
-            --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
+          node scripts/release/preflight-production.mjs \
             --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
-            --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
+            --image-digest "$FINNOR_ECR_IMAGE_DIGEST" \
+            --output-file "$RUNNER_TEMP/production-preflight.json"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Authenticate exact AWS project with GitHub OIDC for ECS
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        with:
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
+          aws-region: ${{ env.AWS_REGION }}
+          inline-session-policy: >-
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["cloudformation:CreateChangeSet","cloudformation:DescribeChangeSet","cloudformation:DescribeStacks","cloudformation:ExecuteChangeSet","ecr:DescribeImages","ecs:*","elasticloadbalancing:*","application-autoscaling:*","cloudwatch:*","ec2:*","iam:*","logs:DescribeLogStreams","logs:GetLogEvents"],"Resource":"*"}]}
+
+      - name: Deploy or resume governed four-class AWS compute plane
+        run: |
+          set -euo pipefail
+          deploy_stage() {
+            node scripts/release/deploy-aws-compute-plane.mjs \
+              --stage="$1" \
+              --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
+              --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
+              --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
+          }
+          stage="$(aws cloudformation describe-stacks --stack-name finnor-production --query 'Stacks[0].Parameters[?ParameterKey==`ComputePlaneStage`].ParameterValue | [0]' --output text)"
+          if test -z "$stage" -o "$stage" = "None"; then stage=legacy; fi
+          case "$stage" in
+            legacy) deploy_stage preparing; deploy_stage routing; deploy_stage finalized ;;
+            preparing) deploy_stage routing; deploy_stage finalized ;;
+            routing) deploy_stage finalized ;;
+            finalized) deploy_stage rollout ;;
+            *) echo "::error::unknown compute-plane stage $stage"; exit 1 ;;
+          esac
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -451,10 +651,23 @@ jobs:
           VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
           VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Verify current Private Equity production readiness
+      - name: Execute governed Phase 8 Water retirement protocol
+        run: |
+          node scripts/release/run-p8-production-water-retirement.mjs \
+            --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
+            --apply \
+            --authorization-ref "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Verify final PE product authority readiness
         run: |
           node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" api
           node scripts/release/verify-production-readiness.mjs https://api-psi-brown-95.vercel.app "$FINNOR_COMMIT_SHA" api
+          npm --prefix finnor-os run release:p8-runtime-contract -- --readiness-url https://api-psi-brown-95.vercel.app
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""

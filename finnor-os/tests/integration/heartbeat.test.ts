@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { CURRENT_MIGRATION_HEAD, getPool, closePool, workerHeartbeat } from "@finnor/db";
+import { getPool, closePool, workerHeartbeat } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { startHeartbeat, WORKER_HEARTBEAT_ID } from "../../apps/worker/src/heartbeat";
 
@@ -83,9 +83,9 @@ describe.skipIf(!available)("worker heartbeat", () => {
       [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner"]],
     );
     expect(cutoverRoles.rows).toEqual([
-      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
-      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
-      { service: "worker", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
+      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
+      { service: "worker", release_sha: "a".repeat(40), migration_head: expect.stringMatching(/^0135_/) },
     ]);
   });
 

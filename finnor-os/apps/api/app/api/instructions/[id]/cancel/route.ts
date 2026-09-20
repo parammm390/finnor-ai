@@ -1,6 +1,6 @@
-import { actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
+import { MAX_BACKGROUND_SCAN_BATCH, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
 import { emitInstructionEvent } from "@finnor/orchestration";
 import { canApprove, errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
@@ -50,13 +50,31 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
 
     const snapshot = await withTenant(ctx.tenantId, async (db) => {
-      const actions = await db
-        .select({ id: domainActions.id, status: domainActions.status })
-        .from(domainActions)
-        .where(and(
-          eq(domainActions.tenantId, ctx.tenantId),
-          instruction.workId ? eq(domainActions.workId, instruction.workId) : eq(domainActions.instructionId, id),
-        ));
+      // Cancellation is a rare write path, but an instruction may have a long
+      // history. Walk it with SQL-side keyset pages so one request never asks
+      // PostgreSQL/Supavisor to materialize an unbounded DomainAction result.
+      const actions: Array<{ id: string; status: string; createdAt: Date }> = [];
+      let cursor: { createdAt: Date; id: string } | null = null;
+      while (true) {
+        const pagePlus: Array<{ id: string; status: string; createdAt: Date }> = await db
+          .select({ id: domainActions.id, status: domainActions.status, createdAt: domainActions.createdAt })
+          .from(domainActions)
+          .where(and(
+            eq(domainActions.tenantId, ctx.tenantId),
+            instruction.workId ? eq(domainActions.workId, instruction.workId) : eq(domainActions.instructionId, id),
+            cursor ? or(
+              gt(domainActions.createdAt, cursor.createdAt),
+              and(eq(domainActions.createdAt, cursor.createdAt), gt(domainActions.id, cursor.id)),
+            ) : undefined,
+          ))
+          .orderBy(asc(domainActions.createdAt), asc(domainActions.id))
+          .limit(MAX_BACKGROUND_SCAN_BATCH + 1);
+        const page: Array<{ id: string; status: string; createdAt: Date }> = pagePlus.slice(0, MAX_BACKGROUND_SCAN_BATCH);
+        actions.push(...page);
+        if (pagePlus.length <= MAX_BACKGROUND_SCAN_BATCH || page.length === 0) break;
+        const last: { id: string; status: string; createdAt: Date } = page[page.length - 1]!;
+        cursor = { createdAt: last.createdAt, id: last.id };
+      }
       return { instruction, actions };
     });
 
@@ -100,7 +118,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           eq(workflowRuns.tenantId, ctx.tenantId),
           inArray(workflowSteps.domainActionId, actionIds),
           inArray(workflowRuns.status, ["running", "paused"]),
-        )),
+        ))
+        .limit(MAX_BACKGROUND_SCAN_BATCH),
     );
     const runResults = await Promise.all(activeRuns.map((run) => cancelRun(ctx.tenantId, run.id, run.version, ctx.userId)));
     const inFlightActions = snapshot.actions.filter((action) => action.status === "approved" || action.status === "executing").length;
@@ -113,7 +132,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           eq(domainActions.tenantId, ctx.tenantId),
           eq(domainActions.workId, snapshot.instruction.workId!),
           inArray(domainActions.status, ["executing", "needs_human_review"]),
-        )));
+        ))
+        .limit(MAX_BACKGROUND_SCAN_BATCH));
       const reconciliationRequired = unresolvedActions.length > 0 || runResults.some((result) => !result.ok);
       await transitionWork(ctx.tenantId, snapshot.instruction.workId, "cancelled", "cancelled", {
         instructionId: id,

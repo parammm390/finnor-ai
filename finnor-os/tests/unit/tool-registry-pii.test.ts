@@ -15,6 +15,7 @@ describe("ToolRegistry — PII minimization via piiAllowlist", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}).passthrough(),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       piiAllowlist: ["to", "subject"],
       run,
     });
@@ -30,6 +31,7 @@ describe("ToolRegistry — PII minimization via piiAllowlist", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}).passthrough(),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       run,
     });
     await reg.call("t", { to: "a@b.com", extra: "anything" });
@@ -44,6 +46,7 @@ describe("ToolRegistry — PII minimization via piiAllowlist", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}).passthrough(),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       piiAllowlist: ["to", "subject", "cc"],
       run,
     });

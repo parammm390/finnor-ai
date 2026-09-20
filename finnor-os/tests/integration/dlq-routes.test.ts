@@ -1,174 +1,229 @@
-// Phase 2 (§2.3) DLQ API routes: list/inspect/replay/discard, owner-only.
+// Scope 2 governed DLQ controls: workflow-step redrive only, tenant isolation,
+// Authority evidence, optimistic version/fence checks, and append-only audit.
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
+import { and, eq, sql } from "drizzle-orm";
+import {
+  closePool,
+  commands,
+  deadLetters,
+  runtimeOperatorControls,
+  tenants,
+  workflowRuns,
+  workflowSteps,
+  withTenant,
+} from "@finnor/db";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, outboxEvents, deadLetters, commands, workflowRuns, workflowSteps } from "@finnor/db";
-import { eq } from "drizzle-orm";
+import { seed, SEED_TENANT_ID } from "../../packages/db/seed";
 import { GET as listDlq } from "../../apps/api/app/api/dlq/route";
 import { GET as inspectDlq } from "../../apps/api/app/api/dlq/[id]/route";
 import { POST as replayDlq } from "../../apps/api/app/api/dlq/[id]/replay/route";
 import { POST as discardDlq } from "../../apps/api/app/api/dlq/[id]/discard/route";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const TENANT_ID = "00000000-0000-4000-8000-0000000000e9";
+const OTHER_TENANT_ID = "00000000-0000-4000-8000-0000000000e9";
 
 async function dbUp(): Promise<boolean> {
-  const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
+  const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2_000 });
   try {
-    await c.connect();
-    await c.end();
+    await client.connect();
     return true;
   } catch {
     return false;
+  } finally {
+    await client.end().catch(() => undefined);
   }
 }
+
 const available = await dbUp();
 
-function req(url: string, opts: { role?: string; method?: string } = {}): Request {
-  return new Request(`http://localhost${url}`, {
-    method: opts.method ?? "GET",
-    headers: { "x-tenant-id": TENANT_ID, "x-user-role": opts.role ?? "owner" },
+function errorChain(error: unknown): string {
+  const messages: string[] = [];
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current);
+    messages.push(current.message);
+    current = current.cause;
+  }
+  return messages.join("\ncaused by: ");
+}
+
+async function expectDatabaseRejection(work: Promise<unknown>, pattern: RegExp): Promise<void> {
+  try {
+    await work;
+  } catch (error) {
+    expect(errorChain(error)).toMatch(pattern);
+    return;
+  }
+  throw new Error(`Expected database operation to reject with ${pattern}`);
+}
+
+function request(
+  path: string,
+  options: { tenantId?: string; role?: string; method?: string; body?: Record<string, unknown> } = {},
+): Request {
+  return new Request(`http://localhost${path}`, {
+    method: options.method ?? "GET",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": options.tenantId ?? SEED_TENANT_ID,
+      "x-user-role": options.role ?? "owner",
+    },
+    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   });
 }
 
-describe.skipIf(!available)("DLQ routes (§2.3)", () => {
-  let openOutboxEventId: string;
-  let openDeadLetterId: string;
-  let discardedDeadLetterId: string;
-  let linkedWorkflowRunId: string;
-  let linkedCommandId: string;
+async function makeStepDeadLetter(input: {
+  errorKind?: "retryable" | "terminal" | "unknown_outcome";
+  replayable?: boolean;
+  afterPossibleEffect?: boolean;
+} = {}): Promise<{ deadLetterId: string; stepId: string; runId: string }> {
+  return withTenant(SEED_TENANT_ID, async (db) => {
+    const [command] = await db.insert(commands).values({
+      tenantId: SEED_TENANT_ID,
+      commandType: "scope2_dlq_control_test",
+      payload: {},
+    }).returning();
+    const [run] = await db.insert(workflowRuns).values({
+      tenantId: SEED_TENANT_ID,
+      commandId: command!.id,
+      workflowType: "single_action",
+      status: "failed",
+    }).returning();
+    const [step] = await db.insert(workflowSteps).values({
+      tenantId: SEED_TENANT_ID,
+      workflowRunId: run!.id,
+      stepType: "scope2_dlq_probe",
+      sequence: 1,
+      idempotencyKey: `scope2-dlq:${crypto.randomUUID()}`,
+      status: "failed",
+      executionState: input.afterPossibleEffect ? "failed_after_possible_effect" : "failed_before_effect",
+      ...(input.afterPossibleEffect ? { effectCommitAt: new Date() } : {}),
+    }).returning();
+    const [deadLetter] = await db.insert(deadLetters).values({
+      tenantId: SEED_TENANT_ID,
+      relatedWorkflowStepId: step!.id,
+      envelope: {
+        type: "workflow_step",
+        version: 2,
+        tenantId: SEED_TENANT_ID,
+        occurredAt: new Date().toISOString(),
+        payload: { workflowStepId: step!.id },
+      },
+      errorKind: input.errorKind ?? "retryable",
+      attempts: 3,
+      lastError: "deterministic test failure",
+      replayable: input.replayable ?? true,
+    }).returning();
+    return { deadLetterId: deadLetter!.id, stepId: step!.id, runId: run!.id };
+  });
+}
 
+describe.skipIf(!available)("governed DLQ routes", () => {
   beforeAll(async () => {
     process.env.DATABASE_URL = DB_URL;
     process.env.AUTH_DEV_BYPASS = "1";
     await migrate(DB_URL);
-    await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "DLQ Route Test Dealer" }).onConflictDoNothing());
-
-    const [command] = await withTenant(TENANT_ID, (db) =>
-      db.insert(commands).values({ tenantId: TENANT_ID, commandType: "dlq_route_test", payload: {} }).returning(),
-    );
-    linkedCommandId = command!.id;
-    const [workflowRun] = await withTenant(TENANT_ID, (db) =>
-      db.insert(workflowRuns).values({ tenantId: TENANT_ID, commandId: linkedCommandId, workflowType: "single_action" }).returning(),
-    );
-    linkedWorkflowRunId = workflowRun!.id;
-    const [workflowStep] = await withTenant(TENANT_ID, (db) =>
-      db.insert(workflowSteps).values({ tenantId: TENANT_ID, workflowRunId: linkedWorkflowRunId, stepType: "dlq_route_probe", sequence: 1, idempotencyKey: `dlq-route-${Date.now()}` }).returning(),
-    );
-    const [outboxRow] = await withTenant(TENANT_ID, (db) =>
-      db.insert(outboxEvents).values({ tenantId: TENANT_ID, workflowStepId: workflowStep!.id, eventType: "dlq.route.probe", payload: {}, status: "failed" }).returning(),
-    );
-    openOutboxEventId = outboxRow!.id;
-    const [openDl] = await withTenant(TENANT_ID, (db) =>
-      db
-        .insert(deadLetters)
-        .values({
-          tenantId: TENANT_ID,
-          relatedOutboxEventId: openOutboxEventId,
-          envelope: { type: "dlq.route.probe", version: 1, tenantId: TENANT_ID, occurredAt: new Date().toISOString(), payload: {} },
-          errorKind: "retryable",
-          attempts: 3,
-          lastError: "provider timeout",
-          replayable: true,
-          status: "open",
-        })
-        .returning(),
-    );
-    openDeadLetterId = openDl!.id;
-    const [discardedDl] = await withTenant(TENANT_ID, (db) =>
-      db
-        .insert(deadLetters)
-        .values({
-          tenantId: TENANT_ID,
-          envelope: { type: "dlq.route.probe.2", version: 1, tenantId: TENANT_ID, occurredAt: new Date().toISOString(), payload: {} },
-          errorKind: "terminal",
-          attempts: 1,
-          lastError: "bad payload",
-          replayable: false,
-          status: "discarded",
-          resolvedAt: new Date(),
-        })
-        .returning(),
-    );
-    discardedDeadLetterId = discardedDl!.id;
+    await seed(DB_URL);
+    await withTenant(OTHER_TENANT_ID, (db) => db.insert(tenants).values({
+      id: OTHER_TENANT_ID,
+      name: "Scope-2 tenant-isolation probe",
+    }).onConflictDoNothing());
   });
 
   afterAll(async () => {
-    await withTenant(TENANT_ID, async (db) => {
-      await db.delete(deadLetters).where(eq(deadLetters.tenantId, TENANT_ID));
-      await db.delete(outboxEvents).where(eq(outboxEvents.tenantId, TENANT_ID));
-      await db.delete(workflowSteps).where(eq(workflowSteps.workflowRunId, linkedWorkflowRunId));
-      await db.delete(workflowRuns).where(eq(workflowRuns.id, linkedWorkflowRunId));
-      await db.delete(commands).where(eq(commands.id, linkedCommandId));
-    });
     await closePool();
   });
 
-  it("a non-owner role is forbidden from listing the DLQ", async () => {
-    const res = await listDlq(req("/api/dlq", { role: "analyst" }));
-    expect(res.status).toBe(403);
-  });
+  it("requires owner authority and tenant-scopes list/inspect", async () => {
+    const target = await makeStepDeadLetter();
+    const forbidden = await listDlq(request("/api/dlq", { role: "analyst" }));
+    expect(forbidden.status).toBe(403);
 
-  it("owner lists open dead letters", async () => {
-    const res = await listDlq(req("/api/dlq"));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.deadLetters.some((d: { id: string }) => d.id === openDeadLetterId)).toBe(true);
-    expect(body.deadLetters.find((d: { id: string; relatedWorkflowRunId?: string }) => d.id === openDeadLetterId)?.relatedWorkflowRunId).toBe(linkedWorkflowRunId);
-    expect(body.deadLetters.some((d: { id: string }) => d.id === discardedDeadLetterId)).toBe(false);
-  });
+    const listed = await listDlq(request("/api/dlq"));
+    expect(listed.status).toBe(200);
+    const listBody = await listed.json() as { deadLetters: Array<{ id: string; relatedWorkflowRunId: string | null }> };
+    expect(listBody.deadLetters).toContainEqual(expect.objectContaining({
+      id: target.deadLetterId,
+      relatedWorkflowRunId: target.runId,
+    }));
 
-  it("owner filters by status", async () => {
-    const res = await listDlq(req("/api/dlq?status=discarded"));
-    const body = await res.json();
-    expect(body.deadLetters.map((d: { id: string }) => d.id)).toEqual([discardedDeadLetterId]);
-  });
-
-  it("owner inspects a single dead letter; 404 for an unknown id", async () => {
-    const res = await inspectDlq(req(`/api/dlq/${openDeadLetterId}`), { params: Promise.resolve({ id: openDeadLetterId }) });
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.deadLetter.lastError).toBe("provider timeout");
-
-    const missing = await inspectDlq(req(`/api/dlq/00000000-0000-4000-9000-000000000000`), {
-      params: Promise.resolve({ id: "00000000-0000-4000-9000-000000000000" }),
+    const isolated = await inspectDlq(request(`/api/dlq/${target.deadLetterId}`, { tenantId: OTHER_TENANT_ID }), {
+      params: Promise.resolve({ id: target.deadLetterId }),
     });
-    expect(missing.status).toBe(404);
+    expect(isolated.status).toBe(404);
   });
 
-  it("replay resets the linked outbox event to pending and marks the dead letter replayed", async () => {
-    const res = await replayDlq(req(`/api/dlq/${openDeadLetterId}/replay`, { method: "POST" }), { params: Promise.resolve({ id: openDeadLetterId }) });
-    expect(res.status).toBe(200);
-    expect((await res.json() as { workflowRunId: string | null }).workflowRunId).toBe(linkedWorkflowRunId);
-    const [dl] = await withTenant(TENANT_ID, (db) => db.select().from(deadLetters).where(eq(deadLetters.id, openDeadLetterId)));
-    expect(dl!.status).toBe("replayed");
-    const [outboxRow] = await withTenant(TENANT_ID, (db) => db.select().from(outboxEvents).where(eq(outboxEvents.id, openOutboxEventId)));
-    expect(outboxRow!.status).toBe("pending");
+  it("replays only a fenced pre-effect step and records both governed controls", async () => {
+    const target = await makeStepDeadLetter();
+    const response = await replayDlq(request(`/api/dlq/${target.deadLetterId}/replay`, {
+      method: "POST",
+      body: { expectedVersion: 1, reason: "operator verified the failure was pre-dispatch", controlKey: `replay:${target.deadLetterId}` },
+    }), { params: Promise.resolve({ id: target.deadLetterId }) });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ replayed: true, workflowRunId: target.runId, version: 2 });
 
-    // Already replayed — a second replay is a conflict, not a silent success.
-    const again = await replayDlq(req(`/api/dlq/${openDeadLetterId}/replay`, { method: "POST" }), { params: Promise.resolve({ id: openDeadLetterId }) });
-    expect(again.status).toBe(409);
+    const state = await withTenant(SEED_TENANT_ID, async (db) => {
+      const [deadLetter] = await db.select().from(deadLetters).where(eq(deadLetters.id, target.deadLetterId));
+      const [step] = await db.select().from(workflowSteps).where(eq(workflowSteps.id, target.stepId));
+      const controls = await db.select().from(runtimeOperatorControls).where(and(
+        eq(runtimeOperatorControls.tenantId, SEED_TENANT_ID),
+        sql`${runtimeOperatorControls.targetId} IN (${target.deadLetterId}::uuid, ${target.stepId}::uuid)`,
+      ));
+      return { deadLetter, step, controls };
+    });
+    expect(state.deadLetter).toMatchObject({ status: "replayed", version: 2 });
+    expect(state.step).toMatchObject({ status: "pending", executionState: "authorized", dispatchGeneration: 1 });
+    expect(state.controls.map((row) => row.controlType).sort()).toEqual(["dlq_replay", "step_redrive"]);
+    expect(state.controls.every((row) => row.authorityDecisionId && row.actorId && row.reason)).toBe(true);
+
+    const duplicate = await replayDlq(request(`/api/dlq/${target.deadLetterId}/replay`, {
+      method: "POST",
+      body: { expectedVersion: 1, reason: "operator verified the failure was pre-dispatch", controlKey: `replay:${target.deadLetterId}` },
+    }), { params: Promise.resolve({ id: target.deadLetterId }) });
+    expect(duplicate.status).toBe(409);
   });
 
-  it("discard on a non-replayable/terminal dead letter still works — discard never checks replayable", async () => {
-    const [terminalDl] = await withTenant(TENANT_ID, (db) =>
-      db
-        .insert(deadLetters)
-        .values({
-          tenantId: TENANT_ID,
-          envelope: { type: "dlq.route.probe.3", version: 1, tenantId: TENANT_ID, occurredAt: new Date().toISOString(), payload: {} },
-          errorKind: "terminal",
-          attempts: 1,
-          lastError: "bad payload",
-          replayable: false,
-          status: "open",
-        })
-        .returning(),
-    );
-    const res = await discardDlq(req(`/api/dlq/${terminalDl!.id}/discard`, { method: "POST" }), { params: Promise.resolve({ id: terminalDl!.id }) });
-    expect(res.status).toBe(200);
-    const [dl] = await withTenant(TENANT_ID, (db) => db.select().from(deadLetters).where(eq(deadLetters.id, terminalDl!.id)));
-    expect(dl!.status).toBe("discarded");
+  it("blocks replay after a possible effect and preserves the unknown outcome", async () => {
+    const target = await makeStepDeadLetter({ errorKind: "unknown_outcome", afterPossibleEffect: true });
+    const response = await replayDlq(request(`/api/dlq/${target.deadLetterId}/replay`, {
+      method: "POST",
+      body: { expectedVersion: 1, reason: "requesting replay without reconciliation", controlKey: `unsafe-replay:${target.deadLetterId}` },
+    }), { params: Promise.resolve({ id: target.deadLetterId }) });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "reconciliation_required" });
+
+    const [step] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(workflowSteps).where(eq(workflowSteps.id, target.stepId)));
+    expect(step).toMatchObject({ status: "failed", executionState: "failed_after_possible_effect", dispatchGeneration: 0 });
+  });
+
+  it("discards append-only history with an optimistic version and rejects stale control", async () => {
+    const target = await makeStepDeadLetter({ errorKind: "terminal", replayable: false });
+    const stale = await discardDlq(request(`/api/dlq/${target.deadLetterId}/discard`, {
+      method: "POST",
+      body: { expectedVersion: 2, reason: "stale operator screen", controlKey: `discard-stale:${target.deadLetterId}` },
+    }), { params: Promise.resolve({ id: target.deadLetterId }) });
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toEqual({ error: "version_conflict" });
+
+    const applied = await discardDlq(request(`/api/dlq/${target.deadLetterId}/discard`, {
+      method: "POST",
+      body: { expectedVersion: 1, reason: "terminal invalid payload retained for audit", controlKey: `discard:${target.deadLetterId}` },
+    }), { params: Promise.resolve({ id: target.deadLetterId }) });
+    expect(applied.status).toBe(200);
+    expect(await applied.json()).toEqual({ discarded: true, version: 2 });
+
+    const [audit] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(runtimeOperatorControls).where(and(
+      eq(runtimeOperatorControls.tenantId, SEED_TENANT_ID),
+      eq(runtimeOperatorControls.controlKey, `discard:${target.deadLetterId}`),
+    )));
+    expect(audit).toMatchObject({ controlType: "dlq_discard", outcome: "applied", expectedVersion: 1 });
+    await expectDatabaseRejection(withTenant(SEED_TENANT_ID, (db) => db.update(runtimeOperatorControls)
+      .set({ outcome: "rejected" })
+      .where(eq(runtimeOperatorControls.id, audit!.id))), /append-only audit evidence/i);
+    await expectDatabaseRejection(withTenant(SEED_TENANT_ID, (db) => db.delete(runtimeOperatorControls)
+      .where(eq(runtimeOperatorControls.id, audit!.id))), /append-only audit evidence/i);
   });
 });

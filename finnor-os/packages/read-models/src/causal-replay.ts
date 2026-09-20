@@ -25,7 +25,10 @@ import {
   workInputs,
   workObjectivePlannerAttempts,
   workObjectiveSteps,
+  workPlanRevisions,
+  workRecoveryDecisions,
   workPlannerAttempts,
+  workforceAssignments,
   workflowRuns,
   workflowSteps,
   works,
@@ -48,6 +51,7 @@ const NODE_LIMIT = 1_000;
 const EDGE_LIMIT = 2_000;
 const ACTION_EVENT_LIMIT = 2_000;
 const ARTIFACT_LIMIT = 500;
+const RELATED_ROW_LIMIT = EDGE_LIMIT;
 
 export interface CausalReplayViewer {
   userId: string;
@@ -61,6 +65,9 @@ type ActionRow = typeof domainActions.$inferSelect;
 type ReceiptRow = typeof decisionReceipts.$inferSelect;
 type ObjectiveStepRow = typeof workObjectiveSteps.$inferSelect;
 type ObjectiveAttemptRow = typeof workObjectivePlannerAttempts.$inferSelect;
+type PlanRevisionRow = typeof workPlanRevisions.$inferSelect;
+type WorkforceAssignmentRow = typeof workforceAssignments.$inferSelect;
+type RecoveryDecisionRow = typeof workRecoveryDecisions.$inferSelect;
 type WorkflowStepRow = typeof workflowSteps.$inferSelect;
 
 function iso(value: Date | string | null | undefined, fallback = new Date(0).toISOString()): string {
@@ -136,9 +143,12 @@ export async function causalReplayProjection(
   const objectiveSteps = (aggregate.objectiveSteps ?? []) as ObjectiveStepRow[];
   const objectiveLoop = aggregate.objectiveLoop;
   const objectiveAttempts = (aggregate.objectivePlannerAttempts ?? []) as ObjectiveAttemptRow[];
+  const planRevisions = (aggregate.planRevisions ?? []) as PlanRevisionRow[];
+  const workforceAssignmentRows = (aggregate.workforceAssignments ?? []) as WorkforceAssignmentRow[];
+  const recoveryDecisionRows = (aggregate.recoveryDecisions ?? []) as RecoveryDecisionRow[];
   const workflowStepRows = (aggregate.workflowSteps ?? []) as WorkflowStepRow[];
   const repairs = (aggregate.repairs ?? []) as Array<{ id: string; failedDomainActionId: string; status: string; terminalReceipt: unknown; createdAt: Date; proposedAt: Date | null }>;
-  const eventWaits = (aggregate.eventWaits ?? []) as Array<{ id: string; objectiveStepId: string; status: string; expectedEventType: string; matchedEventId: string | null; conditionSummary: string; createdAt: Date; satisfiedAt: Date | null; timedOutAt: Date | null }>;
+  const eventWaits = (aggregate.eventWaits ?? []) as Array<{ id: string; objectiveStepId: string; planRevisionId: string | null; planNodeId: string | null; objectiveRevision: number | null; status: string; expectedEventType: string; matchedEventId: string | null; conditionSummary: string; createdAt: Date; satisfiedAt: Date | null; timedOutAt: Date | null }>;
   const wakeClaims = (aggregate.wakeClaims ?? []) as Array<{ id: string; waitId: string; integrationEventId: string; claimedAt: Date }>;
   const integrationEventRows = (aggregate.integrationEvents ?? []) as Array<{ id: string; source: string; provider: string | null; eventType: string; status: string; trustClass: string; workId: string | null; domainActionId: string | null; computerRunId: string | null; evidenceRefs: unknown; occurredAt: Date; receivedAt: Date }>;
   const workEvents = (aggregate.events ?? []) as Array<{ id: string; seq: number; eventType: string; fromStatus: string | null; toStatus: string; payload: unknown; createdAt: Date }>;
@@ -158,64 +168,78 @@ export async function causalReplayProjection(
     const actionEventsPlus = actionIds.length ? await db.select().from(actionLog).where(and(
       eq(actionLog.tenantId, tenantId),
       inArray(actionLog.domainActionId, actionIds),
-    )).orderBy(asc(actionLog.timestamp)).limit(ACTION_EVENT_LIMIT + 1) : [];
-    const authorityRows = await db.select().from(authorityDecisions).where(and(
+    )).orderBy(asc(actionLog.timestamp), asc(actionLog.id)).limit(ACTION_EVENT_LIMIT + 1) : [];
+    const authorityRowsPlus = await db.select().from(authorityDecisions).where(and(
       eq(authorityDecisions.tenantId, tenantId),
       or(eq(authorityDecisions.workId, workId), ...(actionIds.length ? [inArray(authorityDecisions.domainActionId, actionIds)] : [])),
-    )).orderBy(asc(authorityDecisions.createdAt));
-    const approvalRows = actionIds.length ? await db.select().from(authorityApprovalRequests).where(and(
+    )).orderBy(asc(authorityDecisions.createdAt), asc(authorityDecisions.id)).limit(RELATED_ROW_LIMIT + 1);
+    const authorityRows = authorityRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const approvalRowsPlus = actionIds.length ? await db.select().from(authorityApprovalRequests).where(and(
       eq(authorityApprovalRequests.tenantId, tenantId),
       inArray(authorityApprovalRequests.domainActionId, actionIds),
-    )).orderBy(asc(authorityApprovalRequests.createdAt)) : [];
+    )).orderBy(asc(authorityApprovalRequests.createdAt), asc(authorityApprovalRequests.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const approvalRows = approvalRowsPlus.slice(0, RELATED_ROW_LIMIT);
     const approvalIds = approvalRows.map((row) => row.id);
-    const approvalSteps = approvalIds.length ? await db.select().from(authorityApprovalRequestSteps).where(and(
+    const approvalStepsPlus = approvalIds.length ? await db.select().from(authorityApprovalRequestSteps).where(and(
       eq(authorityApprovalRequestSteps.tenantId, tenantId),
       inArray(authorityApprovalRequestSteps.approvalRequestId, approvalIds),
-    )).orderBy(asc(authorityApprovalRequestSteps.sequence)) : [];
-    const effectRows = actionIds.length ? await db.select().from(businessEffects).where(and(
+    )).orderBy(asc(authorityApprovalRequestSteps.sequence), asc(authorityApprovalRequestSteps.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const approvalSteps = approvalStepsPlus.slice(0, RELATED_ROW_LIMIT);
+    const effectRowsPlus = actionIds.length ? await db.select().from(businessEffects).where(and(
       eq(businessEffects.tenantId, tenantId),
       inArray(businessEffects.domainActionId, actionIds),
-    )).orderBy(asc(businessEffects.createdAt)) : [];
-    const policyRows = policyIds.length ? await db.select().from(domainPolicyRevisions).where(and(
+    )).orderBy(asc(businessEffects.createdAt), asc(businessEffects.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const effectRows = effectRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const policyRowsPlus = policyIds.length ? await db.select().from(domainPolicyRevisions).where(and(
       eq(domainPolicyRevisions.tenantId, tenantId),
       inArray(domainPolicyRevisions.policyId, policyIds),
-    )).orderBy(asc(domainPolicyRevisions.effectiveFrom)) : [];
-    const externalRows = actionIds.length ? await db.select().from(externalOperations).where(and(
+    )).orderBy(asc(domainPolicyRevisions.effectiveFrom), asc(domainPolicyRevisions.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const policyRows = policyRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const externalRowsPlus = actionIds.length ? await db.select().from(externalOperations).where(and(
       eq(externalOperations.tenantId, tenantId),
       inArray(externalOperations.domainActionId, actionIds),
-    )).orderBy(asc(externalOperations.createdAt)) : [];
-    const deliveryRows = actionIds.length ? await db.select().from(communicationDeliveries).where(and(
+    )).orderBy(asc(externalOperations.createdAt), asc(externalOperations.domainActionId), asc(externalOperations.operationKey)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const externalRows = externalRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const deliveryRowsPlus = actionIds.length ? await db.select().from(communicationDeliveries).where(and(
       eq(communicationDeliveries.tenantId, tenantId),
       or(eq(communicationDeliveries.workId, workId), inArray(communicationDeliveries.domainActionId, actionIds)),
-    )).orderBy(asc(communicationDeliveries.createdAt)) : [];
-    const universalRows = actionIds.length ? await db.select().from(universalActionEvents).where(and(
+    )).orderBy(asc(communicationDeliveries.createdAt), asc(communicationDeliveries.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const deliveryRows = deliveryRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const universalRowsPlus = actionIds.length ? await db.select().from(universalActionEvents).where(and(
       eq(universalActionEvents.tenantId, tenantId),
       inArray(universalActionEvents.domainActionId, actionIds),
-    )).orderBy(asc(universalActionEvents.createdAt)) : [];
-    const integrationRows = stepIds.length ? await db.select().from(integrationOperations).where(and(
+    )).orderBy(asc(universalActionEvents.createdAt), asc(universalActionEvents.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const universalRows = universalRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const integrationRowsPlus = stepIds.length ? await db.select().from(integrationOperations).where(and(
       eq(integrationOperations.tenantId, tenantId),
       inArray(integrationOperations.workflowStepId, stepIds),
-    )).orderBy(asc(integrationOperations.createdAt)) : [];
-    const commandRows = await db.select({ command: commands, runId: workflowRuns.id }).from(workflowRuns)
+    )).orderBy(asc(integrationOperations.createdAt), asc(integrationOperations.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const integrationRows = integrationRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const commandRowsPlus = await db.select({ command: commands, runId: workflowRuns.id }).from(workflowRuns)
       .innerJoin(commands, and(eq(commands.tenantId, tenantId), eq(commands.id, workflowRuns.commandId)))
       .where(and(eq(workflowRuns.tenantId, tenantId), eq(workflowRuns.workId, workId)))
-      .orderBy(asc(commands.createdAt));
-    const outboxRows = stepIds.length ? await db.select().from(outboxEvents).where(and(
+      .orderBy(asc(commands.createdAt), asc(commands.id)).limit(RELATED_ROW_LIMIT + 1);
+    const commandRows = commandRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const outboxRowsPlus = stepIds.length ? await db.select().from(outboxEvents).where(and(
       eq(outboxEvents.tenantId, tenantId),
       inArray(outboxEvents.workflowStepId, stepIds),
-    )).orderBy(asc(outboxEvents.createdAt)) : [];
-    const inboxRows = stepIds.length ? await db.select().from(inboxEvents).where(and(
+    )).orderBy(asc(outboxEvents.createdAt), asc(outboxEvents.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const outboxRows = outboxRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const inboxRowsPlus = stepIds.length ? await db.select().from(inboxEvents).where(and(
       eq(inboxEvents.tenantId, tenantId),
       inArray(inboxEvents.matchedStepId, stepIds),
-    )).orderBy(asc(inboxEvents.receivedAt)) : [];
-    const reconciliationRows = stepIds.length ? await db.select().from(reconciliationCases).where(and(
+    )).orderBy(asc(inboxEvents.receivedAt), asc(inboxEvents.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const inboxRows = inboxRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const reconciliationRowsPlus = stepIds.length ? await db.select().from(reconciliationCases).where(and(
       eq(reconciliationCases.tenantId, tenantId),
       inArray(reconciliationCases.relatedStepId, stepIds),
-    )).orderBy(asc(reconciliationCases.createdAt)) : [];
-    const compensationRows = stepIds.length ? await db.select().from(compensationCases).where(and(
+    )).orderBy(asc(reconciliationCases.createdAt), asc(reconciliationCases.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const reconciliationRows = reconciliationRowsPlus.slice(0, RELATED_ROW_LIMIT);
+    const compensationRowsPlus = stepIds.length ? await db.select().from(compensationCases).where(and(
       eq(compensationCases.tenantId, tenantId),
       inArray(compensationCases.workflowStepId, stepIds),
-    )).orderBy(asc(compensationCases.createdAt)) : [];
+    )).orderBy(asc(compensationCases.createdAt), asc(compensationCases.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const compensationRows = compensationRowsPlus.slice(0, RELATED_ROW_LIMIT);
     const artifactRowsPlus = computerRunIds.length ? await db.select({
       id: computerArtifacts.id,
       runId: computerArtifacts.runId,
@@ -231,20 +255,22 @@ export async function causalReplayProjection(
     }).from(computerArtifacts).where(and(
       eq(computerArtifacts.tenantId, tenantId),
       inArray(computerArtifacts.runId, computerRunIds),
-    )).orderBy(asc(computerArtifacts.createdAt)).limit(ARTIFACT_LIMIT + 1) : [];
+    )).orderBy(asc(computerArtifacts.createdAt), asc(computerArtifacts.id)).limit(ARTIFACT_LIMIT + 1) : [];
     const [artifactRetention] = await db.select({ retentionDays: tenantRetentionPolicies.retentionDays, legalHold: tenantRetentionPolicies.legalHold }).from(tenantRetentionPolicies).where(and(
       eq(tenantRetentionPolicies.tenantId, tenantId),
       eq(tenantRetentionPolicies.dataClass, "computer_artifact_content"),
     )).limit(1);
-    const businessRows = exactBusinessSources.length ? await db.select().from(businessEvents).where(and(
+    const businessRowsPlus = exactBusinessSources.length ? await db.select().from(businessEvents).where(and(
       eq(businessEvents.tenantId, tenantId),
       inArray(businessEvents.source, exactBusinessSources),
-    )).orderBy(asc(businessEvents.occurredAt)) : [];
+    )).orderBy(asc(businessEvents.occurredAt), asc(businessEvents.id)).limit(RELATED_ROW_LIMIT + 1) : [];
+    const businessRows = businessRowsPlus.slice(0, RELATED_ROW_LIMIT);
     const instructionIds = inputs.map((input) => input.instructionId);
-    const instructionRows = instructionIds.length ? await db.select().from(instructionEvents).where(and(
+    const instructionRowsPlus = instructionIds.length ? await db.select().from(instructionEvents).where(and(
       eq(instructionEvents.tenantId, tenantId),
       inArray(instructionEvents.instructionId, instructionIds),
-    )).orderBy(asc(instructionEvents.createdAt)) : [];
+    )).orderBy(asc(instructionEvents.createdAt), asc(instructionEvents.id)).limit(ACTION_EVENT_LIMIT + 1) : [];
+    const instructionRows = instructionRowsPlus.slice(0, ACTION_EVENT_LIMIT);
     return {
       actionEventsPlus,
       authorityRows,
@@ -265,6 +291,27 @@ export async function causalReplayProjection(
       artifactRetention,
       businessRows,
       instructionRows,
+      instructionEventsTruncated: instructionRowsPlus.length > ACTION_EVENT_LIMIT,
+      truncatedTables: [
+        ...(authorityRowsPlus.length > RELATED_ROW_LIMIT ? ["authority_decisions"] : []),
+        ...(approvalRowsPlus.length > RELATED_ROW_LIMIT ? ["authority_approval_requests"] : []),
+        ...(approvalStepsPlus.length > RELATED_ROW_LIMIT ? ["authority_approval_request_steps"] : []),
+        ...(effectRowsPlus.length > RELATED_ROW_LIMIT ? ["business_effects"] : []),
+        ...(policyRowsPlus.length > RELATED_ROW_LIMIT ? ["domain_policy_revisions"] : []),
+        ...(externalRowsPlus.length > RELATED_ROW_LIMIT ? ["external_operations"] : []),
+        ...(deliveryRowsPlus.length > RELATED_ROW_LIMIT ? ["communication_deliveries"] : []),
+        ...(universalRowsPlus.length > RELATED_ROW_LIMIT ? ["universal_action_events"] : []),
+        ...(integrationRowsPlus.length > RELATED_ROW_LIMIT ? ["integration_operations"] : []),
+        ...(commandRowsPlus.length > RELATED_ROW_LIMIT ? ["commands"] : []),
+        ...(outboxRowsPlus.length > RELATED_ROW_LIMIT ? ["outbox_events"] : []),
+        ...(inboxRowsPlus.length > RELATED_ROW_LIMIT ? ["inbox_events"] : []),
+        ...(reconciliationRowsPlus.length > RELATED_ROW_LIMIT ? ["reconciliation_cases"] : []),
+        ...(compensationRowsPlus.length > RELATED_ROW_LIMIT ? ["compensation_cases"] : []),
+        ...(artifactRowsPlus.length > ARTIFACT_LIMIT ? ["computer_artifacts"] : []),
+        ...(businessRowsPlus.length > RELATED_ROW_LIMIT ? ["business_events"] : []),
+        ...(actionEventsPlus.length > ACTION_EVENT_LIMIT ? ["action_log"] : []),
+        ...(instructionRowsPlus.length > ACTION_EVENT_LIMIT ? ["instruction_events"] : []),
+      ],
     };
   });
 
@@ -410,6 +457,87 @@ export async function causalReplayProjection(
     if (!decisionContextNode) addMissing(`missing:decision-context:${attempt.id}`, iso(attempt.startedAt), "This planner attempt predates immutable decision-time context capture.", id);
   }
 
+  const planNodeByRevisionId = new Map<string, string>();
+  const completionProofNodeByPlan = new Map<string, string>();
+  for (const plan of planRevisions) {
+    const id = `plan-revision:${plan.id}`;
+    const persistedGraph = record(plan.planGraph);
+    const persistedNodes = Array.isArray(persistedGraph.nodes) ? persistedGraph.nodes : [];
+    planNodeByRevisionId.set(plan.id, id);
+    addNode({
+      id,
+      stage: plan.status === "failed" || plan.status === "blocked" ? "failure" : "planning",
+      title: `Plan revision ${plan.revision}`,
+      summary: `${persistedNodes.length} immutable node${persistedNodes.length === 1 ? "" : "s"} · ${humanize(plan.status)}`,
+      status: plan.status,
+      occurredAt: iso(plan.selectedAt),
+      sourceRefs: [sourceRef("work_plan_revisions", plan.id)],
+      evidence: [evidence("work_plan_revisions", plan.id, iso(plan.selectedAt), "available", plan.semanticHash)],
+      facts: sanitizeExecutionValue({
+        revision: plan.revision,
+        parentRevisionId: plan.parentRevisionId,
+        reason: plan.reason,
+        compilerVersion: plan.compilerVersion,
+        goalSpec: plan.goalSpec,
+        constraintSet: plan.constraintSet,
+        planningSnapshot: plan.planningSnapshot,
+        hashes: {
+          goal: plan.goalHash,
+          constraints: plan.constraintHash,
+          worldSnapshot: plan.worldSnapshotHash,
+          graph: plan.graphHash,
+          semantic: plan.semanticHash,
+        },
+        graph: { version: persistedGraph.version ?? null, semanticHash: persistedGraph.semanticHash ?? null, nodes: persistedNodes },
+        revisionTransition: plan.revisionTransition,
+      }, viewer.role) as Record<string, unknown>,
+      entityRefs: [],
+    });
+    const proof = record(plan.completionProof);
+    if (Object.keys(proof).length > 0) {
+      const proofId = `completion-proof:${plan.id}`;
+      completionProofNodeByPlan.set(plan.id, proofId);
+      addNode({
+        id: proofId,
+        stage: proof.verified === true ? "verification" : "failure",
+        title: proof.verified === true ? "Verified completion proof" : "Unverified completion record",
+        summary: proof.verified === true ? "Objective completion is bound to durable evidence." : "Completion evidence did not establish VERIFIED truth.",
+        status: proof.verified === true ? "verified" : "unverified",
+        occurredAt: iso(plan.completedAt ?? plan.selectedAt),
+        sourceRefs: [`${sourceRef("work_plan_revisions", plan.id)}.completion_proof`],
+        evidence: [evidence("work_plan_revisions.completion_proof", plan.id, iso(plan.completedAt ?? plan.selectedAt), proof.verified === true ? "available" : "unavailable")],
+        facts: sanitizeExecutionValue(proof, viewer.role) as Record<string, unknown>,
+        entityRefs: [],
+      });
+      addEdge({
+        from: id,
+        to: proofId,
+        relation: "proved_plan_completion",
+        evidenceRefs: [`${sourceRef("work_plan_revisions", plan.id)}.completion_proof`],
+        explanation: "The immutable PlanRevision stores the verified CompletionProof that closed it.",
+      });
+    }
+  }
+  for (const plan of planRevisions) {
+    const id = planNodeByRevisionId.get(plan.id)!;
+    const planner = plan.plannerAttemptId ? plannerNodeById.get(plan.plannerAttemptId) : undefined;
+    if (planner) addEdge({
+      from: planner,
+      to: id,
+      relation: "selected_plan_revision",
+      evidenceRefs: [`${sourceRef("work_plan_revisions", plan.id)}.planner_attempt_id`],
+      explanation: "The selected immutable PlanRevision names the exact canonical planner attempt that produced it.",
+    });
+    const parent = plan.parentRevisionId ? planNodeByRevisionId.get(plan.parentRevisionId) : undefined;
+    if (parent) addEdge({
+      from: parent,
+      to: id,
+      relation: "superseded_by_child_revision",
+      evidenceRefs: [`${sourceRef("work_plan_revisions", plan.id)}.parent_revision_id`, `${sourceRef("work_plan_revisions", plan.id)}.revision_transition`],
+      explanation: "The child revision records its exact parent and deterministic preserved/invalidated node diff.",
+    });
+  }
+
   const objectivePlannerByStep = new Map<string, string[]>();
   for (const attempt of objectiveAttempts) {
     const id = `objective-planner:${attempt.id}`;
@@ -429,20 +557,61 @@ export async function causalReplayProjection(
   }
 
   const objectiveStepNodeById = new Map<string, string>();
+  const verificationNodeByStepId = new Map<string, string>();
   for (const step of objectiveSteps) {
     const id = `objective-step:${step.id}`;
     objectiveStepNodeById.set(step.id, id);
     addNode({
       id,
       stage: step.iterationOutcome === "failed" || step.iterationOutcome === "blocked" ? "failure" : step.decisionKind === "wait" ? "external_event" : "planning",
-      title: `Objective iteration ${step.stepNumber}`,
+      title: step.executionRole === "node"
+        ? `Logical node attempt ${step.planNodeId ?? step.stepNumber}.${step.attemptNumber ?? 1}`
+        : `Objective controller iteration ${step.stepNumber}`,
       summary: text(step.decisionReason, step.decisionKind ? humanize(step.decisionKind) : humanize(step.phase)),
       status: step.iterationOutcome ?? step.phase,
       occurredAt: iso(step.startedAt),
       sourceRefs: [sourceRef("work_objective_steps", step.id)],
       evidence: [evidence("work_objective_steps", step.id, iso(step.startedAt), step.inspectionHash ? "available" : "unavailable", step.inspectionHash)],
-      facts: sanitizeExecutionValue({ inspection: step.inspection, inspectionHash: step.inspectionHash, decision: step.decision, observation: step.observation, recoveryKind: step.recoveryKind, successVerification: step.successVerification, failure: step.failure }, viewer.role) as Record<string, unknown>,
+      facts: sanitizeExecutionValue({
+        objectiveRevision: step.objectiveRevision,
+        planRevisionId: step.planRevisionId,
+        planNodeId: step.planNodeId,
+        attemptNumber: step.attemptNumber,
+        executionRole: step.executionRole,
+        executionState: step.executionState,
+        claim: { owner: step.claimOwner, until: iso(step.claimUntil, "") || null, claimedAt: iso(step.claimedAt, "") || null },
+        recoveryParentStepId: step.recoveryParentStepId,
+        resourceKeys: step.resourceKeys,
+        budgetReservation: {
+          kind: step.budgetReservationKind,
+          estimatedCostMicros: step.estimatedCostReservationMicros,
+          reservedAt: iso(step.budgetReservedAt, "") || null,
+        },
+        inspection: step.inspection,
+        inspectionHash: step.inspectionHash,
+        decision: step.decision,
+        observation: step.observation,
+        recoveryKind: step.recoveryKind,
+        successVerification: step.successVerification,
+        failure: step.failure,
+      }, viewer.role) as Record<string, unknown>,
       entityRefs: [],
+    });
+    const plan = step.planRevisionId ? planNodeByRevisionId.get(step.planRevisionId) : undefined;
+    if (plan) addEdge({
+      from: plan,
+      to: id,
+      relation: "reserved_logical_attempt",
+      evidenceRefs: [`${sourceRef("work_objective_steps", step.id)}.plan_revision_id`, `${sourceRef("work_objective_steps", step.id)}.plan_node_id`, `${sourceRef("work_objective_steps", step.id)}.attempt_number`],
+      explanation: "The logical attempt is pinned to one immutable PlanRevision, PlanNode, Objective generation, and attempt number.",
+    });
+    const recoveryParent = step.recoveryParentStepId ? objectiveStepNodeById.get(step.recoveryParentStepId) : undefined;
+    if (recoveryParent) addEdge({
+      from: recoveryParent,
+      to: id,
+      relation: "explicit_retry_attempt",
+      evidenceRefs: [`${sourceRef("work_objective_steps", step.id)}.recovery_parent_step_id`],
+      explanation: "The retry is a distinct logical attempt that preserves its failed parent instead of overwriting it.",
     });
     for (const plannerId of objectivePlannerByStep.get(step.id) ?? []) addEdge({
       from: plannerId,
@@ -450,6 +619,78 @@ export async function causalReplayProjection(
       relation: "produced_objective_decision",
       evidenceRefs: [`${sourceRef("work_objective_planner_attempts", plannerId.slice("objective-planner:".length))}.objective_step_id`],
       explanation: "The objective planner attempt is durably bound to this exact objective step.",
+    });
+    const verification = record(step.verificationResult);
+    if (verification.version === 1 && ["verified", "divergent", "inconclusive"].includes(String(verification.state))) {
+      const verificationId = `verification-result:${step.id}`;
+      verificationNodeByStepId.set(step.id, verificationId);
+      addNode({
+        id: verificationId,
+        stage: verification.state === "divergent" ? "failure" : "verification",
+        title: `${humanize(String(verification.state))} verification result`,
+        summary: `${humanize(String(record(verification.subject).kind ?? "attempt"))} observation for attempt ${step.attemptNumber ?? 1}`,
+        status: String(verification.state),
+        occurredAt: iso(step.completedAt ?? step.startedAt),
+        sourceRefs: [`${sourceRef("work_objective_steps", step.id)}.verification_result`],
+        evidence: [evidence("work_objective_steps.verification_result", step.id, iso(step.completedAt ?? step.startedAt), "available", typeof verification.evidenceHash === "string" ? verification.evidenceHash : null)],
+        facts: sanitizeExecutionValue(verification, viewer.role) as Record<string, unknown>,
+        entityRefs: [],
+      });
+      addEdge({
+        from: id,
+        to: verificationId,
+        relation: "produced_verification_result",
+        evidenceRefs: [`${sourceRef("work_objective_steps", step.id)}.verification_result`],
+        explanation: "The exact logical attempt stores the explicit verified, divergent, or inconclusive result used for advancement.",
+      });
+    }
+  }
+
+  const workforceNodesByStep = new Map<string, string[]>();
+  for (const assignment of workforceAssignmentRows) {
+    const id = `workforce-assignment:${assignment.id}`;
+    if (assignment.objectiveStepId) workforceNodesByStep.set(assignment.objectiveStepId, [...(workforceNodesByStep.get(assignment.objectiveStepId) ?? []), id]);
+    addNode({
+      id,
+      stage: assignment.state === "failed" || assignment.state === "cancelled" || assignment.state === "reassigned" ? "failure" : "dependency",
+      title: `Workforce claim ${humanize(assignment.state)}`,
+      summary: `${assignment.capability} · physical attempt ${assignment.attempt} · logical attempt ${assignment.nodeAttempt ?? "legacy"}`,
+      status: assignment.state,
+      occurredAt: iso(assignment.startedAt ?? assignment.createdAt),
+      sourceRefs: [sourceRef("workforce_assignments", assignment.id)],
+      evidence: [evidence("workforce_assignments", assignment.id, iso(assignment.createdAt))],
+      facts: sanitizeExecutionValue({
+        planRevisionId: assignment.planRevisionId,
+        planNodeId: assignment.planNodeId,
+        objectiveRevision: assignment.objectiveRevision,
+        nodeAttempt: assignment.nodeAttempt,
+        agentProfileId: assignment.agentProfileId,
+        agentRevisionId: assignment.agentRevisionId,
+        capability: assignment.capability,
+        physicalAttempt: assignment.attempt,
+        leaseOwner: assignment.leaseOwner,
+        leaseUntil: iso(assignment.leaseUntil, "") || null,
+        previousAssignmentId: assignment.previousAssignmentId,
+        reassignmentReason: assignment.reassignmentReason,
+        failure: assignment.failure,
+      }, viewer.role) as Record<string, unknown>,
+      entityRefs: [],
+    });
+    const logicalAttempt = assignment.objectiveStepId ? objectiveStepNodeById.get(assignment.objectiveStepId) : undefined;
+    if (logicalAttempt) addEdge({
+      from: logicalAttempt,
+      to: id,
+      relation: "leased_to_physical_worker",
+      evidenceRefs: [`${sourceRef("workforce_assignments", assignment.id)}.objective_step_id`, `${sourceRef("workforce_assignments", assignment.id)}.node_attempt`],
+      explanation: "The physical worker lease is fenced to the exact durable logical PlanNode attempt.",
+    });
+    const previous = assignment.previousAssignmentId ? `workforce-assignment:${assignment.previousAssignmentId}` : undefined;
+    if (previous && nodeIds.has(previous)) addEdge({
+      from: previous,
+      to: id,
+      relation: "physically_reassigned",
+      evidenceRefs: [`${sourceRef("workforce_assignments", assignment.id)}.previous_assignment_id`],
+      explanation: "Physical reassignment preserves one logical attempt and an explicit predecessor claim.",
     });
   }
 
@@ -480,6 +721,11 @@ export async function causalReplayProjection(
         actionType: action.actionType,
         payload: action.payload,
         planId: action.planId,
+        planRevisionId: action.planRevisionId,
+        planNodeId: action.planNodeId,
+        objectiveStepId: action.objectiveStepId,
+        authorityDecisionId: action.authorityDecisionId,
+        authorityRevision: action.authorityRevision,
         groundedPayload: action.groundedPayload,
         compiledGraph: action.compiledGraph,
         expectedResult: projected?.intent.expectedResult ?? null,
@@ -499,6 +745,15 @@ export async function causalReplayProjection(
       explanation: "The action row stores the exact planner, objective-step, or instruction relationship that proposed it.",
     });
     else addMissing(`missing:action-origin:${action.id}`, iso(action.createdAt), `Action ${action.id} has no durable planner, objective-step, or instruction relationship.`, id);
+    if (action.objectiveStepId) {
+      for (const assignmentId of workforceNodesByStep.get(action.objectiveStepId) ?? []) addEdge({
+        from: assignmentId,
+        to: id,
+        relation: "materialized_claimed_plan_node",
+        evidenceRefs: [`${sourceRef("workforce_assignments", assignmentId.slice("workforce-assignment:".length))}.objective_step_id`, `${sourceRef("domain_actions", action.id)}.objective_step_id`],
+        explanation: "The claimed physical worker and DomainAction converge on the same exact logical PlanNode attempt.",
+      });
+    }
 
     const revision = action.policyId && action.policyVersion ? policyByIdentity.get(`${action.policyId}:${action.policyVersion}`) : undefined;
     if (revision) {
@@ -581,6 +836,14 @@ export async function causalReplayProjection(
       });
       addEdge({ from: authorityNodeByAction.get(action.id) ?? id, to: approvalId, relation: "required_approval", evidenceRefs: [`${sourceRef("authority_approval_requests", approval.id)}.authority_decision_id`, `${sourceRef("authority_approval_requests", approval.id)}.domain_action_id`], explanation: "The approval request references both the authority decision and exact consequence-bearing action." });
     }
+    const explicitVerification = action.objectiveStepId ? verificationNodeByStepId.get(action.objectiveStepId) : undefined;
+    if (explicitVerification) addEdge({
+      from: effectNodeByAction.get(action.id) ?? id,
+      to: explicitVerification,
+      relation: "established_attempt_verification",
+      evidenceRefs: [`${sourceRef("domain_actions", action.id)}.objective_step_id`, ...(effect ? [sourceRef("business_effects", effect.id)] : [])],
+      explanation: "Canonical action/effect evidence feeds the explicit VerificationResult on this exact logical attempt.",
+    });
   }
 
   for (const action of actions) {
@@ -590,6 +853,60 @@ export async function causalReplayProjection(
       if (from && to) addEdge({ from, to, relation: "must_complete_before", evidenceRefs: [`${sourceRef("domain_actions", action.id)}.depends_on`], explanation: "The dependency is stored on the dependent DomainAction; parallel actions remain unconnected." });
       else addMissing(`missing:dependency:${action.id}:${dependencyId}`, iso(action.createdAt), `Dependency ${dependencyId} referenced by action ${action.id} is unavailable in this Work.`, to);
     }
+  }
+
+  const recoveryNodeById = new Map<string, string>();
+  for (const recovery of recoveryDecisionRows) {
+    const id = `recovery-decision:${recovery.id}`;
+    recoveryNodeById.set(recovery.id, id);
+    addNode({
+      id,
+      stage: recovery.decision === "terminal_failure" ? "failure" : recovery.decision === "compensate" ? "compensation" : "recovery",
+      title: `Recovery decision: ${humanize(recovery.decision)}`,
+      summary: recovery.reason,
+      status: recovery.decision,
+      occurredAt: iso(recovery.createdAt),
+      sourceRefs: [sourceRef("work_recovery_decisions", recovery.id)],
+      evidence: [evidence("work_recovery_decisions", recovery.id, iso(recovery.createdAt), "available", recovery.decisionKey)],
+      facts: sanitizeExecutionValue({
+        cause: recovery.cause,
+        objectiveRevision: recovery.objectiveRevision,
+        planRevisionId: recovery.planRevisionId,
+        planNodeId: recovery.planNodeId,
+        objectiveStepId: recovery.objectiveStepId,
+        attemptNumber: recovery.attemptNumber,
+        recoveryParentStepId: recovery.recoveryParentStepId,
+        authorityDecisionId: recovery.authorityDecisionId,
+        domainActionId: recovery.domainActionId,
+        businessEffectId: recovery.businessEffectId,
+        verificationResult: recovery.verificationResult,
+        context: recovery.context,
+        decisionKey: recovery.decisionKey,
+      }, viewer.role) as Record<string, unknown>,
+      entityRefs: [],
+    });
+    const verification = recovery.objectiveStepId ? verificationNodeByStepId.get(recovery.objectiveStepId) : undefined;
+    const effect = recovery.domainActionId ? effectNodeByAction.get(recovery.domainActionId) : undefined;
+    const action = recovery.domainActionId ? actionNodeById.get(recovery.domainActionId) : undefined;
+    const attempt = recovery.objectiveStepId ? objectiveStepNodeById.get(recovery.objectiveStepId) : undefined;
+    const parentAttempt = recovery.recoveryParentStepId ? objectiveStepNodeById.get(recovery.recoveryParentStepId) : undefined;
+    const upstream = verification ?? effect ?? action ?? attempt ?? parentAttempt ?? planNodeByRevisionId.get(recovery.planRevisionId);
+    if (upstream) addEdge({
+      from: upstream,
+      to: id,
+      relation: "required_deterministic_recovery",
+      evidenceRefs: [sourceRef("work_recovery_decisions", recovery.id), ...(recovery.objectiveStepId ? [`${sourceRef("work_recovery_decisions", recovery.id)}.objective_step_id`] : [])],
+      explanation: "The append-only RecoveryDecision preserves the exact attempt/effect/verification facts that determined its next safe transition.",
+    });
+    const child = planRevisions.find((candidate) => candidate.parentRevisionId === recovery.planRevisionId);
+    const childNode = child ? planNodeByRevisionId.get(child.id) : undefined;
+    if (childNode) addEdge({
+      from: id,
+      to: childNode,
+      relation: "caused_child_plan_revision",
+      evidenceRefs: [sourceRef("work_recovery_decisions", recovery.id), `${sourceRef("work_plan_revisions", child!.id)}.parent_revision_id`],
+      explanation: "Replanning creates a child PlanRevision while preserving the recovery cause and parent history.",
+    });
   }
 
   const commandNodeByRun = new Map<string, string>();
@@ -636,10 +953,11 @@ export async function causalReplayProjection(
     if (upstream) addEdge({ from: upstream, to: nodeId, relation: "authorized_dispatch", evidenceRefs: [evidenceRef], explanation: "The execution record carries the exact action foreign key; approval/authority remains a separate preceding fact." });
   };
   for (const operation of extra.externalRows) {
-    const id = `external-operation:${operation.domainActionId}:${operation.operationKey}`;
-    const ref = `external_operations:${operation.domainActionId}:${operation.operationKey}`;
+    const ownerRef = operation.domainActionId ?? `${operation.ownerType}:${operation.ownerKey}`;
+    const id = `external-operation:${ownerRef}:${operation.operationKey}`;
+    const ref = `external_operations:${ownerRef}:${operation.operationKey}`;
     addNode({ id, stage: operation.status === "failed" || operation.status === "unknown" ? "failure" : "provider", title: operation.provider ? `${humanize(operation.provider)} operation` : "External operation", summary: `${operation.operationKey} · ${humanize(operation.status)}`, status: operation.status, occurredAt: iso(operation.createdAt), sourceRefs: [ref], evidence: [evidence("external_operations", ref, iso(operation.updatedAt), operation.response === null ? "unavailable" : "available", operation.requestHash)], facts: sanitizeExecutionValue({ provider: operation.provider, operationKey: operation.operationKey, requestHash: operation.requestHash, response: operation.response }, viewer.role) as Record<string, unknown>, entityRefs: [] });
-    attachProvider(operation.domainActionId, id, `${ref}.domain_action_id`);
+    if (operation.domainActionId) attachProvider(operation.domainActionId, id, `${ref}.domain_action_id`);
   }
   for (const delivery of extra.deliveryRows) {
     const id = `delivery:${delivery.id}`;
@@ -695,7 +1013,7 @@ export async function causalReplayProjection(
   }
   for (const wait of eventWaits) {
     const id = `event-wait:${wait.id}`;
-    addNode({ id, stage: wait.status === "timed_out" ? "failure" : "external_event", title: `Wait for ${humanize(wait.expectedEventType)}`, summary: wait.conditionSummary, status: wait.status, occurredAt: iso(wait.satisfiedAt ?? wait.timedOutAt ?? wait.createdAt), sourceRefs: [sourceRef("work_event_waits", wait.id)], evidence: [evidence("work_event_waits", wait.id, iso(wait.createdAt))], facts: { matchedEventId: wait.matchedEventId }, entityRefs: [] });
+    addNode({ id, stage: wait.status === "timed_out" ? "failure" : "external_event", title: `Wait for ${humanize(wait.expectedEventType)}`, summary: wait.conditionSummary, status: wait.status, occurredAt: iso(wait.satisfiedAt ?? wait.timedOutAt ?? wait.createdAt), sourceRefs: [sourceRef("work_event_waits", wait.id)], evidence: [evidence("work_event_waits", wait.id, iso(wait.createdAt))], facts: { matchedEventId: wait.matchedEventId, planRevisionId: wait.planRevisionId, planNodeId: wait.planNodeId, objectiveRevision: wait.objectiveRevision }, entityRefs: [] });
     const step = objectiveStepNodeById.get(wait.objectiveStepId);
     if (step) addEdge({ from: step, to: id, relation: "paused_for_exact_event", evidenceRefs: [`${sourceRef("work_event_waits", wait.id)}.objective_step_id`], explanation: "The wait contract is owned by the objective step that paused." });
   }
@@ -763,6 +1081,7 @@ export async function causalReplayProjection(
   }
 
   const actionEventsTruncated = extra.actionEventsPlus.length > ACTION_EVENT_LIMIT;
+  const instructionEventsTruncated = extra.instructionEventsTruncated;
   for (const event of extra.actionEventsPlus.slice(0, ACTION_EVENT_LIMIT).filter((event) => /fail|error|timeout|blocked|unknown|recover|retry|reconcil|gate|confirm|reject|approv|escalat/i.test(event.step))) {
     const id = `action-event:${event.id}`;
     const stage = actionEventStage(event.step);
@@ -789,6 +1108,10 @@ export async function causalReplayProjection(
     addNode({ id, stage: query.status === "failed" ? "failure" : "evidence", title: humanize(query.intent), summary: `${query.rowCount} canonical row${query.rowCount === 1 ? "" : "s"} · ${humanize(query.status)}`, status: query.status, occurredAt: iso(query.completedAt ?? query.startedAt), sourceRefs: [sourceRef("work_query_executions", query.id)], evidence: [evidence("work_query_executions", query.id, iso(query.startedAt))], facts: sanitizeExecutionValue({ resultSummary: query.resultSummary }, viewer.role) as Record<string, unknown>, entityRefs: [] });
     const input = query.workInputId ? inputNodeById.get(query.workInputId) : undefined;
     if (input) addEdge({ from: input, to: id, relation: "executed_read", evidenceRefs: [`${sourceRef("work_query_executions", query.id)}.work_input_id`], explanation: "The deterministic query receipt is durably linked to the Work input that requested it." });
+  }
+
+  for (const table of extra.truncatedTables) {
+    missing.push(`Causal replay was bounded at ${table === "computer_artifacts" ? ARTIFACT_LIMIT : table === "action_log" || table === "instruction_events" ? ACTION_EVENT_LIMIT : RELATED_ROW_LIMIT} rows for ${table}; request a narrower Work or dedicated paginated read for a complete history.`);
   }
 
   for (const event of workEvents.filter((event) => /fail|block|recover|reconcil|cancel|interrupted/i.test(event.eventType))) {
@@ -818,6 +1141,11 @@ export async function causalReplayProjection(
   });
   const provenEdges = finalEdges.filter((edge) => edge.certainty === "proven").length;
   const missingEdges = finalEdges.filter((edge) => edge.certainty === "missing").length;
+  if (!aggregate.read.complete) {
+    for (const table of aggregate.read.truncatedTables) {
+      addMissing(`missing:bounded-read:${table}`, iso(work.updatedAt), `Causal replay was bounded at ${aggregate.read.limit} rows for ${table}; request a narrower Work or dedicated paginated read for a complete history.`);
+    }
+  }
   const uniqueMissing = [...new Set(missing)];
   const legacyIncomplete = inputs.some((input) => !input.contextSnapshot) || plannerAttempts.some((attempt) => !attempt.decisionContextSnapshot);
   const finalizedReceipts = receipts.filter((receipt) => receipt.finalizedAt).length;
@@ -856,8 +1184,8 @@ export async function causalReplayProjection(
     completeness: { status: uniqueMissing.length === 0 ? "complete" : legacyIncomplete ? "legacy_incomplete" : "partial", provenEdges, missingEdges, missing: uniqueMissing },
     viewer: { role: viewer.role, evidenceVisibility: "full" },
     readOnlyGuarantee: { source: "durable_projection", method: "GET", mutationControlsIncluded: false, sideEffectsPossible: false },
-    limits: { nodes: NODE_LIMIT, edges: EDGE_LIMIT, actionEvents: ACTION_EVENT_LIMIT, computerArtifacts: ARTIFACT_LIMIT },
-    truncated: { nodes: nodesTruncated, edges: edgesTruncated, actionEvents: actionEventsTruncated, computerArtifacts: artifactsTruncated },
+    limits: { nodes: NODE_LIMIT, edges: EDGE_LIMIT, actionEvents: ACTION_EVENT_LIMIT, instructionEvents: ACTION_EVENT_LIMIT, computerArtifacts: ARTIFACT_LIMIT },
+    truncated: { nodes: nodesTruncated, edges: edgesTruncated, actionEvents: actionEventsTruncated, instructionEvents: instructionEventsTruncated, computerArtifacts: artifactsTruncated },
     asOf: new Date().toISOString(),
   };
 }

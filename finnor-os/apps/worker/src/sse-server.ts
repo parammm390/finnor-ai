@@ -10,7 +10,7 @@ import "dotenv/config";
 import type http from "node:http";
 import { initObservability, getLogger } from "@finnor/tools";
 import { startJarvisEventListener, stopJarvisEventListener, onJarvisEvent } from "./sse/listener";
-import { createSseGateway } from "./sse/gateway";
+import { createSseGateway, drainSseConnections } from "./sse/gateway";
 import { onJarvisEventMarkProjectionsDirty } from "@finnor/projections";
 
 const isMain = process.argv[1]?.endsWith("sse-server.ts") || process.argv[1]?.endsWith("sse-server.js");
@@ -27,6 +27,7 @@ export async function startSseServer(port: number, signal?: AbortSignal): Promis
   // job completing). Binding "0.0.0.0" explicitly is the documented fix.
   await new Promise<void>((resolve) => server.listen(port, "0.0.0.0", resolve));
   signal?.addEventListener("abort", () => {
+    drainSseConnections();
     server.close();
     void stopJarvisEventListener();
   });

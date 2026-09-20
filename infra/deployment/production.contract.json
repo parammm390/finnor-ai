@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "environment": "production",
   "canonicalGit": {
     "remote": "origin",
@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0131_private_equity_release_baseline.sql",
+    "requiredMigrationHead": "0138_scope3_compute_plane.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -18,7 +18,7 @@
       "FINNOR_ENVIRONMENT",
       "FINNOR_RELEASE_SOURCE"
     ],
-    "requiredComponents": ["frontend", "api", "worker", "supplierCanaryApp", "supplierCanaryAuth"],
+    "requiredComponents": ["frontend", "api", "computeRealtime", "computeInteractive", "computeBackground", "computeHeavy", "supplierCanaryApp", "supplierCanaryAuth"],
     "concurrencyGroup": "finnor-production-release",
     "mutationAuthorization": {
       "schema": "finnor-production-mutation-authorization.v1",
@@ -32,7 +32,10 @@
         "vercel-environment-update",
         "vercel-production-deploy",
         "database-migrate",
-        "aws-service-deploy"
+        "aws-compute-stack-deploy",
+        "compute-cutover-activate",
+        "compute-cutover-finalize",
+        "product-authority-update"
       ]
     }
   },
@@ -86,7 +89,7 @@
       "desiredCount": 1,
       "cpu": 512,
       "memory": 1024,
-      "autoscaling": false,
+      "autoscaling": true,
       "fargateSpot": false,
       "natGateway": false,
       "secretMap": {
@@ -102,10 +105,23 @@
       "sseGatewayPort": 8090,
       "sseGatewayUrl": "https://realtime.finnorai.com"
     },
+    "computePlane": {
+      "schemaVersion": 1,
+      "imageRepository": "finnor-worker",
+      "clusterName": "finnor-production",
+      "metricNamespace": "FINNOR/ComputePlane",
+      "classes": {
+        "REALTIME": { "serviceName": "finnor-realtime", "heartbeatService": "compute-realtime", "taskFamily": "finnor-realtime", "containerName": "finnor-realtime", "cpu": 512, "memory": 1024, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 15, "backlogPerTaskTarget": 2, "ingress": "sse-alb", "taskRoleName": "finnor-realtime-task" },
+        "INTERACTIVE": { "serviceName": "finnor-interactive", "heartbeatService": "compute-interactive", "taskFamily": "finnor-interactive", "containerName": "finnor-interactive", "cpu": 1024, "memory": 2048, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 3, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 60, "backlogPerTaskTarget": 4, "ingress": "none", "taskRoleName": "finnor-worker-task" },
+        "BACKGROUND": { "serviceName": "finnor-background", "heartbeatService": "compute-background", "taskFamily": "finnor-background", "containerName": "finnor-background", "cpu": 512, "memory": 1024, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 900, "backlogPerTaskTarget": 8, "ingress": "none", "taskRoleName": "finnor-background-task" },
+        "HEAVY": { "serviceName": "finnor-heavy", "heartbeatService": "compute-heavy", "taskFamily": "finnor-heavy", "containerName": "finnor-heavy", "cpu": 2048, "memory": 4096, "workerConcurrency": 1, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 1800, "backlogPerTaskTarget": 1, "ingress": "none", "taskRoleName": "finnor-heavy-task" }
+      },
+      "capacityProvenance": "Scope-3 engineering defaults pending load and live AWS certification; not product SLOs or provider quotas"
+    },
     "orchestrator": {
-      "mode": "embedded-worker",
+      "mode": "embedded-compute-interactive",
       "separateDeployment": false,
-      "releaseIdentity": "worker",
+      "releaseIdentity": "computeInteractive",
       "requiredCapability": "orchestration"
     },
     "supplierCanaryApp": {

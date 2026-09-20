@@ -286,6 +286,9 @@ export interface PlanNodeBase {
   expectedEffects: CandidateExpectedEffect[];
   observation: ObservationSpec;
   recovery: RecoverySpec;
+  /** Deterministic compiler facts used by concurrent execution reservations. */
+  estimatedCostMicros?: number | null;
+  estimatedLatencyMs?: number | null;
   semanticHash: string;
 }
 export interface PlanQueryNode extends PlanNodeBase { kind: "query"; request: Record<string, unknown> }

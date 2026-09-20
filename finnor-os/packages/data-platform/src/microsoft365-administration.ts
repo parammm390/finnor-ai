@@ -1050,6 +1050,7 @@ export async function completeMicrosoftGraphAdminConsent(input: {
         if (verified) {
           const supportsNotifications = microsoft365SourceCapability(scope.sourceKind).supportsChangeNotifications;
           await db.insert(jobs).values({
+            tenantId: request!.tenant_id,
             type: supportsNotifications ? "maintain_integration_subscriptions" : "sync_source",
             payload: {
               tenantId: request!.tenant_id,
@@ -1339,6 +1340,7 @@ export async function configureMicrosoft365Source(input: ConfigureMicrosoftSourc
       if (verified) {
         const subscriptionRequired = descriptor.supportsChangeNotifications;
         await db.insert(jobs).values({
+          tenantId: input.tenantId,
           type: subscriptionRequired ? "maintain_integration_subscriptions" : "sync_source",
           payload: {
             tenantId: input.tenantId,
@@ -1451,6 +1453,7 @@ export async function disableMicrosoft365Source(input: {
         metadata: { sourceScopeId, sourceKind: loaded.source_kind, authorityDecisionId: access.authorityDecisionId },
       });
       await db.insert(jobs).values({
+        tenantId: input.tenantId,
         type: "maintain_integration_subscriptions",
         payload: {
           tenantId: input.tenantId,

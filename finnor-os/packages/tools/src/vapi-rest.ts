@@ -1,7 +1,8 @@
 // Vapi REST client for outbound calls (voice confirmations + spoken failure alerts).
-// Wrapped like every other integration: timeout, retry, typed errors — no bare fetch.
+// The ToolRegistry wrapper owns timeout/retry/invocation audit. This adapter performs
+// exactly one HTTP request; direct legacy callers receive one structured outcome.
 
-import { wrappedCall, type ToolCallResult } from "./wrap";
+import type { ToolCallResult } from "./wrap";
 import { IntegrationError } from "./errors";
 import type { TenantCredentialContext } from "@finnor/security";
 
@@ -21,7 +22,7 @@ export interface OutboundCallOpts {
 }
 
 export async function placeVapiCall(opts: OutboundCallOpts, context: VapiCredentialContext): Promise<ToolCallResult> {
-  return wrappedCall("vapi", async () => {
+  try {
     if (context.tenantId !== opts.tenantId) throw new IntegrationError("vapi", "Vapi credential context tenant mismatch", false);
     const { apiKey, phoneNumberId } = context.credentials;
     const allowedAssistantIds = new Set([context.credentials.assistantId, ...Object.values(context.credentials.assistantIds ?? {})]);
@@ -46,12 +47,24 @@ export async function placeVapiCall(opts: OutboundCallOpts, context: VapiCredent
           ...(opts.variableValues ? { variableValues: opts.variableValues } : {}),
         },
       }),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       throw new IntegrationError("vapi", `create call failed (${res.status})`, res.status >= 500);
     }
-    return (await res.json()) as Record<string, unknown>;
-  });
+    return { ok: true, output: (await res.json()) as Record<string, unknown> };
+  } catch (error) {
+    const normalized = error instanceof IntegrationError
+      ? error
+      : new IntegrationError("vapi", error instanceof Error ? error.message : "create call failed", false, "unknown_outcome");
+    return {
+      ok: false,
+      output: {},
+      error: normalized.message,
+      integrationUnavailable: true,
+      errorKind: normalized.kind,
+    };
+  }
 }
 
 export interface VapiCallRecord extends Record<string, unknown> {

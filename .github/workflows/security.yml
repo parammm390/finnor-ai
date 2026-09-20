@@ -7,6 +7,9 @@ on:
         required: false
         type: boolean
         default: true
+  push:
+    branches: [main]
+    paths: ["package.json", "package-lock.json", "finnor-os/**", ".github/workflows/security.yml"]
 permissions:
   actions: read
   contents: read
@@ -24,10 +27,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   osv:
     name: osv-scanner
-    if: ${{ inputs.run_dependency_scan }}
+    if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
     # v2 ships reusable workflows, not a root action.yml. Calling the root as an
     # action makes GitHub reject it before the dependency scan begins.
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2
     with:
       scan-args: |-
         --lockfile=package-lock.json

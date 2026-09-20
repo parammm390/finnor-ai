@@ -111,6 +111,22 @@ export async function canApprove(ctx: TenantContext, actionType: string): Promis
   return decision.outcome === "allowed";
 }
 
+/** Durable authorization evidence for consequential runtime controls. Callers must
+ * persist the returned decision id with the control mutation; a boolean-only role
+ * check is insufficient for redrive/replay/discard/reconciliation audit. */
+export async function authorizeRuntimeControl(
+  ctx: TenantContext,
+  resourceType: "workflow_run" | "workflow_step" | "dead_letter" | "reconciliation_case" | "compensation_case",
+  resourceId: string,
+) {
+  return evaluateAuthority(ctx, {
+    operation: "approval",
+    capability: "approve:*",
+    resource: { type: resourceType, id: resourceId },
+    risk: "medium",
+  });
+}
+
 /** Projection-only capability discovery. Unlike canApprove(), this records no
  * decision; the corresponding mutation route always re-authorizes durably. */
 export async function canApproveReadOnly(ctx: TenantContext, actionType: string): Promise<boolean> {

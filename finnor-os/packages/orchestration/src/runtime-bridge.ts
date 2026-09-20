@@ -14,11 +14,10 @@ import {
   type Db,
 } from "@finnor/db";
 import { submitCommand } from "@finnor/workflow-runtime";
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { BusinessEffectSet, DraftAction, ExecutionResult, ErrorKind } from "@finnor/shared-types";
 import type { ToolRegistry } from "@finnor/tools";
 import type { DomainEnginePlugin } from "@finnor/plugins-shared";
-import { isInstructionCancellationPayload } from "./instruction-trace";
 
 export interface ExecutePluginViaRuntimeParams {
   tenantId: string;
@@ -70,16 +69,24 @@ export async function assertActionNotCancelledTx(
 ): Promise<void> {
   if (params.instructionId) {
     await db.execute(sql`SELECT id FROM ${instructionSessions} WHERE ${instructionSessions.id} = ${params.instructionId} AND ${instructionSessions.tenantId} = ${params.tenantId} FOR UPDATE`);
-    const cancellationRows = await db
-      .select({ payload: instructionEvents.payload })
+    const [cancellation] = await db
+      .select({ id: instructionEvents.id })
       .from(instructionEvents)
       .where(and(
         eq(instructionEvents.tenantId, params.tenantId),
         eq(instructionEvents.instructionId, params.instructionId),
         eq(instructionEvents.phase, "cancelled"),
+        // Keep the exact historical cancellation predicate in PostgreSQL. The
+        // previous implementation fetched up to 100 JSON payloads and classified
+        // them in JavaScript, turning an append-only trace into an egress source.
+        sql`(
+          jsonb_typeof(${instructionEvents.payload}->'actionId') IS DISTINCT FROM 'string'
+          OR ${instructionEvents.payload}->>'fence' = 'true'
+          OR ${instructionEvents.payload}->>'canonical' = 'true'
+        )`,
       ))
-      .limit(100);
-    if (cancellationRows.some((row) => isInstructionCancellationPayload(row.payload))) {
+      .limit(1);
+    if (cancellation) {
       throw new ActionCancellationConflictError();
     }
   }
@@ -155,7 +162,7 @@ export async function authorizeActionExecutionTx(
       eq(actionLog.tenantId, params.tenantId),
       eq(actionLog.domainActionId, params.actionId),
       eq(actionLog.step, "confirmed"),
-    )).limit(1);
+    )).orderBy(desc(actionLog.timestamp), desc(actionLog.id)).limit(1);
     const output = approval?.output && typeof approval.output === "object" ? approval.output as Record<string, unknown> : {};
     if (!approval || output.businessEffectId !== effect.id || output.authorizedEffectHash !== effect.semanticHash) {
       throw new Error("Durable execution refused: final approval did not authorize this exact Business Effect");

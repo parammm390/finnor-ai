@@ -18,6 +18,7 @@ describe("tool execution framework (§11–12, §22)", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({ phone: z.string() }),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       run,
     });
     const res = await reg.call("t", { phone: 42 });
@@ -33,6 +34,7 @@ describe("tool execution framework (§11–12, §22)", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       retryPolicy: { attempts: 3, baseDelayMs: 1, timeoutMs: 1000 },
       run,
     });
@@ -50,6 +52,7 @@ describe("tool execution framework (§11–12, §22)", () => {
       description: "",
       integration: "test",
       inputSchema: z.object({}),
+      execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
       retryPolicy: { attempts: 3, baseDelayMs: 1, timeoutMs: 1000 },
       run,
     });

@@ -281,7 +281,16 @@ export async function POST(req: Request): Promise<Response> {
     }
     let result: Awaited<ReturnType<ReturnType<typeof getOrchestrator>["handleInstructionResult"]>>;
     try {
-      if (instructionRouteDecision.route === "ATOMIC_EFFECT" || instructionRouteDecision.route === "CONVERSATION") await enforceBatchBackpressure();
+      if (instructionRouteDecision.route === "ATOMIC_EFFECT" || instructionRouteDecision.route === "CONVERSATION") {
+        // This Work is already durably accepted. Pressure may affect the worker or
+        // governed provider schedule, but it must never turn into a 429/drop here.
+        await enforceBatchBackpressure({
+          tenantId: ctx.tenantId,
+          workloadClass: "INTERACTIVE",
+          phase: "after_acceptance",
+          obligationKind: "required",
+        });
+      }
       result = await getOrchestrator().handleInstructionResult(body.data.instruction, humanCtx, {
         sessionId: body.data.sessionId,
         instructionId: received.instructionId,

@@ -35,7 +35,7 @@ async function dbUp(): Promise<boolean> {
 }
 const available = await dbUp();
 
-describe.skipIf(!available)("historical field-service conversation context kernel", () => {
+describe.skipIf(!available)("Phase 6 authenticated-employee conversation context kernel", () => {
   const priorCredentials = {
     GMAIL_USER: process.env.GMAIL_USER,
     GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,

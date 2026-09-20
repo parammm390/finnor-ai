@@ -449,6 +449,12 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       description: "PE4 deterministic no-egress mail emulator",
       integration: "gmail",
       inputSchema: z.object({ tenantId: z.string().uuid(), to: z.string().email(), subject: z.string(), body: z.string() }).passthrough(),
+      execution: {
+        effect: "consequential",
+        retrySafety: "repeatable",
+        idempotency: { mode: "inherently_idempotent" },
+        verification: "acknowledgement",
+      },
       piiAllowlist: ["tenantId", "to", "subject", "body"],
       retryPolicy: { attempts: 1, baseDelayMs: 1, timeoutMs: 1_000 },
       async run(input) {

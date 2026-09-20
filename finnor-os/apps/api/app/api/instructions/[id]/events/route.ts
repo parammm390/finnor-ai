@@ -5,7 +5,7 @@
 // than silently returning an empty list, so the poller can tell "nothing new yet"
 // apart from "this id isn't yours."
 
-import { withTenant, instructionSessions, instructionEvents } from "@finnor/db";
+import { MAX_INSTRUCTION_EVENT_PAGE, withTenant, instructionSessions, instructionEvents } from "@finnor/db";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { requireContext, errorResponse, AuthError } from "../../../../../lib/auth";
 
@@ -19,20 +19,35 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (afterParam && (!Number.isInteger(after) || after < 0)) {
       throw new AuthError("after must be a non-negative integer", 400);
     }
+    const limitParam = url.searchParams.get("limit");
+    const limit = limitParam === null ? MAX_INSTRUCTION_EVENT_PAGE : Number(limitParam);
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INSTRUCTION_EVENT_PAGE) {
+      throw new AuthError(`limit must be an integer from 1 to ${MAX_INSTRUCTION_EVENT_PAGE}`, 400);
+    }
 
     const [session] = await withTenant(ctx.tenantId, (db) =>
-      db.select({ id: instructionSessions.id }).from(instructionSessions).where(and(eq(instructionSessions.id, id), eq(instructionSessions.tenantId, ctx.tenantId))),
+      db.select({ id: instructionSessions.id }).from(instructionSessions).where(and(eq(instructionSessions.id, id), eq(instructionSessions.tenantId, ctx.tenantId))).limit(1),
     );
     if (!session) return Response.json({ error: "Instruction not found" }, { status: 404 });
 
-    const rows = await withTenant(ctx.tenantId, (db) =>
+    const rowsPlus = await withTenant(ctx.tenantId, (db) =>
       db
         .select({ seq: instructionEvents.seq, phase: instructionEvents.phase, payload: instructionEvents.payload, createdAt: instructionEvents.createdAt })
         .from(instructionEvents)
         .where(and(eq(instructionEvents.instructionId, id), eq(instructionEvents.tenantId, ctx.tenantId), gt(instructionEvents.seq, after)))
-        .orderBy(asc(instructionEvents.seq)),
+        .orderBy(asc(instructionEvents.seq))
+        .limit(limit + 1),
     );
-    return Response.json({ events: rows });
+    const hasMore = rowsPlus.length > limit;
+    const rows = hasMore ? rowsPlus.slice(0, limit) : rowsPlus;
+    return Response.json({
+      events: rows,
+      page: {
+        limit,
+        hasMore,
+        nextAfter: hasMore ? rows.at(-1)?.seq ?? after : null,
+      },
+    });
   } catch (err) {
     return errorResponse(err);
   }

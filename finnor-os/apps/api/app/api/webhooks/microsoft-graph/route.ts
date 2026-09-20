@@ -261,13 +261,14 @@ async function durableEnqueueMany(
 ): Promise<void> {
   if (wakes.length === 0) return;
   await client.query(
-    `INSERT INTO finnor_os.jobs(type,payload,idempotency_key,lane,priority)
-     SELECT wake.type,wake.payload,wake.idempotency_key,'interactive',wake.priority
+    `INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority)
+     SELECT wake.tenant_id::uuid,wake.type,wake.payload,wake.idempotency_key,'interactive',wake.priority
        FROM jsonb_to_recordset($1::jsonb)
-         AS wake(type text,payload jsonb,idempotency_key text,priority integer)
+         AS wake(tenant_id text,type text,payload jsonb,idempotency_key text,priority integer)
      ON CONFLICT (idempotency_key) DO NOTHING`,
     [JSON.stringify(wakes.map((wake) => ({
       type: wake.type,
+      tenant_id: wake.payload.tenantId,
       payload: wake.payload,
       idempotency_key: wake.idempotencyKey,
       priority: wake.priority,

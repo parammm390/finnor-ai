@@ -1,4 +1,5 @@
 import type { MicrosoftGraphAuthContext } from "@finnor/security";
+import { withGovernedProviderInvocation } from "@finnor/db";
 import { randomUUID } from "node:crypto";
 import { acquireMicrosoftGraphAccessToken, clearMicrosoftGraphTokenCache } from "./auth";
 import { MicrosoftGraphError, retryAfterMilliseconds } from "./errors";
@@ -20,6 +21,10 @@ export interface MicrosoftGraphRequest {
   timeoutMs?: number;
   maxResponseBytes?: number;
   allowedOpaquePath?: (url: URL) => boolean;
+  /** A second authenticated HTTP request is safe by default only for reads. A
+   * consequential caller must instrument a new physical invocation before opting
+   * into mutation retry. */
+  allowAuthRetry?: boolean;
 }
 
 export interface MicrosoftGraphResponse<T> {
@@ -28,6 +33,39 @@ export interface MicrosoftGraphResponse<T> {
   requestId?: string;
   clientRequestId: string;
   headers: Headers;
+}
+
+/**
+ * Optional durable audit boundary for consequential Graph mutations. The client
+ * deliberately exposes no URL or body to the hook: callers bind immutable intent
+ * before constructing the client, while this hook accounts for every physical
+ * HTTP request (including auth retries and upload redirects).
+ */
+export interface MicrosoftGraphMutationAudit {
+  prepare(input: {
+    operation: string;
+    method: Exclude<NonNullable<MicrosoftGraphRequest["method"]>, "GET">;
+    clientRequestId: string;
+  }): Promise<string>;
+  markRequestMayHaveLeft(handle: string): Promise<void>;
+  acknowledge(handle: string, input: {
+    operation: string;
+    status: number;
+    clientRequestId: string;
+    requestId?: string;
+  }): Promise<void>;
+  fail(handle: string, input: {
+    operation: string;
+    status: number | null;
+    clientRequestId: string;
+    kind: string;
+    message: string;
+    definitePreDispatch: boolean;
+    definiteRejection: boolean;
+    /** A transparent auth retry is another physical request, not a terminal
+     * logical-operation failure. */
+    terminalForLogicalOperation: boolean;
+  }): Promise<void>;
 }
 
 interface SentGraphResponse {
@@ -75,7 +113,11 @@ function controlledHeaders(request: MicrosoftGraphRequest, token: string, client
   return headers;
 }
 
-async function boundedBytes(response: Response, limit: number): Promise<Uint8Array> {
+function withCapacitySignal<T extends { signal?: AbortSignal }>(input: T, capacitySignal: AbortSignal): T {
+  return { ...input, signal: input.signal ? AbortSignal.any([input.signal, capacitySignal]) : capacitySignal };
+}
+
+async function boundedBytes(response: Response, limit: number, timeoutMs = 60_000, signal?: AbortSignal): Promise<Uint8Array> {
   const declared = Number(response.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > limit) {
     throw new MicrosoftGraphError("invalid_response", "Microsoft Graph response exceeded the configured size bound", response.status, false);
@@ -84,9 +126,20 @@ async function boundedBytes(response: Response, limit: number): Promise<Uint8Arr
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let length = 0;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new MicrosoftGraphError("provider_down", "Microsoft Graph response body timed out", response.status, true)), Math.min(Math.max(timeoutMs, 1_000), 60_000));
+  });
+  let onAbort: (() => void) | undefined;
+  const aborted = new Promise<never>((_, reject) => {
+    if (!signal) return;
+    onAbort = () => reject(signal.reason ?? new DOMException("Graph response aborted", "AbortError"));
+    if (signal.aborted) onAbort();
+    else signal.addEventListener("abort", onAbort, { once: true });
+  });
   try {
     while (true) {
-      const chunk = await reader.read();
+      const chunk = await Promise.race([reader.read(), timedOut, aborted]);
       if (chunk.done) break;
       length += chunk.value.byteLength;
       if (length > limit) {
@@ -95,7 +148,12 @@ async function boundedBytes(response: Response, limit: number): Promise<Uint8Arr
       }
       chunks.push(chunk.value);
     }
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    throw error;
   } finally {
+    if (timeout) clearTimeout(timeout);
+    if (onAbort) signal?.removeEventListener("abort", onAbort);
     reader.releaseLock();
   }
   const output = new Uint8Array(length);
@@ -150,11 +208,23 @@ function graphFailure(response: Response, bytes: Uint8Array): MicrosoftGraphErro
 export class MicrosoftGraphClient {
   constructor(
     private readonly auth: MicrosoftGraphAuthContext,
-    private readonly options: { fetch?: typeof fetch; logger?: MicrosoftGraphLogger } = {},
+    private readonly options: {
+      fetch?: typeof fetch;
+      logger?: MicrosoftGraphLogger;
+      mutationAudit?: MicrosoftGraphMutationAudit;
+    } = {},
   ) {}
 
   invalidateToken(): void {
     clearMicrosoftGraphTokenCache(this.auth.cacheKey);
+  }
+
+  private governed<T>(operation: string, invoke: (capacitySignal: AbortSignal) => Promise<T>): Promise<T> {
+    return withGovernedProviderInvocation({
+      provider: "microsoft-graph",
+      tenantId: this.auth.tenantId,
+      ownerId: `microsoft-graph:${operation}:${randomUUID()}`,
+    }, invoke);
   }
 
   private async send(request: MicrosoftGraphRequest, refreshAttempted: boolean): Promise<SentGraphResponse> {
@@ -162,12 +232,38 @@ export class MicrosoftGraphClient {
     const method = request.method ?? "GET";
     const clientRequestId = randomUUID();
     const token = await acquireMicrosoftGraphAccessToken(this.auth, refreshAttempted);
+    const mutationMethod = method === "GET" ? null : method;
+    const auditHandle = mutationMethod && this.options.mutationAudit
+      ? await this.options.mutationAudit.prepare({
+          operation: request.operation,
+          method: mutationMethod,
+          clientRequestId,
+        })
+      : null;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), Math.min(Math.max(request.timeoutMs ?? 20_000, 1_000), 60_000));
     const onAbort = () => controller.abort();
-    request.signal?.addEventListener("abort", onAbort, { once: true });
+    if (request.signal?.aborted) onAbort();
+    else request.signal?.addEventListener("abort", onAbort, { once: true });
     const started = Date.now();
     let response: Response;
+    if (auditHandle) {
+      try {
+        await this.options.mutationAudit!.markRequestMayHaveLeft(auditHandle);
+      } catch (error) {
+        await this.options.mutationAudit!.fail(auditHandle, {
+          operation: request.operation,
+          status: null,
+          clientRequestId,
+          kind: "audit_boundary_failure",
+          message: error instanceof Error ? error.message : "Mutation audit boundary failed",
+          definitePreDispatch: true,
+          definiteRejection: false,
+          terminalForLogicalOperation: true,
+        }).catch(() => undefined);
+        throw error;
+      }
+    }
     try {
       response = await (this.options.fetch ?? fetch)(url, {
         method,
@@ -178,7 +274,18 @@ export class MicrosoftGraphClient {
       });
     } catch (error) {
       const timedOut = error instanceof Error && error.name === "AbortError";
-      throw new MicrosoftGraphError("provider_down", timedOut ? "Microsoft Graph request timed out" : "Microsoft Graph network request failed", null, true);
+      const graphError = new MicrosoftGraphError("provider_down", timedOut ? "Microsoft Graph request timed out" : "Microsoft Graph network request failed", null, true);
+      if (auditHandle) await this.options.mutationAudit!.fail(auditHandle, {
+        operation: request.operation,
+        status: null,
+        clientRequestId,
+        kind: graphError.kind,
+        message: graphError.message,
+        definitePreDispatch: false,
+        definiteRejection: false,
+        terminalForLogicalOperation: true,
+      });
+      throw graphError;
     } finally {
       clearTimeout(timeout);
       request.signal?.removeEventListener("abort", onAbort);
@@ -192,7 +299,33 @@ export class MicrosoftGraphClient {
       ...(response.headers.get("request-id") ? { requestId: response.headers.get("request-id")! } : {}),
       clientRequestId,
     });
-    if (response.status === 401 && !refreshAttempted) {
+    const authRetryAllowed = request.allowAuthRetry === true || method === "GET";
+    const willAuthRetry = response.status === 401 && !refreshAttempted && authRetryAllowed;
+    if (auditHandle) {
+      const requestId = response.headers.get("request-id") ?? response.headers.get("x-ms-request-id") ?? undefined;
+      if ((response.status >= 200 && response.status < 400)) {
+        await this.options.mutationAudit!.acknowledge(auditHandle, {
+          operation: request.operation,
+          status: response.status,
+          clientRequestId,
+          ...(requestId ? { requestId } : {}),
+        });
+      } else {
+        const definiteRejection = response.status >= 400 && response.status < 500
+          && response.status !== 408 && response.status !== 429;
+        await this.options.mutationAudit!.fail(auditHandle, {
+          operation: request.operation,
+          status: response.status,
+          clientRequestId,
+          kind: response.status === 401 ? "auth" : response.status === 403 ? "permission" : "http_error",
+          message: `Microsoft Graph returned HTTP ${response.status}`,
+          definitePreDispatch: false,
+          definiteRejection,
+          terminalForLogicalOperation: !willAuthRetry,
+        });
+      }
+    }
+    if (willAuthRetry) {
       await response.body?.cancel().catch(() => undefined);
       this.invalidateToken();
       return this.send(request, true);
@@ -201,8 +334,12 @@ export class MicrosoftGraphClient {
   }
 
   async requestJson<T extends Record<string, unknown>>(request: MicrosoftGraphRequest): Promise<MicrosoftGraphResponse<T>> {
+    return this.governed(request.operation, (capacitySignal) => this.requestJsonInternal<T>(withCapacitySignal(request, capacitySignal)));
+  }
+
+  private async requestJsonInternal<T extends Record<string, unknown>>(request: MicrosoftGraphRequest): Promise<MicrosoftGraphResponse<T>> {
     const { response, clientRequestId } = await this.send(request, false);
-    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 1_048_576);
+    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 1_048_576, 60_000, request.signal);
     if (!response.ok) throw graphFailure(response, bytes);
     if (response.status === 204 || (response.status === 202 && bytes.length === 0)) {
       return { value: {} as T, status: response.status, clientRequestId, headers: response.headers };
@@ -221,8 +358,12 @@ export class MicrosoftGraphClient {
   }
 
   async requestText(request: MicrosoftGraphRequest & { acceptedContentTypes: readonly string[] }): Promise<MicrosoftGraphResponse<string>> {
+    return this.governed(request.operation, (capacitySignal) => this.requestTextInternal(withCapacitySignal(request, capacitySignal)));
+  }
+
+  private async requestTextInternal(request: MicrosoftGraphRequest & { acceptedContentTypes: readonly string[] }): Promise<MicrosoftGraphResponse<string>> {
     const { response, clientRequestId } = await this.send({ ...request, headers: { accept: request.acceptedContentTypes.join(", "), ...request.headers } }, false);
-    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 2_097_152);
+    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 2_097_152, 60_000, request.signal);
     if (!response.ok) throw graphFailure(response, bytes);
     const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
     if (!request.acceptedContentTypes.some((expected) => contentType.includes(expected.toLowerCase()))) {
@@ -240,6 +381,10 @@ export class MicrosoftGraphClient {
   /** Download Graph content while keeping the bearer token off the short-lived
    * preauthenticated CDN URL returned by DriveItem content endpoints. */
   async requestBytes(request: MicrosoftGraphRequest & { acceptedContentTypes?: readonly string[] }): Promise<MicrosoftGraphResponse<Uint8Array>> {
+    return this.governed(request.operation, (capacitySignal) => this.requestBytesInternal(withCapacitySignal(request, capacitySignal)));
+  }
+
+  private async requestBytesInternal(request: MicrosoftGraphRequest & { acceptedContentTypes?: readonly string[] }): Promise<MicrosoftGraphResponse<Uint8Array>> {
     const { response: graphResponse, clientRequestId } = await this.send(request, false);
     let response = graphResponse;
     if ([301, 302, 303, 307, 308].includes(response.status)) {
@@ -248,7 +393,7 @@ export class MicrosoftGraphClient {
       if (!location) throw new MicrosoftGraphError("invalid_response", "Microsoft Graph content redirect omitted Location", response.status, false);
       response = await this.fetchPreauthenticated(location, request.timeoutMs ?? 20_000, request.signal);
     }
-    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 10_485_760);
+    const bytes = await boundedBytes(response, request.maxResponseBytes ?? 10_485_760, 60_000, request.signal);
     if (!response.ok) throw graphFailure(response, bytes);
     const allowed = request.acceptedContentTypes ?? [];
     const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
@@ -275,17 +420,56 @@ export class MicrosoftGraphClient {
     signal?: AbortSignal;
     timeoutMs?: number;
   }): Promise<MicrosoftGraphResponse<Record<string, unknown>>> {
+    return this.governed(input.operation, (capacitySignal) => this.putUploadChunkInternal(withCapacitySignal(input, capacitySignal)));
+  }
+
+  private async putUploadChunkInternal(input: {
+    operation: string;
+    uploadUrl: string;
+    bytes: Uint8Array;
+    start: number;
+    total: number;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  }): Promise<MicrosoftGraphResponse<Record<string, unknown>>> {
     if (input.bytes.byteLength === 0 || input.start < 0 || input.total <= 0 || input.start + input.bytes.byteLength > input.total) {
       throw new MicrosoftGraphError("blocked_config", "Upload chunk range is invalid", null, false);
     }
     let url = preauthenticatedUrl(input.uploadUrl);
-    const clientRequestId = randomUUID();
     let response: Response | undefined;
+    let lastClientRequestId: string | undefined;
     for (let redirect = 0; redirect < 4; redirect += 1) {
+      const clientRequestId = randomUUID();
+      lastClientRequestId = clientRequestId;
+      const auditHandle = this.options.mutationAudit
+        ? await this.options.mutationAudit.prepare({
+            operation: input.operation,
+            method: "PUT",
+            clientRequestId,
+          })
+        : null;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), Math.min(Math.max(input.timeoutMs ?? 60_000, 1_000), 120_000));
       const onAbort = () => controller.abort();
-      input.signal?.addEventListener("abort", onAbort, { once: true });
+      if (input.signal?.aborted) onAbort();
+      else input.signal?.addEventListener("abort", onAbort, { once: true });
+      if (auditHandle) {
+        try {
+          await this.options.mutationAudit!.markRequestMayHaveLeft(auditHandle);
+        } catch (error) {
+          await this.options.mutationAudit!.fail(auditHandle, {
+            operation: input.operation,
+            status: null,
+            clientRequestId,
+            kind: "audit_boundary_failure",
+            message: error instanceof Error ? error.message : "Mutation audit boundary failed",
+            definitePreDispatch: true,
+            definiteRejection: false,
+            terminalForLogicalOperation: true,
+          }).catch(() => undefined);
+          throw error;
+        }
+      }
       try {
         response = await (this.options.fetch ?? fetch)(url, {
           method: "PUT",
@@ -299,10 +483,45 @@ export class MicrosoftGraphClient {
         });
       } catch (error) {
         const timedOut = error instanceof Error && error.name === "AbortError";
-        throw new MicrosoftGraphError("provider_down", timedOut ? "Microsoft upload chunk timed out" : "Microsoft upload chunk failed", null, true);
+        const graphError = new MicrosoftGraphError("provider_down", timedOut ? "Microsoft upload chunk timed out" : "Microsoft upload chunk failed", null, true);
+        if (auditHandle) await this.options.mutationAudit!.fail(auditHandle, {
+          operation: input.operation,
+          status: null,
+          clientRequestId,
+          kind: graphError.kind,
+          message: graphError.message,
+          definitePreDispatch: false,
+          definiteRejection: false,
+          terminalForLogicalOperation: true,
+        });
+        throw graphError;
       } finally {
         clearTimeout(timeout);
         input.signal?.removeEventListener("abort", onAbort);
+      }
+      const requestId = response.headers.get("request-id") ?? response.headers.get("x-ms-request-id") ?? undefined;
+      if (auditHandle) {
+        if (response.status >= 200 && response.status < 400) {
+          await this.options.mutationAudit!.acknowledge(auditHandle, {
+            operation: input.operation,
+            status: response.status,
+            clientRequestId,
+            ...(requestId ? { requestId } : {}),
+          });
+        } else {
+          const definiteRejection = response.status >= 400 && response.status < 500
+            && response.status !== 408 && response.status !== 429;
+          await this.options.mutationAudit!.fail(auditHandle, {
+            operation: input.operation,
+            status: response.status,
+            clientRequestId,
+            kind: "http_error",
+            message: `Microsoft upload returned HTTP ${response.status}`,
+            definitePreDispatch: false,
+            definiteRejection,
+            terminalForLogicalOperation: true,
+          });
+        }
       }
       if (![301, 302, 303, 307, 308].includes(response.status)) break;
       const location = response.headers.get("location");
@@ -312,11 +531,12 @@ export class MicrosoftGraphClient {
       response = undefined;
     }
     if (!response) throw new MicrosoftGraphError("invalid_response", "Microsoft upload exceeded the redirect bound", null, false);
-    const bytes = await boundedBytes(response, 1_048_576);
+    const bytes = await boundedBytes(response, 1_048_576, 60_000, input.signal);
     if (!response.ok) throw graphFailure(response, bytes);
     const value = bytes.byteLength ? jsonObject(bytes, response.status) : {};
-    this.options.logger?.({ operation: input.operation, status: response.status, durationMs: 0, clientRequestId });
-    return { value, status: response.status, clientRequestId, headers: response.headers };
+    const finalClientRequestId = lastClientRequestId ?? randomUUID();
+    this.options.logger?.({ operation: input.operation, status: response.status, durationMs: 0, clientRequestId: finalClientRequestId });
+    return { value, status: response.status, clientRequestId: finalClientRequestId, headers: response.headers };
   }
 
   private async fetchPreauthenticated(location: string, timeoutMs: number, signal?: AbortSignal): Promise<Response> {
@@ -325,7 +545,8 @@ export class MicrosoftGraphClient {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), Math.min(Math.max(timeoutMs, 1_000), 60_000));
       const onAbort = () => controller.abort();
-      signal?.addEventListener("abort", onAbort, { once: true });
+      if (signal?.aborted) onAbort();
+      else signal?.addEventListener("abort", onAbort, { once: true });
       let response: Response;
       try {
         response = await (this.options.fetch ?? fetch)(url, { method: "GET", redirect: "manual", signal: controller.signal });

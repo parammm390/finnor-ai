@@ -15,6 +15,7 @@ import {
   workObjectiveSteps,
   workPlanRevisions,
   workQueryExecutions,
+  works,
   withTenant,
   resolveTenantVertical,
   type Db,
@@ -292,20 +293,58 @@ export async function requestWorkforceAssignment(params: {
   };
 
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${params.planRevisionId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${params.objectiveLoop.id} FOR SHARE`);
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${params.planRevisionId} FOR SHARE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveSteps} WHERE ${workObjectiveSteps.tenantId}=${params.tenantId} AND ${workObjectiveSteps.id}=${params.objectiveStepId} FOR UPDATE`);
     const [plan] = await db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId), eq(workPlanRevisions.id, params.planRevisionId),
     )).limit(1);
-    if (!plan || plan.status !== "active") return { status: "blocked", reason: "The selected P6 PlanRevision is no longer current.", ineligibility: { plan: ["PLAN_SUPERSEDED"] } };
+    if (!plan || plan.status !== "active") return { status: "blocked", reason: "The selected P6 PlanRevision is no longer current.", ineligibility: { plan: ["PLAN_SUPERSEDED"] } as Record<string, string[]> };
+    const [objectiveStep] = await db.select().from(workObjectiveSteps).where(and(
+      eq(workObjectiveSteps.tenantId, params.tenantId),
+      eq(workObjectiveSteps.id, params.objectiveStepId),
+      eq(workObjectiveSteps.objectiveLoopId, params.objectiveLoop.id),
+      eq(workObjectiveSteps.workId, params.workId),
+      eq(workObjectiveSteps.planRevisionId, params.planRevisionId),
+      eq(workObjectiveSteps.planNodeId, params.node.id),
+      sql`${workObjectiveSteps.completedAt} IS NULL`,
+    )).limit(1);
+    if (!objectiveStep) return { status: "blocked", reason: "The exact logical PlanNode attempt is no longer schedulable.", ineligibility: { step: ["PLAN_ATTEMPT_STALE"] } as Record<string, string[]> };
+    // Preserve the historical-null boundary.  A pre-Scope-1 step does not gain
+    // synthetic generation truth merely because it is observed by the upgraded
+    // runtime; kernel-reserved steps always carry the exact revision.
+    const exactAttempt = objectiveStep.objectiveRevision !== null
+      && objectiveStep.attemptNumber !== null
+      && objectiveStep.executionRole === "node";
+    const objectiveRevision = exactAttempt ? objectiveStep.objectiveRevision : null;
+    // Historical pre-Scope-1 steps intentionally remain unattributed rather than
+    // fabricating attempt 1. Newly reserved kernel steps always carry the exact
+    // non-null attempt number.
+    const nodeAttempt = exactAttempt ? objectiveStep.attemptNumber : null;
+    if (objectiveRevision !== null && objectiveRevision !== params.objectiveLoop.revision) return { status: "blocked", reason: "The Objective revision changed before workforce assignment.", ineligibility: { step: ["OBJECTIVE_REVISION_STALE"] } as Record<string, string[]> };
     let [existing] = await db.select().from(workforceAssignments).where(and(
       eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.planRevisionId, params.planRevisionId),
       eq(workforceAssignments.planNodeId, params.node.id), inArray(workforceAssignments.state, [...ACTIVE_ASSIGNMENT_STATES]),
     )).limit(1);
     if (existing && (existing.state === "claimed" || existing.state === "running") && existing.leaseUntil && existing.leaseUntil <= new Date()) {
+      if (await assignmentHasAmbiguousEffectTx(db, existing)) {
+        await db.update(workforceAssignments).set({
+          state: "waiting", leaseOwner: null, leaseUntil: null,
+          failure: { code: "AMBIGUOUS_EXTERNAL_OUTCOME", recovery: "RECONCILE", priorLeaseOwner: existing.leaseOwner }, updatedAt: new Date(),
+        }).where(and(eq(workforceAssignments.id, existing.id), eq(workforceAssignments.state, existing.state)));
+        if (existing.objectiveStepId) await db.update(workObjectiveSteps).set({
+          executionState: "reconciliation_required", claimOwner: null, claimUntil: null,
+          failure: { code: "AMBIGUOUS_EXTERNAL_OUTCOME", recovery: "RECONCILE" },
+        }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, existing.objectiveStepId), sql`${workObjectiveSteps.completedAt} IS NULL`));
+        return { status: "blocked", reason: "The expired worker crossed an ambiguous external-effect boundary; reconciliation is required.", ineligibility: { effect: ["RECONCILIATION_REQUIRED"] } as Record<string, string[]> };
+      }
       await db.update(workforceAssignments).set({
         state: "reassigned", completedAt: new Date(), leaseOwner: null, leaseUntil: null,
         reassignmentReason: "LEASE_EXPIRED", failure: { code: "LEASE_EXPIRED", priorLeaseOwner: existing.leaseOwner }, updatedAt: new Date(),
       }).where(and(eq(workforceAssignments.id, existing.id), eq(workforceAssignments.state, existing.state)));
+      if (existing.objectiveStepId) await db.update(workObjectiveSteps).set({ executionState: "scheduled", claimOwner: null, claimUntil: null }).where(and(
+        eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, existing.objectiveStepId), sql`${workObjectiveSteps.completedAt} IS NULL`,
+      ));
       existing = undefined;
     }
     const profiles = await db.select({ profile: agentProfiles, revision: agentProfileRevisions }).from(agentProfiles)
@@ -427,6 +466,8 @@ export async function requestWorkforceAssignment(params: {
       planNodeId: params.node.id,
       objectiveLoopId: params.objectiveLoop.id,
       objectiveStepId: params.objectiveStepId,
+      objectiveRevision,
+      nodeAttempt,
       agentProfileId: winner.candidate.profile.id,
       agentRevisionId: winner.candidate.revision.id,
       capability,
@@ -444,13 +485,14 @@ export async function requestWorkforceAssignment(params: {
     }).returning();
     if (!assignment) throw new Error("Unable to persist WorkforceAssignment");
     await db.insert(jobs).values({
+      tenantId: params.tenantId,
       type: "run_workforce_assignment",
       payload: {
         tenantId: params.tenantId,
         workId: params.workId,
         objectiveLoopId: params.objectiveLoop.id,
         expectedRevision: params.objectiveLoop.revision,
-        expectedStepNumber: params.objectiveLoop.stepCount,
+        expectedStepNumber: objectiveStep.stepNumber,
         workforceAssignmentId: assignment.id,
       },
       idempotencyKey: `workforce:${assignment.id}:attempt:1`,
@@ -507,6 +549,7 @@ export async function reassignWorkforceAssignment(params: {
       const [step] = updated.objectiveStepId ? await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, updated.objectiveStepId))).limit(1) : [];
       if (loop && !["blocked", "completed", "failed", "cancelled"].includes(loop.state)) {
         await db.insert(jobs).values({
+          tenantId: params.tenantId,
           type: "run_objective_iteration",
           payload: {
             tenantId: params.tenantId,
@@ -527,7 +570,23 @@ export async function reassignWorkforceAssignment(params: {
 
 export type WorkforceClaimResult =
   | { status: "claimed"; assignment: typeof workforceAssignments.$inferSelect; leaseOwner: string }
-  | { status: "busy" | "expired" | "reassigned" | "invalid" | "terminal"; reason: string };
+  | { status: "busy" | "expired" | "reassigned" | "reconciliation_required" | "invalid" | "terminal"; reason: string };
+
+async function assignmentHasAmbiguousEffectTx(db: Db, assignment: typeof workforceAssignments.$inferSelect): Promise<boolean> {
+  if (assignment.nodeKind !== "action") return false;
+  const [step] = assignment.objectiveStepId ? await db.select({ domainActionId: workObjectiveSteps.domainActionId }).from(workObjectiveSteps).where(and(
+    eq(workObjectiveSteps.tenantId, assignment.tenantId),
+    eq(workObjectiveSteps.id, assignment.objectiveStepId),
+  )).limit(1) : [];
+  const actionId = assignment.domainActionId ?? step?.domainActionId;
+  if (!actionId) return false;
+  const [[action], [effect]] = await Promise.all([
+    db.select({ status: domainActions.status }).from(domainActions).where(and(eq(domainActions.tenantId, assignment.tenantId), eq(domainActions.id, actionId))).limit(1),
+    db.select({ status: businessEffects.status }).from(businessEffects).where(and(eq(businessEffects.tenantId, assignment.tenantId), eq(businessEffects.domainActionId, actionId))).limit(1),
+  ]);
+  if (effect && ["executing", "executed", "partially_verified", "unverified", "reconciliation_required"].includes(effect.status)) return true;
+  return action?.status === "executing" || (action?.status === "completed" && effect?.status !== "verified");
+}
 
 export async function claimWorkforceAssignment(params: {
   tenantId: string;
@@ -536,16 +595,50 @@ export async function claimWorkforceAssignment(params: {
 }): Promise<WorkforceClaimResult> {
   const owner = params.leaseOwner ?? randomUUID();
   return withTenant(params.tenantId, async (db) => {
+    // Take compatible generation locks before physical ownership. Independent
+    // workers share Objective/Plan locks; control and scheduler transitions take
+    // exclusive locks in this same Objective -> Plan -> Step -> Assignment order.
+    // Reading identity first is safe because assignment history cannot be deleted.
+    const [identity] = await db.select({
+      planRevisionId: workforceAssignments.planRevisionId,
+      objectiveLoopId: workforceAssignments.objectiveLoopId,
+      objectiveStepId: workforceAssignments.objectiveStepId,
+    }).from(workforceAssignments).where(and(
+      eq(workforceAssignments.tenantId, params.tenantId),
+      eq(workforceAssignments.id, params.assignmentId),
+    )).limit(1);
+    if (!identity) return { status: "invalid", reason: "Assignment is not in the authenticated tenant." };
+    if (identity.objectiveLoopId) {
+      await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${identity.objectiveLoopId} FOR SHARE`);
+    }
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${identity.planRevisionId} FOR SHARE`);
+    if (identity.objectiveStepId) {
+      await db.execute(sql`SELECT id FROM ${workObjectiveSteps} WHERE ${workObjectiveSteps.tenantId}=${params.tenantId} AND ${workObjectiveSteps.id}=${identity.objectiveStepId} FOR UPDATE`);
+    }
     await db.execute(sql`SELECT id FROM ${workforceAssignments} WHERE ${workforceAssignments.tenantId}=${params.tenantId} AND ${workforceAssignments.id}=${params.assignmentId} FOR UPDATE`);
     let [assignment] = await db.select().from(workforceAssignments).where(and(eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.id, params.assignmentId))).limit(1);
     if (!assignment) return { status: "invalid", reason: "Assignment is not in the authenticated tenant." };
     if (["completed", "failed", "cancelled", "reassigned"].includes(assignment.state)) return { status: "terminal", reason: `Assignment is ${assignment.state}.` };
     if ((assignment.state === "claimed" || assignment.state === "running") && assignment.leaseOwner !== owner) {
       if (assignment.leaseUntil && assignment.leaseUntil > new Date()) return { status: "busy", reason: "Assignment has a current lease owner." };
+      if (await assignmentHasAmbiguousEffectTx(db, assignment)) {
+        await db.update(workforceAssignments).set({
+          state: "waiting", leaseOwner: null, leaseUntil: null,
+          failure: { code: "AMBIGUOUS_EXTERNAL_OUTCOME", recovery: "RECONCILE", priorLeaseOwner: assignment.leaseOwner }, updatedAt: new Date(),
+        }).where(eq(workforceAssignments.id, assignment.id));
+        if (assignment.objectiveStepId) await db.update(workObjectiveSteps).set({
+          executionState: "reconciliation_required", claimOwner: null, claimUntil: null,
+          failure: { code: "AMBIGUOUS_EXTERNAL_OUTCOME", recovery: "RECONCILE" },
+        }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, assignment.objectiveStepId), sql`${workObjectiveSteps.completedAt} IS NULL`));
+        return { status: "reconciliation_required", reason: "The expired lease crossed an ambiguous external-effect boundary; reconciliation is required and retry is forbidden." };
+      }
       await db.update(workforceAssignments).set({
         state: "reassigned", completedAt: new Date(), leaseOwner: null, leaseUntil: null,
         reassignmentReason: "LEASE_EXPIRED", failure: { code: "LEASE_EXPIRED", priorLeaseOwner: assignment.leaseOwner }, updatedAt: new Date(),
       }).where(eq(workforceAssignments.id, assignment.id));
+      if (assignment.objectiveStepId) await db.update(workObjectiveSteps).set({
+        executionState: "scheduled", claimOwner: null, claimUntil: null,
+      }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, assignment.objectiveStepId), sql`${workObjectiveSteps.completedAt} IS NULL`));
       return { status: "expired", reason: "Expired assignment was preserved as reassignment history." };
     }
     const [scope] = await db.select({
@@ -564,6 +657,16 @@ export async function claimWorkforceAssignment(params: {
       loopMaxSteps: workObjectiveLoops.maxSteps,
       loopCreatedAt: workObjectiveLoops.createdAt,
       loopDeadlineAt: workObjectiveLoops.deadlineAt,
+      loopRevision: workObjectiveLoops.revision,
+      loopState: workObjectiveLoops.state,
+      workStatus: works.status,
+      stepObjectiveRevision: workObjectiveSteps.objectiveRevision,
+      stepAttemptNumber: workObjectiveSteps.attemptNumber,
+      stepExecutionRole: workObjectiveSteps.executionRole,
+      stepExecutionState: workObjectiveSteps.executionState,
+      stepClaimOwner: workObjectiveSteps.claimOwner,
+      stepClaimUntil: workObjectiveSteps.claimUntil,
+      stepCompletedAt: workObjectiveSteps.completedAt,
     }).from(workforceAssignments)
       .innerJoin(workPlanRevisions, eq(workPlanRevisions.id, workforceAssignments.planRevisionId))
       .innerJoin(agentProfiles, eq(agentProfiles.id, workforceAssignments.agentProfileId))
@@ -572,8 +675,18 @@ export async function claimWorkforceAssignment(params: {
         eq(workObjectiveLoops.id, workforceAssignments.objectiveLoopId),
         eq(workObjectiveLoops.tenantId, workforceAssignments.tenantId),
       ))
+      .innerJoin(workObjectiveSteps, and(
+        eq(workObjectiveSteps.id, workforceAssignments.objectiveStepId),
+        eq(workObjectiveSteps.tenantId, workforceAssignments.tenantId),
+      ))
+      .innerJoin(works, and(eq(works.id, workforceAssignments.workId), eq(works.tenantId, workforceAssignments.tenantId)))
       .where(and(eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.id, assignment.id))).limit(1);
-    if (!scope || scope.planStatus !== "active" || scope.profileStatus !== "enabled" || scope.revisionStatus !== "active" || scope.revisionProfileId !== assignment.agentProfileId) {
+    if (!scope || scope.planStatus !== "active" || scope.profileStatus !== "enabled" || scope.revisionStatus !== "active" || scope.revisionProfileId !== assignment.agentProfileId
+      || scope.stepCompletedAt !== null || ["blocked", "completed", "failed", "cancelled"].includes(scope.loopState)
+      || ["completed", "failed", "cancelled"].includes(scope.workStatus)
+      || (assignment.objectiveRevision !== null && assignment.objectiveRevision !== scope.loopRevision)
+      || (scope.stepObjectiveRevision !== null && scope.stepObjectiveRevision !== scope.loopRevision)
+      || (assignment.nodeAttempt !== null && assignment.nodeAttempt !== scope.stepAttemptNumber)) {
       await db.update(workforceAssignments).set({ state: "cancelled", completedAt: new Date(), leaseOwner: null, leaseUntil: null, failure: { code: "ASSIGNMENT_SCOPE_STALE" }, updatedAt: new Date() }).where(eq(workforceAssignments.id, assignment.id));
       return { status: "invalid", reason: "Assignment plan/profile/revision is no longer current." };
     }
@@ -622,16 +735,41 @@ export async function claimWorkforceAssignment(params: {
         .where(and(eq(workforceAssignments.id, assignment.id), eq(workforceAssignments.state, "claimed"), eq(workforceAssignments.leaseOwner, owner))).returning();
     }
     if (!assignment || assignment.leaseOwner !== owner) return { status: "busy", reason: "Another worker owns the assignment lease." };
+    const [claimedStep] = await db.update(workObjectiveSteps).set({
+      executionState: "running",
+      claimOwner: owner,
+      claimUntil: leaseUntil,
+      claimedAt: sql`coalesce(${workObjectiveSteps.claimedAt}, now())`,
+    }).where(and(
+      eq(workObjectiveSteps.tenantId, params.tenantId),
+      eq(workObjectiveSteps.id, assignment.objectiveStepId!),
+      eq(workObjectiveSteps.planRevisionId, assignment.planRevisionId),
+      eq(workObjectiveSteps.planNodeId, assignment.planNodeId),
+      sql`${workObjectiveSteps.completedAt} IS NULL`,
+      sql`(${workObjectiveSteps.claimOwner} IS NULL OR ${workObjectiveSteps.claimOwner}=${owner})`,
+    )).returning({ id: workObjectiveSteps.id });
+    if (!claimedStep) {
+      await db.update(workforceAssignments).set({ state: "cancelled", completedAt: new Date(), leaseOwner: null, leaseUntil: null, failure: { code: "LOGICAL_ATTEMPT_CLAIM_LOST" }, updatedAt: new Date() }).where(eq(workforceAssignments.id, assignment.id));
+      return { status: "invalid", reason: "The physical worker could not claim the exact durable logical attempt." };
+    }
     return { status: "claimed", assignment, leaseOwner: owner };
   });
 }
 
 export async function renewWorkforceAssignmentLease(tenantId: string, assignmentId: string, leaseOwner: string): Promise<boolean> {
-  const rows = await withTenant(tenantId, (db) => db.update(workforceAssignments).set({ leaseUntil: new Date(Date.now() + WORKFORCE_LEASE_MS), updatedAt: new Date() }).where(and(
-    eq(workforceAssignments.tenantId, tenantId), eq(workforceAssignments.id, assignmentId), eq(workforceAssignments.leaseOwner, leaseOwner),
-    inArray(workforceAssignments.state, ["claimed", "running"]), sql`${workforceAssignments.leaseUntil} > now()`,
-  )).returning({ id: workforceAssignments.id }));
-  return rows.length === 1;
+  return withTenant(tenantId, async (db) => {
+    const leaseUntil = new Date(Date.now() + WORKFORCE_LEASE_MS);
+    const [assignment] = await db.update(workforceAssignments).set({ leaseUntil, updatedAt: new Date() }).where(and(
+      eq(workforceAssignments.tenantId, tenantId), eq(workforceAssignments.id, assignmentId), eq(workforceAssignments.leaseOwner, leaseOwner),
+      inArray(workforceAssignments.state, ["claimed", "running"]), sql`${workforceAssignments.leaseUntil} > now()`,
+    )).returning({ id: workforceAssignments.id, objectiveStepId: workforceAssignments.objectiveStepId });
+    if (!assignment?.objectiveStepId) return false;
+    const steps = await db.update(workObjectiveSteps).set({ claimUntil: leaseUntil }).where(and(
+      eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, assignment.objectiveStepId),
+      eq(workObjectiveSteps.claimOwner, leaseOwner), eq(workObjectiveSteps.executionState, "running"), sql`${workObjectiveSteps.claimUntil} > now()`,
+    )).returning({ id: workObjectiveSteps.id });
+    return steps.length === 1;
+  });
 }
 
 export async function isWorkforceAssignmentCurrent(params: { tenantId: string; assignmentId: string; leaseOwner: string; planRevisionId: string; planNodeId: string; agentRevisionId: string }): Promise<boolean> {
@@ -639,11 +777,30 @@ export async function isWorkforceAssignmentCurrent(params: { tenantId: string; a
     .innerJoin(workPlanRevisions, and(eq(workPlanRevisions.id, workforceAssignments.planRevisionId), eq(workPlanRevisions.tenantId, workforceAssignments.tenantId)))
     .innerJoin(agentProfileRevisions, and(eq(agentProfileRevisions.id, workforceAssignments.agentRevisionId), eq(agentProfileRevisions.tenantId, workforceAssignments.tenantId)))
     .innerJoin(agentProfiles, and(eq(agentProfiles.id, workforceAssignments.agentProfileId), eq(agentProfiles.tenantId, workforceAssignments.tenantId)))
+    .innerJoin(workObjectiveLoops, and(eq(workObjectiveLoops.id, workforceAssignments.objectiveLoopId), eq(workObjectiveLoops.tenantId, workforceAssignments.tenantId)))
+    .innerJoin(workObjectiveSteps, and(eq(workObjectiveSteps.id, workforceAssignments.objectiveStepId), eq(workObjectiveSteps.tenantId, workforceAssignments.tenantId)))
+    .innerJoin(works, and(eq(works.id, workforceAssignments.workId), eq(works.tenantId, workforceAssignments.tenantId)))
     .where(and(
       eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.id, params.assignmentId), eq(workforceAssignments.state, "running"),
       eq(workforceAssignments.leaseOwner, params.leaseOwner), sql`${workforceAssignments.leaseUntil} > now()`,
       eq(workforceAssignments.planRevisionId, params.planRevisionId), eq(workforceAssignments.planNodeId, params.planNodeId), eq(workforceAssignments.agentRevisionId, params.agentRevisionId),
       eq(workPlanRevisions.status, "active"), eq(agentProfileRevisions.status, "active"), eq(agentProfiles.status, "enabled"),
+      sql`${workObjectiveLoops.state} NOT IN ('blocked','completed','failed','cancelled')`,
+      sql`(
+        (${workforceAssignments.objectiveRevision} IS NULL
+          AND ${workforceAssignments.nodeAttempt} IS NULL
+          AND (
+            (${workObjectiveSteps.objectiveRevision} IS NULL AND ${workObjectiveSteps.executionRole} IS NULL)
+            OR (${workObjectiveSteps.objectiveRevision}=${workObjectiveLoops.revision} AND ${workObjectiveSteps.executionRole}='controller')
+          ))
+        OR
+        (${workObjectiveLoops.revision}=${workforceAssignments.objectiveRevision}
+          AND ${workObjectiveSteps.objectiveRevision}=${workforceAssignments.objectiveRevision}
+          AND ${workObjectiveSteps.attemptNumber}=${workforceAssignments.nodeAttempt}
+          AND ${workObjectiveSteps.executionRole}='node')
+      )`,
+      eq(workObjectiveSteps.executionState, "running"), eq(workObjectiveSteps.claimOwner, params.leaseOwner), sql`${workObjectiveSteps.claimUntil} > now()`,
+      sql`${workObjectiveSteps.completedAt} IS NULL`, sql`${works.status} NOT IN ('completed','failed','cancelled')`,
     )).limit(1));
   return Boolean(row);
 }
@@ -663,6 +820,26 @@ export async function finalizeWorkforceAssignment(params: {
     if (params.thrownFailure) {
       const error = params.thrownFailure instanceof Error ? { name: params.thrownFailure.name, message: params.thrownFailure.message } : { message: String(params.thrownFailure) };
       await db.update(workforceAssignments).set({ state: "failed", completedAt: new Date(), leaseOwner: null, leaseUntil: null, failure: { code: "WORKER_EXECUTION_FAILED", ...error }, updatedAt: new Date() }).where(eq(workforceAssignments.id, assignment.id));
+      if (step) {
+        const exactAttempt = assignment.objectiveRevision !== null && assignment.nodeAttempt !== null && step.executionRole === "node";
+        await db.update(workObjectiveSteps).set(exactAttempt ? {
+          phase: "finished",
+          executionState: "failed",
+          claimOwner: null,
+          claimUntil: null,
+          iterationOutcome: "failed",
+          failure: { code: "WORKER_EXECUTION_FAILED", ...error },
+          completedAt: new Date(),
+        } : {
+          executionState: "scheduled",
+          claimOwner: null,
+          claimUntil: null,
+        }).where(and(
+          eq(workObjectiveSteps.tenantId, params.tenantId),
+          eq(workObjectiveSteps.id, step.id),
+          sql`${workObjectiveSteps.completedAt} IS NULL`,
+        ));
+      }
       return;
     }
     if (!step?.completedAt) {
@@ -707,6 +884,7 @@ export async function enqueueAssignmentRecovery(tenantId: string, assignmentId: 
     const [step] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, assignment.objectiveStepId))).limit(1);
     if (!loop || !step || step.completedAt) return;
     await db.insert(jobs).values({
+      tenantId,
       type: "run_objective_iteration",
       payload: { tenantId, workId: assignment.workId, objectiveLoopId: loop.id, expectedRevision: loop.revision, expectedStepNumber: step.stepNumber },
       idempotencyKey: `workforce-recovery:${assignment.id}:attempt:${assignment.attempt}`,

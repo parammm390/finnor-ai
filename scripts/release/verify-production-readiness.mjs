@@ -1,5 +1,4 @@
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
-import { evaluateProductionReadiness } from "./production-readiness-policy.mjs"
 
 const [baseUrl, expectedSha, component = "api"] = process.argv.slice(2)
 
@@ -9,77 +8,41 @@ if (!baseUrl || !expectedSha) {
 }
 
 const url = `${baseUrl.replace(/\/$/, "")}/api/ready`
-// Credential/configuration defects are never transient convergence conditions.
-// Resolve the protected-deployment header once and fail immediately if absent.
-const protectionHeaders = vercelProtectionHeaders(component)
-const timeoutMs = 120_000
-const pollIntervalMs = 5_000
-const startedAt = Date.now()
-let attempt = 0
+const response = await fetch(url, {
+  headers: vercelProtectionHeaders(component),
+  signal: AbortSignal.timeout(20_000),
+})
+const body = await response.json().catch(() => null)
+const authority = body?.checks?.productAuthority?.detail
+const release = body?.checks?.runtimeRelease?.detail
 
-while (true) {
-  attempt += 1
-  let response
-  let body
-  try {
-    response = await fetch(url, {
-      headers: protectionHeaders,
-      signal: AbortSignal.timeout(20_000),
-    })
-    body = await response.json().catch(() => null)
-  } catch (error) {
-    const elapsedMs = Date.now() - startedAt
-    if (elapsedMs + pollIntervalMs <= timeoutMs) {
-      console.warn(JSON.stringify({ event: "production-readiness-request-retry", url, attempt, elapsedMs }))
-      await new Promise((resolvePromise) => setTimeout(resolvePromise, pollIntervalMs))
-      continue
-    }
-    console.error(JSON.stringify({ ok: false, url, attempt, elapsedMs, error: error instanceof Error ? error.message : String(error) }, null, 2))
-    process.exit(1)
-  }
+const checks = {
+  http: response.ok,
+  ready: body?.ok === true,
+  finalPeGateRequired: authority?.finalPeGateRequired === true,
+  authorityState: authority?.state === "water_retired",
+  activeProductVertical: authority?.activeProductVertical === "private_equity",
+  authorityCheck: body?.checks?.productAuthority?.ok === true,
+  runtimeEpoch: body?.checks?.runtimeEpoch?.ok === true,
+  runtimeRelease: body?.checks?.runtimeRelease?.ok === true,
+  expectedRelease: release?.expectedReleaseSha === expectedSha,
+  migration: body?.checks?.migrations?.ok === true,
+  workerFleet: body?.checks?.workerFleet?.ok === true,
+}
 
-  const evaluation = evaluateProductionReadiness({ responseOk: response.ok, status: response.status, body, expectedSha })
-  if (evaluation.ok) {
-    console.log(JSON.stringify({
-      ok: true,
-      url,
-      attempt,
-      convergenceMs: Date.now() - startedAt,
-      checks: evaluation.checks,
-      authority: {
-        status: evaluation.authority.status,
-        activeProductVertical: evaluation.authority.activeProductVertical,
-        epoch: evaluation.authority.epoch,
-        minimumCutoverProtocol: evaluation.authority.minimumCutoverProtocol,
-      },
-    }, null, 2))
-    break
-  }
-
-  const elapsedMs = Date.now() - startedAt
-  if (evaluation.retryable && elapsedMs + pollIntervalMs <= timeoutMs) {
-    console.warn(JSON.stringify({
-      event: "production-readiness-runtime-convergence",
-      url,
-      attempt,
-      elapsedMs,
-      releaseShas: evaluation.release.releaseShas,
-      mixedRuntimes: evaluation.release.mixedRuntimes,
-      mixedMigrationRuntimes: evaluation.release.mixedMigrationRuntimes,
-    }))
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, pollIntervalMs))
-    continue
-  }
-
-  console.error(JSON.stringify({
-    ok: false,
-    url,
-    status: response.status,
-    attempt,
-    elapsedMs,
-    timedOut: evaluation.retryable,
-    checks: evaluation.checks,
-    body,
-  }, null, 2))
+if (Object.values(checks).some((value) => !value)) {
+  console.error(JSON.stringify({ ok: false, url, status: response.status, checks, body }, null, 2))
   process.exit(1)
 }
+
+console.log(JSON.stringify({
+  ok: true,
+  url,
+  checks,
+  authority: {
+    state: authority.state,
+    activeProductVertical: authority.activeProductVertical,
+    epoch: authority.epoch,
+    minimumCutoverProtocol: authority.minimumCutoverProtocol,
+  },
+}, null, 2))

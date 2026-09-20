@@ -2,13 +2,12 @@
 // grounding and durable-operation preparation before the authority boundary.
 
 import { interrupt } from "@langchain/langgraph";
-import { withTenant, domainActions, enqueueJob } from "@finnor/db";
+import { withTenant, domainActions } from "@finnor/db";
 import { appendEpisode } from "@finnor/memory";
 import { eq, and } from "drizzle-orm";
 import type { DomainAction } from "@finnor/shared-types";
-import { ScopedToolRegistry, tenantProviderConfigured, type ToolRegistry } from "@finnor/tools";
+import { ScopedToolRegistry, type ToolRegistry } from "@finnor/tools";
 import type { PluginRegistry } from "../plugin-registry";
-import { diagnoseFailure, buildConfirmationScript } from "../voice";
 import { advanceWorkflowForActionRequired } from "../workflow";
 import { executePluginViaRuntime } from "../runtime-bridge";
 import type { GateState } from "./state";
@@ -163,20 +162,9 @@ export function makeGateNode() {
         .where(and(eq(domainActions.id, state.actionId), eq(domainActions.tenantId, state.tenantId)));
     });
     await appendEpisode(state.tenantId, state.actionId, "gate", {}, { gated: true, summary, businessEffectId: state.draft!.businessEffect?.id ?? null, semanticHash: state.draft!.businessEffect?.semanticHash ?? null });
-    await enqueueJob(
-      "send_push_notification",
-      { tenantId: state.tenantId, kind: "approval-needed", actionId: state.actionId, body: summary },
-      `push:approval-needed:${state.actionId}`,
-      state.correlationId,
-    ).catch(() => undefined);
-    if (await tenantProviderConfigured(state.tenantId, "vapi")) {
-      await enqueueJob(
-        "voice_confirm_request",
-        { tenantId: state.tenantId, actionId: state.actionId, script: buildConfirmationScript(summary) },
-        `voice-confirm:${state.actionId}`,
-        state.correlationId,
-      ).catch(() => undefined);
-    }
+    // The canonical durable attention/approval surface owns the notification.
+    // Scope 2 retired direct push/voice nudge jobs that bypassed provider-operation
+    // identity and physical-invocation audit.
     return { authorityOutcome: authority.decision.outcome, authorityDecisionId: authority.decision.id, authorityReasonCode: authority.decision.reasonCode, requiresGate: true };
   };
 }
@@ -270,14 +258,6 @@ export function makeExecuteNode(plugins: PluginRegistry, tools: ToolRegistry) {
       if (workflow.advanced.length > 0) {
         await appendEpisode(state.tenantId, state.actionId, "workflow", {}, { advanced: workflow.advanced });
       }
-    }
-    if (finalStatus === "blocked_integration_unavailable" && await tenantProviderConfigured(state.tenantId, "vapi")) {
-      await enqueueJob(
-        "voice_notify_failure",
-        { tenantId: state.tenantId, actionId: state.actionId, script: diagnoseFailure(result.error, state.actionType) },
-        `voice-fail:${state.actionId}`,
-        state.correlationId,
-      ).catch(() => undefined);
     }
     return { result };
   };

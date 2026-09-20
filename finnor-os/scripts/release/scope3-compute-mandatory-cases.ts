@@ -1,0 +1,102 @@
+export const SCOPE3_GATE_IDS = [
+  "architecture",
+  "classification-claiming",
+  "fairness-load",
+  "resource-governors",
+  "telemetry-scaling",
+  "lifecycle-chaos",
+  "release-governance",
+  "regressions-boundaries",
+] as const;
+
+export type Scope3GateId = (typeof SCOPE3_GATE_IDS)[number];
+
+export interface Scope3MandatoryCase {
+  ordinal: number;
+  id: string;
+  statement: string;
+  gates: readonly Scope3GateId[];
+}
+
+/** Acceptance ledger for the user's 75 mandatory Scope-3 cases. `gates` describe
+ * the engineering area; the release runner requires exact passing assertions
+ * from scope3-compute-case-proofs.ts for each case. Gate labels alone never pass. */
+export const SCOPE3_MANDATORY_CASES: readonly Scope3MandatoryCase[] = [
+  { ordinal: 1, id: "scope3.exhaustive-job-classification", statement: "Every production job type has one deterministic workload class.", gates: ["architecture", "classification-claiming"] },
+  { ordinal: 2, id: "scope3.untrusted-payload-no-promotion", statement: "Untrusted job payload cannot escalate its workload class.", gates: ["classification-claiming"] },
+  { ordinal: 3, id: "scope3.singular-job-store", statement: "The canonical jobs store remains singular.", gates: ["architecture"] },
+  { ordinal: 4, id: "scope3.realtime-claim-isolation", statement: "The REALTIME service claims only permitted workload.", gates: ["classification-claiming"] },
+  { ordinal: 5, id: "scope3.interactive-claim-isolation", statement: "The INTERACTIVE service claims only permitted workload.", gates: ["classification-claiming"] },
+  { ordinal: 6, id: "scope3.background-claim-isolation", statement: "The BACKGROUND service claims only permitted workload.", gates: ["classification-claiming"] },
+  { ordinal: 7, id: "scope3.heavy-claim-isolation", statement: "The HEAVY service claims only permitted workload.", gates: ["classification-claiming"] },
+  { ordinal: 8, id: "scope3.atomic-class-filter", statement: "Class filtering occurs inside the atomic claim.", gates: ["classification-claiming"] },
+  { ordinal: 9, id: "scope3.hundred-cross-class-workers", statement: "One hundred cross-class workers never claim ineligible work.", gates: ["classification-claiming", "fairness-load"] },
+  { ordinal: 10, id: "scope3.deterministic-class-priority", statement: "Priority ordering remains deterministic inside a class.", gates: ["classification-claiming", "fairness-load"] },
+  { ordinal: 11, id: "scope3.tenant-flood-fairness", statement: "A tenant flood cannot permanently starve another tenant.", gates: ["fairness-load"] },
+  { ordinal: 12, id: "scope3.global-job-fairness", statement: "Global jobs are handled correctly by fairness logic.", gates: ["classification-claiming", "fairness-load"] },
+  { ordinal: 13, id: "scope3.class-concurrency-config", statement: "Process concurrency is independently configurable by class.", gates: ["architecture", "fairness-load"] },
+  { ordinal: 14, id: "scope3.local-concurrency-bound", statement: "One task's local concurrency remains bounded.", gates: ["architecture", "fairness-load"] },
+  { ordinal: 15, id: "scope3.global-db-bound", statement: "Database concurrency remains globally bounded across multiple tasks.", gates: ["architecture", "resource-governors", "fairness-load"] },
+  { ordinal: 16, id: "scope3.db-capacity-crash", statement: "A database capacity holder crash does not permanently leak capacity.", gates: ["resource-governors", "lifecycle-chaos"] },
+  { ordinal: 17, id: "scope3.provider-global-bound", statement: "Provider concurrency is globally bounded where configured.", gates: ["resource-governors"] },
+  { ordinal: 18, id: "scope3.provider-failure-isolation", statement: "Provider governor failure does not block unrelated providers.", gates: ["resource-governors", "lifecycle-chaos"] },
+  { ordinal: 19, id: "scope3.model-global-bound", statement: "Model concurrency remains globally bounded across tasks.", gates: ["resource-governors"] },
+  { ordinal: 20, id: "scope3.model-priority-reserve", statement: "BACKGROUND model load cannot permanently starve INTERACTIVE model work.", gates: ["resource-governors", "fairness-load"] },
+  { ordinal: 21, id: "scope3.tenant-model-quota", statement: "Tenant model quota is enforced where configured.", gates: ["resource-governors"] },
+  { ordinal: 22, id: "scope3.truthful-cost-governor", statement: "The known token/cost governor works without fabricating unknown usage.", gates: ["resource-governors", "regressions-boundaries"] },
+  { ordinal: 23, id: "scope3.capacity-defer-attempt", statement: "Resource saturation defers work without burning a business attempt.", gates: ["resource-governors", "lifecycle-chaos"] },
+  { ordinal: 24, id: "scope3.capacity-defer-no-spin", statement: "Deferred resource wait does not busy-spin.", gates: ["resource-governors", "lifecycle-chaos"] },
+  { ordinal: 25, id: "scope3.age-ignores-future-run", statement: "Oldest eligible age ignores future run_at.", gates: ["telemetry-scaling", "fairness-load"] },
+  { ordinal: 26, id: "scope3.age-class-specific", statement: "Oldest eligible age is class-specific.", gates: ["telemetry-scaling"] },
+  { ordinal: 27, id: "scope3.backlog-effective-capacity", statement: "Backlog per task uses effective healthy capacity.", gates: ["telemetry-scaling"] },
+  { ordinal: 28, id: "scope3.zero-capacity-pressure", statement: "Zero healthy tasks with positive backlog produces scale-out pressure.", gates: ["telemetry-scaling"] },
+  { ordinal: 29, id: "scope3.metric-eligibility", statement: "Scaling metrics exclude unsupported and retired work.", gates: ["telemetry-scaling", "classification-claiming"] },
+  { ordinal: 30, id: "scope3.signal-not-raw-depth", statement: "The scaling signal is not raw queue depth alone.", gates: ["telemetry-scaling"] },
+  { ordinal: 31, id: "scope3.four-services", statement: "Four independently scalable compute services exist in infrastructure as code.", gates: ["architecture", "release-governance"] },
+  { ordinal: 32, id: "scope3.independent-resource-envelopes", statement: "Service resource envelopes are independent.", gates: ["architecture"] },
+  { ordinal: 33, id: "scope3.heavy-resource-isolation", statement: "HEAVY resources and concurrency are isolated.", gates: ["architecture", "fairness-load"] },
+  { ordinal: 34, id: "scope3.realtime-heavy-isolation", statement: "REALTIME capacity is isolated from HEAVY saturation.", gates: ["architecture", "fairness-load"] },
+  { ordinal: 35, id: "scope3.ingress-placement", statement: "Realtime ingress is not unnecessarily attached to every service.", gates: ["architecture"] },
+  { ordinal: 36, id: "scope3.scheduler-ownership", statement: "Scheduler ownership is explicit.", gates: ["architecture", "lifecycle-chaos"] },
+  { ordinal: 37, id: "scope3.orchestrator-ownership", statement: "Orchestrator ownership is explicit and current.", gates: ["architecture", "release-governance"] },
+  { ordinal: 38, id: "scope3.singleton-scheduler", statement: "Horizontal worker scale does not multiply semantic scheduler work.", gates: ["lifecycle-chaos", "fairness-load"] },
+  { ordinal: 39, id: "scope3.truthful-class-heartbeats", statement: "Heartbeats identify compute service and class truthfully.", gates: ["telemetry-scaling", "release-governance"] },
+  { ordinal: 40, id: "scope3.independent-class-health", statement: "Fleet health detects one unhealthy class independently.", gates: ["telemetry-scaling", "release-governance"] },
+  { ordinal: 41, id: "scope3.sigterm-stops-claims", statement: "SIGTERM stops new claims.", gates: ["lifecycle-chaos"] },
+  { ordinal: 42, id: "scope3.graceful-drain", statement: "Graceful drain preserves in-flight durable work.", gates: ["lifecycle-chaos"] },
+  { ordinal: 43, id: "scope3.pre-effect-scale-in", statement: "Scale-in during pre-effect work is safe.", gates: ["lifecycle-chaos", "regressions-boundaries"] },
+  { ordinal: 44, id: "scope3.post-effect-scale-in", statement: "Scale-in after a possible effect preserves Scope-2 reconciliation semantics.", gates: ["lifecycle-chaos", "regressions-boundaries"] },
+  { ordinal: 45, id: "scope3.worker-crash-no-loss", statement: "Worker crash loses no jobs.", gates: ["lifecycle-chaos"] },
+  { ordinal: 46, id: "scope3.worker-crash-effect-safety", statement: "Worker crash duplicates no consequential effects.", gates: ["lifecycle-chaos", "regressions-boundaries"] },
+  { ordinal: 47, id: "scope3.mixed-load-progress", statement: "Mixed-class load preserves interactive progress.", gates: ["fairness-load"] },
+  { ordinal: 48, id: "scope3.background-capacity-isolation", statement: "BACKGROUND backlog cannot unintentionally consume HEAVY or REALTIME capacity.", gates: ["fairness-load", "architecture"] },
+  { ordinal: 49, id: "scope3.heavy-no-interactive-starvation", statement: "HEAVY backlog cannot starve INTERACTIVE work.", gates: ["fairness-load", "resource-governors"] },
+  { ordinal: 50, id: "scope3.db-saturation-bounded", statement: "Database saturation causes bounded degradation instead of connection explosion.", gates: ["fairness-load", "resource-governors"] },
+  { ordinal: 51, id: "scope3.provider-saturation-bounded", statement: "Provider saturation causes bounded degradation instead of a retry storm.", gates: ["fairness-load", "resource-governors"] },
+  { ordinal: 52, id: "scope3.model-saturation-bounded", statement: "Model saturation causes bounded degradation instead of unbounded parallel requests.", gates: ["fairness-load", "resource-governors"] },
+  { ordinal: 53, id: "scope3.truthful-api-backpressure", statement: "API and backpressure decisions use truthful canonical metrics.", gates: ["telemetry-scaling", "resource-governors"] },
+  { ordinal: 54, id: "scope3.accepted-work-not-dropped", statement: "Required durable Work is never silently dropped under load shedding.", gates: ["resource-governors", "regressions-boundaries"] },
+  { ordinal: 55, id: "scope3.autoscaling-bounds", statement: "Autoscaling minimum and maximum bounds are explicit.", gates: ["telemetry-scaling", "architecture"] },
+  { ordinal: 56, id: "scope3.class-scale-out", statement: "Autoscaling scale-out policy is class-specific.", gates: ["telemetry-scaling"] },
+  { ordinal: 57, id: "scope3.class-scale-in", statement: "Autoscaling scale-in policy is class-specific.", gates: ["telemetry-scaling"] },
+  { ordinal: 58, id: "scope3.bounded-scaling", statement: "Scaling configuration avoids unlimited capacity.", gates: ["telemetry-scaling", "architecture"] },
+  { ordinal: 59, id: "scope3.bounded-metric-dimensions", statement: "CloudWatch metric dimensions remain bounded.", gates: ["telemetry-scaling"] },
+  { ordinal: 60, id: "scope3.certified-release-deploy", statement: "Production release deploys all required services from the certified SHA and digest.", gates: ["release-governance"] },
+  { ordinal: 61, id: "scope3.release-convergence", statement: "Production release verifies convergence of every required compute service.", gates: ["release-governance"] },
+  { ordinal: 62, id: "scope3.rollback-compatibility", statement: "Rollback cannot leave a silently mixed incompatible compute fleet.", gates: ["release-governance", "lifecycle-chaos"] },
+  { ordinal: 63, id: "scope3.singular-mutation-authority", statement: "Phase-15A production mutation authority remains singular.", gates: ["release-governance", "regressions-boundaries"] },
+  { ordinal: 64, id: "scope3.no-service-deploy-bypass", statement: "No independent service deploy bypass exists.", gates: ["release-governance"] },
+  { ordinal: 65, id: "scope3.scope1-green", statement: "Scope-1 certification remains green.", gates: ["regressions-boundaries"] },
+  { ordinal: 66, id: "scope3.scope2-green", statement: "Scope-2 certification remains green.", gates: ["regressions-boundaries"] },
+  { ordinal: 67, id: "scope3.planner-compiler-green", statement: "Planner and compiler semantics remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 68, id: "scope3.work-planrevision-green", statement: "Work and PlanRevision semantics remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 69, id: "scope3.authority-green", statement: "Authority semantics remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 70, id: "scope3.effect-protocol-green", statement: "BusinessEffect and effect protocol semantics remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 71, id: "scope3.receipt-reconciliation-green", statement: "DecisionReceipt and reconciliation semantics remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 72, id: "scope3.waits-signals-green", statement: "Durable waits and signals remain green.", gates: ["regressions-boundaries"] },
+  { ordinal: 73, id: "scope3.tenant-isolation-green", statement: "Current tenant isolation remains fail-closed.", gates: ["regressions-boundaries"] },
+  { ordinal: 74, id: "scope3.scope14-not-frozen", statement: "Final Scope-14 regional and private-network decisions are not prematurely frozen.", gates: ["architecture", "regressions-boundaries"] },
+  { ordinal: 75, id: "scope3.future-scope-boundary", statement: "No architecture owned by Scope 4 through 15B is implemented early.", gates: ["architecture", "regressions-boundaries"] },
+] as const;
+
+export const SCOPE3_MANDATORY_CASE_COUNT = SCOPE3_MANDATORY_CASES.length;

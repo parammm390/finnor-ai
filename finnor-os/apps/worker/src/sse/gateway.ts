@@ -13,6 +13,20 @@ type IdentityContext = Omit<TenantContext, "correlationId">;
 type DeltaPage = Awaited<ReturnType<typeof readOperationalDeltas>>;
 
 const HEARTBEAT_MS = 15_000;
+const activeSseResponses = new Set<ServerResponse>();
+
+export function activeSseConnectionCount(): number { return activeSseResponses.size; }
+
+/** ALB deregistration cannot by itself make a persistent SSE request finish.
+ * Tell clients to reconnect using their durable cursor, then close locally. */
+export function drainSseConnections(): void {
+  for (const response of activeSseResponses) {
+    if (!response.destroyed) {
+      response.write("event: reconnect\ndata: {}\n\n");
+      response.end();
+    }
+  }
+}
 
 function workerCapabilities(): string[] {
   return (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse")
@@ -80,6 +94,7 @@ function handleEvents(req: IncomingMessage, res: ServerResponse, url: URL): void
         ...corsHeaders(req.headers.origin),
       });
       res.write(": connected\n\n");
+      activeSseResponses.add(res);
 
       let cursor = pendingInitial.cursor;
       let closed = false;
@@ -137,11 +152,13 @@ function handleEvents(req: IncomingMessage, res: ServerResponse, url: URL): void
 
       const heartbeat = setInterval(() => res.write(": heartbeat\n\n"), HEARTBEAT_MS);
       const cleanup = () => {
+        if (closed) return;
         closed = true;
+        activeSseResponses.delete(res);
         clearInterval(heartbeat);
         unsubscribe();
       };
-      req.on("close", cleanup);
+      res.on("close", cleanup);
       res.on("error", cleanup);
     })
     .catch((error) => {

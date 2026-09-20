@@ -1,6 +1,6 @@
 import {
   CURRENT_MIGRATION_HEAD,
-  MINIMUM_PRODUCT_RUNTIME_PROTOCOL,
+  PHASE5_CUTOVER_PROTOCOL,
   readProductRuntimeAuthoritySnapshot,
   recordCutoverCompatibleHeartbeat,
   type ProductRuntimeAuthoritySnapshot,
@@ -32,8 +32,8 @@ export async function GET(): Promise<Response> {
 
   if (
     authority
-    && authority.epoch >= MINIMUM_PRODUCT_RUNTIME_PROTOCOL
-    && authority.minimumCutoverProtocol >= MINIMUM_PRODUCT_RUNTIME_PROTOCOL
+    && authority.epoch >= PHASE5_CUTOVER_PROTOCOL
+    && authority.minimumCutoverProtocol >= PHASE5_CUTOVER_PROTOCOL
     && authority.activeProductVertical === "private_equity"
     && ["preparing", "water_intake_frozen", "water_retired"].includes(authority.state)
   ) {
@@ -64,8 +64,12 @@ export async function GET(): Promise<Response> {
       fleet = await readWorkerFleetReadiness(expectedReleaseSha);
       checks.migrations = { ok: fleet.migrationHead === CURRENT_MIGRATION_HEAD, detail: fleet.migrationHead ?? "none" };
       checks.workerFleet = {
-        ok: fleet.healthyWorkers > 0,
-        detail: { compatibleWorkers: fleet.healthyWorkers, freshRuntimes: fleet.freshRuntimes },
+        ok: fleet.computeCutoverState === "authoritative"
+          ? fleet.computeReady === true
+          : (fleet.legacyCompatibleWorkers ?? 0) > 0 || fleet.computeReady === true,
+        detail: { compatibleWorkers: fleet.healthyWorkers, freshRuntimes: fleet.freshRuntimes,
+          legacyCompatibleWorkers: fleet.legacyCompatibleWorkers,
+          computeCutoverState: fleet.computeCutoverState, computeClassCounts: fleet.computeClassCounts },
       };
     } catch {
       checks.migrations = { ok: false, detail: "unknown" };
@@ -86,10 +90,12 @@ export async function GET(): Promise<Response> {
   checks.productAuthority = {
     ok: finalPe.productAuthority,
     detail: {
-      status: finalPe.productAuthority ? "active" : "inactive",
+      state: authority?.state ?? null,
       activeProductVertical: authority?.activeProductVertical ?? null,
       epoch: authority?.epoch ?? null,
       minimumCutoverProtocol: authority?.minimumCutoverProtocol ?? null,
+      waterIntakeFrozenAt: authority?.waterIntakeFrozenAt ?? null,
+      waterRetiredAt: authority?.waterRetiredAt ?? null,
       finalPeGateRequired: finalPe.finalPeGateRequired,
     },
   };

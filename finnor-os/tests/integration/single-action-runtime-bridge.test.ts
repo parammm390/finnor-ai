@@ -16,6 +16,7 @@ import {
   decisionReceipts,
   domainActions,
   integrationOperations,
+  jobDeliveryAttempts,
   jobs,
   reconciliationCases,
   receiveWork,
@@ -23,12 +24,14 @@ import {
   users,
   withTenant,
   workflowRuns,
+  workflowStepClaims,
   workflowSteps,
 } from "@finnor/db";
 import { FinnorOrchestrator, authorizeActionExecutionTx, emitInstructionEvent, executeAuthorizedEffectStep } from "@finnor/orchestration";
 import { migrate } from "../../packages/db/migrate";
 import { seed, SEED_OWNER_EMAIL, SEED_TENANT_ID } from "../../packages/db/seed";
 import { runWorkflowStep } from "../../apps/worker/src/handlers/run-workflow-step";
+import { JobQueue } from "../../apps/worker/src/queue";
 import { cancelRun, claimStep, recoverStaleSteps } from "@finnor/workflow-runtime";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -298,6 +301,93 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     expect(storedStep).toMatchObject({ status: "failed", executionState: "blocked", effectCommitAt: null });
   });
 
+  it("records an authority revocation as causal-ready but execution-ineligible before any runtime claim", async () => {
+    const fixture = await draftUpdate("Pre-claim revocation must not write");
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const { command, run, step } = await durableRows(fixture.action.id);
+    expect(step).toMatchObject({
+      protocolVersion: 2,
+      status: "pending",
+      executionState: "authorized",
+      causalReadyAt: expect.any(Date),
+      executionEligibleAt: null,
+      attempts: 0,
+    });
+
+    const [targetJob] = await withTenant(SEED_TENANT_ID, (db) => db.update(jobs).set({
+      priority: 1_000_000,
+      runAt: new Date(0),
+    }).where(eq(jobs.idempotencyKey, `workflow-step:${SEED_TENANT_ID}:${step!.id}`)).returning());
+    expect(targetJob).toMatchObject({ type: "run_workflow_step_v2", protocolVersion: 2, status: "queued" });
+
+    const workerId = `eligibility-certifier:${randomUUID()}`;
+    const queue = new JobQueue(workerId, 30);
+    queue.register("run_workflow_step_v2", runWorkflowStep, {
+      protocolVersions: [2],
+      retrySafety: "durably_effect_guarded",
+    });
+    await withTenant(SEED_TENANT_ID, (db) => db.update(users).set({ status: "suspended" }).where(and(
+      eq(users.tenantId, SEED_TENANT_ID),
+      eq(users.id, ownerId),
+    )));
+    try {
+      expect(await queue.tick()).toBe(true);
+    } finally {
+      await withTenant(SEED_TENANT_ID, (db) => db.update(users).set({ status: "active" }).where(and(
+        eq(users.tenantId, SEED_TENANT_ID),
+        eq(users.id, ownerId),
+      )));
+    }
+
+    const observed = await withTenant(SEED_TENANT_ID, async (db) => {
+      const [task, action, effect, storedStep, storedRun, storedCommand, storedJob] = await Promise.all([
+        db.select().from(tasks).where(eq(tasks.id, fixture.taskId)).then((rows) => rows[0]),
+        db.select().from(domainActions).where(eq(domainActions.id, fixture.action.id)).then((rows) => rows[0]),
+        db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).then((rows) => rows[0]),
+        db.select().from(workflowSteps).where(eq(workflowSteps.id, step!.id)).then((rows) => rows[0]),
+        db.select().from(workflowRuns).where(eq(workflowRuns.id, run!.id)).then((rows) => rows[0]),
+        db.select().from(commands).where(eq(commands.id, command!.id)).then((rows) => rows[0]),
+        db.select().from(jobs).where(eq(jobs.id, targetJob!.id)).then((rows) => rows[0]),
+      ]);
+      const [claims, deliveries] = await Promise.all([
+        db.select().from(workflowStepClaims).where(and(
+          eq(workflowStepClaims.tenantId, SEED_TENANT_ID),
+          eq(workflowStepClaims.workflowStepId, step!.id),
+        )),
+        db.select().from(jobDeliveryAttempts).where(and(
+          eq(jobDeliveryAttempts.tenantId, SEED_TENANT_ID),
+          eq(jobDeliveryAttempts.jobId, targetJob!.id),
+        )),
+      ]);
+      return { task, action, effect, storedStep, storedRun, storedCommand, storedJob, claims, deliveries };
+    });
+    expect(observed.task).toMatchObject({ title: "Before durable approval", status: "open" });
+    expect(observed.action).toMatchObject({ status: "needs_human_review", executionStartedAt: null });
+    // Scope 2 records the runtime refusal. It must not invent a Scope-1 CANCEL.
+    expect(observed.effect).toMatchObject({ status: "authorized" });
+    expect(observed.storedStep).toMatchObject({
+      status: "failed",
+      executionState: "blocked",
+      causalReadyAt: expect.any(Date),
+      executionEligibleAt: null,
+      claimedAt: null,
+      claimToken: null,
+      attempts: 0,
+      effectCommitAt: null,
+      eligibilityEvidence: expect.objectContaining({
+        eligible: false,
+        authorityIsNotCausality: true,
+        effectCommitCrossed: false,
+      }),
+    });
+    expect(observed.storedRun).toMatchObject({ status: "failed" });
+    expect(observed.storedCommand).toMatchObject({ status: "failed" });
+    expect(observed.storedJob).toMatchObject({ status: "completed", attempts: 1 });
+    expect(observed.claims).toHaveLength(0);
+    expect(observed.deliveries).toHaveLength(1);
+    expect(observed.deliveries[0]).toMatchObject({ workerId, outcome: "completed" });
+  });
+
   it("does not execute an approved effect after its material target precondition changes", async () => {
     const fixture = await draftUpdate("Stale effect must not overwrite current truth");
     await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
@@ -383,7 +473,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     expect(task).toMatchObject({ title: "Before durable approval", status: "open" });
     expect(action!.status).toBe("needs_human_review");
     expect(effect!.status).toBe("reconciliation_required");
-    expect(storedStep).toMatchObject({ status: "leased", executionState: "reconciling" });
+    expect(storedStep).toMatchObject({ status: "waiting_observation", executionState: "reconciling", claimToken: null });
     expect(operations).toHaveLength(1);
     expect(operations[0]!.status).toBe("unknown");
     expect(cases).toHaveLength(1);

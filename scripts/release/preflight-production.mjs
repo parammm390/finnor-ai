@@ -11,6 +11,7 @@ import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, ass
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
 const worker = contract.topology.worker
+const profiles = contract.topology.computePlane.classes
 const outputIndex = process.argv.indexOf("--output-file")
 const outputPath = outputIndex >= 0 ? process.argv[outputIndex + 1] : undefined
 const databaseEnvIndex = process.argv.indexOf("--database-env")
@@ -113,46 +114,99 @@ const clusterResponse = awsJson("ecs", ["describe-clusters", "--clusters", worke
 const cluster = clusterResponse.clusters?.[0]
 if (!cluster || cluster.status !== "ACTIVE") throw new Error(`ECS cluster ${worker.clusterName} is missing or not ACTIVE`)
 if (cluster.registeredContainerInstancesCount !== 0) throw new Error("FINNOR ECS cluster unexpectedly contains EC2 container instances")
-const serviceResponse = awsJson("ecs", ["describe-services", "--cluster", worker.clusterName, "--services", worker.serviceName])
-const service = serviceResponse.services?.[0]
-if (!service || service.status !== "ACTIVE") throw new Error(`ECS service ${worker.serviceName} is missing or not ACTIVE`)
-if (service.launchType !== "FARGATE") throw new Error(`ECS service launch type is ${service.launchType ?? "<missing>"}, not FARGATE`)
-if (service.desiredCount !== worker.desiredCount) throw new Error(`ECS desired count ${service.desiredCount} differs from ${worker.desiredCount}`)
-if (service.capacityProviderStrategy?.some((entry) => entry.capacityProvider === "FARGATE_SPOT")) throw new Error("ECS service is configured for Fargate Spot")
-if (service.deploymentConfiguration?.minimumHealthyPercent !== 100 || service.deploymentConfiguration?.maximumPercent !== 200) throw new Error("ECS rolling deployment percentages are not 100/200")
-if (service.deploymentConfiguration?.deploymentCircuitBreaker?.enable !== true || service.deploymentConfiguration?.deploymentCircuitBreaker?.rollback !== true) throw new Error("ECS deployment circuit breaker rollback is not enabled")
-const configuredSubnets = service.networkConfiguration?.awsvpcConfiguration?.subnets ?? []
-if (new Set(configuredSubnets).size !== new Set(worker.publicSubnetIds).size || worker.publicSubnetIds.some((subnet) => !configuredSubnets.includes(subnet))) throw new Error("ECS service subnets differ from the canonical two-subnet public network")
-const taskSecurityGroupId = service.networkConfiguration?.awsvpcConfiguration?.securityGroups?.[0]
-if (!taskSecurityGroupId) throw new Error("ECS service has no worker task security group")
-const taskDefinition = awsJson("ecs", ["describe-task-definition", "--task-definition", worker.taskFamily]).taskDefinition
-if (!taskDefinition || taskDefinition.family !== worker.taskFamily) throw new Error(`ECS task definition family ${worker.taskFamily} is missing`)
-const container = taskDefinition.containerDefinitions?.find((entry) => entry.name === worker.containerName)
-if (!container || !container.portMappings?.some((entry) => entry.containerPort === worker.containerPort)) throw new Error("ECS task definition does not expose the canonical worker port")
-const taskEnv = Object.fromEntries((container.environment ?? []).map((entry) => [entry.name, entry.value]))
-for (const [name, value] of Object.entries({
-  SECRETS_PROVIDER: "aws-secrets-manager",
-  SUPABASE_URL: contract.topology.database.supabaseUrl,
-  FINNOR_WORKER_CAPABILITIES: "jobs,orchestration,computer,event-wake,connection-health,realtime,sse",
-  JARVIS_SSE_ALLOWED_ORIGINS: "https://finnorai.com",
-  PORT: "8090",
-  SSE_PORT: "8090",
-  WORKER_CONCURRENCY: "2",
-  WORKER_INTERACTIVE_RESERVED_CONCURRENCY: "1",
-  FINNOR_DB_POOL_MAX: "4",
-})) {
-  if (taskEnv[name] !== value) throw new Error(`ECS task definition ${name} is ${taskEnv[name] ?? "<missing>"}, expected ${value}`)
+const stack = awsJson("cloudformation", ["describe-stacks", "--stack-name", worker.stackName]).Stacks?.[0]
+if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production CloudFormation stack is missing, unstable, or uses an unexpected service role")
+const stackParameters = Object.fromEntries((stack.Parameters ?? []).map((entry) => [entry.ParameterKey, entry.ParameterValue]))
+const computeStage = stackParameters.ComputePlaneStage ?? "legacy"
+if (!["legacy", "preparing", "routing", "finalized"].includes(computeStage)) throw new Error(`unknown compute-plane stage ${computeStage}`)
+
+function assertServiceTopology(service, profile, label, { legacy = false } = {}) {
+  if (!service || service.status !== "ACTIVE" || service.launchType !== "FARGATE") throw new Error(`${label} ECS service is missing, inactive, or not FARGATE`)
+  const minTasks = legacy ? (computeStage === "routing" ? 0 : worker.desiredCount) : profile.minTasks
+  const maxTasks = legacy ? worker.desiredCount : profile.maxTasks
+  if (!Number.isInteger(service.desiredCount) || service.desiredCount < minTasks || service.desiredCount > maxTasks) throw new Error(`${label} desired count is outside its governed envelope`)
+  if (service.capacityProviderStrategy?.some((entry) => entry.capacityProvider === "FARGATE_SPOT")) throw new Error(`${label} is configured for Fargate Spot`)
+  if (service.deploymentConfiguration?.minimumHealthyPercent !== 100 || service.deploymentConfiguration?.maximumPercent !== 200) throw new Error(`${label} rolling deployment percentages are not 100/200`)
+  if (service.deploymentConfiguration?.deploymentCircuitBreaker?.enable !== true || service.deploymentConfiguration?.deploymentCircuitBreaker?.rollback !== true) throw new Error(`${label} deployment circuit breaker rollback is not enabled`)
+  const subnets = service.networkConfiguration?.awsvpcConfiguration?.subnets ?? []
+  if (new Set(subnets).size !== new Set(worker.publicSubnetIds).size || worker.publicSubnetIds.some((subnet) => !subnets.includes(subnet))) throw new Error(`${label} subnets differ from the canonical two-subnet network`)
 }
-if ("AWS_ACCESS_KEY_ID" in taskEnv || "AWS_SECRET_ACCESS_KEY" in taskEnv) throw new Error("ECS task definition contains static AWS credentials")
-let taskSecretMap
-try { taskSecretMap = JSON.parse(taskEnv.FINNOR_SECRET_IDS ?? "") } catch { throw new Error("ECS task definition FINNOR_SECRET_IDS is not valid JSON") }
-if (JSON.stringify(taskSecretMap) !== JSON.stringify(worker.secretMap)) throw new Error("ECS task definition secret map differs from the canonical map")
+
+const capabilities = {
+  REALTIME: "jobs,realtime,sse",
+  INTERACTIVE: "jobs,orchestration,event-wake,workflow",
+  BACKGROUND: "jobs,recovery,connection-health,scheduled-scans",
+  HEAVY: "jobs,computer,artifact",
+}
+const classSecretKeys = {
+  REALTIME: ["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"],
+  INTERACTIVE: Object.keys(worker.secretMap),
+  BACKGROUND: Object.keys(worker.secretMap),
+  HEAVY: ["DATABASE_URL", "GROQ_API_KEY", "REDIS_URL", "SENTRY_DSN"],
+}
+const classServices = {}
+let service
+let taskDefinition
+let taskSecurityGroupId
+if (computeStage !== "legacy") {
+  const names = Object.values(profiles).map((profile) => profile.serviceName)
+  const found = awsJson("ecs", ["describe-services", "--cluster", worker.clusterName, "--services", ...names]).services ?? []
+  for (const [workloadClass, profile] of Object.entries(profiles)) {
+    const classService = found.find((entry) => entry.serviceName === profile.serviceName)
+    assertServiceTopology(classService, profile, workloadClass)
+    const classTask = awsJson("ecs", ["describe-task-definition", "--task-definition", classService.taskDefinition]).taskDefinition
+    if (!classTask || classTask.family !== profile.taskFamily || classTask.executionRoleArn !== `arn:aws:iam::${worker.accountId}:role/${worker.executionRoleName}` || classTask.taskRoleArn !== `arn:aws:iam::${worker.accountId}:role/${profile.taskRoleName}`) throw new Error(`${workloadClass} task definition or role identity differs from the contract`)
+    const classContainer = classTask.containerDefinitions?.find((entry) => entry.name === profile.containerName)
+    if (!classContainer) throw new Error(`${workloadClass} container is missing`)
+    const env = Object.fromEntries((classContainer.environment ?? []).map((entry) => [entry.name, entry.value]))
+    const expectedEnv = {
+      SECRETS_PROVIDER: "aws-secrets-manager", SUPABASE_URL: contract.topology.database.supabaseUrl,
+      FINNOR_WORKLOAD_CLASS: workloadClass, FINNOR_WORKER_CAPABILITIES: capabilities[workloadClass],
+      WORKER_CONCURRENCY: String(profile.workerConcurrency), FINNOR_DB_POOL_MAX: "1", PORT: "8090",
+    }
+    for (const [name, value] of Object.entries(expectedEnv)) if (env[name] !== value) throw new Error(`${workloadClass} ${name} is ${env[name] ?? "<missing>"}, expected ${value}`)
+    if ("AWS_ACCESS_KEY_ID" in env || "AWS_SECRET_ACCESS_KEY" in env) throw new Error(`${workloadClass} contains static AWS credentials`)
+    let secretMap
+    try { secretMap = JSON.parse(env.FINNOR_SECRET_IDS ?? "") } catch { throw new Error(`${workloadClass} FINNOR_SECRET_IDS is invalid`) }
+    const expectedSecretMap = Object.fromEntries(classSecretKeys[workloadClass].map((key) => [key, worker.secretMap[key]]))
+    if (JSON.stringify(secretMap) !== JSON.stringify(expectedSecretMap)) throw new Error(`${workloadClass} secret map exceeds or differs from its contract`)
+    classServices[workloadClass] = { service: classService, taskDefinition: classTask }
+  }
+  service = classServices.REALTIME.service
+  taskDefinition = classServices.REALTIME.taskDefinition
+  taskSecurityGroupId = service.networkConfiguration?.awsvpcConfiguration?.securityGroups?.[0]
+}
+if (["legacy", "preparing", "routing"].includes(computeStage)) {
+  const legacyService = awsJson("ecs", ["describe-services", "--cluster", worker.clusterName, "--services", worker.serviceName]).services?.[0]
+  assertServiceTopology(legacyService, null, "legacy worker", { legacy: true })
+  const legacyTask = awsJson("ecs", ["describe-task-definition", "--task-definition", legacyService.taskDefinition]).taskDefinition
+  if (!legacyTask || legacyTask.family !== worker.taskFamily) throw new Error(`legacy task family ${worker.taskFamily} is missing`)
+  const container = legacyTask.containerDefinitions?.find((entry) => entry.name === worker.containerName)
+  if (!container?.portMappings?.some((entry) => entry.containerPort === worker.containerPort)) throw new Error("legacy task does not expose the canonical worker port")
+  const env = Object.fromEntries((container.environment ?? []).map((entry) => [entry.name, entry.value]))
+  for (const [name, value] of Object.entries({ SECRETS_PROVIDER: "aws-secrets-manager", SUPABASE_URL: contract.topology.database.supabaseUrl,
+    FINNOR_WORKER_CAPABILITIES: "jobs,orchestration,computer,event-wake,connection-health,realtime,sse", JARVIS_SSE_ALLOWED_ORIGINS: "https://finnorai.com",
+    PORT: "8090", SSE_PORT: "8090", WORKER_CONCURRENCY: "2", WORKER_INTERACTIVE_RESERVED_CONCURRENCY: "1" })) {
+    if (env[name] !== value) throw new Error(`legacy task ${name} is ${env[name] ?? "<missing>"}, expected ${value}`)
+  }
+  if ("AWS_ACCESS_KEY_ID" in env || "AWS_SECRET_ACCESS_KEY" in env) throw new Error("legacy task contains static AWS credentials")
+  let secretMap
+  try { secretMap = JSON.parse(env.FINNOR_SECRET_IDS ?? "") } catch { throw new Error("legacy FINNOR_SECRET_IDS is invalid") }
+  if (JSON.stringify(secretMap) !== JSON.stringify(worker.secretMap)) throw new Error("legacy secret map differs from the canonical map")
+  if (computeStage === "legacy") {
+    service = legacyService
+    taskDefinition = legacyTask
+    taskSecurityGroupId = service.networkConfiguration?.awsvpcConfiguration?.securityGroups?.[0]
+  }
+}
+if (!service || !taskDefinition || !taskSecurityGroupId) throw new Error("preflight could not resolve the active realtime ECS topology")
 
 const loadBalancers = awsJson("elbv2", ["describe-load-balancers", "--names", worker.loadBalancerName]).LoadBalancers ?? []
 const loadBalancer = loadBalancers[0]
 if (!loadBalancer || loadBalancer.State?.Code !== "active") throw new Error(`ALB ${worker.loadBalancerName} is missing or not active`)
 if (loadBalancer.VpcId !== worker.vpcId || loadBalancer.Scheme !== "internet-facing") throw new Error("realtime ALB VPC or scheme differs from the contract")
-const targetGroups = awsJson("elbv2", ["describe-target-groups", "--names", worker.targetGroupName]).TargetGroups ?? []
+const activeTargetGroupName = ["legacy", "preparing"].includes(computeStage) ? worker.targetGroupName : profiles.REALTIME.serviceName
+const targetGroups = awsJson("elbv2", ["describe-target-groups", "--names", activeTargetGroupName]).TargetGroups ?? []
 const targetGroup = targetGroups[0]
 if (!targetGroup || targetGroup.VpcId !== worker.vpcId || targetGroup.TargetType !== "ip" || targetGroup.Port !== worker.containerPort) throw new Error("ALB target group does not match the Fargate worker")
 if (targetGroup.HealthCheckPath !== "/healthz" || targetGroup.HealthCheckProtocol !== "HTTP") throw new Error("ALB target health check is not GET /healthz over HTTP")
@@ -221,7 +275,7 @@ try {
         to_regclass('finnor_os.import_entity_refs') IS NOT NULL AS import_entity_refs,
         EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='finnor_os' AND table_name='tenant_integrations' AND column_name='credential_ref') AS tenant_credentials
     `)
-    if (Object.values(shape.rows[0] ?? {}).some((value) => value !== true)) throw new Error("canonical production schema shape is inconsistent")
+    if (Object.values(shape.rows[0] ?? {}).some((value) => value !== true)) throw new Error("production Phase 1–3 schema shape is inconsistent")
   }
   const counts = await client.query(`
     SELECT
@@ -257,20 +311,26 @@ const evidence = {
     imageUri: `${repository.repositoryUri}@${image.imageDigest}`,
     clusterName: worker.clusterName,
     clusterArn: cluster.arn,
-    serviceName: worker.serviceName,
+    computePlaneStage: computeStage,
+    serviceName: service.serviceName,
     serviceArn: service.serviceArn,
-    taskFamily: worker.taskFamily,
+    taskFamily: taskDefinition.family,
     taskDefinitionArn: taskDefinition.taskDefinitionArn,
     loadBalancerName: worker.loadBalancerName,
     loadBalancerArn: loadBalancer.LoadBalancerArn,
     loadBalancerDnsName: loadBalancer.DNSName,
-    targetGroupName: worker.targetGroupName,
+    targetGroupName: activeTargetGroupName,
     targetGroupArn: targetGroup.TargetGroupArn,
     httpListenerArn: httpListener.ListenerArn,
     httpsListenerArn: httpsListener.ListenerArn,
     albSecurityGroupId,
     taskSecurityGroupId,
     publicSubnetIds: worker.publicSubnetIds,
+    classServices: Object.fromEntries(Object.entries(classServices).map(([workloadClass, value]) => [workloadClass, {
+      serviceName: value.service.serviceName,
+      taskDefinitionArn: value.taskDefinition.taskDefinitionArn,
+      desiredCount: value.service.desiredCount,
+    }])),
   },
   database: { host: parsedDatabaseUrl.hostname, migrationHead, businessCounts },
 }

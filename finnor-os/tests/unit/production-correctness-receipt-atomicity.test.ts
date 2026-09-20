@@ -11,8 +11,8 @@ describe("production-correctness DecisionReceipt atomicity", () => {
     const steps = source("steps.ts");
     const claim = steps.slice(steps.indexOf("export async function claimStep"), steps.indexOf("function extractCitations"));
 
-    expect(claim).toContain("if (claimed) await openReceiptForClaimTx(db, tenantId, claimed)");
-    expect(claim).not.toMatch(/if \(claimed\) await openReceiptForClaimTx\([^\n]*\);\s*return claimed;/);
+    expect(claim).toMatch(/const claimed = await withTenant\([\s\S]*if \(claimed\) \{[\s\S]*await db\.insert\(workflowStepClaims\)[\s\S]*await openReceiptForClaimTx\(db, tenantId, claimed\);[\s\S]*return claimed \?\? null;[\s\S]*\}\);/);
+    expect(claim).not.toMatch(/await withTenant\([\s\S]*\}\);\s*if \(claimed\)[\s\S]*openReceiptForClaimTx/);
     expect(steps).not.toContain("failed to open receipt for step");
   });
 

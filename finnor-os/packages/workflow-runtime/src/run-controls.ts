@@ -7,7 +7,7 @@
 // execution) so "who paused this and when" is answerable the same way any other
 // consequential action in this system is.
 
-import { actionLog, businessEffects, commands, domainActions, reconciliationCases, withTenant, workflowRuns, workflowSteps, reconcileWorkStatus, resolveTenantVertical } from "@finnor/db";
+import { actionLog, businessEffects, commands, domainActions, reconciliationCases, withTenant, workflowRuns, workflowStepClaims, workflowSteps, reconcileWorkStatus, resolveTenantVertical } from "@finnor/db";
 import type { Db } from "@finnor/db";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { redriveNextPendingStepTx } from "./steps";
@@ -118,19 +118,23 @@ async function applyTransition(
   return { ok: true, run: updated };
 }
 
-export async function pauseRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+export async function pauseRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, _authorityDecisionId?: string): Promise<RunControlResult> {
   return applyTransition(tenantId, runId, expectedVersion, TRANSITIONS.pause, requestedBy);
 }
 
-export async function resumeRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+export async function resumeRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, authorityDecisionId?: string): Promise<RunControlResult> {
   return applyTransition(tenantId, runId, expectedVersion, TRANSITIONS.resume, requestedBy, async (db) => {
     // The old delivery may already have completed as a no-op while the run was paused.
     // Advance the generation and insert its replacement atomically with the resume.
-    await redriveNextPendingStepTx(db, tenantId, runId);
+    await redriveNextPendingStepTx(db, tenantId, runId, authorityDecisionId ? {
+      actorId: requestedBy,
+      authorityDecisionId,
+      reason: "Resume requested replacement delivery for the next causally-ready pending step",
+    } : undefined);
   });
 }
 
-export async function cancelRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+export async function cancelRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, _authorityDecisionId?: string): Promise<RunControlResult> {
   await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
     const [run] = await db.update(workflowRuns).set({ status: "cancelled", version: sql`${workflowRuns.version} + 1`, updatedAt: new Date() })
@@ -151,12 +155,27 @@ export async function cancelRun(tenantId: string, runId: string, expectedVersion
     const active = steps.filter((step) => step.status === "pending" || step.status === "leased");
     const beforeEffectIds = active.filter((step) => !step.effectCommitAt && ["authorized", "claimed"].includes(step.executionState)).map((step) => step.id);
     if (beforeEffectIds.length > 0) {
+      // Cancellation transfers ownership away from every pre-effect worker. Close
+      // the append-only claim history first, then clear the live claim token/fence
+      // shape on the step. A stale worker retaining its old token can no longer
+      // commit through any fenced settlement path after this transaction wins.
+      await db.update(workflowStepClaims).set({
+        outcome: "known_failed",
+        finishedAt: now,
+      }).where(and(
+        eq(workflowStepClaims.tenantId, tenantId),
+        inArray(workflowStepClaims.workflowStepId, beforeEffectIds),
+        sql`${workflowStepClaims.finishedAt} IS NULL`,
+      ));
       await db.update(workflowSteps).set({
         status: "failed",
         executionState: "cancelled_before_effect",
         cancellationRequestedAt: now,
         terminalReason: "Cancelled before the effect commit point",
         leaseExpiresAt: null,
+        leaseHeartbeatAt: null,
+        claimToken: null,
+        claimOwner: null,
         updatedAt: now,
       }).where(and(eq(workflowSteps.tenantId, tenantId), inArray(workflowSteps.id, beforeEffectIds)));
     }
@@ -223,7 +242,7 @@ export async function cancelRun(tenantId: string, runId: string, expectedVersion
  *  'pending' and re-drives the run via the same advanceWorkflow() every step
  *  completion already calls. Never resets a step that's genuinely still in flight
  *  ('leased') — only ones that terminally failed. */
-export async function retryRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+export async function retryRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, authorityDecisionId?: string): Promise<RunControlResult> {
   await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
     const steps = await db.select().from(workflowSteps).where(and(
@@ -287,7 +306,11 @@ export async function retryRun(tenantId: string, runId: string, expectedVersion:
         output: { safeKnownFailure: true, effectIds },
       })));
     }
-    await redriveNextPendingStepTx(db, tenantId, runId);
+    await redriveNextPendingStepTx(db, tenantId, runId, authorityDecisionId ? {
+      actorId: requestedBy,
+      authorityDecisionId,
+      reason: "Operator retry redrove a known pre-effect failure without changing semantic operation identity",
+    } : undefined);
     await recordRunControlReceiptTx(
       db,
       tenantId,
@@ -309,7 +332,7 @@ export async function retryRun(tenantId: string, runId: string, expectedVersion:
   return { ok: true, run: updated };
 }
 
-export async function escalateRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string): Promise<RunControlResult> {
+export async function escalateRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, _authorityDecisionId?: string): Promise<RunControlResult> {
   await assertActiveRun(tenantId, runId);
   return applyTransition(tenantId, runId, expectedVersion, TRANSITIONS.escalate, requestedBy);
 }

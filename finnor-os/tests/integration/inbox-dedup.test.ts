@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, tenants, workflowSteps, workflowRuns, commands, inboxEvents, reconciliationCases, decisionReceipts } from "@finnor/db";
+import { withTenant, closePool, tenants, workflowSteps, workflowStepClaims, workflowRuns, commands, inboxEvents, reconciliationCases, decisionReceipts } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import { submitCommand, claimStep, completeStep, receiveInboxEvent } from "@finnor/workflow-runtime";
 
@@ -48,6 +48,7 @@ describe.skipIf(!available)("inbox event dedup + matching", () => {
       await db.delete(reconciliationCases).where(eq(reconciliationCases.tenantId, TENANT_ID));
       await db.delete(inboxEvents).where(eq(inboxEvents.tenantId, TENANT_ID));
       await db.delete(decisionReceipts).where(eq(decisionReceipts.tenantId, TENANT_ID));
+      await db.delete(workflowStepClaims).where(eq(workflowStepClaims.tenantId, TENANT_ID));
       await db.delete(workflowSteps).where(eq(workflowSteps.tenantId, TENANT_ID));
       await db.delete(workflowRuns).where(eq(workflowRuns.tenantId, TENANT_ID));
       await db.delete(commands).where(eq(commands.tenantId, TENANT_ID));

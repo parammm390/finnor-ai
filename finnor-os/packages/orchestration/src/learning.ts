@@ -4,8 +4,8 @@
 // own future behavior. Deterministic aggregation only, no LLM call — this is a report,
 // not a judgment.
 
-import { withTenant, domainActions, actionLog, scanFindings, pendingConfirmations, voiceTurns, domainPolicies } from "@finnor/db";
-import { and, eq, gte, desc, isNotNull, inArray } from "drizzle-orm";
+import { withTenant, MAX_HIGH_EGRESS_ROWS, domainActions, actionLog, scanFindings, pendingConfirmations, voiceTurns, domainPolicies } from "@finnor/db";
+import { and, asc, eq, gte, desc, inArray, isNotNull, sql } from "drizzle-orm";
 import { parseSpokenDecision } from "./voice";
 import { redactText } from "@finnor/security";
 
@@ -29,6 +29,12 @@ export interface ActionTypeStats {
 
 /** Pure aggregation — no DB access, unit-testable with fabricated rows. */
 export function summarizeActionOutcomes(rows: Array<{ actionType: string; status: string }>): ActionTypeStats[] {
+  return summarizeActionOutcomeCounts(rows.map((row) => ({ ...row, count: 1 })));
+}
+
+/** Same aggregation over PostgreSQL GROUP BY output. Keeping this separate lets
+ * callers preserve exact totals without fetching one row per historical action. */
+export function summarizeActionOutcomeCounts(rows: Array<{ actionType: string; status: string; count: number }>): ActionTypeStats[] {
   interface Bucket {
     total: number;
     draft: number;
@@ -51,28 +57,29 @@ export function summarizeActionOutcomes(rows: Array<{ actionType: string; status
       needsHumanReview: 0,
       blockedIntegration: 0,
     };
-    b.total++;
+    const count = Number(r.count);
+    b.total += count;
     switch (r.status) {
       case "draft":
-        b.draft++;
+        b.draft += count;
         break;
       case "pending":
-        b.pending++;
+        b.pending += count;
         break;
       case "completed":
-        b.completed++;
+        b.completed += count;
         break;
       case "failed":
-        b.failed++;
+        b.failed += count;
         break;
       case "rejected":
-        b.rejected++;
+        b.rejected += count;
         break;
       case "needs_human_review":
-        b.needsHumanReview++;
+        b.needsHumanReview += count;
         break;
       case "blocked_integration_unavailable":
-        b.blockedIntegration++;
+        b.blockedIntegration += count;
         break;
       default:
         break; // approved/executing are transient — never the stored terminal status
@@ -187,11 +194,12 @@ export interface LearningDigest {
  *  job and GET /api/insights call, so there's exactly one place this logic lives. */
 export async function computeLearningDigest(tenantId: string, windowDays = 90): Promise<LearningDigest> {
   const since = new Date(Date.now() - windowDays * 24 * 3600 * 1000);
-  const { actionRows, criticRows, scanFindingRows, resolvedConfirmations, policyRow } = await withTenant(tenantId, async (db) => {
+  const { actionRows, criticRows, scanFindingSummary, resolvedConfirmations, policyRow } = await withTenant(tenantId, async (db) => {
       const actionRows = await db
-        .select({ actionType: domainActions.actionType, status: domainActions.status })
+        .select({ actionType: domainActions.actionType, status: domainActions.status, count: sql<number>`count(*)::int` })
         .from(domainActions)
-        .where(and(eq(domainActions.tenantId, tenantId), gte(domainActions.createdAt, since)));
+        .where(and(eq(domainActions.tenantId, tenantId), gte(domainActions.createdAt, since)))
+        .groupBy(domainActions.actionType, domainActions.status);
       const criticRows = await db
         .select({ domainActionId: actionLog.domainActionId, actionType: domainActions.actionType, output: actionLog.output, timestamp: actionLog.timestamp })
         .from(actionLog)
@@ -199,8 +207,12 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
         .where(and(eq(actionLog.tenantId, tenantId), eq(actionLog.step, "critic_review"), gte(actionLog.timestamp, since)))
         .orderBy(desc(actionLog.timestamp))
         .limit(100);
-      const scanFindingRows = await db
-        .select({ createdAt: scanFindings.createdAt, digestedAt: scanFindings.digestedAt })
+      const [scanFindingSummary] = await db
+        .select({
+          avg: sql<number | null>`avg(extract(epoch from (${scanFindings.digestedAt} - ${scanFindings.createdAt})) / 3600.0)`,
+          max: sql<number | null>`max(extract(epoch from (${scanFindings.digestedAt} - ${scanFindings.createdAt})) / 3600.0)`,
+          sampleSize: sql<number>`count(*)::int`,
+        })
         .from(scanFindings)
         .where(and(eq(scanFindings.tenantId, tenantId), gte(scanFindings.createdAt, since), isNotNull(scanFindings.digestedAt)));
       // Two-stage traversal: direct rows first, then
@@ -208,7 +220,7 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
       // this mirrors the established convention for this kind of "children of a set
       // of parent ids" query in this codebase.
       const resolvedConfirmations = await db
-        .select({ voiceSessionId: pendingConfirmations.voiceSessionId })
+        .selectDistinct({ voiceSessionId: pendingConfirmations.voiceSessionId })
         .from(pendingConfirmations)
         .where(
           and(
@@ -216,21 +228,35 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
             inArray(pendingConfirmations.status, ["confirmed", "rejected"]),
             gte(pendingConfirmations.resolvedAt, since),
           ),
-        );
-      const policyRow = await db.select({ policy: domainPolicies.policy }).from(domainPolicies).where(eq(domainPolicies.actionType, "voice_confirmation"));
-      return { actionRows, criticRows, scanFindingRows, resolvedConfirmations, policyRow };
+        )
+        .orderBy(asc(pendingConfirmations.voiceSessionId))
+        .limit(MAX_HIGH_EGRESS_ROWS + 1);
+      if (resolvedConfirmations.length > MAX_HIGH_EGRESS_ROWS) {
+        throw new Error(`Learning digest confirmation read exceeded ${MAX_HIGH_EGRESS_ROWS} sessions; narrow the window before retrying`);
+      }
+      const policyRow = await db.select({ policy: domainPolicies.policy }).from(domainPolicies).where(and(
+        eq(domainPolicies.tenantId, tenantId),
+        eq(domainPolicies.actionType, "voice_confirmation"),
+      )).limit(1);
+      return { actionRows, criticRows, scanFindingSummary, resolvedConfirmations, policyRow };
     });
 
   const resolvedSessionIds = [...new Set(resolvedConfirmations.map((r) => r.voiceSessionId))];
-  const callerTurns =
+  const callerTurnRows =
     resolvedSessionIds.length === 0
       ? []
       : await withTenant(tenantId, (db) =>
           db
             .select({ transcriptText: voiceTurns.transcriptText, createdAt: voiceTurns.createdAt })
             .from(voiceTurns)
-            .where(and(eq(voiceTurns.tenantId, tenantId), eq(voiceTurns.role, "caller"), inArray(voiceTurns.voiceSessionId, resolvedSessionIds))),
+            .where(and(eq(voiceTurns.tenantId, tenantId), eq(voiceTurns.role, "caller"), sql`${voiceTurns.voiceSessionId} IN (${sql.join(resolvedSessionIds.map((id) => sql`${id}::uuid`), sql`, `)})`))
+            .orderBy(desc(voiceTurns.createdAt), desc(voiceTurns.id))
+            .limit(MAX_HIGH_EGRESS_ROWS + 1),
         );
+  if (callerTurnRows.length > MAX_HIGH_EGRESS_ROWS) {
+    throw new Error(`Learning digest caller-turn read exceeded ${MAX_HIGH_EGRESS_ROWS} rows; narrow the window before retrying`);
+  }
+  const callerTurns = callerTurnRows;
   const confirmationPolicy = (policyRow[0]?.policy ?? {}) as { approvePhrases?: unknown; rejectPhrases?: unknown };
   const asStrings = (v: unknown): string[] | undefined => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined);
   const unclearConfirmations = computeUnclearConfirmations(callerTurns, {
@@ -238,7 +264,7 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
     reject: asStrings(confirmationPolicy.rejectPhrases),
   });
 
-  const actionTypeStats = summarizeActionOutcomes(actionRows);
+  const actionTypeStats = summarizeActionOutcomeCounts(actionRows);
   const criticFindings: CriticFinding[] = criticRows
     .filter((r) => (r.output as Record<string, unknown> | null)?.flagged === true)
     .map((r) => ({
@@ -254,7 +280,11 @@ export async function computeLearningDigest(tenantId: string, windowDays = 90): 
     actionTypeStats,
     criticFindings,
     topConcerns: buildTopConcerns(actionTypeStats, criticFindings, windowDays),
-    scanFindingLagHours: computeScanFindingLag(scanFindingRows),
+    scanFindingLagHours: {
+      avg: scanFindingSummary?.avg == null ? null : Number(scanFindingSummary.avg),
+      max: scanFindingSummary?.max == null ? null : Number(scanFindingSummary.max),
+      sampleSize: Number(scanFindingSummary?.sampleSize ?? 0),
+    },
     unclearConfirmations,
   };
 }

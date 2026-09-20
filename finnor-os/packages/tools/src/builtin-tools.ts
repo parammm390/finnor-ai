@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { enqueueJob } from "@finnor/db";
 import { resolveCredentialContext } from "@finnor/security";
 import { sendEmail } from "./email";
 import { IntegrationError } from "./errors";
@@ -26,6 +25,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     name: "web_search",
     description: "Real-time, read-only web search with citation metadata",
     integration: "exa",
+    execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
     inputSchema: z.object({
       query: z.string().min(2).max(2_000),
       numResults: z.number().int().min(1).max(10).optional(),
@@ -45,6 +45,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     name: "firecrawl_scrape",
     description: "Read-only source retrieval with URL and terms controls",
     integration: "firecrawl",
+    execution: { effect: "read_only", retrySafety: "repeatable", idempotency: { mode: "inherently_idempotent" }, verification: "none" },
     inputSchema: z.object({
       url: z.string().url().max(2_048),
       maxChars: z.number().int().min(100).max(40_000).optional(),
@@ -70,6 +71,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     name: "send_email",
     description: "Send email through an execution-resolved, governed identity",
     integration: "gmail",
+    execution: { effect: "consequential", retrySafety: "readback_required", idempotency: { mode: "readback", scope: "tenant-integration/message" }, verification: "readback" },
     inputSchema: z.object({
       tenantId: z.string().uuid(),
       to: z.string().email(),
@@ -109,6 +111,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     name: "send_sms_to_number",
     description: "Reserved Core SMS transport; unavailable until a non-retired provider adapter is configured",
     integration: "sms",
+    execution: { effect: "consequential", retrySafety: "prohibited", idempotency: { mode: "none" }, verification: "none" },
     inputSchema: z.object({
       tenantId: z.string().uuid(),
       phoneNumber: z.string().min(7).max(40),
@@ -121,6 +124,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
         "No active Core SMS provider adapter is configured",
         false,
         "config",
+        "definite_pre_dispatch",
       );
     },
   });
@@ -129,6 +133,7 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     name: "vapi_place_call",
     description: "Place one governed employee or business-party call through Vapi",
     integration: "vapi",
+    execution: { effect: "consequential", retrySafety: "readback_required", idempotency: { mode: "readback", scope: "tenant-integration/call" }, verification: "webhook_or_readback" },
     inputSchema: z.object({
       tenantId: z.string().uuid(),
       phoneNumber: z.string().min(7).max(40),
@@ -177,25 +182,4 @@ export function registerBuiltinTools(registry: ToolRegistry): void {
     },
   });
 
-  registry.register({
-    name: "send_finnor_notification",
-    description: "Queue a Finnor-owned operational notification through the guarded Resend path",
-    integration: "resend",
-    inputSchema: z.object({
-      tenantId: z.string().uuid(),
-      to: z.string().email(),
-      subject: z.string().min(1).max(998),
-      html: z.string().min(1).max(100_000),
-    }).strict(),
-    piiAllowlist: ["tenantId", "to", "subject", "html"],
-    async run(input) {
-      await enqueueJob("send_resend_email", {
-        tenantId: String(input.tenantId),
-        to: String(input.to),
-        subject: String(input.subject),
-        html: String(input.html),
-      });
-      return { queued: true, delivery: "pending" };
-    },
-  });
 }

@@ -13,6 +13,9 @@ export class IntegrationError extends Error {
     message: string,
     public readonly retryable: boolean,
     kind?: ErrorKind,
+    /** Only adapters that can prove no request crossed the mutation boundary may
+     * select definite_pre_dispatch. Absence of this evidence is possible egress. */
+    public readonly requestDisposition: "definite_pre_dispatch" | "may_have_left" = "may_have_left",
   ) {
     super(`[${integration}] ${message}`);
     this.name = "IntegrationError";
@@ -25,14 +28,14 @@ export class IntegrationTimeoutError extends IntegrationError {
     // Once a consequential provider request has left the process, a timeout does not
     // prove it failed. Retrying inline could duplicate the effect; reconciliation is
     // required before another attempt is authorized.
-    super(integration, `timed out after ${timeoutMs}ms; provider outcome is unknown`, false, "unknown_outcome");
+    super(integration, `timed out after ${timeoutMs}ms; provider outcome is unknown`, false, "unknown_outcome", "may_have_left");
     this.name = "IntegrationTimeoutError";
   }
 }
 
 export class NotImplementedError extends IntegrationError {
   constructor(integration: string) {
-    super(integration, "not implemented — stubbed behind interface (§31)", false);
+    super(integration, "not implemented — stubbed behind interface (§31)", false, "config", "definite_pre_dispatch");
     this.name = "NotImplementedError";
   }
 }

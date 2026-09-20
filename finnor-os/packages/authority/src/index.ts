@@ -574,7 +574,8 @@ export async function eligibleApproversForActions(tenantId: string, actionIds: s
   return withTenant(tenantId, async (db) => {
     const actions = await db.select({ id: domainActions.id, actionType: domainActions.actionType, authorityContext: domainActions.authorityContext })
       .from(domainActions)
-      .where(and(eq(domainActions.tenantId, tenantId), inArray(domainActions.id, uniqueActionIds)));
+      .where(and(eq(domainActions.tenantId, tenantId), inArray(domainActions.id, uniqueActionIds)))
+      .limit(uniqueActionIds.length);
     const requests = await db.select({ id: authorityApprovalRequests.id, domainActionId: authorityApprovalRequests.domainActionId, currentStep: authorityApprovalRequests.currentStep })
       .from(authorityApprovalRequests)
       .where(and(

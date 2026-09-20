@@ -137,6 +137,12 @@ function communicationTools(calls: Array<{ tool: string; input: Record<string, u
       description: "deterministic acceptance provider",
       integration: "acceptance-provider",
       inputSchema: z.object({}).passthrough(),
+      execution: {
+        effect: "consequential",
+        retrySafety: "repeatable",
+        idempotency: { mode: "inherently_idempotent" },
+        verification: "acknowledgement",
+      },
       retryPolicy: { attempts: 1, baseDelayMs: 1, timeoutMs: 1_000 },
       async run(input, runtime) {
         calls.push({ tool: name, input });
@@ -755,6 +761,12 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
       description: "unknown outcome probe",
       integration: "uncertain-provider",
       inputSchema: z.object({}).passthrough(),
+      execution: {
+        effect: "consequential",
+        retrySafety: "readback_required",
+        idempotency: { mode: "readback" },
+        verification: "readback",
+      },
       retryPolicy: { attempts: 1, baseDelayMs: 1, timeoutMs: 10 },
       async run() {
         invocations += 1;
