@@ -160,10 +160,24 @@ async function main() {
     await embedded.createDatabase("fresh");
     assert.equal((await migrate(`postgres://finnor:finnor@127.0.0.1:${port}/fresh`, current)).length, current.length);
     // Protected main already carries the production 0131 baseline. Simulate
-    // the exact merged migration directory, including the second 0131 file,
-    // so a green old-branch fresh install cannot hide a post-merge failure.
-    const mergedFresh = [...current, ...historical.filter((migration) => migration.name === "0131_private_equity_release_baseline.sql")]
-      .sort((a, b) => a.name.localeCompare(b.name));
+    // the exact merged migration lineage, but collapse repeated filenames the
+    // same way the filename-keyed tracker does. A historical copy is expected
+    // here; it must be byte-identical to the checked-in migration rather than
+    // being executed a second time or silently replacing it.
+    const mergedByName = new Map<string, MigrationFile>();
+    for (const migration of [...current, ...historical.filter((entry) => entry.name === "0131_private_equity_release_baseline.sql")]) {
+      const existing = mergedByName.get(migration.name);
+      if (existing) {
+        assert.equal(
+          createHash("sha256").update(existing.sql).digest("hex"),
+          createHash("sha256").update(migration.sql).digest("hex"),
+          `Merged migration ${migration.name} has divergent SQL bodies`,
+        );
+      } else {
+        mergedByName.set(migration.name, migration);
+      }
+    }
+    const mergedFresh = [...mergedByName.values()].sort((a, b) => a.name.localeCompare(b.name));
     await embedded.createDatabase("merged_fresh");
     const mergedFreshUrl = `postgres://finnor:finnor@127.0.0.1:${port}/merged_fresh`;
     assert.equal((await migrate(mergedFreshUrl, mergedFresh)).length,

@@ -72,7 +72,12 @@ const requireFromOs = createRequire(new URL("../../finnor-os/package.json", impo
 const pg = requireFromOs("pg")
 const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
 
-const requiredRuntimeRoles = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
+const LEGACY_RUNTIME_ROLES = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
+const COMPUTE_RUNTIME_ROLES = [
+  "api", "compute-realtime", "compute-interactive", "compute-background", "compute-heavy",
+  "orchestrator", "supplier-canary", "scheduler-owner",
+]
+let requiredRuntimeRoles = LEGACY_RUNTIME_ROLES
 
 async function readAuthority({ forUpdate = false } = {}) {
   const result = await client.query(
@@ -242,6 +247,13 @@ async function awaitPreCutoverFleet(initialSurfaces, epoch) {
 const releaseSurfaces = await inspectReleaseSurfaces()
 await client.connect()
 try {
+  const computeCutover = await client.query(
+    "SELECT state FROM finnor_os.compute_plane_cutover WHERE singleton=true",
+  )
+  if (computeCutover.rowCount !== 1) throw new Error("The single compute-plane cutover row is unavailable")
+  requiredRuntimeRoles = computeCutover.rows[0].state === "authoritative"
+    ? COMPUTE_RUNTIME_ROLES
+    : LEGACY_RUNTIME_ROLES
   const head = (await client.query("SELECT max(name) AS name FROM finnor_os._migrations")).rows[0]?.name
   if (head !== migrationHead) throw new Error(`Production migration head ${head ?? "<missing>"} is not ${migrationHead}`)
   const authorityBefore = await readAuthority()
