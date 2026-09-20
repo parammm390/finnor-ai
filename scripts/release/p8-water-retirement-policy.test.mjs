@@ -81,7 +81,7 @@ test("supplier canary proof is exact-release, role, migration, and protocol lock
     ...expectedRelease,
     deploymentId: "dpl_exact",
     traceable: true,
-      migrationHead: "0135_source_compatibility_runtime_parity.sql",
+    migrationHead: "0138_scope3_compute_plane.sql",
     cutoverProtocol: 5,
   }
   assert.equal(assertSupplierCanaryRelease("canary", body, expectedRelease, target, body.migrationHead), body)

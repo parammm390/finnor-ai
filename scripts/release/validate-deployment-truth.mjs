@@ -52,6 +52,7 @@ const migrationPath = join(repoRoot, "finnor-os/packages/db/migrations", contrac
 required(existsSync(migrationPath), `required migration does not exist: ${relative(repoRoot, migrationPath)}`)
 const repositoryMigrationHead = readdirSync(join(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort().at(-1)
 required(repositoryMigrationHead === contract.release.requiredMigrationHead, `production contract migration head ${contract.release.requiredMigrationHead} differs from repository head ${repositoryMigrationHead ?? "<missing>"}`)
+required(read("finnor-os/apps/supplier-canary/api/index.mjs").includes(contract.release.requiredMigrationHead), "supplier canary release evidence is stale relative to the production migration head")
 for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-compute-plane.mjs", "scripts/release/compute-plane-policy.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 required(!existsSync(join(repoRoot, "scripts/release/deploy-aws-worker.mjs")), "retired single-worker deployer still exists")
 
@@ -68,6 +69,13 @@ for (const claim of ["aud", "sub"]) required(cfn.includes(`token.actions.githubu
 required(cfn.includes("repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}"), "GitHub OIDC subject no longer binds immutable repository identity and production environment")
 for (const unsupportedClaim of ["repository_id", "repository_owner_id", "ref", "environment", "workflow"]) required(!cfn.includes(`token.actions.githubusercontent.com:${unsupportedClaim}:`), `GitHub OIDC trust uses AWS-unsupported claim ${unsupportedClaim}`)
 required(cfn.includes("AWS-supported sub binds immutable repo + owner IDs and the production environment"), "GitHub OIDC role context no longer records its trust invariant")
+for (const action of [
+  "ecs:DescribeServiceDeployments", "ecs:ListServiceDeployments", "ecs:ListTagsForResource",
+  "elasticloadbalancing:DescribeListenerAttributes", "elasticloadbalancing:DescribeRules",
+  "elasticloadbalancing:DescribeTags", "elasticloadbalancing:DescribeTargetGroupAttributes",
+  "application-autoscaling:DescribeScheduledActions", "cloudwatch:ListTagsForResource",
+  "iam:UpdateRoleDescription", "iam:ListEntitiesForPolicy",
+]) required(cfn.includes(action), `GitHub release role omits CloudFormation resource-handler permission ${action}`)
 
 const workflow = read(".github/workflows/production-release.yml")
 const workflowDirectory = join(repoRoot, ".github/workflows")
@@ -116,8 +124,8 @@ const preflightAt = workflow.indexOf("preflight-production.mjs")
 const migrationAt = workflow.indexOf("release:migrate:production")
 const workerAt = workflow.indexOf("deploy-aws-compute-plane.mjs")
 const parityAt = workflow.indexOf("verify-production-parity.mjs")
-const canaryAppAt = workflow.indexOf("deploy-production.mjs supplierCanaryApp")
-const canaryAuthAt = workflow.indexOf("deploy-production.mjs supplierCanaryAuth")
+const canaryAppAt = workflow.indexOf("- name: Deploy Private Equity supplier canary app")
+const canaryAuthAt = workflow.indexOf("- name: Deploy Private Equity supplier canary auth")
 const cutoverAt = workflow.indexOf("run-p8-production-water-retirement.mjs")
 const readinessAt = workflow.indexOf("verify-production-readiness.mjs")
 required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < cutoverAt && cutoverAt < readinessAt, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> four-class compute -> parity -> governed Water retirement -> readiness")

@@ -136,7 +136,21 @@ test("supplier canary builds are isolated from the finnor-os workspace lockfile"
   assert.match(deployScript, /cpSync\(appDir, buildDir, \{\s*recursive: true/)
   assert.match(deployScript, /worktreeStatus\(repoRoot\)/)
   assert.match(deployScript, /vercel", \["build"[\s\S]*buildDir/)
-  assert.match(deployScript, /vercel", deployArgs, buildDir/)
+  assert.match(deployScript, /vercel", withVercelToken\(deployArgs\), buildDir/)
+})
+
+test("Vercel release authentication is explicit and redacted", () => {
+  const deployScript = readFileSync(new URL("./deploy-production.mjs", import.meta.url), "utf8")
+  const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
+  assert.match(deployScript, /return vercelToken \? \[\.\.\.args, "--token", vercelToken\] : args/)
+  assert.match(deployScript, /if \(previous === "--token"\) return "\*\*\*"/)
+  assert.match(deployScript, /if \(arg\.startsWith\("--token="\)\) return "--token=\*\*\*"/)
+  assert.match(deployScript, /withVercelToken\(\["pull", "--yes", "--environment=production"\]\)/)
+  assert.match(deployScript, /withVercelToken\(deployArgs\)/)
+  assert.doesNotMatch(deployScript, /withoutSecrets\(env, \["VERCEL_TOKEN"\]\)/)
+  assert.match(workflow, /vercel pull --yes --environment=production --token "\$VERCEL_TOKEN"/)
+  assert.match(workflow, /deploy-production\.mjs supplierCanaryApp --prepare-only/)
+  assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth --prepare-only/)
 })
 
 test("isolated supplier canary builds preserve canonical Vercel routing", () => {

@@ -63,7 +63,7 @@ test("supplier canary health exposes exact Phase 8 release provenance", () => {
       environment: "production",
       source: "github-actions",
       deploymentId: "dpl_exact",
-      migrationHead: "0135_source_compatibility_runtime_parity.sql",
+      migrationHead: "0138_scope3_compute_plane.sql",
       cutoverProtocol: 5,
       traceable: true,
     })

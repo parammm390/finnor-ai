@@ -40,8 +40,17 @@ function git(args) {
   return execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
 }
 
+function redactCommandArgs(args) {
+  return args.map((arg, index) => {
+    const previous = args[index - 1]
+    if (previous === "--token") return "***"
+    if (arg.startsWith("--token=")) return "--token=***"
+    return arg
+  })
+}
+
 function run(command, args, cwd, env) {
-  console.log(`$ ${command} ${args.join(" ")}`)
+  console.log(`$ ${command} ${redactCommandArgs(args).join(" ")}`)
   const result = spawnSync(command, args, {
     cwd,
     env,
@@ -61,6 +70,7 @@ const buildId = process.env.FINNOR_BUILD_ID || `finnor-${commitSha.slice(0, 12)}
 const version = process.env.FINNOR_VERSION || `0.1.0+${commitSha.slice(0, 12)}`
 const environment = "production"
 const source = process.env.FINNOR_RELEASE_SOURCE || (prepareOnly ? "local-read-only" : "")
+const vercelToken = process.env.VERCEL_TOKEN?.trim()
 
 if (!/^[0-9a-f]{40}$/.test(commitSha)) throw new Error(`HEAD is not a full commit SHA: ${commitSha}`)
 if (dirty) throw new Error(`Refusing to deploy a dirty worktree:\n${dirty}`)
@@ -68,6 +78,11 @@ if (remoteMain !== commitSha) throw new Error(`Refusing to deploy ${commitSha}; 
 if (buildId !== `finnor-${commitSha.slice(0, 12)}`) throw new Error(`FINNOR_BUILD_ID must be commit-derived: ${buildId}`)
 if (!version.endsWith(`+${commitSha.slice(0, 12)}`)) throw new Error(`FINNOR_VERSION must be commit-derived: ${version}`)
 if (!prepareOnly && source !== "github-actions") throw new Error("Production deployment is restricted to the certified GitHub Actions release")
+if (source === "github-actions" && !vercelToken) throw new Error("VERCEL_TOKEN is required by the certified GitHub Actions release")
+
+function withVercelToken(args) {
+  return vercelToken ? [...args, "--token", vercelToken] : args
+}
 
 const appDir = resolve(repoRoot, app.directory)
 // Vercel's local build bootstrap can discover the parent finnor-os workspace
@@ -125,7 +140,7 @@ if (!deployOnly) {
   const pullDir = mkdtempSync(join(tmpdir(), "finnor-vercel-pull-"))
   let buildEnvironment
   try {
-    run("vercel", ["pull", "--yes", "--environment=production"], pullDir, withoutSecrets(env, ["VERCEL_TOKEN"]))
+    run("vercel", withVercelToken(["pull", "--yes", "--environment=production"]), pullDir, withoutSecrets(env))
     buildEnvironment = sanitizeVercelBuildEnvironment(join(pullDir, ".vercel", ".env.production.local"), {
       FINNOR_COMMIT_SHA: commitSha,
       FINNOR_BUILD_ID: buildId,
@@ -178,7 +193,7 @@ const deployArgs = [
   "--env", `FINNOR_ENVIRONMENT=${environment}`,
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
 ]
-const deployOutput = run("vercel", deployArgs, buildDir, withoutSecrets(env, ["VERCEL_TOKEN"]))
+const deployOutput = run("vercel", withVercelToken(deployArgs), buildDir, withoutSecrets(env))
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
 const productionUrls = [...deployOutput.matchAll(/^\s*Production:\s+(https:\/\/[^\s)]+)/gm)].map((match) => match[1].replace(/[.,]+$/, ""))
 const deploymentUrl = productionUrls.at(-1) ?? urls.findLast((url) => url.includes(".vercel.app"))

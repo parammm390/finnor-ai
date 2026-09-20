@@ -380,6 +380,8 @@ jobs:
         run: |
           node scripts/release/deploy-production.mjs frontend --prepare-only
           node scripts/release/deploy-production.mjs api --prepare-only
+          node scripts/release/deploy-production.mjs supplierCanaryApp --prepare-only
+          node scripts/release/deploy-production.mjs supplierCanaryAuth --prepare-only
           node scripts/release/verify-release.mjs
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
@@ -447,7 +449,7 @@ jobs:
           VERCEL_ORG_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.organizationId")"
           VERCEL_PROJECT_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.projectId")"
           export VERCEL_ORG_ID VERCEL_PROJECT_ID
-          (cd "$config_dir" && vercel pull --yes --environment=production)
+          (cd "$config_dir" && vercel pull --yes --environment=production --token "$VERCEL_TOKEN")
           protected_env="$config_dir/.vercel/.env.production.local"
           test -s "$protected_env"
           chmod 600 "$protected_env"
