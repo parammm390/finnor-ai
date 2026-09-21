@@ -8,13 +8,106 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:net";
+import { parse as parseDotenv } from "dotenv";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { migrate, type MigrationFile } from "../../packages/db/migrate";
 import { pgConnectionConfig } from "../../packages/db/index";
 import { HISTORICAL_PRODUCTION_MIGRATIONS } from "../../packages/db/historical-migration-lineage";
+import { isCanonicalProductionDatabaseTarget } from "../../packages/db/production-target-guard";
 
 const historicalNames = HISTORICAL_PRODUCTION_MIGRATIONS.map(({ name }) => name);
+const TERMINAL_PROVIDER_DISPOSITION_MIGRATION = "0136a_terminal_legacy_provider_job_disposition.sql";
+
+/** Optional read-only production-row fixture. No production SQL mutation is
+ * permitted; only the disposable embedded database receives copied rows. */
+async function copyCurrentLegacyProviderJobs(localUrl: string, envPath: string): Promise<{
+  copiedJobs: number; expectedDispositions: number;
+}> {
+  const protectedEnv = parseDotenv(await readFile(envPath));
+  const productionUrl = protectedEnv.MIGRATIONS_DATABASE_URL;
+  assert(productionUrl && isCanonicalProductionDatabaseTarget(productionUrl),
+    "read-only legacy provider-job fixture requires the canonical production database URL");
+  const remote = new pg.Client(pgConnectionConfig(productionUrl));
+  const local = new pg.Client({ connectionString: localUrl });
+  await remote.connect();
+  try {
+    await remote.query("BEGIN READ ONLY");
+    const jobs = await remote.query<{
+      id: string; type: string; payload: unknown; status: string; attempts: number;
+      max_attempts: number; run_at: Date; last_error: string | null;
+      idempotency_key: string | null; started_at: Date | null; completed_at: Date | null;
+      lane: string; priority: number; lease_owner: string | null;
+      lease_expires_at: Date | null; lease_heartbeat_at: Date | null;
+    }>(`SELECT id,type,payload,status,attempts,max_attempts,run_at,last_error,
+               idempotency_key,started_at,completed_at,lane,priority,lease_owner,
+               lease_expires_at,lease_heartbeat_at
+          FROM finnor_os.jobs
+         WHERE type=ANY(ARRAY[
+           'voice_confirm_request','voice_notify_failure','send_push_notification',
+           'send_resend_email','backup_db'
+         ]::text[])
+         ORDER BY id`);
+    const authority = await remote.query<{
+      epoch: number; state: string; active_product_vertical: string;
+      minimum_cutover_protocol: number; water_intake_frozen_at: Date | null;
+      water_retired_at: Date | null; activated_by: string | null;
+      activation_evidence: unknown;
+    }>(`SELECT epoch,state,active_product_vertical,minimum_cutover_protocol,
+               water_intake_frozen_at,water_retired_at,activated_by,activation_evidence
+          FROM finnor_os.product_runtime_authority WHERE authority_key='product'`);
+    const expected = await remote.query<{ count: number }>(`SELECT count(*)::int AS count
+      FROM finnor_os.jobs
+     WHERE (
+       type=ANY(ARRAY['voice_confirm_request','voice_notify_failure','send_push_notification']::text[])
+       AND status='quarantined'
+       AND last_error='RETIRED_VERTICAL: historical Water job is non-executable'
+       AND payload ? 'tenantId'
+       AND (SELECT state FROM finnor_os.product_runtime_authority WHERE authority_key='product')='water_retired'
+     ) OR (
+       type='backup_db' AND status='dead_letter' AND attempts>=max_attempts
+       AND payload='{}'::jsonb
+       AND (last_error LIKE 'Error: BLOCKED-CONFIG: BACKUP_GITHUB_TOKEN/BACKUP_GITHUB_REPO are required for the supplementary backup job%'
+         OR last_error LIKE 'Error: No handler registered for job type backup_db%')
+     )`);
+    await remote.query("COMMIT");
+    assert.equal(authority.rows.length, 1, "canonical product authority row is missing");
+    await local.connect();
+    try {
+      await local.query("BEGIN");
+      const row = authority.rows[0];
+      assert(row, "canonical product authority row is missing");
+      await local.query(`UPDATE finnor_os.product_runtime_authority
+                           SET epoch=$1,state=$2,active_product_vertical=$3,
+                               minimum_cutover_protocol=$4,water_intake_frozen_at=$5,
+                               water_retired_at=$6,activated_by=$7,activation_evidence=$8::jsonb
+                         WHERE authority_key='product'`,
+        [row.epoch,row.state,row.active_product_vertical,row.minimum_cutover_protocol,
+          row.water_intake_frozen_at,row.water_retired_at,row.activated_by,
+          JSON.stringify(row.activation_evidence)]);
+      for (const job of jobs.rows) {
+        await local.query(`INSERT INTO finnor_os.jobs(
+            id,type,payload,status,attempts,max_attempts,run_at,last_error,
+            idempotency_key,started_at,completed_at,lane,priority,lease_owner,
+            lease_expires_at,lease_heartbeat_at
+          ) VALUES ($1,$2,$3::jsonb,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+          [job.id,job.type,JSON.stringify(job.payload),job.status,job.attempts,
+            job.max_attempts,job.run_at,job.last_error,job.idempotency_key,
+            job.started_at,job.completed_at,job.lane,job.priority,job.lease_owner,
+            job.lease_expires_at,job.lease_heartbeat_at]);
+      }
+      await local.query("COMMIT");
+    } catch (error) {
+      await local.query("ROLLBACK");
+      throw error;
+    } finally {
+      await local.end();
+    }
+    return { copiedJobs: jobs.rows.length, expectedDispositions: expected.rows[0]?.count ?? 0 };
+  } finally {
+    await remote.end();
+  }
+}
 
 interface SchemaFact { kind: string; name: string; detail: string }
 
@@ -133,6 +226,10 @@ async function main() {
     await migrate(url, current.filter((migration) => migration.name < "0131"));
     await migrate(url, historical.filter((migration) => migration.name >= "0131"));
     if (process.argv.includes("--compare-live")) await compareLiveSchema(url);
+    const productionJobsArg = process.argv.indexOf("--production-job-env");
+    const productionJobSnapshot = productionJobsArg >= 0
+      ? await copyCurrentLegacyProviderJobs(url, process.argv[productionJobsArg + 1] ?? "")
+      : null;
     const legacy = new pg.Client({ connectionString: url });
     await legacy.connect();
     try {
@@ -142,6 +239,7 @@ async function main() {
     } finally { await legacy.end(); }
     const applied = await migrate(url, current);
     assert(applied.includes("0131_egress_bounded_read_indexes.sql"));
+    assert(applied.includes(TERMINAL_PROVIDER_DISPOSITION_MIGRATION));
     assert(applied.includes("0138_scope3_compute_plane.sql"));
     assert.deepEqual(await migrate(url, current), []);
     const verification = new pg.Client({ connectionString: url });
@@ -156,6 +254,29 @@ async function main() {
         { idempotency_key: "historical:pending", status: "quarantined", workload_class: "BACKGROUND", classification_policy_revision: 0 },
         { idempotency_key: "historical:terminal", status: "dead_letter", workload_class: "BACKGROUND", classification_policy_revision: 0 },
       ]);
+      if (productionJobsArg >= 0) {
+        const dispositions = await verification.query<{ disposition: string; count: number }>(
+          `SELECT disposition,count(*)::int AS count
+             FROM finnor_os.legacy_provider_job_retirement_dispositions
+            GROUP BY disposition ORDER BY disposition`,
+        );
+        const unresolved = await verification.query<{ count: number }>(
+          `SELECT count(*)::int AS count FROM finnor_os.jobs
+            WHERE type=ANY(ARRAY[
+              'voice_confirm_request','voice_notify_failure','send_push_notification',
+              'send_resend_email','backup_db'
+            ]::text[])
+              AND status IN ('queued','running','failed','dead_letter','quarantined')`,
+        );
+        assert.equal(unresolved.rows[0]?.count, 0,
+          "production-row rehearsal left an unresolved legacy provider job");
+        assert.equal(dispositions.rows.reduce((sum, row) => sum + row.count, 0),
+          productionJobSnapshot?.expectedDispositions,
+          "production-row disposition count differs from the read-only source snapshot");
+        console.log(JSON.stringify({ productionJobSnapshot: "read-only",
+          copiedProductionJobs: productionJobSnapshot?.copiedJobs,
+          dispositions: dispositions.rows, unresolvedLegacyProviderJobs: 0 }));
+      }
     } finally { await verification.end(); }
     await embedded.createDatabase("fresh");
     assert.equal((await migrate(`postgres://finnor:finnor@127.0.0.1:${port}/fresh`, current)).length, current.length);
