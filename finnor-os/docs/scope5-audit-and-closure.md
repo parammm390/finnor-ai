@@ -119,6 +119,14 @@ coverage and source precedence remain unchanged.
 
 ### External gates and bounded limitations
 
+- **Release state:** `CODE_COMPLETE` describes the locally tested current
+  working tree. `RELEASE_READY` is false: commit
+  `c214a8a2d8da631ebc6edb766dc0a39f0938d642` contains the Scope-5
+  implementation but the current branch still lacks prerequisite migrations
+  0127–0139 and related earlier-scope files that remain in the user's
+  staged/untracked working tree. A clean checkout of this commit is therefore
+  not a complete release candidate. The targeted commit left unrelated staged
+  entries in place. `LIVE_CERTIFIED` is false.
 - **BLOCKED_EXTERNAL:** no staging or live migration, worker deployment,
   activation, read-only production verification, or live rollback/disable proof
   was provided. `PASS_INTEGRATION` refers only to disposable embedded Postgres.
@@ -129,6 +137,10 @@ coverage and source precedence remain unchanged.
 - No Claim→Assumption, Underwriting→Risk, or shared-Deal→Work causal edge is
   invented. Those downstream objects appear only when their owner persisted
   an exact source, model, risk, IC or Plan pin link.
+- The focused certification exercises an owner-validated IC Question source
+  link and a same-Deal negative case. Finalized IC proposal→Decision support
+  traversal is implemented against persisted links but has no focused
+  Scope-5 end-to-end fixture; it is not claimed as integration-certified.
 - Historical epistemic state before the explicit Scope-5 baseline is reported
   unavailable. Earlier source/canonical history remains inspectable with its
   owner; no pre-baseline ChangeSet is synthesized.
