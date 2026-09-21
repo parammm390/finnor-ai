@@ -119,14 +119,16 @@ coverage and source precedence remain unchanged.
 
 ### External gates and bounded limitations
 
-- **Release state:** `CODE_COMPLETE` describes the locally tested current
-  working tree. `RELEASE_READY` is false: commit
-  `c214a8a2d8da631ebc6edb766dc0a39f0938d642` contains the Scope-5
-  implementation but the current branch still lacks prerequisite migrations
-  0127–0139 and related earlier-scope files that remain in the user's
-  staged/untracked working tree. A clean checkout of this commit is therefore
-  not a complete release candidate. The targeted commit left unrelated staged
-  entries in place. `LIVE_CERTIFIED` is false.
+- **Release state:** `CODE_COMPLETE` describes the locally tested integrated
+  candidate. The Scope-5 implementation commit
+  `c214a8a2d8da631ebc6edb766dc0a39f0938d642` and current branch still
+  lack prerequisite migrations 0127–0139 and related earlier-scope files that
+  remain in the user's staged/untracked working tree. A separate immutable
+  integrated candidate ref contains those prerequisites and passes clean
+  checkout tests (proof below). `RELEASE_READY` remains false until its broad
+  earlier-scope change set is reviewed through the governed release path.
+  `LIVE_CERTIFIED` is false. The targeted branch commits left unrelated staged
+  entries in place.
 - **BLOCKED_EXTERNAL:** no staging or live migration, worker deployment,
   activation, read-only production verification, or live rollback/disable proof
   was provided. `PASS_INTEGRATION` refers only to disposable embedded Postgres.
@@ -144,3 +146,29 @@ coverage and source precedence remain unchanged.
 - Historical epistemic state before the explicit Scope-5 baseline is reported
   unavailable. Earlier source/canonical history remains inspectable with its
   owner; no pre-baseline ChangeSet is synthesized.
+
+### Integrated candidate clean-checkout proof — 2026-09-22
+
+`refs/codex/scope5-integrated-candidate` at
+`f2cdd8208d3025561d2f832da851eb814ee1e3e5` snapshots the relevant
+repository sources, including migrations 0127–0140 and their earlier-scope
+dependencies. It differs from the Scope-5 branch head by 434 paths and was
+verified from an isolated `git archive` checkout whose `@finnor/*` package
+links resolve to that checkout. This ref did not replace the user's branch or
+index. From that exact candidate:
+
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | PASS_LOCAL |
+| `npm run release:scope5-epistemic-impact` | 18 PASS_INTEGRATION gates; staging/live BLOCKED_EXTERNAL; migration head 0140 |
+| `npm run release:scope4-digital-twin` | 10 PASS_INTEGRATION gates, including 140 unit tests, existing PE/Work/Scope-1/2 database regressions and focused Scope-3 |
+| root `npm run test:release` | 24/24 release policy tests plus production mutation inventory PASS_LOCAL |
+
+The focused Scope-5 certification output in `docs/release/` was refreshed from
+this candidate run. The earlier current-tree full Scope-3/2/1 and Phase-15A
+results remain recorded above; a separate full Scope-3 run was not repeated
+from this isolated checkout. No staging or live cutover was performed. The
+local AWS CLI session had expired (`aws sts get-caller-identity` exit 255);
+the `signing-in-to-aws` skill requires user confirmation before `aws login`.
+The configured Region is `us-east-1` but the selected Region must be confirmed
+in AWS Settings before any Regional deployment.

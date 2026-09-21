@@ -1,6 +1,6 @@
 {
   "schema": "finnor.scope5-epistemic-impact-certification.v1",
-  "generatedAt": "2026-09-21T19:06:59.195Z",
+  "generatedAt": "2026-09-21T23:30:10.372Z",
   "migrationHead": "0140_scope5_epistemic_impact.sql",
   "status": "PASS_INTEGRATION",
   "gates": [
@@ -104,8 +104,8 @@
     {
       "scenario": "single-proposition",
       "propositions": 330,
-      "fullMedianMs": 5.38,
-      "incrementalMedianMs": 1.9,
+      "fullMedianMs": 5.22,
+      "incrementalMedianMs": 1.92,
       "fullEvaluations": 330,
       "incrementalEvaluations": 1,
       "equivalent": true
@@ -113,8 +113,8 @@
     {
       "scenario": "high-fanout",
       "propositions": 330,
-      "fullMedianMs": 5.15,
-      "incrementalMedianMs": 2.43,
+      "fullMedianMs": 5.3,
+      "incrementalMedianMs": 2.68,
       "fullEvaluations": 330,
       "incrementalEvaluations": 17,
       "equivalent": true
@@ -122,8 +122,8 @@
     {
       "scenario": "deep-dependency-chain",
       "propositions": 330,
-      "fullMedianMs": 5.24,
-      "incrementalMedianMs": 1.95,
+      "fullMedianMs": 5.19,
+      "incrementalMedianMs": 1.98,
       "fullEvaluations": 330,
       "incrementalEvaluations": 13,
       "equivalent": true
@@ -131,8 +131,8 @@
     {
       "scenario": "unrelated-evidence-update",
       "propositions": 330,
-      "fullMedianMs": 4.69,
-      "incrementalMedianMs": 1.45,
+      "fullMedianMs": 4.86,
+      "incrementalMedianMs": 1.52,
       "fullEvaluations": 330,
       "incrementalEvaluations": 1,
       "equivalent": true
@@ -140,8 +140,8 @@
     {
       "scenario": "freshness-expiry-batch",
       "propositions": 330,
-      "fullMedianMs": 4.47,
-      "incrementalMedianMs": 2.53,
+      "fullMedianMs": 5.18,
+      "incrementalMedianMs": 2.5,
       "fullEvaluations": 330,
       "incrementalEvaluations": 27,
       "equivalent": true
@@ -149,8 +149,8 @@
     {
       "scenario": "multiple-simultaneous-changes",
       "propositions": 330,
-      "fullMedianMs": 4.64,
-      "incrementalMedianMs": 1.95,
+      "fullMedianMs": 4.81,
+      "incrementalMedianMs": 2.13,
       "fullEvaluations": 330,
       "incrementalEvaluations": 10,
       "equivalent": true
@@ -158,8 +158,8 @@
     {
       "scenario": "phase4-metric-restatement",
       "propositions": 330,
-      "fullMedianMs": 4.09,
-      "incrementalMedianMs": 1.96,
+      "fullMedianMs": 4.44,
+      "incrementalMedianMs": 1.95,
       "fullEvaluations": 330,
       "incrementalEvaluations": 13,
       "equivalent": true
@@ -167,8 +167,8 @@
     {
       "scenario": "large-deal-portfolio-graph",
       "propositions": 1030,
-      "fullMedianMs": 19.71,
-      "incrementalMedianMs": 4.56,
+      "fullMedianMs": 27.27,
+      "incrementalMedianMs": 4.77,
       "fullEvaluations": 1030,
       "incrementalEvaluations": 1,
       "equivalent": true

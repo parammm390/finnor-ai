@@ -1,6 +1,6 @@
 # Scope 5 Epistemic Intelligence certification
 
-Generated: 2026-09-21T19:06:59.195Z
+Generated: 2026-09-21T23:30:10.372Z
 Migration head: 0140_scope5_epistemic_impact.sql
 
 Local result: PASS_INTEGRATION. Staging and live remain BLOCKED_EXTERNAL.
