@@ -168,7 +168,7 @@ BEGIN
     max_attempts,
     last_error,
     encode(public.digest(
-      concat_ws('|',id::text,type,status,attempts::text,max_attempts::text,coalesce(last_error,'')),
+      convert_to(concat_ws('|',id::text,type,status,attempts::text,max_attempts::text,coalesce(last_error,'')),'UTF8'),
       'sha256'
     ),'hex'),
     CASE WHEN type='backup_db' THEN NULL ELSE product_epoch END,

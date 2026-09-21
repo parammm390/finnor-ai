@@ -223,7 +223,24 @@ async function main() {
     } finally { await client.end(); }
     await migrate(url, historical.filter((migration) => migration.name < "0131"));
     console.log("Historical 0102 and 0104–0108 schema installed");
+    // The oldest migrations used the extension in public. Production now keeps
+    // pgcrypto in extensions and the 0109b compatibility migration installs
+    // only public.digest(bytea,text), matching the current production catalog.
+    const extensionClient = new pg.Client({ connectionString: url });
+    await extensionClient.connect();
+    try {
+      await extensionClient.query("CREATE SCHEMA extensions; ALTER EXTENSION pgcrypto SET SCHEMA extensions");
+    } finally { await extensionClient.end(); }
     await migrate(url, current.filter((migration) => migration.name < "0131"));
+    const digestClient = new pg.Client({ connectionString: url });
+    await digestClient.connect();
+    try {
+      const digestOverloads = await digestClient.query<{ bytea: boolean; text: boolean }>(
+        "SELECT to_regprocedure('public.digest(bytea,text)') IS NOT NULL AS bytea, to_regprocedure('public.digest(text,text)') IS NOT NULL AS text",
+      );
+      assert.equal(digestOverloads.rows[0]?.bytea, true, "production-compatible public digest(bytea,text) is missing");
+      assert.equal(digestOverloads.rows[0]?.text, false, "historical rehearsal unexpectedly exposes public digest(text,text)");
+    } finally { await digestClient.end(); }
     await migrate(url, historical.filter((migration) => migration.name >= "0131"));
     if (process.argv.includes("--compare-live")) await compareLiveSchema(url);
     const productionJobsArg = process.argv.indexOf("--production-job-env");
