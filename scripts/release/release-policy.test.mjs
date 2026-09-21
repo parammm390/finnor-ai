@@ -111,6 +111,11 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-compute-plane\.mjs/)
+  const deployStage = workflow.match(/deploy_stage\(\) \{([\s\S]*?)\n          \}/)?.[1]
+  assert.ok(deployStage, "production workflow must define the compute deploy stage")
+  for (const argument of ["preflight-evidence", "database-env", "image-digest"]) {
+    assert.match(deployStage, new RegExp(`--${argument}=\\"\\$FINNOR_[A-Z_]+\\"`))
+  }
   assert.doesNotMatch(workflow, /deploy-aws-worker\.mjs/)
   assert.match(workflow, /release:scope3\b/)
   assert.doesNotMatch(workflow, /run: npm run release:scope3:focused\b/)

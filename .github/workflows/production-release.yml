@@ -619,9 +619,9 @@ jobs:
           deploy_stage() {
             node scripts/release/deploy-aws-compute-plane.mjs \
               --stage="$1" \
-              --preflight-evidence "$FINNOR_PREFLIGHT_EVIDENCE" \
-              --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
-              --image-digest "$FINNOR_ECR_IMAGE_DIGEST"
+              --preflight-evidence="$FINNOR_PREFLIGHT_EVIDENCE" \
+              --database-env="$FINNOR_PROTECTED_DATABASE_ENV" \
+              --image-digest="$FINNOR_ECR_IMAGE_DIGEST"
           }
           stage="$(aws cloudformation describe-stacks --stack-name finnor-production --query 'Stacks[0].Parameters[?ParameterKey==`ComputePlaneStage`].ParameterValue | [0]' --output text)"
           if test -z "$stage" -o "$stage" = "None"; then stage=legacy; fi
