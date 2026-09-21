@@ -11,3 +11,4 @@ export * from "./p2-handoff";
 export * from "./semantic-diff";
 export * from "./trace";
 export * from "./shadow";
+export * from "./durable";

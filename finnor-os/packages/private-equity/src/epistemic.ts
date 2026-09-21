@@ -1,13 +1,15 @@
 import {
   EPISTEMIC_HEURISTIC_VERSION,
   analyzeUncertainty,
-  appendEvidenceAndRecompute,
+  appendEvidenceIncrementally,
   canonicalOperationalQueryEvidence,
   createEpistemicState,
+  durableDeterministicValueHash,
   evidenceFromExistingSource,
   explicitUserInputEvidence,
   providerObservationEvidence,
   propositionById,
+  pinCurrentEpistemicRequirements,
   requirementResolved,
   webResearchEvidence,
   type AcquisitionOption,
@@ -16,6 +18,10 @@ import {
   type EvidenceRecord,
   type JsonValue,
   type PropositionDefinition,
+  type PropositionDerivation,
+  type DurableGraphDefinition,
+  type DurableSourceBinding,
+  type DurablePinResult,
 } from "@finnor/epistemic-runtime";
 import type {
   PrivateEquityDecisionReadiness,
@@ -45,10 +51,13 @@ export const PE_PROPOSITION_PREDICATES = [
   "finding.current",
   "deal_risk.current",
   "dependency.resolved",
+  "dependency.removed",
+  "dependency.blocker_resolved",
   "milestone.achieved",
   "closing_condition.state",
   "closing_condition.evidence_sufficient",
   "closing_condition.waiver_valid",
+  "closing_condition.close_ready",
   "closing_item.ready",
   "closing_item.verified",
   "deal.close_eligible",
@@ -192,18 +201,35 @@ function definition(
   observedAt: string,
   value?: JsonValue,
   dependencyRefs: string[] = [],
+  derivation?: PropositionDerivation,
 ): DefinitionRow {
   return {
     definition: {
       id: pePropositionId(dealId, entityType, entityId, predicate),
       subject: { kind: "entity", type: entityType, id: entityId },
-      predicate: { name: predicate, operator: "eq" },
+      predicate: { name: predicate, operator: "eq", ...(derivation ? { derivation } : {}) },
       dependencyRefs,
     },
     table: tableForPredicate(predicate),
     value,
     observedAt,
   };
+}
+
+function requireValue(propositionId: string, values: JsonValue[]) {
+  return {
+    op: "require" as const,
+    propositionId,
+    expectedValueHashes: values.map(durableDeterministicValueHash),
+    acceptableStatuses: ["KNOWN" as const],
+  };
+}
+
+function booleanDerivation(
+  ruleId: string,
+  expression: PropositionDerivation["expression"],
+): PropositionDerivation {
+  return { ruleId,version:"scope5-derived-v1",owner:"@finnor/private-equity",expression };
 }
 
 function canonicalDefinitions(input: BuildPrivateEquityEpistemicInput, asOf: string): DefinitionRow[] {
@@ -254,8 +280,18 @@ function canonicalDefinitions(input: BuildPrivateEquityEpistemicInput, asOf: str
   for (const row of graph.dependencies) {
     const blockerType = String(row.blockerType);
     const blockerId = String(row.blockerId);
-    const resolved = Boolean(row.removedAt) || isPositiveDependencyResolution(blockerType, entityState.get(`${blockerType}:${blockerId}`) ?? "");
-    rows.push(definition(dealId, "pe_dependency", asId(row), "dependency.resolved", asIso(row.updatedAt, asOf), resolved));
+    const id = asId(row);
+    const removedId = pePropositionId(dealId,"pe_dependency",id,"dependency.removed");
+    const blockerIdProp = pePropositionId(dealId,"pe_dependency",id,"dependency.blocker_resolved");
+    rows.push(
+      definition(dealId,"pe_dependency",id,"dependency.removed",asIso(row.updatedAt,asOf),Boolean(row.removedAt)),
+      definition(dealId,"pe_dependency",id,"dependency.blocker_resolved",asIso(row.updatedAt,asOf),
+        isPositiveDependencyResolution(blockerType,entityState.get(`${blockerType}:${blockerId}`) ?? "")),
+      definition(dealId,"pe_dependency",id,"dependency.resolved",asIso(row.updatedAt,asOf),undefined,
+        [removedId,blockerIdProp],booleanDerivation("pe.dependency.resolved",{
+          op:"any",terms:[requireValue(removedId,[true]),requireValue(blockerIdProp,[true])],
+        })),
+    );
   }
   for (const row of graph.milestones) {
     rows.push(definition(dealId, "pe_milestone", asId(row), "milestone.achieved", asIso(row.updatedAt, asOf), row.state === "achieved"));
@@ -286,6 +322,15 @@ function canonicalDefinitions(input: BuildPrivateEquityEpistemicInput, asOf: str
       observedAt,
       row.state === "waived" ? !invalid : undefined,
     ));
+    const stateId = pePropositionId(dealId,"pe_closing_condition",id,"closing_condition.state");
+    const waiverId = pePropositionId(dealId,"pe_closing_condition",id,"closing_condition.waiver_valid");
+    rows.push(definition(dealId,"pe_closing_condition",id,"closing_condition.close_ready",observedAt,undefined,
+      [stateId,waiverId],booleanDerivation("pe.closing-condition.close-ready",{
+        op:"any",terms:[
+          requireValue(stateId,["satisfied"]),
+          { op:"all",terms:[requireValue(stateId,["waived"]),requireValue(waiverId,[true])] },
+        ],
+      })));
   }
   for (const row of graph.closingItems) {
     const id = asId(row);
@@ -299,13 +344,163 @@ function canonicalDefinitions(input: BuildPrivateEquityEpistemicInput, asOf: str
     );
   }
 
+  const requiredConditionIds = new Set(graph.closingConditions.filter((row) => row.requiredForClose !== false).map(asId));
+  const requiredItemIds = new Set(graph.closingItems.filter((row) => row.requiredForClose !== false).map(asId));
+  const relevantDependencies = graph.dependencies.filter((row) =>
+    (row.blockedType === "pe_closing_condition" && requiredConditionIds.has(String(row.blockedId)))
+      || (row.blockedType === "pe_closing_item" && requiredItemIds.has(String(row.blockedId))));
   const eligibilityDeps = [
-    ...graph.closingConditions.filter((row) => row.requiredForClose !== false).map((row) => pePropositionId(dealId, "pe_closing_condition", asId(row), "closing_condition.state")),
+    pePropositionId(dealId,"pe_deal",dealId,"deal.lifecycle_state"),
+    pePropositionId(dealId,"pe_deal",dealId,"deal.loi_signed"),
+    ...graph.closingConditions.filter((row) => row.requiredForClose !== false).map((row) => pePropositionId(dealId, "pe_closing_condition", asId(row), "closing_condition.close_ready")),
     ...graph.closingItems.filter((row) => row.requiredForClose !== false).map((row) => pePropositionId(dealId, "pe_closing_item", asId(row), "closing_item.verified")),
-    ...graph.dependencies.filter((row) => !row.removedAt).map((row) => pePropositionId(dealId, "pe_dependency", asId(row), "dependency.resolved")),
+    ...relevantDependencies.map((row) => pePropositionId(dealId, "pe_dependency", asId(row), "dependency.resolved")),
   ];
-  rows.push(definition(dealId, "pe_deal", dealId, "deal.close_eligible", asOf, eligibility.eligible, eligibilityDeps));
+  rows.push(definition(dealId,"pe_deal",dealId,"deal.close_eligible",asOf,undefined,eligibilityDeps,
+    booleanDerivation("pe.deal.close-eligible",{
+      op:"all",terms:[
+        requireValue(pePropositionId(dealId,"pe_deal",dealId,"deal.lifecycle_state"),["active"]),
+        requireValue(pePropositionId(dealId,"pe_deal",dealId,"deal.loi_signed"),[true]),
+        ...eligibilityDeps.slice(2).map((id) => requireValue(id,[true])),
+      ],
+    })));
   return rows;
+}
+
+const POSITIVE_DEPENDENCY_STATES: Record<string, JsonValue[]> = {
+  pe_workstream:["complete","cancelled"],
+  pe_request:["fulfilled","cancelled"],
+  pe_deliverable:["accepted","superseded","cancelled"],
+  pe_finding:["resolved","accepted","superseded"],
+  pe_deal_risk:["resolved","accepted"],
+  pe_milestone:["achieved","cancelled"],
+  pe_closing_condition:["satisfied","waived"],
+  pe_closing_item:["verified","cancelled"],
+};
+
+function canonicalDurableBinding(input: BuildPrivateEquityEpistemicInput, row: DefinitionRow): DurableSourceBinding | null {
+  const subjectId = row.definition.subject.id;
+  if (!subjectId) return null;
+  const base = {
+    propositionId:row.definition.id,sourceKind:"canonical_entity" as const,
+    sourceType:row.definition.subject.type,sourceId:subjectId,evidenceKind:"CANONICAL_DB" as const,
+  };
+  const predicate = row.definition.predicate.name as PePropositionPredicate;
+  switch (predicate) {
+    case "deal.exists": return { ...base,valuePath:"id",selector:{ op:"constant",value:true } };
+    case "deal.loi_signed": return { ...base,valuePath:"signed_loi_at",selector:{ op:"boolean",expression:{ op:"not_null",path:"signed_loi_at" } } };
+    case "deal.target_close_at": return { ...base,valuePath:"target_closing_at" };
+    case "deal.lifecycle_state": return { ...base,valuePath:"status" };
+    case "workstream.state":
+    case "closing_condition.state": return { ...base,valuePath:"state" };
+    case "request.acknowledged": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"in",path:"state",values:["acknowledged","fulfilled"] } } };
+    case "request.fulfilled": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"equals",path:"state",value:"fulfilled" } } };
+    case "deliverable.received": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"in",path:"state",values:["received","accepted","rejected"] } } };
+    case "deliverable.accepted": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"equals",path:"state",value:"accepted" } } };
+    case "closing_condition.evidence_sufficient": return { ...base,valuePath:"state",selector:{
+      op:"boolean",omitWhenFalse:true,expression:{ op:"any",terms:[
+        { op:"equals",path:"evidence_required",value:false },{ op:"equals",path:"state",value:"satisfied" },
+      ] },
+    } };
+    case "closing_condition.waiver_valid": return { ...base,valuePath:"state",selector:{
+      op:"boolean",when:{ op:"equals",path:"state",value:"waived" },expression:{ op:"all",terms:[
+        { op:"not_null",path:"waiver_authority_decision_id" },
+        { op:"any",terms:[
+          { op:"equals",path:"waiver_requires_approval",value:false },
+          { op:"not_null",path:"waiver_decision_receipt_id" },
+        ] },
+      ] },
+    } };
+    case "closing_item.ready": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"in",path:"state",values:["ready","verified"] } } };
+    case "closing_item.verified": return { ...base,valuePath:"state",selector:{ op:"boolean",omitWhenFalse:true,expression:{ op:"equals",path:"state",value:"verified" } } };
+    case "dependency.removed": return { ...base,valuePath:"removed_at",selector:{ op:"boolean",expression:{ op:"not_null",path:"removed_at" } } };
+    case "dependency.blocker_resolved": {
+      const dependency = input.graph.dependencies.find((candidate) => asId(candidate) === subjectId);
+      if (!dependency) throw new Error(`Missing PE dependency for ${row.definition.id}`);
+      const values = POSITIVE_DEPENDENCY_STATES[String(dependency.blockerType)];
+      if (!values) throw new Error(`Unsupported PE dependency blocker ${String(dependency.blockerType)}`);
+      return { ...base,sourceType:String(dependency.blockerType),sourceId:String(dependency.blockerId),
+        valuePath:"state",selector:{ op:"boolean",expression:{ op:"in",path:"state",values } } };
+    }
+    case "finding.current": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"equals",path:"state",value:"open" } } };
+    case "deal_risk.current": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"in",path:"state",values:["open","mitigating"] } } };
+    case "milestone.achieved": return { ...base,valuePath:"state",selector:{ op:"boolean",expression:{ op:"equals",path:"state",value:"achieved" } } };
+    default: return null;
+  }
+}
+
+/** Build one tenant-wide, bounded graph from current PE owners. Only propositions
+ * needed by explicit DecisionRequirements (plus their dependency closure) become
+ * operational; descriptive query propositions remain in the existing adapter. */
+export function buildPrivateEquityDurableGraphDefinition(
+  inputs: readonly BuildPrivateEquityEpistemicInput[],
+  options?: { tenantId: string; digitalTwinSources: readonly { entityType: string; entityId: string }[] },
+): DurableGraphDefinition {
+  if (!inputs.length && !options?.digitalTwinSources.length) throw new Error("A durable PE graph requires a Deal or Digital Twin fact");
+  const tenantId = options?.tenantId ?? inputs[0]!.tenantId;
+  if (inputs.some((input) => input.tenantId !== tenantId)) throw new Error("Durable PE graph cannot cross tenants");
+  const allRows = inputs.flatMap((input) => canonicalDefinitions(input,input.asOf ?? input.graph.asOf)
+    .map((row) => ({ input,row })));
+  const byId = new Map(allRows.map((entry) => [entry.row.definition.id,entry]));
+  if (byId.size !== allRows.length) throw new Error("Durable PE graph contains duplicate semantic proposition identities");
+  const included = new Set(inputs.flatMap((input) => decisionRequirements(input).map((row) => row.propositionId)));
+  const pending = [...included];
+  while (pending.length) {
+    const id = pending.pop()!;
+    const entry = byId.get(id);
+    if (!entry) throw new Error(`DecisionRequirement references unavailable proposition ${id}`);
+    for (const dependencyId of entry.row.definition.dependencyRefs ?? []) {
+      if (!included.has(dependencyId)) { included.add(dependencyId); pending.push(dependencyId); }
+    }
+  }
+  const selected = [...included].sort().map((id) => byId.get(id)!);
+  const propositions = selected.map(({ row }) => row.definition);
+  const dependencies = propositions.flatMap((definition) => (definition.dependencyRefs ?? []).map((dependsOnPropositionId) => ({
+    id:`pe-dependency:${definition.id}:${dependsOnPropositionId}`,
+    propositionId:definition.id,dependsOnPropositionId,kind:"DERIVED_FROM" as const,
+  })));
+  const bindings: DurableSourceBinding[] = [];
+  for (const entry of selected) {
+    if (entry.row.definition.predicate.derivation) continue;
+    const binding = canonicalDurableBinding(entry.input,entry.row);
+    if (binding) bindings.push(binding);
+  }
+  const evidenceBindingByKey = new Map<string,DurableSourceBinding>();
+  for (const input of inputs) {
+    for (const assertion of [...(input.assertions ?? [])].sort((a,b) => a.ref.localeCompare(b.ref))) {
+      if (!included.has(assertion.propositionId)) continue;
+      const matched = /^evidence-source:([0-9a-f-]{36}):version:[0-9a-f-]{36}$/i.exec(assertion.ref);
+      if (!matched) continue;
+      const sourceType = assertion.kind === "provider_observation" ? "pe_provider_observation"
+        : assertion.kind === "document_claim" ? "pe_document_claim" : null;
+      if (!sourceType) continue;
+      const binding: DurableSourceBinding = {
+        propositionId:assertion.propositionId,sourceKind:"evidence_source",sourceType,sourceId:matched[1]!,
+        valuePath:"claims",selector:{ op:"claim",propositionId:assertion.propositionId },
+        evidenceKind:assertion.kind === "provider_observation" ? "PROVIDER_OBSERVATION" : "DOCUMENT",
+        ...(assertion.maximumAgeMs === undefined ? {} : { maxAgeMs:assertion.maximumAgeMs }),
+      };
+      evidenceBindingByKey.set(`${binding.propositionId}:${binding.sourceId}`,binding);
+    }
+  }
+  bindings.push(...[...evidenceBindingByKey.values()].sort((a,b) => `${a.propositionId}:${a.sourceId}`.localeCompare(`${b.propositionId}:${b.sourceId}`)));
+  for (const source of options?.digitalTwinSources ?? []) {
+    if (!/^pe_[a-z_]+$/.test(source.entityType) || !UUID.test(source.entityId)) {
+      throw new Error("Invalid Digital Twin source identity");
+    }
+    const propositionId = `pe:twin:v1:${source.entityType}:${source.entityId}:business_fact`;
+    propositions.push({ id:propositionId,subject:{kind:"entity",type:source.entityType,id:source.entityId},
+      predicate:{name:"twin.business_fact"} });
+    bindings.push({ propositionId,sourceKind:"canonical_entity",sourceType:source.entityType,
+      sourceId:source.entityId,valuePath:"business_fact",selector:{op:"business_hash"},evidenceKind:"CANONICAL_DB" });
+  }
+  if (new Set(propositions.map((row) => row.id)).size !== propositions.length) {
+    throw new Error("Durable PE graph contains duplicate Digital Twin source identities");
+  }
+  return {
+    tenantId,ruleVersion:"scope5-materiality-v1",heuristicVersion:EPISTEMIC_HEURISTIC_VERSION,
+    propositions,dependencies,bindings,
+  };
 }
 
 function assertionEvidence(state: EpistemicState, assertion: PrivateEquityAssertion): EvidenceRecord | null {
@@ -595,12 +790,12 @@ export function buildPrivateEquityEpistemicSnapshot(input: BuildPrivateEquityEpi
     tables: [row.table],
     executionRef: `pe-canonical:${row.table}:${input.dealId}:${row.definition.subject.id}:${row.observedAt}`,
   })]);
-  state = appendEvidenceAndRecompute(state, canonicalEvidence, asOf);
+  state = appendEvidenceIncrementally(state, canonicalEvidence, asOf).state;
   const assertions = (input.assertions ?? []).map((assertion) => {
     if (!byId.has(assertion.propositionId)) throw new Error(`PE assertion references undeclared proposition ${assertion.propositionId}`);
     return assertionEvidence(state, assertion);
   }).filter((record): record is EvidenceRecord => Boolean(record));
-  state = appendEvidenceAndRecompute(state, assertions, asOf);
+  state = appendEvidenceIncrementally(state, assertions, asOf).state;
   const requirements = decisionRequirements(input);
   return {
     state,
@@ -608,6 +803,35 @@ export function buildPrivateEquityEpistemicSnapshot(input: BuildPrivateEquityEpi
     warnings: privateEquityEpistemicWarnings(state),
     decisions: decisionReadiness(state, requirements),
   };
+}
+
+/** Planning asks the durable runtime to pin only the requirements for the exact
+ * decision selected by this action. PE still owns the readiness semantics and
+ * the runtime stores only redacted belief hashes. */
+export async function pinPrivateEquityDecisionReadiness(input: {
+  tenantId: string;
+  actionType: string;
+  planRevisionId?: string | null;
+  planNodeId?: string | null;
+  decisionId: string;
+  requirements: readonly PrivateEquityDecisionRequirement[];
+}): Promise<DurablePinResult> {
+  const requirements = input.requirements.filter((row) => row.decisionId === input.decisionId);
+  if (!requirements.length) throw new Error(`Private Equity decision has no explicit requirements: ${input.decisionId}`);
+  return pinCurrentEpistemicRequirements({
+    tenantId: input.tenantId,
+    actionType: input.actionType,
+    planRevisionId: input.planRevisionId,
+    planNodeId: input.planNodeId,
+    requirements: requirements.map((row) => ({
+      propositionId: row.propositionId,
+      expectedValues: row.expectedValues,
+      mandatory: row.mandatory,
+      acceptableStatuses: row.acceptableStatuses,
+      minimumAuthority: row.minimumAuthority ?? ["CANONICAL_OWNER"],
+      minimumConfidence: row.minimumConfidence ?? "VERIFIED",
+    })),
+  });
 }
 
 export interface BuildPrivateEquityWorldEpistemicInput {
@@ -662,7 +886,7 @@ export function buildPrivateEquityWorldEpistemicSnapshot(
     asOf: input.asOf,
     propositions: rows.map((row) => row.definition),
   });
-  state = appendEvidenceAndRecompute(state, rows.map((row) => canonicalOperationalQueryEvidence({
+  state = appendEvidenceIncrementally(state, rows.map((row) => canonicalOperationalQueryEvidence({
     state,
     propositionId: row.definition.id,
     value: row.value!,
@@ -670,12 +894,12 @@ export function buildPrivateEquityWorldEpistemicSnapshot(
     intent: "pe_world_state",
     tables: [row.table],
     executionRef: `pe-world:${row.table}:${row.definition.subject.id}:${row.observedAt}`,
-  })), input.asOf);
+  })), input.asOf).state;
   const byId = new Set(rows.map((row) => row.definition.id));
   const evidence = (input.assertions ?? []).filter((assertion) => byId.has(assertion.propositionId))
     .map((assertion) => assertionEvidence(state, assertion))
     .filter((record): record is EvidenceRecord => Boolean(record));
-  state = appendEvidenceAndRecompute(state, evidence, input.asOf);
+  state = appendEvidenceIncrementally(state, evidence, input.asOf).state;
   return { state, requirements: [], warnings: privateEquityEpistemicWarnings(state), decisions: [] };
 }
 

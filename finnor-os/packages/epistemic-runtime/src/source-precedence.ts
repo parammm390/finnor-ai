@@ -133,6 +133,7 @@ export function evidenceFingerprint(evidence: EvidenceRecord): string {
     source: evidence.source,
     observedAt: evidence.observedAt,
     validAt: evidence.validAt ?? null,
+    validTo: evidence.validTo ?? null,
     ingestedAt: evidence.ingestedAt,
     value: evidence.value,
     confidence: evidence.confidence,

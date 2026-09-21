@@ -13,7 +13,7 @@ import type {
   SourceAuthority,
 } from "./contracts";
 import { EPISTEMIC_HEURISTIC_VERSION } from "./contracts";
-import { appendEvidenceAndRecompute, createEvidenceRecord } from "./belief-update";
+import { appendEvidenceIncrementally, createEvidenceRecord } from "./belief-update";
 import { createEpistemicState } from "./state";
 import { epistemicHash } from "./source-precedence";
 
@@ -170,7 +170,7 @@ export function epistemicStateFromOperatingContext(input: {
     const record = evidenceFromBinding(input.context, input.scope, binding);
     return record ? [record] : [];
   });
-  return appendEvidenceAndRecompute(state, evidence, input.asOf ?? input.context.assembledAt);
+  return appendEvidenceIncrementally(state, evidence, input.asOf ?? input.context.assembledAt).state;
 }
 
 export interface SourceEvidenceInput {
