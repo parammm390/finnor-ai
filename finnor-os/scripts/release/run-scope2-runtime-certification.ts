@@ -23,6 +23,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, "../..");
 const REPOSITORY_ROOT = resolve(ROOT, "..");
 const BIN = (name: string) => resolve(ROOT, "node_modules/.bin", name);
+const TERMINAL_PROVIDER_DISPOSITION_MIGRATION = "0136a_terminal_legacy_provider_job_disposition.sql";
 const SCOPE2_MIGRATION = "0137_scope2_durable_runtime.sql";
 const SESSION_COUNT = 100;
 let databaseUrl = "";
@@ -358,6 +359,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     artifactRecalculation: "packages/artifacts/src/recalculation.ts",
     computerProvider: "packages/computer/src/steel-provider.ts",
     schema: "packages/db/schema.ts",
+    terminalProviderDispositionMigration: `packages/db/migrations/${TERMINAL_PROVIDER_DISPOSITION_MIGRATION}`,
     migration: `packages/db/migrations/${SCOPE2_MIGRATION}`,
     migrationBundle: "packages/db/migrations-bundle.ts",
     scope1Protocol: "packages/orchestration/src/orchestration-protocol.ts",
@@ -391,6 +393,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   assert(source.auditRecord.includes("WHAT REQUEST MAY HAVE LEFT FINNOR") && source.auditRecord.includes("NO UNTRACKED POSSIBLE EFFECT"), "Scope-2 audit record uses an untruthful provider/effect claim");
   assert(source.conformanceContract.includes("Temporal and Hatchet have not been") && source.conformanceContract.includes("DEFERRED"), "runtime conformance contract invents an external-engine result");
   assert(CURRENT_MIGRATION_HEAD.localeCompare(SCOPE2_MIGRATION) >= 0, `migration head ${CURRENT_MIGRATION_HEAD} precedes required Scope-2 migration ${SCOPE2_MIGRATION}`);
+  assert(source.migrationBundle.includes(TERMINAL_PROVIDER_DISPOSITION_MIGRATION), "serverless migration bundle omits terminal provider-job disposition bridge");
   assert(source.migrationBundle.includes(SCOPE2_MIGRATION), "serverless migration bundle omits Scope-2 migration");
 
   assert(source.schema.includes("workObjectiveSteps") && source.scope1Kernel.includes("reserveReadyPlanFrontier"), "Scope-1 semantic ExecutionAttempt owner is missing");
@@ -424,6 +427,11 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
 
   assert(source.migration.includes("Scope-2 outbox retirement blocked") && source.migration.includes("unresolvedEvents"), "outbox retirement lacks persisted-obligation guard");
   assert(source.migration.includes("legacy provider-job retirement blocked"), "legacy provider-job retirement lacks persisted-obligation guard");
+  assert(source.terminalProviderDispositionMigration.includes("append-only evidence")
+    && source.terminalProviderDispositionMigration.includes("water_retired_terminal")
+    && source.terminalProviderDispositionMigration.includes("supplementary_backup_terminal")
+    && source.terminalProviderDispositionMigration.includes("unsafe_rows"),
+  "terminal provider-job bridge does not preserve evidence and fail closed on unproven rows");
   assert(!source.worker.includes("relay_outbox_events"), "retired outbox relay remains registered");
   for (const retired of ["voice_confirm_request", "voice_notify_failure", "send_push_notification", "send_resend_email", "backup_db"]) {
     assert(!source.worker.includes(retired), `retired untracked provider job remains registered: ${retired}`);
@@ -609,19 +617,103 @@ async function proveRetirementGuards(sourceUrl: string, embedded: boolean): Prom
   const probe = await createDatabase(sourceUrl, "finnor_scope2_retirement_probe");
   try {
     const migrations = embedded ? await embeddedCompatibleMigrations() : await embeddedCompatibleMigrations();
+    const preDisposition = migrations.filter((file) => file.name.localeCompare(TERMINAL_PROVIDER_DISPOSITION_MIGRATION) < 0);
     const preScope2 = migrations.filter((file) => file.name.localeCompare(SCOPE2_MIGRATION) < 0);
-    await migrate(probe.url, preScope2);
+    await migrate(probe.url, preDisposition);
     await seed(probe.url);
     const client = new pg.Client({ connectionString: probe.url });
     await client.connect();
     try {
       await client.query(
+        `INSERT INTO finnor_os.jobs(type,payload,status,attempts,max_attempts,last_error,idempotency_key)
+         VALUES
+           ('backup_db','{}','dead_letter',3,3,
+            'Error: BLOCKED-CONFIG: BACKUP_GITHUB_TOKEN/BACKUP_GITHUB_REPO are required for the supplementary backup job',
+            'terminal-backup-disposition-probe'),
+           ('voice_confirm_request',jsonb_build_object('tenantId',$1::text),'quarantined',3,3,
+            'RETIRED_VERTICAL: historical Water job is non-executable',
+            'terminal-water-disposition-probe')`,
+        [SEED_TENANT_ID],
+      );
+      await client.query(
+        `UPDATE finnor_os.product_runtime_authority
+            SET epoch=6,state='water_retired',water_intake_frozen_at=clock_timestamp(),
+                water_retired_at=clock_timestamp(),activated_by='scope2-certification',updated_at=clock_timestamp()
+          WHERE authority_key='product'`,
+      );
+      await client.query(
+        `INSERT INTO finnor_os.jobs(type,payload,status,idempotency_key)
+         VALUES('send_resend_email','{}','queued','unproven-provider-disposition-probe')`,
+      );
+    } finally {
+      await client.end();
+    }
+
+    let unprovenBlocked = false;
+    try {
+      await migrate(probe.url, preScope2);
+    } catch (error) {
+      unprovenBlocked = /terminal provider-job disposition blocked/i.test(error instanceof Error ? error.message : String(error));
+    }
+    assert(unprovenBlocked, "terminal provider-job bridge did not fail closed on queued work");
+    const afterUnproven = new pg.Client({ connectionString: probe.url });
+    await afterUnproven.connect();
+    try {
+      const queued = await afterUnproven.query<{ count: number }>(
+        `SELECT count(*)::int count FROM finnor_os.jobs
+          WHERE idempotency_key='unproven-provider-disposition-probe'
+            AND type='send_resend_email' AND status='queued'`,
+      );
+      assert(queued.rows[0]?.count === 1, "failed terminal disposition rewrote queued provider work");
+      await afterUnproven.query(
+        "DELETE FROM finnor_os.jobs WHERE idempotency_key='unproven-provider-disposition-probe'",
+      );
+    } finally {
+      await afterUnproven.end();
+    }
+
+    const dispositionApplied = await migrate(probe.url, preScope2);
+    assert(dispositionApplied.includes(TERMINAL_PROVIDER_DISPOSITION_MIGRATION),
+      "terminal provider-job disposition bridge did not apply");
+
+    const afterDisposition = new pg.Client({ connectionString: probe.url });
+    await afterDisposition.connect();
+    try {
+      const evidence = await afterDisposition.query<{ count: number }>(
+        `SELECT count(*)::int count
+           FROM finnor_os.legacy_provider_job_retirement_dispositions
+          WHERE job_id IN (
+            SELECT id FROM finnor_os.jobs
+             WHERE idempotency_key IN ('terminal-backup-disposition-probe','terminal-water-disposition-probe')
+          )`,
+      );
+      assert(evidence.rows[0]?.count === 2, "terminal provider-job dispositions are incomplete");
+      const retired = await afterDisposition.query<{ count: number }>(
+        `SELECT count(*)::int count FROM finnor_os.jobs
+          WHERE (idempotency_key='terminal-backup-disposition-probe'
+                 AND type='retired_supplementary_backup_db' AND status='dead_letter')
+             OR (idempotency_key='terminal-water-disposition-probe'
+                 AND type='retired_water_voice_confirm_request' AND status='quarantined')`,
+      );
+      assert(retired.rows[0]?.count === 2, "terminal provider jobs lost their terminal state or retired type identity");
+      let evidenceImmutable = false;
+      try {
+        await afterDisposition.query(
+          `UPDATE finnor_os.legacy_provider_job_retirement_dispositions
+              SET recorded_at=recorded_at
+            WHERE job_id=(SELECT id FROM finnor_os.jobs WHERE idempotency_key='terminal-backup-disposition-probe')`,
+        );
+      } catch (error) {
+        evidenceImmutable = /append-only evidence/i.test(error instanceof Error ? error.message : String(error));
+      }
+      assert(evidenceImmutable, "terminal provider-job disposition evidence is mutable");
+      await afterDisposition.query(
         `INSERT INTO finnor_os.outbox_events(tenant_id,event_type,payload,status)
          VALUES($1,'retirement.guard.probe','{}','pending')`,
         [SEED_TENANT_ID],
       );
     } finally {
-      await client.end();
+      await afterDisposition.end();
     }
 
     let outboxBlocked = false;
@@ -670,6 +762,9 @@ async function proveRetirementGuards(sourceUrl: string, embedded: boolean): Prom
       outboxStatePreservedAfterAbort: true,
       legacyProviderJobObligationBlocked: true,
       providerJobStatePreservedAfterAbort: true,
+      provenTerminalProviderJobsDispositioned: 2,
+      terminalProviderJobEvidenceAppendOnly: true,
+      unprovenProviderJobDispositionBlocked: true,
       cleanDeploymentApplied: true,
     };
   } finally {
