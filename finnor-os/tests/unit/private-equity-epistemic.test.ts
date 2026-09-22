@@ -74,8 +74,9 @@ describe("Private Equity Phase 3 epistemic runtime", () => {
       "assumption.current", "decision.current",
       "deal.exists", "deal.loi_signed", "deal.target_close_at", "deal.lifecycle_state", "workstream.state",
       "request.acknowledged", "request.fulfilled", "request.overdue", "deliverable.received", "deliverable.accepted",
-      "finding.current", "deal_risk.current", "dependency.resolved", "milestone.achieved", "closing_condition.state",
-      "closing_condition.evidence_sufficient", "closing_condition.waiver_valid", "closing_item.ready", "closing_item.verified",
+      "finding.current", "deal_risk.current", "dependency.resolved", "dependency.removed", "dependency.blocker_resolved",
+      "milestone.achieved", "closing_condition.state", "closing_condition.evidence_sufficient",
+      "closing_condition.waiver_valid", "closing_condition.close_ready", "closing_item.ready", "closing_item.verified",
       "deal.close_eligible",
     ]);
   });

@@ -109,6 +109,10 @@ export const PRODUCTION_JOB_CONTRACTS = {
   observe_external_effect: tenantFixed("INTERACTIVE", "locally_idempotent", "Observation resolves an accepted Scope-2 effect outcome."),
   maintain_integration_subscriptions: tenantLaneClassified("reconcilable", "Routine renewal is background; a trusted setup flow may require interactive convergence."),
   materialize_artifact_version: tenantFixed("HEAVY", "durably_effect_guarded", "Artifact download/compile/upload paths have high byte and memory envelopes."),
+  process_epistemic_change_v2: tenantFixed("BACKGROUND", "locally_idempotent", "Accepted version changes advance a fenced durable epistemic frontier.", { protocolVersions: [2] }),
+  scan_epistemic_freshness_v2: tenantFixed("BACKGROUND", "locally_idempotent", "Indexed due-freshness discovery is bounded maintenance.", { protocolVersions: [2], obligationKind: "coalescible" }),
+  recover_epistemic_changes_v2: tenantFixed("BACKGROUND", "locally_idempotent", "Recover accepted changes without a live physical delivery.", { protocolVersions: [2], obligationKind: "coalescible" }),
+  refresh_epistemic_graph_v2: tenantFixed("BACKGROUND", "locally_idempotent", "Rebuild and shadow-verify a PE graph after newly relevant canonical structure.", { protocolVersions: [2], obligationKind: "coalescible" }),
 } as const satisfies Record<string, ProductionJobContract>;
 
 export type ProductionJobType = keyof typeof PRODUCTION_JOB_CONTRACTS;

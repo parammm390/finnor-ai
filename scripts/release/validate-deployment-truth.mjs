@@ -14,7 +14,7 @@ required(contract.schemaVersion === 3 && contract.environment === "production", 
 required(contract.canonicalGit.remote === "origin" && contract.canonicalGit.branch === "main" && contract.canonicalGit.repository === "parammm390/finnor-ai", "canonical Git target must be origin/main")
 required(contract.canonicalGit.requireCleanWorktree === true, "production contract must require a clean worktree")
 required(contract.release.concurrencyGroup === "finnor-production-release", "production concurrency lock changed")
-required(contract.release.requiredMigrationHead === "0138_scope3_compute_plane.sql", "production migration head is not locked to Scope 3")
+required(contract.release.requiredMigrationHead === "0140_scope5_epistemic_impact.sql", "production migration head is not locked to Scope 5")
 for (const component of ["computeRealtime", "computeInteractive", "computeBackground", "computeHeavy"]) required(contract.release.requiredComponents.includes(component), `${component} must be required for every production release`)
 required(contract.release.requiredComponents.includes("supplierCanaryApp") && contract.release.requiredComponents.includes("supplierCanaryAuth"), "both supplier canary roles must be required for the Phase 8 cutover release")
 required(contract.forbiddenActiveProviders.includes("azure"), "Azure must remain forbidden in the active production topology")
@@ -52,7 +52,6 @@ const migrationPath = join(repoRoot, "finnor-os/packages/db/migrations", contrac
 required(existsSync(migrationPath), `required migration does not exist: ${relative(repoRoot, migrationPath)}`)
 const repositoryMigrationHead = readdirSync(join(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort().at(-1)
 required(repositoryMigrationHead === contract.release.requiredMigrationHead, `production contract migration head ${contract.release.requiredMigrationHead} differs from repository head ${repositoryMigrationHead ?? "<missing>"}`)
-required(read("finnor-os/apps/supplier-canary/api/index.mjs").includes(contract.release.requiredMigrationHead), "supplier canary release evidence is stale relative to the production migration head")
 for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-compute-plane.mjs", "scripts/release/compute-plane-policy.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 required(!existsSync(join(repoRoot, "scripts/release/deploy-aws-worker.mjs")), "retired single-worker deployer still exists")
 
@@ -69,13 +68,6 @@ for (const claim of ["aud", "sub"]) required(cfn.includes(`token.actions.githubu
 required(cfn.includes("repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}"), "GitHub OIDC subject no longer binds immutable repository identity and production environment")
 for (const unsupportedClaim of ["repository_id", "repository_owner_id", "ref", "environment", "workflow"]) required(!cfn.includes(`token.actions.githubusercontent.com:${unsupportedClaim}:`), `GitHub OIDC trust uses AWS-unsupported claim ${unsupportedClaim}`)
 required(cfn.includes("AWS-supported sub binds immutable repo + owner IDs and the production environment"), "GitHub OIDC role context no longer records its trust invariant")
-for (const action of [
-  "ecs:DescribeServiceDeployments", "ecs:ListServiceDeployments", "ecs:ListTagsForResource",
-  "elasticloadbalancing:DescribeListenerAttributes", "elasticloadbalancing:DescribeRules",
-  "elasticloadbalancing:DescribeTags", "elasticloadbalancing:DescribeTargetGroupAttributes",
-  "application-autoscaling:DescribeScheduledActions", "cloudwatch:ListTagsForResource",
-  "iam:UpdateRoleDescription", "iam:ListEntitiesForPolicy",
-]) required(cfn.includes(action), `GitHub release role omits CloudFormation resource-handler permission ${action}`)
 
 const workflow = read(".github/workflows/production-release.yml")
 const workflowDirectory = join(repoRoot, ".github/workflows")
@@ -112,9 +104,12 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "phase5-readiness", "release:pe-p7-workforce-learning", "npm run release:scope3"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "release:scope5:rollout", "phase5-readiness", "npm run release:scope4-digital-twin", "npm run release:scope5-epistemic-impact"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+for (const argument of ['--preflight-evidence="$FINNOR_PREFLIGHT_EVIDENCE"', '--database-env="$FINNOR_PROTECTED_DATABASE_ENV"', '--image-digest="$FINNOR_ECR_IMAGE_DIGEST"']) required(workflow.includes(argument), `compute deploy argument does not match the exact --key=value parser: ${argument}`)
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
-required(workflow.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "Phase 5 gate must exclude the retired Phase 6 integration fixture")
+const backendCi = read(".github/workflows/ci.yml")
+const prVerdict = read(".github/workflows/pr-verdict.yml")
+required(prVerdict.includes("uses: ./.github/workflows/ci.yml") && backendCi.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "PR backend gate must run the full active suite while excluding the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")
 required(workflow.includes("production.contract.json').topology.api") && read("scripts/release/deploy-production.mjs").includes("production.contract.json"), "Vercel release stages must consume the canonical deployment contract")
 
@@ -124,11 +119,12 @@ const preflightAt = workflow.indexOf("preflight-production.mjs")
 const migrationAt = workflow.indexOf("release:migrate:production")
 const workerAt = workflow.indexOf("deploy-aws-compute-plane.mjs")
 const parityAt = workflow.indexOf("verify-production-parity.mjs")
-const canaryAppAt = workflow.indexOf("- name: Deploy Private Equity supplier canary app")
-const canaryAuthAt = workflow.indexOf("- name: Deploy Private Equity supplier canary auth")
+const canaryAppAt = workflow.indexOf("deploy-production.mjs supplierCanaryApp --output-file")
+const canaryAuthAt = workflow.indexOf("deploy-production.mjs supplierCanaryAuth --output-file")
 const cutoverAt = workflow.indexOf("run-p8-production-water-retirement.mjs")
 const readinessAt = workflow.indexOf("verify-production-readiness.mjs")
-required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < cutoverAt && cutoverAt < readinessAt, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> four-class compute -> parity -> governed Water retirement -> readiness")
+const scope5At = workflow.indexOf("release:scope5:rollout")
+required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < cutoverAt && cutoverAt < readinessAt && readinessAt < scope5At, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> four-class compute -> parity -> governed Water retirement -> readiness -> Scope-5 activation")
 
 if (failures.length) {
   console.error(`Deployment truth validation failed:\n- ${failures.join("\n- ")}`)

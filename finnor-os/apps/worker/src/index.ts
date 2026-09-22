@@ -32,6 +32,7 @@ import { syncSource, syncSources } from "./handlers/sync-source";
 import { observeExternalEffectHandler } from "./handlers/observe-external-effect";
 import { maintainIntegrationSubscriptions } from "./handlers/maintain-integration-subscriptions";
 import { materializeArtifactVersion } from "./handlers/materialize-artifact-version";
+import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph, scanEpistemicFreshness } from "./handlers/epistemic-impact";
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
 import { getPool, parseWorkloadClass, startComputeControlLeadership, type WorkloadClass } from "@finnor/db";
 import { startClassHealthServer } from "./class-health";
@@ -70,6 +71,10 @@ export function createWorker(): JobQueue {
   queue.register("observe_external_effect", observeExternalEffectHandler, PRODUCTION_JOB_CONTRACTS.observe_external_effect);
   queue.register("maintain_integration_subscriptions", maintainIntegrationSubscriptions, PRODUCTION_JOB_CONTRACTS.maintain_integration_subscriptions);
   queue.register("materialize_artifact_version", materializeArtifactVersion, PRODUCTION_JOB_CONTRACTS.materialize_artifact_version);
+  queue.register("process_epistemic_change_v2", processEpistemicChange, PRODUCTION_JOB_CONTRACTS.process_epistemic_change_v2);
+  queue.register("scan_epistemic_freshness_v2", scanEpistemicFreshness, PRODUCTION_JOB_CONTRACTS.scan_epistemic_freshness_v2);
+  queue.register("recover_epistemic_changes_v2", recoverEpistemicChanges, PRODUCTION_JOB_CONTRACTS.recover_epistemic_changes_v2);
+  queue.register("refresh_epistemic_graph_v2", refreshEpistemicGraph, PRODUCTION_JOB_CONTRACTS.refresh_epistemic_graph_v2);
   return queue;
 }
 
@@ -94,6 +99,9 @@ export const ACTIVE_SCHEDULED_SCANS: ScheduledScan[] = [
   { type: "purge_retention", intervalHours: 24, payload: (tenantId) => ({ tenantId }) },
   { type: "daily_scorecard", intervalHours: 24, payload: (tenantId) => ({ tenantId }) },
   { type: "project_read_models", intervalHours: 1, payload: (tenantId) => ({ tenantId }) },
+  { type: "scan_epistemic_freshness_v2", intervalHours: 1 / 4, payload: (tenantId) => ({ tenantId }) },
+  { type: "recover_epistemic_changes_v2", intervalHours: 1 / 6, payload: (tenantId) => ({ tenantId }) },
+  { type: "refresh_epistemic_graph_v2", intervalHours: 1 / 4, payload: (tenantId) => ({ tenantId }) },
 ]
 
 const isMain = process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("index.js");

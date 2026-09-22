@@ -8,7 +8,7 @@
       "path": ".github/workflows/production-release.yml",
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-compute-stack-deploy", "compute-cutover-activate", "compute-cutover-finalize", "product-authority-update"],
+      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-compute-stack-deploy", "compute-cutover-activate", "compute-cutover-finalize", "product-authority-update", "epistemic-impact-activate"],
       "authorization": "finnor-production-mutation-authorization.v1",
       "serialization": "finnor-production-release"
     },
@@ -57,6 +57,15 @@
       "state": "ACTIVE",
       "operations": ["product-authority-update"],
       "authorization": "finnor-production-mutation-authorization.v1"
+    },
+    {
+      "id": "scope5-operational-cutover",
+      "path": "finnor-os/scripts/release/rollout-scope5-production.ts",
+      "classification": "PRODUCTION_MUTATOR",
+      "state": "ACTIVE",
+      "operations": ["epistemic-impact-activate"],
+      "authorization": "finnor-production-mutation-authorization.v1",
+      "serialization": "finnor-production-release"
     },
     {
       "id": "phase9-bootstrap-workflow",
@@ -131,6 +140,9 @@
         "finnor-os/scripts/release/scope3-compute-case-proofs.ts",
         "finnor-os/scripts/release/run-scope3-focused-tests.ts",
         "finnor-os/scripts/release/run-scope3-compute-certification.ts",
+        "finnor-os/scripts/release/generate-scope4-relationship-contracts.ts",
+        "finnor-os/scripts/release/run-scope4-digital-twin-certification.ts",
+        "finnor-os/scripts/release/run-scope5-epistemic-impact-certification.ts",
         "finnor-os/scripts/release/rehearse-historical-upgrade.ts",
         "finnor-os/scripts/release/run-pe-p1-world-truth-certification.ts",
         "finnor-os/scripts/release/run-pe-p4-underwriting-certification.ts",
@@ -152,13 +164,15 @@
         "scripts/release/verify-live-release.mjs",
         "scripts/release/verify-production-parity.mjs",
         "scripts/release/verify-production-readiness.mjs",
+        "scripts/release/production-readiness-policy.mjs",
+        "scripts/release/production-readiness-policy.test.mjs",
+        "scripts/release/release-evidence-policy.mjs",
+        "scripts/release/release-evidence-policy.test.mjs",
         "scripts/release/verify-supplier-canary-release.mjs",
         "scripts/release/verify-p8-zero-resurrection.mjs",
         "scripts/release/verify-release.mjs",
         "scripts/release/validate-deployment-truth.mjs",
         "scripts/release/release-policy.mjs",
-        "scripts/release/production-readiness-policy.mjs",
-        "scripts/release/release-evidence-policy.mjs",
         "scripts/release/vercel-protection.mjs"
       ],
       "classification": "READ_ONLY",
@@ -190,9 +204,7 @@
         "scripts/release/compute-plane-policy.test.mjs",
         "scripts/release/pr-verdict-policy.test.mjs",
         "scripts/release/production-mutation-guard.test.mjs",
-        "scripts/release/production-readiness-policy.test.mjs",
         "scripts/release/protected-env.test.mjs",
-        "scripts/release/release-evidence-policy.test.mjs",
         "scripts/release/release-policy.test.mjs",
         "scripts/release/supplier-canary-health.test.mjs"
       ],

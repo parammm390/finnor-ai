@@ -1,0 +1,177 @@
+{
+  "schema": "finnor.scope5-epistemic-impact-certification.v1",
+  "generatedAt": "2026-09-22T20:11:56.132Z",
+  "migrationHead": "0140_scope5_epistemic_impact.sql",
+  "status": "PASS_INTEGRATION",
+  "gates": [
+    {
+      "id": "fresh-migration",
+      "status": "PASS_INTEGRATION",
+      "evidence": "141 migrations applied through 0140_scope5_epistemic_impact.sql"
+    },
+    {
+      "id": "tenant-isolation",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Cross-tenant source binding and historical graph replay rejected"
+    },
+    {
+      "id": "bounded-baseline",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Baseline resumed after one-node batch; 3 propositions evaluated without fabricated ChangeSets"
+    },
+    {
+      "id": "bounded-frontier-retry",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Root and derived child reevaluated across retries; unrelated proposition was not touched; concurrent duplicate delivery produced one ChangeSet"
+    },
+    {
+      "id": "causal-replay",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Existing read-only projection shows exact source, transition, Work impact and two proven edges"
+    },
+    {
+      "id": "full-oracle",
+      "status": "PASS_INTEGRATION",
+      "evidence": "All 3 durable beliefs match independent full recomputation after source change"
+    },
+    {
+      "id": "bitemporal-replay",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Earlier knownAt remains good after later evidence changed the current belief to bad"
+    },
+    {
+      "id": "activation-and-disable",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Activation refused absent exact protocol-2 heartbeat; reversible kill switch restored legacy fallback without erasing immutable facts"
+    },
+    {
+      "id": "exact-plan-gate",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Activated stale mandatory pin blocks only the dependent PlanNode"
+    },
+    {
+      "id": "final-pe-transaction",
+      "status": "PASS_INTEGRATION",
+      "evidence": "PE closing mutation rejected stale pin inside its final owner transaction; canonical condition remained open"
+    },
+    {
+      "id": "atomic-source-rollback",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Rolled-back source version left neither EvidenceChange nor committed source row"
+    },
+    {
+      "id": "concurrent-ordered-sources",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Two concurrently accepted source versions converged in ingestion order; out-of-order delivery deferred and full oracle matched"
+    },
+    {
+      "id": "structural-refresh",
+      "status": "PASS_INTEGRATION",
+      "evidence": "New PE Deal advanced epoch, fenced execution, rebuilt/baselined graph and required explicit reactivation"
+    },
+    {
+      "id": "populated-upgrade",
+      "status": "PASS_INTEGRATION",
+      "evidence": "0139→0140 preserved existing canonical/evidence rows; new epistemic tables empty until explicit baseline; pre-baseline replay unavailable"
+    },
+    {
+      "id": "outcome-calibration",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Final PE Decision froze one exact Plan-pinned assessment; later Outcome comparison was contradicted and idempotent without modifying the assessment"
+    },
+    {
+      "id": "durable-freshness",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Indexed due scan accepted one idempotent clock change, propagated root→derived child and matched full oracle"
+    },
+    {
+      "id": "digital-twin-restatement",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Phase-4 metric revision generated a redacted canonical proposition delta and exact Underwriting input/node/run/IC Question paths; unlinked same-Deal Question/Decision were unaffected, historic Run/Question stayed immutable and structural epoch fenced activation"
+    },
+    {
+      "id": "performance",
+      "status": "PASS_INTEGRATION",
+      "evidence": "8 corpus scenarios matched full semantics; measured proposition counts and median latencies are in the JSON report"
+    },
+    {
+      "id": "staging-and-live",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": "No staging/live deployment or exact release worker proof was supplied; local embedded PostgreSQL is not an external environment."
+    }
+  ],
+  "benchmarks": [
+    {
+      "scenario": "single-proposition",
+      "propositions": 330,
+      "fullMedianMs": 5.31,
+      "incrementalMedianMs": 1.86,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 1,
+      "equivalent": true
+    },
+    {
+      "scenario": "high-fanout",
+      "propositions": 330,
+      "fullMedianMs": 5.6,
+      "incrementalMedianMs": 3.06,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 17,
+      "equivalent": true
+    },
+    {
+      "scenario": "deep-dependency-chain",
+      "propositions": 330,
+      "fullMedianMs": 5.04,
+      "incrementalMedianMs": 2.04,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 13,
+      "equivalent": true
+    },
+    {
+      "scenario": "unrelated-evidence-update",
+      "propositions": 330,
+      "fullMedianMs": 4.68,
+      "incrementalMedianMs": 1.49,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 1,
+      "equivalent": true
+    },
+    {
+      "scenario": "freshness-expiry-batch",
+      "propositions": 330,
+      "fullMedianMs": 4.67,
+      "incrementalMedianMs": 2.47,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 27,
+      "equivalent": true
+    },
+    {
+      "scenario": "multiple-simultaneous-changes",
+      "propositions": 330,
+      "fullMedianMs": 5.13,
+      "incrementalMedianMs": 2.06,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 10,
+      "equivalent": true
+    },
+    {
+      "scenario": "phase4-metric-restatement",
+      "propositions": 330,
+      "fullMedianMs": 3.7,
+      "incrementalMedianMs": 1.93,
+      "fullEvaluations": 330,
+      "incrementalEvaluations": 13,
+      "equivalent": true
+    },
+    {
+      "scenario": "large-deal-portfolio-graph",
+      "propositions": 1030,
+      "fullMedianMs": 28.71,
+      "incrementalMedianMs": 4.7,
+      "fullEvaluations": 1030,
+      "incrementalEvaluations": 1,
+      "equivalent": true
+    }
+  ]
+}

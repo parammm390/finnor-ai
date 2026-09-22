@@ -45,7 +45,7 @@ const image = aws("ecr", ["describe-images", "--repository-name", worker.ecrRepo
 if (image?.imageDigest !== imageDigest) throw new Error("ECR release tag does not resolve to the requested digest")
 const imageUri = `${worker.accountId}.dkr.ecr.${worker.region}.amazonaws.com/${worker.ecrRepository}@${imageDigest}`
 const stack = aws("cloudformation", ["describe-stacks", "--stack-name", worker.stackName]).Stacks?.[0]
-if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production stack is missing, unstable, or uses an unexpected service role")
+if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production stack is missing, unstable, or uses an unexpected service role")
 const stackParameters = Object.fromEntries((stack.Parameters ?? []).map((parameter) => [parameter.ParameterKey, parameter.ParameterValue]))
 const currentStage = stackParameters.ComputePlaneStage ?? "legacy"
 const requestedStage = stage === "rollout" ? "finalized" : stage

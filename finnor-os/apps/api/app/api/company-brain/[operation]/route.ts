@@ -1,7 +1,9 @@
 import {
   COMPANY_BRAIN_NAMESPACES,
   CORE_BRAIN_OBJECT_TYPES,
+  EPISTEMIC_BRAIN_OBJECT_TYPES,
   PE_ENTITY_TYPES,
+  PE_WORLD_ROOT_TYPES,
   PLANNING_BRAIN_OBJECT_TYPES,
   UNDERWRITING_BRAIN_OBJECT_TYPES,
   WORKFORCE_BRAIN_OBJECT_TYPES,
@@ -28,7 +30,7 @@ export const runtime = "nodejs";
 const UuidSchema = z.string().uuid();
 const TimestampSchema = z.string().datetime({ offset: true });
 const RootSchema = z.object({
-  entityType: z.enum(["pe_strategy", "pe_opportunity", "pe_deal"]),
+  entityType: z.enum(PE_WORLD_ROOT_TYPES),
   entityId: UuidSchema,
 }).strict();
 
@@ -44,6 +46,13 @@ const CoreRefSchema = z.object({
   owner: z.enum(["@finnor/db", "@finnor/read-models"]),
   type: z.enum(CORE_BRAIN_OBJECT_TYPES),
   id: z.string().trim().min(1).max(512),
+  revisionId: z.string().trim().min(1).max(512).optional(),
+}).strict();
+const EpistemicRefSchema = z.object({
+  namespace: z.literal("epistemic"),
+  owner: z.literal("@finnor/epistemic-runtime"),
+  type: z.enum(EPISTEMIC_BRAIN_OBJECT_TYPES),
+  id: z.string().trim().min(1).max(1024),
   revisionId: z.string().trim().min(1).max(512).optional(),
 }).strict();
 const UnderwritingRefSchema = z.object({
@@ -67,15 +76,16 @@ const WorkforceRefSchema = z.object({
   id: UuidSchema,
   revisionId: z.string().trim().min(1).max(256).optional(),
 }).strict();
-const RefSchema = z.discriminatedUnion("namespace", [PrivateEquityRefSchema, CoreRefSchema, UnderwritingRefSchema, PlanningRefSchema, WorkforceRefSchema]);
+const RefSchema = z.discriminatedUnion("namespace", [PrivateEquityRefSchema, CoreRefSchema, EpistemicRefSchema, UnderwritingRefSchema, PlanningRefSchema, WorkforceRefSchema]);
 
-const RootedSchema = z.object({ root: RootSchema, asOf: TimestampSchema.optional() }).strict();
-const RootedRefSchema = z.object({ root: RootSchema, ref: RefSchema, asOf: TimestampSchema.optional() }).strict();
-const SearchSchema = z.object({ query: z.string().trim().max(240).default(""), root: RootSchema.optional(), asOf: TimestampSchema.optional(), limit: z.number().int().min(1).max(100).optional() }).strict();
+const TemporalFields = { asOf: TimestampSchema.optional(), validAt: TimestampSchema.optional(), knowledgeAt: TimestampSchema.optional() };
+const RootedSchema = z.object({ root: RootSchema, ...TemporalFields }).strict();
+const RootedRefSchema = z.object({ root: RootSchema, ref: RefSchema, ...TemporalFields }).strict();
+const SearchSchema = z.object({ query: z.string().trim().max(240).default(""), root: RootSchema.optional(), ...TemporalFields, limit: z.number().int().min(1).max(100).optional() }).strict();
 const TraverseSchema = z.object({
   root: RootSchema,
   ref: RefSchema,
-  asOf: TimestampSchema.optional(),
+  ...TemporalFields,
   depth: z.number().int().min(0).max(4).optional(),
   limit: z.number().int().min(1).max(250).optional(),
   direction: z.enum(["outbound", "inbound", "both"]).optional(),
@@ -128,24 +138,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       case "search": {
         const input = SearchSchema.parse(body);
         if (!input.root) return response({ results: await listCompanyBrainRoots(ctx, { query: input.query, limit: input.limit }) });
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf, validAt: input.validAt, knowledgeAt: input.knowledgeAt });
         return response({ results: searchCompanyBrainProjection(projection, input.query, input.limit) });
       }
       case "object": {
         const input = RootedRefSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         const node = companyBrainObject(projection, ref);
         if (!node) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Company Brain object was not found in the authenticated root projection");
         return response({ object: node });
       }
       case "traverse": {
         const input = TraverseSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         return response(traverseCompanyBrain(projection, ref, input));
       }
       case "provenance": {
         const input = RootedRefSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         return response(companyBrainProvenance(projection, ref));
       }
       case "history": {
@@ -154,17 +164,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       }
       case "evidence-lineage": {
         const input = RootedRefSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         return response(companyBrainEvidenceLineage(projection, ref));
       }
       case "decision-lineage": {
         const input = RootedRefSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         return response(companyBrainDecisionLineage(projection, ref));
       }
       case "available-actions": {
         const input = RootedRefSchema.parse(body); const ref = checkedRef(input.ref);
-        const projection = await loadCompanyBrainProjection(ctx, { root: input.root, asOf: input.asOf });
+        const projection = await loadCompanyBrainProjection(ctx, input);
         const node = companyBrainObject(projection, ref);
         if (!node) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Company Brain object was not found in the authenticated root projection");
         return response({ ref: node.ref, actions: node.availableActions, authorization: "evaluated_at_execution" });

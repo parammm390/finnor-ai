@@ -21,6 +21,7 @@ import {
   tenantRetentionPolicies,
   universalActionEvents,
   withTenant,
+  withTenantTransaction,
   workAggregate,
   workInputs,
   workObjectivePlannerAttempts,
@@ -52,6 +53,55 @@ const EDGE_LIMIT = 2_000;
 const ACTION_EVENT_LIMIT = 2_000;
 const ARTIFACT_LIMIT = 500;
 const RELATED_ROW_LIMIT = EDGE_LIMIT;
+const EPISTEMIC_REPLAY_LIMIT = 100;
+
+interface EpistemicReplayImpactRow {
+  changeset_id: string;
+  change_id: string;
+  proposition_id: string;
+  object_id: string;
+  edge_kind: string;
+  path: unknown;
+  materiality: string;
+  consequence: string;
+  rule_version: string;
+  heuristic_version: string;
+  operational_enabled: boolean;
+  completed_at: Date;
+  source_kind: string;
+  source_version_id: string | null;
+  source_owner: string;
+  accepted_at: Date;
+  observed_at: Date | null;
+  valid_at: Date | null;
+  known_at: Date;
+  delta: unknown;
+}
+
+/** Exact Work Plan pins are the only join from Scope-5 impact history into
+ * Causal Replay. A shared Deal or nearby timestamp is not a causal edge. */
+async function epistemicReplayImpacts(tenantId: string, workId: string): Promise<EpistemicReplayImpactRow[]> {
+  return withTenantTransaction(tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    const result = await client.query<EpistemicReplayImpactRow>(
+      `SELECT p.changeset_id,p.proposition_id,p.object_id,p.edge_kind,p.path,p.materiality,p.consequence,
+         s.change_id,s.rule_version,s.heuristic_version,s.operational_enabled,s.completed_at,
+         c.source_kind,c.source_version_id,c.source_owner,c.accepted_at,c.observed_at,c.valid_at,c.known_at,
+         delta.value AS delta
+       FROM finnor_os.epistemic_impact_paths p
+       JOIN finnor_os.epistemic_changesets s ON s.tenant_id=p.tenant_id AND s.id=p.changeset_id
+       JOIN finnor_os.epistemic_changes c ON c.tenant_id=s.tenant_id AND c.id=s.change_id
+       JOIN finnor_os.work_plan_revisions r ON r.tenant_id=p.tenant_id
+         AND p.object_id LIKE r.id::text || ':%' AND r.work_id=$2
+       LEFT JOIN LATERAL (
+         SELECT item.value FROM jsonb_array_elements(s.semantic_deltas) AS item(value)
+         WHERE item.value->>'propositionId'=p.proposition_id LIMIT 1
+       ) delta ON true
+       WHERE p.tenant_id=$1 AND p.object_kind='work_plan_node'
+       ORDER BY c.accepted_at,c.id,p.proposition_id,p.object_id
+       LIMIT $3`, [tenantId,workId,EPISTEMIC_REPLAY_LIMIT+1]);
+    return result.rows;
+  });
+}
 
 export interface CausalReplayViewer {
   userId: string;
@@ -315,6 +365,8 @@ export async function causalReplayProjection(
     };
   });
 
+  const epistemicImpactsPlus = await epistemicReplayImpacts(tenantId, workId);
+
   const nodes: CausalReplayNode[] = [];
   const edges: CausalReplayEdge[] = [];
   const missing: string[] = [];
@@ -345,6 +397,61 @@ export async function causalReplayProjection(
     missing.push(summary);
     if (from) addEdge({ from, to: id, relation: "missing_provenance", evidenceRefs: [], explanation: summary, certainty: "missing" });
   };
+
+  for (const impact of epistemicImpactsPlus.slice(0, EPISTEMIC_REPLAY_LIMIT)) {
+    const sourceId = `epistemic-change:${impact.change_id}`;
+    const transitionId = `epistemic-transition:${impact.changeset_id}:${impact.proposition_id}`;
+    const consequenceId = `epistemic-impact:${impact.changeset_id}:${impact.proposition_id}:${impact.object_id}`;
+    const impactRef = `epistemic_impact_paths:${impact.changeset_id}:${impact.proposition_id}:${impact.object_id}:${impact.edge_kind}`;
+    const sourceVersionRef = impact.source_version_id
+      ? `${impact.source_kind}:${impact.source_version_id}` : `epistemic_changes:${impact.change_id}`;
+    const sourceAt = iso(impact.accepted_at);
+    const completedAt = iso(impact.completed_at);
+    addNode({
+      id: sourceId,
+      stage: impact.source_kind === "canonical_entity_version" ? "canonical_change" : "evidence",
+      title: "Epistemic source change accepted",
+      summary: `${humanize(impact.source_kind)} from ${impact.source_owner}`,
+      status: "accepted",
+      occurredAt: sourceAt,
+      sourceRefs: [sourceRef("epistemic_changes",impact.change_id),sourceVersionRef],
+      evidence: [evidence("epistemic_changes",impact.change_id,sourceAt)],
+      facts: { sourceKind:impact.source_kind,sourceVersionId:impact.source_version_id,
+        observedAt:impact.observed_at ? iso(impact.observed_at) : null,
+        validAt:impact.valid_at ? iso(impact.valid_at) : null,knownAt:iso(impact.known_at) },
+      entityRefs: [],
+    });
+    addNode({
+      id: transitionId,stage:"context",title:"Proposition belief changed",
+      summary:`${impact.proposition_id} · ${humanize(impact.materiality)}`,
+      status:impact.materiality,occurredAt:completedAt,
+      sourceRefs:[sourceRef("epistemic_changesets",impact.changeset_id)],
+      evidence:[evidence("epistemic_changesets",impact.changeset_id,completedAt)],
+      facts:{ propositionId:impact.proposition_id,delta:impact.delta,ruleVersion:impact.rule_version,
+        heuristicVersion:impact.heuristic_version,operationalEnabled:impact.operational_enabled },
+      entityRefs:[],
+    });
+    addNode({
+      id:consequenceId,stage:impact.consequence === "block_consequential" ? "failure" : "dependency",
+      title:"Epistemic impact on Plan node",
+      summary:`${humanize(impact.consequence)} · ${humanize(impact.edge_kind)}`,
+      status:impact.consequence,occurredAt:completedAt,
+      sourceRefs:[impactRef],
+      evidence:[evidence("epistemic_impact_paths",impactRef,completedAt)],
+      facts:{ propositionId:impact.proposition_id,planNodeRef:impact.object_id,edgeKind:impact.edge_kind,
+        path:impact.path,materiality:impact.materiality,consequence:impact.consequence,ruleVersion:impact.rule_version },
+      entityRefs:[{entityType:"work_plan_node",entityId:impact.object_id}],
+    });
+    addEdge({ from:sourceId,to:transitionId,relation:"caused_epistemic_transition",
+      evidenceRefs:[sourceRef("epistemic_changesets",impact.changeset_id)],
+      explanation:"The immutable ChangeSet names the exact accepted source change and proposition delta." });
+    addEdge({ from:transitionId,to:consequenceId,relation:"impacted_pinned_plan_node",
+      evidenceRefs:[impactRef],
+      explanation:"The persisted impact path links the changed proposition to this exact Work Plan node." });
+  }
+  if (epistemicImpactsPlus.length > EPISTEMIC_REPLAY_LIMIT) {
+    missing.push(`Epistemic impact replay was bounded at ${EPISTEMIC_REPLAY_LIMIT} exact Work Plan paths.`);
+  }
 
   const inputNodeById = new Map<string, string>();
   const contextNodeByInput = new Map<string, string>();
@@ -1128,7 +1235,10 @@ export async function causalReplayProjection(
     addMissing(`missing:provider-effect:${action.id}`, action.timestamps.lastChangedAt, `Action ${action.id} claims a confirmed external effect but has no replayable provider/computer record.`, actionNodeById.get(action.id));
   }
 
-  const sortedNodes = nodes.sort((a, b) => a.occurredAt.localeCompare(b.occurredAt) || a.id.localeCompare(b.id));
+  const epistemicOrder = (id: string): number => id.startsWith("epistemic-change:") ? 0
+    : id.startsWith("epistemic-transition:") ? 1 : id.startsWith("epistemic-impact:") ? 2 : 3;
+  const sortedNodes = nodes.sort((a, b) => a.occurredAt.localeCompare(b.occurredAt)
+    || epistemicOrder(a.id)-epistemicOrder(b.id) || a.id.localeCompare(b.id));
   const nodesTruncated = sortedNodes.length > NODE_LIMIT;
   const finalNodes = sortedNodes.slice(0, NODE_LIMIT);
   const retainedNodeIds = new Set(finalNodes.map((node) => node.id));

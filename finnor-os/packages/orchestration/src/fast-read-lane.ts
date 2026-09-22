@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import {
   OPERATIONAL_QUERY_INTENTS,
+  PE_WORLD_ROOT_TYPES,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   isRetiredWaterCanonicalEntity,
   isRetiredWaterParty,
@@ -272,9 +273,9 @@ export function validateOperationalQueryRequest(
 
   if (intent === "pe_world_state") {
     const root = object(value?.root);
-    if (!root || !["pe_strategy", "pe_opportunity", "pe_deal"].includes(String(root.entityType))
+    if (!root || !PE_WORLD_ROOT_TYPES.includes(String(root.entityType) as (typeof PE_WORLD_ROOT_TYPES)[number])
         || typeof root.entityId !== "string" || !UUID.test(root.entityId)) {
-      return { success: false, error: "PE world-state queries require a valid Strategy, Opportunity, or Deal root" };
+      return { success: false, error: "PE world-state queries require a valid canonical PE world root" };
     }
     if (value?.at !== undefined && (typeof value.at !== "string" || !Number.isFinite(Date.parse(value.at)))) {
       return { success: false, error: "PE world-state at must be an ISO timestamp" };

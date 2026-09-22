@@ -111,20 +111,27 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(workflow, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-compute-plane\.mjs/)
+  const computeSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECS[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
+  assert.ok(computeSessionPolicy, "compute deployment must use a scoped AWS session")
+  assert.match(computeSessionPolicy, /ecr:DescribeRepositories/, "CloudFormation resolves the ECR repository ARN while updating worker roles")
+  for (const path of ["preflight-production.mjs", "deploy-aws-compute-plane.mjs"]) {
+    const source = readFileSync(new URL(path, import.meta.url), "utf8")
+    assert.match(source, /UPDATE_ROLLBACK_COMPLETE/, `${path} must accept a stable stack after a governed rollback`)
+  }
   const deployStage = workflow.match(/deploy_stage\(\) \{([\s\S]*?)\n          \}/)?.[1]
   assert.ok(deployStage, "production workflow must define the compute deploy stage")
   for (const argument of ["preflight-evidence", "database-env", "image-digest"]) {
     assert.match(deployStage, new RegExp(`--${argument}=\\"\\$FINNOR_[A-Z_]+\\"`))
   }
   assert.doesNotMatch(workflow, /deploy-aws-worker\.mjs/)
-  assert.match(workflow, /release:scope3\b/)
-  assert.doesNotMatch(workflow, /run: npm run release:scope3:focused\b/)
+  assert.match(workflow, /release:scope4-digital-twin\b/)
+  assert.match(workflow, /release:scope5-epistemic-impact\b/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryApp/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
   assert.match(workflow, /run-p8-production-water-retirement\.mjs/)
+  assert.match(workflow, /release:scope5:rollout/)
+  assert.ok(workflow.indexOf("Verify final PE product authority readiness") < workflow.indexOf("release:scope5:rollout"))
   assert.match(workflow, /phase5-readiness/)
-  assert.match(workflow, /release:pe-p7-workforce-learning/)
-  assert.match(workflow, /phase6-conversation-context-kernel\.test\.ts/)
   for (const envName of [
     "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
     "VERCEL_API_AUTOMATION_BYPASS_SECRET",

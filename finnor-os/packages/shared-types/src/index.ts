@@ -18,6 +18,7 @@ export * from "./source-truth";
 export * from "./outcome-packs";
 export * from "./vertical-runtime";
 export * from "./retired-water";
+export * from "./private-equity";
 
 export type Role = "owner";
 

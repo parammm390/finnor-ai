@@ -1,4 +1,4 @@
-import { PeDomainError, loadSemanticActivity, type PeMutationContext } from "@finnor/private-equity";
+import { PE_WORLD_ROOT_TYPES, PeDomainError, loadSemanticActivity, type PeMutationContext } from "@finnor/private-equity";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../lib/auth";
 
@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 const InputSchema = z.object({
   root: z.object({
-    entityType: z.enum(["pe_strategy", "pe_opportunity", "pe_deal"]),
+    entityType: z.enum(PE_WORLD_ROOT_TYPES),
     entityId: z.string().uuid(),
   }).strict(),
   asOf: z.string().datetime({ offset: true }).optional(),

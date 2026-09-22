@@ -77,6 +77,24 @@ export interface PropositionPredicate {
   name: string;
   path?: string;
   operator?: "exists" | "not_exists" | "eq" | "not_eq" | "gte" | "lte" | "contains" | "available";
+  /** Versioned deterministic projection over explicit proposition dependencies. */
+  derivation?: PropositionDerivation;
+}
+
+export type PropositionDerivationExpression =
+  | {
+      op: "require";
+      propositionId: string;
+      expectedValueHashes: string[];
+      acceptableStatuses?: PropositionStatus[];
+    }
+  | { op: "all" | "any"; terms: PropositionDerivationExpression[] };
+
+export interface PropositionDerivation {
+  ruleId: string;
+  version: string;
+  owner: string;
+  expression: PropositionDerivationExpression;
 }
 
 export type PropositionValue =
@@ -118,6 +136,8 @@ export interface EvidenceRecord {
   source: EvidenceSource;
   observedAt: string;
   validAt?: string;
+  /** Exclusive end of the business-valid interval when the source owner has one. */
+  validTo?: string;
   ingestedAt: string;
   value: JsonValue;
   confidence: ConfidenceAssessment;
@@ -149,6 +169,8 @@ export interface Proposition {
   predicate: PropositionPredicate;
   status: PropositionStatus;
   value: PropositionValue;
+  /** Optional redacted value identity used when evaluating a durable dependent. */
+  valueHash?: string;
   source?: EvidenceSource;
   sourceAuthority?: SourceAuthority;
   observedAt?: string;
@@ -219,6 +241,9 @@ export interface EpistemicState {
   version: typeof EPISTEMIC_STATE_VERSION;
   scope: EpistemicScope;
   asOf: string;
+  /** Business-valid and knowledge clocks are distinct for historical evaluation. */
+  validAt?: string;
+  knownAt?: string;
   propositions: Proposition[];
   /** Separate deterministic canonical projection; never inferred from confidence. */
   canonicalTruth: CanonicalTruthRecord[];

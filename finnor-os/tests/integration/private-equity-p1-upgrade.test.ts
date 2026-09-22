@@ -144,9 +144,9 @@ describe.skipIf(!available)("P1 populated PE database upgrade", () => {
       deals: 1,
       workstreams: 1,
       document_links: 1,
-      // The original twenty P1/legacy PE owners plus the eight P5 IC process
-      // entities that join the same canonical temporal-history substrate.
-      coverage_types: 28,
+      // Twenty P1/legacy owners, eight P5 IC owners, and twenty Scope 4
+      // Digital Twin and Core identity owners share canonical history coverage.
+      coverage_types: 48,
       deal_history: 1,
       child_history: 1,
       // 0110 captures the legacy row and 0111 captures the root-scope backfill.

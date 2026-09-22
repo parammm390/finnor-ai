@@ -54,6 +54,10 @@
     "release:scope3:focused": "tsx scripts/release/run-scope3-focused-tests.ts",
     "release:scope3:load": "tsx scripts/release/run-scope3-focused-tests.ts --load",
     "release:scope3": "tsx scripts/release/run-scope3-compute-certification.ts",
+    "scope4:relationships": "tsx scripts/release/generate-scope4-relationship-contracts.ts",
+    "release:scope4-digital-twin": "tsx scripts/release/run-scope4-digital-twin-certification.ts",
+    "release:scope5-epistemic-impact": "tsx scripts/release/run-scope5-epistemic-impact-certification.ts",
+    "release:scope5:rollout": "tsx scripts/release/rollout-scope5-production.ts",
     "release:pe5": "tsx scripts/release/run-pe5-water-retirement-certification.ts",
     "release:p8-runtime-contract": "tsx scripts/release/verify-p8-runtime-contract.ts"
   },

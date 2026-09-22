@@ -1,0 +1,262 @@
+{
+  "phase": "Phase 4 — Company Brain / PE Digital Twin",
+  "status": "PASS_INTEGRATION",
+  "startedAt": "2026-09-22T20:02:47.461Z",
+  "completedAt": "2026-09-22T20:05:22.490Z",
+  "migrationHead": "0140_scope5_epistemic_impact.sql",
+  "evidenceLevels": {
+    "local": "PASS_LOCAL",
+    "database": "PASS_INTEGRATION",
+    "liveProviders": "BLOCKED_EXTERNAL"
+  },
+  "freshDatabase": {
+    "head": "0140_scope5_epistemic_impact.sql",
+    "tables": 18,
+    "forcedRls": true,
+    "historyTriggers": true,
+    "canonicalOwners": 18
+  },
+  "populatedUpgrade": {
+    "applied": [
+      "0139_scope4_pe_digital_twin.sql",
+      "0140_scope5_epistemic_impact.sql"
+    ],
+    "identitiesPreserved": 3,
+    "fabricatedScope4Rows": 0,
+    "coreIdentityBaselines": 2,
+    "preBaselineRows": 0
+  },
+  "benchmark": {
+    "corpus": {
+      "companies": 200,
+      "funds": 10,
+      "vehicles": 20,
+      "closedDeals": 200,
+      "holdings": 200,
+      "securities": 200,
+      "debtFacilities": 200,
+      "ownershipInterests": 200,
+      "coverageFacts": 400,
+      "metricSeries": 200,
+      "metricObservations": 1000
+    },
+    "metrics": [
+      {
+        "operation": "company lookup/search",
+        "samples": 12,
+        "p50Ms": 5.78,
+        "p95Ms": 9.2,
+        "maxMs": 9.2,
+        "thresholdMs": 1000
+      },
+      {
+        "operation": "Company projection",
+        "samples": 12,
+        "p50Ms": 124.66,
+        "p95Ms": 140.18,
+        "maxMs": 140.18,
+        "thresholdMs": 3500
+      },
+      {
+        "operation": "Fund/portfolio projection",
+        "samples": 12,
+        "p50Ms": 121.76,
+        "p95Ms": 135.51,
+        "maxMs": 135.51,
+        "thresholdMs": 4000
+      },
+      {
+        "operation": "bounded traversal",
+        "samples": 12,
+        "p50Ms": 0.68,
+        "p95Ms": 0.71,
+        "maxMs": 0.71,
+        "thresholdMs": 100
+      },
+      {
+        "operation": "historical/as-of projection",
+        "samples": 12,
+        "p50Ms": 121.92,
+        "p95Ms": 135.1,
+        "maxMs": 135.1,
+        "thresholdMs": 4000
+      },
+      {
+        "operation": "ownership closed-world as-of",
+        "samples": 12,
+        "p50Ms": 3.28,
+        "p95Ms": 3.59,
+        "maxMs": 3.59,
+        "thresholdMs": 1000
+      }
+    ],
+    "plans": {
+      "canonicalHistory": [
+        {
+          "Plan": {
+            "Node Type": "Unique",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 851.68,
+            "Total Cost": 861.25,
+            "Plan Rows": 1222,
+            "Plan Width": 959,
+            "Actual Startup Time": 2.73,
+            "Actual Total Time": 3.12,
+            "Actual Rows": 1800,
+            "Actual Loops": 1,
+            "Disabled": false,
+            "Shared Hit Blocks": 682,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 851.68,
+                "Total Cost": 854.87,
+                "Plan Rows": 1276,
+                "Plan Width": 959,
+                "Actual Startup Time": 2.73,
+                "Actual Total Time": 2.793,
+                "Actual Rows": 1800,
+                "Actual Loops": 1,
+                "Disabled": false,
+                "Sort Key": [
+                  "entity_type",
+                  "entity_id",
+                  "recorded_at DESC",
+                  "entity_version DESC"
+                ],
+                "Sort Method": "quicksort",
+                "Sort Space Used": 1569,
+                "Sort Space Type": "Memory",
+                "Shared Hit Blocks": 682,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Seq Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Relation Name": "canonical_entity_versions",
+                    "Alias": "canonical_entity_versions",
+                    "Startup Cost": 0,
+                    "Total Cost": 785.86,
+                    "Plan Rows": 1276,
+                    "Plan Width": 959,
+                    "Actual Startup Time": 0.012,
+                    "Actual Total Time": 1.469,
+                    "Actual Rows": 1800,
+                    "Actual Loops": 1,
+                    "Disabled": false,
+                    "Filter": "((tenant_id = '60000000-0000-4000-8000-000000000001'::uuid) AND (recorded_at <= now()) AND (entity_type = ANY ('{external_organization,pe_portfolio_holding,pe_ownership_interest,pe_metric_series,pe_metric_observation}'::text[])))",
+                    "Rows Removed by Filter": 2573,
+                    "Shared Hit Blocks": 682,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 76,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.391,
+          "Triggers": [],
+          "Execution Time": 3.229
+        }
+      ]
+    }
+  },
+  "gates": [
+    {
+      "id": "fresh-database",
+      "status": "PASS_INTEGRATION",
+      "evidence": "141 forward migrations; head 0139; 18 forced-RLS history owners"
+    },
+    {
+      "id": "populated-upgrade",
+      "status": "PASS_INTEGRATION",
+      "evidence": "0138 populated Core identities and PE Strategy preserved byte-for-byte; zero fabricated Scope 4 rows; honest baselines"
+    },
+    {
+      "id": "typecheck",
+      "status": "PASS_LOCAL",
+      "evidence": "repository TypeScript project"
+    },
+    {
+      "id": "relationship-contracts",
+      "status": "PASS_LOCAL",
+      "evidence": "66 runtime relationship contracts exactly match checked-in certification matrix"
+    },
+    {
+      "id": "pe-domain-boundary",
+      "status": "PASS_LOCAL",
+      "evidence": "canonical PE ownership boundary verifier"
+    },
+    {
+      "id": "unit-regressions",
+      "status": "PASS_LOCAL",
+      "evidence": "Company Brain, PE state/epistemic/underwriting/IC, Source Truth, Scope 1 and Scope 3 contract suites"
+    },
+    {
+      "id": "database-regressions",
+      "status": "PASS_INTEGRATION",
+      "evidence": "Scope 4 adversarial; existing PE close/world/Underwriting/IC; Source Truth, Work/Planning, and Scope 1-2 database suites; focused 44-test Scope 3 disposable suite"
+    },
+    {
+      "id": "phase15a",
+      "status": "PASS_LOCAL",
+      "evidence": "production target, protected environment, PR verdict, mutation inventory, and release policy suite"
+    },
+    {
+      "id": "postgres-graph-benchmark",
+      "status": "PASS_INTEGRATION",
+      "evidence": "6 measured operations on representative 200-company / 1,000-observation corpus; all p95 guardrails passed"
+    },
+    {
+      "id": "live-provider-validation",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": "No SEC, GLEIF, PitchBook, Preqin, CapIQ, Grata, SourceScrub, or equivalent credential/data source was supplied; no live-provider claim made"
+    }
+  ],
+  "graphStoreConclusion": "PostgreSQL met every measured p95 guardrail on the representative bounded corpus. No graph-store bakeoff or dual-write is justified by evidence.",
+  "blockedExternal": [
+    "Live third-party company, person, ownership, debt, metric, and benchmark provider certification"
+  ]
+}
