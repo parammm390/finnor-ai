@@ -117,6 +117,7 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(computeSessionPolicy, /logs:DescribeLogGroups/, "CloudFormation resolves the log group ARN while updating worker roles")
   const computeTemplate = readFileSync(new URL("../../infra/aws/finnor-production.yaml", import.meta.url), "utf8")
   assert.match(computeTemplate, /Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '\*'/)
+  assert.match(computeTemplate, /Sid: ComputeScalingTags[\s\S]{0,240}application-autoscaling:TagResource[\s\S]{0,120}application-autoscaling:UntagResource[\s\S]{0,180}scalable-target\/\*/)
   for (const path of ["preflight-production.mjs", "deploy-aws-compute-plane.mjs"]) {
     const source = readFileSync(new URL(path, import.meta.url), "utf8")
     assert.match(source, /UPDATE_ROLLBACK_COMPLETE/, `${path} must accept a stable stack after a governed rollback`)

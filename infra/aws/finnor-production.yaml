@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: FINNOR four-class production compute plane on ECS Fargate with a REALTIME-only HTTPS ALB SSE gateway.
+Description: FINNOR four-class ECS Fargate compute with a REALTIME HTTPS SSE gateway.
 
 Metadata:
   AWSToolsMetrics:
@@ -398,6 +398,7 @@ Resources:
                 Effect: Allow
                 Action: [application-autoscaling:RegisterScalableTarget, application-autoscaling:DeregisterScalableTarget, application-autoscaling:PutScalingPolicy, application-autoscaling:DeleteScalingPolicy, application-autoscaling:DescribeScalableTargets, application-autoscaling:DescribeScalingPolicies, application-autoscaling:DescribeScheduledActions]
                 Resource: '*'
+              - { Sid: ComputeScalingTags, Effect: Allow, Action: [application-autoscaling:TagResource, application-autoscaling:UntagResource], Resource: !Sub 'arn:${AWS::Partition}:application-autoscaling:${AWS::Region}:${AWS::AccountId}:scalable-target/*' }
               - Sid: ComputeAlarms
                 Effect: Allow
                 Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:ListTagsForResource, cloudwatch:TagResource, cloudwatch:UntagResource]
@@ -1007,8 +1008,7 @@ Resources:
         - { Key: service, Value: finnor-heavy }
         - { Key: environment, Value: production }
 
-  # Four independent bounded capacity targets. All minima are one: each class
-  # owns its own metric publisher, so zero capacity would lose the wake signal.
+  # One wake publisher per class.
   RealtimeScaleTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: RealtimeService
@@ -1135,9 +1135,7 @@ Resources:
         MetricAggregationType: Maximum
         StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
 
-  # ScalePressure=max(oldest eligible age / class engineering target,
-  # backlog per fresh running task / class engineering target). A publisher
-  # failure emits no fabricated zero; missing data cannot cause scale-in.
+  # max(age/target, backlog/fresh-task/target); missing metrics never scale in.
   RealtimeScaleOutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
