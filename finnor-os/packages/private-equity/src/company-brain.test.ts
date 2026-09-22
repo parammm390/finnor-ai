@@ -29,7 +29,8 @@ const at = "2026-09-11T12:00:00.000Z";
 
 function refFor(qualified: CompanyBrainQualifiedType, id = "11111111-1111-4111-8111-111111111111"): CompanyBrainObjectRef {
   const [namespace, type] = qualified.split(":");
-  const owner = namespace === "private_equity" || namespace === "underwriting" ? "@finnor/private-equity" : "@finnor/db";
+  const owner = namespace === "private_equity" || namespace === "underwriting" ? "@finnor/private-equity"
+    : namespace === "epistemic" ? "@finnor/epistemic-runtime" : "@finnor/db";
   const parsed = parseCompanyBrainObjectRef({ namespace, owner, type, id });
   if (!parsed) throw new Error(`Test could not construct ${qualified}`);
   return parsed;
@@ -39,6 +40,29 @@ describe("Company Brain relationship registry", () => {
   it("registers every declared relationship exactly once", () => {
     expect(COMPANY_BRAIN_RELATIONSHIP_REGISTRY.map((entry) => entry.kind)).toEqual(COMPANY_BRAIN_RELATIONSHIP_KINDS);
     expect(new Set(COMPANY_BRAIN_RELATIONSHIP_REGISTRY.map((entry) => entry.kind)).size).toBe(COMPANY_BRAIN_RELATIONSHIP_KINDS.length);
+  });
+
+  it("certifies the complete relationship contract rather than only endpoint types", () => {
+    for (const relationship of COMPANY_BRAIN_RELATIONSHIP_REGISTRY) {
+      expect(relationship.sourceOwner).toMatch(/^@finnor\//);
+      expect(relationship.mutationOwner).toMatch(/^@finnor\//);
+      expect(relationship.direction).toMatch(/^(outbound|inbound|bidirectional)$/);
+      expect(relationship.cardinality.length).toBeGreaterThan(0);
+      expect(relationship.validTimeBehavior.length).toBeGreaterThan(0);
+      expect(relationship.historyBehavior.length).toBeGreaterThan(0);
+      expect(relationship.exclusivityRule.length).toBeGreaterThan(0);
+      expect(relationship.cycleRule.length).toBeGreaterThan(0);
+      expect(relationship.tenantRule).toBe("authenticated_tenant_only");
+      expect(relationship.persistedProof.length).toBeGreaterThan(0);
+      expect(relationship.persistedSources.length).toBeGreaterThan(0);
+      expect(relationship.persistedSources.every((source) => source.table.length > 0 && source.columns.length > 0)).toBe(true);
+    }
+    expect(COMPANY_BRAIN_RELATIONSHIP_REGISTRY.find((entry) => entry.kind === "company_parent")).toMatchObject({
+      cycleRule: "cycles_forbidden", validTimeBehavior: "effective_interval",
+    });
+    expect(COMPANY_BRAIN_RELATIONSHIP_REGISTRY.find((entry) => entry.kind === "claim_subject")).toMatchObject({
+      sourceOwner: "@finnor/epistemic-runtime", mutationOwner: "@finnor/epistemic-runtime",
+    });
   });
 
   it.each(COMPANY_BRAIN_RELATIONSHIP_REGISTRY)("accepts only the exact persisted source for $kind", (registration) => {
@@ -89,6 +113,8 @@ function world(): PeWorldState {
   return {
     root: { entityType: "pe_deal", entityId: "10000000-0000-4000-8000-000000000003" },
     stateAt: at,
+    validAt: at,
+    knowledgeAt: at,
     temporalCompleteness: { status: "partial", baselineAt: "2026-01-01T00:00:00.000Z", unavailableEntityTypes: [], reasons: ["fixture partial"] },
     strategy: { id: "10000000-0000-4000-8000-000000000001", name: "Fund I", state: "active", version: 2 },
     opportunity: { id: "10000000-0000-4000-8000-000000000002", strategyId: "10000000-0000-4000-8000-000000000001", name: "Project Atlas", state: "qualified", version: 3 },
@@ -97,6 +123,10 @@ function world(): PeWorldState {
     deals: [{ id: "10000000-0000-4000-8000-000000000003", opportunityId: "10000000-0000-4000-8000-000000000002", name: "Atlas", status: "active", version: 4 }],
     investmentCases: [{ id: "10000000-0000-4000-8000-000000000004", dealId: "10000000-0000-4000-8000-000000000003", title: "Base case", state: "active", version: 1 }],
     theses: [], assumptions: [], decisions: [], decisionEffectLinks: [], dealParties: [], workstreams: [],
+    funds: [], vehicles: [], fundVehicleLinks: [], strategyMandates: [], portfolioHoldings: [], companies: [], people: [],
+    companyHierarchyRelationships: [], companyPartyRoles: [], securities: [], debtFacilities: [], debtFacilityLenders: [],
+    ownershipInterests: [], metricSeries: [], metricObservations: [], benchmarks: [], benchmarkObservations: [],
+    claims: [], outcomes: [], exits: [], factCoverage: [],
     requests: [{ id: "10000000-0000-4000-8000-000000000025", dealId: "10000000-0000-4000-8000-000000000003", requestText: "Provide the signed renewal schedule", state: "open", version: 1 }],
     deliverables: [{ id: "10000000-0000-4000-8000-000000000026", dealId: "10000000-0000-4000-8000-000000000003", description: "Signed renewal schedule", kind: "data_room_schedule", state: "expected", version: 1 }],
     findings: [

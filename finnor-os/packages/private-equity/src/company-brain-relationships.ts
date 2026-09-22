@@ -7,6 +7,7 @@ import {
   type CompanyBrainRelationshipRegistration,
   type CompanyBrainSourceRef,
 } from "./company-brain-types";
+import { PE_ENTITY_TYPES } from "./types";
 
 const q = (value: string): CompanyBrainQualifiedType => value as CompanyBrainQualifiedType;
 
@@ -42,6 +43,9 @@ const DOCUMENT_LINK_SOURCE_TYPES = [
   "private_equity:pe_finding", "private_equity:pe_closing_condition", "private_equity:pe_closing_item",
   "private_equity:pe_strategy", "private_equity:pe_opportunity", "private_equity:pe_investment_case",
   "private_equity:pe_thesis", "private_equity:pe_assumption", "private_equity:pe_decision",
+  "private_equity:pe_fund", "private_equity:pe_vehicle", "private_equity:pe_portfolio_holding",
+  "private_equity:pe_security", "private_equity:pe_debt_facility", "private_equity:pe_metric_series",
+  "private_equity:pe_outcome", "private_equity:pe_exit",
 ].map(q);
 
 const EVIDENCE_LINK_SOURCE_TYPES = [
@@ -49,6 +53,9 @@ const EVIDENCE_LINK_SOURCE_TYPES = [
   "private_equity:pe_closing_condition", "private_equity:pe_closing_item", "private_equity:pe_strategy",
   "private_equity:pe_opportunity", "private_equity:pe_investment_case", "private_equity:pe_thesis",
   "private_equity:pe_assumption", "private_equity:pe_decision",
+  "private_equity:pe_fund", "private_equity:pe_vehicle", "private_equity:pe_portfolio_holding",
+  "private_equity:pe_security", "private_equity:pe_debt_facility", "private_equity:pe_metric_series",
+  "private_equity:pe_metric_observation", "private_equity:pe_benchmark", "private_equity:pe_outcome", "private_equity:pe_exit",
 ].map(q);
 
 const WORK_ATTACHABLE_TYPES = [
@@ -58,9 +65,17 @@ const WORK_ATTACHABLE_TYPES = [
   "private_equity:pe_finding", "private_equity:pe_deal_risk", "private_equity:pe_milestone",
   "private_equity:pe_closing_condition", "private_equity:pe_closing_item", "private_equity:pe_ic_case",
   "private_equity:pe_ic_question", "private_equity:pe_ic_condition",
+  "private_equity:pe_fund", "private_equity:pe_vehicle", "private_equity:pe_portfolio_holding",
+  "private_equity:pe_security", "private_equity:pe_debt_facility", "private_equity:pe_metric_series",
+  "private_equity:pe_outcome", "private_equity:pe_exit", "core:external_organization",
 ].map(q);
 
-const registry: CompanyBrainRelationshipRegistration[] = [
+type RelationshipDefinition = Omit<CompanyBrainRelationshipRegistration,
+  "mutationOwner" | "validTimeBehavior" | "cardinality" | "exclusivityRule" | "cycleRule" | "persistedProof">
+  & Partial<Pick<CompanyBrainRelationshipRegistration,
+  "mutationOwner" | "validTimeBehavior" | "cardinality" | "exclusivityRule" | "cycleRule" | "persistedProof">>;
+
+const definitions: RelationshipDefinition[] = [
   {
     kind: "strategy_opportunity", fromTypes: [q("private_equity:pe_strategy")], toTypes: [q("private_equity:pe_opportunity")], direction: "outbound",
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_opportunities", columns: ["id", "strategy_id"] }], resolver: "PeWorldState.opportunities.strategyId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
@@ -126,7 +141,7 @@ const registry: CompanyBrainRelationshipRegistration[] = [
     sourceOwner: "@finnor/db", persistedSources: [{ table: "external_ref_observations", columns: ["id", "evidence_version_id"] }], resolver: "PeWorldState.observedEvidence", tenantRule: "authenticated_tenant_only", historyBehavior: "immutable", inspectionBehavior: "source_row",
   },
   {
-    kind: "source_observation_object", fromTypes: [q("core:source_observation")], toTypes: [q("private_equity:pe_strategy"), q("private_equity:pe_opportunity"), q("private_equity:pe_deal"), ...DEAL_CHILD_TYPES], direction: "outbound",
+    kind: "source_observation_object", fromTypes: [q("core:source_observation")], toTypes: [q("core:external_organization"), q("core:external_contact"), ...PE_ENTITY_TYPES.map((type) => q(`private_equity:${type}`))], direction: "outbound",
     sourceOwner: "@finnor/db", persistedSources: [{ table: "external_ref_observations", columns: ["id", "canonical_entity_type", "canonical_entity_id"] }], resolver: "PeWorldState.observedEvidence", tenantRule: "authenticated_tenant_only", historyBehavior: "immutable", inspectionBehavior: "source_row",
   },
   {
@@ -221,7 +236,125 @@ const registry: CompanyBrainRelationshipRegistration[] = [
     kind: "reassignment_previous", fromTypes: [q("workforce:agent_assignment")], toTypes: [q("workforce:agent_assignment")], direction: "outbound",
     sourceOwner: "@finnor/db", persistedSources: [{ table: "workforce_assignments", columns: ["id", "previous_assignment_id"] }], resolver: "workforceStatus.assignments.previousAssignmentId", tenantRule: "authenticated_tenant_only", historyBehavior: "current_only", inspectionBehavior: "source_row",
   },
+  {
+    kind: "fund_vehicle", fromTypes: [q("private_equity:pe_fund")], toTypes: [q("private_equity:pe_vehicle")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_fund_vehicle_links", columns: ["id", "fund_id", "vehicle_id", "relationship_kind", "valid_from", "valid_to"] }], resolver: "PeWorldState.fundVehicleLinks", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical typed pairs are forbidden", cycleRule: "cycles_allowed", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "fund_strategy", fromTypes: [q("private_equity:pe_fund")], toTypes: [q("private_equity:pe_strategy")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_strategy_mandates", columns: ["id", "principal_type", "principal_id", "strategy_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.strategyMandates[principalType=pe_fund]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical mandates are forbidden", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "vehicle_strategy", fromTypes: [q("private_equity:pe_vehicle")], toTypes: [q("private_equity:pe_strategy")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_strategy_mandates", columns: ["id", "principal_type", "principal_id", "strategy_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.strategyMandates[principalType=pe_vehicle]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical mandates are forbidden", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "opportunity_company", fromTypes: [q("private_equity:pe_opportunity")], toTypes: [q("core:external_organization")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_opportunities", columns: ["id", "target_organization_id"] }], resolver: "PeWorldState.opportunities.targetOrganizationId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "one target Company per Opportunity version", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "deal_company", fromTypes: [q("private_equity:pe_deal")], toTypes: [q("core:external_organization")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_deals", columns: ["id", "target_organization_id"] }], resolver: "PeWorldState.deals.targetOrganizationId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "one target Company per Deal version", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_fund", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_fund")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_portfolio_holdings", columns: ["id", "fund_id", "vehicle_id"] }], resolver: "PeWorldState.portfolioHoldings.fundId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "a Holding has exactly one Fund or Vehicle investor", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_vehicle", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_vehicle")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_portfolio_holdings", columns: ["id", "fund_id", "vehicle_id"] }], resolver: "PeWorldState.portfolioHoldings.vehicleId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "a Holding has exactly one Fund or Vehicle investor", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_company", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("core:external_organization")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_portfolio_holdings", columns: ["id", "company_id"] }], resolver: "PeWorldState.portfolioHoldings.companyId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "one canonical Company per Holding", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_origin_deal", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_deal")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_portfolio_holdings", columns: ["id", "origin_deal_id", "entry_date"] }], resolver: "PeWorldState.portfolioHoldings.originDealId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "one verified closed origin Deal per Holding", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_parent", fromTypes: [q("core:external_organization")], toTypes: [q("core:external_organization")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_company_hierarchy_relationships", columns: ["id", "parent_company_id", "child_company_id", "relationship_kind", "valid_from", "valid_to"] }], resolver: "PeWorldState.companyHierarchyRelationships", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical parent-child kinds are forbidden", cycleRule: "cycles_forbidden", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_sponsor", fromTypes: [q("core:external_organization")], toTypes: [q("core:external_organization"), q("core:external_contact")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_company_party_roles", columns: ["id", "company_id", "party_type", "party_id", "role", "valid_from", "valid_to"] }], resolver: "PeWorldState.companyPartyRoles[role=sponsor]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical sponsor roles are forbidden", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_advisor", fromTypes: [q("core:external_organization")], toTypes: [q("core:external_organization"), q("core:external_contact")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_company_party_roles", columns: ["id", "company_id", "party_type", "party_id", "role", "valid_from", "valid_to"] }], resolver: "PeWorldState.companyPartyRoles[role=advisor]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical advisor roles are forbidden", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_security", fromTypes: [q("core:external_organization")], toTypes: [q("private_equity:pe_security")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_securities", columns: ["id", "issuer_company_id", "security_key", "valid_from", "valid_to"] }], resolver: "PeWorldState.securities", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "one_to_many", exclusivityRule: "security key is unique for an issuer in an active interval", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_debt_facility", fromTypes: [q("core:external_organization")], toTypes: [q("private_equity:pe_debt_facility")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_debt_facilities", columns: ["id", "borrower_company_id", "facility_key", "valid_from", "valid_to"] }], resolver: "PeWorldState.debtFacilities", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "one_to_many", exclusivityRule: "facility key is unique for a borrower in an active interval", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "facility_lender", fromTypes: [q("private_equity:pe_debt_facility")], toTypes: [q("core:external_organization"), q("core:external_contact")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_debt_facility_lenders", columns: ["id", "debt_facility_id", "lender_party_type", "lender_party_id", "lender_role", "valid_from", "valid_to"] }], resolver: "PeWorldState.debtFacilityLenders", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_many", exclusivityRule: "overlapping identical lender roles are forbidden", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "ownership_owner", fromTypes: [q("private_equity:pe_fund"), q("private_equity:pe_vehicle"), q("core:external_organization")], toTypes: [q("private_equity:pe_ownership_interest")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_ownership_interests", columns: ["id", "owner_type", "owner_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.ownershipInterests owner", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "one_to_many", exclusivityRule: "overlapping identical owner-subject-class facts are forbidden", cycleRule: "cycles_allowed", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "ownership_subject", fromTypes: [q("private_equity:pe_ownership_interest")], toTypes: [q("core:external_organization"), q("private_equity:pe_security")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_ownership_interests", columns: ["id", "subject_type", "subject_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.ownershipInterests subject", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "many_to_one", exclusivityRule: "one typed subject per OwnershipInterest", cycleRule: "cycles_allowed", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "metric_subject", fromTypes: [q("core:external_organization"), q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_metric_series")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_metric_series", columns: ["id", "subject_type", "subject_id", "metric_key"] }], resolver: "PeWorldState.metricSeries", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "one_to_many", exclusivityRule: "one active metric key per typed subject", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "metric_benchmark", fromTypes: [q("private_equity:pe_metric_series")], toTypes: [q("private_equity:pe_benchmark")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_metric_series", columns: ["id", "benchmark_id"] }], resolver: "PeWorldState.metricSeries.benchmarkId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "at most one Benchmark per MetricSeries version", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "metric_observation", fromTypes: [q("private_equity:pe_metric_series")], toTypes: [q("private_equity:pe_metric_observation")], direction: "outbound",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_metric_observations", columns: ["id", "metric_series_id", "period_start", "period_end", "revision"] }], resolver: "PeWorldState.metricObservations", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "business_event_time", cardinality: "one_to_many", exclusivityRule: "one current revision per series and exact period", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "benchmark_observation", fromTypes: [q("private_equity:pe_benchmark")], toTypes: [q("private_equity:pe_benchmark_observation")], direction: "outbound",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_benchmark_observations", columns: ["id", "benchmark_id", "period_start", "period_end", "revision"] }], resolver: "PeWorldState.benchmarkObservations", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "business_event_time", cardinality: "one_to_many", exclusivityRule: "one current revision per benchmark and exact period", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "claim_subject", fromTypes: [q("epistemic:claim")], toTypes: [q("core:external_organization"), ...PE_ENTITY_TYPES.map((type) => q(`private_equity:${type}`))], direction: "outbound",
+    sourceOwner: "@finnor/epistemic-runtime", mutationOwner: "@finnor/epistemic-runtime", persistedSources: [{ table: "epistemic_state_projection", columns: ["proposition_id", "subject", "evidence_refs"] }], resolver: "PeWorldState.claims subject", tenantRule: "authenticated_tenant_only", historyBehavior: "current_only", cardinality: "many_to_one", exclusivityRule: "one typed subject per proposition definition", cycleRule: "not_applicable", persistedProof: "derived projection only; truth is backed by the proposition evidenceRefs", inspectionBehavior: "source_field",
+  },
+  {
+    kind: "decision_outcome", fromTypes: [q("private_equity:pe_decision")], toTypes: [q("private_equity:pe_outcome")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_outcomes", columns: ["id", "decision_id", "subject_type", "subject_id"] }], resolver: "PeWorldState.outcomes.decisionId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "one_to_many", exclusivityRule: "an Outcome may cite at most one canonical Decision", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "company_outcome", fromTypes: [q("core:external_organization")], toTypes: [q("private_equity:pe_outcome")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_outcomes", columns: ["id", "subject_type", "subject_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.outcomes[subjectType=external_organization]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "one_to_many", exclusivityRule: "one typed subject per Outcome", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_outcome", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_outcome")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_outcomes", columns: ["id", "subject_type", "subject_id", "valid_from", "valid_to"] }], resolver: "PeWorldState.outcomes[subjectType=pe_portfolio_holding]", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "effective_interval", cardinality: "one_to_many", exclusivityRule: "one typed subject per Outcome", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "holding_exit", fromTypes: [q("private_equity:pe_portfolio_holding")], toTypes: [q("private_equity:pe_exit")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_exits", columns: ["id", "portfolio_holding_id", "status", "closed_at"] }], resolver: "PeWorldState.exits", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", validTimeBehavior: "business_event_time", cardinality: "one_to_many", exclusivityRule: "at most one closed Exit per Holding", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
+  {
+    kind: "exit_buyer", fromTypes: [q("private_equity:pe_exit")], toTypes: [q("core:external_organization")], direction: "bidirectional",
+    sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_exits", columns: ["id", "buyer_company_id"] }], resolver: "PeWorldState.exits.buyerCompanyId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", cardinality: "many_to_one", exclusivityRule: "at most one buyer Company per Exit version", cycleRule: "not_applicable", inspectionBehavior: "source_row",
+  },
 ];
+
+const registry: CompanyBrainRelationshipRegistration[] = definitions.map((entry) => ({
+  ...entry,
+  mutationOwner: entry.mutationOwner ?? (entry.sourceOwner === "@finnor/private-equity" ? "@finnor/private-equity" : "@finnor/db"),
+  validTimeBehavior: entry.validTimeBehavior ?? "none",
+  cardinality: entry.cardinality ?? "many_to_many",
+  exclusivityRule: entry.exclusivityRule ?? "enforced by the registered source schema and mutation boundary",
+  cycleRule: entry.cycleRule ?? "not_applicable",
+  persistedProof: entry.persistedProof ?? entry.persistedSources.map((source) => `${source.table}(${source.columns.join(",")})`).join(" | "),
+}));
 
 if (registry.length !== COMPANY_BRAIN_RELATIONSHIP_KINDS.length
   || new Set(registry.map((entry) => entry.kind)).size !== COMPANY_BRAIN_RELATIONSHIP_KINDS.length) {

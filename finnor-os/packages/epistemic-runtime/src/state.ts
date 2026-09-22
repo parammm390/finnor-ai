@@ -18,7 +18,7 @@ import { epistemicHash, evidenceFingerprint, validateEvidenceSource } from "./so
 
 export const UNKNOWN_FRESHNESS: EvidenceFreshness = {
   status: "UNKNOWN",
-  reason: "No selected evidence",
+  reason: "No evidence",
 };
 
 export const UNSUPPORTED_CONFIDENCE: ConfidenceAssessment = {
@@ -43,6 +43,25 @@ export function unknownProposition(definition: PropositionDefinition): Propositi
   };
 }
 
+/** A proposition graph is a DAG. An unknown edge cannot be given an optimistic
+ * UNKNOWN value because it could hide a cross-scope or missing prerequisite. */
+function assertPropositionDefinitions(definitions: readonly PropositionDefinition[]): void {
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
+  const active = new Set<string>();
+  const complete = new Set<string>();
+  const visit = (id: string): void => {
+    if (complete.has(id)) return;
+    if (active.has(id)) throw new Error(`Epistemic proposition dependency cycle at ${id}`);
+    const definition = byId.get(id);
+    if (!definition) throw new Error(`Epistemic dependency references unknown proposition ${id}`);
+    active.add(id);
+    for (const parent of definition.dependencyRefs ?? []) visit(parent);
+    active.delete(id);
+    complete.add(id);
+  };
+  for (const id of [...byId.keys()].sort()) visit(id);
+}
+
 export function createEpistemicState(input: {
   scope: EpistemicScope;
   asOf: string;
@@ -59,6 +78,7 @@ export function createEpistemicState(input: {
     ids.add(definition.id);
     return unknownProposition(definition);
   });
+  assertPropositionDefinitions(input.propositions);
   const dependencies = input.propositions.flatMap((definition) => (definition.dependencyRefs ?? []).map((dependsOnPropositionId) => ({
     id: `dependency:${epistemicHash({ propositionId: definition.id, dependsOnPropositionId, kind: "DERIVED_FROM" }).slice(0, 24)}`,
     propositionId: definition.id,
@@ -94,6 +114,13 @@ export function addPropositionDefinitions(
     additions.push(unknownProposition(definition));
   }
   if (additions.length === 0) return state;
+  assertPropositionDefinitions([...state.propositions.map((proposition) => ({
+    id: proposition.id, subject: proposition.subject, predicate: proposition.predicate,
+    dependencyRefs: proposition.dependencyRefs,
+  })), ...additions.map((proposition) => ({
+    id: proposition.id, subject: proposition.subject, predicate: proposition.predicate,
+    dependencyRefs: proposition.dependencyRefs,
+  }))]);
   return {
     ...state,
     propositions: [...state.propositions, ...additions],
@@ -127,7 +154,13 @@ export function requirementResolved(
   const proposition = propositionById(state, requirement.propositionId);
   if (!proposition || !requirement.acceptableStatuses.includes(proposition.status)) return false;
   if (proposition.status !== "KNOWN") return false;
-  if (requirement.maximumAgeMs !== undefined && proposition.freshness.ageMs !== undefined && proposition.freshness.ageMs > requirement.maximumAgeMs) return false;
+  if (requirement.maximumAgeMs !== undefined) {
+    const selected = new Map(state.evidence.map((record) => [record.id, record]));
+    if (proposition.evidenceRefs.some((ref) => {
+      const record = selected.get(ref);
+      return !record || Math.max(0, Date.parse(state.asOf) - Date.parse(record.observedAt)) > requirement.maximumAgeMs!;
+    })) return false;
+  }
   if (requirement.minimumAuthority && (!proposition.sourceAuthority || !requirement.minimumAuthority.includes(proposition.sourceAuthority))) return false;
   if (requirement.minimumConfidence && !confidenceAtLeast(proposition.confidence.level, requirement.minimumConfidence)) return false;
   if (requirement.criticality === "INFORMATIONAL") {
@@ -196,9 +229,10 @@ export function validateEvidenceRecord(record: EvidenceRecord, state: EpistemicS
   if (record.confidence.level === "UNSUPPORTED" && record.confidence.basis !== "NO_SUPPORT") errors.push("UNSUPPORTED_CONFIDENCE_REQUIRES_NO_SUPPORT_BASIS");
   if (record.freshness.maxAgeMs !== undefined && (!Number.isFinite(record.freshness.maxAgeMs) || record.freshness.maxAgeMs < 0)) errors.push("INVALID_FRESHNESS_MAX_AGE");
   if (record.freshness.ageMs !== undefined && (!Number.isFinite(record.freshness.ageMs) || record.freshness.ageMs < 0)) errors.push("INVALID_FRESHNESS_AGE");
-  for (const field of [[record.observedAt, "observedAt"], [record.ingestedAt, "ingestedAt"], [record.validAt, "validAt"]] as const) {
+  for (const field of [[record.observedAt, "observedAt"], [record.ingestedAt, "ingestedAt"], [record.validAt, "validAt"], [record.validTo, "validTo"]] as const) {
     if (field[0] !== undefined && !Number.isFinite(Date.parse(field[0]))) errors.push(`INVALID_${field[1].toUpperCase()}`);
   }
+  if (record.validAt && record.validTo && Date.parse(record.validTo) <= Date.parse(record.validAt)) errors.push("INVALID_VALID_INTERVAL");
   return errors;
 }
 

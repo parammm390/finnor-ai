@@ -137,6 +137,42 @@ export async function peTransaction<T>(
   throw new PeDomainError("PE_TRANSACTION_RETRY_EXHAUSTED", "PE transaction retry exhausted");
 }
 
+async function assertPinnedEpistemicExecution(
+  client: Client,
+  ctx: PeMutationContext,
+  actionType: "satisfy_closing_condition" | "verify_closing_item" | "declare_deal_closed",
+): Promise<void> {
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,5141))", [ctx.auth.tenantId]);
+  const control = await client.query<{ mode: string; kill_switch: boolean }>(
+    "SELECT mode,kill_switch FROM finnor_os.epistemic_runtime_controls WHERE tenant_id=$1", [ctx.auth.tenantId]);
+  if (!control.rows[0] || !["active","refreshing"].includes(control.rows[0].mode) || control.rows[0].kill_switch) return;
+  const actionId = ctx.provenance?.externalId;
+  if (!actionId || !UUID.test(actionId)) {
+    throw new PeDomainError("PE_EPISTEMIC_INVALIDATED", "Active durable epistemic execution requires an exact governed DomainAction", {
+      reasonCodes: ["EPISTEMIC_PLAN_PIN_REQUIRED"],
+    });
+  }
+  const action = await client.query<{ plan_revision_id: string | null; plan_node_id: string | null }>(
+    `SELECT plan_revision_id,plan_node_id FROM finnor_os.domain_actions
+     WHERE tenant_id=$1 AND id=$2 AND action_type=$3`, [ctx.auth.tenantId,actionId,actionType]);
+  if (!action.rows[0]) {
+    throw new PeDomainError("PE_EPISTEMIC_INVALIDATED", "The consequential mutation is not linked to its exact governed DomainAction", {
+      reasonCodes: ["EPISTEMIC_PLAN_PIN_REQUIRED"],
+    });
+  }
+  const checked = await client.query<{ reasons: string[] }>(
+    `SELECT finnor_os.epistemic_execution_block_reasons($1::uuid,$2::uuid,$3::text,true) reasons`,
+    [ctx.auth.tenantId,action.rows[0].plan_revision_id,action.rows[0].plan_node_id]);
+  const reasons = checked.rows[0]?.reasons ?? [];
+  if (reasons.length) {
+    throw new PeDomainError("PE_EPISTEMIC_INVALIDATED", "Mandatory epistemic premises changed before the consequential effect", {
+      reasonCodes: reasons,
+      planRevisionId: action.rows[0].plan_revision_id,
+      planNodeId: action.rows[0].plan_node_id,
+    });
+  }
+}
+
 function quotedIdentifier(value: string): string {
   if (!IDENTIFIER.test(value)) throw new Error(`unsafe internal SQL identifier: ${value}`);
   return `"${value}"`;
@@ -739,6 +775,7 @@ export async function satisfyClosingCondition(ctx: PeMutationContext, input: {
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_closing_conditions", input.closingConditionId);
     if (current.state === "satisfied") return { row: shapePeRow(current), changed: false, idempotent: true };
+    await assertPinnedEpistemicExecution(client,ctx,"satisfy_closing_condition");
     if (current.evidence_required && !input.documentId && !input.evidenceSourceId) {
       throw new PeDomainError("PE_EVIDENCE_REQUIRED", "Closing Condition satisfaction requires canonical Document or Evidence support");
     }
@@ -808,6 +845,7 @@ export async function verifyClosingItem(ctx: PeMutationContext, input: {
   return peTransaction(ctx, async (_db, client) => {
     const current = await getLifecycleRowForUpdate(client, ctx.auth.tenantId, "pe_closing_items", input.closingItemId);
     if (current.state === "verified") return { row: shapePeRow(current), changed: false, idempotent: true };
+    await assertPinnedEpistemicExecution(client,ctx,"verify_closing_item");
     if (current.verification_evidence_required && !input.documentId && !input.evidenceSourceId) {
       throw new PeDomainError("PE_EVIDENCE_REQUIRED", "Closing Item verification requires canonical Document or Evidence support");
     }
@@ -932,6 +970,7 @@ export async function declareDealClosed(ctx: PeMutationContext, input: {
     supplied: input.governance,
   });
   return peTransaction(ctx, async (_db, client) => {
+    await assertPinnedEpistemicExecution(client,ctx,"declare_deal_closed");
     const result = await client.query<{ result: unknown }>(
       `SELECT finnor_os.pe_declare_deal_closed($1::uuid,$2::uuid,$3,$4,$5::uuid,$6::uuid,$7,$8) AS result`,
       [ctx.auth.tenantId, input.dealId, input.expectedVersion ?? eligibility.dealVersion,

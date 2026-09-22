@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  PE_DIGITAL_TWIN_ENTITY_TYPES,
   PE_ENTITY_TYPES,
+  PE_IC_ENTITY_TYPES,
+  PE_P1_ENTITY_TYPES,
+  PE_WORLD_ROOT_TYPES,
   buildPrivateEquityWorldEpistemicSnapshot,
   peWorldPropositionId,
   privateEquityAssertionsFromRows,
@@ -13,19 +17,27 @@ const root = { entityType: "pe_strategy" as const, entityId: strategyId };
 const at = "2026-09-07T12:00:00.000Z";
 
 describe("P1 PE world contracts", () => {
-  it("preserves the twenty P1 owners and admits only the eight P5 process-history types", () => {
-    const p1Types = PE_ENTITY_TYPES.filter((entityType) => !entityType.startsWith("pe_ic_"));
-    const p5Types = PE_ENTITY_TYPES.filter((entityType) => entityType.startsWith("pe_ic_"));
-    expect(p1Types).toHaveLength(20);
-    expect(p1Types.slice(0, 7)).toEqual([
+  it("preserves the twenty P1 owners, eight IC types, and eighteen Digital Twin types", () => {
+    expect(PE_P1_ENTITY_TYPES).toHaveLength(20);
+    expect(PE_P1_ENTITY_TYPES.slice(0, 7)).toEqual([
       "pe_strategy", "pe_opportunity", "pe_deal", "pe_investment_case",
       "pe_thesis", "pe_assumption", "pe_decision",
     ]);
-    expect(p5Types).toEqual([
+    expect(PE_IC_ENTITY_TYPES).toEqual([
       "pe_ic_case", "pe_ic_memo", "pe_ic_question", "pe_ic_recommendation",
       "pe_ic_vote", "pe_ic_dissent", "pe_ic_condition", "pe_ic_decision_proposal",
     ]);
+    expect(PE_DIGITAL_TWIN_ENTITY_TYPES).toHaveLength(18);
+    expect(PE_ENTITY_TYPES).toEqual([
+      ...PE_P1_ENTITY_TYPES,
+      ...PE_IC_ENTITY_TYPES,
+      ...PE_DIGITAL_TWIN_ENTITY_TYPES,
+    ]);
     expect(PE_ENTITY_TYPES).not.toContain("pe_artifact");
+    expect(PE_WORLD_ROOT_TYPES).toEqual([
+      "pe_strategy", "pe_opportunity", "pe_deal", "pe_fund", "pe_vehicle",
+      "external_organization", "pe_portfolio_holding",
+    ]);
   });
 
   it("uses the existing Epistemic Runtime for canonical state and contradictory evidence", () => {

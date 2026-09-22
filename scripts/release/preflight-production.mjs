@@ -115,7 +115,7 @@ const cluster = clusterResponse.clusters?.[0]
 if (!cluster || cluster.status !== "ACTIVE") throw new Error(`ECS cluster ${worker.clusterName} is missing or not ACTIVE`)
 if (cluster.registeredContainerInstancesCount !== 0) throw new Error("FINNOR ECS cluster unexpectedly contains EC2 container instances")
 const stack = awsJson("cloudformation", ["describe-stacks", "--stack-name", worker.stackName]).Stacks?.[0]
-if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production CloudFormation stack is missing, unstable, or uses an unexpected service role")
+if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production CloudFormation stack is missing, unstable, or uses an unexpected service role")
 const stackParameters = Object.fromEntries((stack.Parameters ?? []).map((entry) => [entry.ParameterKey, entry.ParameterValue]))
 const computeStage = stackParameters.ComputePlaneStage ?? "legacy"
 if (!["legacy", "preparing", "routing", "finalized"].includes(computeStage)) throw new Error(`unknown compute-plane stage ${computeStage}`)

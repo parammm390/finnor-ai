@@ -22,6 +22,7 @@ import {
   bigint,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { PE_WORLD_ROOT_TYPES, type PeWorldRootType } from "@finnor/shared-types";
 import { money, provenanceColumns, archivable, bytea } from "./columns";
 
 // Everything Finnor owns lives in its own Postgres schema — this is what lets it
@@ -29,6 +30,7 @@ import { money, provenanceColumns, archivable, bytea } from "./columns";
 // running a different app) with zero collision risk on table names.
 export const finnorOsSchema = pgSchema("finnor_os");
 const pgTable = finnorOsSchema.table;
+const peWorldRootTypes = [...PE_WORLD_ROOT_TYPES] as [PeWorldRootType, ...PeWorldRootType[]];
 
 export const tenants = pgTable(
   "tenants",
@@ -4390,7 +4392,7 @@ export const integrationSourceScopes = pgTable(
     providerParentId: text("provider_parent_id"),
     scopeKey: text("scope_key").notNull(),
     enabled: boolean("enabled").notNull().default(true),
-    rootBindingType: text("root_binding_type", { enum: ["pe_strategy", "pe_opportunity", "pe_deal"] }),
+    rootBindingType: text("root_binding_type", { enum: peWorldRootTypes }),
     rootBindingId: uuid("root_binding_id"),
     syncStrategy: text("sync_strategy", { enum: ["delta", "bounded_enumeration", "exact_read"] }).notNull(),
     recoveryStrategy: text("recovery_strategy", {
@@ -4535,7 +4537,7 @@ export const providerObjectRootBindings = pgTable(
     externalObjectType: text("external_object_type").notNull(),
     externalObjectId: text("external_object_id").notNull(),
     bindingLevel: text("binding_level", { enum: ["object", "document", "parent", "thread", "series", "meeting"] }).notNull(),
-    worldRootType: text("world_root_type", { enum: ["pe_strategy", "pe_opportunity", "pe_deal"] }).notNull(),
+    worldRootType: text("world_root_type", { enum: peWorldRootTypes }).notNull(),
     worldRootId: uuid("world_root_id").notNull(),
     bindingSource: text("binding_source", { enum: ["explicit", "source_scope", "core_document", "external_ref", "parent_inheritance", "conversation_inheritance", "meeting_inheritance"] }).notNull(),
     createdBy: text("created_by").notNull(),
@@ -5396,6 +5398,15 @@ export const externalRefObservations = pgTable(
     reason: text("reason"),
     businessEffectId: uuid("business_effect_id"),
     provenance: jsonb("provenance").notNull().default({}),
+    resolutionKind: text("resolution_kind", { enum: ["merge", "split", "correction"] }),
+    resolutionFromRefs: jsonb("resolution_from_refs"),
+    resolutionToRefs: jsonb("resolution_to_refs"),
+    resolutionDecision: text("resolution_decision"),
+    resolutionValidFrom: timestamp("resolution_valid_from", { withTimezone: true }),
+    resolutionValidTo: timestamp("resolution_valid_to", { withTimezone: true }),
+    resolutionEvidenceSourceId: uuid("resolution_evidence_source_id").references(() => evidenceSources.id),
+    resolutionEvidenceVersionId: uuid("resolution_evidence_version_id").references(() => evidenceSourceVersions.id),
+    resolutionAuthority: jsonb("resolution_authority"),
   },
   (t) => [
     index("external_ref_observations_external_time_idx").on(
@@ -5414,3 +5425,151 @@ export const externalRefObservations = pgTable(
       .using("gin", t.providerParentRefs.op("jsonb_path_ops")),
   ],
 );
+
+// Scope 4 institutional PE facts. SQL migration 0139 owns the full compound
+// foreign keys, temporal overlap guards, evidence checks, RLS, and immutable
+// history triggers; these declarations align application query types with it.
+function peTwinAuditColumns() {
+  return {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    version: integer("version").notNull().default(1),
+    sourceSystem: text("source_system").notNull(),
+    externalId: text("external_id"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  };
+}
+
+function peTwinEvidenceColumns() {
+  return {
+    evidenceSourceId: uuid("evidence_source_id").notNull().references(() => evidenceSources.id),
+    evidenceVersionId: uuid("evidence_version_id").notNull().references(() => evidenceSourceVersions.id),
+  };
+}
+
+function peTwinValidColumns() {
+  return {
+    validFrom: timestamp("valid_from", { withTimezone: true }).notNull(),
+    validTo: timestamp("valid_to", { withTimezone: true }),
+    completeness: text("completeness", { enum: ["complete", "partial", "unknown", "conflicting", "unavailable_before_history_baseline"] }).notNull().default("partial"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+  };
+}
+
+export const peFunds = pgTable("pe_funds", {
+  ...peTwinAuditColumns(),
+  name: text("name").notNull(), legalName: text("legal_name"), vintageYear: integer("vintage_year"), baseCurrency: text("base_currency"),
+  status: text("status", { enum: ["forming", "active", "harvesting", "liquidated"] }).notNull().default("active"),
+  observedAt: timestamp("observed_at", { withTimezone: true }), validFrom: timestamp("valid_from", { withTimezone: true }), validTo: timestamp("valid_to", { withTimezone: true }),
+});
+
+export const peVehicles = pgTable("pe_vehicles", {
+  ...peTwinAuditColumns(),
+  name: text("name").notNull(), legalName: text("legal_name"),
+  vehicleType: text("vehicle_type", { enum: ["main", "feeder", "parallel", "co_invest", "blocker", "continuation", "other"] }).notNull(),
+  jurisdiction: text("jurisdiction"), status: text("status", { enum: ["forming", "active", "harvesting", "liquidated"] }).notNull().default("active"),
+  observedAt: timestamp("observed_at", { withTimezone: true }), validFrom: timestamp("valid_from", { withTimezone: true }), validTo: timestamp("valid_to", { withTimezone: true }),
+});
+
+export const peFundVehicleLinks = pgTable("pe_fund_vehicle_links", {
+  ...peTwinAuditColumns(), fundId: uuid("fund_id").notNull().references(() => peFunds.id), vehicleId: uuid("vehicle_id").notNull().references(() => peVehicles.id),
+  relationshipKind: text("relationship_kind", { enum: ["master", "feeder", "parallel", "co_invest", "blocker", "continuation", "other"] }).notNull(),
+  ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peStrategyMandates = pgTable("pe_strategy_mandates", {
+  ...peTwinAuditColumns(), principalType: text("principal_type", { enum: ["pe_fund", "pe_vehicle"] }).notNull(), principalId: uuid("principal_id").notNull(),
+  strategyId: uuid("strategy_id").notNull().references(() => peStrategies.id), ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const pePortfolioHoldings = pgTable("pe_portfolio_holdings", {
+  ...peTwinAuditColumns(), fundId: uuid("fund_id").references(() => peFunds.id), vehicleId: uuid("vehicle_id").references(() => peVehicles.id),
+  companyId: uuid("company_id").notNull().references(() => externalOrganizations.id), originDealId: uuid("origin_deal_id").notNull(),
+  holdingStatus: text("holding_status", { enum: ["active", "partially_realized", "exited"] }).notNull().default("active"), entryDate: date("entry_date").notNull(), exitDate: date("exit_date"),
+  completeness: text("completeness", { enum: ["complete", "partial", "unknown", "conflicting", "unavailable_before_history_baseline"] }).notNull().default("partial"),
+  ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peCompanyHierarchyRelationships = pgTable("pe_company_hierarchy_relationships", {
+  ...peTwinAuditColumns(), parentCompanyId: uuid("parent_company_id").notNull().references(() => externalOrganizations.id), childCompanyId: uuid("child_company_id").notNull().references(() => externalOrganizations.id),
+  relationshipKind: text("relationship_kind", { enum: ["parent_subsidiary", "holding_operating"] }).notNull(), ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peCompanyPartyRoles = pgTable("pe_company_party_roles", {
+  ...peTwinAuditColumns(), companyId: uuid("company_id").notNull().references(() => externalOrganizations.id),
+  partyType: text("party_type", { enum: ["external_organization", "external_contact"] }).notNull(), partyId: uuid("party_id").notNull(),
+  role: text("role", { enum: ["sponsor", "advisor"] }).notNull(), roleDetail: text("role_detail"), ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peSecurities = pgTable("pe_securities", {
+  ...peTwinAuditColumns(), issuerCompanyId: uuid("issuer_company_id").notNull().references(() => externalOrganizations.id), securityKey: text("security_key").notNull(),
+  securityType: text("security_type", { enum: ["common_equity", "preferred_equity", "convertible", "option", "warrant", "other"] }).notNull(),
+  name: text("name").notNull(), currencyCode: text("currency_code"), seniority: integer("seniority"), ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peDebtFacilities = pgTable("pe_debt_facilities", {
+  ...peTwinAuditColumns(), borrowerCompanyId: uuid("borrower_company_id").notNull().references(() => externalOrganizations.id), facilityKey: text("facility_key").notNull(), name: text("name").notNull(),
+  facilityType: text("facility_type", { enum: ["revolver", "term_loan", "delayed_draw", "mezzanine", "unitranche", "notes", "other"] }).notNull(),
+  committedAmount: numeric("committed_amount", { precision: 38, scale: 12 }), currencyCode: text("currency_code"), maturityDate: date("maturity_date"),
+  status: text("status", { enum: ["committed", "active", "repaid", "cancelled", "defaulted"] }).notNull().default("active"),
+  ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peDebtFacilityLenders = pgTable("pe_debt_facility_lenders", {
+  ...peTwinAuditColumns(), debtFacilityId: uuid("debt_facility_id").notNull().references(() => peDebtFacilities.id),
+  lenderPartyType: text("lender_party_type", { enum: ["external_organization", "external_contact"] }).notNull(), lenderPartyId: uuid("lender_party_id").notNull(),
+  lenderRole: text("lender_role", { enum: ["agent", "arranger", "lender", "administrative_agent", "other"] }).notNull(),
+  commitmentAmount: numeric("commitment_amount", { precision: 38, scale: 12 }), currencyCode: text("currency_code"), ...peTwinValidColumns(), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peOwnershipInterests = pgTable("pe_ownership_interests", {
+  ...peTwinAuditColumns(), ownerType: text("owner_type", { enum: ["pe_fund", "pe_vehicle", "external_organization"] }).notNull(), ownerId: uuid("owner_id").notNull(),
+  subjectType: text("subject_type", { enum: ["external_organization", "pe_security"] }).notNull(), subjectId: uuid("subject_id").notNull(),
+  economicPercentage: numeric("economic_percentage", { precision: 20, scale: 18 }), votingPercentage: numeric("voting_percentage", { precision: 20, scale: 18 }), amount: numeric("amount", { precision: 38, scale: 12 }), currencyCode: text("currency_code"), ownershipClass: text("ownership_class"),
+  ...peTwinValidColumns(), supersedesInterestId: uuid("supersedes_interest_id"), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peBenchmarks = pgTable("pe_benchmarks", {
+  ...peTwinAuditColumns(), benchmarkKey: text("benchmark_key").notNull(), name: text("name").notNull(), metricKey: text("metric_key").notNull(), unit: text("unit").notNull(), currencyCode: text("currency_code"), cohortDefinition: jsonb("cohort_definition").notNull().default({}), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peMetricSeries = pgTable("pe_metric_series", {
+  ...peTwinAuditColumns(), subjectType: text("subject_type", { enum: ["external_organization", "pe_portfolio_holding"] }).notNull(), subjectId: uuid("subject_id").notNull(),
+  metricKey: text("metric_key").notNull(), name: text("name").notNull(), unit: text("unit").notNull(), currencyCode: text("currency_code"),
+  frequency: text("frequency", { enum: ["instant", "daily", "weekly", "monthly", "quarterly", "annual", "event"] }).notNull(), benchmarkId: uuid("benchmark_id").references(() => peBenchmarks.id), active: boolean("active").notNull().default(true), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peMetricObservations = pgTable("pe_metric_observations", {
+  ...peTwinAuditColumns(), metricSeriesId: uuid("metric_series_id").notNull().references(() => peMetricSeries.id), periodStart: timestamp("period_start", { withTimezone: true }).notNull(), periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+  valueType: text("value_type", { enum: ["number", "text", "boolean"] }).notNull(), valueNumeric: numeric("value_numeric", { precision: 38, scale: 12 }), valueText: text("value_text"), valueBoolean: boolean("value_boolean"),
+  revision: integer("revision").notNull().default(1), supersedesObservationId: uuid("supersedes_observation_id"), supersededAt: timestamp("superseded_at", { withTimezone: true }), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peBenchmarkObservations = pgTable("pe_benchmark_observations", {
+  ...peTwinAuditColumns(), benchmarkId: uuid("benchmark_id").notNull().references(() => peBenchmarks.id), periodStart: timestamp("period_start", { withTimezone: true }).notNull(), periodEnd: timestamp("period_end", { withTimezone: true }).notNull(), value: numeric("value", { precision: 38, scale: 12 }).notNull(),
+  revision: integer("revision").notNull().default(1), supersedesObservationId: uuid("supersedes_observation_id"), supersededAt: timestamp("superseded_at", { withTimezone: true }), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});
+
+export const peOutcomes = pgTable("pe_outcomes", {
+  ...peTwinAuditColumns(), subjectType: text("subject_type", { enum: ["external_organization", "pe_portfolio_holding"] }).notNull(), subjectId: uuid("subject_id").notNull(), decisionId: uuid("decision_id").references(() => peDecisions.id),
+  outcomeType: text("outcome_type").notNull(), description: text("description").notNull(), observedValue: jsonb("observed_value").notNull().default({}),
+  validFrom: timestamp("valid_from", { withTimezone: true }).notNull(), validTo: timestamp("valid_to", { withTimezone: true }), supersededAt: timestamp("superseded_at", { withTimezone: true }), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+});
+
+export const peExits = pgTable("pe_exits", {
+  ...peTwinAuditColumns(), portfolioHoldingId: uuid("portfolio_holding_id").notNull().references(() => pePortfolioHoldings.id),
+  exitType: text("exit_type", { enum: ["strategic_sale", "sponsor_sale", "ipo", "recapitalization", "write_off", "other"] }).notNull(), buyerCompanyId: uuid("buyer_company_id").references(() => externalOrganizations.id),
+  status: text("status", { enum: ["announced", "signed", "closed", "cancelled"] }).notNull(), announcedAt: timestamp("announced_at", { withTimezone: true }), signedAt: timestamp("signed_at", { withTimezone: true }), closedAt: timestamp("closed_at", { withTimezone: true }), cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  grossProceeds: numeric("gross_proceeds", { precision: 38, scale: 12 }), currencyCode: text("currency_code"), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+});
+
+export const peFactCoverage = pgTable("pe_fact_coverage", {
+  ...peTwinAuditColumns(), subjectType: text("subject_type", { enum: ["external_organization", "pe_fund", "pe_vehicle", "pe_portfolio_holding"] }).notNull(), subjectId: uuid("subject_id").notNull(),
+  proposition: text("proposition", { enum: ["company_ownership", "company_debt", "company_parent", "portfolio_membership", "ownership_total"] }).notNull(),
+  coverageStatus: text("coverage_status", { enum: ["complete", "partial", "unknown", "conflicting", "unavailable_before_history_baseline"] }).notNull(),
+  validFrom: timestamp("valid_from", { withTimezone: true }).notNull(), validTo: timestamp("valid_to", { withTimezone: true }),
+  revision: integer("revision").notNull().default(1), supersedesCoverageId: uuid("supersedes_coverage_id"),
+  supersededAt: timestamp("superseded_at", { withTimezone: true }), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
+});

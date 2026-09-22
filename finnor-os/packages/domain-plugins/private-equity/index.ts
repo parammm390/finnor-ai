@@ -35,6 +35,7 @@ import {
   loadPrivateEquityAssertionsForEvidence,
   markIcReadyForReview,
   pePropositionId,
+  pinPrivateEquityDecisionReadiness,
   PeDomainError,
   receiveDeliverable,
   removeDependency,
@@ -523,6 +524,7 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
 
   const decisionId = decisionIdFor(actionType, payload);
   let decisionReadiness: { decisionId: string; ready: boolean; unresolvedPropositionIds: string[]; acquisitionOptions: unknown[] } | null = null;
+  let durablePin: Awaited<ReturnType<typeof pinPrivateEquityDecisionReadiness>> | null = null;
   if (decisionId) {
     const eligibility = await evaluateDealCloseEligibility(ctx, dealId);
     const linkedAssertions = await loadPrivateEquityAssertions(ctx, dealId);
@@ -573,6 +575,22 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
         acquisitionOptions: decisionReadiness?.acquisitionOptions ?? [],
       });
     }
+    durablePin = await pinPrivateEquityDecisionReadiness({
+      tenantId: action.tenantId,
+      actionType,
+      planRevisionId: action.planRevisionId,
+      planNodeId: action.planNodeId,
+      decisionId,
+      requirements: epistemic.requirements,
+    });
+    if (!durablePin.allowed) {
+      throw new ActionGroundingError("PE_EPISTEMIC_PIN_BLOCKED", "Durable epistemic requirements changed or are not ready for this exact PlanNode", {
+        decisionId,
+        graphVersionId: durablePin.graphVersionId ?? null,
+        reasonCodes: durablePin.reasonCodes,
+        propositionIds: epistemic.requirements.filter((row) => row.decisionId === decisionId).map((row) => row.propositionId).sort(),
+      });
+    }
   }
 
   payload.grounding = {
@@ -581,6 +599,13 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
     work: { entityType: "work", entityId: workId },
     entities: snapshots,
     ...(decisionReadiness ? { decisionReadiness } : {}),
+    ...(durablePin ? { epistemicImpact: {
+      mode: durablePin.mode,
+      operational: durablePin.operational,
+      graphVersionId: durablePin.graphVersionId ?? null,
+      reasonCodes: durablePin.reasonCodes,
+      pins: durablePin.pinned,
+    } } : {}),
   };
   return { draft: { ...draft, payload }, groundedPayload };
 }

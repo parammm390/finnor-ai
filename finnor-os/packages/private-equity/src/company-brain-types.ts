@@ -3,10 +3,12 @@ import type { WorkAggregate } from "@finnor/db";
 import type { IcWorkspaceReadModel } from "./ic-types";
 import type { PeEntityType, PeWorldRootRef, PeWorldState } from "./types";
 
-export const COMPANY_BRAIN_NAMESPACES = ["private_equity", "core", "underwriting", "planning", "workforce"] as const;
+export const COMPANY_BRAIN_NAMESPACES = ["private_equity", "core", "epistemic", "underwriting", "planning", "workforce"] as const;
 export type CompanyBrainNamespace = (typeof COMPANY_BRAIN_NAMESPACES)[number];
 
 export const CORE_BRAIN_OBJECT_TYPES = [
+  "external_organization",
+  "external_contact",
   "document",
   "document_version",
   "evidence_source",
@@ -21,6 +23,9 @@ export const CORE_BRAIN_OBJECT_TYPES = [
   "attention",
 ] as const;
 export type CoreBrainObjectType = (typeof CORE_BRAIN_OBJECT_TYPES)[number];
+
+export const EPISTEMIC_BRAIN_OBJECT_TYPES = ["claim"] as const;
+export type EpistemicBrainObjectType = (typeof EPISTEMIC_BRAIN_OBJECT_TYPES)[number];
 
 export const UNDERWRITING_BRAIN_OBJECT_TYPES = [
   "underwriting_model",
@@ -61,6 +66,14 @@ export interface UnderwritingBrainRef {
   revisionId?: string;
 }
 
+export interface EpistemicBrainRef {
+  namespace: "epistemic";
+  owner: "@finnor/epistemic-runtime";
+  type: EpistemicBrainObjectType;
+  id: string;
+  revisionId?: string;
+}
+
 export interface PlanningBrainRef {
   namespace: "planning";
   owner: "@finnor/db";
@@ -80,6 +93,7 @@ export interface WorkforceBrainRef {
 export type CompanyBrainObjectRef =
   | PrivateEquityBrainRef
   | CoreBrainRef
+  | EpistemicBrainRef
   | UnderwritingBrainRef
   | PlanningBrainRef
   | WorkforceBrainRef;
@@ -87,7 +101,7 @@ export type CompanyBrainObjectRef =
 export type CompanyBrainQualifiedType = `${CompanyBrainNamespace}:${CompanyBrainObjectRef["type"]}`;
 
 export interface CompanyBrainSourceRef {
-  owner: "@finnor/private-equity" | "@finnor/db" | "@finnor/read-models";
+  owner: "@finnor/private-equity" | "@finnor/db" | "@finnor/read-models" | "@finnor/epistemic-runtime";
   table: string;
   id: string;
   revisionId?: string;
@@ -221,6 +235,33 @@ export const COMPANY_BRAIN_RELATIONSHIP_KINDS = [
   "assignment_plan_node",
   "learning_revision_agent",
   "reassignment_previous",
+  "fund_vehicle",
+  "fund_strategy",
+  "vehicle_strategy",
+  "opportunity_company",
+  "deal_company",
+  "holding_fund",
+  "holding_vehicle",
+  "holding_company",
+  "holding_origin_deal",
+  "company_parent",
+  "company_sponsor",
+  "company_advisor",
+  "company_security",
+  "company_debt_facility",
+  "facility_lender",
+  "ownership_owner",
+  "ownership_subject",
+  "metric_subject",
+  "metric_benchmark",
+  "metric_observation",
+  "benchmark_observation",
+  "claim_subject",
+  "decision_outcome",
+  "company_outcome",
+  "holding_outcome",
+  "holding_exit",
+  "exit_buyer",
 ] as const;
 export type CompanyBrainRelationshipKind = (typeof COMPANY_BRAIN_RELATIONSHIP_KINDS)[number];
 
@@ -230,10 +271,16 @@ export interface CompanyBrainRelationshipRegistration {
   toTypes: readonly CompanyBrainQualifiedType[];
   direction: "outbound" | "bidirectional";
   sourceOwner: CompanyBrainSourceRef["owner"];
+  mutationOwner: "@finnor/private-equity" | "@finnor/db" | "@finnor/epistemic-runtime";
   persistedSources: ReadonlyArray<{ table: string; columns: readonly string[] }>;
   resolver: string;
   tenantRule: "authenticated_tenant_only";
   historyBehavior: "canonical_as_of" | "created_at_bounded" | "current_only" | "immutable";
+  validTimeBehavior: "none" | "effective_interval" | "business_event_time";
+  cardinality: "one_to_one" | "one_to_many" | "many_to_one" | "many_to_many";
+  exclusivityRule: string;
+  cycleRule: "not_applicable" | "cycles_forbidden" | "cycles_allowed";
+  persistedProof: string;
   inspectionBehavior: "source_row" | "source_field";
 }
 
@@ -244,6 +291,16 @@ export interface CompanyBrainProjection {
   edges: CompanyBrainEdge[];
   temporal: CompanyBrainTemporalTruth;
   sourceStatus: Array<{ owner: string; status: "complete" | "partial" | "unsupported"; reason?: string }>;
+  capitalStructures: Array<{
+    companyId: string;
+    asOf: string;
+    securityIds: string[];
+    debtFacilityIds: string[];
+    ownershipInterestIds: string[];
+    ownershipCompleteness: "complete" | "partial" | "unknown" | "conflicting" | "unavailable_before_history_baseline";
+    debtCompleteness: "complete" | "partial" | "unknown" | "conflicting" | "unavailable_before_history_baseline";
+    observedEconomicPercentageTotal: string | null;
+  }>;
   bounds: { nodes: number; edges: number; truncated: boolean; maxNodes: number; maxEdges: number };
 }
 

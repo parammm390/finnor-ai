@@ -47,7 +47,7 @@ export interface WorkerHeartbeatOptions {
 const CLASS_CAPABILITIES: Record<WorkloadClass, string[]> = {
   REALTIME: ["jobs", "realtime", "sse"],
   INTERACTIVE: ["jobs", "orchestration", "event-wake", "workflow"],
-  BACKGROUND: ["jobs", "recovery", "connection-health", "scheduled-scans"],
+  BACKGROUND: ["jobs", "recovery", "connection-health", "scheduled-scans", "epistemic-v2"],
   HEAVY: ["jobs", "computer", "artifact"],
 };
 
@@ -63,7 +63,7 @@ async function beat(options: WorkerHeartbeatOptions, draining = false): Promise<
   const release = getRuntimeReleaseMetadata("finnor-worker");
   const capabilities = options.workloadClass
     ? CLASS_CAPABILITIES[options.workloadClass]
-    : (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse")
+    : (process.env.FINNOR_WORKER_CAPABILITIES ?? "jobs,orchestration,computer,event-wake,connection-health,realtime,sse,epistemic-v2")
       .split(",").map((value) => value.trim()).filter(Boolean);
   const meta = {
     ...release,

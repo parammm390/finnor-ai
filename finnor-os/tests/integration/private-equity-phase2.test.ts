@@ -6,7 +6,8 @@ import { closePool, configureTenantVertical, receiveWork, withTenant } from "@fi
 import { migrate } from "../../packages/db/migrate";
 import {
   DealCloseRejectedError,
-  PE_ENTITY_TYPES,
+  PE_IC_ENTITY_TYPES,
+  PE_P1_ENTITY_TYPES,
   PeDomainError,
   acceptDealRisk,
   acceptDeliverable,
@@ -115,6 +116,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
+    await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
     await admin.query("SET app.test_vertical_mode = 'explicit'");
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES
@@ -455,8 +457,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
       "pe_closing_conditions", "pe_closing_items", "pe_document_links", "pe_evidence_links",
       "pe_investment_cases", "pe_theses", "pe_assumptions", "pe_decisions",
     ];
-    const phase2EntityTypes = PE_ENTITY_TYPES.filter((entityType) => !entityType.startsWith("pe_ic_"));
-    const p5ProcessEntityTypes = PE_ENTITY_TYPES.filter((entityType) => entityType.startsWith("pe_ic_"));
+    const phase2EntityTypes = PE_P1_ENTITY_TYPES;
+    const p5ProcessEntityTypes = PE_IC_ENTITY_TYPES;
     const rls = await admin.query<{ relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean; policies: number }>(
       `SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,
         (SELECT count(*)::int FROM pg_policies p WHERE p.schemaname='finnor_os' AND p.tablename=c.relname AND p.policyname='tenant_isolation') policies

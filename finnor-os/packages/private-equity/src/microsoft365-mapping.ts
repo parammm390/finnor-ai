@@ -21,9 +21,9 @@ import type { ProviderObservation, ProviderObservationParentRef } from "@finnor/
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { PoolClient } from "pg";
 import { attachDocumentTx, attachEvidenceTx, peTransaction } from "./repository";
-import { PE_ENTITY_TYPES, PeDomainError, type PeEntityRef, type PeMutationContext, type PeWorldRootRef } from "./types";
+import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES, PeDomainError, type PeEntityRef, type PeMutationContext, type PeWorldRootRef } from "./types";
 
-const ROOT_TYPES = new Set<PeWorldRootRef["entityType"]>(["pe_strategy", "pe_opportunity", "pe_deal"]);
+const ROOT_TYPES = new Set<PeWorldRootRef["entityType"]>(PE_WORLD_ROOT_TYPES);
 const PE_TYPES = new Set<string>(PE_ENTITY_TYPES);
 const MAX_PARENT_REFS = 64;
 
@@ -481,7 +481,7 @@ export async function recordPrivateEquityProviderEvidenceObservation(
 
     let evidenceAttached = false;
     let documentAttached = false;
-    if (rootResolution.root) {
+    if (rootResolution.root && rootResolution.root.entityType !== "external_organization") {
       const rootEntity: PeEntityRef = {
         entityType: rootResolution.root.entityType,
         entityId: rootResolution.root.entityId,

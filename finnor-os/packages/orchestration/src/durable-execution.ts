@@ -170,6 +170,30 @@ async function orchestrationGenerationViolationTx(
   return null;
 }
 
+const EPISTEMIC_REVALIDATED_ACTIONS = new Set([
+  "satisfy_closing_condition",
+  "verify_closing_item",
+  "declare_deal_closed",
+]);
+
+async function epistemicExecutionViolationTx(
+  db: Db,
+  tenantId: string,
+  action: typeof domainActions.$inferSelect,
+): Promise<string | null> {
+  if (!EPISTEMIC_REVALIDATED_ACTIONS.has(action.actionType)) return null;
+  const result = await db.execute<{ reasons: string[] }>(sql`
+    SELECT finnor_os.epistemic_execution_block_reasons(
+      ${tenantId}::uuid,
+      ${action.planRevisionId ?? null}::uuid,
+      ${action.planNodeId ?? null}::text,
+      true
+    ) AS reasons
+  `);
+  const reasons = result.rows[0]?.reasons ?? [];
+  return reasons.length ? `Epistemic premises invalidated: ${reasons.join(", ")}` : null;
+}
+
 /** Revalidate the immutable authorization boundary immediately before a later child
  * workflow step mutates state. A parent worker may have authorized and dispatched the
  * child minutes earlier, so revocation, material policy drift, and stale canonical
@@ -192,14 +216,16 @@ export async function revalidateAuthorizedEffectEligibility(
   const authority = await revalidateActionExecution(tenantId, domainActionId);
   if (authority.outcome !== "allowed") return { allowed: false, reason: `Authority invalidated: ${authority.reasonCode}` };
   try {
-    const { actionRow, humanApproval, generationViolation } = await withTenant(tenantId, async (db) => {
+    const { actionRow, humanApproval, generationViolation, epistemicViolation } = await withTenant(tenantId, async (db) => {
       const [row] = await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, domainActionId))).limit(1);
       const [approval] = await db.select({ id: actionLog.id }).from(actionLog).where(and(eq(actionLog.tenantId, tenantId), eq(actionLog.domainActionId, domainActionId), eq(actionLog.step, "confirmed"))).limit(1);
       const violation = row ? await orchestrationGenerationViolationTx(db, tenantId, row) : null;
-      return { actionRow: row, humanApproval: approval, generationViolation: violation };
+      const epistemicViolation = row ? await epistemicExecutionViolationTx(db,tenantId,row) : null;
+      return { actionRow: row, humanApproval: approval, generationViolation: violation, epistemicViolation };
     });
     if (!actionRow) throw new DurableExecutionBlocked("The authorized action disappeared before effect execution");
     if (generationViolation) throw new DurableExecutionBlocked(`Orchestration generation invalidated: ${generationViolation}`);
+    if (epistemicViolation) throw new DurableExecutionBlocked(epistemicViolation);
     const autonomy = await evaluateEffectAutonomy({
       action: {
         id: actionRow.id,
@@ -429,6 +455,8 @@ async function beginEffectCommit(loaded: LoadedExecution, fence?: StepFence): Pr
   return withTenant(loaded.action.tenantId, async (db) => {
     const generationViolation = await orchestrationGenerationViolationTx(db, loaded.action.tenantId, loaded.action);
     if (generationViolation) throw new DurableExecutionBlocked(`Orchestration generation invalidated: ${generationViolation}`);
+    const epistemicViolation = await epistemicExecutionViolationTx(db,loaded.action.tenantId,loaded.action);
+    if (epistemicViolation) throw new DurableExecutionBlocked(epistemicViolation);
     const [current] = await db.select({
       stepStatus: workflowSteps.status,
       executionState: workflowSteps.executionState,

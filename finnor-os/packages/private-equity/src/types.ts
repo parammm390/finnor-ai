@@ -1,8 +1,16 @@
-import type { CanonicalEntityRef, PartyRef, TenantContext, VerticalDefinition } from "@finnor/shared-types";
+import {
+  PE_WORLD_ROOT_TYPES as SHARED_PE_WORLD_ROOT_TYPES,
+  type CanonicalEntityRef,
+  type PartyRef,
+  type PeWorldRootRef as SharedPeWorldRootRef,
+  type PeWorldRootType as SharedPeWorldRootType,
+  type TenantContext,
+  type VerticalDefinition,
+} from "@finnor/shared-types";
 
 export const PRIVATE_EQUITY_VERTICAL_KEY = "private_equity" as const;
 
-export const PE_ENTITY_TYPES = [
+export const PE_P1_ENTITY_TYPES = [
   "pe_strategy",
   "pe_opportunity",
   "pe_deal",
@@ -23,6 +31,9 @@ export const PE_ENTITY_TYPES = [
   "pe_document_link",
   "pe_evidence_link",
   "pe_finding_risk_link",
+] as const;
+
+export const PE_IC_ENTITY_TYPES = [
   "pe_ic_case",
   "pe_ic_memo",
   "pe_ic_question",
@@ -31,6 +42,33 @@ export const PE_ENTITY_TYPES = [
   "pe_ic_dissent",
   "pe_ic_condition",
   "pe_ic_decision_proposal",
+] as const;
+
+export const PE_DIGITAL_TWIN_ENTITY_TYPES = [
+  "pe_fund",
+  "pe_vehicle",
+  "pe_fund_vehicle_link",
+  "pe_strategy_mandate",
+  "pe_portfolio_holding",
+  "pe_company_hierarchy",
+  "pe_company_party_role",
+  "pe_security",
+  "pe_debt_facility",
+  "pe_debt_facility_lender",
+  "pe_ownership_interest",
+  "pe_metric_series",
+  "pe_metric_observation",
+  "pe_benchmark",
+  "pe_benchmark_observation",
+  "pe_outcome",
+  "pe_exit",
+  "pe_fact_coverage",
+] as const;
+
+export const PE_ENTITY_TYPES = [
+  ...PE_P1_ENTITY_TYPES,
+  ...PE_IC_ENTITY_TYPES,
+  ...PE_DIGITAL_TWIN_ENTITY_TYPES,
 ] as const;
 
 export type PeEntityType = (typeof PE_ENTITY_TYPES)[number];
@@ -66,8 +104,9 @@ export type ThesisState = "draft" | "active" | "superseded" | "retired";
 export type AssumptionState = "active" | "superseded" | "invalidated";
 export type DecisionState = "draft" | "final" | "superseded";
 export type AssumptionValueType = "number" | "currency" | "percent" | "boolean" | "date" | "text" | "json";
-export type PeWorldRootType = "pe_strategy" | "pe_opportunity" | "pe_deal";
-export interface PeWorldRootRef { entityType: PeWorldRootType; entityId: string }
+export const PE_WORLD_ROOT_TYPES = SHARED_PE_WORLD_ROOT_TYPES;
+export type PeWorldRootType = SharedPeWorldRootType;
+export type PeWorldRootRef = SharedPeWorldRootRef;
 
 export type PeLifecycleName =
   | "strategy"
@@ -203,6 +242,10 @@ export type TemporalCompletenessStatus = "complete" | "partial" | "unavailable_b
 export interface PeWorldState {
   root: PeWorldRootRef;
   stateAt: string;
+  /** Business-valid instant used for temporal relationship/fact filtering. */
+  validAt: string;
+  /** Recorded/knowledge instant used to select canonical snapshots. */
+  knowledgeAt: string;
   temporalCompleteness: {
     status: TemporalCompletenessStatus;
     baselineAt: string | null;
@@ -218,6 +261,27 @@ export interface PeWorldState {
   theses: Record<string, unknown>[];
   assumptions: Record<string, unknown>[];
   decisions: Record<string, unknown>[];
+  funds: Record<string, unknown>[];
+  vehicles: Record<string, unknown>[];
+  fundVehicleLinks: Record<string, unknown>[];
+  strategyMandates: Record<string, unknown>[];
+  portfolioHoldings: Record<string, unknown>[];
+  companies: Record<string, unknown>[];
+  people: Record<string, unknown>[];
+  companyHierarchyRelationships: Record<string, unknown>[];
+  companyPartyRoles: Record<string, unknown>[];
+  securities: Record<string, unknown>[];
+  debtFacilities: Record<string, unknown>[];
+  debtFacilityLenders: Record<string, unknown>[];
+  ownershipInterests: Record<string, unknown>[];
+  metricSeries: Record<string, unknown>[];
+  metricObservations: Record<string, unknown>[];
+  benchmarks: Record<string, unknown>[];
+  benchmarkObservations: Record<string, unknown>[];
+  claims: Record<string, unknown>[];
+  outcomes: Record<string, unknown>[];
+  exits: Record<string, unknown>[];
+  factCoverage: Record<string, unknown>[];
   decisionEffectLinks: Record<string, unknown>[];
   dealParties: Record<string, unknown>[];
   workstreams: Record<string, unknown>[];

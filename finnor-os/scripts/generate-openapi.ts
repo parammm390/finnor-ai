@@ -50,6 +50,8 @@ import {
   IcWaiveConditionSchema,
   IcWaiveQuestionSchema,
 } from "../apps/api/lib/ic";
+import { PeDigitalTwinRequestSchema } from "../apps/api/lib/pe-digital-twin";
+import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
 const workforcePage = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().uuid().optional() }).strict();
@@ -63,12 +65,12 @@ const partyRef = z.object({
   partyId: z.string().uuid(),
 }).strict();
 const entityRef = z.object({
-  entityType: z.enum(["work", "task", "user", "org_unit", "tenant_location", "external_organization", "external_contact", "document", "domain_action", "workflow_run", "workflow_step", "pe_strategy", "pe_opportunity", "pe_deal", "pe_investment_case", "pe_thesis", "pe_assumption", "pe_decision", "pe_deal_party", "pe_workstream", "pe_request", "pe_deliverable", "pe_finding", "pe_deal_risk", "pe_dependency", "pe_milestone", "pe_closing_condition", "pe_closing_item", "pe_document_link", "pe_evidence_link", "pe_finding_risk_link"]),
+  entityType: z.enum(["work", "task", "user", "org_unit", "tenant_location", "external_organization", "external_contact", "document", "domain_action", "workflow_run", "workflow_step", ...PE_ENTITY_TYPES]),
   entityId: z.string().uuid(),
 }).strict();
 const deal = { dealId: z.string().uuid(), page: page.optional() } as const;
 const peWorldRoot = z.object({
-  entityType: z.enum(["pe_strategy", "pe_opportunity", "pe_deal"]),
+  entityType: z.enum(PE_WORLD_ROOT_TYPES),
   entityId: z.string().uuid(),
 }).strict();
 const queryEnvelope = {
@@ -116,7 +118,7 @@ const MicrosoftSourceScopeSchema = z.object({
   configuration: z.record(z.unknown()),
   negativeProbeConfiguration: z.record(z.unknown()).nullable().optional(),
   acknowledgeBroadAccess: z.boolean().optional(),
-  rootBinding: z.object({ type: z.enum(["pe_strategy", "pe_opportunity", "pe_deal"]), id: z.string().uuid() }).strict().nullable().optional(),
+  rootBinding: z.object({ type: z.enum(PE_WORLD_ROOT_TYPES), id: z.string().uuid() }).strict().nullable().optional(),
   freshnessPolicy: z.object({
     maxAgeSeconds: z.number().int().min(60).max(604_800),
     criticality: z.enum(["informational", "operational", "consequential"]),
@@ -204,7 +206,7 @@ const OperationalQuerySchema = z.discriminatedUnion("intent", [
   z.object({ intent: z.literal("party_lookup"), ...queryEnvelope, ref: partyRef.optional(), query: z.string().trim().min(1).max(300).optional(), page: page.optional() }).strict(),
   z.object({ intent: z.literal("party_context"), ...queryEnvelope, ref: partyRef.optional(), query: z.string().trim().min(1).max(300).optional(), page: page.optional() }).strict(),
   z.object({ intent: z.literal("team_roster"), ...queryEnvelope, teamRef: partyRef.optional(), query: z.string().trim().min(1).max(300).optional(), page: page.optional() }).strict(),
-  z.object({ intent: z.literal("pe_world_state"), ...queryEnvelope, root: peWorldRoot, at: z.string().datetime({ offset: true }).optional() }).strict(),
+  z.object({ intent: z.literal("pe_world_state"), ...queryEnvelope, root: peWorldRoot, at: z.string().datetime({ offset: true }).optional(), validAt: z.string().datetime({ offset: true }).optional(), knowledgeAt: z.string().datetime({ offset: true }).optional() }).strict(),
   z.object({ intent: z.literal("deal_context"), ...queryEnvelope, ...deal }).strict(),
   z.object({ intent: z.literal("deal_workstreams"), ...queryEnvelope, ...deal, states: z.array(z.string().min(1).max(80)).max(20).optional(), owner: partyRef.optional() }).strict(),
   z.object({ intent: z.literal("open_requests"), ...queryEnvelope, ...deal, workstreamId: z.string().uuid().optional(), requestedFrom: partyRef.optional(), dueState: z.enum(["any", "overdue", "not_overdue"]).optional() }).strict(),
@@ -304,6 +306,7 @@ const paths = {
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
   "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context"] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow pause" } } } },
   "/api/workflows/runs/{id}/resume": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized workflow resume" } } } },

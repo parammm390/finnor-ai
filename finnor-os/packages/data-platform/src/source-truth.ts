@@ -284,16 +284,28 @@ async function refreshIntegrationConflictCount(db: Db, tenantId: string, integra
 }
 
 async function resolveSourceCases(db: Db, record: CanonicalSourceRecord, sourceLinkId: string): Promise<void> {
+  const resolvedAt = new Date();
+  const resolutionEvidence = {
+    mechanism: "source_reconciled",
+    sourceLinkId,
+    provider: record.provider,
+    externalObjectType: record.externalObjectType,
+    externalId: record.externalId,
+    sourceVersion: record.sourceVersion ?? null,
+    sourceSequence: record.sourceSequence ?? null,
+    observedAt: record.observedAt,
+    observedHash: sourceTruthHash(record.data),
+  };
   await db.update(reconciliationCases).set({
     status: "resolved",
-    resolution: { mechanism: "source_reconciled", observedAt: record.observedAt },
+    resolution: resolutionEvidence,
     resolutionOutcome: "happened_as_intended",
-    resolutionEvidence: { sourceLinkId, observedAt: record.observedAt, observedHash: sourceTruthHash(record.data) },
-    resolvedBy: "system:source-truth-observer",
+    resolutionEvidence,
+    resolvedBy: "system:source-truth",
     resolutionProvider: record.provider,
     resolutionIntegrationId: record.integrationId,
-    resolvedAt: new Date(),
     version: sql`${reconciliationCases.version} + 1`,
+    resolvedAt,
   }).where(and(
     eq(reconciliationCases.tenantId, record.tenantId),
     eq(reconciliationCases.integrationId, record.integrationId),

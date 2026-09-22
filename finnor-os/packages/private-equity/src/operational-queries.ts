@@ -362,7 +362,10 @@ async function runQuery(
 ): Promise<PrivateEquityOperationalQueryResult> {
   const ctx = authContext(tenantId, options);
   if (request.intent === "pe_world_state") {
-    const world = await loadPrivateEquityWorldState(ctx, request.root, request.at);
+    const world = await loadPrivateEquityWorldState(ctx, request.root,
+      request.validAt || request.knowledgeAt
+        ? { validAt: request.validAt, knowledgeAt: request.knowledgeAt ?? request.at }
+        : request.at);
     const page = resultPage(1, 1, 1, 0, null);
     return {
       ...base("pe_world_state", [
@@ -373,6 +376,11 @@ async function runQuery(
         "pe_document_links", "pe_evidence_links", "evidence_source_versions", "business_events",
         "authority_decisions", "decision_receipts", "external_ref_observations",
         "integration_source_scopes", "integration_source_coverage_history",
+        "pe_funds", "pe_vehicles", "pe_fund_vehicle_links", "pe_strategy_mandates",
+        "pe_portfolio_holdings", "pe_company_hierarchy_relationships", "pe_company_party_roles",
+        "pe_securities", "pe_debt_facilities", "pe_debt_facility_lenders", "pe_ownership_interests",
+        "pe_metric_series", "pe_metric_observations", "pe_benchmarks", "pe_benchmark_observations",
+        "pe_outcomes", "pe_exits", "pe_fact_coverage",
       ], world.stateAt, page),
       ...world,
     };

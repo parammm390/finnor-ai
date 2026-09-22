@@ -7,6 +7,7 @@ import { listUnderwritingWorkspace } from "./underwriting-repository";
 import { loadPrivateEquityWorldState } from "./world-state";
 import {
   CORE_BRAIN_OBJECT_TYPES,
+  EPISTEMIC_BRAIN_OBJECT_TYPES,
   PLANNING_BRAIN_OBJECT_TYPES,
   UNDERWRITING_BRAIN_OBJECT_TYPES,
   WORKFORCE_BRAIN_OBJECT_TYPES,
@@ -26,6 +27,7 @@ import {
   type CompanyBrainTemporalTruth,
   type CompanyBrainTraverseResult,
   type CoreBrainObjectType,
+  type EpistemicBrainObjectType,
   type PlanningBrainObjectType,
   type PeOperatingContext,
   type UnderwritingBrainObjectType,
@@ -50,6 +52,7 @@ const MAX_TRAVERSE_ROWS = 250;
 
 const PE_TYPE_SET = new Set<string>(PE_ENTITY_TYPES);
 const CORE_TYPE_SET = new Set<string>(CORE_BRAIN_OBJECT_TYPES);
+const EPISTEMIC_TYPE_SET = new Set<string>(EPISTEMIC_BRAIN_OBJECT_TYPES);
 const UNDERWRITING_TYPE_SET = new Set<string>(UNDERWRITING_BRAIN_OBJECT_TYPES);
 const PLANNING_TYPE_SET = new Set<string>(PLANNING_BRAIN_OBJECT_TYPES);
 const WORKFORCE_TYPE_SET = new Set<string>(WORKFORCE_BRAIN_OBJECT_TYPES);
@@ -83,6 +86,24 @@ const PE_TABLES: Record<PeEntityType, string> = {
   pe_ic_dissent: "pe_ic_dissents",
   pe_ic_condition: "pe_ic_conditions",
   pe_ic_decision_proposal: "pe_ic_decision_proposals",
+  pe_fund: "pe_funds",
+  pe_vehicle: "pe_vehicles",
+  pe_fund_vehicle_link: "pe_fund_vehicle_links",
+  pe_strategy_mandate: "pe_strategy_mandates",
+  pe_portfolio_holding: "pe_portfolio_holdings",
+  pe_company_hierarchy: "pe_company_hierarchy_relationships",
+  pe_company_party_role: "pe_company_party_roles",
+  pe_security: "pe_securities",
+  pe_debt_facility: "pe_debt_facilities",
+  pe_debt_facility_lender: "pe_debt_facility_lenders",
+  pe_ownership_interest: "pe_ownership_interests",
+  pe_metric_series: "pe_metric_series",
+  pe_metric_observation: "pe_metric_observations",
+  pe_benchmark: "pe_benchmarks",
+  pe_benchmark_observation: "pe_benchmark_observations",
+  pe_outcome: "pe_outcomes",
+  pe_exit: "pe_exits",
+  pe_fact_coverage: "pe_fact_coverage",
 };
 
 const WORLD_COLLECTIONS: Array<[PeEntityType, keyof PeWorldState]> = [
@@ -105,6 +126,24 @@ const WORLD_COLLECTIONS: Array<[PeEntityType, keyof PeWorldState]> = [
   ["pe_closing_item", "closingItems"],
   ["pe_document_link", "documentLinks"],
   ["pe_evidence_link", "evidenceLinks"],
+  ["pe_fund", "funds"],
+  ["pe_vehicle", "vehicles"],
+  ["pe_fund_vehicle_link", "fundVehicleLinks"],
+  ["pe_strategy_mandate", "strategyMandates"],
+  ["pe_portfolio_holding", "portfolioHoldings"],
+  ["pe_company_hierarchy", "companyHierarchyRelationships"],
+  ["pe_company_party_role", "companyPartyRoles"],
+  ["pe_security", "securities"],
+  ["pe_debt_facility", "debtFacilities"],
+  ["pe_debt_facility_lender", "debtFacilityLenders"],
+  ["pe_ownership_interest", "ownershipInterests"],
+  ["pe_metric_series", "metricSeries"],
+  ["pe_metric_observation", "metricObservations"],
+  ["pe_benchmark", "benchmarks"],
+  ["pe_benchmark_observation", "benchmarkObservations"],
+  ["pe_outcome", "outcomes"],
+  ["pe_exit", "exits"],
+  ["pe_fact_coverage", "factCoverage"],
 ];
 
 const FACT_KEYS = [
@@ -115,6 +154,14 @@ const FACT_KEYS = [
   "semanticHash", "contentHash", "versionNumber", "sourceType", "sourceSystem", "observedAt", "retrievedAt",
   "computedAt", "finalizedAt", "completedAt", "runtimeStatus", "profileStatus", "currentLoad", "attempt",
   "capability", "nodeKind", "reason", "relationship", "truthStatus", "mappingStatus", "conflictState",
+  "legalName", "vintageYear", "baseCurrency", "vehicleType", "jurisdiction", "relationshipKind",
+  "principalType", "holdingStatus", "entryDate", "exitDate", "companyId", "originDealId",
+  "roleDetail", "securityKey", "securityType", "currencyCode", "seniority", "facilityKey", "facilityType",
+  "committedAmount", "maturityDate", "lenderRole", "commitmentAmount", "economicPercentage",
+  "votingPercentage", "amount", "ownershipClass", "metricKey", "unit", "frequency", "periodStart",
+  "periodEnd", "valueType", "valueNumeric", "valueText", "valueBoolean", "benchmarkKey", "cohortDefinition",
+  "outcomeType", "observedValue", "exitType", "grossProceeds", "coverageStatus", "proposition",
+  "validFrom", "validTo", "completeness",
 ] as const;
 
 function record(value: unknown): Record<string, unknown> {
@@ -179,6 +226,16 @@ function coreRef(type: CoreBrainObjectType, id: string, revisionId?: string): Co
   return { namespace: "core", owner: type === "attention" ? "@finnor/read-models" : "@finnor/db", type, id, ...(revisionId ? { revisionId } : {}) };
 }
 
+function worldRootObjectRef(root: PeWorldRootRef): CompanyBrainObjectRef {
+  return root.entityType === "external_organization"
+    ? coreRef("external_organization", root.entityId)
+    : peRef(root.entityType, root.entityId);
+}
+
+function epistemicRef(type: EpistemicBrainObjectType, id: string): CompanyBrainObjectRef {
+  return { namespace: "epistemic", owner: "@finnor/epistemic-runtime", type, id };
+}
+
 function underwritingRef(type: UnderwritingBrainObjectType, id: string): CompanyBrainObjectRef {
   return { namespace: "underwriting", owner: "@finnor/private-equity", type, id };
 }
@@ -202,6 +259,7 @@ export function parseCompanyBrainObjectRef(value: unknown): CompanyBrainObjectRe
   if (namespace === "core" && CORE_TYPE_SET.has(type) && (candidate.owner === "@finnor/db" || candidate.owner === "@finnor/read-models")) {
     return { namespace, owner: candidate.owner, type: type as CoreBrainObjectType, id, ...(revisionId ? { revisionId } : {}) };
   }
+  if (namespace === "epistemic" && EPISTEMIC_TYPE_SET.has(type) && candidate.owner === "@finnor/epistemic-runtime") return epistemicRef(type as EpistemicBrainObjectType, id);
   if (namespace === "underwriting" && UNDERWRITING_TYPE_SET.has(type) && candidate.owner === "@finnor/private-equity") return underwritingRef(type as UnderwritingBrainObjectType, id);
   if (namespace === "planning" && PLANNING_TYPE_SET.has(type) && candidate.owner === "@finnor/db") return planningRef(type as PlanningBrainObjectType, id, revisionId);
   if (namespace === "workforce" && WORKFORCE_TYPE_SET.has(type) && (candidate.owner === "@finnor/db" || candidate.owner === "@finnor/read-models")) return workforceRef(type as WorkforceBrainObjectType, id);
@@ -241,6 +299,61 @@ function currentTemporal(reason = "The canonical owner exposes this object as a 
 
 function immutableTemporal(): CompanyBrainTemporalTruth {
   return { support: "immutable_version", completeness: "complete", baseline: null, reasons: [] };
+}
+
+type TwinCompleteness = "complete" | "partial" | "unknown" | "conflicting" | "unavailable_before_history_baseline";
+
+function exactDecimalSum(values: string[]): string | null {
+  const scale = 18;
+  let total = 0n;
+  for (const value of values) {
+    const match = /^([+-]?)(\d+)(?:\.(\d+))?$/.exec(value);
+    if (!match) return null;
+    const fractional = (match[3] ?? "").padEnd(scale, "0").slice(0, scale);
+    const scaled = BigInt(match[2]!) * 10n ** BigInt(scale) + BigInt(fractional || "0");
+    total += match[1] === "-" ? -scaled : scaled;
+  }
+  const negative = total < 0n; const absolute = negative ? -total : total;
+  const whole = absolute / 10n ** BigInt(scale);
+  const fractional = (absolute % 10n ** BigInt(scale)).toString().padStart(scale, "0").replace(/0+$/, "");
+  return `${negative ? "-" : ""}${whole}${fractional ? `.${fractional}` : ""}`;
+}
+
+function capitalStructureProjection(world: PeWorldState, asOf: string): CompanyBrainProjection["capitalStructures"] {
+  const completenessFor = (companyId: string, propositions: string[]): TwinCompleteness => {
+    const coverage = world.factCoverage.find((row) => row.subjectType === "external_organization"
+      && row.subjectId === companyId && propositions.includes(String(row.proposition)));
+    const value = coverage?.coverageStatus;
+    return value === "complete" || value === "partial" || value === "unknown" || value === "conflicting" || value === "unavailable_before_history_baseline"
+      ? value : "unknown";
+  };
+  return world.companies.flatMap((company) => {
+    const companyId = idOf(company); if (!companyId) return [];
+    const securities = world.securities.filter((row) => row.issuerCompanyId === companyId);
+    const securityIds = new Set(securities.map(idOf).filter((id): id is string => Boolean(id)));
+    const facilities = world.debtFacilities.filter((row) => row.borrowerCompanyId === companyId);
+    const interests = world.ownershipInterests.filter((row) => row.subjectType === "external_organization"
+      ? row.subjectId === companyId : securityIds.has(String(row.subjectId)));
+    const ownershipCompleteness = completenessFor(companyId, ["ownership_total", "company_ownership"]);
+    const debtCompleteness = completenessFor(companyId, ["company_debt"]);
+    const percentages = interests.map((row) => row.economicPercentage)
+      .map((value) => typeof value === "string" || typeof value === "number" ? String(value) : null)
+      .filter((value): value is string => value !== null);
+    const observedEconomicPercentageTotal = ownershipCompleteness === "complete"
+      && percentages.length === interests.length
+      && interests.every((row) => row.completeness === "complete")
+      ? exactDecimalSum(percentages) : null;
+    return [{
+      companyId,
+      asOf,
+      securityIds: [...securityIds].sort(),
+      debtFacilityIds: facilities.map(idOf).filter((id): id is string => Boolean(id)).sort(),
+      ownershipInterestIds: interests.map(idOf).filter((id): id is string => Boolean(id)).sort(),
+      ownershipCompleteness,
+      debtCompleteness,
+      observedEconomicPercentageTotal,
+    }];
+  });
 }
 
 function p1Temporal(world: PeWorldState): CompanyBrainTemporalTruth {
@@ -445,6 +558,25 @@ export function projectCompanyBrain(
   if (world.deal) addPe("pe_deal", world.deal);
   for (const [type, key] of WORLD_COLLECTIONS) for (const row of rows(world[key])) addPe(type, row);
 
+  for (const row of world.companies) {
+    const id = idOf(row); if (!id) continue;
+    const ref = coreRef("external_organization", id);
+    const source = sourceRef("@finnor/db", "external_organizations", id);
+    addNode(createNode({ ref, row, source, rootRefs, temporal: peTemporal, asOf, target: targetFor(ref, { root: world.root }) }));
+  }
+  for (const row of world.people) {
+    const id = idOf(row); if (!id) continue;
+    const ref = coreRef("external_contact", id);
+    const source = sourceRef("@finnor/db", "external_contacts", id);
+    addNode(createNode({ ref, row, source, rootRefs, temporal: peTemporal, asOf, target: targetFor(ref, { root: world.root }) }));
+  }
+  for (const row of world.claims) {
+    const id = text(row.id); if (!id) continue;
+    const ref = epistemicRef("claim", id);
+    const source = sourceRef("@finnor/epistemic-runtime", "epistemic_state_projection", id);
+    addNode(createNode({ ref, row, source, rootRefs, temporal: currentTemporal("Claim state is recomputed by the Epistemic Runtime from exact evidence and canonical facts"), asOf, target: targetFor(ref, { root: world.root }), state: text(row.status) }));
+  }
+
   for (const row of world.documents) {
     const id = idOf(row);
     if (!id) continue;
@@ -475,6 +607,8 @@ export function projectCompanyBrain(
     const entityType = text(row.canonicalEntityType);
     const entityId = text(row.canonicalEntityId);
     if (entityType && entityId && PE_TYPE_SET.has(entityType)) addEdge("source_observation_object", ref, peRef(entityType as PeEntityType, entityId), source, iso(row.receivedAt, asOf));
+    else if (entityType === "external_organization" && entityId) addEdge("source_observation_object", ref, coreRef("external_organization", entityId), source, iso(row.receivedAt, asOf));
+    else if (entityType === "external_contact" && entityId) addEdge("source_observation_object", ref, coreRef("external_contact", entityId), source, iso(row.receivedAt, asOf));
   }
   for (const row of world.sourceCoverage) {
     const id = text(row.coverageHistoryId) ?? text(row.sourceScopeId);
@@ -551,6 +685,104 @@ export function projectCompanyBrain(
     if (!id || row.archivedAt || !entityType || !entityId || !evidenceSourceId || !PE_TYPE_SET.has(entityType)) continue;
     const evidenceRef = evidenceVersionId ? coreRef("evidence_version", evidenceVersionId) : coreRef("evidence_source", evidenceSourceId);
     addEdge("evidence_link", peRef(entityType as PeEntityType, entityId), evidenceRef, sourceRef("@finnor/private-equity", "pe_evidence_links", id), iso(row.createdAt, asOf));
+  }
+
+  for (const row of world.fundVehicleLinks) {
+    const id = idOf(row); const fundId = text(row.fundId); const vehicleId = text(row.vehicleId);
+    if (id && fundId && vehicleId) addEdge("fund_vehicle", peRef("pe_fund", fundId), peRef("pe_vehicle", vehicleId), sourceRef("@finnor/private-equity", "pe_fund_vehicle_links", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.strategyMandates) {
+    const id = idOf(row); const principalId = text(row.principalId); const strategyId = text(row.strategyId);
+    if (!id || !principalId || !strategyId) continue;
+    if (row.principalType === "pe_fund") addEdge("fund_strategy", peRef("pe_fund", principalId), peRef("pe_strategy", strategyId), sourceRef("@finnor/private-equity", "pe_strategy_mandates", id), iso(row.validFrom, asOf));
+    if (row.principalType === "pe_vehicle") addEdge("vehicle_strategy", peRef("pe_vehicle", principalId), peRef("pe_strategy", strategyId), sourceRef("@finnor/private-equity", "pe_strategy_mandates", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.opportunities) {
+    const id = idOf(row); const companyId = text(row.targetOrganizationId);
+    if (id && companyId) addEdge("opportunity_company", peRef("pe_opportunity", id), coreRef("external_organization", companyId), sourceRef("@finnor/private-equity", "pe_opportunities", id), iso(row.updatedAt, asOf));
+  }
+  for (const row of world.deals) {
+    const id = idOf(row); const companyId = text(row.targetOrganizationId);
+    if (id && companyId) addEdge("deal_company", peRef("pe_deal", id), coreRef("external_organization", companyId), sourceRef("@finnor/private-equity", "pe_deals", id), iso(row.updatedAt, asOf));
+  }
+  for (const row of world.portfolioHoldings) {
+    const id = idOf(row); if (!id) continue;
+    const holding = peRef("pe_portfolio_holding", id); const source = sourceRef("@finnor/private-equity", "pe_portfolio_holdings", id);
+    const fundId = text(row.fundId); const vehicleId = text(row.vehicleId); const companyId = text(row.companyId); const dealId = text(row.originDealId);
+    if (fundId) addEdge("holding_fund", holding, peRef("pe_fund", fundId), source, iso(row.entryDate, asOf));
+    if (vehicleId) addEdge("holding_vehicle", holding, peRef("pe_vehicle", vehicleId), source, iso(row.entryDate, asOf));
+    if (companyId) addEdge("holding_company", holding, coreRef("external_organization", companyId), source, iso(row.entryDate, asOf));
+    if (dealId) addEdge("holding_origin_deal", holding, peRef("pe_deal", dealId), source, iso(row.entryDate, asOf));
+  }
+  for (const row of world.companyHierarchyRelationships) {
+    const id = idOf(row); const parentId = text(row.parentCompanyId); const childId = text(row.childCompanyId);
+    if (id && parentId && childId) addEdge("company_parent", coreRef("external_organization", childId), coreRef("external_organization", parentId), sourceRef("@finnor/private-equity", "pe_company_hierarchy_relationships", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.companyPartyRoles) {
+    const id = idOf(row); const companyId = text(row.companyId); const partyId = text(row.partyId);
+    if (!id || !companyId || !partyId) continue;
+    const party = row.partyType === "external_contact" ? coreRef("external_contact", partyId) : coreRef("external_organization", partyId);
+    const kind = row.role === "sponsor" ? "company_sponsor" : row.role === "advisor" ? "company_advisor" : null;
+    if (kind) addEdge(kind, coreRef("external_organization", companyId), party, sourceRef("@finnor/private-equity", "pe_company_party_roles", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.securities) {
+    const id = idOf(row); const companyId = text(row.issuerCompanyId);
+    if (id && companyId) addEdge("company_security", coreRef("external_organization", companyId), peRef("pe_security", id), sourceRef("@finnor/private-equity", "pe_securities", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.debtFacilities) {
+    const id = idOf(row); const companyId = text(row.borrowerCompanyId);
+    if (id && companyId) addEdge("company_debt_facility", coreRef("external_organization", companyId), peRef("pe_debt_facility", id), sourceRef("@finnor/private-equity", "pe_debt_facilities", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.debtFacilityLenders) {
+    const id = idOf(row); const facilityId = text(row.debtFacilityId); const partyId = text(row.lenderPartyId);
+    if (!id || !facilityId || !partyId) continue;
+    const party = row.lenderPartyType === "external_contact" ? coreRef("external_contact", partyId) : coreRef("external_organization", partyId);
+    addEdge("facility_lender", peRef("pe_debt_facility", facilityId), party, sourceRef("@finnor/private-equity", "pe_debt_facility_lenders", id), iso(row.validFrom, asOf));
+  }
+  for (const row of world.ownershipInterests) {
+    const id = idOf(row); const ownerId = text(row.ownerId); const subjectId = text(row.subjectId);
+    if (!id || !ownerId || !subjectId) continue;
+    const interest = peRef("pe_ownership_interest", id); const source = sourceRef("@finnor/private-equity", "pe_ownership_interests", id);
+    const owner = row.ownerType === "pe_fund" ? peRef("pe_fund", ownerId) : row.ownerType === "pe_vehicle" ? peRef("pe_vehicle", ownerId) : coreRef("external_organization", ownerId);
+    const subject = row.subjectType === "pe_security" ? peRef("pe_security", subjectId) : coreRef("external_organization", subjectId);
+    addEdge("ownership_owner", owner, interest, source, iso(row.validFrom, asOf));
+    addEdge("ownership_subject", interest, subject, source, iso(row.validFrom, asOf));
+  }
+  for (const row of world.metricSeries) {
+    const id = idOf(row); const subjectId = text(row.subjectId); if (!id || !subjectId) continue;
+    const seriesRef = peRef("pe_metric_series", id); const source = sourceRef("@finnor/private-equity", "pe_metric_series", id);
+    const subject = row.subjectType === "pe_portfolio_holding" ? peRef("pe_portfolio_holding", subjectId) : coreRef("external_organization", subjectId);
+    addEdge("metric_subject", subject, seriesRef, source, iso(row.createdAt, asOf));
+    const benchmarkId = text(row.benchmarkId);
+    if (benchmarkId) addEdge("metric_benchmark", seriesRef, peRef("pe_benchmark", benchmarkId), source, iso(row.createdAt, asOf));
+  }
+  for (const row of world.metricObservations) {
+    const id = idOf(row); const seriesId = text(row.metricSeriesId);
+    if (id && seriesId) addEdge("metric_observation", peRef("pe_metric_series", seriesId), peRef("pe_metric_observation", id), sourceRef("@finnor/private-equity", "pe_metric_observations", id), iso(row.periodEnd, asOf));
+  }
+  for (const row of world.benchmarkObservations) {
+    const id = idOf(row); const benchmarkId = text(row.benchmarkId);
+    if (id && benchmarkId) addEdge("benchmark_observation", peRef("pe_benchmark", benchmarkId), peRef("pe_benchmark_observation", id), sourceRef("@finnor/private-equity", "pe_benchmark_observations", id), iso(row.periodEnd, asOf));
+  }
+  for (const row of world.claims) {
+    const id = text(row.id); const subject = record(row.subject); const subjectType = text(subject.type); const subjectId = text(subject.id);
+    if (!id || !subjectType || !subjectId) continue;
+    const subjectRef = subjectType === "external_organization" ? coreRef("external_organization", subjectId)
+      : PE_TYPE_SET.has(subjectType) ? peRef(subjectType as PeEntityType, subjectId) : null;
+    if (subjectRef) addEdge("claim_subject", epistemicRef("claim", id), subjectRef, sourceRef("@finnor/epistemic-runtime", "epistemic_state_projection", id, { fieldPath: "subject" }), asOf);
+  }
+  for (const row of world.outcomes) {
+    const id = idOf(row); const subjectId = text(row.subjectId); if (!id || !subjectId) continue;
+    const outcome = peRef("pe_outcome", id); const source = sourceRef("@finnor/private-equity", "pe_outcomes", id);
+    const decisionId = text(row.decisionId); if (decisionId) addEdge("decision_outcome", peRef("pe_decision", decisionId), outcome, source, iso(row.observedAt, asOf));
+    if (row.subjectType === "pe_portfolio_holding") addEdge("holding_outcome", peRef("pe_portfolio_holding", subjectId), outcome, source, iso(row.validFrom, asOf));
+    else addEdge("company_outcome", coreRef("external_organization", subjectId), outcome, source, iso(row.validFrom, asOf));
+  }
+  for (const row of world.exits) {
+    const id = idOf(row); const holdingId = text(row.portfolioHoldingId); if (!id || !holdingId) continue;
+    const exit = peRef("pe_exit", id); const source = sourceRef("@finnor/private-equity", "pe_exits", id);
+    addEdge("holding_exit", peRef("pe_portfolio_holding", holdingId), exit, source, iso(row.closedAt ?? row.signedAt ?? row.announcedAt, asOf));
+    const buyerId = text(row.buyerCompanyId); if (buyerId) addEdge("exit_buyer", exit, coreRef("external_organization", buyerId), source, iso(row.closedAt ?? row.signedAt ?? row.announcedAt, asOf));
   }
 
   for (const entry of bundle.underwriting) {
@@ -740,8 +972,7 @@ export function projectCompanyBrain(
 
   if (bundle.attention) for (const item of bundle.attention.items) {
     const exactRoot = item.rootRefs.some((ref) => (
-      (ref.entityType === "pe_strategy" || ref.entityType === "pe_opportunity" || ref.entityType === "pe_deal")
-      && Boolean(findNode(peRef(ref.entityType, ref.entityId)))
+      Boolean(findNode(worldRootObjectRef(ref as PeWorldRootRef)))
     ));
     const linkedWork = workRootRefs.has(item.workId);
     if (!exactRoot && !linkedWork) continue;
@@ -776,6 +1007,7 @@ export function projectCompanyBrain(
     edges: boundedEdges,
     temporal: peTemporal,
     sourceStatus: sourceStatusFor(bundle),
+    capitalStructures: capitalStructureProjection(world, world.validAt),
     bounds: {
       nodes: boundedNodes.length,
       edges: boundedEdges.length,
@@ -800,12 +1032,15 @@ async function settledMany<T>(
 
 export async function loadCompanyBrainSourceBundle(
   ctx: PeMutationContext,
-  input: { root: PeWorldRootRef; asOf?: string },
+  input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string },
 ): Promise<CompanyBrainSourceBundle> {
-  const world = await loadPrivateEquityWorldState(ctx, input.root, input.asOf);
+  const world = await loadPrivateEquityWorldState(ctx, input.root,
+    input.validAt || input.knowledgeAt
+      ? { validAt: input.validAt, knowledgeAt: input.knowledgeAt ?? input.asOf }
+      : input.asOf);
   const statuses: NonNullable<CompanyBrainSourceBundle["sourceStatus"]> = [{ owner: "P1 Private Equity world", status: world.temporalCompleteness.status === "complete" ? "complete" : "partial", ...(world.temporalCompleteness.reasons.length ? { reason: world.temporalCompleteness.reasons.join("; ") } : {}) }];
   const investmentCaseIds = [...new Set(world.investmentCases.map((row) => text(row.id)).filter((id): id is string => Boolean(id)))].slice(0, 50);
-  const historical = input.asOf !== undefined;
+  const historical = input.asOf !== undefined || input.validAt !== undefined || input.knowledgeAt !== undefined;
   let underwriting: CompanyBrainSourceBundle["underwriting"] = [];
   let works: WorkAggregate[] = [];
   let workforce: WorkforceStatusResult | null = null;
@@ -837,7 +1072,8 @@ export async function loadCompanyBrainSourceBundle(
   try {
     const listed = await listIcCases(ctx, { limit: 100 });
     const relevant = listed.cases.filter((row) => investmentCaseIds.includes(String(row.investmentCaseId))).slice(0, 50);
-    ic = await settledMany("P5 IC", relevant.map((row) => getIcWorkspace(ctx, { icCaseId: String(row.id), ...(input.asOf ? { asOf: input.asOf } : {}) })), statuses);
+    const icAsOf = input.knowledgeAt ?? input.asOf;
+    ic = await settledMany("P5 IC", relevant.map((row) => getIcWorkspace(ctx, { icCaseId: String(row.id), ...(icAsOf ? { asOf: icAsOf } : {}) })), statuses);
   } catch (error) {
     statuses.push({ owner: "P5 IC", status: "partial", reason: error instanceof Error ? error.message : "IC source unavailable" });
   }
@@ -846,7 +1082,7 @@ export async function loadCompanyBrainSourceBundle(
 
 export async function loadCompanyBrainProjection(
   ctx: PeMutationContext,
-  input: { root: PeWorldRootRef; asOf?: string; maxNodes?: number; maxEdges?: number },
+  input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string; maxNodes?: number; maxEdges?: number },
 ): Promise<CompanyBrainProjection> {
   const bundle = await loadCompanyBrainSourceBundle(ctx, input);
   return projectCompanyBrain(bundle, { maxNodes: input.maxNodes, maxEdges: input.maxEdges });
@@ -866,6 +1102,15 @@ export async function listCompanyBrainRoots(
          SELECT 'pe_opportunity'::text entity_type,id::text,name label,state,updated_at FROM finnor_os.pe_opportunities WHERE tenant_id=$1
          UNION ALL
          SELECT 'pe_deal'::text entity_type,id::text,name label,status state,updated_at FROM finnor_os.pe_deals WHERE tenant_id=$1
+         UNION ALL
+         SELECT 'pe_fund'::text entity_type,id::text,name label,status state,updated_at FROM finnor_os.pe_funds WHERE tenant_id=$1
+         UNION ALL
+         SELECT 'pe_vehicle'::text entity_type,id::text,name label,status state,updated_at FROM finnor_os.pe_vehicles WHERE tenant_id=$1
+         UNION ALL
+         SELECT 'external_organization'::text entity_type,id::text,name label,CASE WHEN active THEN 'active' ELSE 'inactive' END state,updated_at FROM finnor_os.external_organizations WHERE tenant_id=$1
+         UNION ALL
+         SELECT 'pe_portfolio_holding'::text entity_type,h.id::text,o.name||' holding' label,h.holding_status state,h.updated_at
+           FROM finnor_os.pe_portfolio_holdings h JOIN finnor_os.external_organizations o ON o.tenant_id=h.tenant_id AND o.id=h.company_id WHERE h.tenant_id=$1
        ) roots
        WHERE ($2='' OR roots.id ILIKE '%'||$2||'%' OR roots.label ILIKE '%'||$2||'%')
        ORDER BY roots.updated_at DESC,roots.entity_type,roots.id LIMIT $3`,
@@ -874,7 +1119,7 @@ export async function listCompanyBrainRoots(
     return result.rows.map((raw) => {
       const row = shapePeRow(raw);
       const root = { entityType: String(row.entityType) as PeWorldRootRef["entityType"], entityId: String(row.id) };
-      const ref = peRef(root.entityType, root.entityId);
+      const ref = worldRootObjectRef(root);
       return { ref, label: String(row.label), state: text(row.state), rootRefs: [root], inspectionTarget: { kind: "pe_context", root, objectRef: ref } };
     });
   }, { readOnly: true });

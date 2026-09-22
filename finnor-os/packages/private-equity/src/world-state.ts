@@ -16,6 +16,7 @@ import {
 import { isMilestoneLate, isRequestOverdue } from "./state-machines";
 import {
   PE_ENTITY_TYPES,
+  PE_WORLD_ROOT_TYPES,
   PeDomainError,
   type PeEntityType,
   type PeMutationContext,
@@ -25,7 +26,16 @@ import {
 } from "./types";
 
 const MAX_WORLD_ROWS = 1_000;
-const ROOT_TYPES = new Set<PeWorldRootRef["entityType"]>(["pe_strategy", "pe_opportunity", "pe_deal"]);
+const MAX_WORLD_CANDIDATES = 5_000;
+const ROOT_TYPES = new Set<PeWorldRootRef["entityType"]>(PE_WORLD_ROOT_TYPES);
+const INSTITUTIONAL_TYPES = [
+  "pe_fund", "pe_vehicle", "pe_fund_vehicle_link", "pe_strategy_mandate",
+  "pe_portfolio_holding", "pe_company_hierarchy", "pe_company_party_role",
+  "pe_security", "pe_debt_facility", "pe_debt_facility_lender",
+  "pe_ownership_interest", "pe_benchmark", "pe_metric_series",
+  "pe_metric_observation", "pe_benchmark_observation", "pe_outcome", "pe_exit",
+  "pe_fact_coverage", "external_organization", "external_contact",
+] as const;
 const DEAL_CHILD_TYPES: PeEntityType[] = [
   "pe_investment_case", "pe_thesis", "pe_assumption", "pe_decision",
   "pe_deal_party", "pe_workstream", "pe_request", "pe_deliverable", "pe_finding",
@@ -34,7 +44,7 @@ const DEAL_CHILD_TYPES: PeEntityType[] = [
 ];
 
 interface HistoryRow {
-  entity_type: PeEntityType;
+  entity_type: string;
   entity_id: string;
   entity_version: number;
   snapshot: Record<string, unknown>;
@@ -155,7 +165,7 @@ async function latestExact(
   client: PeClient,
   tenantId: string,
   at: Date,
-  entityTypes: PeEntityType[],
+  entityTypes: readonly string[],
   entityIds: string[],
 ): Promise<HistoryRow[]> {
   if (entityTypes.length === 0 || entityIds.length === 0) return [];
@@ -225,17 +235,27 @@ function shaped(row: HistoryRow): Record<string, unknown> {
   return shapePeRow(row.snapshot);
 }
 
-function arrayFor(history: Map<string, HistoryRow>, type: PeEntityType): Record<string, unknown>[] {
+function arrayFor(history: Map<string, HistoryRow>, type: string): Record<string, unknown>[] {
   return [...history.values()].filter((row) => row.entity_type === type)
     .sort((left, right) => `${left.recorded_at.toISOString()}:${left.entity_id}`.localeCompare(`${right.recorded_at.toISOString()}:${right.entity_id}`))
     .map(shaped);
 }
 
-function emptyWorld(root: PeWorldRootRef, stateAt: string, completeness: PeWorldState["temporalCompleteness"]): PeWorldState {
+function emptyWorld(
+  root: PeWorldRootRef,
+  validAt: string,
+  knowledgeAt: string,
+  completeness: PeWorldState["temporalCompleteness"],
+): PeWorldState {
   return {
-    root, stateAt, temporalCompleteness: completeness,
+    root, stateAt: knowledgeAt, validAt, knowledgeAt, temporalCompleteness: completeness,
     strategy: null, opportunity: null, deal: null, opportunities: [], deals: [],
     investmentCases: [], theses: [], assumptions: [], decisions: [], decisionEffectLinks: [],
+    funds: [], vehicles: [], fundVehicleLinks: [], strategyMandates: [], portfolioHoldings: [],
+    companies: [], people: [], companyHierarchyRelationships: [], companyPartyRoles: [],
+    securities: [], debtFacilities: [], debtFacilityLenders: [], ownershipInterests: [],
+    metricSeries: [], metricObservations: [], benchmarks: [], benchmarkObservations: [],
+    claims: [], outcomes: [], exits: [], factCoverage: [],
     dealParties: [], workstreams: [], requests: [], deliverables: [], findings: [], dealRisks: [],
     findingRiskLinks: [], dependencies: [], milestones: [], closingConditions: [], closingItems: [],
     documents: [], evidence: [], observedEvidence: [], sourceCoverage: [], sourceCoverageWarnings: [],
@@ -553,21 +573,201 @@ function collectUuid(rows: Array<Record<string, unknown>>, field: string): strin
   return [...new Set(rows.map((row) => row[field]).filter((value): value is string => typeof value === "string"))];
 }
 
+async function latestTenantHistory(
+  client: PeClient,
+  tenantId: string,
+  knowledgeAt: Date,
+): Promise<HistoryRow[]> {
+  const types = [...new Set<string>([...PE_ENTITY_TYPES, ...INSTITUTIONAL_TYPES])];
+  const result = await client.query<HistoryRow>(
+    `SELECT entity_type,entity_id::text,entity_version,snapshot,snapshot_hash,recorded_at,origin,
+       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid
+       FROM finnor_os.canonical_entity_versions
+      WHERE tenant_id=$1 AND recorded_at<=$2 AND entity_type=ANY($3::text[])
+        AND (entity_type IN ('pe_metric_observation','pe_benchmark_observation','pe_fact_coverage') OR recorded_at=(
+          SELECT max(v.recorded_at) FROM finnor_os.canonical_entity_versions v
+           WHERE v.tenant_id=canonical_entity_versions.tenant_id
+             AND v.entity_type=canonical_entity_versions.entity_type
+             AND v.entity_id=canonical_entity_versions.entity_id
+             AND v.recorded_at<=$2))
+      ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC
+      LIMIT $4`,
+    [tenantId, knowledgeAt, types, MAX_WORLD_CANDIDATES + 1],
+  );
+  for (const row of result.rows) {
+    if (!row.hash_valid) {
+      throw new PeDomainError("PE_HISTORY_HASH_MISMATCH", "Canonical temporal snapshot hash verification failed", {
+        entityType: row.entity_type, entityId: row.entity_id, entityVersion: row.entity_version,
+      });
+    }
+  }
+  return result.rows;
+}
+
+function asString(row: HistoryRow, field: string): string | null {
+  const value = row.snapshot[field];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function addId(set: Set<string>, value: string | null): boolean {
+  if (!value || set.has(value)) return false;
+  set.add(value);
+  return true;
+}
+
+function validAtRow(row: HistoryRow, validAt: Date): boolean {
+  const from = iso(row.snapshot.valid_from);
+  const to = iso(row.snapshot.valid_to);
+  if (from && Date.parse(from) > validAt.getTime()) return false;
+  if (to && Date.parse(to) <= validAt.getTime()) return false;
+  const entry = typeof row.snapshot.entry_date === "string" ? Date.parse(`${row.snapshot.entry_date}T00:00:00Z`) : null;
+  if (row.entity_type === "pe_portfolio_holding" && entry !== null && entry > validAt.getTime()) return false;
+  return true;
+}
+
+function correctionKey(row: HistoryRow): string | null {
+  const s = row.snapshot;
+  if (row.entity_type === "pe_metric_observation") return `${row.entity_type}:${String(s.metric_series_id)}:${String(s.period_start)}:${String(s.period_end)}`;
+  if (row.entity_type === "pe_benchmark_observation") return `${row.entity_type}:${String(s.benchmark_id)}:${String(s.period_start)}:${String(s.period_end)}`;
+  if (row.entity_type === "pe_fact_coverage") return `${row.entity_type}:${String(s.subject_type)}:${String(s.subject_id)}:${String(s.proposition)}:${String(s.valid_from)}:${String(s.valid_to)}`;
+  return null;
+}
+
+/** Corrected observations keep stable business identity while each correction has
+ * its own canonical row id. At one knowledge time only the highest known revision
+ * of that business identity belongs in a world projection. */
+function latestCorrections(rows: HistoryRow[]): HistoryRow[] {
+  const winners = new Map<string, HistoryRow>();
+  for (const row of rows) {
+    const key = correctionKey(row);
+    if (!key) continue;
+    const prior = winners.get(key);
+    const revision = Number(row.snapshot.revision ?? 1);
+    const priorRevision = Number(prior?.snapshot.revision ?? 0);
+    if (!prior || revision > priorRevision || (revision === priorRevision && row.recorded_at > prior.recorded_at)) winners.set(key, row);
+  }
+  return rows.filter((row) => {
+    const key = correctionKey(row);
+    return !key || winners.get(key) === row;
+  });
+}
+
+/** Select the connected institutional graph from immutable snapshots.  The
+ * selection is tenant bounded first, then graph bounded; no current table is
+ * consulted to infer a historical edge. */
+function connectedHistory(rows: HistoryRow[], root: PeWorldRootRef, validAt: Date): HistoryRow[] {
+  const selected = new Set<string>();
+  const funds = new Set<string>(); const vehicles = new Set<string>();
+  const holdings = new Set<string>(); const companies = new Set<string>(); const people = new Set<string>();
+  const strategies = new Set<string>(); const opportunities = new Set<string>(); const deals = new Set<string>();
+  const securities = new Set<string>(); const facilities = new Set<string>(); const series = new Set<string>();
+  const benchmarks = new Set<string>(); const decisions = new Set<string>();
+  const seed = root.entityId;
+  if (root.entityType === "pe_fund") funds.add(seed);
+  else if (root.entityType === "pe_vehicle") vehicles.add(seed);
+  else if (root.entityType === "pe_portfolio_holding") holdings.add(seed);
+  else if (root.entityType === "external_organization") companies.add(seed);
+  else if (root.entityType === "pe_strategy") strategies.add(seed);
+  else if (root.entityType === "pe_opportunity") opportunities.add(seed);
+  else if (root.entityType === "pe_deal") deals.add(seed);
+
+  const choose = (row: HistoryRow): boolean => {
+    const s = row.snapshot;
+    const id = row.entity_id;
+    switch (row.entity_type) {
+      case "pe_fund": return funds.has(id);
+      case "pe_vehicle": return vehicles.has(id);
+      case "external_organization": return companies.has(id);
+      case "external_contact": return people.has(id);
+      case "pe_strategy": return strategies.has(id);
+      case "pe_opportunity": return opportunities.has(id)
+        || (root.entityType === "pe_strategy" && strategies.has(asString(row, "strategy_id") ?? ""));
+      case "pe_deal": return deals.has(id) || opportunities.has(asString(row, "opportunity_id") ?? "")
+        || (root.entityType === "external_organization" && companies.has(asString(row, "target_organization_id") ?? ""));
+      case "pe_fund_vehicle_link": return funds.has(asString(row, "fund_id") ?? "") || vehicles.has(asString(row, "vehicle_id") ?? "");
+      case "pe_strategy_mandate": return strategies.has(asString(row, "strategy_id") ?? "")
+        || (s.principal_type === "pe_fund" ? funds : vehicles).has(asString(row, "principal_id") ?? "");
+      case "pe_portfolio_holding": return holdings.has(id) || funds.has(asString(row, "fund_id") ?? "")
+        || vehicles.has(asString(row, "vehicle_id") ?? "") || companies.has(asString(row, "company_id") ?? "")
+        || deals.has(asString(row, "origin_deal_id") ?? "");
+      case "pe_company_hierarchy": return companies.has(asString(row, "parent_company_id") ?? "") || companies.has(asString(row, "child_company_id") ?? "");
+      case "pe_company_party_role": return companies.has(asString(row, "company_id") ?? "")
+        || (s.party_type === "external_organization" ? companies : people).has(asString(row, "party_id") ?? "");
+      case "pe_security": return securities.has(id) || companies.has(asString(row, "issuer_company_id") ?? "");
+      case "pe_debt_facility": return facilities.has(id) || companies.has(asString(row, "borrower_company_id") ?? "");
+      case "pe_debt_facility_lender": return facilities.has(asString(row, "debt_facility_id") ?? "");
+      case "pe_ownership_interest": return (s.owner_type === "pe_fund" ? funds : s.owner_type === "pe_vehicle" ? vehicles : companies).has(asString(row, "owner_id") ?? "")
+        || (s.subject_type === "pe_security" ? securities : companies).has(asString(row, "subject_id") ?? "");
+      case "pe_metric_series": return series.has(id) || (s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "");
+      case "pe_metric_observation": return series.has(asString(row, "metric_series_id") ?? "");
+      case "pe_benchmark": return benchmarks.has(id);
+      case "pe_benchmark_observation": return benchmarks.has(asString(row, "benchmark_id") ?? "");
+      case "pe_outcome": return (s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "") || decisions.has(asString(row, "decision_id") ?? "");
+      case "pe_exit": return holdings.has(asString(row, "portfolio_holding_id") ?? "");
+      case "pe_fact_coverage": return (s.subject_type === "pe_fund" ? funds : s.subject_type === "pe_vehicle" ? vehicles : s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "");
+      default: return deals.has(asString(row, "deal_id") ?? "")
+        || (row.entity_type === "pe_document_link" || row.entity_type === "pe_evidence_link")
+          && (String(s.world_root_type) === root.entityType && String(s.world_root_id) === root.entityId);
+    }
+  };
+
+  for (let pass = 0; pass < 12; pass += 1) {
+    let changed = false;
+    for (const row of rows) {
+      if (!choose(row)) continue;
+      const key = historyKey(row);
+      if (!selected.has(key)) { selected.add(key); changed = true; }
+      const s = row.snapshot;
+      switch (row.entity_type) {
+        case "pe_fund_vehicle_link": changed = addId(funds, asString(row, "fund_id")) || changed; changed = addId(vehicles, asString(row, "vehicle_id")) || changed; break;
+        case "pe_strategy_mandate": changed = addId(strategies, asString(row, "strategy_id")) || changed; changed = (s.principal_type === "pe_fund" ? addId(funds, asString(row, "principal_id")) : addId(vehicles, asString(row, "principal_id"))) || changed; break;
+        case "pe_portfolio_holding": changed = addId(holdings, row.entity_id) || changed; changed = addId(funds, asString(row, "fund_id")) || changed; changed = addId(vehicles, asString(row, "vehicle_id")) || changed; changed = addId(companies, asString(row, "company_id")) || changed; changed = addId(deals, asString(row, "origin_deal_id")) || changed; break;
+        case "pe_company_hierarchy": changed = addId(companies, asString(row, "parent_company_id")) || changed; changed = addId(companies, asString(row, "child_company_id")) || changed; break;
+        case "pe_company_party_role": changed = addId(companies, asString(row, "company_id")) || changed; changed = (s.party_type === "external_organization" ? addId(companies, asString(row, "party_id")) : addId(people, asString(row, "party_id"))) || changed; break;
+        case "pe_security": changed = addId(securities, row.entity_id) || changed; changed = addId(companies, asString(row, "issuer_company_id")) || changed; break;
+        case "pe_debt_facility": changed = addId(facilities, row.entity_id) || changed; changed = addId(companies, asString(row, "borrower_company_id")) || changed; break;
+        case "pe_debt_facility_lender": changed = addId(facilities, asString(row, "debt_facility_id")) || changed; changed = (s.lender_party_type === "external_organization" ? addId(companies, asString(row, "lender_party_id")) : addId(people, asString(row, "lender_party_id"))) || changed; break;
+        case "pe_ownership_interest": changed = (s.owner_type === "pe_fund" ? addId(funds, asString(row, "owner_id")) : s.owner_type === "pe_vehicle" ? addId(vehicles, asString(row, "owner_id")) : addId(companies, asString(row, "owner_id"))) || changed; changed = (s.subject_type === "pe_security" ? addId(securities, asString(row, "subject_id")) : addId(companies, asString(row, "subject_id"))) || changed; break;
+        case "pe_metric_series": changed = addId(series, row.entity_id) || changed; changed = addId(benchmarks, asString(row, "benchmark_id")) || changed; changed = (s.subject_type === "pe_portfolio_holding" ? addId(holdings, asString(row, "subject_id")) : addId(companies, asString(row, "subject_id"))) || changed; break;
+        case "pe_opportunity": changed = addId(opportunities, row.entity_id) || changed; changed = addId(strategies, asString(row, "strategy_id")) || changed; break;
+        case "pe_deal": changed = addId(deals, row.entity_id) || changed; changed = addId(opportunities, asString(row, "opportunity_id")) || changed; changed = addId(companies, asString(row, "target_organization_id")) || changed; break;
+        case "pe_decision": changed = addId(decisions, row.entity_id) || changed; break;
+        default: break;
+      }
+    }
+    if (!changed) break;
+  }
+  return rows.filter((row) => selected.has(historyKey(row)) && validAtRow(row, validAt));
+}
+
+export interface PeWorldTemporalQuery {
+  validAt?: Date | string;
+  knowledgeAt?: Date | string;
+}
+
 /** Historical meaning: only canonical snapshots recorded at or before `at`, and
  * only evidence both effective and retrieved at or before `at`, are eligible. */
 export async function loadPrivateEquityWorldState(
   ctx: PeMutationContext,
   root: PeWorldRootRef,
-  at?: Date | string,
+  at?: Date | string | PeWorldTemporalQuery,
 ): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
-  const requestedAt = at === undefined ? null : at instanceof Date ? at : new Date(at);
-  if (requestedAt && Number.isNaN(requestedAt.getTime())) throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "PE world-state timestamp is malformed");
+  const temporal = at && typeof at === "object" && !(at instanceof Date) ? at : null;
+  const parseAt = (value: Date | string | undefined): Date | null => value === undefined ? null : value instanceof Date ? value : new Date(value);
+  const requestedKnowledgeAt = parseAt(temporal?.knowledgeAt ?? (temporal ? undefined : at as Date | string | undefined));
+  const requestedValidAt = parseAt(temporal?.validAt);
+  if ((requestedKnowledgeAt && Number.isNaN(requestedKnowledgeAt.getTime())) || (requestedValidAt && Number.isNaN(requestedValidAt.getTime()))) {
+    throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "PE world-state validAt or knowledgeAt timestamp is malformed");
+  }
 
   return peTransaction(ctx, async (_db, client) => {
-    const clock = requestedAt ?? (await client.query<{ at: Date }>("SELECT transaction_timestamp() AS at")).rows[0]!.at;
+    const transactionAt = (await client.query<{ at: Date }>("SELECT transaction_timestamp() AS at")).rows[0]!.at;
+    const clock = requestedKnowledgeAt ?? transactionAt;
+    const validClock = requestedValidAt ?? clock;
     const stateAt = clock.toISOString();
+    const validAt = validClock.toISOString();
     const tenant = await client.query<{ tenant_id: string | null }>(
       "SELECT finnor_os.canonical_entity_tenant($1,$2::uuid)::text AS tenant_id",
       [root.entityType, root.entityId],
@@ -578,10 +778,10 @@ export async function loadPrivateEquityWorldState(
 
     const coverage = await client.query<CoverageRow>(
       `SELECT entity_type,coverage_started_at FROM finnor_os.canonical_history_coverage
-        WHERE vertical_key='private_equity' AND entity_type=ANY($1::text[])`,
-      [PE_ENTITY_TYPES],
+        WHERE entity_type=ANY($1::text[])`,
+      [[...PE_ENTITY_TYPES, "external_organization", "external_contact"]],
     );
-    const coverageByType = new Map(coverage.rows.map((row) => [row.entity_type, row.coverage_started_at]));
+    const coverageByType = new Map<string, Date>(coverage.rows.map((row) => [row.entity_type, row.coverage_started_at]));
     const rootCoverage = coverageByType.get(root.entityType);
     if (!rootCoverage) throw new PeDomainError("PE_HISTORY_COVERAGE_MISSING", "PE world root has no declared temporal coverage");
     const unavailableTypes = PE_ENTITY_TYPES.filter((type) => {
@@ -591,7 +791,7 @@ export async function loadPrivateEquityWorldState(
     const allCoverageTimes = [...coverageByType.values()].map((value) => value.getTime());
     const fullBaselineAt = allCoverageTimes.length ? new Date(Math.max(...allCoverageTimes)).toISOString() : null;
     if (clock.getTime() < rootCoverage.getTime()) {
-      return emptyWorld(root, stateAt, {
+      return emptyWorld(root, validAt, stateAt, {
         status: "unavailable_before_baseline",
         baselineAt: rootCoverage.toISOString(),
         unavailableEntityTypes: [...unavailableTypes],
@@ -605,8 +805,8 @@ export async function loadPrivateEquityWorldState(
     const rootRow = rootRows[0];
     // A root created after `at` is truthfully absent then. Never substitute its
     // current row or traverse current relationships backwards in time.
-    if (!rootRow) {
-      return emptyWorld(root, stateAt, {
+    if (!rootRow || !validAtRow(rootRow, validClock)) {
+      return emptyWorld(root, validAt, stateAt, {
         status: unavailableTypes.length ? "partial" : "complete",
         baselineAt: fullBaselineAt,
         unavailableEntityTypes: [...unavailableTypes],
@@ -614,6 +814,9 @@ export async function loadPrivateEquityWorldState(
       });
     }
 
+    const tenantCandidates = await latestTenantHistory(client, ctx.auth.tenantId, clock);
+    const connectedRows = connectedHistory(latestCorrections(tenantCandidates), root, validClock);
+    addHistory(history, connectedRows);
     let strategyRows: HistoryRow[] = [];
     let opportunityRows: HistoryRow[] = [];
     let dealRows: HistoryRow[] = [];
@@ -627,7 +830,7 @@ export async function loadPrivateEquityWorldState(
       dealRows = await latestBySnapshotField(client, ctx.auth.tenantId, clock, ["pe_deal"], "opportunity_id", [root.entityId]);
       const strategyId = rootRow.snapshot.strategy_id;
       if (typeof strategyId === "string") strategyRows = await latestExact(client, ctx.auth.tenantId, clock, ["pe_strategy"], [strategyId]);
-    } else {
+    } else if (root.entityType === "pe_deal") {
       dealRows = rootRows;
       const opportunityId = rootRow.snapshot.opportunity_id;
       if (typeof opportunityId === "string") {
@@ -635,17 +838,24 @@ export async function loadPrivateEquityWorldState(
         const strategyId = opportunityRows[0]?.snapshot.strategy_id;
         if (typeof strategyId === "string") strategyRows = await latestExact(client, ctx.auth.tenantId, clock, ["pe_strategy"], [strategyId]);
       }
+    } else {
+      strategyRows = connectedRows.filter((row) => row.entity_type === "pe_strategy");
+      opportunityRows = connectedRows.filter((row) => row.entity_type === "pe_opportunity");
+      dealRows = connectedRows.filter((row) => row.entity_type === "pe_deal");
     }
     addHistory(history, strategyRows);
     addHistory(history, opportunityRows);
     addHistory(history, dealRows);
     const dealIds = dealRows.map((row) => row.entity_id);
-    const childRows = await latestBySnapshotField(client, ctx.auth.tenantId, clock, DEAL_CHILD_TYPES, "deal_id", dealIds);
+    const childRows = root.entityType === "pe_strategy" || root.entityType === "pe_opportunity" || root.entityType === "pe_deal"
+      ? await latestBySnapshotField(client, ctx.auth.tenantId, clock, DEAL_CHILD_TYPES, "deal_id", dealIds)
+      : connectedRows.filter((row) => DEAL_CHILD_TYPES.includes(row.entity_type as PeEntityType));
     addHistory(history, childRows);
     const linkRows = await latestLinks(client, ctx.auth.tenantId, clock, root, dealIds);
     addHistory(history, linkRows);
 
     const reasons: string[] = [];
+    if (tenantCandidates.length > MAX_WORLD_CANDIDATES) reasons.push(`Tenant history exceeded the ${MAX_WORLD_CANDIDATES}-row graph candidate bound`);
     if ([rootRows, opportunityRows, dealRows, childRows, linkRows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
       reasons.push(`World history exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     }
@@ -657,6 +867,21 @@ export async function loadPrivateEquityWorldState(
     const strategyValues = arrayFor(safeMap, "pe_strategy");
     const opportunityValues = arrayFor(safeMap, "pe_opportunity");
     const dealValues = arrayFor(safeMap, "pe_deal");
+    const primaryOpportunity = root.entityType === "pe_opportunity"
+      ? opportunityValues.find((row) => row.id === root.entityId) ?? null
+      : root.entityType === "pe_deal"
+        ? opportunityValues.find((row) => row.id === rootRow.snapshot.opportunity_id) ?? null
+        : null;
+    const primaryDeal = root.entityType === "pe_deal"
+      ? dealValues.find((row) => row.id === root.entityId) ?? null
+      : root.entityType === "pe_opportunity"
+        ? dealValues.find((row) => row.opportunityId === root.entityId) ?? null
+        : null;
+    const primaryStrategy = root.entityType === "pe_strategy"
+      ? strategyValues.find((row) => row.id === root.entityId) ?? null
+      : primaryOpportunity && typeof primaryOpportunity.strategyId === "string"
+        ? strategyValues.find((row) => row.id === primaryOpportunity.strategyId) ?? null
+        : strategyValues[0] ?? null;
     const documentLinks = arrayFor(safeMap, "pe_document_link").filter((row) => !row.archivedAt);
     const evidenceLinks = arrayFor(safeMap, "pe_evidence_link").filter((row) => !row.archivedAt);
     const entityRefs = safeHistory.map((row) => ({ entity_type: row.entity_type, entity_id: row.entity_id }));
@@ -684,9 +909,9 @@ export async function loadPrivateEquityWorldState(
          FROM finnor_os.evidence_sources s
          JOIN finnor_os.evidence_source_versions v ON v.tenant_id=s.tenant_id AND v.source_id=s.id
         WHERE s.tenant_id=$1 AND s.id=ANY($2::uuid[])
-          AND v.as_of<=$3 AND v.retrieved_at<=$3
-        ORDER BY s.id,v.version_number DESC,v.id DESC LIMIT $4`,
-      [ctx.auth.tenantId, evidenceSourceIds, clock, MAX_WORLD_ROWS + 1],
+          AND v.as_of<=$3 AND v.retrieved_at<=$4
+        ORDER BY s.id,v.version_number DESC,v.id DESC LIMIT $5`,
+      [ctx.auth.tenantId, evidenceSourceIds, validClock, clock, MAX_WORLD_ROWS + 1],
     ) : { rows: [] as Array<PrivateEquityAssertionSourceRow & SqlRow> };
     if (evidenceVersionsRaw.rows.length > MAX_WORLD_ROWS) reasons.push(`Evidence exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     const explicitVersionsBySource = new Map<string, Set<string>>();
@@ -873,14 +1098,24 @@ export async function loadPrivateEquityWorldState(
     const theses = arrayFor(safeMap, "pe_thesis");
     const assumptions = arrayFor(safeMap, "pe_assumption");
     const decisions = arrayFor(safeMap, "pe_decision");
+    const portfolioHoldings = arrayFor(safeMap, "pe_portfolio_holding").map((row) => {
+      const entryAt = typeof row.entryDate === "string" ? Date.parse(`${row.entryDate}T00:00:00Z`) : Number.NaN;
+      const exitAt = typeof row.exitDate === "string" ? Date.parse(`${row.exitDate}T00:00:00Z`) : Number.NaN;
+      return {
+        ...row,
+        holdingStatus: Number.isFinite(exitAt) && exitAt <= validClock.getTime()
+          ? "exited"
+          : Number.isFinite(entryAt) && entryAt <= validClock.getTime() ? "active" : row.holdingStatus,
+      };
+    });
     const assertions: PrivateEquityAssertion[] = privateEquityAssertionsFromRows(eligibleEvidenceRows, 200, root);
     const epistemic = buildPrivateEquityWorldEpistemicSnapshot({
       tenantId: ctx.auth.tenantId,
       principalId: ctx.auth.employeeId ?? ctx.auth.userId,
       root,
       world: {
-        strategy: strategyValues[0] ?? null,
-        opportunity: root.entityType === "pe_opportunity" ? opportunityValues[0] ?? null : null,
+        strategy: primaryStrategy,
+        opportunity: root.entityType === "pe_opportunity" ? primaryOpportunity : null,
         investmentCases, theses, assumptions, decisions,
       },
       assertions,
@@ -898,27 +1133,50 @@ export async function loadPrivateEquityWorldState(
     return {
       root,
       stateAt,
+      validAt,
+      knowledgeAt: stateAt,
       temporalCompleteness: {
         status: completenessStatus,
         baselineAt: fullBaselineAt,
         unavailableEntityTypes: [...unavailableTypes],
         reasons: [...new Set(reasons)],
       },
-      strategy: strategyValues[0] ?? null,
-      opportunity: root.entityType === "pe_opportunity" || root.entityType === "pe_deal" ? opportunityValues[0] ?? null : null,
-      deal: root.entityType === "pe_opportunity" || root.entityType === "pe_deal" ? dealValues[0] ?? null : null,
+      strategy: primaryStrategy,
+      opportunity: root.entityType === "pe_opportunity" || root.entityType === "pe_deal" ? primaryOpportunity : null,
+      deal: root.entityType === "pe_opportunity" || root.entityType === "pe_deal" ? primaryDeal : null,
       opportunities: opportunityValues,
       deals: dealValues,
       investmentCases,
       theses,
       assumptions,
       decisions,
+      funds: arrayFor(safeMap, "pe_fund"),
+      vehicles: arrayFor(safeMap, "pe_vehicle"),
+      fundVehicleLinks: arrayFor(safeMap, "pe_fund_vehicle_link"),
+      strategyMandates: arrayFor(safeMap, "pe_strategy_mandate"),
+      portfolioHoldings,
+      companies: arrayFor(safeMap, "external_organization"),
+      people: arrayFor(safeMap, "external_contact"),
+      companyHierarchyRelationships: arrayFor(safeMap, "pe_company_hierarchy"),
+      companyPartyRoles: arrayFor(safeMap, "pe_company_party_role"),
+      securities: arrayFor(safeMap, "pe_security"),
+      debtFacilities: arrayFor(safeMap, "pe_debt_facility"),
+      debtFacilityLenders: arrayFor(safeMap, "pe_debt_facility_lender"),
+      ownershipInterests: arrayFor(safeMap, "pe_ownership_interest"),
+      metricSeries: arrayFor(safeMap, "pe_metric_series"),
+      metricObservations: arrayFor(safeMap, "pe_metric_observation"),
+      benchmarks: arrayFor(safeMap, "pe_benchmark"),
+      benchmarkObservations: arrayFor(safeMap, "pe_benchmark_observation"),
+      claims: epistemic.state.propositions.map((proposition) => ({ ...proposition, owner: "@finnor/epistemic-runtime" })),
+      outcomes: arrayFor(safeMap, "pe_outcome"),
+      exits: arrayFor(safeMap, "pe_exit"),
+      factCoverage: arrayFor(safeMap, "pe_fact_coverage"),
       decisionEffectLinks: decisionEffectRaw.rows.slice(0, MAX_WORLD_ROWS).map(shapePeRow),
       dealParties: arrayFor(safeMap, "pe_deal_party"),
       workstreams: arrayFor(safeMap, "pe_workstream"),
       requests: arrayFor(safeMap, "pe_request").map((row) => ({
         ...row,
-        overdue: isRequestOverdue({ state: String(row.state), dueAt: row.dueAt as string | null }, clock),
+        overdue: isRequestOverdue({ state: String(row.state), dueAt: row.dueAt as string | null }, validClock),
       })),
       deliverables: arrayFor(safeMap, "pe_deliverable"),
       findings: arrayFor(safeMap, "pe_finding"),
@@ -927,7 +1185,7 @@ export async function loadPrivateEquityWorldState(
       dependencies: arrayFor(safeMap, "pe_dependency"),
       milestones: arrayFor(safeMap, "pe_milestone").map((row) => ({
         ...row,
-        late: isMilestoneLate({ state: String(row.state), targetAt: row.targetAt as string }, clock),
+        late: isMilestoneLate({ state: String(row.state), targetAt: row.targetAt as string }, validClock),
       })),
       closingConditions: arrayFor(safeMap, "pe_closing_condition"),
       closingItems: arrayFor(safeMap, "pe_closing_item"),

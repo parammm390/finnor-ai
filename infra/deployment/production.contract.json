@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0138_scope3_compute_plane.sql",
+    "requiredMigrationHead": "0140_scope5_epistemic_impact.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -35,7 +35,8 @@
         "aws-compute-stack-deploy",
         "compute-cutover-activate",
         "compute-cutover-finalize",
-        "product-authority-update"
+        "product-authority-update",
+        "epistemic-impact-activate"
       ]
     }
   },

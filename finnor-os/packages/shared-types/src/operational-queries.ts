@@ -3,6 +3,7 @@
  * Phase-5 deny ledger and are never part of this executable union.
  */
 import type { CanonicalEntityRef, CompanyContext, CompanyContextAnchor, PartyRef } from "./company-graph";
+import type { PeWorldRootRef } from "./private-equity";
 
 export const OPERATIONAL_QUERY_VERSION = 1 as const;
 
@@ -144,8 +145,10 @@ export interface CriticalDependenciesRequest extends DealScopedQueryRequest {
 export interface ClosingReadinessRequest extends DealScopedQueryRequest { intent: "closing_readiness" }
 export interface PeWorldStateRequest {
   intent: "pe_world_state";
-  root: { entityType: "pe_strategy" | "pe_opportunity" | "pe_deal"; entityId: string };
+  root: PeWorldRootRef;
   at?: string;
+  validAt?: string;
+  knowledgeAt?: string;
 }
 
 export type CoreOperationalQueryRequest =
@@ -630,6 +633,8 @@ export interface ClosingReadinessResult extends OperationalQueryResultBase<"clos
 export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world_state"> {
   root: PeWorldStateRequest["root"];
   stateAt: string;
+  validAt: string;
+  knowledgeAt: string;
   temporalCompleteness: {
     status: "complete" | "partial" | "unavailable_before_baseline";
     baselineAt: string | null;
@@ -645,6 +650,27 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
   theses: Record<string, unknown>[];
   assumptions: Record<string, unknown>[];
   decisions: Record<string, unknown>[];
+  funds: Record<string, unknown>[];
+  vehicles: Record<string, unknown>[];
+  fundVehicleLinks: Record<string, unknown>[];
+  strategyMandates: Record<string, unknown>[];
+  portfolioHoldings: Record<string, unknown>[];
+  companies: Record<string, unknown>[];
+  people: Record<string, unknown>[];
+  companyHierarchyRelationships: Record<string, unknown>[];
+  companyPartyRoles: Record<string, unknown>[];
+  securities: Record<string, unknown>[];
+  debtFacilities: Record<string, unknown>[];
+  debtFacilityLenders: Record<string, unknown>[];
+  ownershipInterests: Record<string, unknown>[];
+  metricSeries: Record<string, unknown>[];
+  metricObservations: Record<string, unknown>[];
+  benchmarks: Record<string, unknown>[];
+  benchmarkObservations: Record<string, unknown>[];
+  claims: Record<string, unknown>[];
+  outcomes: Record<string, unknown>[];
+  exits: Record<string, unknown>[];
+  factCoverage: Record<string, unknown>[];
   decisionEffectLinks: Record<string, unknown>[];
   dealParties: Record<string, unknown>[];
   workstreams: Record<string, unknown>[];

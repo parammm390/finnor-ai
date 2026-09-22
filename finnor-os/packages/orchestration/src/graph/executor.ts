@@ -38,6 +38,8 @@ export class LangGraphExecutor implements Executor {
           alreadyApproved: action.status === "approved" || action.status === "executing",
           correlationId: action.correlationId,
           workId: action.workId ?? undefined,
+          planRevisionId: action.planRevisionId ?? undefined,
+          planNodeId: action.planNodeId ?? undefined,
           initiatedBy: action.initiatedBy ?? undefined,
           approvedBy: action.approvedBy ?? undefined,
         },

@@ -21,6 +21,8 @@ export const GateStateAnnotation = Annotation.Root({
   // receipts. Existing checkpointed runs without it resume with it undefined.
   correlationId: Annotation<string | undefined>,
   workId: Annotation<string | undefined>,
+  planRevisionId: Annotation<string | undefined>,
+  planNodeId: Annotation<string | undefined>,
   initiatedBy: Annotation<string | undefined>,
   approvedBy: Annotation<string | undefined>,
   authorityOutcome: Annotation<"allowed" | "denied" | "approval_required" | undefined>,

@@ -9,7 +9,7 @@ import * as schema from "./schema";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
-import { classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
+import { PRODUCTION_JOB_CONTRACTS, classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
 export { MAX_BACKGROUND_SCAN_BATCH, MAX_HIGH_EGRESS_ROWS, MAX_INSTRUCTION_EVENT_PAGE, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import { MAX_HIGH_EGRESS_ROWS, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import {
@@ -501,10 +501,12 @@ export async function enqueueJob(
   if (isProductionJobType(type) && classification.tenantScope === "global" && tenantId) throw new Error(`${type} is global and cannot carry tenant identity`);
   if (tenantId) await resolveTenantVertical(tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
+  const protocolVersion = isProductionJobType(type)
+    ? PRODUCTION_JOB_CONTRACTS[type].protocolVersions[0] ?? 1 : 1;
   await getPool().query(
-    `INSERT INTO jobs (tenant_id, type, payload, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO jobs (tenant_id, type, payload, idempotency_key, lane, priority, protocol_version) VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (idempotency_key) DO NOTHING`,
-    [tenantId, type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority],
+    [tenantId, type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority, protocolVersion],
   );
 }
 
@@ -529,11 +531,13 @@ export async function enqueueJobAt(
   if (isProductionJobType(type) && classification.tenantScope === "global" && tenantId) throw new Error(`${type} is global and cannot carry tenant identity`);
   if (tenantId) await resolveTenantVertical(tenantId);
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
+  const protocolVersion = isProductionJobType(type)
+    ? PRODUCTION_JOB_CONTRACTS[type].protocolVersions[0] ?? 1 : 1;
   await getPool().query(
-    `INSERT INTO jobs (tenant_id, type, payload, run_at, idempotency_key, lane, priority) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO jobs (tenant_id, type, payload, run_at, idempotency_key, lane, priority, protocol_version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      ON CONFLICT (idempotency_key) DO UPDATE SET run_at=LEAST(jobs.run_at, EXCLUDED.run_at)
      WHERE jobs.status='queued'`,
-    [tenantId, type, JSON.stringify(fullPayload), runAt, idempotencyKey, lane, priority],
+    [tenantId, type, JSON.stringify(fullPayload), runAt, idempotencyKey, lane, priority, protocolVersion],
   );
 }
 

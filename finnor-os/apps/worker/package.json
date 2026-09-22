@@ -15,6 +15,7 @@
     "@finnor/computer": "*",
     "@finnor/data-platform": "*",
     "@finnor/db": "*",
+    "@finnor/epistemic-runtime": "*",
     "@finnor/memory": "*",
     "@finnor/orchestration": "*",
     "@finnor/private-equity": "*",

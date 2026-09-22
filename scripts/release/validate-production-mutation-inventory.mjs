@@ -37,7 +37,7 @@ for (const path of auditRoots.flatMap((root) => filesUnder(resolve(repoRoot, roo
 }
 
 const activeMutators = inventory.entries.filter((entry) => entry.classification === "PRODUCTION_MUTATOR" && entry.state === "ACTIVE")
-requireInvariant(activeMutators.length === 6, "active production writer inventory changed; classify and authorize the new mechanism")
+requireInvariant(activeMutators.length === 7, "active production writer inventory changed; classify and authorize the new mechanism")
 for (const entry of activeMutators.filter((candidate) => candidate.path.endsWith(".mjs") || candidate.path.endsWith(".ts"))) {
   const source = read(entry.path)
   requireInvariant(source.includes("authorizeProductionMutation"), `${entry.path} does not consume the common production mutation guard`)

@@ -50,7 +50,11 @@ describe("P3 import boundary", () => {
       const declared = { ...manifest.dependencies, ...manifest.optionalDependencies, ...manifest.peerDependencies };
       graph.set(manifest.name, Object.keys(declared).filter((dependency) => names.has(dependency)).sort());
     }
-    expect(graph.get("@finnor/epistemic-runtime")).toEqual(["@finnor/shared-types"]);
+    // Scope 5's durable adapter reads tenant-scoped DB state and compiles the
+    // existing underwriting IR. Both dependencies remain below orchestration.
+    expect(graph.get("@finnor/epistemic-runtime")).toEqual([
+      "@finnor/db", "@finnor/shared-types", "@finnor/underwriting",
+    ]);
     expect(graph.get("@finnor/shared-types") ?? []).not.toContain("@finnor/epistemic-runtime");
     expect(cycles(graph)).toEqual([]);
   });
