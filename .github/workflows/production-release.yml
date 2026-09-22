@@ -607,7 +607,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
           inline-session-policy: >-
-            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["cloudformation:CreateChangeSet","cloudformation:DescribeChangeSet","cloudformation:DescribeStacks","cloudformation:ExecuteChangeSet","ecr:DescribeImages","ecr:DescribeRepositories","ecs:*","elasticloadbalancing:*","application-autoscaling:*","cloudwatch:*","ec2:*","iam:*","logs:DescribeLogStreams","logs:GetLogEvents"],"Resource":"*"}]}
+            {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["cloudformation:CreateChangeSet","cloudformation:DescribeChangeSet","cloudformation:DescribeStacks","cloudformation:ExecuteChangeSet","ecr:DescribeImages","ecr:DescribeRepositories","ecs:*","elasticloadbalancing:*","application-autoscaling:*","cloudwatch:*","ec2:*","iam:*","logs:DescribeLogGroups","logs:DescribeLogStreams","logs:GetLogEvents"],"Resource":"*"}]}
 
       - name: Deploy or resume governed four-class AWS compute plane
         run: |

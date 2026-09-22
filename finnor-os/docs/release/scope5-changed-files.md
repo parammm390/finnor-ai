@@ -2,7 +2,7 @@
 
 Base: `origin/main` at `d60852fa5cc6e136349ca32297a79ac925c854ab`. This list is the exact path diff of the isolated release candidate, including Phase 4 prerequisites and production release repairs.
 
-87 changed paths:
+88 changed paths:
 
 - `.github/workflows/production-release.yml`
 - `docs/release/generated/action-manifest.json`
@@ -80,6 +80,7 @@ Base: `origin/main` at `d60852fa5cc6e136349ca32297a79ac925c854ab`. This list is 
 - `finnor-os/tests/integration/private-equity-scope4-digital-twin.test.ts`
 - `finnor-os/tests/unit/private-equity-epistemic.test.ts`
 - `finnor-os/tests/unit/private-equity-p1-world.test.ts`
+- `infra/aws/finnor-production.yaml`
 - `infra/deployment/production-mutation-inventory.json`
 - `infra/deployment/production.contract.json`
 - `package.json`
@@ -89,6 +90,5 @@ Base: `origin/main` at `d60852fa5cc6e136349ca32297a79ac925c854ab`. This list is 
 - `scripts/release/preflight-production.mjs`
 - `scripts/release/release-policy.test.mjs`
 - `scripts/release/supplier-canary-health.test.mjs`
-- `scripts/release/validate-deployment-truth.mjs`
 - `scripts/release/validate-deployment-truth.mjs`
 - `scripts/release/validate-production-mutation-inventory.mjs`
