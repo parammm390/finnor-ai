@@ -83,10 +83,10 @@ try {
     const beats = await client.query(`
       SELECT service,instance_id AS "instanceId",release_sha AS "releaseSha",build_id AS "buildId",
              version,release_source AS "releaseSource",environment,migration_head AS "migrationHead",
-             deployment_id AS "deploymentId",capabilities,last_beat_at AS "lastBeatAt",w.meta
+             deployment_id AS "deploymentId",capabilities,h.last_beat_at AS "lastBeatAt",w.meta
         FROM finnor_os.service_release_heartbeats h
         JOIN finnor_os.worker_heartbeat w ON w.id=h.instance_id
-       WHERE service=ANY($1::text[]) AND last_beat_at>now()-interval '45 seconds'`,
+       WHERE service=ANY($1::text[]) AND h.last_beat_at>now()-interval '45 seconds'`,
       [COMPUTE_CLASSES.map((workloadClass) => profiles[workloadClass].heartbeatService)],
     )
     assertComputeFleetConverged({ profiles, services, tasksByClass, heartbeats: beats.rows,
@@ -128,7 +128,7 @@ try {
       await pause(3_000)
     }
     if (changeSet?.Status !== "CREATE_COMPLETE") throw new Error(`compute change set failed: ${changeSet?.StatusReason ?? "timed out"}`)
-    if (stage === "rollout") assertComputeRolloutChangeSet(changeSet.Changes)
+    if (stage === "rollout" || (stage === "routing" && nextStage === "preparing")) assertComputeRolloutChangeSet(changeSet.Changes)
     else assertComputeStageTransition({ from: currentStage, to: nextStage, changes: changeSet.Changes })
     if (nextStage === "routing" && !changeSet.Changes?.some((change) => change.ResourceChange?.LogicalResourceId === "HttpsRealtimeListener")) throw new Error("routing change set omitted the authoritative listener switch")
     return { changesetName, changes: changeSet.Changes }
@@ -162,6 +162,11 @@ try {
     const activating = databaseStage.state === "preparing"
     const recovering = databaseStage.state === "authoritative" && databaseStage.activated_release_sha === expected.commitSha
     if (currentStage !== "preparing" || (!activating && !recovering)) throw new Error("routing requires a prepared stack and either an unactivated fence or same-release recovery")
+    if (activating && stackParameters.ReleaseCommitSha !== expected.commitSha) {
+      await authorizeProductionMutation("aws-compute-stack-deploy")
+      const refreshed = await prepareStackChange("preparing", stackParameters.LegacyWorkerTaskDefinitionArn)
+      await executeStackChange(refreshed)
+    }
     const fleet = await waitForFleet()
     await authorizeProductionMutation("aws-compute-stack-deploy")
     // Validate the exact ingress-only change before the forward-only database fence.
