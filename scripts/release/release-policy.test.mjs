@@ -114,6 +114,9 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   const computeSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECS[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
   assert.ok(computeSessionPolicy, "compute deployment must use a scoped AWS session")
   assert.match(computeSessionPolicy, /ecr:DescribeRepositories/, "CloudFormation resolves the ECR repository ARN while updating worker roles")
+  assert.match(computeSessionPolicy, /logs:DescribeLogGroups/, "CloudFormation resolves the log group ARN while updating worker roles")
+  const computeTemplate = readFileSync(new URL("../../infra/aws/finnor-production.yaml", import.meta.url), "utf8")
+  assert.match(computeTemplate, /Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '\*'/)
   for (const path of ["preflight-production.mjs", "deploy-aws-compute-plane.mjs"]) {
     const source = readFileSync(new URL(path, import.meta.url), "utf8")
     assert.match(source, /UPDATE_ROLLBACK_COMPLETE/, `${path} must accept a stable stack after a governed rollback`)

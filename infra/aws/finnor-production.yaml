@@ -423,6 +423,7 @@ Resources:
                   - logs:DescribeLogStreams
                   - logs:GetLogEvents
                 Resource: !Sub '${WorkerLogGroup.Arn}:*'
+              - { Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '*' }
               - Sid: PassOnlyFinnorRoles
                 Effect: Allow
                 Action: iam:PassRole
