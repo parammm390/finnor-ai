@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, FileSearch, GitBranch, LockKeyhole, Scale, ShieldCheck } from "lucide-react"
 
-import FinnorNavigation from "@/components/rebuild/FinnorNavigation"
+import CentropyNavigation from "@/components/rebuild/CentropyNavigation"
 import { siteConfig } from "@/config/site"
 import styles from "./PrivateEquityResource.module.css"
 
@@ -75,5 +75,5 @@ function Trust() {
 }
 
 export function PrivateEquityResource({ kind }: { kind: PrivateEquityResourceKind }) {
-  return <div className={styles.page}><FinnorNavigation /><main>{kind === "hub" ? <Hub /> : kind === "glossary" ? <Glossary /> : kind === "drag" ? <Drag /> : kind === "readiness" ? <Readiness /> : <Trust />}<section className={styles.cta}><span>PRIVATE EQUITY DECISION + EXECUTION INFRASTRUCTURE</span><h2>Map one consequential workflow from canonical truth to durable proof.</h2><a href={siteConfig.calendlyLink} target="_blank" rel="noreferrer">Book an operating review <ArrowRight size={14} /></a></section></main></div>
+  return <div className={styles.page}><CentropyNavigation /><main>{kind === "hub" ? <Hub /> : kind === "glossary" ? <Glossary /> : kind === "drag" ? <Drag /> : kind === "readiness" ? <Readiness /> : <Trust />}<section className={styles.cta}><span>PRIVATE EQUITY DECISION + EXECUTION INFRASTRUCTURE</span><h2>Map one consequential workflow from canonical truth to durable proof.</h2><a href={siteConfig.calendlyLink} target="_blank" rel="noreferrer">Book an operating review <ArrowRight size={14} /></a></section></main></div>
 }
