@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import pg from "pg";
 import { assertNotProductionDatabaseTarget } from "../packages/db/production-target-guard";
+import { pgConnectionConfig } from "../packages/db/postgres-connection.mjs";
 
 function arg(name: string): string {
   const value = process.argv.slice(2).find((entry) => entry.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
   const adminUrl = await databaseUrl(envFile);
   assertNotProductionDatabaseTarget(adminUrl, "preview role configuration");
   const password = randomBytes(32).toString("base64url");
-  const admin = new pg.Client({ connectionString: adminUrl, ssl: { rejectUnauthorized: true } });
+  const admin = new pg.Client(pgConnectionConfig(adminUrl));
   await admin.connect();
   try {
     await admin.query("SELECT set_config($1, $2, false)", ["app.a5_preview_role_password", password]);
@@ -51,7 +52,7 @@ async function main(): Promise<void> {
   const appUrl = new URL(adminUrl);
   appUrl.username = "finnor_preview_app";
   appUrl.password = password;
-  const verify = new pg.Client({ connectionString: appUrl.toString(), ssl: { rejectUnauthorized: true } });
+  const verify = new pg.Client(pgConnectionConfig(appUrl.toString()));
   await verify.connect();
   const { rows } = await verify.query<{ current_user: string; rolbypassrls: boolean }>(
     "SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user",
