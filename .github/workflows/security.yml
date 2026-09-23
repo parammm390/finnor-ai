@@ -30,7 +30,7 @@ jobs:
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
     # v2 ships reusable workflows, not a root action.yml. Calling the root as an
     # action makes GitHub reject it before the dependency scan begins.
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc
     with:
       scan-args: |-
         --lockfile=package-lock.json
