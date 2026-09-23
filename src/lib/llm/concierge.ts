@@ -92,15 +92,15 @@ const CONCIERGE_RESPONSE_SCHEMA = {
 }
 
 const SYSTEM_PROMPT = [
-  "You are FINNOR's website concierge for Private Equity investment and operating teams.",
+  "You are Centropy's website concierge for Private Equity investment and operating teams.",
   "",
   "Commercial truth:",
-  "- FINNOR is Private Equity decision + execution infrastructure.",
-  "- FINNOR connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce.",
-  "- JARVIS is the owner operating surface: Home for current context and attention, Deals for the Company Brain, Work for plans/execution/proof/recovery, and Agents for governed workforce and learning.",
+  "- Centropy is Private Equity decision + execution infrastructure.",
+  "- Centropy connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce.",
+  "- CENTROPY is the owner operating surface: Home for current context and attention, Deals for the Company Brain, Work for plans/execution/proof/recovery, and Agents for governed workforce and learning.",
   "- The Company Brain is a deterministic projection over existing canonical truth. It is not a second database and must never invent relationships, causality, evidence, or certainty.",
-  "- FINNOR exposes candidate actions; existing Policy and Authority evaluate the exact operation, resource, and revision at execution.",
-  "- FINNOR does not autonomously approve investments, cast IC votes, or replace human investment judgment.",
+  "- Centropy exposes candidate actions; existing Policy and Authority evaluate the exact operation, resource, and revision at execution.",
+  "- Centropy does not autonomously approve investments, cast IC votes, or replace human investment judgment.",
   "- Production deployments start around $30,000. Final pricing depends on source quality, integrations, PE workflow scope, authority, workspace engineering, reliability, activation, and support.",
   "",
   "Deployment work can include a truth census, source and relationship mapping, underwriting and IC lineage, Work and authority configuration, integrations, workspace engineering, recovery testing, tenant-isolation tests, production activation, and support.",
@@ -137,7 +137,7 @@ const SYSTEM_PROMPT = [
   "Set show_lead_summary true when the operating problem and scope recommendation are known. Use empty strings for unknown fields. Set cta true when the visitor asks to book or the lead summary is ready.",
 ].join("\n")
 
-export async function buildFinnorConciergeReply(
+export async function buildCentropyConciergeReply(
   messages: ConciergeMessage[],
   collectedFields: ConciergeCollectedFields
 ): Promise<ConciergeReply> {
@@ -155,7 +155,7 @@ export async function buildFinnorConciergeReply(
       })
       return normalizeConciergeReply(parsed as GeminiConciergeJson, fallback)
     } catch (error) {
-      console.info("FINNOR AI Concierge: Groq unavailable, trying Gemini.", error)
+      console.info("Centropy AI Concierge: Groq unavailable, trying Gemini.", error)
     }
   }
 
@@ -192,7 +192,7 @@ export async function buildFinnorConciergeReply(
       payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("\n") || ""
     return normalizeConciergeReply(parseJson(rawText), fallback)
   } catch (error) {
-    console.info("FINNOR AI Concierge: Gemini response fallback used.", error)
+    console.info("Centropy AI Concierge: Gemini response fallback used.", error)
     return fallback
   } finally {
     clearTimeout(timeout)
@@ -255,7 +255,7 @@ function buildConversationPrompt(
       .map((message) => `${message.role === "assistant" ? "ASSISTANT" : "VISITOR"}: ${message.content}`)
       .join("\n"),
     "",
-    "Respond to the latest visitor message as Finnor AI Concierge.",
+    "Respond to the latest visitor message as Centropy AI Concierge.",
     "Do not ask for any non-empty collected field again.",
   ].join("\n")
 }
@@ -373,7 +373,7 @@ function buildFallbackReply(
   if (/what.*finnor|does finnor|finnor do|explain/.test(latest)) {
     return {
       reply:
-        "FINNOR is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed agents; JARVIS is the owner operating surface.",
+        "Centropy is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed agents; CENTROPY is the owner operating surface.",
       suggestedPlan: collectedFields.suggestedPlan || "Not enough detail",
     }
   }

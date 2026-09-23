@@ -1,6 +1,6 @@
 // jarvis-v3 P3.T2 (plan v3 §7.1/§8 PHASE 3): the instruction lifecycle trace.
 // `instruction_sessions`/`instruction_events` (migration 0062, unapplied this session —
-// see JARVIS-FRONTEND-MAESTRO-STATE-v3.md BLOCKER for why) back the frontend's 400ms
+// see CENTROPY-FRONTEND-MAESTRO-STATE-v3.md BLOCKER for why) back the frontend's 400ms
 // trace poll. Ordinary presentation trace writes are best-effort. Cancellation
 // markers are different: they are execution fences, so their write/read paths are
 // explicitly fail-closed.

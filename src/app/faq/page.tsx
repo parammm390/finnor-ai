@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
-import FinnorMarketingPage from "@/components/marketing/FinnorMarketingPage";
+import CentropyMarketingPage from "@/components/marketing/CentropyMarketingPage";
 import { faqItems } from "@/content/commercial-truth";
 
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Direct answers about FINNOR, JARVIS, Company Brain, PE lineage, tenant isolation, authority, governed agents, deployment, and pricing.",
+    "Direct answers about Centropy, CENTROPY, Company Brain, PE lineage, tenant isolation, authority, governed agents, deployment, and pricing.",
   alternates: { canonical: "https://finnorai.com/faq" },
   openGraph: {
-    title: "FAQ | FINNOR",
-    description: "The product, PE truth, authority, lineage, deployment, and pricing answers behind FINNOR.",
+    title: "FAQ | Centropy",
+    description: "The product, PE truth, authority, lineage, deployment, and pricing answers behind Centropy.",
     url: "https://finnorai.com/faq",
-    images: [{ url: "https://finnorai.com/og-image.svg", width: 1200, height: 630, alt: "FINNOR FAQ" }],
+    images: [{ url: "https://finnorai.com/og-image.svg", width: 1200, height: 630, alt: "Centropy FAQ" }],
   },
 };
 
@@ -34,7 +34,7 @@ export default function FaqRoute() {
           }),
         }}
       />
-      <FinnorMarketingPage route="faq" />
+      <CentropyMarketingPage route="faq" />
     </>
   );
 }

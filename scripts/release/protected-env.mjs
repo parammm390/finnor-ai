@@ -35,7 +35,8 @@ const BUILD_SAFE_EXACT_NAMES = new Set([
   "GEMINI_MODEL",
   "GROQ_MODEL",
   "INVENTORY_BINDING",
-  "JARVIS_SSE_GATEWAY_URL",
+  "CENTROPY_SSE_GATEWAY_URL",
+  "JARVIS_SSE_GATEWAY_URL", // legacy compatibility during Centropy cutover
   "NODE_ENV",
   "PLANNER_MEMORY",
   "PORTAL_ROLE",

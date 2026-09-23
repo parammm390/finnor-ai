@@ -1,4 +1,4 @@
-// §5.2 (JARVIS 95% MAESTRO PACK): chunking spec — receipts/reports/transcripts split
+// §5.2 (CENTROPY 95% MAESTRO PACK): chunking spec — receipts/reports/transcripts split
 // by semantic unit (paragraph, falling back to sentence for an oversized paragraph),
 // packed to a 200-500 token target. Token count is estimated (~4 chars/token, the
 // standard English rule of thumb) — good enough for a chunk-size heuristic, not

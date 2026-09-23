@@ -1,4 +1,4 @@
-// scan_reliability_alerts (Phase 6, JARVIS 95% MAESTRO PACK §6.6): the real signal
+// scan_reliability_alerts (Phase 6, CENTROPY 95% MAESTRO PACK §6.6): the real signal
 // side of "Sentry alerts: failure spike, reconciliation backlog >20, DLQ >10,
 // health-check flapping, secret-store unreachable." This handler computes the real
 // numbers and calls Sentry.captureMessage the moment a threshold is breached —

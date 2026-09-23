@@ -91,7 +91,7 @@ export interface AuthorityDecision {
  *  the row's own data (see packages/db/migrations/0037's own comment on why). Shared
  *  by apps/worker/src/sse/listener.ts (the LISTEN side) and packages/projections (the
  *  CQRS projector), so both sides of that channel agree on one type. */
-export interface JarvisEvent {
+export interface CentropyEvent {
   tenantId: string;
   kind: string;
   id: string;
@@ -301,7 +301,7 @@ export interface Job {
 export const PLACEHOLDER_NEEDS_REAL_VALUE = "PLACEHOLDER_NEEDS_REAL_VALUE";
 
 // ---------------------------------------------------------------------------
-// Phase 2 (JARVIS 95% MAESTRO PACK §0.3.2, §2.2): the one error taxonomy every retry
+// Phase 2 (CENTROPY 95% MAESTRO PACK §0.3.2, §2.2): the one error taxonomy every retry
 // path keys off. Existing call sites (e.g. packages/tools/src/errors.ts's
 // IntegrationError) extend this rather than re-declaring their own — a string-matched
 // error kind is exactly the failure mode this type exists to rule out.

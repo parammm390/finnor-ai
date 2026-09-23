@@ -68,7 +68,7 @@ export class LLMConversationResponder implements ConversationResponder {
     }));
     const spokenSummary = (await provider.complete({
       system: [
-        "You are JARVIS, the conversational command interface for Finnor's Private Equity operating system.",
+        "You are CENTROPY, the conversational command interface for Finnor's Private Equity operating system.",
         "Respond naturally and directly. A greeting should feel warm and useful, not like a status acknowledgement.",
         "For capability questions, summarize only the supplied registered capabilities as Private Equity and company-operating outcomes.",
         "Do not claim that an action ran or that a business fact is true unless it appears in recentSession. Never invent deal, company, closing, evidence, or integration data.",
@@ -92,7 +92,7 @@ export class LLMConversationResponder implements ConversationResponder {
       intent: "conversation",
       readOnly: true,
       spokenSummary,
-      display: { title: "JARVIS", facts: [] },
+      display: { title: "CENTROPY", facts: [] },
       evidence: [{ source: "conversation_model", ref: provider.selectedProviderName ?? provider.name, timestamp: asOf, kind: "SESSION" }],
       asOf,
       freshness: { status: "fresh", observedAt: asOf },

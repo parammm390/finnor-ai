@@ -5,11 +5,11 @@
   <rect x="78" y="88" width="1044" height="454" fill="#F8F6F0" stroke="#C8C4BA"/>
   <rect x="882" y="88" width="240" height="454" fill="#112229"/>
   <path d="M882 178H1122M882 362H1122" stroke="#30444B"/>
-  <text x="120" y="148" fill="#14272D" font-family="Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="5">FINNOR</text>
+  <text x="120" y="148" fill="#14272D" font-family="Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="5">Centropy</text>
   <text x="120" y="272" fill="#14272D" font-family="Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-3">Private Equity decision</text>
   <text x="120" y="350" fill="#14272D" font-family="Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-3">+ execution infrastructure.</text>
   <text x="120" y="433" fill="#53666B" font-family="Arial, sans-serif" font-size="25" font-weight="500">Source-backed context. Exact authority. Durable proof.</text>
-  <text x="910" y="138" fill="#7FA6B3" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2">JARVIS / COMMAND SURFACE</text>
+  <text x="910" y="138" fill="#7FA6B3" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2">CENTROPY / COMMAND SURFACE</text>
   <circle cx="920" cy="220" r="7" fill="#58AD78"/>
   <text x="945" y="226" fill="#F4F4EF" font-family="Arial, sans-serif" font-size="19" font-weight="700">Deal truth linked</text>
   <circle cx="920" cy="276" r="7" fill="#E47B3E"/>

@@ -24,7 +24,7 @@ function firstEnv(...names: string[]) {
 export function getReleaseMetadata(service: string): ReleaseMetadata {
   const commitSha = firstEnv("FINNOR_COMMIT_SHA", "VERCEL_GIT_COMMIT_SHA", "GITHUB_SHA", "RELEASE_SHA") ?? "unknown"
   const shortSha = FULL_COMMIT_SHA.test(commitSha) ? commitSha.slice(0, 12) : "unknown"
-  const buildId = firstEnv("FINNOR_BUILD_ID", "NEXT_BUILD_ID") ?? `finnor-${shortSha}`
+  const buildId = firstEnv("FINNOR_BUILD_ID", "NEXT_BUILD_ID") ?? `centropy-${shortSha}`
   const version = firstEnv("FINNOR_VERSION") ?? `0.1.0+${shortSha}`
   const deploymentId = firstEnv("VERCEL_DEPLOYMENT_ID", "FINNOR_DEPLOYMENT_ID") ?? null
   const environment = firstEnv("FINNOR_ENVIRONMENT", "VERCEL_ENV", "NODE_ENV") ?? "unknown"

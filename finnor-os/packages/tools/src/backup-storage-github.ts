@@ -1,5 +1,5 @@
 // A4.T4: GitHub Releases as the $0 backup storage target (Param's call — Cloudflare R2
-// is blocked, no card on file; see JARVIS-CREDENTIALS-LEDGER.md). Plain `fetch` against
+// is blocked, no card on file; see CENTROPY-CREDENTIALS-LEDGER.md). Plain `fetch` against
 // the GitHub REST API, no octokit dependency (hard rule #5: prefer a small hand-roll).
 // A dedicated private repo (not finnor-os itself) holds nothing but backup releases, so
 // the token this needs is scoped to exactly that repo — least-privilege, unlike the
@@ -57,7 +57,7 @@ export async function uploadBackup(cfg: BackupStorageConfig, tag: string, filena
   const createRes = await fetch(`${GITHUB_API}/repos/${cfg.repo}/releases`, {
     method: "POST",
     headers: { ...headers(cfg), "Content-Type": "application/json" },
-    body: JSON.stringify({ tag_name: tag, name: tag, body: "Automated finnor DB backup — see JARVIS-MAESTRO-PLAN.md A4.T4.", draft: false, prerelease: false }),
+    body: JSON.stringify({ tag_name: tag, name: tag, body: "Automated finnor DB backup — see CENTROPY-MAESTRO-PLAN.md A4.T4.", draft: false, prerelease: false }),
   });
   if (!createRes.ok) throw new Error(`GitHub release create failed: ${createRes.status} ${await createRes.text()}`);
   const release = (await createRes.json()) as { id: number; upload_url: string };

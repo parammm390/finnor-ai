@@ -1,26 +1,26 @@
 import { expect, test, type Page } from "@playwright/test"
 
-export const PHASE9_PRIMARY_ROUTES = ["/jarvis", "/jarvis/deals", "/jarvis/work", "/jarvis/agents"] as const
+export const PHASE9_PRIMARY_ROUTES = ["/centropy", "/centropy/deals", "/centropy/work", "/centropy/agents"] as const
 export const PHASE9_DEAL_SECTIONS = ["overview", "underwriting", "diligence", "ic", "evidence", "closing", "work", "activity"] as const
 export const PHASE9_FOREIGN_DEAL_ID = "99999999-9999-4999-8999-999999999999"
 
 export async function signInOwner(page: Page, email: string, password: string): Promise<void> {
-  await page.goto("/jarvis/login")
+  await page.goto("/centropy/login")
   await page.getByPlaceholder(/you@example.com/i).fill(email)
   await page.getByPlaceholder(/•+/i).fill(password)
   await page.getByRole("button", { name: /sign in/i }).click()
-  await page.waitForURL("**/jarvis", { timeout: 60_000 })
+  await page.waitForURL("**/centropy", { timeout: 60_000 })
   await expect(page.locator(".pw-global-bar")).toBeVisible()
 }
 
 export async function openDeterministicDeal(page: Page): Promise<{ dealId: string; href: string }> {
-  await page.goto("/jarvis/deals?sort=name")
+  await page.goto("/centropy/deals?sort=name")
   const first = page.locator(".pw-deal-link").first()
   await expect(first, "the Phase 9 owner fixture needs at least one canonical Deal root").toBeVisible({ timeout: 45_000 })
   const rawHref = await first.getAttribute("href")
   expect(rawHref).toBeTruthy()
   const href = new URL(rawHref!, page.url())
-  const match = /^\/jarvis\/deals\/([0-9a-f-]{36})\/overview$/i.exec(href.pathname)
+  const match = /^\/centropy\/deals\/([0-9a-f-]{36})\/overview$/i.exec(href.pathname)
   expect(match, "Deal href must be a dynamic canonical UUID route").toBeTruthy()
   await first.click()
   await expect(page.locator(".pw-context-header")).toBeVisible({ timeout: 30_000 })
@@ -29,7 +29,7 @@ export async function openDeterministicDeal(page: Page): Promise<{ dealId: strin
 
 export async function openDealSection(page: Page, section: (typeof PHASE9_DEAL_SECTIONS)[number]): Promise<void> {
   await page.locator(".pw-deal-tabs").getByRole("link", { name: new RegExp(`^${section}$`, "i") }).click()
-  await expect(page).toHaveURL(new RegExp(`/jarvis/deals/[0-9a-f-]{36}/${section}`))
+  await expect(page).toHaveURL(new RegExp(`/centropy/deals/[0-9a-f-]{36}/${section}`))
 }
 
 export async function inspectFirstRowContaining(page: Page, text: RegExp): Promise<void> {
@@ -85,7 +85,7 @@ export async function certifyRequiredJourneyDimensions(page: Page, dealId: strin
     const before = new URL(deepLink)
     expect(requestRootId(deepLink)).toBe(dealId)
     expect(before.searchParams.get("inspect"), "journey endpoint must preserve the exact InspectionTarget").toBeTruthy()
-    await page.route("**/api/jarvis/company-brain/projection", async (route) => {
+    await page.route("**/api/centropy/company-brain/projection", async (route) => {
       const body = route.request().postDataJSON() as { root?: { entityId?: string } }
       if (body.root?.entityId === dealId) await new Promise((resolve) => setTimeout(resolve, 450))
       try {
@@ -111,7 +111,7 @@ export async function certifyRequiredJourneyDimensions(page: Page, dealId: strin
     if (await contextClose.isVisible()) await contextClose.click()
     expect(requestRootId(page.url())).toBe(dealId)
     expect(new URL(page.url()).searchParams.get("inspect")).toBe(before.searchParams.get("inspect"))
-    await page.unroute("**/api/jarvis/company-brain/projection")
+    await page.unroute("**/api/centropy/company-brain/projection")
   })
 
   await test.step("inspector + lineage", async () => {
@@ -141,17 +141,17 @@ export async function certifyRequiredJourneyDimensions(page: Page, dealId: strin
     await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K")
     const command = page.locator(".pw-command[role='dialog']")
     await expect(command).toBeVisible()
-    await expect(command).toContainText(/JARVIS COMMAND LAYER/i)
+    await expect(command).toContainText(/CENTROPY COMMAND LAYER/i)
     await expect(command).toContainText(/PE context/i)
     await page.keyboard.press("Escape")
     await expect(command).toHaveCount(0)
   })
 
   await test.step("stale + failure + recovery", async () => {
-    await page.goto(`/jarvis/deals/${dealId}/overview`)
+    await page.goto(`/centropy/deals/${dealId}/overview`)
     await expect(page.locator(".pw-context-header")).toBeVisible({ timeout: 30_000 })
     let failProjection = true
-    await page.route("**/api/jarvis/company-brain/projection", async (route) => {
+    await page.route("**/api/centropy/company-brain/projection", async (route) => {
       if (failProjection) await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "deterministic source outage" }) })
       else await route.continue()
     })
@@ -164,14 +164,14 @@ export async function certifyRequiredJourneyDimensions(page: Page, dealId: strin
     await page.locator(".pw-deal-workspace > .pw-error-state").getByRole("button", { name: /Retry/ }).click()
     await expect(page.getByText("Showing stale Deal data")).toHaveCount(0, { timeout: 30_000 })
     await expect(page.locator(".pw-context-header")).toBeVisible()
-    await page.unroute("**/api/jarvis/company-brain/projection")
+    await page.unroute("**/api/centropy/company-brain/projection")
   })
 
   await test.step("tenant isolation", async () => {
-    await page.goto(`/jarvis/deals/${PHASE9_FOREIGN_DEAL_ID}/overview`)
+    await page.goto(`/centropy/deals/${PHASE9_FOREIGN_DEAL_ID}/overview`)
     await expect(page.getByText(/Deal context is not represented|Deal workspace unavailable|Operating context rejected/i).first()).toBeVisible({ timeout: 30_000 })
     await page.goBack()
-    await expect(page).toHaveURL(new RegExp(`/jarvis/deals/${dealId}/overview`))
+    await expect(page).toHaveURL(new RegExp(`/centropy/deals/${dealId}/overview`))
     await expect(page.locator(".pw-context-header")).toBeVisible({ timeout: 30_000 })
   })
 

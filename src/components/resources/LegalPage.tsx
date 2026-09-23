@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
-import FinnorNavigation from "@/components/rebuild/FinnorNavigation"
+import CentropyNavigation from "@/components/rebuild/CentropyNavigation"
 import styles from "./LegalPage.module.css"
 
 export function LegalPage({ children }: { children: ReactNode }) {
-  return <div className={styles.page}><FinnorNavigation /><main>{children}</main></div>
+  return <div className={styles.page}><CentropyNavigation /><main>{children}</main></div>
 }
 
 export { styles as legalStyles }

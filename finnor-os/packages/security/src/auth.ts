@@ -6,7 +6,7 @@
 // the bearer-token path; its dev-bypass branch, rate limiting, and Sentry tagging stay
 // there since those are Next.js-Request-specific concerns, not identity verification.
 //
-// Deviation from JARVIS-MAESTRO-PLAN.md §5 B1's "Read: packages/security (JWT verify)"
+// Deviation from CENTROPY-MAESTRO-PLAN.md §5 B1's "Read: packages/security (JWT verify)"
 // line: this logic did not actually live here before B1 — it was inlined inside
 // apps/api/lib/auth.ts's requireContext(). Moved here rather than duplicated, which is
 // what "Read: packages/security (JWT verify)" implied should already be true.

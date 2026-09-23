@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: "FINNOR",
+  name: "Centropy",
   tagline: "Private Equity decision + execution infrastructure.",
   description:
-    "FINNOR connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce. JARVIS is the owner operating surface.",
+    "Centropy connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce. CENTROPY is the owner operating surface.",
   contactEmail: "param@finnorai.com",
   ctaLink: "https://calendly.com/pdave9807",
   calendlyLink: "https://calendly.com/pdave9807",

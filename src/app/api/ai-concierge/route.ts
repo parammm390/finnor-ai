@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import {
-  buildFinnorConciergeReply,
+  buildCentropyConciergeReply,
   type ConciergeCollectedFields,
   type ConciergeMessage,
   type ConciergeRole,
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A visitor message is required." }, { status: 400 })
     }
 
-    const reply = await buildFinnorConciergeReply(messages, collectedFields)
+    const reply = await buildCentropyConciergeReply(messages, collectedFields)
     return NextResponse.json(reply)
   } catch (error) {
     if (error instanceof ApiRequestError) {

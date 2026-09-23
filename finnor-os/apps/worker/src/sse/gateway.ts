@@ -7,7 +7,7 @@ import type { Role, TenantContext } from "@finnor/shared-types";
 import { readOperationalDeltas } from "@finnor/db";
 import { resolveTenantFromBearerToken, AuthVerificationError } from "@finnor/security";
 import { getLogger, getRuntimeReleaseMetadata } from "@finnor/tools";
-import { onJarvisEvent, type JarvisEvent } from "./listener";
+import { onCentropyEvent, type CentropyEvent } from "./listener";
 
 type IdentityContext = Omit<TenantContext, "correlationId">;
 type DeltaPage = Awaited<ReturnType<typeof readOperationalDeltas>>;
@@ -36,7 +36,7 @@ function workerCapabilities(): string[] {
 }
 
 function allowedOrigins(): string[] {
-  return (process.env.JARVIS_SSE_ALLOWED_ORIGINS ?? "http://localhost:3000,https://finnorai.com")
+  return (process.env.CENTROPY_SSE_ALLOWED_ORIGINS ?? process.env.JARVIS_SSE_ALLOWED_ORIGINS ?? "http://localhost:3000,https://finnorai.com")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
@@ -145,7 +145,7 @@ function handleEvents(req: IncomingMessage, res: ServerResponse, url: URL): void
         }
       };
 
-      const unsubscribe = onJarvisEvent((event: JarvisEvent) => {
+      const unsubscribe = onCentropyEvent((event: CentropyEvent) => {
         if (event.tenantId === ctx.tenantId && event.kind === "operational_delta") void drain();
       });
       void drain();

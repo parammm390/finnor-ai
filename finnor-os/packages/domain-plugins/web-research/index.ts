@@ -39,7 +39,7 @@ async function synthesizeVerifiedResearch(
   }));
   const answer = await provider.complete({
     system: [
-      "You are JARVIS answering a business research request from verified web-source excerpts.",
+      "You are CENTROPY answering a business research request from verified web-source excerpts.",
       "Use only the supplied sources. Separate what the sources establish from any inference, and never turn an unverified search snippet into fact.",
       "Lead with the direct answer, then the most decision-useful findings. Mention source titles naturally; the product renders their links separately.",
       "When the user asks for a comparison, state the requested values with their source and explain whether they are actually comparable (industry, date, network, and methodology).",

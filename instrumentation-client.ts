@@ -2,7 +2,7 @@
 // frontend, per hard rule #3). Mirrors finnor-os's observability.ts pattern: init()
 // no-ops harmlessly without a DSN, so this ships inert until NEXT_PUBLIC_SENTRY_DSN is
 // set (client code needs the NEXT_PUBLIC_ prefix to reach the browser bundle — DSNs
-// aren't privileged secrets, see JARVIS-CREDENTIALS-LEDGER.md).
+// aren't privileged secrets, see CENTROPY-CREDENTIALS-LEDGER.md).
 import * as Sentry from "@sentry/browser";
 
 Sentry.init({

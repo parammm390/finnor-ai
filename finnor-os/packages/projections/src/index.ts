@@ -5,7 +5,7 @@
 // redoing the aggregation query every request.
 //
 // Deviation from the plan's literal "projector job consumes outbox events": grepped
-// the whole codebase (JARVIS-MAESTRO-STATE.md's B1 session log has the full evidence)
+// the whole codebase (CENTROPY-MAESTRO-STATE.md's B1 session log has the full evidence)
 // and enqueueOutboxEvent() has zero call sites anywhere in application code — the
 // outbox table is real, tested, wired into the job queue, and permanently empty today.
 // Consuming it literally would mean this projector never fires. Adapted, not stopped:
@@ -30,7 +30,7 @@ import { withTenant, readModelProjections, getPool } from "@finnor/db";
 import { reliability, activitySnapshot, type ReliabilityMetrics, type ActivitySnapshot } from "@finnor/read-models";
 import { and, eq } from "drizzle-orm";
 import { getLogger } from "@finnor/tools";
-import type { JarvisEvent } from "@finnor/shared-types";
+import type { CentropyEvent } from "@finnor/shared-types";
 
 export const PROJECTED_VIEWS = ["reliability", "activity-snapshot"] as const;
 export type ProjectedView = (typeof PROJECTED_VIEWS)[number];
@@ -49,7 +49,7 @@ async function computeView(tenantId: string, view: ProjectedView): Promise<unkno
 }
 
 async function notifyProjectionUpdated(tenantId: string, view: ProjectedView): Promise<void> {
-  const event: JarvisEvent = { tenantId, kind: "projection", id: view, ts: new Date().toISOString() };
+  const event: CentropyEvent = { tenantId, kind: "projection", id: view, ts: new Date().toISOString() };
   await getPool().query("SELECT pg_notify('jarvis_events', $1)", [JSON.stringify(event)]);
 }
 
@@ -147,11 +147,11 @@ function scheduleDebouncedRebuild(tenantId: string, view: ProjectedView): void {
   );
 }
 
-/** Wire this to onJarvisEvent (apps/worker/src/sse/listener.ts) — marks the views a
+/** Wire this to onCentropyEvent (apps/worker/src/sse/listener.ts) — marks the views a
  *  given NOTIFY kind affects as dirty and debounces a real rebuild shortly after, so a
  *  burst of writes to the same tenant collapses into one recompute instead of one per
  *  row changed. */
-export function onJarvisEventMarkProjectionsDirty(event: JarvisEvent): void {
+export function onCentropyEventMarkProjectionsDirty(event: CentropyEvent): void {
   const views = DIRTY_VIEWS_BY_KIND[event.kind];
   if (!views) return;
   for (const view of views) scheduleDebouncedRebuild(event.tenantId, view);
