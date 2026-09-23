@@ -74,7 +74,7 @@ const initialMessages: ChatMessage[] = [
     id: "assistant-initial",
     role: "assistant",
     content:
-      "Centropy is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers; CENTROPY is the owner operating surface. I can explain the system or help scope an operating review.",
+      "Centropy is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers; Centropy Workspace is the authenticated owner operating surface. I can explain the system or help scope an operating review.",
   },
 ];
 
@@ -253,7 +253,7 @@ export function CentropyAIConcierge() {
       await waitForThinkingDelay();
       addAssistantMessage({
         content:
-          "Centropy connects the PE decision record to the execution record without creating a second source of truth. CENTROPY is where owners inspect the Company Brain, direct bounded Work, and review evidence, receipts, proof, and governed agents.",
+          "Centropy connects the PE decision record to the execution record without creating a second source of truth. Centropy Workspace is where owners inspect the Company Brain, direct bounded Work, and review evidence, receipts, proof, and governed agents.",
       });
       setActiveField(null);
       setIsFitFlow(false);
@@ -265,7 +265,7 @@ export function CentropyAIConcierge() {
       await waitForThinkingDelay();
       addAssistantMessage({
         content:
-          "A deployment can configure PE truth and sources, underwriting and IC lineage, integrations, authority, CENTROPY workspaces, Work and execution paths, evidence, receipts, proof, recovery, tenant isolation, production activation, and governed agent scope.",
+          "A deployment can configure PE truth and sources, underwriting and IC lineage, integrations, authority, Centropy workspaces, Work and execution paths, evidence, receipts, proof, recovery, tenant isolation, production activation, and governed agent scope.",
       });
       setActiveField(null);
       setIsFitFlow(false);

@@ -11,11 +11,12 @@ import { getCurrentAccessToken } from "./centropy-auth"
 import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
 
 const TEST_KEY_STORAGE = "centropy_admin_key"
+const LEGACY_TEST_KEY_STORAGE = "jarvis_admin_key"
 const TEST_MODE = (process.env.NEXT_PUBLIC_CENTROPY_TEST_MODE ?? process.env.NEXT_PUBLIC_JARVIS_TEST_MODE) === "1"
 
 export function getCentropyTestKey(): string | null {
   if (!TEST_MODE || typeof window === "undefined") return null
-  return window.localStorage.getItem(TEST_KEY_STORAGE)
+  return window.localStorage.getItem(TEST_KEY_STORAGE) ?? window.localStorage.getItem(LEGACY_TEST_KEY_STORAGE)
 }
 
 export function setCentropyTestKey(key: string): void {
@@ -26,6 +27,7 @@ export function setCentropyTestKey(key: string): void {
 export function clearCentropyTestKey(): void {
   if (typeof window === "undefined") return
   window.localStorage.removeItem(TEST_KEY_STORAGE)
+  window.localStorage.removeItem(LEGACY_TEST_KEY_STORAGE)
 }
 
 export class CentropyApiError extends Error {

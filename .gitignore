@@ -37,3 +37,4 @@ vercel_output.txt
 /vapi_call_transcripts.md
 /coverage/
 /src/lib/centropy/openapi-types.ts
+/artifacts/

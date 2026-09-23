@@ -4,7 +4,7 @@ import DealWorkspace from "@/components/centropy/product/DealWorkspace"
 import { DEAL_SECTION_KEYS, type DealSectionKey } from "@/components/centropy/pe/context-routing"
 
 export const metadata: Metadata = {
-  title: "Deal Workspace — FINNOR",
+  title: "Deal Workspace — Centropy",
   description: "A persistent source-backed Private Equity operating context.",
 }
 

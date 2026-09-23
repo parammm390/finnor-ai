@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     "investment committee governance",
     "private equity workflow",
     "governed AI workforce",
-    "CENTROPY command surface",
+    "Centropy Workspace",
     "Centropy",
   ],
   authors: [{ name: "Centropy", url: "https://finnorai.com" }],
@@ -119,7 +119,7 @@ export default function RootLayout({
                   "@type": "Organization",
                   "@id": "https://finnorai.com/#organization",
                   name: "Centropy",
-                  alternateName: ["Centropy", "Centropy"],
+                  alternateName: ["Centropy"],
                   url: "https://finnorai.com",
                   email: "param@finnorai.com",
                   description:
@@ -170,7 +170,7 @@ export default function RootLayout({
                 {
                   "@type": "SoftwareApplication",
                   "@id": "https://finnorai.com/#centropy",
-                  name: "CENTROPY",
+                  name: "Centropy Workspace",
                   applicationCategory: "BusinessApplication",
                   operatingSystem: "Cloud",
                   url: "https://finnorai.com",

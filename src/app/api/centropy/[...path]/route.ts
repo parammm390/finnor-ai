@@ -117,7 +117,7 @@ function hasBearer(req: NextRequest): string | null {
 
 function hasTestKey(req: NextRequest): boolean {
   const configured = (process.env.CENTROPY_ADMIN_KEY ?? process.env.JARVIS_ADMIN_KEY);
-  return (process.env.CENTROPY_TEST_MODE ?? process.env.JARVIS_TEST_MODE) === "1" && Boolean(configured) && req.headers.get("x-centropy-key") === configured;
+  return (process.env.CENTROPY_TEST_MODE ?? process.env.JARVIS_TEST_MODE) === "1" && Boolean(configured) && (req.headers.get("x-centropy-key") ?? req.headers.get("x-jarvis-key")) === configured;
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {

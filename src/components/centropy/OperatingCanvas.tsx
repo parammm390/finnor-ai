@@ -48,7 +48,7 @@ function ObjectTree({ nodes, edges, onNavigate }: { nodes: CompanyBrainNode[]; e
 function ProtectedState({ kind, detail, retry }: { kind: "loading" | "signed-out" | "auth-error" | "role-error" | "denied"; detail?: string; retry?: () => void }) {
   if (kind === "loading") return <div className="pw-protected-state"><Skeleton rows={6} label="Restoring authenticated workspace" /></div>
   if (kind === "signed-out") return <div className="pw-protected-state pe-state"><section className="pw-empty-state"><LockKeyhole size={20} /><h1>Decision context stays private by default.</h1><p>Sign in to inspect tenant-scoped Deals, Work, evidence, decisions, and governed agents.</p></section><Link className="pw-primary-action" href="/centropy/login">Sign in <ArrowRight size={14} /></Link></div>
-  return <div className="pw-protected-state"><ErrorState title={kind === "denied" ? "No active Workspace V3 surface" : kind === "role-error" ? "Workspace authority is unavailable" : "FINNOR could not restore sign-in"} detail={detail ?? "The authenticated boundary did not resolve."} state={kind === "denied" ? "DENIED" : "UNAVAILABLE"} onRetry={retry} /></div>
+  return <div className="pw-protected-state"><ErrorState title={kind === "denied" ? "No active Workspace V3 surface" : kind === "role-error" ? "Workspace authority is unavailable" : "Centropy could not restore sign-in"} detail={detail ?? "The authenticated boundary did not resolve."} state={kind === "denied" ? "DENIED" : "UNAVAILABLE"} onRetry={retry} /></div>
 }
 
 function Workstation({ children }: { children: ReactNode }) {
@@ -101,7 +101,7 @@ function Workstation({ children }: { children: ReactNode }) {
 
   return <div className="pw-shell" data-surface={surface}>
     <header className="pw-global-bar">
-      <Link className="pw-brand" href={withPeOperatingContext("/centropy", operating.context)} aria-label="FINNOR home"><span>F</span><strong>FINNOR</strong></Link>
+      <Link className="pw-brand" href={withPeOperatingContext("/centropy", operating.context)} aria-label="Centropy home"><span>C</span><strong>Centropy</strong></Link>
       <label className="pw-deal-switcher"><span>Deal</span><select aria-label="Deal switcher" value={selectedDeal} onChange={(event) => switchDeal(event.target.value)}><option value="">Select a Deal</option>{deals.map((deal) => {
         const root = deal.rootRefs[0]!
         return <option key={root.entityId} value={root.entityId}>{deal.label}</option>
