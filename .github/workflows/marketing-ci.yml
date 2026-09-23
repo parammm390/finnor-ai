@@ -1,6 +1,5 @@
-# CI for the marketing site (repo root) — Phase 7 §7.9/§7.10 (JARVIS 95% MAESTRO
-# PACK): "truthfulness enforcement in CI" and "Playwright suite green in CI" both
-# need an actual CI job, not just a clean local run. Scoped to paths OUTSIDE
+# CI for the root web application. These product-quality gates need an actual CI
+# job, not just a clean local run. Scoped to paths OUTSIDE
 # finnor-os/ (that repo has its own workflow, ci.yml) so the two don't trigger on
 # each other's changes.
 name: marketing-ci
@@ -29,7 +28,7 @@ jobs:
       # The Supabase ANON/publishable key, not the service-role secret — Next.js
       # bakes every NEXT_PUBLIC_* var into the client JS bundle at build time, so
       # this is already visible to anyone opening devtools on the live site; it is
-      # not confidential, and prerendering /jarvis and /jarvis/login genuinely
+      # not confidential, and prerendering /centropy and /centropy/login genuinely
       # requires it to be set (real first CI run of this workflow failed on `npm
       # run build` with "supabaseUrl is required" without it — reproduced locally
       # by unsetting it, root-caused, not guessed).
@@ -39,13 +38,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          # package-lock.json includes @mapbox/jsonlint-lines-primitives@2.0.3,
-          # which declares node >=22. Node 20 makes npm ci exit EBADENGINE on
-          # the hosted runner before any of this workflow's actual checks run.
+          # Match the Node runtime used by the repository's other CI workflows.
           node-version: 22
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      # The root app's typed JARVIS client imports the canonical Work projection
+      # The root app's typed Centropy client imports the canonical Work projection
       # and submission contract from finnor-os. Install that workspace's package
       # graph before root tsc so CI resolves the same @finnor/db/drizzle types as
       # local development instead of turning the imported backend source into an
@@ -53,7 +50,7 @@ jobs:
       - name: Install Finnor OS type dependencies
         run: npm ci --prefix finnor-os --no-audit --no-fund
       # Phase 7 §7.8: no-restricted-properties(Math.random) under src/components/
-      # jarvis and src/app/jarvis, defined in .eslintrc.cjs — this is what actually
+      # centropy and src/app/centropy, defined in .eslintrc.cjs — this is what actually
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
       - run: npm run lint
@@ -112,7 +109,7 @@ jobs:
           # scripts/lighthouse-gate.mjs takes several samples and gates on the
           # median instead of one draw — the same fix lighthouse-ci's own
           # `numberOfRuns` option exists for. This does not relax the 0.90 bar.
-          node scripts/lighthouse-gate.mjs 'http://localhost:3000/jarvis?lowPower=1' "$chrome_path" > lighthouse-gate.log 2>&1
+          node scripts/lighthouse-gate.mjs 'http://localhost:3000/centropy?lowPower=1' "$chrome_path" > lighthouse-gate.log 2>&1
           lighthouse_status=$?
           # This workflow certifies the unauthenticated marketing/public boundary.
           # The authenticated and labelled-fixture suites have separate release

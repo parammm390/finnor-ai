@@ -36,13 +36,13 @@ export async function testVapiAssistants(context: TenantCredentialContext<"vapi"
       signal: AbortSignal.timeout(5_000),
     });
     return [{
-      agentKey: "jarvis",
+      agentKey: "centropy",
       personaKey: "main",
       configured: true,
       healthy: response.ok,
       ...(response.ok ? {} : { error: `Assistant verification failed (${response.status})` }),
     }];
   } catch {
-    return [{ agentKey: "jarvis", personaKey: "main", configured: true, healthy: false, error: "Assistant verification request failed" }];
+    return [{ agentKey: "centropy", personaKey: "main", configured: true, healthy: false, error: "Assistant verification request failed" }];
   }
 }

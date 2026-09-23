@@ -8,8 +8,8 @@ let cached: { token: string; refreshToken: string; expiresAt: number } | null = 
 async function passwordLogin(): Promise<{ token: string; refreshToken: string; expiresAt: number }> {
   const url = process.env.FINNOR_OS_SUPABASE_URL
   const key = process.env.FINNOR_OS_SUPABASE_KEY
-  const email = (process.env.CENTROPY_SERVICE_EMAIL ?? process.env.JARVIS_SERVICE_EMAIL)
-  const password = (process.env.CENTROPY_SERVICE_PASSWORD ?? process.env.JARVIS_SERVICE_PASSWORD)
+  const email = process.env.CENTROPY_SERVICE_EMAIL?.trim() || process.env.JARVIS_SERVICE_EMAIL?.trim()
+  const password = process.env.CENTROPY_SERVICE_PASSWORD || process.env.JARVIS_SERVICE_PASSWORD
   if (!url || !key || !email || !password) {
     throw new Error("Centropy proxy auth is not configured")
   }

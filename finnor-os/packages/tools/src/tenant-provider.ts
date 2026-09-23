@@ -57,7 +57,7 @@ export async function testTenantVapiAssistants(tenantId: string): Promise<VoiceA
     return testVapiAssistants(await resolveTenantVapiContext(tenantId));
   } catch (error) {
     const health = resolutionHealth(error, "vapi");
-    return [{ agentKey: "jarvis", personaKey: "main", ...health }];
+    return [{ agentKey: "centropy", personaKey: "main", ...health }];
   }
 }
 

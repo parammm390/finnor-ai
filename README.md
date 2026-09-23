@@ -1,6 +1,6 @@
 # Centropy
 
-Centropy is **Private Equity decision + execution infrastructure**. It connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce. CENTROPY is the owner operating surface.
+Centropy is FINNOR's **Private Equity decision and execution infrastructure**. It connects canonical deal truth, underwriting lineage, IC governance, work planning and execution, evidence and receipts, and a governed AI workforce. The Centropy workspace is the owner operating surface.
 
 The Phase 8 product boundary is intentionally narrow:
 
@@ -27,16 +27,16 @@ The Company Brain and Semantic Activity Theater are deterministic read projectio
 |---|---|
 | Public PE product and information architecture | `src/components/marketing/`, `src/components/resources/` |
 | Public metadata and structured data | `src/app/layout.tsx`, `src/app/manifest.ts`, `src/config/site.ts` |
-| CENTROPY owner surfaces | `src/components/centropy/pe/`, `src/components/centropy/agents/` |
+| Centropy owner surfaces | `src/components/centropy/pe/`, `src/components/centropy/agents/` |
 | Generated Workspace V3 browser contract | `src/components/centropy/lib/workspace-config.generated.ts` |
-| CENTROPY API proxy boundary | `src/app/api/centropy/[...path]/route.ts` |
+| Centropy API proxy boundary | `src/app/api/centropy/[...path]/route.ts` |
 | Canonical execution platform | `finnor-os/` |
 | Phase 8 audit and release evidence | `docs/release/` |
 | Production release contract | `infra/deployment/production.contract.json` |
 
 ## Local development
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 20.19+ or 22.12+ and npm.
 
 ```bash
 npm ci
@@ -49,7 +49,7 @@ Useful checks:
 
 ```bash
 npm run workspace:check
-npm test
+npm run test:unit
 npx tsc --noEmit
 cd finnor-os && npm test
 ```

@@ -119,6 +119,7 @@ const DEFAULT_MIN_DOMAIN_INTERVAL_MS = 250;
 const DEFAULT_MAX_RATE_LIMIT_WAIT_MS = 5_000;
 const DEFAULT_MAX_ROBOTS_CHARS = 100_000;
 const FIRECRAWL_USER_AGENT = "Finnor-CENTROPY-Research/1.0";
+const ROBOTS_PRODUCT_TOKEN = "centropy";
 
 export class UnsafeWebUrlError extends IntegrationError {
   constructor(message: string) {
@@ -286,7 +287,10 @@ function parseRobots(text: string): RobotsGroup[] {
 }
 
 function robotsAllows(groups: RobotsGroup[], url: URL): boolean {
-  const matchingGroups = groups.filter((group) => group.agents.includes("*") || group.agents.some((agent) => agent.includes("finnor") || agent.includes("jarvis")));
+  const namedGroups = groups.filter((group) => group.agents.includes(ROBOTS_PRODUCT_TOKEN));
+  const matchingGroups = namedGroups.length > 0
+    ? namedGroups
+    : groups.filter((group) => group.agents.includes("*"));
   const rules = matchingGroups.flatMap((group) => group.rules);
   let best: RobotsRule | undefined;
   for (const rule of rules) {

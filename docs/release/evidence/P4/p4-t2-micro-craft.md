@@ -1,5 +1,7 @@
 # P4.T2 — Pixel-level micro-craft
 
+Root-level screenshots cited in this historical report are available from [the legacy artifact index](../legacy-root-artifacts.md).
+
 Date: 2026-08-08  
 Status: CLOSED  
 Sev-1 / Sev-2 introduced: 0

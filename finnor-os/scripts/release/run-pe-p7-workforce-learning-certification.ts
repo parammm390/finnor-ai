@@ -257,19 +257,19 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     attention: "packages/read-models/src/attention-query.ts",
     migration: `packages/db/migrations/${P7_MIGRATION}`,
     openapi: "openapi.json",
-    productDataProvider: "../src/components/jarvis/product/ProductDataProvider.tsx",
-    workforceHook: "../src/components/jarvis/pe/use-pe-data.ts",
+    productDataProvider: "../src/components/centropy/product/ProductDataProvider.tsx",
+    workforceHook: "../src/components/centropy/pe/use-pe-data.ts",
     configureRoute: "apps/api/app/api/workforce/profiles/route.ts",
     reassignRoute: "apps/api/app/api/workforce/assignments/[id]/reassign/route.ts",
     proposalRoute: "apps/api/app/api/workforce/proposals/[id]/route.ts",
   } as const;
   const source = Object.fromEntries(await Promise.all(Object.entries(paths).map(async ([key, path]) => [key, await readFile(resolve(ROOT, path), "utf8")]))) as Record<keyof typeof paths, string>;
-  const frontend = await readFile(resolve(REPOSITORY_ROOT, "src/components/jarvis/agents/AgentFleetSurface.tsx"), "utf8");
+  const frontend = await readFile(resolve(REPOSITORY_ROOT, "src/components/centropy/agents/AgentFleetSurface.tsx"), "utf8");
   // Phase 8 owns the browser contract in the PE surface contracts module; the
-  // former monolithic root jarvis-client.ts was deliberately deleted during the
+  // former monolithic root client was deliberately deleted during the
   // surface cutover. Keep this release gate pointed at the live typed contract
   // instead of resurrecting that retired client path.
-  const peContracts = await readFile(resolve(REPOSITORY_ROOT, "src/components/jarvis/pe/contracts.ts"), "utf8");
+  const peContracts = await readFile(resolve(REPOSITORY_ROOT, "src/components/centropy/pe/contracts.ts"), "utf8");
   const packageJson = JSON.parse(source.package) as { scripts?: Record<string, string> };
   const workforcePackage = JSON.parse(source.workforcePackage) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
 
@@ -307,7 +307,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
 
   for (const route of ["/api/workforce/profiles", "/api/workforce/assignments/{id}/reassign", "/api/workforce/proposals/{id}", "/api/queries"]) assert(source.openapi.includes(`\"${route}\"`), `OpenAPI is missing ${route}`);
   assert(source.configureRoute.includes("configureAgentProfile") && source.reassignRoute.includes("reassignWorkforceAssignment") && source.proposalRoute.includes("promoteLearningProposal"), "P7 API routes are not bound to governed runtime functions");
-  await access(resolve(REPOSITORY_ROOT, "src/components/jarvis/agents/agent-fleet.ts")).then(() => { throw new Error("static frontend agent-fleet authority still exists"); }, () => undefined);
+  await access(resolve(REPOSITORY_ROOT, "src/components/centropy/agents/agent-fleet.ts")).then(() => { throw new Error("static frontend agent-fleet authority still exists"); }, () => undefined);
   // The current product data provider owns the browser contract; keep this gate
   // pointed at that live typed path instead of a retired monolithic client.
   assert(
@@ -320,9 +320,9 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
       source.productDataProvider.includes("const workforce = useWorkforceStatus") &&
       source.workforceHook.includes("export function useWorkforceStatus") &&
       source.workforceHook.includes("stateFor: workforceState"),
-    "JARVIS workforce surface is not backend-truth-only",
+    "Centropy workforce surface is not backend-truth-only",
   );
-  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("profileById.has(worker.id)"), "JARVIS workforce surface does not bind canonical worker and profile status");
+  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("profileById.has(worker.id)"), "Centropy workforce surface does not bind canonical worker and profile status");
   for (const status of ["idle", "working", "waiting", "blocked", "failed", "unavailable"]) assert(peContracts.includes(`\"${status}\"`), `workforce contract omits ${status}`);
   assert(peContracts.includes('configurationState: "configured" | "unconfigured"'), "workforce contract omits explicit configuration state");
   assert(peContracts.includes('status: "complete" | "partial"') && peContracts.includes("truncatedSources"), "PE browser contract does not preserve workforce source completeness");

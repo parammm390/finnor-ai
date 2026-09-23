@@ -242,7 +242,7 @@ export async function POST(req: Request): Promise<Response> {
         source: body.data.channel,
         selectedEntities: prepared.context.resolution.resolvedReferences.map(({ entityType, entityId }) => ({ entityType, entityId })),
         excludedEntities: [],
-        surface: { id: "home", route: "/jarvis", spatialState: "canvas" },
+        surface: { id: "home", route: "/centropy", spatialState: "canvas" },
         filters: [],
       };
     }

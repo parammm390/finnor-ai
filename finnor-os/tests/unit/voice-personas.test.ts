@@ -3,8 +3,8 @@ import { agentKeyForPersona, VOICE_AGENT_KEYS } from "@finnor/tools";
 
 describe("bounded voice persona attribution", () => {
   it("maps only source-owned personas to safe product keys", () => {
-    expect(VOICE_AGENT_KEYS).toEqual(["jarvis"]);
-    expect(agentKeyForPersona("main")).toBe("jarvis");
+    expect(VOICE_AGENT_KEYS).toEqual(["centropy"]);
+    expect(agentKeyForPersona("main")).toBe("centropy");
     expect(agentKeyForPersona("payment_collector")).toBeUndefined();
     expect(agentKeyForPersona("winback")).toBeUndefined();
   });

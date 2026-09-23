@@ -23,23 +23,37 @@ const routes = [
   { path: "/demo/lifecycle", finalPath: "/product" },
   { path: "/demo/legacy", finalPath: "/product" },
   { path: "/dashboard-demo", finalPath: "/product" },
-  { path: "/customers", finalPath: "/jarvis/deals" },
-  { path: "/schedule", finalPath: "/jarvis/work" },
-  { path: "/money", finalPath: "/jarvis/deals" },
-  { path: "/jarvis" },
-  { path: "/jarvis/login" },
-  { path: "/jarvis/reset-password" },
-  { path: "/jarvis/deals" },
-  { path: "/jarvis/work" },
-  { path: "/jarvis/agents" },
-  { path: "/jarvis/customers", finalPath: "/jarvis/deals" },
-  { path: "/jarvis/schedule", finalPath: "/jarvis/work" },
-  { path: "/jarvis/money", finalPath: "/jarvis/deals" },
-  { path: "/jarvis/bridge", finalPath: "/jarvis", allowedStatus: [200, 307] },
-  { path: "/jarvis/classic", finalPath: "/jarvis", allowedStatus: [200, 307] },
-  { path: "/jarvis/next", finalPath: "/jarvis", allowedStatus: [200, 307] },
-  { path: "/jarvis/showtime", finalPath: "/jarvis", allowedStatus: [200, 307] },
-  { path: "/jarvis/stage", finalPath: "/jarvis", allowedStatus: [200, 307] },
+  { path: "/customers", finalPath: "/centropy/deals" },
+  { path: "/schedule", finalPath: "/centropy/work" },
+  { path: "/money", finalPath: "/centropy/deals" },
+  { path: "/centropy" },
+  { path: "/centropy/login" },
+  { path: "/centropy/reset-password" },
+  { path: "/centropy/deals" },
+  { path: "/centropy/work" },
+  { path: "/centropy/agents" },
+  { path: "/centropy/customers", finalPath: "/centropy/deals" },
+  { path: "/centropy/schedule", finalPath: "/centropy/work" },
+  { path: "/centropy/money", finalPath: "/centropy/deals" },
+  { path: "/centropy/bridge", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/centropy/classic", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/centropy/next", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/centropy/showtime", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/centropy/stage", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/jarvis", finalPath: "/centropy" },
+  { path: "/jarvis/login", finalPath: "/centropy/login" },
+  { path: "/jarvis/reset-password", finalPath: "/centropy/reset-password" },
+  { path: "/jarvis/deals", finalPath: "/centropy/deals" },
+  { path: "/jarvis/work", finalPath: "/centropy/work" },
+  { path: "/jarvis/agents", finalPath: "/centropy/agents" },
+  { path: "/jarvis/customers", finalPath: "/centropy/deals" },
+  { path: "/jarvis/schedule", finalPath: "/centropy/work" },
+  { path: "/jarvis/money", finalPath: "/centropy/deals" },
+  { path: "/jarvis/bridge", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/jarvis/classic", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/jarvis/next", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/jarvis/showtime", finalPath: "/centropy", allowedStatus: [200, 307] },
+  { path: "/jarvis/stage", finalPath: "/centropy", allowedStatus: [200, 307] },
 ];
 
 const viewports = [
@@ -61,7 +75,7 @@ for (const viewport of viewports) {
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const value = message.text();
-    if (route === "/jarvis/bridge" && (/status of 401 \(Unauthorized\)/i.test(value) || value.includes("Sign in required"))) {
+    if (route.endsWith("/bridge") && (/status of 401 \(Unauthorized\)/i.test(value) || value.includes("Sign in required"))) {
       expectedAuthDenials.push(value);
       return;
     }
@@ -71,7 +85,7 @@ for (const viewport of viewports) {
   try {
     const response = await page.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
     await page.waitForLoadState("load");
-    await page.waitForTimeout(route.startsWith("/jarvis") ? 900 : 450);
+    await page.waitForTimeout(route.startsWith("/centropy") || route.startsWith("/jarvis") ? 900 : 450);
     const status = response?.status() ?? 0;
     const metrics = await page.evaluate(() => ({
       bodyLength: (document.body.textContent ?? "").trim().length,
@@ -80,7 +94,8 @@ for (const viewport of viewports) {
       horizontalOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
     }));
     const allowedStatus = routeConfig.allowedStatus ?? [200];
-    const minimumBodyLength = route.startsWith("/jarvis") || status === 404 ? 10 : 120;
+    const isProductRoute = route.startsWith("/centropy") || route.startsWith("/jarvis");
+    const minimumBodyLength = isProductRoute || status === 404 ? 10 : 120;
     results.push({
       viewport: viewport.label,
       route,

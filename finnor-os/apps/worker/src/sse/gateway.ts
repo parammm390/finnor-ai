@@ -36,7 +36,10 @@ function workerCapabilities(): string[] {
 }
 
 function allowedOrigins(): string[] {
-  return (process.env.CENTROPY_SSE_ALLOWED_ORIGINS ?? process.env.JARVIS_SSE_ALLOWED_ORIGINS ?? "http://localhost:3000,https://finnorai.com")
+  const configured = process.env.CENTROPY_SSE_ALLOWED_ORIGINS?.trim()
+    || process.env.JARVIS_SSE_ALLOWED_ORIGINS?.trim()
+    || "http://localhost:3000,https://finnorai.com";
+  return configured
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);

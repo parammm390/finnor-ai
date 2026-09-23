@@ -370,10 +370,10 @@ function buildFallbackReply(
     }
   }
 
-  if (/what.*finnor|does finnor|finnor do|explain/.test(latest)) {
+  if (/what.*(?:finnor|centropy)|does (?:finnor|centropy)|(?:finnor|centropy) do|explain/.test(latest)) {
     return {
       reply:
-        "Centropy is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed agents; CENTROPY is the owner operating surface.",
+        "Centropy is FINNOR's Private Equity decision and execution product. It connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed agents.",
       suggestedPlan: collectedFields.suggestedPlan || "Not enough detail",
     }
   }

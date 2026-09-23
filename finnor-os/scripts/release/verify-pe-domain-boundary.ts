@@ -82,7 +82,6 @@ const COGNITION_PATHS = [
   "packages/orchestration/src/conversation.ts",
   "packages/orchestration/src/conversation-kernel.ts",
   "packages/orchestration/src/objective-loop.ts",
-  "packages/orchestration/src/repair.ts",
   "packages/orchestration/src/operating-context.ts",
   "packages/orchestration/src/interaction-context.ts",
   "packages/orchestration/src/planner-memory.ts",

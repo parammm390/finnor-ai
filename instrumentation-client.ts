@@ -3,7 +3,7 @@
 // no-ops harmlessly without a DSN, so this ships inert until NEXT_PUBLIC_SENTRY_DSN is
 // set (client code needs the NEXT_PUBLIC_ prefix to reach the browser bundle — DSNs
 // aren't privileged secrets, see CENTROPY-CREDENTIALS-LEDGER.md).
-import * as Sentry from "@sentry/browser";
+import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,

@@ -1,4 +1,4 @@
-// D9.T4 — CI Lighthouse gate for the public /jarvis route (?lowPower=1).
+// D9.T4 — CI Lighthouse gate for the public /centropy route (?lowPower=1).
 //
 // A single Lighthouse pass on a shared/noisy CI runner is a genuinely unreliable
 // performance sample, not a code regression: 5 real CI runs on unchanged commits
