@@ -70,7 +70,7 @@ async function inspectReleaseSurfaces() {
 const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
-const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
+const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15_000 })
 
 const LEGACY_RUNTIME_ROLES = ["api", "worker", "orchestrator", "supplier-canary", "scheduler-owner"]
 const COMPUTE_RUNTIME_ROLES = [

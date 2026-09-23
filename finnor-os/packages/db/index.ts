@@ -57,7 +57,7 @@ export function pgConnectionConfig(url: string): pg.ClientConfig {
   const skipSsl = sslDisabled || cleaned.includes("localhost") || cleaned.includes("127.0.0.1");
   return {
     connectionString: cleaned,
-    ...(skipSsl ? {} : { ssl: { rejectUnauthorized: false } }),
+    ...(skipSsl ? {} : { ssl: { rejectUnauthorized: true } }),
   };
 }
 

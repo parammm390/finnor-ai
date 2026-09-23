@@ -62,7 +62,7 @@ if (parsedDatabase.hostname !== contract.topology.database.host) throw new Error
 if (!parsedDatabase.username.endsWith(`.${new URL(contract.topology.database.supabaseUrl).hostname.split(".")[0]}`)) {
   throw new Error("database project reference differs from the canonical Supabase auth project")
 }
-const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
+const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15_000 })
 await client.connect()
 try {
   const migration = await client.query("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1")

@@ -31,3 +31,8 @@ vercel_output.txt
 /lighthouse-run-*.json
 /lighthouse-gate.log
 /lighthouse.log
+/evidence/
+/qa-screenshots/
+/vapi_recent_calls.json
+/vapi_call_transcripts.md
+/coverage/

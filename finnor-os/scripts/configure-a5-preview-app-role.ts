@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   const adminUrl = await databaseUrl(envFile);
   assertNotProductionDatabaseTarget(adminUrl, "preview role configuration");
   const password = randomBytes(32).toString("base64url");
-  const admin = new pg.Client({ connectionString: adminUrl, ssl: { rejectUnauthorized: false } });
+  const admin = new pg.Client({ connectionString: adminUrl, ssl: { rejectUnauthorized: true } });
   await admin.connect();
   try {
     await admin.query("SELECT set_config($1, $2, false)", ["app.a5_preview_role_password", password]);
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   const appUrl = new URL(adminUrl);
   appUrl.username = "finnor_preview_app";
   appUrl.password = password;
-  const verify = new pg.Client({ connectionString: appUrl.toString(), ssl: { rejectUnauthorized: false } });
+  const verify = new pg.Client({ connectionString: appUrl.toString(), ssl: { rejectUnauthorized: true } });
   await verify.connect();
   const { rows } = await verify.query<{ current_user: string; rolbypassrls: boolean }>(
     "SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user",

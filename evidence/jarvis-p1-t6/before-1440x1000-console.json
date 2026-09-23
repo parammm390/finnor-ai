@@ -1,8 +1,0 @@
-[
-  {
-    "level": "info",
-    "message": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
-    "timestamp": "2026-08-02T14:36:17.470Z",
-    "url": "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js"
-  }
-]
