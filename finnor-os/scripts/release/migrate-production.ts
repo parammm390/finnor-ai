@@ -40,6 +40,7 @@ async function main(): Promise<void> {
       accountId?: string;
       region?: string;
       clusterName?: string;
+      computePlaneStage?: string;
       serviceName?: string;
       taskFamily?: string;
       ecrRepository?: string;
@@ -56,11 +57,16 @@ async function main(): Promise<void> {
         taskFamily: string;
         ecrRepository: string;
       };
+      computePlane: { classes: { REALTIME: { serviceName: string; taskFamily: string } } };
       database: { host: string };
     };
   };
   const evidenceAge = Date.now() - Date.parse(evidence.checkedAt ?? "");
   const contractHash = createHash("sha256").update(contractRaw).digest("hex");
+  const computeStage = evidence.aws?.computePlaneStage;
+  const activeService = computeStage === "legacy"
+    ? contract.topology.worker
+    : contract.topology.computePlane.classes.REALTIME;
   if (
     evidence.ok !== true ||
     evidence.commitSha !== commitSha ||
@@ -69,8 +75,9 @@ async function main(): Promise<void> {
     evidence.aws?.accountId !== contract.topology.worker.accountId ||
     evidence.aws?.region !== contract.topology.worker.region ||
     evidence.aws?.clusterName !== contract.topology.worker.clusterName ||
-    evidence.aws?.serviceName !== contract.topology.worker.serviceName ||
-    evidence.aws?.taskFamily !== contract.topology.worker.taskFamily ||
+    !["legacy", "preparing", "routing", "finalized"].includes(computeStage ?? "") ||
+    evidence.aws?.serviceName !== activeService.serviceName ||
+    evidence.aws?.taskFamily !== activeService.taskFamily ||
     evidence.aws?.ecrRepository !== contract.topology.worker.ecrRepository ||
     evidence.database?.host !== contract.topology.database.host ||
     !Number.isFinite(evidenceAge) || evidenceAge < 0 || evidenceAge > 60 * 60 * 1000
