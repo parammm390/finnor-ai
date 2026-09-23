@@ -95,12 +95,20 @@ const entryGroups = {
   supplierCanary: [join(osRoot, "apps/supplier-canary/api/index.mjs")],
   demo: [
     join(repoRoot, "src/components/marketing/PrivateEquityPublicPage.tsx"),
-    join(repoRoot, "src/components/ai-concierge/FinnorAIConcierge.tsx"),
+    join(repoRoot, "src/components/ai-concierge/CentropyAIConcierge.tsx"),
   ],
   publicWebsite: [...rootAppFiles, join(repoRoot, "next.config.mjs")],
   productionApi: [...apiAppFiles, join(osRoot, "apps/api/middleware.ts")],
 }
-const reachableByGroup = Object.fromEntries(Object.entries(entryGroups).map(([name, entries]) => [name, reachableFrom(entries)]))
+const missingEntrypoints = Object.entries(entryGroups).flatMap(([name, entries]) =>
+  entries
+    .filter((entry) => !existsSync(entry))
+    .map((entry) => `${name}: configured entrypoint does not exist: ${relativePath(entry)}`),
+)
+const reachableByGroup = Object.fromEntries(Object.entries(entryGroups).map(([name, entries]) => [
+  name,
+  reachableFrom(entries.filter((entry) => existsSync(entry))),
+]))
 const allReachable = new Set(Object.values(reachableByGroup).flatMap((paths) => [...paths]))
 
 const allowlist = JSON.parse(readFileSync(allowlistPath, "utf8"))
@@ -130,7 +138,7 @@ const doctrinePatterns = [
 ]
 
 const matchedAllowlist = new Set()
-const violations = []
+const violations = [...missingEntrypoints]
 const matches = []
 for (const path of [...allReachable].sort()) {
   if (![".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].includes(extname(path))) continue

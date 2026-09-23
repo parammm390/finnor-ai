@@ -10,6 +10,7 @@ import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
 import { PRODUCTION_JOB_CONTRACTS, classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
+import { pgConnectionConfig } from "./postgres-connection.mjs";
 export { MAX_BACKGROUND_SCAN_BATCH, MAX_HIGH_EGRESS_ROWS, MAX_INSTRUCTION_EVENT_PAGE, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import { MAX_HIGH_EGRESS_ROWS, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import {
@@ -36,30 +37,10 @@ export * from "./event-fabric";
 export * from "./compute-contract";
 export * from "./compute-control";
 export * from "./compute-governor";
+export { pgConnectionConfig } from "./postgres-connection.mjs";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;
-
-/**
- * node-postgres quirk: an `sslmode=` query param in the connection string overrides
- * an explicit `ssl` config object, and Supabase's chain is self-signed from Node's
- * point of view. Strip the param and configure ssl explicitly instead — except
- * `sslmode=disable` is read as an explicit override before stripping (the standard
- * Postgres convention for "this endpoint genuinely doesn't speak TLS, don't ask it to").
- *
- * Non-local endpoints must use TLS unless the caller explicitly supplies the standard
- * PostgreSQL `sslmode=disable` override. Provider hostnames are never treated as proof
- * that plaintext transport is safe.
- */
-export function pgConnectionConfig(url: string): pg.ClientConfig {
-  const sslDisabled = /[?&]sslmode=disable\b/.test(url);
-  const cleaned = url.replace(/([?&])sslmode=[^&]*&?/, "$1").replace(/[?&]$/, "");
-  const skipSsl = sslDisabled || cleaned.includes("localhost") || cleaned.includes("127.0.0.1");
-  return {
-    connectionString: cleaned,
-    ...(skipSsl ? {} : { ssl: { rejectUnauthorized: true } }),
-  };
-}
 
 /**
  * "Skip SSL" and "safe to hold many connections per invocation" are NOT the same

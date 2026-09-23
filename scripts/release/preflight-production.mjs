@@ -7,6 +7,7 @@ import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { readProtectedEnvValue } from "./protected-env.mjs"
 import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
+import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -259,7 +260,7 @@ const parsedDatabaseUrl = new URL(databaseUrl)
 if (parsedDatabaseUrl.hostname !== contract.topology.database.host) throw new Error(`database host ${parsedDatabaseUrl.hostname} differs from the canonical contract`)
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
-const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15_000 })
+const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })
 await client.connect()
 let migrationHead
 let businessCounts

@@ -190,6 +190,8 @@
         "scripts/release/production-mutation-guard.d.mts",
         "scripts/release/production-mutation-guard.mjs",
         "scripts/release/protected-env.mjs",
+        "finnor-os/packages/db/postgres-connection.d.mts",
+        "finnor-os/packages/db/postgres-connection.mjs",
         "scripts/release/validate-production-mutation-inventory.mjs",
         "scripts/release/worktree-state.mjs"
       ],
@@ -203,6 +205,7 @@
         "scripts/release/p8-water-retirement-policy.test.mjs",
         "scripts/release/compute-plane-policy.test.mjs",
         "scripts/release/pr-verdict-policy.test.mjs",
+        "scripts/release/postgres-connection.test.mjs",
         "scripts/release/production-mutation-guard.test.mjs",
         "scripts/release/protected-env.test.mjs",
         "scripts/release/release-policy.test.mjs",

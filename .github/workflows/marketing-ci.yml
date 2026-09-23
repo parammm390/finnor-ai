@@ -56,6 +56,13 @@ jobs:
       - run: npm run lint
       - run: npm run workspace:check
       - run: npx tsc --noEmit -p tsconfig.json
+      # Run every credential-free release policy before merge. The production-only
+      # workflow used to be the first place the P8 reachability verifier ran, which
+      # allowed a stale renamed entrypoint to merge and waste a release attempt.
+      - name: Verify static production release policy
+        run: |
+          npm run test:release
+          npm run release:p8-zero-resurrection
       # D9.T3 — committed, reproducible WCAG contrast audit (glass fill + RiskBadge
       # materials, both real `data-mood` variants). Replaces the earlier throwaway
       # Node scripts C3/D9 ran locally and deleted — this makes a future token
