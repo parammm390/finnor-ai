@@ -5,7 +5,7 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRelative = "finnor-os/apps/api/lib/workspace-config.ts";
-const outputRelative = "src/components/jarvis/lib/workspace-config.generated.ts";
+const outputRelative = "src/components/centropy/lib/workspace-config.generated.ts";
 const source = await readFile(path.join(root, sourceRelative), "utf8");
 const hash = createHash("sha256").update(source).digest("hex");
 const output = [

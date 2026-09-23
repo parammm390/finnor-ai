@@ -1,4 +1,4 @@
-// scan_watchdog job (A4.T2, JARVIS MAESTRO PLAN §4): four independent reliability
+// scan_watchdog job (A4.T2, CENTROPY MAESTRO PLAN §4): four independent reliability
 // signals the existing scans don't cover — stuck runs, orphaned steps, aging approvals
 // (nudge only), and unfinalized receipts. Modeled directly on scan-reliability-alerts.ts's
 // split between a pure, unit-testable detector and a thin handler that reports/acts —

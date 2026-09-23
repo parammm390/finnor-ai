@@ -1,4 +1,4 @@
-// LLM provider abstraction for JARVIS. Provider choice is explicit and routed by
+// LLM provider abstraction for CENTROPY. Provider choice is explicit and routed by
 // purpose/channel; there is intentionally no unnamed provider default. A model can
 // still be pinned per action_type via domain_policies (model_provider column), a
 // config change rather than a code change.
@@ -296,7 +296,7 @@ export class DeepSeekProvider extends OpenAICompatibleProvider {
   }
 }
 
-/** Legacy explicit-only Bedrock Anthropic adapter. It is not part of any JARVIS
+/** Legacy explicit-only Bedrock Anthropic adapter. It is not part of any CENTROPY
  * default route; GLM/Mistral/DeepSeek are the configured first-party choices. */
 export class BedrockAnthropicProvider implements LLMProvider {
   name = "bedrock-anthropic";
@@ -341,7 +341,7 @@ export class BedrockAnthropicProvider implements LLMProvider {
 
 /**
  * Bedrock Converse is the shared request/response format for the non-Anthropic
- * models used by JARVIS (GLM, Mistral, Qwen, DeepSeek, OpenAI OSS, and Amazon Nova). Keeping this
+ * models used by CENTROPY (GLM, Mistral, Qwen, DeepSeek, OpenAI OSS, and Amazon Nova). Keeping this
  * adapter model-agnostic lets the routing policy change without coupling the rest of
  * the system to each vendor's InvokeModel payload shape.
  */
@@ -507,7 +507,7 @@ export class GroqProvider implements LLMProvider {
 
 const BEDROCK_QWEN_PLANNING_MODEL_ID = () => process.env.AWS_BEDROCK_QWEN_PLANNING_MODEL_ID ?? "qwen.qwen3-235b-a22b-2507-v1:0";
 const BEDROCK_QWEN_FAST_MODEL_ID = () => process.env.AWS_BEDROCK_QWEN_FAST_MODEL_ID ?? "qwen.qwen3-32b-v1:0";
-// These are the Bedrock model IDs for the single-key JARVIS provider chain. Each
+// These are the Bedrock model IDs for the single-key CENTROPY provider chain. Each
 // can be overridden when an account pins a different active model revision.
 const BEDROCK_GLM_MODEL_ID = () => process.env.AWS_BEDROCK_GLM_MODEL_ID ?? "zai.glm-4.7";
 const BEDROCK_MISTRAL_MODEL_ID = () => process.env.AWS_BEDROCK_MISTRAL_MODEL_ID ?? "mistral.mistral-small-2402-v1:0";
@@ -554,7 +554,7 @@ addProvider("glm", () => singleKeyBedrockProvider(BEDROCK_GLM_MODEL_ID(), "glm")
 addProvider("mistral", () => bedrockConfigured() ? singleKeyBedrockProvider(BEDROCK_MISTRAL_MODEL_ID(), "mistral") : new MistralProvider(), singleKeyMistralConfigured);
 addProvider("deepseek", () => bedrockConfigured() ? singleKeyBedrockProvider(BEDROCK_DEEPSEEK_MODEL_ID(), "deepseek") : new DeepSeekProvider(), deepseekConfigured);
 // Legacy providers remain available only when named explicitly or selected by an
-// explicit route override. None is a default fallback in the JARVIS route table.
+// explicit route override. None is a default fallback in the CENTROPY route table.
 addProvider("groq", () => new GroqProvider(), groqConfigured);
 addProvider("bedrock-qwen-planning", () => new BedrockConverseProvider(BEDROCK_QWEN_PLANNING_MODEL_ID(), undefined, BEDROCK_QWEN_PLANNING_REGION(), "bedrock-qwen-planning"), bedrockConfigured);
 addProvider("bedrock-qwen-fast", () => new BedrockConverseProvider(BEDROCK_QWEN_FAST_MODEL_ID(), undefined, undefined, "bedrock-qwen-fast"), bedrockConfigured);

@@ -64,7 +64,7 @@ async function persistContactLead({
   workflow: string
 }) {
   if (!serverEnv.supabaseUrl || !serverEnv.supabaseServiceRoleKey) {
-    console.info("FINNOR contact form: Supabase is not configured; skipping database insert.")
+    console.info("Centropy contact form: Supabase is not configured; skipping database insert.")
     return
   }
 
@@ -80,7 +80,7 @@ async function persistContactLead({
     .insert([{ name, email, company, phone, message: workflow, status: "new" }])
 
   if (error) {
-    console.info("FINNOR contact form: Supabase insert skipped after database error.")
+    console.info("Centropy contact form: Supabase insert skipped after database error.")
   }
 }
 
@@ -98,7 +98,7 @@ async function sendContactNotification({
   workflow: string
 }) {
   if (!serverEnv.gmailUser || !serverEnv.gmailAppPassword) {
-    console.info("FINNOR contact form: Gmail notification is not configured; skipping email.")
+    console.info("Centropy contact form: Gmail notification is not configured; skipping email.")
     return
   }
 
@@ -134,6 +134,6 @@ async function sendContactNotification({
       `,
     })
   } catch (error) {
-    console.info("FINNOR contact form: email notification failed.", error)
+    console.info("Centropy contact form: email notification failed.", error)
   }
 }

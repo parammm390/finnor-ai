@@ -13,7 +13,7 @@ import pg from "pg";
 import http from "node:http";
 import { migrate } from "../../packages/db/migrate";
 import { getPool, closePool, adminDb, tenants, domainActions } from "@finnor/db";
-import { startJarvisEventListener, stopJarvisEventListener, onJarvisEvent } from "../../apps/worker/src/sse/listener";
+import { startCentropyEventListener, stopCentropyEventListener, onCentropyEvent } from "../../apps/worker/src/sse/listener";
 import { createSseGateway } from "../../apps/worker/src/sse/gateway";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -74,7 +74,7 @@ describe.skipIf(!available)("B1.T2 — SSE gateway", () => {
     const [otherTenant] = await adminDb().insert(tenants).values({ name: "B1.T2 SSE gateway other tenant" }).returning();
     otherTenantId = otherTenant!.id;
 
-    await startJarvisEventListener();
+    await startCentropyEventListener();
     server = createSseGateway();
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     port = (server.address() as { port: number }).port;
@@ -82,7 +82,7 @@ describe.skipIf(!available)("B1.T2 — SSE gateway", () => {
 
   afterAll(async () => {
     server.close();
-    await stopJarvisEventListener();
+    await stopCentropyEventListener();
     await closePool();
   });
 
@@ -99,7 +99,7 @@ describe.skipIf(!available)("B1.T2 — SSE gateway", () => {
 
   it("streams a durable safe delta to the connected tenant within 2s, and not to another tenant", async () => {
     const [own, other] = await Promise.all([connectSse(port, tenantId), connectSse(port, otherTenantId)]);
-    // Give both SSE connections a moment to register their onJarvisEvent subscriber
+    // Give both SSE connections a moment to register their onCentropyEvent subscriber
     // before the write happens, same as a real client's connect-then-listen race.
     await new Promise((r) => setTimeout(r, 100));
 

@@ -9,8 +9,8 @@ import ParticleNetwork from "@/components/ui/particle-network"
 import GrainOverlay from "@/components/ui/grain-overlay"
 import MarketingPageTransition from "@/components/ui/marketing-page-transition"
 
-const FinnorAIConcierge = dynamic(
-  () => import("@/components/ai-concierge/FinnorAIConcierge").then((module) => module.FinnorAIConcierge),
+const CentropyAIConcierge = dynamic(
+  () => import("@/components/ai-concierge/CentropyAIConcierge").then((module) => module.CentropyAIConcierge),
   { ssr: false },
 )
 
@@ -22,7 +22,7 @@ export function MarketingChrome({ children }: { children: ReactNode }) {
       <ScrollProgress />
       <GrainOverlay />
       <MarketingPageTransition>{children}</MarketingPageTransition>
-      <FinnorAIConcierge />
+      <CentropyAIConcierge />
     </SmoothScroll>
   )
 }

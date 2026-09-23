@@ -12,11 +12,11 @@
 import pg from "pg";
 import { pgConnectionConfig } from "@finnor/db";
 import { getLogger } from "@finnor/tools";
-import type { JarvisEvent } from "@finnor/shared-types";
+import type { CentropyEvent } from "@finnor/shared-types";
 
-export type { JarvisEvent };
+export type { CentropyEvent };
 
-type Listener = (event: JarvisEvent) => void;
+type Listener = (event: CentropyEvent) => void;
 
 const CHANNEL = "jarvis_events";
 const RECONNECT_BASE_MS = 1000;
@@ -35,9 +35,9 @@ function listenUrl(): string {
 
 function handleNotification(msg: pg.Notification): void {
   if (msg.channel !== CHANNEL || !msg.payload) return;
-  let event: JarvisEvent;
+  let event: CentropyEvent;
   try {
-    event = JSON.parse(msg.payload) as JarvisEvent;
+    event = JSON.parse(msg.payload) as CentropyEvent;
   } catch {
     getLogger().warn({ payload: msg.payload }, "[sse] malformed jarvis_events payload, dropped");
     return;
@@ -87,13 +87,13 @@ function scheduleReconnect(): void {
 
 /** Call once at process startup. Idempotent — a second call is a no-op while already
  *  connected/connecting. */
-export async function startJarvisEventListener(): Promise<void> {
+export async function startCentropyEventListener(): Promise<void> {
   stopped = false;
   if (client) return;
   await connect();
 }
 
-export async function stopJarvisEventListener(): Promise<void> {
+export async function stopCentropyEventListener(): Promise<void> {
   stopped = true;
   const c = client;
   client = null;
@@ -104,7 +104,7 @@ export async function stopJarvisEventListener(): Promise<void> {
 /** Subscribe to every jarvis_events notification this process receives, regardless of
  *  tenant — callers (the SSE gateway, the projector) filter for what they care about.
  *  Returns an unsubscribe function. */
-export function onJarvisEvent(listener: Listener): () => void {
+export function onCentropyEvent(listener: Listener): () => void {
   subscribers.add(listener);
   return () => subscribers.delete(listener);
 }

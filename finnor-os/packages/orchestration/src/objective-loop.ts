@@ -368,7 +368,7 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
     this.provider ??= resolveProviderForPurpose("planning", input.channel);
     const raw = await this.provider.complete({
       system: [
-        "You are JARVIS's governed objective-step decision maker.",
+        "You are CENTROPY's governed objective-step decision maker.",
         "Choose exactly ONE bounded next step from the current canonical business inspection.",
         "Never emit a multi-step plan. Never assume an action worked; durable results will be inspected on the next iteration.",
         "Prefer a deterministic query when a missing canonical fact is needed. Use a typed action only for a real mutation.",

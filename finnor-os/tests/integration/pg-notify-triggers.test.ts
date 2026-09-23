@@ -37,7 +37,7 @@ async function dbUp(): Promise<boolean> {
 }
 const available = await dbUp();
 
-interface JarvisEvent {
+interface CentropyEvent {
   tenantId: string;
   kind: string;
   id: string;
@@ -46,7 +46,7 @@ interface JarvisEvent {
 
 describe.skipIf(!available)("B1.T1 — jarvis_events NOTIFY triggers", () => {
   let listener: pg.Client;
-  let events: JarvisEvent[] = [];
+  let events: CentropyEvent[] = [];
   let tenantId: string;
 
   beforeAll(async () => {
@@ -61,7 +61,7 @@ describe.skipIf(!available)("B1.T1 — jarvis_events NOTIFY triggers", () => {
     await listener.query("LISTEN jarvis_events");
     listener.on("notification", (msg) => {
       if (msg.channel !== "jarvis_events" || !msg.payload) return;
-      events.push(JSON.parse(msg.payload) as JarvisEvent);
+      events.push(JSON.parse(msg.payload) as CentropyEvent);
     });
   });
 
@@ -71,7 +71,7 @@ describe.skipIf(!available)("B1.T1 — jarvis_events NOTIFY triggers", () => {
     await closePool();
   });
 
-  async function waitForKind(kind: string, timeoutMs = 3000): Promise<JarvisEvent> {
+  async function waitForKind(kind: string, timeoutMs = 3000): Promise<CentropyEvent> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       const found = events.find((e) => e.kind === kind && e.tenantId === tenantId);

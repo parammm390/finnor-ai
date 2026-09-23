@@ -1,4 +1,4 @@
-// §5.2 (JARVIS 95% MAESTRO PACK): the post-step runtime hook auto-ingests every
+// §5.2 (CENTROPY 95% MAESTRO PACK): the post-step runtime hook auto-ingests every
 // completed workflow/receipt/report/transcript into semantic memory. This is the one
 // place callers (workflow-runtime's completeStep, voice-os's closeVoiceSession) reach
 // into — chunk, embed, and write, all best-effort so a memory-layer failure can never

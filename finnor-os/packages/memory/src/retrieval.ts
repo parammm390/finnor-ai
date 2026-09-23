@@ -1,4 +1,4 @@
-// §5.3 (JARVIS 95% MAESTRO PACK): hybrid retrieval. Retrieval order is law — (1)
+// §5.3 (CENTROPY 95% MAESTRO PACK): hybrid retrieval. Retrieval order is law — (1)
 // structured read-models first, (2) tenant-scoped semantic second, (3) merged with
 // citations — "the LLM never answers from semantic memory alone when a structured
 // source exists." This module owns the merge/citation/confidence machinery; each

@@ -25,10 +25,10 @@
     --ring: 222.2 84% 4.9%;
     --radius: 0.75rem;
 
-    /* M1 visual token bridge: the exact JARVIS hue family (src/components/jarvis/
-       jarvis-theme.css's --j-cyan/--j-teal/--j-violet/--j-amber/--j-red/--j-green),
-       hex values copied verbatim, never re-invented. Prefixed jm- (jarvis-marketing)
-       to stay distinct from the real --j-* tokens, which stay scoped to .jarvis-root
+    /* M1 visual token bridge: the exact CENTROPY hue family (src/components/centropy/
+       centropy-theme.css's --j-cyan/--j-teal/--j-violet/--j-amber/--j-red/--j-green),
+       hex values copied verbatim, never re-invented. Prefixed jm- (centropy-marketing)
+       to stay distinct from the real --j-* tokens, which stay scoped to .centropy-root
        and are imported separately for dark/proof sections rather than merged here.
        Every hardcoded accent rgba() below in this file is now derived from these. */
     --jm-cyan: 34, 211, 238;

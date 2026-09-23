@@ -9,15 +9,15 @@ import "dotenv/config";
 
 import type http from "node:http";
 import { initObservability, getLogger } from "@finnor/tools";
-import { startJarvisEventListener, stopJarvisEventListener, onJarvisEvent } from "./sse/listener";
+import { startCentropyEventListener, stopCentropyEventListener, onCentropyEvent } from "./sse/listener";
 import { createSseGateway, drainSseConnections } from "./sse/gateway";
-import { onJarvisEventMarkProjectionsDirty } from "@finnor/projections";
+import { onCentropyEventMarkProjectionsDirty } from "@finnor/projections";
 
 const isMain = process.argv[1]?.endsWith("sse-server.ts") || process.argv[1]?.endsWith("sse-server.js");
 
 export async function startSseServer(port: number, signal?: AbortSignal): Promise<http.Server> {
-  await startJarvisEventListener();
-  onJarvisEvent(onJarvisEventMarkProjectionsDirty);
+  await startCentropyEventListener();
+  onCentropyEvent(onCentropyEventMarkProjectionsDirty);
   const server = createSseGateway();
   // Persistent runtime platforms route to a service's assigned port over
   // its private network interface, not just loopback — binding with no explicit host
@@ -29,7 +29,7 @@ export async function startSseServer(port: number, signal?: AbortSignal): Promis
   signal?.addEventListener("abort", () => {
     drainSseConnections();
     server.close();
-    void stopJarvisEventListener();
+    void stopCentropyEventListener();
   });
   return server;
 }

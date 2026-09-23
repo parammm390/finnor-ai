@@ -348,7 +348,7 @@ jobs:
             --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
             --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
             --env SUPABASE_URL="$supabase_url" \
-            --env JARVIS_SSE_ALLOWED_ORIGINS=https://finnorai.com \
+            --env CENTROPY_SSE_ALLOWED_ORIGINS=https://finnorai.com \
             --env WORKER_CONCURRENCY=2 \
             --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=0 \
             --env FINNOR_DB_POOL_MAX=1 \

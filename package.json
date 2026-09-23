@@ -1,5 +1,5 @@
 {
-  "name": "finnor",
+  "name": "centropy",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src scripts",
-    "jarvis:types": "openapi-typescript finnor-os/openapi.json -o src/lib/jarvis/openapi-types.ts",
+    "centropy:types": "openapi-typescript finnor-os/openapi.json -o src/lib/centropy/openapi-types.ts",
     "workspace:generate": "node scripts/generate-workspace-contract.mjs",
     "workspace:check": "node scripts/generate-workspace-contract.mjs --check",
     "release:p8-zero-resurrection": "node scripts/release/verify-p8-zero-resurrection.mjs && npm run release:p8-runtime-contract --prefix finnor-os",

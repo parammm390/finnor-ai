@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import FinnorMarketingPage from "@/components/marketing/FinnorMarketingPage";
+import CentropyMarketingPage from "@/components/marketing/CentropyMarketingPage";
 
 export const metadata: Metadata = {
   title: "Pricing | Scoped FINNOR Deployment",
@@ -16,5 +16,5 @@ export const metadata: Metadata = {
 };
 
 export default function PricingRoute() {
-  return <FinnorMarketingPage route="pricing" />;
+  return <CentropyMarketingPage route="pricing" />;
 }

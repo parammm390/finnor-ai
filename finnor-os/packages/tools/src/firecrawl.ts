@@ -118,7 +118,7 @@ const DEFAULT_ROBOTS_TTL_MS = 15 * 60_000;
 const DEFAULT_MIN_DOMAIN_INTERVAL_MS = 250;
 const DEFAULT_MAX_RATE_LIMIT_WAIT_MS = 5_000;
 const DEFAULT_MAX_ROBOTS_CHARS = 100_000;
-const FIRECRAWL_USER_AGENT = "Finnor-JARVIS-Research/1.0";
+const FIRECRAWL_USER_AGENT = "Finnor-CENTROPY-Research/1.0";
 
 export class UnsafeWebUrlError extends IntegrationError {
   constructor(message: string) {

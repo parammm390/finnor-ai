@@ -1,5 +1,5 @@
 // project_read_models (B1.T3): the periodic backstop for the CQRS projections cache.
-// The debounced dirty-refresh (packages/projections' onJarvisEventMarkProjectionsDirty,
+// The debounced dirty-refresh (packages/projections' onCentropyEventMarkProjectionsDirty,
 // wired in apps/worker/src/sse-server.ts) is the fast path — this is what keeps every
 // view honestly fresh even where that fast path can't reach: proposals status changes
 // (migration 0037's own comment — no tenant_id column, no NOTIFY trigger possible) and

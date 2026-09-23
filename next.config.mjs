@@ -1,15 +1,15 @@
-// Phase 1.4: security headers on the JARVIS app + its API proxy. CSP is deliberately
+// Phase 1.4: security headers on the Centropy app + its API proxy. CSP is deliberately
 // permissive on connect-src/media-src/worker-src (https:/wss:/blob: rather than an
 // enumerated allowlist) because the Voice Console's @vapi-ai/web SDK talks to
 // infrastructure this repo doesn't control and can't safely enumerate without risking
 // breaking live voice calls — the directives that matter most for THIS incident
 // (object-src, frame-ancestors, base-uri, form-action) are still locked down.
-const JARVIS_CSP = [
+const CENTROPY_CSP = [
   "default-src 'self'",
   // Next's production runtime still needs inline bootstrap scripts. Daily's CSP-
   // compatible call machine is loaded from its own host when Vapi uses avoidEval.
   // Next's development client bundles use eval for source maps. Keep the production
-  // policy eval-free, but allow dev hydration so browser QA can exercise JARVIS.
+  // policy eval-free, but allow dev hydration so browser QA can exercise Centropy.
   `script-src 'self' 'unsafe-inline' https://*.daily.co blob:${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
@@ -40,58 +40,68 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/jarvis",
+        destination: "/centropy",
+        permanent: true,
+      },
+      {
+        source: "/jarvis/:path*",
+        destination: "/centropy/:path*",
+        permanent: true,
+      },
+      {
         source: "/customers",
-        destination: "/jarvis/deals",
+        destination: "/centropy/deals",
         permanent: true,
       },
       {
         source: "/schedule",
-        destination: "/jarvis/work",
+        destination: "/centropy/work",
         permanent: true,
       },
       {
         source: "/money",
-        destination: "/jarvis/deals",
+        destination: "/centropy/deals",
         permanent: true,
       },
       {
-        source: "/jarvis/customers",
-        destination: "/jarvis/deals",
+        source: "/centropy/customers",
+        destination: "/centropy/deals",
         permanent: true,
       },
       {
-        source: "/jarvis/schedule",
-        destination: "/jarvis/work",
+        source: "/centropy/schedule",
+        destination: "/centropy/work",
         permanent: true,
       },
       {
-        source: "/jarvis/money",
-        destination: "/jarvis/deals",
+        source: "/centropy/money",
+        destination: "/centropy/deals",
         permanent: true,
       },
       {
-        source: "/jarvis/bridge",
-        destination: "/jarvis",
+        source: "/centropy/bridge",
+        destination: "/centropy",
         permanent: true,
       },
       {
-        source: "/jarvis/classic",
-        destination: "/jarvis",
+        source: "/centropy/classic",
+        destination: "/centropy",
         permanent: true,
       },
       {
-        source: "/jarvis/next",
-        destination: "/jarvis",
+        source: "/centropy/next",
+        destination: "/centropy",
         permanent: true,
       },
       {
-        source: "/jarvis/showtime",
-        destination: "/jarvis",
+        source: "/centropy/showtime",
+        destination: "/centropy",
         permanent: true,
       },
       {
-        source: "/jarvis/stage",
-        destination: "/jarvis",
+        source: "/centropy/stage",
+        destination: "/centropy",
         permanent: true,
       },
       {
@@ -131,11 +141,23 @@ const nextConfig = {
       },
     ]
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/jarvis/:path*",
+        destination: "/api/centropy/:path*",
+      },
+    ]
+  },
   async headers() {
     return [
       {
-        source: "/jarvis/:path*",
-        headers: [...SECURITY_HEADERS, { key: "Content-Security-Policy", value: JARVIS_CSP }],
+        source: "/centropy/:path*",
+        headers: [...SECURITY_HEADERS, { key: "Content-Security-Policy", value: CENTROPY_CSP }],
+      },
+      {
+        source: "/api/centropy/:path*",
+        headers: SECURITY_HEADERS,
       },
       {
         source: "/api/jarvis/:path*",

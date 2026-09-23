@@ -3976,7 +3976,7 @@ export const runtimeSubstrateRetirements = pgTable("runtime_substrate_retirement
   evidence: jsonb("evidence").notNull(),
 });
 
-// Phase 2 (JARVIS 95% MAESTRO PACK §2.2): one receipt per executed action — created at
+// Phase 2 (CENTROPY 95% MAESTRO PACK §2.2): one receipt per executed action — created at
 // proposal time (before the step's external effect runs), finalized with
 // actualResult/failure at completion. Answers "what did I intend, what evidence did I
 // use, what policy allowed it, who approved it, what actually happened, how do we

@@ -24,8 +24,8 @@ import {
 
 import { siteConfig } from "@/config/site"
 import { DEPLOYMENT_START_USD, faqItems, productCategory, productPillars } from "@/content/commercial-truth"
-import FinnorNavigation from "@/components/rebuild/FinnorNavigation"
-import { FinnorMark } from "@/components/rebuild/FinnorMark"
+import CentropyNavigation from "@/components/rebuild/CentropyNavigation"
+import { CentropyMark } from "@/components/rebuild/CentropyMark"
 import styles from "./PrivateEquityPublicPage.module.css"
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
@@ -36,17 +36,17 @@ const routeCopy: Record<PrivateEquityPublicRoute, { eyebrow: string; title: stri
   home: {
     eyebrow: productCategory,
     title: "The decision record and the execution record belong together.",
-    body: "FINNOR connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers in one inspectable operating surface.",
+    body: "Centropy connects canonical deal truth, underwriting lineage, IC governance, Work, evidence, receipts, and governed AI workers in one inspectable operating surface.",
   },
   product: {
-    eyebrow: "Product / JARVIS + Company Brain",
+    eyebrow: "Product / CENTROPY + Company Brain",
     title: "Move from investment context to governed execution without losing lineage.",
-    body: "The Company Brain composes the existing PE truth model. JARVIS turns that source-backed context into inspectable attention, bounded Work, and exact authority requests.",
+    body: "The Company Brain composes the existing PE truth model. CENTROPY turns that source-backed context into inspectable attention, bounded Work, and exact authority requests.",
   },
   capabilities: {
     eyebrow: "Capabilities / P1–P7 projected",
     title: "Seven existing systems of record. One coherent PE operating surface.",
-    body: "FINNOR projects the truth, epistemic, underwriting, IC, planning, execution, evidence, and workforce layers already persisted—without inventing another graph or source of truth.",
+    body: "Centropy projects the truth, epistemic, underwriting, IC, planning, execution, evidence, and workforce layers already persisted—without inventing another graph or source of truth.",
   },
   "how-it-works": {
     eyebrow: "Deployment / evidence before activation",
@@ -60,8 +60,8 @@ const routeCopy: Record<PrivateEquityPublicRoute, { eyebrow: string; title: stri
   },
   faq: {
     eyebrow: "Direct answers / precise boundaries",
-    title: "What FINNOR does—and what it never implies.",
-    body: "The short version: FINNOR improves inspectability and governed execution. It does not replace investment judgment or grant autonomous investment authority.",
+    title: "What Centropy does—and what it never implies.",
+    body: "The short version: Centropy improves inspectability and governed execution. It does not replace investment judgment or grant autonomous investment authority.",
   },
 }
 
@@ -175,7 +175,7 @@ function CapabilityGrid() {
     <section className={styles.capabilities} id="capabilities" data-reveal>
       <div className={styles.sectionHeader}>
         <div><span>THE OPERATING STACK</span><h2>Decision infrastructure that survives contact with execution.</h2></div>
-        <p>Each layer remains owned by its canonical package and projected into JARVIS. Visibility does not grant mutation authority.</p>
+        <p>Each layer remains owned by its canonical package and projected into CENTROPY. Visibility does not grant mutation authority.</p>
       </div>
       <div className={styles.capabilityGrid}>
         {productPillars.map((pillar, index) => {
@@ -219,7 +219,7 @@ function FAQ() {
 }
 
 function PublicFooter() {
-  return <footer className={styles.footer}><div><Link href="/" aria-label="FINNOR home"><FinnorMark /><strong>FINNOR</strong></Link><p>{productCategory}. Source-backed context, explicit uncertainty, exact authority, and durable proof.</p></div><nav aria-label="Footer"><Link href="/product">Product</Link><Link href="/resources">Resources</Link><Link href="/trust-safety">Trust</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><span>Human investment authority remains human.</span></footer>
+  return <footer className={styles.footer}><div><Link href="/" aria-label="Centropy home"><CentropyMark /><strong>Centropy</strong></Link><p>{productCategory}. Source-backed context, explicit uncertainty, exact authority, and durable proof.</p></div><nav aria-label="Footer"><Link href="/product">Product</Link><Link href="/resources">Resources</Link><Link href="/trust-safety">Trust</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><span>Human investment authority remains human.</span></footer>
 }
 
 export default function PrivateEquityPublicPage({ route }: { route: PrivateEquityPublicRoute }) {
@@ -238,20 +238,20 @@ export default function PrivateEquityPublicPage({ route }: { route: PrivateEquit
 
   return (
     <div className={styles.site} ref={root}>
-      <FinnorNavigation />
+      <CentropyNavigation />
       <main>
         <section className={styles.hero}>
           <div className={styles.heroCopy} data-hero-copy><span>{copy.eyebrow}</span><h1>{copy.title}</h1><p>{copy.body}</p><div><a href={siteConfig.calendlyLink} target="_blank" rel="noreferrer">Map your operating boundary <ArrowRight size={15} /></a><Link href="/product">Inspect the product</Link></div></div>
-          <aside className={styles.heroLedger} aria-label="FINNOR product control model"><header><CircleDot size={15} /><span>DECISION + EXECUTION LEDGER</span><em>EXPLICIT STATE</em></header><div><small>CONTEXT</small><strong>Project Northstar</strong><span>Synthetic PE walkthrough</span></div><div><small>DECISION STATE</small><strong>Not yet recorded</strong><span>No autonomous authority implied</span></div><div><small>EVIDENCE</small><strong>KNOWN · UNKNOWN · CONFLICTING</strong><span>Each fact carries source references</span></div><div><small>EXECUTION</small><strong>Candidate actions only</strong><span>Authority evaluated at execution</span></div><footer><LockKeyhole size={14} /> Tenant-scoped · source-backed · inspectable</footer></aside>
+          <aside className={styles.heroLedger} aria-label="Centropy product control model"><header><CircleDot size={15} /><span>DECISION + EXECUTION LEDGER</span><em>EXPLICIT STATE</em></header><div><small>CONTEXT</small><strong>Project Northstar</strong><span>Synthetic PE walkthrough</span></div><div><small>DECISION STATE</small><strong>Not yet recorded</strong><span>No autonomous authority implied</span></div><div><small>EVIDENCE</small><strong>KNOWN · UNKNOWN · CONFLICTING</strong><span>Each fact carries source references</span></div><div><small>EXECUTION</small><strong>Candidate actions only</strong><span>Authority evaluated at execution</span></div><footer><LockKeyhole size={14} /> Tenant-scoped · source-backed · inspectable</footer></aside>
         </section>
-        <div className={styles.marquee} aria-label="FINNOR product layers"><div>{[...productPillars, ...productPillars].map((pillar, index) => <span key={`${pillar.name}:${index}`}><Sparkles size={11} />{pillar.name}</span>)}</div></div>
+        <div className={styles.marquee} aria-label="Centropy product layers"><div>{[...productPillars, ...productPillars].map((pillar, index) => <span key={`${pillar.name}:${index}`}><Sparkles size={11} />{pillar.name}</span>)}</div></div>
         {(route === "home" || route === "product") ? <SyntheticBrain /> : null}
         {(route === "home" || route === "product") ? <ActivityTheater /> : null}
         {(route === "home" || route === "product" || route === "capabilities") ? <CapabilityGrid /> : null}
         {(route === "home" || route === "how-it-works") ? <Deployment /> : null}
         {route === "pricing" ? <Pricing /> : null}
         {route === "faq" ? <FAQ /> : null}
-        <section className={styles.authority} data-reveal><Scale size={25} /><div><span>AUTHORITY BOUNDARY</span><h2>Better context can support judgment. It cannot replace it.</h2><p>FINNOR exposes candidate actions and the exact evidence behind them. Existing Policy, Authority, approval, BusinessEffect, receipt, and proof boundaries remain decisive.</p></div><ShieldCheck size={32} /></section>
+        <section className={styles.authority} data-reveal><Scale size={25} /><div><span>AUTHORITY BOUNDARY</span><h2>Better context can support judgment. It cannot replace it.</h2><p>Centropy exposes candidate actions and the exact evidence behind them. Existing Policy, Authority, approval, BusinessEffect, receipt, and proof boundaries remain decisive.</p></div><ShieldCheck size={32} /></section>
         <section className={styles.cta} data-reveal><span>START WITH THE REAL OPERATING BOUNDARY</span><h2>Map one consequential PE workflow from truth to proof.</h2><p>Bring the sources, governance path, failure modes, and decisions that matter. We will define what can be inspected, what can be prepared, and what must remain held.</p><a href={siteConfig.calendlyLink} target="_blank" rel="noreferrer">Book an operating review <ArrowRight size={15} /></a></section>
       </main>
       <PublicFooter />

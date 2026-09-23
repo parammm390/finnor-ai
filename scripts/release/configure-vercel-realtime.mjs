@@ -19,18 +19,21 @@ async function request(path, init = {}) {
 }
 
 const envResponse = await request(`/v10/projects/${target.projectId}/env?teamId=${target.organizationId}&decrypt=false`)
-const productionEntries = (envResponse.envs ?? []).filter((entry) => entry.key === "JARVIS_SSE_GATEWAY_URL" && (entry.target === "production" || entry.target?.includes?.("production")))
-if (productionEntries.length !== 1 || !productionEntries[0].id) throw new Error("Vercel frontend must have exactly one production JARVIS_SSE_GATEWAY_URL entry")
-const entry = productionEntries[0]
+const REALTIME_ENV = "CENTROPY_SSE_GATEWAY_URL"
+const LEGACY_REALTIME_ENV = "JARVIS_SSE_GATEWAY_URL"
+const productionEntries = (envResponse.envs ?? []).filter((entry) => [REALTIME_ENV, LEGACY_REALTIME_ENV].includes(entry.key) && (entry.target === "production" || entry.target?.includes?.("production")))
+const preferred = productionEntries.find((entry) => entry.key === REALTIME_ENV) ?? productionEntries.find((entry) => entry.key === LEGACY_REALTIME_ENV)
+if (!preferred?.id) throw new Error(`Vercel frontend must have production ${REALTIME_ENV} (legacy ${LEGACY_REALTIME_ENV} is accepted during cutover)`)
+const entry = preferred
 const expected = contract.topology.worker.sseGatewayUrl
 if (apply) {
   await authorizeProductionMutation("vercel-environment-update")
   await request(`/v9/projects/${target.projectId}/env/${entry.id}?teamId=${target.organizationId}`, {
     method: "PATCH",
-    body: JSON.stringify({ key: entry.key, value: expected, target: ["production"], type: entry.type === "sensitive" ? "sensitive" : "encrypted" }),
+    body: JSON.stringify({ key: REALTIME_ENV, value: expected, target: ["production"], type: entry.type === "sensitive" ? "sensitive" : "encrypted" }),
   })
 }
 const verified = await request(`/v10/projects/${target.projectId}/env?teamId=${target.organizationId}&decrypt=false`)
-const remaining = (verified.envs ?? []).filter((candidate) => candidate.key === entry.key && (candidate.target === "production" || candidate.target?.includes?.("production")))
+const remaining = (verified.envs ?? []).filter((candidate) => candidate.key === (apply ? REALTIME_ENV : entry.key) && (candidate.target === "production" || candidate.target?.includes?.("production")))
 if (remaining.length !== 1) throw new Error("Vercel frontend realtime environment entry disappeared or duplicated")
-console.log(JSON.stringify({ ok: true, applied: apply, projectId: target.projectId, environment: "production", key: entry.key, expectedValue: expected }, null, 2))
+console.log(JSON.stringify({ ok: true, applied: apply, projectId: target.projectId, environment: "production", key: apply ? REALTIME_ENV : entry.key, expectedValue: expected }, null, 2))

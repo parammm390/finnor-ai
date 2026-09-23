@@ -11,10 +11,10 @@ export default function CustomCursor() {
   const [variant, setVariant] = useState<CursorVariant>("default")
 
   useEffect(() => {
-    // JARVIS supplies its own high-contrast cursor.  Keeping this site-wide
+    // CENTROPY supplies its own high-contrast cursor.  Keeping this site-wide
     // cursor out of that route prevents two cursors (including the dark one)
     // from competing for visibility in the command center.
-    if (window.location.pathname.startsWith("/jarvis")) {
+    if (window.location.pathname.startsWith("/centropy")) {
       document.documentElement.removeAttribute("data-custom-cursor")
       return
     }

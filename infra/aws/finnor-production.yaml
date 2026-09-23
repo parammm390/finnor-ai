@@ -681,7 +681,7 @@ Resources:
               Value: !Ref RealtimeSecretMap
             - Name: FINNOR_TENANT_SECRET_PREFIX
               Value: finnor/tenants
-            - Name: JARVIS_SSE_ALLOWED_ORIGINS
+            - Name: CENTROPY_SSE_ALLOWED_ORIGINS
               Value: !Ref SseAllowedOrigins
             - Name: WORKER_CONCURRENCY
               Value: '2'

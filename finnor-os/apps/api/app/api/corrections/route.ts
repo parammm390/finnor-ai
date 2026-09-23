@@ -1,4 +1,4 @@
-// §5.6 (JARVIS 95% MAESTRO PACK): correction loop. An operator marks a past AI
+// §5.6 (CENTROPY 95% MAESTRO PACK): correction loop. An operator marks a past AI
 // answer wrong with the correction — receipt-linked so it has real provenance, not a
 // free-floating claim. Falls back to owner-only (canApprove's own default when no
 // role_permissions row exists for this action type). Active authority roles remain

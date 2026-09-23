@@ -118,7 +118,7 @@ async function beat(options: WorkerHeartbeatOptions, draining = false): Promise<
   await recordCutoverCompatibleHeartbeats(roles);
 
   const pingUrl = process.env.HEALTHCHECK_PING_URL;
-  if (!pingUrl) return; // ⏸ PARAM signup pending (see JARVIS-CREDENTIALS-LEDGER.md) — no-op, not a fake ping
+  if (!pingUrl) return; // ⏸ PARAM signup pending (see CENTROPY-CREDENTIALS-LEDGER.md) — no-op, not a fake ping
   try {
     await fetch(pingUrl);
   } catch (err) {

@@ -23,7 +23,7 @@ export interface SemanticHit {
 }
 
 /**
- * Embedding provider abstraction. §5.1 (JARVIS 95% MAESTRO PACK): the chosen real
+ * Embedding provider abstraction. §5.1 (CENTROPY 95% MAESTRO PACK): the chosen real
  * provider is Voyage AI voyage-3.5 (VoyageEmbedder below). DeterministicLocalEmbedder
  * hashes token n-grams into a fixed vector — NOT semantically meaningful, a mechanical
  * stand-in that keeps ingestion/retrieval *plumbing* testable without a live API key.

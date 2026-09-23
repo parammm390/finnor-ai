@@ -1,4 +1,4 @@
-// §5.2 (JARVIS 95% MAESTRO PACK): turns a finalized DecisionReceipt into a real,
+// §5.2 (CENTROPY 95% MAESTRO PACK): turns a finalized DecisionReceipt into a real,
 // citable semantic-memory chunk. Shared by two callers that must never diverge: the
 // live post-step hook in steps.ts (fires the moment a step completes) and
 // scripts/backfill-embeddings.ts (a one-off pass over receipts that finalized before

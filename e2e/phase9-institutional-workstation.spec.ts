@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
-import type { WorkAggregateView } from "../src/components/jarvis/product/contracts"
+import type { WorkAggregateView } from "../src/components/centropy/product/contracts"
 import { assertInspectorLineage, assertKeyboardInspector, certifyRequiredJourneyDimensions, openDealSection, openDeterministicDeal, PHASE9_DEAL_SECTIONS, PHASE9_PRIMARY_ROUTES, signInOwner } from "./fixtures/phase9"
 
 const email = process.env.TEST_OWNER_EMAIL
@@ -30,8 +30,8 @@ test.describe("Phase 9 backend-backed certification", () => {
     await expect(page.getByRole("table", { name: "Ranked attention" })).toBeVisible({ timeout: 45_000 })
     await assertKeyboardInspector(page)
     await page.locator(".pw-attention-row").first().locator("td:nth-child(2) .pw-entity-link").click()
-    await expect(page).toHaveURL(/\/jarvis\/deals\/[0-9a-f-]{36}\/overview/)
-    const dealId = /\/jarvis\/deals\/([0-9a-f-]{36})\/overview/i.exec(new URL(page.url()).pathname)?.[1]
+    await expect(page).toHaveURL(/\/centropy\/deals\/[0-9a-f-]{36}\/overview/)
+    const dealId = /\/centropy\/deals\/([0-9a-f-]{36})\/overview/i.exec(new URL(page.url()).pathname)?.[1]
     expect(dealId).toBeTruthy()
     await openDealSection(page, "diligence")
     await page.locator(".pw-deal-section tbody tr").filter({ hasText: /Finding/i }).first().locator(".pw-entity-link").first().click()
@@ -46,7 +46,7 @@ test.describe("Phase 9 backend-backed certification", () => {
     await expect(page.locator(".pw-inspector[data-open='true']")).toHaveCount(0)
     await openDealSection(page, "work")
     await page.locator(".pw-deal-section").getByRole("link", { name: /Open Work/i }).first().click()
-    await expect(page).toHaveURL(/\/jarvis\/work/)
+    await expect(page).toHaveURL(/\/centropy\/work/)
     await expect(page.getByText("Persisted final outcome").or(page.getByText("No final outcome"))).toBeVisible()
     await expect(page.getByRole("table", { name: "Work semantic Activity" }).or(page.getByText(/Known empty: no Work Activity/))).toBeVisible()
     await certifyRequiredJourneyDimensions(page, dealId!)
@@ -104,7 +104,7 @@ test.describe("Phase 9 backend-backed certification", () => {
     await openDealSection(page, "work")
     const governedWork = page.getByRole("table", { name: "Deal-linked Work" }).locator("tbody tr").filter({ hasText: /Verify Atlas QoE evidence/i })
     await expect(governedWork, "closing verification must resolve to the exact root-linked governed Work").toBeVisible()
-    const workResponsePromise = page.waitForResponse((response) => response.request().method() === "GET" && /\/api\/jarvis\/works\/[0-9a-f-]{36}$/i.test(new URL(response.url()).pathname))
+    const workResponsePromise = page.waitForResponse((response) => response.request().method() === "GET" && /\/api\/centropy\/works\/[0-9a-f-]{36}$/i.test(new URL(response.url()).pathname))
     await governedWork.getByRole("link", { name: /Open Work/i }).click()
     const workResponse = await workResponsePromise
     expect(workResponse.status(), "the UI must read the canonical P6 Work aggregate").toBe(200)
@@ -137,7 +137,7 @@ test.describe("Phase 9 backend-backed certification", () => {
     await expect(page.getByRole("table", { name: "Closing conditions and items" }).locator("tbody tr").filter({ hasText: "QoE evidence package is indexed in the closing record." })).toContainText(/VERIFIED/i)
     await page.goForward()
     await page.goForward()
-    await expect(page).toHaveURL(/\/jarvis\/work/)
+    await expect(page).toHaveURL(/\/centropy\/work/)
     await certifyRequiredJourneyDimensions(page, dealId)
   })
 
@@ -159,7 +159,7 @@ test.describe("Phase 9 backend-backed certification", () => {
     const workEdge = inspector.locator(".pw-lineage-edge").filter({ hasText: /assignment work/i }).first()
     await expect(workEdge, "Assignment must traverse to its persisted canonical Work").toBeVisible()
     await workEdge.locator(".pw-entity-link").last().click()
-    await expect(page).toHaveURL(/\/jarvis\/work/)
+    await expect(page).toHaveURL(/\/centropy\/work/)
     await expect(inspector.locator(".pw-inspector__header")).toContainText(/work/i)
     await expect(page.getByRole("table", { name: "Plan and execution" })).toBeVisible({ timeout: 30_000 })
     await expect(page.getByText("5 · Verification")).toBeVisible()
@@ -175,7 +175,7 @@ test.describe("Phase 9 backend-backed certification", () => {
         value: () => "90000000-0000-4000-8000-000000000090",
       })
     })
-    await page.route("**/api/jarvis/works/*", async (route) => {
+    await page.route("**/api/centropy/works/*", async (route) => {
       // Keep the real backend response, but hold it long enough to certify that
       // VERIFYING is a visible state rather than an unreachable render branch.
       await new Promise((resolve) => setTimeout(resolve, 450))
@@ -199,9 +199,9 @@ test.describe("Phase 9 backend-backed certification", () => {
       "RECEIPT",
     ])
 
-    const actionResponsePromise = page.waitForResponse((response) => response.request().method() === "POST" && response.url().includes("/api/jarvis/actions"))
-    const aggregateResponsePromise = page.waitForResponse((response) => response.request().method() === "GET" && /\/api\/jarvis\/works\/[0-9a-f-]{36}$/i.test(new URL(response.url()).pathname))
-    await command.getByRole("button", { name: "Propose to JARVIS" }).click()
+    const actionResponsePromise = page.waitForResponse((response) => response.request().method() === "POST" && response.url().includes("/api/centropy/actions"))
+    const aggregateResponsePromise = page.waitForResponse((response) => response.request().method() === "GET" && /\/api\/centropy\/works\/[0-9a-f-]{36}$/i.test(new URL(response.url()).pathname))
+    await command.getByRole("button", { name: "Propose to CENTROPY" }).click()
     await expect(command).toHaveAttribute("data-stage", "executing")
     const actionResponse = await actionResponsePromise
     expect([200, 201], "the command must reach real governed intake or its persisted idempotent replay").toContain(actionResponse.status())
@@ -211,7 +211,7 @@ test.describe("Phase 9 backend-backed certification", () => {
 
     await expect(command).toHaveAttribute("data-stage", "verifying")
     const aggregateResponse = await aggregateResponsePromise
-    expect(aggregateResponse.url()).toContain(`/api/jarvis/works/${actionBody.workId}`)
+    expect(aggregateResponse.url()).toContain(`/api/centropy/works/${actionBody.workId}`)
     expect(aggregateResponse.status(), "verification must reread the persisted canonical Work aggregate").toBe(200)
     const aggregateBody = await aggregateResponse.json() as { work?: { work?: { id?: string; status?: string } } }
     expect(aggregateBody.work?.work?.id).toBe(actionBody.workId)
@@ -225,7 +225,7 @@ test.describe("Phase 9 backend-backed certification", () => {
     await expect(page.locator(".pw-inspector[data-open='true']")).toBeVisible()
     expect(new URL(page.url()).searchParams.get("root")).toContain(dealId)
     expect(new URL(page.url()).searchParams.get("inspect")).toContain(actionBody.workId!)
-    await page.unroute("**/api/jarvis/works/*")
+    await page.unroute("**/api/centropy/works/*")
   })
 
   test("captures desktop visual evidence for every primary route", async ({ page }, testInfo) => {
@@ -244,13 +244,13 @@ test.describe("Phase 9 backend-backed certification", () => {
       return `${url.pathname}${url.search}`
     }
     const primaryRoutes = [
-      { name: "home", path: withRoot("/jarvis"), ready: () => page.getByRole("table", { name: "Ranked attention" }) },
-      { name: "deals", path: withRoot("/jarvis/deals?sort=name"), ready: () => page.getByRole("table", { name: "Firm Deal master" }) },
+      { name: "home", path: withRoot("/centropy"), ready: () => page.getByRole("table", { name: "Ranked attention" }) },
+      { name: "deals", path: withRoot("/centropy/deals?sort=name"), ready: () => page.getByRole("table", { name: "Firm Deal master" }) },
       { name: "work", path: workHref!, ready: () => page.getByRole("table", { name: "Plan and execution" }) },
-      { name: "agents", path: withRoot("/jarvis/agents"), ready: () => page.getByRole("table", { name: "Business-shaped governed AI workforce" }) },
+      { name: "agents", path: withRoot("/centropy/agents"), ready: () => page.getByRole("table", { name: "Business-shaped governed AI workforce" }) },
       ...PHASE9_DEAL_SECTIONS.map((section) => ({
         name: `deal-${section}`,
-        path: withRoot(`/jarvis/deals/${dealId}/${section}`),
+        path: withRoot(`/centropy/deals/${dealId}/${section}`),
         ready: () => section === "overview" ? page.locator('[aria-label="Deal synthesis"]')
           : section === "underwriting" ? page.getByRole("table", { name: "Underwriting outputs" })
             : section === "diligence" ? page.getByRole("table", { name: "Diligence workstreams, requests, findings, risks, dependencies, and milestones" })

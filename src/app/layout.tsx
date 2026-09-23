@@ -39,13 +39,13 @@ const satoshi = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://finnorai.com"),
-  applicationName: "FINNOR",
+  applicationName: "Centropy",
   title: {
-    default: "FINNOR | Private Equity Decision + Execution Infrastructure",
-    template: "%s | FINNOR",
+    default: "Centropy | Private Equity Decision + Execution Infrastructure",
+    template: "%s | Centropy",
   },
   description:
-    "FINNOR connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce.",
+    "Centropy connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce.",
   keywords: [
     "private equity decision infrastructure",
     "private equity execution infrastructure",
@@ -54,35 +54,35 @@ export const metadata: Metadata = {
     "investment committee governance",
     "private equity workflow",
     "governed AI workforce",
-    "JARVIS command surface",
-    "FINNOR",
+    "Centropy Workspace",
+    "Centropy",
   ],
-  authors: [{ name: "FINNOR", url: "https://finnorai.com" }],
-  creator: "FINNOR",
-  publisher: "FINNOR",
+  authors: [{ name: "Centropy", url: "https://finnorai.com" }],
+  creator: "Centropy",
+  publisher: "Centropy",
   category: "Business software",
   alternates: {
     canonical: "https://finnorai.com/",
   },
   openGraph: {
-    title: "FINNOR | Private Equity Decision + Execution Infrastructure",
+    title: "Centropy | Private Equity Decision + Execution Infrastructure",
     description:
       "Canonical deal truth, underwriting lineage, IC governance, governed execution, evidence, receipts, and governed AI workers in one inspectable operating surface.",
     url: "https://finnorai.com/",
-    siteName: "FINNOR",
+    siteName: "Centropy",
     images: [
       {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "FINNOR Private Equity decision and execution infrastructure",
+        alt: "Centropy Private Equity decision and execution infrastructure",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FINNOR | Private Equity Decision + Execution Infrastructure",
+    title: "Centropy | Private Equity Decision + Execution Infrastructure",
     description:
       "Connect deal truth, underwriting, IC decisions, governed Work, evidence, receipts, and AI workers without losing lineage or authority.",
     images: ["/og-image.svg"],
@@ -118,20 +118,20 @@ export default function RootLayout({
                 {
                   "@type": "Organization",
                   "@id": "https://finnorai.com/#organization",
-                  name: "FINNOR",
-                  alternateName: ["FINNOR", "Finnor"],
+                  name: "Centropy",
+                  alternateName: ["Centropy"],
                   url: "https://finnorai.com",
                   email: "param@finnorai.com",
                   description:
-                    "FINNOR builds Private Equity decision and execution infrastructure around canonical deal truth, underwriting lineage, IC governance, Work, evidence, and governed AI workers.",
+                    "Centropy builds Private Equity decision and execution infrastructure around canonical deal truth, underwriting lineage, IC governance, Work, evidence, and governed AI workers.",
                   sameAs: ["https://www.linkedin.com/in/param-dave16"],
                 },
                 {
                   "@type": "WebSite",
                   "@id": "https://finnorai.com/#website",
                   url: "https://finnorai.com",
-                  name: "FINNOR",
-                  alternateName: "FINNOR",
+                  name: "Centropy",
+                  alternateName: "Centropy",
                   publisher: { "@id": "https://finnorai.com/#organization" },
                   inLanguage: "en-US",
                 },
@@ -139,9 +139,9 @@ export default function RootLayout({
                   "@type": "WebPage",
                   "@id": "https://finnorai.com/#webpage",
                   url: "https://finnorai.com",
-                  name: "FINNOR | Private Equity Decision + Execution Infrastructure",
+                  name: "Centropy | Private Equity Decision + Execution Infrastructure",
                   description:
-                    "FINNOR connects source-backed PE objects, underwriting lineage, investment committee governance, Work and planning, authority, evidence, receipts, and governed agents.",
+                    "Centropy connects source-backed PE objects, underwriting lineage, investment committee governance, Work and planning, authority, evidence, receipts, and governed agents.",
                   isPartOf: { "@id": "https://finnorai.com/#website" },
                   about: { "@id": "https://finnorai.com/#organization" },
                   inLanguage: "en-US",
@@ -149,7 +149,7 @@ export default function RootLayout({
                 {
                   "@type": "Product",
                   "@id": "https://finnorai.com/#product",
-                  name: "FINNOR",
+                  name: "Centropy",
                   category: "Private Equity decision + execution infrastructure",
                   description:
                     "Source-backed infrastructure joining canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence, receipts, and governed AI workers.",
@@ -169,13 +169,13 @@ export default function RootLayout({
                 },
                 {
                   "@type": "SoftwareApplication",
-                  "@id": "https://finnorai.com/#jarvis",
-                  name: "JARVIS",
+                  "@id": "https://finnorai.com/#centropy",
+                  name: "Centropy Workspace",
                   applicationCategory: "BusinessApplication",
                   operatingSystem: "Cloud",
                   url: "https://finnorai.com",
                   description:
-                    "The command and work surface for FINNOR deployments, used to understand, direct, approve and inspect operational work.",
+                    "The command and work surface for Centropy deployments, used to understand, direct, approve and inspect operational work.",
                   isPartOf: { "@id": "https://finnorai.com/#product" },
                 },
               ],

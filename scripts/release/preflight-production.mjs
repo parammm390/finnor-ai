@@ -74,7 +74,9 @@ for (const name of ["MIGRATIONS_DATABASE_URL", "DATABASE_URL", "SUPABASE_URL", "
 const frontendTarget = contract.topology.frontend
 const frontendEnvResponse = await vercel(`/v10/projects/${frontendTarget.projectId}/env?teamId=${frontendTarget.organizationId}&decrypt=false`)
 const frontendProductionEnvNames = new Set((frontendEnvResponse.envs ?? []).filter((entry) => isProductionTarget(entry.target)).map((entry) => entry.key))
-if (!frontendProductionEnvNames.has("JARVIS_SSE_GATEWAY_URL")) throw new Error("Vercel frontend production environment is missing JARVIS_SSE_GATEWAY_URL")
+if (!frontendProductionEnvNames.has("CENTROPY_SSE_GATEWAY_URL") && !frontendProductionEnvNames.has("JARVIS_SSE_GATEWAY_URL")) {
+  throw new Error("Vercel frontend production environment is missing CENTROPY_SSE_GATEWAY_URL (legacy JARVIS_SSE_GATEWAY_URL accepted during cutover)")
+}
 
 const awsRegion = worker.region
 function awsJson(service, args, timeout = 60_000) {
@@ -185,10 +187,12 @@ if (["legacy", "preparing", "routing"].includes(computeStage)) {
   if (!container?.portMappings?.some((entry) => entry.containerPort === worker.containerPort)) throw new Error("legacy task does not expose the canonical worker port")
   const env = Object.fromEntries((container.environment ?? []).map((entry) => [entry.name, entry.value]))
   for (const [name, value] of Object.entries({ SECRETS_PROVIDER: "aws-secrets-manager", SUPABASE_URL: contract.topology.database.supabaseUrl,
-    FINNOR_WORKER_CAPABILITIES: "jobs,orchestration,computer,event-wake,connection-health,realtime,sse", JARVIS_SSE_ALLOWED_ORIGINS: "https://finnorai.com",
+    FINNOR_WORKER_CAPABILITIES: "jobs,orchestration,computer,event-wake,connection-health,realtime,sse",
     PORT: "8090", SSE_PORT: "8090", WORKER_CONCURRENCY: "2", WORKER_INTERACTIVE_RESERVED_CONCURRENCY: "1" })) {
     if (env[name] !== value) throw new Error(`legacy task ${name} is ${env[name] ?? "<missing>"}, expected ${value}`)
   }
+  const allowedOrigins = env.CENTROPY_SSE_ALLOWED_ORIGINS ?? env.JARVIS_SSE_ALLOWED_ORIGINS
+  if (allowedOrigins !== "https://finnorai.com") throw new Error(`legacy task realtime allowed origins are ${allowedOrigins ?? "<missing>"}, expected https://finnorai.com`)
   if ("AWS_ACCESS_KEY_ID" in env || "AWS_SECRET_ACCESS_KEY" in env) throw new Error("legacy task contains static AWS credentials")
   let secretMap
   try { secretMap = JSON.parse(env.FINNOR_SECRET_IDS ?? "") } catch { throw new Error("legacy FINNOR_SECRET_IDS is invalid") }
@@ -255,7 +259,7 @@ const parsedDatabaseUrl = new URL(databaseUrl)
 if (parsedDatabaseUrl.hostname !== contract.topology.database.host) throw new Error(`database host ${parsedDatabaseUrl.hostname} differs from the canonical contract`)
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
-const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
+const client = new pg.Client({ connectionString: databaseUrl, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15_000 })
 await client.connect()
 let migrationHead
 let businessCounts

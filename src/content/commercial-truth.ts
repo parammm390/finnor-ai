@@ -49,20 +49,20 @@ export const operatingAreas = productPillars.map((pillar, index) => ({
 
 export const faqItems = [
   {
-    question: "What is FINNOR?",
-    answer: "FINNOR is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce without creating a second source of truth.",
+    question: "What is Centropy?",
+    answer: "Centropy is Private Equity decision + execution infrastructure. It connects canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence and receipts, and a governed AI workforce without creating a second source of truth.",
   },
   {
-    question: "What is JARVIS?",
-    answer: "JARVIS is FINNOR’s owner operating surface. Home holds the current command context and attention; Deals centers the Company Brain; Work exposes plans, actions, effects, receipts, proof, and recovery; Agents exposes the governed workforce and learning record.",
+    question: "What is CENTROPY?",
+    answer: "CENTROPY is Centropy’s owner operating surface. Home holds the current command context and attention; Deals centers the Company Brain; Work exposes plans, actions, effects, receipts, proof, and recovery; Agents exposes the governed workforce and learning record.",
   },
   {
-    question: "Does FINNOR make investment decisions autonomously?",
-    answer: "No. FINNOR can assemble evidence, expose lineage, prepare bounded work, and surface candidate actions. Investment judgment and consequential authority remain with the people and governance process configured for the firm.",
+    question: "Does Centropy make investment decisions autonomously?",
+    answer: "No. Centropy can assemble evidence, expose lineage, prepare bounded work, and surface candidate actions. Investment judgment and consequential authority remain with the people and governance process configured for the firm.",
   },
   {
-    question: "Does FINNOR replace source systems?",
-    answer: "Not by implication. FINNOR composes existing canonical records and source-backed relationships. The deployment defines which sources are authoritative, how freshness and conflicts are represented, and which operations can cross an execution boundary.",
+    question: "Does Centropy replace source systems?",
+    answer: "Not by implication. Centropy composes existing canonical records and source-backed relationships. The deployment defines which sources are authoritative, how freshness and conflicts are represented, and which operations can cross an execution boundary.",
   },
   {
     question: "What does the Company Brain contain?",

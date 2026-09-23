@@ -1,4 +1,4 @@
-// §5.6 (JARVIS 95% MAESTRO PACK): correction loop. An operator marks an AI answer
+// §5.6 (CENTROPY 95% MAESTRO PACK): correction loop. An operator marks an AI answer
 // wrong with the correction; it becomes a first-class fact that outranks semantic hits
 // on the same topic thereafter — real provenance via an optional receipt link, not a
 // free-floating claim.
