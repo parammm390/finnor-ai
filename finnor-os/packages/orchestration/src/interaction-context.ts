@@ -38,7 +38,7 @@ function normalizeLegacyContext(value: unknown, channel: "voice" | "text" | "con
     source: channel,
     selectedEntities: entityRefs,
     excludedEntities: [],
-    surface: { id: "home", route: "/jarvis", spatialState: "canvas" },
+    surface: { id: "home", route: "/centropy", spatialState: "canvas" },
     filters: [],
   };
 }

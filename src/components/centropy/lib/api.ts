@@ -12,7 +12,7 @@ import { mutationProjectionTags, publishBusinessInvalidation } from "./business-
 
 const TEST_KEY_STORAGE = "centropy_admin_key"
 const LEGACY_TEST_KEY_STORAGE = "jarvis_admin_key"
-const TEST_MODE = (process.env.NEXT_PUBLIC_CENTROPY_TEST_MODE ?? process.env.NEXT_PUBLIC_JARVIS_TEST_MODE) === "1"
+const TEST_MODE = (process.env.NEXT_PUBLIC_CENTROPY_TEST_MODE || process.env.NEXT_PUBLIC_JARVIS_TEST_MODE) === "1"
 
 export function getCentropyTestKey(): string | null {
   if (!TEST_MODE || typeof window === "undefined") return null

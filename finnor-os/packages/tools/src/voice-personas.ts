@@ -5,12 +5,12 @@ export type VoicePersona = "main";
 
 /** Safe product-facing keys carried in the durable causal envelope. These are not
  * provider assistant ids and are the only voice identity a read model may expose. */
-export type VoiceAgentKey = "jarvis";
+export type VoiceAgentKey = "centropy";
 
-export const VOICE_AGENT_KEYS = ["jarvis"] as const satisfies readonly VoiceAgentKey[];
+export const VOICE_AGENT_KEYS = ["centropy"] as const satisfies readonly VoiceAgentKey[];
 
 const AGENT_KEY_BY_PERSONA: Record<VoicePersona, VoiceAgentKey> = {
-  main: "jarvis",
+  main: "centropy",
 };
 
 /** Maps only a validated, known persona to its safe product key. Unknown values

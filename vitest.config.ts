@@ -1,15 +1,10 @@
 import { fileURLToPath } from "node:url"
 import { defineConfig } from "vitest/config"
 
-// Unit-test runner for the CENTROPY kernel (plan v3 P1.T1).
+// Unit-test runner for the Centropy product kernel (plan v3 P1.T1).
 //
-// environment: "node" — deliberate, not a default. @testing-library/react@16 needs
-// BOTH an @testing-library/dom@^10 peer and a DOM environment (jsdom / happy-dom).
-// Neither is an authorised dependency in this plan (P1.T1 permits exactly vitest and
-// @testing-library/react), so no DOM environment can be installed. Recorded under
-// ## BLOCKERS in CENTROPY-FRONTEND-MAESTRO-STATE-v3.md. Until that is resolved, every
-// unit test in this plan targets pure logic (kernel selectors, derivations), which is
-// where the truth rules actually live.
+// environment: "node" is deliberate. The unit suite covers pure logic; browser
+// interaction and DOM behavior are exercised by the Playwright end-to-end suite.
 //
 // e2e/ is excluded: those are Playwright specs and are run by `npm run test:e2e`.
 export default defineConfig({
@@ -20,10 +15,8 @@ export default defineConfig({
     // The plan fixes the script string as exactly `vitest run`, and also requires it to
     // exit 0 before any test exists (P1.T1). That lives here rather than as a CLI flag.
     passWithNoTests: true,
-    // `lib/centropy-auth.tsx` constructs the Supabase browser client at module load,
-    // and that client validates its URL eagerly. Any test whose module graph reaches
-    // it therefore needs these present. They are placeholders for module construction
-    // only — nothing under test makes a network call, and no test asserts on them.
+    // Keep stable placeholders for tests that load Supabase configuration. The unit
+    // suite does not make network calls.
     env: {
       NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-not-a-real-credential",

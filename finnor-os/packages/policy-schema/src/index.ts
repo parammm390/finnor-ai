@@ -75,7 +75,8 @@ export const OperatingInteractionContextSchema = z.object({
   excludedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   surface: z.object({
     id: z.enum(["home", "work", "agents", "deals"]),
-    route: z.string().startsWith("/jarvis").max(300).optional(),
+    // Accept the old path while saved contexts and deployed clients are migrating.
+    route: z.string().max(300).regex(/^\/(?:centropy|jarvis)(?:\/|$)/).optional(),
     spatialState: z.enum(["canvas", "detail", "list", "map", "timeline"]).optional(),
   }).strict(),
   filters: z.array(z.object({

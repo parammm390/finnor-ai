@@ -1,16 +1,11 @@
-// Phase 1.4: security headers on the Centropy app + its API proxy. CSP is deliberately
-// permissive on connect-src/media-src/worker-src (https:/wss:/blob: rather than an
-// enumerated allowlist) because the Voice Console's @vapi-ai/web SDK talks to
-// infrastructure this repo doesn't control and can't safely enumerate without risking
-// breaking live voice calls — the directives that matter most for THIS incident
-// (object-src, frame-ancestors, base-uri, form-action) are still locked down.
+// Phase 1.4: security headers on the Centropy app + its API proxy. Deployment-hosted
+// Supabase and monitoring endpoints vary, so connect-src accepts HTTPS/WSS origins.
+// The page routes and higher-risk embedding directives remain first-party only.
 const CENTROPY_CSP = [
   "default-src 'self'",
-  // Next's production runtime still needs inline bootstrap scripts. Daily's CSP-
-  // compatible call machine is loaded from its own host when Vapi uses avoidEval.
-  // Next's development client bundles use eval for source maps. Keep the production
-  // policy eval-free, but allow dev hydration so browser QA can exercise Centropy.
-  `script-src 'self' 'unsafe-inline' https://*.daily.co blob:${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  // Next's production runtime still needs inline bootstrap scripts. Development
+  // bundles use eval for source maps; production remains eval-free.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",

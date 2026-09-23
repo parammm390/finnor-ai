@@ -38,10 +38,12 @@ export function ResetPasswordForm() {
     try {
       const supabaseBrowser = await getSupabaseBrowser()
       const { error: resetError } = await supabaseBrowser.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/centropy/reset-password`,
+        // Keep the previously allow-listed Supabase callback during the route cutover.
+        // Next redirects this compatibility URL to the canonical Centropy page.
+        redirectTo: `${window.location.origin}/jarvis/reset-password`,
       })
       if (resetError) throw resetError
-      setMessage("If that address has a CENTROPY account, a password-reset link is on its way.")
+      setMessage("If that address has a Centropy account, a password-reset link is on its way.")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
     } finally {
@@ -74,7 +76,7 @@ export function ResetPasswordForm() {
           {recoverySession ? "Choose a new password" : "Reset your password"}
         </div>
         <p className="mb-5 j-fs-sm text-[color:var(--j-text-dim)]">
-          {recoverySession ? "Set a new password for your CENTROPY account." : "We will send a reset link to the email address on your CENTROPY account."}
+          {recoverySession ? "Set a new password for your Centropy account." : "We will send a reset link to the email address on your Centropy account."}
         </p>
         {recoverySession ? (
           <form onSubmit={setNewPassword} className="space-y-3">

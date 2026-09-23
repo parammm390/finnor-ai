@@ -46,7 +46,7 @@ describe("real conversational lane", () => {
       asOf: "2026-08-10T10:00:00.000Z",
       evidence: [{ source: "conversation_model", ref: "test-answer-model", timestamp: "2026-08-10T10:00:00.000Z" }],
     });
-    expect(answer.spokenSummary).not.toMatch(/^(?:heard|JARVIS is ready)/i);
+    expect(answer.spokenSummary).not.toMatch(/^(?:heard|(?:Centropy|Jarvis) is ready)/i);
   });
 });
 

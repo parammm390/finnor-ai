@@ -1,5 +1,7 @@
 # P4.T4 — Performance / accessibility / responsive certification
 
+Root-level reports and screenshots cited below are available from [the legacy artifact index](../legacy-root-artifacts.md).
+
 Date: 2026-08-09 (Asia/Kolkata)
 
 ## Result

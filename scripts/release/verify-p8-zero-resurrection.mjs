@@ -84,7 +84,7 @@ function reachableFrom(entries) {
 const rootAppFiles = sourceFilesUnder(join(repoRoot, "src/app"))
 const apiAppFiles = sourceFilesUnder(join(osRoot, "apps/api/app"))
 const entryGroups = {
-  jarvis: sourceFilesUnder(join(repoRoot, "src/app/jarvis")),
+  centropy: sourceFilesUnder(join(repoRoot, "src/app/centropy")),
   planner: [
     join(osRoot, "packages/orchestration/src/planner.ts"),
     join(osRoot, "packages/orchestration/src/objective-loop.ts"),

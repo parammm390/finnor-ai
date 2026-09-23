@@ -10,7 +10,7 @@ import {
   resolveProviderForPurpose,
 } from "@finnor/tools";
 
-describe("JARVIS model routing", () => {
+describe("Centropy model routing", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
     for (const name of ["MISTRAL_API_KEY", "DEEPSEEK_API_KEY", "AWS_BEDROCK_API_KEY", "GROQ_API_KEY"]) vi.stubEnv(name, "");

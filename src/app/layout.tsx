@@ -57,9 +57,9 @@ export const metadata: Metadata = {
     "Centropy Workspace",
     "Centropy",
   ],
-  authors: [{ name: "Centropy", url: "https://finnorai.com" }],
-  creator: "Centropy",
-  publisher: "Centropy",
+  authors: [{ name: "FINNOR", url: "https://finnorai.com" }],
+  creator: "FINNOR",
+  publisher: "FINNOR",
   category: "Business software",
   alternates: {
     canonical: "https://finnorai.com/",
@@ -118,12 +118,12 @@ export default function RootLayout({
                 {
                   "@type": "Organization",
                   "@id": "https://finnorai.com/#organization",
-                  name: "Centropy",
-                  alternateName: ["Centropy"],
+                  name: "FINNOR",
+                  alternateName: ["FINNOR"],
                   url: "https://finnorai.com",
                   email: "param@finnorai.com",
                   description:
-                    "Centropy builds Private Equity decision and execution infrastructure around canonical deal truth, underwriting lineage, IC governance, Work, evidence, and governed AI workers.",
+                    "FINNOR builds Centropy, Private Equity decision and execution infrastructure around canonical deal truth, underwriting lineage, IC governance, Work, evidence, and governed AI workers.",
                   sameAs: ["https://www.linkedin.com/in/param-dave16"],
                 },
                 {
@@ -131,7 +131,7 @@ export default function RootLayout({
                   "@id": "https://finnorai.com/#website",
                   url: "https://finnorai.com",
                   name: "Centropy",
-                  alternateName: "Centropy",
+                  alternateName: "Centropy by FINNOR",
                   publisher: { "@id": "https://finnorai.com/#organization" },
                   inLanguage: "en-US",
                 },
@@ -143,7 +143,7 @@ export default function RootLayout({
                   description:
                     "Centropy connects source-backed PE objects, underwriting lineage, investment committee governance, Work and planning, authority, evidence, receipts, and governed agents.",
                   isPartOf: { "@id": "https://finnorai.com/#website" },
-                  about: { "@id": "https://finnorai.com/#organization" },
+                  about: { "@id": "https://finnorai.com/#product" },
                   inLanguage: "en-US",
                 },
                 {
@@ -153,7 +153,8 @@ export default function RootLayout({
                   category: "Private Equity decision + execution infrastructure",
                   description:
                     "Source-backed infrastructure joining canonical deal truth, underwriting lineage, IC governance, Work and planning, governed execution, evidence, receipts, and governed AI workers.",
-                  brand: { "@id": "https://finnorai.com/#organization" },
+                  brand: { "@type": "Brand", name: "Centropy" },
+                  manufacturer: { "@id": "https://finnorai.com/#organization" },
                   audience: {
                     "@type": "BusinessAudience",
                     audienceType: "Private equity investment and operating teams",
@@ -172,6 +173,7 @@ export default function RootLayout({
                   "@id": "https://finnorai.com/#centropy",
                   name: "Centropy Workspace",
                   applicationCategory: "BusinessApplication",
+                  brand: { "@type": "Brand", name: "Centropy" },
                   operatingSystem: "Cloud",
                   url: "https://finnorai.com",
                   description:

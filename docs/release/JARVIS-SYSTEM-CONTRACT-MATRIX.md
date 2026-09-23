@@ -5,6 +5,8 @@ Scope: authenticated JARVIS frontend → same-origin proxy → FINNOR OS API →
 
 ## Release result
 
+Historical screenshots and root evidence referenced below are linked from [the artifact index](evidence/legacy-root-artifacts.md).
+
 The repaired local production build passes the authenticated six-surface sweep. Home, Work, Customers, Schedule, Money, and Agents all returned HTTP 200 for their authoritative API reads, with zero browser console errors and zero page errors. The exact one-command acceptance chain completed and is visible across Work, Household, Schedule, Agents, and receipt evidence.
 
 This does **not** claim that absent provider configuration or absent historical data exists. Vapi remains explicitly unconfigured in the acceptance environment, older failed attempts remain visible, and no route-optimization receipt is claimed for a schedule that was booked but never optimized.

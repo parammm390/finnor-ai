@@ -3,7 +3,7 @@
 export const runtime = "edge"
 
 function configuredGateway(): URL | null {
-  for (const value of [process.env.CENTROPY_SSE_GATEWAY_URL, process.env.JARVIS_SSE_GATEWAY_URL, process.env.NEXT_PUBLIC_CENTROPY_SSE_URL, process.env.NEXT_PUBLIC_JARVIS_SSE_URL]) {
+  for (const value of [process.env.CENTROPY_SSE_GATEWAY_URL, process.env.NEXT_PUBLIC_CENTROPY_SSE_URL, process.env.JARVIS_SSE_GATEWAY_URL, process.env.NEXT_PUBLIC_JARVIS_SSE_URL]) {
     const candidate = value?.trim()
     if (!candidate) continue
     try {

@@ -23,7 +23,7 @@ export class AuthError extends Error {
   }
 }
 
-/** Same convention as root/src/app/api/jarvis/[...path]/route.ts's own clientIp() —
+/** Same convention as root/src/app/api/centropy/[...path]/route.ts's own clientIp() —
  *  first hop of x-forwarded-for, falling back to x-real-ip, "unknown" if neither is
  *  present (a direct/local request with no proxy in front). */
 function clientIp(req: Request): string {

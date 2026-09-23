@@ -267,7 +267,7 @@ export interface WorkCall {
   endedAt: string | null;
   endedReason: string | null;
   householdId: string | null;
-  agentKey: "jarvis" | "follow-up" | "service-reminder" | "win-back" | "payment-collector" | null;
+  agentKey: "centropy" | "follow-up" | "service-reminder" | "win-back" | "payment-collector" | null;
 }
 
 export interface WorkCaseProjection {
@@ -408,11 +408,12 @@ function stringValue(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-const WORK_AGENT_KEYS = ["jarvis", "follow-up", "service-reminder", "win-back", "payment-collector"] as const;
+const WORK_AGENT_KEYS = ["centropy", "follow-up", "service-reminder", "win-back", "payment-collector"] as const;
 type WorkAgentKey = (typeof WORK_AGENT_KEYS)[number];
 
 function callAgentKey(raw: unknown): WorkAgentKey | null {
   const value = stringValue(record(raw)?.agentKey);
+  if (value === "jarvis") return "centropy";
   return value && WORK_AGENT_KEYS.includes(value as WorkAgentKey) ? (value as WorkAgentKey) : null;
 }
 
