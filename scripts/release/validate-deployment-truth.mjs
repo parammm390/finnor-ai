@@ -14,7 +14,7 @@ required(contract.schemaVersion === 3 && contract.environment === "production", 
 required(contract.canonicalGit.remote === "origin" && contract.canonicalGit.branch === "main" && contract.canonicalGit.repository === "parammm390/finnor-ai", "canonical Git target must be origin/main")
 required(contract.canonicalGit.requireCleanWorktree === true, "production contract must require a clean worktree")
 required(contract.release.concurrencyGroup === "finnor-production-release", "production concurrency lock changed")
-required(contract.release.requiredMigrationHead === "0140_scope5_epistemic_impact.sql", "production migration head is not locked to Scope 5")
+required(contract.release.requiredMigrationHead === "0141_restricted_digest_projection_access.sql", "production migration head is not locked to the projection repair")
 for (const component of ["computeRealtime", "computeInteractive", "computeBackground", "computeHeavy"]) required(contract.release.requiredComponents.includes(component), `${component} must be required for every production release`)
 required(contract.release.requiredComponents.includes("supplierCanaryApp") && contract.release.requiredComponents.includes("supplierCanaryAuth"), "both supplier canary roles must be required for the Phase 8 cutover release")
 required(contract.forbiddenActiveProviders.includes("azure"), "Azure must remain forbidden in the active production topology")

@@ -1,7 +1,7 @@
 /** Scope-5 durable projection. The source owners retain every raw value; this
  * module stores only versioned definitions, source references, semantic hashes,
  * redacted belief facts, causal edges and derived impact. */
-import { withTenantTransaction } from "@finnor/db";
+import { CURRENT_MIGRATION_HEAD, withTenantTransaction } from "@finnor/db";
 import { affectedNodes, compileUnderwritingModel, type UnderwritingModelIR } from "@finnor/underwriting";
 import type { PoolClient } from "pg";
 import { EPISTEMIC_HEURISTIC_VERSION, type ConfidenceLevel, type EvidenceRecord, type JsonValue, type Proposition,
@@ -1283,9 +1283,9 @@ export async function activateDurableEpistemicImpact(input: {
       throw new Error("Epistemic activation requires drained changes, freshness, and an exact shadow checkpoint");
     }
     const worker = await client.query(`SELECT 1 FROM finnor_os.service_release_heartbeats
-      WHERE service IN ('compute-background','worker') AND release_sha=$1 AND migration_head='0140_scope5_epistemic_impact.sql'
+      WHERE service IN ('compute-background','worker') AND release_sha=$1 AND migration_head=$2
         AND capabilities @> ARRAY['epistemic-v2']::text[] AND last_beat_at>=clock_timestamp()-interval '2 minutes'
-      LIMIT 1`,[input.releaseSha]);
+      LIMIT 1`,[input.releaseSha,CURRENT_MIGRATION_HEAD]);
     if (!worker.rowCount) throw new Error("No fresh protocol-2 epistemic worker for the exact release/migration head");
     await client.query(`UPDATE finnor_os.epistemic_runtime_controls SET mode='active',activated_at=clock_timestamp(),
       activated_release_sha=$2,updated_at=clock_timestamp() WHERE tenant_id=$1`,[input.tenantId,input.releaseSha]);

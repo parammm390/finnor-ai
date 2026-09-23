@@ -66,7 +66,7 @@ jobs:
         working-directory: finnor-os
 
       - name: Verify canonical traversal and tenant isolation
-        run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts
+        run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts tests/integration/restricted-digest-projection.test.ts
         working-directory: finnor-os
 
   phase5-readiness:

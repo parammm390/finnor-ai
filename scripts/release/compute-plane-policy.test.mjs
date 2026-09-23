@@ -6,7 +6,7 @@ const sha = "a".repeat(40)
 const digest = `sha256:${"b".repeat(64)}`
 const now = Date.parse("2026-01-01T00:00:00Z")
 const expected = { commitSha: sha, buildId: "finnor-aaaaaaaaaaaa", version: "0.1.0+aaaaaaaaaaaa", source: "github-actions", environment: "production" }
-const migrationHead = "0140_scope5_epistemic_impact.sql"
+const migrationHead = "0141_restricted_digest_projection_access.sql"
 
 function fixture() {
   const profiles = {}, services = {}, tasksByClass = {}, heartbeats = []

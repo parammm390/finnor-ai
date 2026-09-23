@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0140_scope5_epistemic_impact.sql",
+    "requiredMigrationHead": "0141_restricted_digest_projection_access.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

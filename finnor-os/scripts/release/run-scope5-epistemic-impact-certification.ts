@@ -72,7 +72,7 @@ async function withDatabase<T>(name: string, run: (url: string) => Promise<T>): 
 async function populatedUpgrade(): Promise<void> {
   await withDatabase("upgrade",async (url) => {
     const files = await migrationFiles();
-    const prior = files.filter((file) => file.name < CURRENT_MIGRATION_HEAD);
+    const prior = files.filter((file) => file.name < "0140_scope5_epistemic_impact.sql");
     assert.equal(prior.at(-1)?.name,"0139_scope4_pe_digital_twin.sql");
     await migrate(url,prior);
     const tenantId = randomUUID(); const userId = randomUUID(); const sourceId = randomUUID(); const companyId = randomUUID();
@@ -93,7 +93,7 @@ async function populatedUpgrade(): Promise<void> {
         FROM finnor_os.external_organizations o WHERE o.id=$1`,[companyId,sourceId])).rows[0];
     } finally { await client.end(); }
     const applied = await migrate(url,files);
-    assert.deepEqual(applied,[CURRENT_MIGRATION_HEAD]);
+    assert.deepEqual(applied,["0140_scope5_epistemic_impact.sql",CURRENT_MIGRATION_HEAD]);
     const verify = new pg.Client({ connectionString:url }); await verify.connect();
     try {
       await verify.query("SELECT set_config('app.tenant_id',$1,false),set_config('app.user_id',$2,false)",[tenantId,userId]);
@@ -117,7 +117,7 @@ async function populatedUpgrade(): Promise<void> {
         validAt:new Date(0).toISOString(),knownAt:new Date(0).toISOString()});
       assert.equal(replay.status,"UNAVAILABLE_BEFORE_BASELINE");
       assert.equal((await baselineDurableEpistemicGraph(tenantId)).complete,true);
-      pass("populated-upgrade",`0139→0140 preserved existing canonical/evidence rows; new epistemic tables empty until explicit baseline; pre-baseline replay unavailable`);
+      pass("populated-upgrade",`0139→0140→0141 preserved existing canonical/evidence rows; new epistemic tables empty until explicit baseline; pre-baseline replay unavailable`);
     } finally { await verify.end(); }
   });
 }
@@ -461,7 +461,7 @@ async function digitalTwinRestatement(): Promise<void> {
       const releaseSha="b".repeat(40);
       await client.query(`INSERT INTO finnor_os.service_release_heartbeats
         (service,instance_id,release_sha,build_id,version,release_source,migration_head,capabilities,environment)
-        VALUES('worker','scope5-twin',$1,'scope5-twin','scope5-twin','certification','0140_scope5_epistemic_impact.sql',ARRAY['epistemic-v2'],'test')`,[releaseSha]);
+        VALUES('worker','scope5-twin',$1,'scope5-twin','scope5-twin','certification',$2,ARRAY['epistemic-v2'],'test')`,[releaseSha,CURRENT_MIGRATION_HEAD]);
       await activateDurableEpistemicImpact({tenantId,graphVersionId:prepared.graphVersionId!,releaseSha});
       const replacementId=randomUUID(),replacementVersionId=randomUUID();
       await client.query("BEGIN");
@@ -685,7 +685,7 @@ await withDatabase("fresh",async (url) => {
       /No fresh protocol-2 epistemic worker/);
     await client.query(`INSERT INTO finnor_os.service_release_heartbeats
       (service,instance_id,release_sha,build_id,version,release_source,migration_head,capabilities,environment)
-      VALUES('worker','scope5-smoke',$1,'scope5-smoke','scope5-smoke','certification','0140_scope5_epistemic_impact.sql',ARRAY['epistemic-v2'],'test')`,[releaseSha]);
+      VALUES('worker','scope5-smoke',$1,'scope5-smoke','scope5-smoke','certification',$2,ARRAY['epistemic-v2'],'test')`,[releaseSha,CURRENT_MIGRATION_HEAD]);
     await activateDurableEpistemicImpact({tenantId,graphVersionId:staged.graphVersionId,releaseSha});
     const postActivationPinGuard = (await client.query<{reasons:string[]}>(
       "SELECT finnor_os.epistemic_execution_block_reasons($1,$2,$3,true) reasons",[tenantId,planId,"high-risk-node"])).rows[0]!.reasons;
