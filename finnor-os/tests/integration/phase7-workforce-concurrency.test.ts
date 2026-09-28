@@ -293,9 +293,12 @@ describe.skipIf(!available)("P7 assignment, crash, reassignment, and learning co
     const budgeted = await requestAssignment(budgetFixture);
     expect(budgeted.status).toBe("assigned");
     if (budgeted.status !== "assigned") return;
-    await admin.query(`UPDATE finnor_os.work_objective_loops SET query_count=8 WHERE id=$1`, [budgetFixture.loopId]);
+    // Exhaust the Objective's actual global ceiling (11), independently of
+    // either specialist's profile allowance (8). This step has no reservation.
+    await admin.query(`UPDATE finnor_os.work_objective_loops SET query_count=11 WHERE id=$1`, [budgetFixture.loopId]);
     expect((await claimWorkforceAssignment({ tenantId, assignmentId: budgeted.assignment.id, leaseOwner: "budget-check" })).status).toBe("reassigned");
-    const exhausted = await requestAssignment({ ...budgetFixture, objectiveLoop: { ...budgetFixture.objectiveLoop, queryCount: 8 } });
+    // The original caller snapshot still says zero: persisted exhaustion wins.
+    const exhausted = await requestAssignment(budgetFixture);
     expect(exhausted.status).toBe("unassigned");
     expect((await admin.query(`SELECT state,reassignment_reason FROM finnor_os.workforce_assignments WHERE id=$1`, [budgeted.assignment.id])).rows[0])
       .toEqual({ state: "reassigned", reassignment_reason: "AUTONOMY_BUDGET_EXHAUSTED" });

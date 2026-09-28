@@ -196,7 +196,7 @@ export interface ObjectiveInspection extends Record<string, unknown> {
   priorIterations: unknown[];
 }
 
-async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string): Promise<Record<string, unknown>> {
+async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, workId: string): Promise<Record<string, unknown>> {
   return withTenant(tenantId, async (db) => {
     const investments = await db.execute(sql`
       SELECT id::text,title,state,version FROM finnor_os.pe_investment_cases
@@ -218,7 +218,8 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string): Pr
       JOIN finnor_os.pe_investment_cases investment
         ON investment.tenant_id=run.tenant_id AND investment.id=run.investment_case_id
       WHERE run.tenant_id=${tenantId}::uuid AND investment.deal_id=${dealId}::uuid
-      ORDER BY run.computed_at DESC,run.id LIMIT 8
+      ORDER BY CASE WHEN run.work_id=${workId}::uuid THEN 0 WHEN run.scenario_id IS NULL THEN 1 ELSE 2 END,
+        run.computed_at DESC,run.id LIMIT 16
     `);
     const cases = await db.execute(sql`
       SELECT id::text,investment_case_id::text,committee_config_version_id::text,final_decision_id::text,
@@ -923,7 +924,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
   const privateEquityIcBasis = businessRequest.intent === "closing_readiness"
-    ? await inspectPrivateEquityIcBasis(tenantId, businessRequest.dealId) : undefined;
+    ? await inspectPrivateEquityIcBasis(tenantId, businessRequest.dealId, workId) : undefined;
   const objectiveSteps = aggregate.objectiveSteps as Array<typeof workObjectiveSteps.$inferSelect>;
   const actorId = ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null);
   const [identityAccess, computerConfig, computerRunRows, delegationRows, acknowledgementRows, eventWake] = await Promise.all([

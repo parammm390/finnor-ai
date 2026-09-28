@@ -1,0 +1,64 @@
+{
+  "schema": "centropy.secret-scan-policy-proof/v1",
+  "status": "PASS",
+  "capturedAt": "2026-09-28T04:04:24.412Z",
+  "scannerVersion": "8.24.3",
+  "binarySha256": "531b6b70a924b24fe5ccddb83f0d2fdcc68d68fa6abfcf343aa4f4a2ec7ee5ba",
+  "configurationSha256": "50c4dea32a321a3f64978d26328adfb311043b59b8f37f5bdaeb0c7806b1690f",
+  "steps": [
+    "Show the default scanner detects the authored high entropy business references",
+    "Show the exact field/value/path policy allows those references",
+    "Show accessToken and apiKey fields remain detected on the same evidence path"
+  ],
+  "scans": [
+    {
+      "fixture": "business",
+      "policy": "default",
+      "inputSha256": "5eb783980d596445f8e6bb32c867c3801752d83cbecb8befa13c496ae9e616b7",
+      "inputBytes": 210,
+      "fields": [
+        "executionKey",
+        "idempotencyKey",
+        "templateKey",
+        "versionKey"
+      ],
+      "exitCode": 1,
+      "findingCount": 4,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "business",
+      "policy": "configured",
+      "inputSha256": "5eb783980d596445f8e6bb32c867c3801752d83cbecb8befa13c496ae9e616b7",
+      "inputBytes": 210,
+      "fields": [
+        "executionKey",
+        "idempotencyKey",
+        "templateKey",
+        "versionKey"
+      ],
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "credential",
+      "policy": "configured",
+      "inputSha256": "2d8d0d790f007ce20cc885d841b0f35b14a9d3306a24246e6fd5ae3e0a6692cc",
+      "inputBytes": 108,
+      "fields": [
+        "accessToken",
+        "apiKey"
+      ],
+      "exitCode": 1,
+      "findingCount": 2,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    }
+  ],
+  "reproduce": "node scripts/centropy/verify-secret-scan-policy.mjs <pinned-gitleaks-8.24.3-path>",
+  "limitation": "Authored scanner fixtures; no external credentials or external security certification are claimed."
+}

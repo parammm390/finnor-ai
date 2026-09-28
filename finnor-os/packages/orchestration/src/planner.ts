@@ -437,7 +437,7 @@ function workOpenedIcCase(planningContext: unknown): { caseRow: Record<string, u
   const inspection = record(planningContext);
   const basis = record(inspection.privateEquityIcBasis);
   const actions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
-  const opened = actions.find((action) => action.actionType === "open_ic_case" && action.status === "completed");
+  const opened = actions.find((action) => ["open_ic_case", "select_ic_underwriting_run"].includes(String(action.actionType)) && action.status === "completed");
   const effects = Array.isArray(inspection.businessEffects) ? inspection.businessEffects.map(record) : [];
   const effect = effects.find((item) => item.domainActionId === opened?.id && item.status === "verified");
   const caseId = record(record(effect?.observedResult).entity).entityId;
@@ -449,7 +449,7 @@ function workOpenedIcCase(planningContext: unknown): { caseRow: Record<string, u
 function icMemoDraftCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const current = workOpenedIcCase(planningContext);
-  if (!current || current.caseRow.state !== "PREPARING" || typeof current.caseRow.primaryUnderwritingRunId !== "string"
+  if (!current || !["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"].includes(String(current.caseRow.state)) || typeof current.caseRow.primaryUnderwritingRunId !== "string"
     || current.actions.some((action) => action.actionType === "create_ic_memo_draft")) return null;
   const investments = Array.isArray(current.basis.investmentCases) ? current.basis.investmentCases.map(record) : [];
   const investment = investments.find((item) => item.id === current.caseRow.investmentCaseId);
@@ -464,15 +464,14 @@ function icMemoDraftCandidate(goal: GoalSpec, planningContext: unknown): Candida
 function icMemoSelectionCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const current = workOpenedIcCase(planningContext);
-  if (!current || current.caseRow.state !== "PREPARING") return null;
+  if (!current || !["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"].includes(String(current.caseRow.state))) return null;
   const priorSelections = current.actions.filter((action) => action.actionType === "select_ic_memo_version");
   // A prior action may have selected the exact memo in PE2 before a downstream
   // Work-graph attachment failed. Permit one fresh, approved re-selection of
   // the same DocumentVersion while preserving the failed action and receipt.
   const recovering = priorSelections.length === 1 && priorSelections[0]?.status === "failed"
     && (current.caseRow.currentMemoId == null || current.caseRow.currentMemoId === priorSelections[0]?.id);
-  if (priorSelections.length > 1 || (priorSelections.length === 1 && !recovering)
-    || (current.caseRow.currentMemoId && !recovering)) return null;
+  if (priorSelections.length > 1 || (priorSelections.length === 1 && !recovering)) return null;
   const created = current.actions.find((action) => action.actionType === "create_ic_memo_draft" && action.status === "completed");
   const drafts = Array.isArray(current.basis.generatedMemoDrafts) ? current.basis.generatedMemoDrafts.map(record) : [];
   const draft = drafts.find((item) => item.ic_case_id === current.caseRow.id && item.action_id === created?.id
@@ -487,14 +486,14 @@ function icMemoSelectionCandidate(goal: GoalSpec, planningContext: unknown): Can
     documentId: draft.document_id, documentVersionId: draft.document_version_id,
     underwritingRunId: current.caseRow.primaryUnderwritingRunId,
     evidenceCutoffAt: cutoff, sourceCompleteness: "COMPLETE",
-    changeClassification: recovering && current.caseRow.currentMemoId ? "NON_MATERIAL" : "INITIAL",
+    changeClassification: recovering && current.caseRow.currentMemoId ? "NON_MATERIAL" : current.caseRow.currentMemoId ? "MATERIAL" : "INITIAL",
   }, recovering ? "grounded-ic-memo-selection-recovery" : "grounded-ic-memo-selection");
 }
 
 function icRecommendationCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const current = workOpenedIcCase(planningContext);
-  if (!current || current.caseRow.state !== "PREPARING" || current.caseRow.currentRecommendationId
+  if (!current || !["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"].includes(String(current.caseRow.state)) || current.caseRow.currentRecommendationId
     || current.actions.some((action) => action.actionType === "prepare_ic_recommendation")) return null;
   const selections = Array.isArray(current.basis.memoSelections) ? current.basis.memoSelections.map(record) : [];
   const selected = selections.find((item) => item.id === current.caseRow.currentMemoId
@@ -514,12 +513,33 @@ function icRecommendationCandidate(goal: GoalSpec, planningContext: unknown): Ca
 function icReviewCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const current = workOpenedIcCase(planningContext);
-  if (!current || current.caseRow.state !== "PREPARING" || typeof current.caseRow.currentRecommendationId !== "string"
+  if (!current || !["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"].includes(String(current.caseRow.state)) || typeof current.caseRow.currentRecommendationId !== "string"
     || current.actions.some((action) => action.actionType === "request_ic_memo_review")) return null;
   return boundedIcActionCandidate(goal, "request_ic_memo_review", {
     dealId: current.basis.dealId, icCaseId: current.caseRow.id,
     expectedCaseVersion: current.caseRow.version,
   }, "grounded-ic-review-readiness");
+}
+
+function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot, planningContext: unknown): CandidatePlan | null {
+  if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
+  const inspection = record(planningContext);
+  const basis = record(inspection.privateEquityIcBasis);
+  const actions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
+  if (actions.some((item) => ["open_ic_case", "select_ic_underwriting_run"].includes(String(item.actionType)))) return null;
+  const runs = Array.isArray(basis.recentRuns) ? basis.recentRuns.map(record) : [];
+  const run = runs.find((item) => item.workId === snapshot.work.id && item.status === "SUCCEEDED"
+    && item.validity === "VALID" && typeof item.scenarioId === "string");
+  if (!run || typeof run.id !== "string") return null;
+  const cases = Array.isArray(basis.icCases) ? basis.icCases.map(record).filter((item) => item.investmentCaseId === run.investmentCaseId
+    && !["DECIDED", "WITHDRAWN", "SUPERSEDED"].includes(String(item.state))) : [];
+  if (cases.length !== 1) return null;
+  const current = cases[0]!;
+  if (!["DRAFT", "PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"].includes(String(current.state))
+    || typeof current.id !== "string" || typeof current.version !== "number") return null;
+  return boundedIcActionCandidate(goal, "select_ic_underwriting_run", {
+    dealId: basis.dealId, icCaseId: current.id, expectedCaseVersion: current.version, underwritingRunId: run.id,
+  }, "grounded-existing-ic-run-selection");
 }
 
 function icCaseOpeningCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot, planningContext: unknown): CandidatePlan | null {
@@ -535,7 +555,7 @@ function icCaseOpeningCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot,
   const investmentCases = Array.isArray(basis.investmentCases) ? basis.investmentCases.map(record) : [];
   if (!investmentCases.some((item) => item.id === run.investmentCaseId && item.state === "active")) return null;
   const cases = Array.isArray(basis.icCases) ? basis.icCases.map(record).filter((item) => item.investmentCaseId === run.investmentCaseId) : [];
-  if (cases.some((item) => !["DECIDED", "SUPERSEDED", "CANCELLED"].includes(String(item.state)))) return null;
+  if (cases.some((item) => !["DECIDED", "SUPERSEDED", "WITHDRAWN"].includes(String(item.state)))) return null;
   const priorDecision = cases.find((item) => item.state === "DECIDED" && typeof item.finalDecisionId === "string");
   const configs = Array.isArray(basis.committeeConfigVersions) ? basis.committeeConfigVersions.map(record) : [];
   const configId = priorDecision?.committeeConfigVersionId ?? (configs.length === 1 ? configs[0]?.id : null);
@@ -554,7 +574,7 @@ function icBeginPreparationCandidate(goal: GoalSpec, planningContext: unknown): 
   const inspection = record(planningContext);
   const priorActions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
   if (priorActions.some((action) => action.actionType === "begin_ic_preparation")) return null;
-  const opened = priorActions.find((action) => action.actionType === "open_ic_case" && action.status === "completed");
+  const opened = priorActions.find((action) => ["open_ic_case", "select_ic_underwriting_run"].includes(String(action.actionType)) && action.status === "completed");
   if (!opened) return null;
   const effects = Array.isArray(inspection.businessEffects) ? inspection.businessEffects.map(record) : [];
   const effect = effects.find((item) => item.domainActionId === opened.id && item.status === "verified");
@@ -1324,6 +1344,7 @@ export class LLMPlanner implements Planner {
       ?? icRecommendationCandidate(goal, opts.planningContext)
       ?? icReviewCandidate(goal, opts.planningContext)
       ?? icCurrentStateVerificationCandidate(goal, opts.planningContext)
+      ?? icExistingCaseRunCandidate(goal, snapshot, opts.planningContext)
       ?? icCaseOpeningCandidate(goal, snapshot, opts.planningContext)
       ?? icRevenueSensitivityCandidate(goal, opts.planningContext)
       ?? this.deterministicCandidate(instruction, planningInstruction, memory, allowedActionTypes, goal, opts);

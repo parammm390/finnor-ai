@@ -1,0 +1,25 @@
+title = "FINNOR secret detection with exact non-secret business metadata"
+
+[extend]
+useDefault = true
+
+# Exact non-secret fields only. Keep evidence and fixture files fully scanned;
+# never exclude a directory or credential-shaped field.
+[[rules]]
+id = "generic-api-key"
+# Other attributes inherit the pinned scanner's default generic-api-key rule.
+
+[[rules.allowlists]]
+description = "Exact canonical UUIDs and authored fixture identifiers; credential fields remain scanned"
+condition = "AND"
+paths = [
+  '''(^|/)docs/centropy/evidence/.*\.json$''',
+  '''(^|/)finnor-os/scripts/seed-centropy-ic-template\.ts$''',
+  '''(^|/)finnor-os/scripts/seed-phase9-e2e\.ts$''',
+]
+regexTarget = "match"
+regexes = [
+  '''(?i)(?:executionKey|idempotencyKey)"?\s*:\s*"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"''',
+  '''(?:"?(?:templateKey|template_key)"?\s*[:=]\s*"centropy_ic_default_v1"|versionKey"?\s*:\s*"centropy-growth-bps-e2e-v2")''',
+  '''(?:sourceKey|idempotencyKey)\s*:\s*"phase9-[a-z0-9-]+"''',
+]

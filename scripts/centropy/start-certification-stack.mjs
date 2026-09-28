@@ -21,6 +21,12 @@ const apiEnv = readEnv(join(backend, "apps/api/.env.local"))
 const env = { ...process.env, ...rootEnv, ...readEnv(join(backend, ".env")), ...apiEnv,
   DATABASE_URL: "postgres://finnor_app:finnor_app@127.0.0.1:55441/finnor",
   NEXT_PUBLIC_OS_API_URL: "http://127.0.0.1:3101", WORKER_CONCURRENCY: "4" }
+delete env.AUTH_DEV_BYPASS
+const productionBuild = process.argv.includes("--production-build")
+if (productionBuild) {
+  if (!existsSync(join(root, ".next/BUILD_ID")) || !existsSync(join(backend, "apps/api/.next/BUILD_ID"))) throw new Error("Build both frontend and API before compiled local certification")
+  Object.assign(env, { SECRETS_PROVIDER: "env", ALLOW_PLAINTEXT_ENV_SECRETS: "1" })
+}
 if (!rootEnv.TEST_OWNER_EMAIL || !rootEnv.TEST_OWNER_PASSWORD) throw new Error("Fixture owner sign-in variables are required")
 if (env.SUPABASE_URL !== rootEnv.NEXT_PUBLIC_SUPABASE_URL) throw new Error("Frontend and API must use the same Supabase Auth project")
 const adminEnv = { ...env, DATABASE_URL: "postgres://finnor:finnor@127.0.0.1:55441/finnor", FINNOR_TEST_MANAGED_EXTENSIONS: "omit" }
@@ -70,11 +76,11 @@ try {
   if (name === "atlas-temporal-clone") await step("temporal-baseline", ["scripts/seed-centropy-temporal-baseline.ts"])
   if (smtpCanary) await step("communication-fixture", ["scripts/seed-centropy-communication-canary.ts"])
   const preload = smtpCanary ? ["--import", "tsx", "--import", join(root, "scripts/centropy/smtp-canary-preload.mjs")] : []
-  const api = child("api", process.execPath, [...preload, join(backend, "node_modules/next/dist/bin/next"), "dev", "-p", "3101"], join(backend, "apps/api"))
-  const frontend = child("frontend", process.execPath, [join(root, "node_modules/next/dist/bin/next"), "dev", "-p", "3001"], root)
+  const api = child("api", process.execPath, [...preload, join(backend, "node_modules/next/dist/bin/next"), productionBuild ? "start" : "dev", "-p", "3101"], join(backend, "apps/api"))
+  const frontend = child("frontend", process.execPath, [join(root, "node_modules/next/dist/bin/next"), productionBuild ? "start" : "dev", "-p", "3001"], root)
   const worker = child("worker", process.execPath, ["--import", "tsx", ...(smtpCanary ? ["--import", join(root, "scripts/centropy/smtp-canary-preload.mjs")] : []), "apps/worker/src/index.ts"], backend, { ...env, ...(smtpCanary ? { CENTROPY_SMTP_CAPTURE_SERVER: "1" } : {}) })
   for (const proc of [api, frontend, worker]) proc.on("exit", (code) => { if (!stopping) { console.error(`Stack process ${proc.pid} exited (${code})`); void stop(1) } })
-  const state = { schema: "centropy.disposable-stack/v1", name, startedAt: new Date().toISOString(),
+  const state = { schema: "centropy.disposable-stack/v1", name, startedAt: new Date().toISOString(), serverMode: productionBuild ? "compiled_local_fixture" : "development", authBypass: false,
     frontend: "http://localhost:3001", api: "http://127.0.0.1:3101", database: { host: "127.0.0.1", port: 55441, name: "finnor" },
     pids: { harness: process.pid, api: api.pid, frontend: frontend.pid, worker: worker.pid } }
   writeFileSync(join(stateDir, "stack.json"), JSON.stringify(state, null, 2), { mode: 0o600 })

@@ -296,6 +296,12 @@ export async function requestWorkforceAssignment(params: {
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${params.objectiveLoop.id} FOR SHARE`);
     await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${params.planRevisionId} FOR SHARE`);
     await db.execute(sql`SELECT id FROM ${workObjectiveSteps} WHERE ${workObjectiveSteps.tenantId}=${params.tenantId} AND ${workObjectiveSteps.id}=${params.objectiveStepId} FOR UPDATE`);
+    const [currentLoop] = await db.select().from(workObjectiveLoops).where(and(
+      eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId), eq(workObjectiveLoops.id, params.objectiveLoop.id),
+    )).limit(1);
+    if (!currentLoop || currentLoop.revision !== params.objectiveLoop.revision || ["blocked", "completed", "failed", "cancelled"].includes(currentLoop.state)) {
+      return { status: "blocked", reason: "The Objective generation is no longer schedulable.", ineligibility: { objective: ["OBJECTIVE_REVISION_STALE"] } as Record<string, string[]> };
+    }
     const [plan] = await db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId), eq(workPlanRevisions.id, params.planRevisionId),
     )).limit(1);
@@ -321,7 +327,7 @@ export async function requestWorkforceAssignment(params: {
     // fabricating attempt 1. Newly reserved kernel steps always carry the exact
     // non-null attempt number.
     const nodeAttempt = exactAttempt ? objectiveStep.attemptNumber : null;
-    if (objectiveRevision !== null && objectiveRevision !== params.objectiveLoop.revision) return { status: "blocked", reason: "The Objective revision changed before workforce assignment.", ineligibility: { step: ["OBJECTIVE_REVISION_STALE"] } as Record<string, string[]> };
+    if (objectiveRevision !== null && objectiveRevision !== currentLoop.revision) return { status: "blocked", reason: "The Objective revision changed before workforce assignment.", ineligibility: { step: ["OBJECTIVE_REVISION_STALE"] } as Record<string, string[]> };
     let [existing] = await db.select().from(workforceAssignments).where(and(
       eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.planRevisionId, params.planRevisionId),
       eq(workforceAssignments.planNodeId, params.node.id), inArray(workforceAssignments.state, [...ACTIVE_ASSIGNMENT_STATES]),
@@ -346,6 +352,21 @@ export async function requestWorkforceAssignment(params: {
         eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, existing.objectiveStepId), sql`${workObjectiveSteps.completedAt} IS NULL`,
       ));
       existing = undefined;
+    }
+    // P6 counters reserve operations before execution. Equality is valid only
+    // for an exact step that already holds its reservation. Read the persisted
+    // counters under the generation lock, rather than the caller's snapshot.
+    const globalBudgetExhausted = currentLoop.actionCount > currentLoop.maxActions
+      || currentLoop.queryCount > currentLoop.maxQueries
+      || (!objectiveStep.budgetReservedAt && params.node.kind === "action" && currentLoop.actionCount >= currentLoop.maxActions)
+      || (!objectiveStep.budgetReservedAt && params.node.kind === "query" && currentLoop.queryCount >= currentLoop.maxQueries)
+      || Date.now() >= currentLoop.deadlineAt.getTime();
+    if (globalBudgetExhausted) {
+      if (existing) await db.update(workforceAssignments).set({
+        state: "reassigned", completedAt: new Date(), leaseOwner: null, leaseUntil: null,
+        reassignmentReason: "AUTONOMY_BUDGET_EXHAUSTED", failure: { code: "AUTONOMY_BUDGET_EXHAUSTED" }, updatedAt: new Date(),
+      }).where(and(eq(workforceAssignments.id, existing.id), inArray(workforceAssignments.state, [...ACTIVE_ASSIGNMENT_STATES])));
+      return { status: "unassigned", reason: "The Objective's current global operation budget or deadline is exhausted.", ineligibility: { objective: ["AUTONOMY_BUDGET_EXHAUSTED"] } as Record<string, string[]> };
     }
     const profiles = await db.select({ profile: agentProfiles, revision: agentProfileRevisions }).from(agentProfiles)
       .innerJoin(agentProfileRevisions, and(eq(agentProfileRevisions.agentProfileId, agentProfiles.id), eq(agentProfileRevisions.tenantId, agentProfiles.tenantId)))
@@ -423,11 +444,11 @@ export async function requestWorkforceAssignment(params: {
           knownTokens: null,
         },
         p6BudgetCeilings: {
-          maxActions: params.objectiveLoop.maxActions,
-          maxQueries: params.objectiveLoop.maxQueries,
-          maxReplans: params.objectiveLoop.maxSteps,
-          maxPlannerCalls: params.objectiveLoop.maxSteps,
-          maxWallClockMs: Math.max(1, params.objectiveLoop.deadlineAt.getTime() - params.objectiveLoop.createdAt.getTime()),
+          maxActions: currentLoop.maxActions,
+          maxQueries: currentLoop.maxQueries,
+          maxReplans: currentLoop.maxSteps,
+          maxPlannerCalls: currentLoop.maxSteps,
+          maxWallClockMs: Math.max(1, currentLoop.deadlineAt.getTime() - currentLoop.createdAt.getTime()),
           maxKnownCostUsd: null,
           maxKnownTokens: null,
         },
@@ -442,7 +463,11 @@ export async function requestWorkforceAssignment(params: {
     boundary.currentPlanRevisionId = plan.id;
     if (existing) {
       const currentCandidate = candidates.find((candidate) => candidate.profile.id === existing!.agentProfileId && candidate.revision.id === existing!.agentRevisionId);
-      const existingCandidate = currentCandidate ? { ...currentCandidate, currentLoad: Math.max(0, currentCandidate.currentLoad - 1) } : null;
+      const existingCandidate = currentCandidate ? { ...currentCandidate, currentLoad: Math.max(0, currentCandidate.currentLoad - 1), budgetUsage: {
+        ...currentCandidate.budgetUsage,
+        actions: Math.max(0, currentCandidate.budgetUsage.actions - (existing.nodeKind === "action" ? 1 : 0)),
+        queries: Math.max(0, currentCandidate.budgetUsage.queries - (existing.nodeKind === "query" ? 1 : 0)),
+      } } : null;
       const existingEligibility = existingCandidate ? evaluateAssignmentEligibility(boundary, existingCandidate) : null;
       if (existingEligibility?.eligible) {
         return { status: "assigned", assignment: existing, score: existing.assignmentScore as AssignmentScore, created: false };
@@ -681,6 +706,7 @@ export async function claimWorkforceAssignment(params: {
       stepClaimOwner: workObjectiveSteps.claimOwner,
       stepClaimUntil: workObjectiveSteps.claimUntil,
       stepCompletedAt: workObjectiveSteps.completedAt,
+      stepBudgetReservedAt: workObjectiveSteps.budgetReservedAt,
     }).from(workforceAssignments)
       .innerJoin(workPlanRevisions, eq(workPlanRevisions.id, workforceAssignments.planRevisionId))
       .innerJoin(agentProfiles, eq(agentProfiles.id, workforceAssignments.agentProfileId))
@@ -732,6 +758,8 @@ export async function claimWorkforceAssignment(params: {
       || (assignment.nodeKind === "query" && (profileUsage?.queries ?? 0) > limits.maxQueries)
       || scope.loopActionCount > scope.loopMaxActions
       || scope.loopQueryCount > scope.loopMaxQueries
+      || (!scope.stepBudgetReservedAt && assignment.nodeKind === "action" && scope.loopActionCount >= scope.loopMaxActions)
+      || (!scope.stepBudgetReservedAt && assignment.nodeKind === "query" && scope.loopQueryCount >= scope.loopMaxQueries)
       || Date.now() >= scope.loopDeadlineAt.getTime()
       || Math.max(0, Date.now() - assignment.createdAt.getTime()) >= limits.maxWallClockMs;
     const reassignmentReason: WorkforceReassignmentReason | null = !routeAvailable(scope.modelRoute as AgentModelRoute)

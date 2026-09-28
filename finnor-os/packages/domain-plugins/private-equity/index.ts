@@ -520,7 +520,7 @@ async function groundIcPlannerAction(params: {
       }
       case "create_ic_memo_draft":
         icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
-        icState(process, ["PREPARING"], actionType);
+        icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"], actionType);
         if (!process.primaryUnderwritingRunId || !workspace.underwriting?.eligibleUnderPinnedPolicy) {
           throw new ActionGroundingError("IC_UNDERWRITING_REQUIRED", "A policy-eligible primary Underwriting Run must be pinned before drafting the memo");
         }
@@ -564,7 +564,7 @@ async function groundIcPlannerAction(params: {
       }
       case "request_ic_memo_review":
         icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
-        icState(process, ["PREPARING"], actionType);
+        icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"], actionType);
         if (!workspace.memo) throw new ActionGroundingError("IC_MEMO_REQUIRED", "An exact P3 Memo DocumentVersion must be selected before review");
         groundedPayload.push({ field: "expectedCaseVersion", status: "verified" });
         break;
@@ -958,7 +958,10 @@ async function governanceProof(draft: DraftAction, tenantId: string, actorId: st
   if (!approval) throw new PeDomainError("PE_APPROVAL_PROOF_MISSING", "The exact approved authority request is not available at execution");
   if (!execution) throw new PeDomainError("PE_EXECUTION_AUTHORITY_MISSING", "The exact allowed execution authority decision is not available");
   if (!receipt) throw new PeDomainError("PE_DECISION_RECEIPT_MISSING", "The exact authorized DecisionReceipt is not available at execution");
-  return { authorityDecisionId: execution.id, decisionReceiptId: receipt.id };
+  // The canonical PE owner validates the approved request's decision. Keep the
+  // independent allowed execution check above, but do not substitute it for
+  // the approval_required decision that owns the human approval and receipt.
+  return { authorityDecisionId: approval.authorityDecisionId, decisionReceiptId: receipt.id };
 }
 
 function existingCreateResult(graph: DealExecutionGraph, actionType: PrivateEquityActionType, payload: Payload): PeMutationResult | null {
@@ -1075,7 +1078,7 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
       }
       const workspace = await getIcWorkspace(ctx, { icCaseId: String(payload.icCaseId) });
       icExpectedVersion(workspace.case, payload.expectedCaseVersion, "ICCase");
-      icState(workspace.case, ["PREPARING"], actionType);
+      icState(workspace.case, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"], actionType);
       const runId = String(workspace.case.primaryUnderwritingRunId ?? "");
       if (workspace.case.dealId !== payload.dealId || !runId || !workspace.underwriting?.eligibleUnderPinnedPolicy) {
         throw new PeDomainError("IC_UNDERWRITING_REQUIRED", "The exact IC Case requires a policy-eligible pinned Underwriting Run");
