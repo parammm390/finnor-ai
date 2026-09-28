@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import handler from "../../finnor-os/apps/supplier-canary/api/index.mjs"
+import { loadContract } from "./release-policy.mjs"
 
 const managedEnvironment = [
   "PORTAL_ROLE",
@@ -63,7 +64,7 @@ test("supplier canary health exposes exact Phase 8 release provenance", () => {
       environment: "production",
       source: "github-actions",
       deploymentId: "dpl_exact",
-      migrationHead: "0141_restricted_digest_projection_access.sql",
+      migrationHead: loadContract().release.requiredMigrationHead,
       cutoverProtocol: 5,
       traceable: true,
     })

@@ -55,39 +55,40 @@ describe.skipIf(!available)("worker heartbeat", () => {
     const controller2 = new AbortController();
     startHeartbeat(30, controller2.signal);
     await new Promise((r) => setTimeout(r, 90));
-    controller2.abort();
-
-    let rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
-    // Abort stops future interval ticks but cannot cancel a beat already in flight.
-    // Poll briefly for that committed write instead of racing it at millisecond
-    // precision and making the release gate flaky.
-    for (let attempt = 0; attempt < 10 && rows2[0]!.lastBeatAt.getTime() <= firstBeat; attempt++) {
-      await new Promise((r) => setTimeout(r, 25));
-      rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+    try {
+      let rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+      // Observe the live worker before abort schedules its drain deletion. Poll
+      // for the committed beat instead of assuming a tick completed on schedule.
+      for (let attempt = 0; attempt < 10 && rows2[0]!.lastBeatAt.getTime() <= firstBeat; attempt++) {
+        await new Promise((r) => setTimeout(r, 25));
+        rows2 = await adminDb().select().from(workerHeartbeat).where(eq(workerHeartbeat.id, WORKER_HEARTBEAT_ID));
+      }
+      expect(rows2).toHaveLength(1); // still exactly one row — upsert, not insert
+      expect(rows2[0]!.lastBeatAt.getTime()).toBeGreaterThan(firstBeat);
+      expect(rows2[0]!.meta).toMatchObject({
+        service: "finnor-worker",
+        commitSha: "a".repeat(40),
+        buildId: `finnor-${"a".repeat(12)}`,
+        version: `0.1.0+${"a".repeat(12)}`,
+        environment: "production",
+        source: "test",
+        traceable: true,
+      });
+      const cutoverRoles = await getPool().query<{ service: string; release_sha: string; migration_head: string }>(
+        `SELECT service,release_sha,migration_head
+           FROM service_release_heartbeats
+          WHERE instance_id=$1 AND service=ANY($2::text[])
+          ORDER BY service`,
+        [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner"]],
+      );
+      expect(cutoverRoles.rows).toEqual([
+        { service: "orchestrator", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+        { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+        { service: "worker", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
+      ]);
+    } finally {
+      controller2.abort();
     }
-    expect(rows2).toHaveLength(1); // still exactly one row — upsert, not insert
-    expect(rows2[0]!.lastBeatAt.getTime()).toBeGreaterThan(firstBeat);
-    expect(rows2[0]!.meta).toMatchObject({
-      service: "finnor-worker",
-      commitSha: "a".repeat(40),
-      buildId: `finnor-${"a".repeat(12)}`,
-      version: `0.1.0+${"a".repeat(12)}`,
-      environment: "production",
-      source: "test",
-      traceable: true,
-    });
-    const cutoverRoles = await getPool().query<{ service: string; release_sha: string; migration_head: string }>(
-      `SELECT service,release_sha,migration_head
-         FROM service_release_heartbeats
-        WHERE instance_id=$1 AND service=ANY($2::text[])
-        ORDER BY service`,
-      [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner"]],
-    );
-    expect(cutoverRoles.rows).toEqual([
-      { service: "orchestrator", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
-      { service: "scheduler-owner", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
-      { service: "worker", release_sha: "a".repeat(40), migration_head: CURRENT_MIGRATION_HEAD },
-    ]);
   });
 
   it("no-ops HEALTHCHECK_PING_URL silently when unset — never throws, never fakes a ping", async () => {

@@ -21,7 +21,7 @@
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
     "release:mutation-inventory": "node scripts/release/validate-production-mutation-inventory.mjs",
     "release:preflight": "npm run release:truth && npm run test:release",
-    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-evidence-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
+    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-evidence-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/supplier-canary-health.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -38,7 +38,7 @@
     "lenis": "^1.3.23",
     "lucide-react": "^0.424.0",
     "next": "^16.3.3",
-    "nodemailer": "^10.0.0",
+    "nodemailer": "10.0.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwind-merge": "^2.4.0",
@@ -48,7 +48,6 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@types/node": "^20",
-    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "autoprefixer": "^10.4.27",

@@ -263,7 +263,7 @@ jobs:
 
       - name: Release governance regression tests
         run: |
-          node --test scripts/release/release-policy.test.mjs scripts/release/compute-plane-policy.test.mjs
+          node --test scripts/release/release-policy.test.mjs scripts/release/compute-plane-policy.test.mjs scripts/release/supplier-canary-health.test.mjs
           node scripts/release/validate-production-mutation-inventory.mjs
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
