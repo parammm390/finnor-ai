@@ -88,6 +88,11 @@ jobs:
       # entities and is outside this release gate; do not silently re-enable
       # that vertical while certifying the retirement boundary.
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+      # P7 typechecks the root Centropy surface; this backend job otherwise
+      # installs no root @types or Playwright declarations.
+      - name: Install root type dependencies for Phase 7
+        run: npm ci --no-audit --no-fund
+        working-directory: .
       - name: Phase 7 governed workforce and learning certification
         run: |
           set -euo pipefail

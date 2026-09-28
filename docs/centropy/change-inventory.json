@@ -1,24 +1,24 @@
 {
   "schema": "centropy.change-inventory/v1",
-  "generatedAt": "2026-09-28T21:07:48.803761+00:00",
+  "generatedAt": "2026-09-28T21:19:07.841569+00:00",
   "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
   "auditedMainBaseline": "e464d78ac45dae41435b826757941d008c9b634c",
   "branch": "codex/centropy-release-candidate",
   "workingTreeImplementation": true,
   "comparison": "Fetched origin/main versus complete candidate working tree, plus non-ignored untracked files; no rename inference",
   "counts": {
-    "total": 553,
+    "total": 555,
     "added": 379,
-    "modified": 130,
+    "modified": 132,
     "deleted": 44,
-    "currentChangedBytes": 71053780
+    "currentChangedBytes": 71317724
   },
   "files": [
     {
       "file": ".github/workflows/ci.yml",
       "status": "M",
-      "bytes": 4546,
-      "sha256": "81511c8183da49c596218445a51db3b54b7519070e4c00865bc1ebab3cf68019"
+      "bytes": 4809,
+      "sha256": "0cae64e690563e3b59bcbf9637463da948819eb154f67fb48492100da40ac76c"
     },
     {
       "file": ".github/workflows/marketing-ci.yml",
@@ -1426,8 +1426,8 @@
     {
       "file": "docs/centropy/release-ci-recovery-failure-modes.md",
       "status": "A",
-      "bytes": 7471,
-      "sha256": "011352ac36e87ba80ba46cb1e6440d8381c6a1a0a25f477288a35fe9a702cc66"
+      "bytes": 8600,
+      "sha256": "53188c3157471de4fbcb4b3fc1b17a2069dffef36af0bd7c883bbbeb98c72628"
     },
     {
       "file": "docs/centropy/renderer-performance-failure-modes.md",
@@ -1866,6 +1866,18 @@
       "status": "M",
       "bytes": 464839,
       "sha256": "96e3cd334684213f4c4447c68555a0c4f413222d343693216a50375cd63907ab"
+    },
+    {
+      "file": "finnor-os/package-lock.json",
+      "status": "M",
+      "bytes": 257467,
+      "sha256": "6ac7b27e958b1103ceac8a83f2696bbcf87bb69407f0aae8f54671f476f127bf"
+    },
+    {
+      "file": "finnor-os/package.json",
+      "status": "M",
+      "bytes": 5085,
+      "sha256": "ef9eecdace1e537dcfbba9d80eee543770c43c7d0179d6daa9a00f9e4dcf8691"
     },
     {
       "file": "finnor-os/packages/artifacts/src/creation.ts",
