@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowRight, Globe2, History, LockKeyhole, LogOut, PanelsTopLeft, Plus, Settings } from "lucide-react"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
-import { centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
+import { centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
 import { readPeOperatingContext } from "@/components/centropy/pe/context-routing"
 import { isPeWorldRootRef, type CompanyBrainNode, type CompanyBrainObjectRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { InstructionTraceRuntime, type InstructionTraceSnapshot } from "../runtime/instruction-events"
@@ -33,6 +33,7 @@ const PendingEffects = lazy(() => import("../thread/PendingEffects").then((modul
 const WorkforceAssignments = lazy(() => import("../thread/WorkforceAssignments").then((module) => ({ default: module.WorkforceAssignments })))
 const OutcomePacks = lazy(() => import("../thread/OutcomePacks").then((module) => ({ default: module.OutcomePacks })))
 const SettingsDialog = lazy(() => import("../controls/SettingsDialog").then((module) => ({ default: module.SettingsDialog })))
+const StandaloneArtifactCanvas = lazy(() => import("../canvas/ArtifactCanvas").then((module) => ({ default: module.ArtifactCanvas })))
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -101,6 +102,7 @@ export function CentropyWorkspace() {
   const [voiceListening, setVoiceListening] = useState(false)
   const [assignmentsOpen, setAssignmentsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable")
   const [responseWork, setResponseWork] = useState<{ threadId: string; workId: string } | null>(null)
   const [trace, setTrace] = useState<InstructionTraceSnapshot | null>(null)
   const traceRuntime = useRef<InstructionTraceRuntime | null>(null)
@@ -116,6 +118,14 @@ export function CentropyWorkspace() {
   const [composerSuggestion, setComposerSuggestion] = useState<{ id: string; text: string } | null>(null)
 
   useEffect(() => { if (draftArtifactInUrl) setMobilePane("canvas") }, [draftArtifactInUrl])
+  useEffect(() => {
+    if (!ready) return
+    let active = true
+    void centropyGet<{ prefs: { density: string } }>("user-prefs").then((result) => {
+      if (active && ["comfortable", "compact"].includes(result.prefs.density)) setDensity(result.prefs.density as "comfortable" | "compact")
+    }).catch(() => undefined)
+    return () => { active = false }
+  }, [ready, refreshToken])
 
   useEffect(() => {
     if (fromRoute) {
@@ -410,7 +420,7 @@ export function CentropyWorkspace() {
   if (!auth.session) return <div className="ct-auth-state"><LockKeyhole size={25} /><h1>Your investment context stays private.</h1><p>Sign in to open your Investigations and verified work.</p><Link href="/centropy/login">Sign in <ArrowRight size={16} /></Link></div>
   if (auth.role !== "owner") return <div className="ct-auth-state"><h1>Workspace access unavailable</h1><p>The authenticated role has no active CENTROPY workspace.</p></div>
 
-  return <div className="ct-app" data-mobile-pane={mobilePane}>
+  return <div className="ct-app" data-mobile-pane={mobilePane} data-density={density}>
     <header className="ct-topbar">
       <Link className="ct-brand" href="/centropy" onClick={() => { traceRuntime.current?.stop(); setTrace(null); setPending(null); setThreadId(null); setResponseWork(null); setReplayWorkId(null); setExplicitRoot(null); setFocusedObject(null); setMobilePane("thread") }} aria-label="CENTROPY new Investigation"><CentropyPresence state={presenceState} size={26} animated={false} /><strong>CENTROPY</strong></Link>
       <div className="ct-topbar__actions">
@@ -451,6 +461,7 @@ export function CentropyWorkspace() {
       <main className="ct-canvas" aria-label={worldMode ? "WORLD explorer" : "Investigation Canvas"}>
         {worldMode ? <WorldExplorer root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
           : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
+          : draftArtifactInUrl ? <Suspense fallback={<p role="status">Reading the exact artifact draft…</p>}><StandaloneArtifactCanvas key={`${searchParams.get("artifactDocumentId")}:${searchParams.get("artifactVersionId")}`} documentId={searchParams.get("artifactDocumentId")!} initialVersionId={searchParams.get("artifactVersionId")!} onClose={() => { const query = new URLSearchParams(routeQuery); for (const key of ["artifactMode", "artifactDocumentId", "artifactVersionId"]) query.delete(key); router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false }) }} onVersionChange={(id) => { if (!UUID.test(id)) return; const query = new URLSearchParams(routeQuery); query.set("artifactVersionId", id); router.replace(`${pathname}?${query}`, { scroll: false }) }} /></Suspense>
           : <HomeCanvas recent={recent} recentError={recentError} onOpenInvestigation={openInvestigation} />}
       </main>
     </div>

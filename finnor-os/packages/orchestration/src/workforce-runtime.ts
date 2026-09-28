@@ -596,6 +596,7 @@ export async function reassignWorkforceAssignment(params: {
             workId: updated.workId,
             objectiveLoopId: loop.id,
             expectedRevision: loop.revision,
+            workforceRecoveryAssignmentId: updated.id,
             ...(!step?.completedAt && step ? { expectedStepNumber: step.stepNumber } : {}),
           },
           idempotencyKey: `workforce-operator-reassign:${updated.id}`,
@@ -944,7 +945,7 @@ export async function enqueueAssignmentRecovery(tenantId: string, assignmentId: 
     await db.insert(jobs).values({
       tenantId,
       type: "run_objective_iteration",
-      payload: { tenantId, workId: assignment.workId, objectiveLoopId: loop.id, expectedRevision: loop.revision, expectedStepNumber: step.stepNumber },
+      payload: { tenantId, workId: assignment.workId, objectiveLoopId: loop.id, expectedRevision: loop.revision, expectedStepNumber: step.stepNumber, workforceRecoveryAssignmentId: assignment.id },
       idempotencyKey: `workforce-recovery:${assignment.id}:attempt:${assignment.attempt}`,
       lane: "interactive",
       priority: 25,

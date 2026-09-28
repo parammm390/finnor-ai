@@ -2,13 +2,8 @@
 // subscription; tenant and user identity are always derived from the verified token.
 import { pushSubscriptions, withTenant } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
-import { z } from "zod";
 import { errorResponse, requireContext } from "../../../lib/auth";
-
-const SubscriptionSchema = z.object({
-  endpoint: z.string().url().max(2000),
-  keys: z.object({ p256dh: z.string().min(1).max(1024), auth: z.string().min(1).max(1024) }),
-});
+import { PushSubscriptionSchema as SubscriptionSchema, DeletePushSubscriptionSchema } from "../../../lib/product-control-schemas";
 
 export async function POST(req: Request): Promise<Response> {
   try {
@@ -27,7 +22,7 @@ export async function POST(req: Request): Promise<Response> {
 export async function DELETE(req: Request): Promise<Response> {
   try {
     const ctx = await requireContext(req);
-    const parsed = z.object({ endpoint: z.string().url().max(2000) }).safeParse(await req.json().catch(() => null));
+    const parsed = DeletePushSubscriptionSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return Response.json({ error: "Invalid push subscription" }, { status: 400 });
     await withTenant(ctx.tenantId, async (db) => {
       await db.delete(pushSubscriptions).where(and(eq(pushSubscriptions.userId, ctx.userId), eq(pushSubscriptions.endpoint, parsed.data.endpoint)));

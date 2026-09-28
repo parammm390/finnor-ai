@@ -958,10 +958,11 @@ async function governanceProof(draft: DraftAction, tenantId: string, actorId: st
   if (!approval) throw new PeDomainError("PE_APPROVAL_PROOF_MISSING", "The exact approved authority request is not available at execution");
   if (!execution) throw new PeDomainError("PE_EXECUTION_AUTHORITY_MISSING", "The exact allowed execution authority decision is not available");
   if (!receipt) throw new PeDomainError("PE_DECISION_RECEIPT_MISSING", "The exact authorized DecisionReceipt is not available at execution");
-  // The canonical PE owner validates the approved request's decision. Keep the
-  // independent allowed execution check above, but do not substitute it for
-  // the approval_required decision that owns the human approval and receipt.
-  return { authorityDecisionId: approval.authorityDecisionId, decisionReceiptId: receipt.id };
+  // Closing owners require the approval_required decision that owns the human
+  // approval. The IC opening owner requires the allowed execution decision.
+  // Both exact proofs above remain mandatory before either reference is passed.
+  const approvalOwned = draft.actionType === "waive_closing_condition" || draft.actionType === "declare_deal_closed";
+  return { authorityDecisionId: approvalOwned ? approval.authorityDecisionId : execution.id, decisionReceiptId: receipt.id };
 }
 
 function existingCreateResult(graph: DealExecutionGraph, actionType: PrivateEquityActionType, payload: Payload): PeMutationResult | null {

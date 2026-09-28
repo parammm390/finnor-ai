@@ -1,22 +1,7 @@
 import { z } from "zod";
 import { resolveReconciliationCase } from "@finnor/workflow-runtime";
 import { authorizeRuntimeControl, errorResponse, requireContext } from "../../../../../lib/auth";
-
-const BodySchema = z.object({
-  expectedVersion: z.number().int().positive(),
-  outcome: z.enum([
-    "happened_as_intended",
-    "definitely_did_not_happen",
-    "happened_differently",
-    "still_unknowable",
-    "legally_compensatable",
-  ]),
-  evidence: z.object({}).passthrough().refine((value) => Object.keys(value).length > 0, "resolution evidence is required"),
-  reason: z.string().trim().min(1).max(4_000),
-  provider: z.string().trim().min(1).max(160).optional(),
-  integrationId: z.string().uuid().optional(),
-  controlKey: z.string().trim().min(1).max(512).optional(),
-});
+import { ResolveReconciliationSchema as BodySchema } from "../../../../../lib/product-control-schemas";
 
 const STATUS_BY_REASON: Record<string, number> = {
   not_found: 404,

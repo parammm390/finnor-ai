@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { writeFile } from "node:fs/promises"
 import { expect, test } from "@playwright/test"
+import { awaitFixtureRateWindow } from "./fixtures/rate-window"
 
 const email = process.env.TEST_OWNER_EMAIL
 const password = process.env.TEST_OWNER_PASSWORD
@@ -13,6 +14,7 @@ test("Atlas whole-deal recheck uses independent governed specialist reads", asyn
   const baseUrl = String(testInfo.project.use.baseURL ?? "")
   test.skip(process.env.CENTROPY_DISPOSABLE_E2E !== "1" || !["127.0.0.1", "localhost"].includes(new URL(baseUrl).hostname), "Disposable localhost fixture only")
   test.skip(!email || !password, "Owner sign-in is required")
+  await awaitFixtureRateWindow(testInfo)
   const proofPath = testInfo.outputPath("centropy-parallel-deal-recheck.proof.json")
   const screenshotPath = testInfo.outputPath("centropy-parallel-deal-recheck.png")
   const observed: Record<string, unknown> = { workId: null, threadId: null, objectiveLoopId: null,

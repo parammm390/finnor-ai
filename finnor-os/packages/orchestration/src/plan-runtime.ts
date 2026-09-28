@@ -151,7 +151,7 @@ export async function selectAndMaterializePlan(params: Parameters<typeof selectP
   }
 
   const rows = await withTenant(params.tenantContext.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.id}=${revision.id} AND ${workPlanRevisions.tenantId}=${params.tenantContext.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.id}=${revision.id} AND ${workPlanRevisions.tenantId}=${params.tenantContext.tenantId} FOR NO KEY UPDATE`);
     const [currentRevision] = await db.select({ status: workPlanRevisions.status, semanticHash: workPlanRevisions.semanticHash }).from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantContext.tenantId),
       eq(workPlanRevisions.id, revision.id),

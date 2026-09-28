@@ -320,6 +320,7 @@ export class FinnorOrchestrator implements Orchestrator {
     expectedRevision?: number;
     expectedStepNumber?: number;
     workforceAssignmentId?: string;
+    workforceRecoveryAssignmentId?: string;
     deferToWorkforceJob?: boolean;
     workforceLeaseOwner?: string;
     signal?: AbortSignal;
@@ -1064,6 +1065,7 @@ export class FinnorOrchestrator implements Orchestrator {
       plannerAttemptId?: string;
       planRevisionId?: string;
       planNodeId?: string;
+      reviewBeforeExecution?: boolean;
     } = {},
   ): Promise<{ action: DomainAction; result: ExecutionResult }> {
     if (isRetiredWaterAction(actionType)) throw new RetiredVerticalError("water");
@@ -1155,7 +1157,7 @@ export class FinnorOrchestrator implements Orchestrator {
       action.policyId = policy.id;
       action.policyVersion = policy.version;
     }
-    const result = await this.executor.execute(action, policy);
+    const result = await this.executor.execute(action, policy, { reviewBeforeExecution: opts.reviewBeforeExecution });
     await this.reflectWithRetry(action, policy, result);
     return { action, result };
   }

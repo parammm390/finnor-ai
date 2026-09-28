@@ -14,7 +14,7 @@ import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from 
 // Resolve this per request so a warmed serverless module cannot retain an old
 // upstream URL after configuration changes, and so the boundary is easy to test.
 function osApi(): string | undefined {
-  return process.env.NEXT_PUBLIC_OS_API_URL
+  return process.env.FINNOR_OS_API_URL ?? process.env.NEXT_PUBLIC_OS_API_URL
 }
 
 function isPublicGet(segments: string[]): boolean {
@@ -128,7 +128,7 @@ async function doForward(
     signal: controller.signal,
   };
   try {
-    if (method === "POST" || method === "PUT") {
+    if (method === "POST" || method === "PUT" || method === "DELETE") {
       const body = await req.text();
       if (body.length > 2_000_000) return proxyError("Request body too large", 413);
       try { JSON.parse(body.length > 0 ? body : "{}"); } catch { return proxyError("Invalid JSON body", 400); }
@@ -143,6 +143,7 @@ async function doForward(
         "content-type": upstream.headers.get("content-type") ?? "application/json",
         "cache-control": "no-store",
         ...(upstream.headers.get("content-disposition") ? { "content-disposition": upstream.headers.get("content-disposition")! } : {}),
+        ...(upstream.headers.get("retry-after") ? { "retry-after": upstream.headers.get("retry-after")! } : {}),
       },
     });
   } catch (error) {

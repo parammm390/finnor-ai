@@ -1,0 +1,25 @@
+export type SupportingRead = { routePattern: string; title: string; query?: Array<{ key: string; label: string; uuid?: boolean }> }
+/** Existing canonical read APIs. These controls never submit a business mutation. */
+export const SUPPORTING_READS: SupportingRead[] = [
+  { routePattern: "actions/review-capability", title: "Exact effect review protocol" },
+  { routePattern: "computer/runs/:id", title: "Computer run" },
+  { routePattern: "connections/:ref", title: "My exact provider connection" },
+  { routePattern: "corrections", title: "Recorded answer corrections" },
+  { routePattern: "documents/:id/artifact/context", title: "Exact artifact governance", query: [{ key: "versionId", label: "Exact document version", uuid: true }] },
+  { routePattern: "documents/:id/artifact/versions/:versionId", title: "Exact artifact version" },
+  { routePattern: "employees", title: "Accessible employees" },
+  { routePattern: "instructions/:id", title: "Persisted instruction" },
+  { routePattern: "integrations/status", title: "Integration health" },
+  { routePattern: "investment-cases", title: "Investment cases" },
+  { routePattern: "operating-profile", title: "Current operating profile" },
+  { routePattern: "operations/:id", title: "Recorded external operation" },
+  { routePattern: "outcome-packs/grants", title: "Owner autonomy grants" },
+  { routePattern: "private-equity/ic/cases/:id/decision-proof", title: "Exact committee decision proof" },
+  { routePattern: "receipts", title: "Receipts for an exact action", query: [{ key: "domainActionId", label: "Exact action reference", uuid: true }] },
+  { routePattern: "receipts/:id", title: "Exact decision receipt" },
+  { routePattern: "underwriting/model-versions/:id/affected", title: "Model dependency impact", query: [{ key: "nodeId", label: "Exact model node" }] },
+  { routePattern: "underwriting/model-versions/diff", title: "Compare exact model versions", query: [{ key: "left", label: "Earlier model version", uuid: true }, { key: "right", label: "Later model version", uuid: true }] },
+  { routePattern: "user-prefs/digest", title: "My recorded digest" },
+  { routePattern: "workforce/profiles", title: "Current specialist profiles" },
+  { routePattern: "works/:id/execution", title: "Exact Work execution" },
+]

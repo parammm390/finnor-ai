@@ -20,7 +20,7 @@ const rootEnv = readEnv(join(root, ".env.local"))
 const apiEnv = readEnv(join(backend, "apps/api/.env.local"))
 const env = { ...process.env, ...rootEnv, ...readEnv(join(backend, ".env")), ...apiEnv,
   DATABASE_URL: "postgres://finnor_app:finnor_app@127.0.0.1:55441/finnor",
-  NEXT_PUBLIC_OS_API_URL: "http://127.0.0.1:3101", WORKER_CONCURRENCY: "4" }
+  NEXT_PUBLIC_OS_API_URL: "http://127.0.0.1:3101", FINNOR_OS_API_URL: "http://127.0.0.1:3101", WORKER_CONCURRENCY: "4" }
 delete env.AUTH_DEV_BYPASS
 const productionBuild = process.argv.includes("--production-build")
 if (productionBuild) {

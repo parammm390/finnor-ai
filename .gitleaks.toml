@@ -16,6 +16,7 @@ paths = [
   '''(^|/)docs/centropy/evidence/.*\.json$''',
   '''(^|/)finnor-os/scripts/seed-centropy-ic-template\.ts$''',
   '''(^|/)finnor-os/scripts/seed-phase9-e2e\.ts$''',
+  '''(^|/)scripts/centropy/verify-secret-scan-policy\.mjs$''',
 ]
 regexTarget = "match"
 regexes = [

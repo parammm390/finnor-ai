@@ -1,10 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { ArrowRight } from "lucide-react"
 import { z } from "zod"
 import { centropyGet } from "@/components/centropy/lib/api"
 import type { ConversationThreadSummary } from "../thread/thread-contract"
+
+const WorkflowRecoveryDesk = lazy(() => import("../controls/WorkflowRecoveryDesk").then((module) => ({ default: module.WorkflowRecoveryDesk })))
+const ArtifactCreationDesk = lazy(() => import("../controls/ArtifactCreationDesk").then((module) => ({ default: module.ArtifactCreationDesk })))
+const SupportingReadDesk = lazy(() => import("../controls/SupportingReadDesk").then((module) => ({ default: module.SupportingReadDesk })))
 
 const WorkSummarySchema = z.object({
   id: z.string().uuid(),
@@ -32,6 +36,9 @@ export function HomeCanvas({ recent, recentError, onOpenInvestigation }: {
   recentError: string | null
   onOpenInvestigation: (id: string) => void
 }) {
+  const [workflowOpen, setWorkflowOpen] = useState(false)
+  const [artifactOpen, setArtifactOpen] = useState(false)
+  const [supportingOpen, setSupportingOpen] = useState(false)
   const [works, setWorks] = useState<ReadState<WorkSummary>>({ data: [], error: null, status: "loading" })
   const [attention, setAttention] = useState<ReadState<AttentionSummary>>({ data: [], error: null, status: "loading" })
   const [attentionCoverage, setAttentionCoverage] = useState<string | null>(null)
@@ -65,5 +72,8 @@ export function HomeCanvas({ recent, recentError, onOpenInvestigation }: {
     <section className="ct-home__section" aria-labelledby="ct-home-work"><h3 id="ct-home-work">Work in motion</h3>{works.status === "loading" ? <p role="status">Loading active Work…</p> : null}{works.error ? <p role="alert">{works.error}</p> : null}{works.status === "ready" ? works.data.length ? <><ol>{works.data.slice(0, 5).map((work) => { const linked = threadForWork(work.id); return <li key={work.id}>{linked ? <button type="button" onClick={() => onOpenInvestigation(linked.id)}><span><strong>{work.initialInstruction}</strong><small>{work.status.replaceAll("_", " ")} · Linked Investigation</small></span><time dateTime={work.updatedAt}>{dateLabel(work.updatedAt)}</time><ArrowRight size={15} aria-hidden /></button> : <div className="ct-home__row"><span><strong>{work.initialInstruction}</strong><small>{work.status.replaceAll("_", " ")} · No recent Investigation link</small></span><time dateTime={work.updatedAt}>{dateLabel(work.updatedAt)}</time></div>}</li> })}</ol>{works.data.length > 5 ? <p className="ct-home__more">Showing 5 of {works.data.length} active Work records.</p> : null}</> : <p>No active Work is recorded.</p> : null}</section>
 
     <section className="ct-home__section" aria-labelledby="ct-home-attention"><h3 id="ct-home-attention">Needs your attention</h3>{attention.status === "loading" ? <p role="status">Loading human attention…</p> : null}{attention.error ? <p role="alert">{attention.error}</p> : null}{attention.status === "ready" ? <>{attentionCoverage !== "complete" ? <p className="ct-home__coverage">Attention source coverage is {attentionCoverage ?? "unknown"}.</p> : null}{attention.data.length ? <><ol>{attention.data.slice(0, 5).map((item) => { const linked = threadForWork(item.workId); return <li key={item.id}>{linked ? <button type="button" onClick={() => onOpenInvestigation(linked.id)}><span><strong>{item.reason}</strong><small>{item.nextHumanBoundary.description}</small></span><ArrowRight size={15} aria-hidden /></button> : <div className="ct-home__row"><span><strong>{item.reason}</strong><small>{item.nextHumanBoundary.description}</small></span></div>}</li> })}</ol>{attention.data.length > 5 ? <p className="ct-home__more">Showing 5 of {attention.data.length} attention records.</p> : null}</> : <p>{attentionCoverage === "complete" ? "No human attention items are recorded." : "No items returned from the available attention sources."}</p>}</> : null}</section>
+    <section className="ct-home__section"><details onToggle={(event) => setWorkflowOpen(event.currentTarget.open)}><summary>Inspect workflow recovery</summary>{workflowOpen ? <Suspense fallback={<p>Opening workflow recovery…</p>}><WorkflowRecoveryDesk /></Suspense> : null}</details></section>
+    <section className="ct-home__section"><details onToggle={(event) => setArtifactOpen(event.currentTarget.open)}><summary>Create an artifact draft</summary>{artifactOpen ? <Suspense fallback={<p>Opening artifact creation…</p>}><ArtifactCreationDesk /></Suspense> : null}</details></section>
+    <section className="ct-home__section"><details onToggle={(event) => setSupportingOpen(event.currentTarget.open)}><summary>Inspect supporting canonical records</summary>{supportingOpen ? <Suspense fallback={<p>Opening supporting records…</p>}><SupportingReadDesk /></Suspense> : null}</details></section>
   </div>
 }

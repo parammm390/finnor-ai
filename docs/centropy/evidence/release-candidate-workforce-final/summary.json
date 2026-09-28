@@ -1,0 +1,42 @@
+{
+  "schema": "centropy.workforce-regression-summary/v1",
+  "result": "PASS_LOCAL_COMPILED",
+  "capturedAt": "2026-09-28T20:02:26.897231+00:00",
+  "testRunnerExitCode": 0,
+  "passed": 3,
+  "skipped": 0,
+  "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
+  "workingTreeImplementation": true,
+  "proofs": [
+    {
+      "flow": "atlas_parallel_deal_recheck",
+      "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+      "proof": "docs/centropy/evidence/release-candidate-workforce-final/centropy-parallel-deal-rec-f2308-t-governed-specialist-reads-desktop-chromium/centropy-parallel-deal-recheck.proof.json",
+      "sha256": "8945e4c525451827249f3b40969ea76526f9c1865052c8889237675fce470631",
+      "result": "PASS_LOCAL_COMPILED",
+      "capturedAt": "2026-09-28T20:01:14.804Z"
+    },
+    {
+      "flow": "atlas_live_workforce_reassignment",
+      "workId": "743bf22b-9b17-474b-9b81-b6cc6c7948ea",
+      "proof": "docs/centropy/evidence/release-candidate-workforce-reassign-final/centropy-live-workforce-re-fa9e3-assign-one-exact-assignment-desktop-chromium/centropy-live-workforce-reassign.proof.json",
+      "sha256": "9d1bd36b9cd39e3f49da503690085bd343e85ce77da1b6aefc44f8d7e169fab8",
+      "result": "PASS_LOCAL_COMPILED",
+      "capturedAt": "2026-09-28T20:00:11.362Z"
+    },
+    {
+      "flow": "atlas_controlled_canonical_read_recovery",
+      "workId": "e2c9a863-817f-4d17-902c-3735a8e6f902",
+      "proof": "docs/centropy/evidence/release-candidate-workforce-final/centropy-controlled-recove-488df-olled-canonical-read-outage-desktop-chromium/centropy-controlled-recovery.proof.json",
+      "sha256": "81ba0b6c1ca77dc07da68b85b90c1a4f76d069e720d272785bac96fcd50a1242",
+      "result": "PASS_LOCAL_COMPILED",
+      "capturedAt": "2026-09-28T19:59:23.217Z"
+    }
+  ],
+  "reproduce": "CENTROPY_RECOVERY_ADMIN_DATABASE_URL=postgres://finnor:finnor@127.0.0.1:55441/finnor CENTROPY_LOCAL_WORKER_PID=<current fixture worker> node scripts/centropy/run-local-e2e.mjs e2e/centropy-parallel-deal-recheck.spec.ts e2e/centropy-controlled-recovery.spec.ts e2e/centropy-live-workforce-reassign.spec.ts --project=desktop-chromium --workers=1",
+  "limitations": [
+    "Compiled local fixture; no production permission change or worker pause",
+    "Actual canonical one-minute request windows are awaited; limits remain unchanged",
+    "Partial query IDs and assignment history are preserved by actual runtime owners"
+  ]
+}

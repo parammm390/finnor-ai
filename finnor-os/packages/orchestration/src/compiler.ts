@@ -409,7 +409,10 @@ function collectEffectTargets(value: unknown, actionId: string, path = ""): Busi
     const type = EFFECT_RESOURCE_KEYS[key] ?? (key.endsWith("Ids") ? EFFECT_RESOURCE_KEYS[`${key.slice(0, -3)}Id`] : undefined);
     if (type) {
       const ids = Array.isArray(child) ? child : [child];
-      for (const id of ids) if (typeof id === "string" && UUID_RE.test(id)) targets.push({ kind: "entity", type, id, sourcePath: childPath });
+      // Employees are PartyRefs, including an explicitly grounded human
+      // verifier. Preserve that kind so the compiler and DB scope boundary use
+      // the same canonical party owner and tenant checks.
+      for (const id of ids) if (typeof id === "string" && UUID_RE.test(id)) targets.push({ kind: type === "employee" ? "party" : "entity", type, id, sourcePath: childPath });
     } else if (EFFECT_RECIPIENT_KEYS[key] && typeof child === "string" && child.trim()) {
       targets.push({ kind: "resource", type: EFFECT_RECIPIENT_KEYS[key]!, id: child.trim(), sourcePath: childPath });
     } else {

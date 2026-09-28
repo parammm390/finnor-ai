@@ -25,7 +25,13 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
     <header><div><span className="ct-eyebrow">YOUR WORKSPACE</span><h2 id="ct-settings-title">Settings</h2></div><button type="button" aria-label="Close Settings" onClick={onClose}>×</button></header>
     <p>Review exact changes before recording them. Connections, committee membership, and autonomy limits are enforced by their owning services.</p>
     {error ? <p role="alert">{error}</p> : null}
-    <HumanControlDesk groups={["preferences", "operating-profile", "workforce", "committee-configuration", "autonomy", "microsoft"]} verificationRoutes={["user-prefs"]} verify={async (form, _result, body) => {
+    <HumanControlDesk groups={["preferences", "operating-profile", "workforce", "committee-configuration", "autonomy", "microsoft", "connections"]} verificationRoutes={["user-prefs", "outcome-packs/control"]} verify={async (form, _result, body) => {
+      if (form.routePattern === "outcome-packs/control") {
+        const catalog = await centropyGet<{ packs: Array<{ definition: { id: string }; setting: { enabled: boolean; reason?: string } }> }>("outcome-packs")
+        const pack = catalog.packs.find((entry) => entry.definition.id === body.packId)
+        if (!pack || pack.setting.enabled !== body.enabled || pack.setting.reason !== body.reason) throw new Error("The mission setting did not match the exact reviewed change.")
+        return pack
+      }
       const read = await centropyGet<{ prefs: Record<string, unknown> }>("user-prefs")
       if (form.method === "PUT" && Object.entries(body).some(([key, value]) => JSON.stringify(read.prefs[key]) !== JSON.stringify(value))) throw new Error("The saved preferences differ from the reviewed change.")
       return read

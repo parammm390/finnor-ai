@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
+import { awaitFixtureRateWindow } from "./fixtures/rate-window"
 
 const finnorRequire = createRequire(resolve(process.cwd(), "finnor-os/package.json"))
 const PgClient = finnorRequire("pg").Client as new (options: { connectionString: string }) => {
@@ -26,6 +27,7 @@ test("recover a partially completed Atlas recheck after a controlled canonical-r
   const baseUrl = String(testInfo.project.use.baseURL ?? "")
   test.skip(process.env.CENTROPY_DISPOSABLE_E2E !== "1" || !["127.0.0.1", "localhost"].includes(new URL(baseUrl).hostname), "Disposable localhost fixture only")
   test.skip(!email || !password || !adminUrl || !/^postgres(?:ql)?:\/\/[^/]+@127\.0\.0\.1:55441\/finnor$/.test(adminUrl), "A guarded disposable local admin database URL and owner sign-in are required")
+  await awaitFixtureRateWindow(testInfo)
   const proofPath = testInfo.outputPath("centropy-controlled-recovery.proof.json")
   const screenshotPath = testInfo.outputPath("centropy-controlled-recovery.png")
   const observed: Record<string, unknown> = { workId: null, threadId: null, failedState: null, recoveredState: null,

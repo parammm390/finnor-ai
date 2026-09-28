@@ -26,6 +26,7 @@ import { discoverActionRegistry } from "./discover-action-registry";
 import { activeImportEntityTypes } from "../../packages/import-engine/src/definition";
 import { activeCanonicalImportWriterTypes } from "../../packages/import-engine/src/index";
 import { createSourceAdapterRegistry } from "../../packages/tools/src/source-adapters";
+import { GmailSentMessageAdapter } from "../../packages/tools/src/gmail-observation";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, "../..");
@@ -286,7 +287,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   const discovered = await discoverActionRegistry();
   const discoveredTypes = discovered.map((row) => row.actionType);
   const expectedTypes = ACTION_HARDENING_SPEC.map((row) => row.actionType);
-  if (EXECUTABLE_ACTION_COUNT !== 41 || !equalSets(discoveredTypes, expectedTypes)) {
+  if (EXECUTABLE_ACTION_COUNT !== 45 || !equalSets(discoveredTypes, expectedTypes)) {
     errors.push(`active action registry mismatch: discovered=${discoveredTypes.length}, expected=${EXECUTABLE_ACTION_COUNT}`);
   }
   const retiredActions = discoveredTypes.filter((type) => (RETIRED_WATER_ACTION_TYPES as readonly string[]).includes(type));
@@ -308,7 +309,14 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   if (activeImportEntityTypes().length || activeCanonicalImportWriterTypes().length) {
     errors.push("active import entity/writer registry must be empty until a PE import pack is explicitly certified");
   }
-  if (createSourceAdapterRegistry().providers().length) errors.push("active provider-to-business source mapping registry must be empty");
+  const sourceAdapters = createSourceAdapterRegistry();
+  // The canonical communication verifier retains only exact sent-message
+  // transport evidence. It is not a legacy domain import/synchronization pack.
+  if (!equalSets(sourceAdapters.providers(), ["gmail"])) errors.push("only the exact Gmail sent-message readback adapter may be registered");
+  else {
+    const gmail = sourceAdapters.get("gmail");
+    if (!(gmail instanceof GmailSentMessageAdapter) || !equalSets(gmail.scopes, ["sent_message_readback"])) errors.push("Gmail must remain the bounded canonical sent-message readback implementation");
+  }
 
   const workerSource = await readFile(resolve(ROOT, "apps/worker/src/index.ts"), "utf8");
   const registeredJobs = [...workerSource.matchAll(/queue\.register\(["']([^"']+)["']/g)].map((match) => match[1]!);

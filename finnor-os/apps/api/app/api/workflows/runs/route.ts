@@ -56,6 +56,7 @@ export async function GET(req: Request): Promise<Response> {
 
       return runRows.map((r) => ({
         id: r.id,
+        workId: r.workId,
         workflowType: r.workflowType,
         status: r.status,
         // This is the same pure threshold the watchdog scan uses. Findings are sent

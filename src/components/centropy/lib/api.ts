@@ -179,8 +179,8 @@ export async function centropyPut<T>(path: string, body: unknown): Promise<T> {
   return centropyRequest<T>("PUT", path, body)
 }
 
-export async function centropyDelete<T>(path: string): Promise<T> {
-  return centropyRequest<T>("DELETE", path)
+export async function centropyDelete<T>(path: string, body?: unknown): Promise<T> {
+  return centropyRequest<T>("DELETE", path, body)
 }
 
 /** Download immutable bytes through the same authenticated, tenant-scoped proxy. */

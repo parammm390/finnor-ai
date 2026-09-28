@@ -10,6 +10,7 @@ import {
   ControlObjectiveSchema,
   HandoffWorkSchema,
   StartOutcomePackSchema,
+  SetOutcomePackEnabledSchema,
   ConfirmActionSchema,
   RejectActionSchema,
   EscalateActionSchema,
@@ -42,6 +43,7 @@ import {
   IcOpenVotingSchema,
   IcQuestionSourceSchema,
   IcRecommendationSchema,
+  IcReviewedDeckLinkSchema,
   IcResolveQuestionSchema,
   IcSatisfyConditionSchema,
   IcSelectMemoSchema,
@@ -55,6 +57,7 @@ import { PeDigitalTwinRequestSchema } from "../apps/api/lib/pe-digital-twin";
 import { OperatingProfileUpdateSchema } from "../apps/api/lib/operating-profile";
 import { UserPreferencesPatchSchema } from "../apps/api/lib/user-preferences";
 import { WorkflowRunControlSchema } from "../apps/api/lib/run-control-route";
+import { DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
 import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
@@ -285,6 +288,32 @@ const icMutation = (schema: z.ZodTypeAny, description: string, parameters: reado
   },
 });
 const paths = {
+  "/api/outcome-packs/control": {
+    post: { security: secured, requestBody: json(SetOutcomePackEnabledSchema), responses: { "200": { description: "Owner recorded exact mission enablement; runtime authority remains enforced for every effect" }, "403": { description: "Only a human owner can change mission enablement" } } },
+  },
+  "/api/actions/human": {
+    post: { security: secured, requestBody: json(HumanClosingActionSchema), responses: { "201": { description: "Exact human-authored closing decision drafted in canonical Work and Thread, awaiting effect review" }, "200": { description: "Same exact intake replayed without a second action" }, "403": { description: "Canonical human identity or verifier identity rejected" }, "409": { description: "Intake key belongs to a different decision" }, "422": { description: "Canonical grounding or authority rejects the decision" } } },
+  },
+  "/api/computer/runs/{id}/cancel": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(EmptyProductControlSchema), responses: { "200": { description: "Durable cancellation requested for the exact computer run" }, "403": { description: "Actor cannot cancel this run" } } },
+  },
+  "/api/connections/{ref}": {
+    get: { security: secured, parameters: [{ name: "ref", in: "path", required: true, schema: { type: "string" } }], responses: { "200": { description: "Canonical provider connection status" } } },
+    delete: { security: secured, parameters: [{ name: "ref", in: "path", required: true, schema: { type: "string" } }], responses: { "200": { description: "Connection revoked by its owning security service" } } },
+  },
+  "/api/connections/{ref}/verify": {
+    post: { security: secured, parameters: [{ name: "ref", in: "path", required: true, schema: { type: "string" } }], requestBody: json(EmptyProductControlSchema), responses: { "200": { description: "Provider readback confirms a usable connection" }, "409": { description: "Provider connection is not usable" } } },
+  },
+  "/api/connections/google/start": {
+    post: { security: secured, requestBody: json(GoogleConnectionStartSchema), responses: { "200": { description: "PKCE authorization URL and HTTP-only state cookie issued" }, "409": { description: "Canonical auth profile or provider configuration is unavailable" } } },
+  },
+  "/api/reconciliation/{id}/resolve": { post: icMutation(ResolveReconciliationSchema, "Evidence-bearing resolution recorded by the canonical workflow owner") },
+  "/api/workflows/steps/{id}/compensate": { post: icMutation(InitiateCompensationSchema, "Canonical compensation requested after legal-state and authority checks") },
+  "/api/private-equity/ic/cases/{id}/reviewed-deck-link": { post: icMutation(IcReviewedDeckLinkSchema, "Exact approved deck version linked and independently read back in its Deal-root IC case") },
+  "/api/push-subscriptions": {
+    post: { security: secured, requestBody: json(PushSubscriptionSchema), responses: { "201": { description: "Authenticated browser's actual Web Push subscription recorded" } } },
+    delete: { security: secured, requestBody: json(DeletePushSubscriptionSchema), responses: { "204": { description: "Own device subscription removed" } } },
+  },
   "/api/operating-profile": {
     get: { security: secured, responses: { "200": { description: "Own employee profile and canonical tenant operating profile with owner editability" } } },
     put: { security: secured, requestBody: json(OperatingProfileUpdateSchema), responses: { "200": { description: "Own employee or owner-authorized company profile saved" }, "403": { description: "Company profile edit requires owner authority" } } },
@@ -319,7 +348,7 @@ const paths = {
   "/api/dlq/{id}": { get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact dead-letter record" } } } },
   "/api/dlq/{id}/replay": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized dead-letter replay requested" } } } },
   "/api/dlq/{id}/discard": { post: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Authorized dead-letter discard recorded" } } } },
-  "/api/corrections": { get: { security: secured, responses: { "200": { description: "Tenant-scoped corrections" } } }, post: { security: secured, responses: { "201": { description: "Correction recorded" } } } },
+  "/api/corrections": { get: { security: secured, responses: { "200": { description: "Tenant-scoped corrections" } } }, post: { security: secured, requestBody: json(SubmitCorrectionSchema), responses: { "201": { description: "Receipt-linked human correction recorded" } } } },
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },

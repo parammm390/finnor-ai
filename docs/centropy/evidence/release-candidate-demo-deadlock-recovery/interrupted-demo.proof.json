@@ -1,0 +1,240 @@
+{
+  "schema": "centropy.real-demo-proof/v1",
+  "result": "INCOMPLETE",
+  "capturedAt": "2026-09-28T18:43:49.237Z",
+  "baseURL": "http://127.0.0.1:3001",
+  "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+  "workId": "c94c12da-f66a-4704-9720-dc299c25f567",
+  "threadId": "8249d31d-51d0-4e9f-b442-0439dd4a64d3",
+  "instructionId": "c94c12da-f66a-4704-9720-dc299c25f567",
+  "observed": {
+    "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+    "authoredFixture": true,
+    "checkpoints": [
+      {
+        "phase": "01-atlas-context",
+        "atMs": 1140,
+        "screenshot": "01-atlas-context.png",
+        "sha256": "7abbd75c2421670959f10d5f626975723ae9a0e6eac0e3bff74a6e74e0ac9dbf"
+      },
+      {
+        "phase": "02-real-trace",
+        "atMs": 15170,
+        "screenshot": "02-real-trace.png",
+        "sha256": "93516ad9f27c4915a334f2a9c1a6825bd1a734f58cc3d66056dc58aa5bdcfac6"
+      },
+      {
+        "phase": "03-specialists",
+        "atMs": 20591,
+        "screenshot": "03-specialists.png",
+        "sha256": "c1c29437854a62763df4e2e31dd48afa3dd85fc04bb350346d576beb7a313617"
+      },
+      {
+        "phase": "04-financial-sources",
+        "atMs": 30505,
+        "screenshot": "04-financial-sources.png",
+        "sha256": "e8c666a60619a2a0172913ea97048f4674a068b1f63b5cba18867617078792fa"
+      },
+      {
+        "phase": "05-material-risk-and-source",
+        "atMs": 40153,
+        "screenshot": "05-material-risk-and-source.png",
+        "sha256": "afcacd6004541ddad1ff3f43a58e43097cdd3513e65d56c4fa2ca687cca0d345"
+      }
+    ],
+    "approvals": [],
+    "streamResponses": [
+      {
+        "status": 404,
+        "type": "application/json",
+        "atMs": 5347
+      },
+      {
+        "status": 200,
+        "type": "text/event-stream",
+        "atMs": 5562
+      }
+    ],
+    "intake": {
+      "input": {
+        "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+        "instructionId": "c94c12da-f66a-4704-9720-dc299c25f567",
+        "idempotencyKey": "c94c12da-f66a-4704-9720-dc299c25f567",
+        "threadId": "8249d31d-51d0-4e9f-b442-0439dd4a64d3",
+        "channel": "text",
+        "activeContext": {
+          "version": 1,
+          "capturedAt": "2026-09-28T18:43:06.349Z",
+          "source": "text",
+          "selectedEntities": [
+            {
+              "entityType": "pe_deal",
+              "entityId": "90000000-0000-4000-8000-000000000001"
+            }
+          ],
+          "excludedEntities": [],
+          "surface": {
+            "id": "deals",
+            "spatialState": "canvas"
+          },
+          "filters": []
+        }
+      },
+      "response": {
+        "planned": [],
+        "objective": {
+          "objectiveLoopId": "e856fc42-fd1b-41e8-ad83-8c39f85fdf02",
+          "state": "continue",
+          "route": "OBJECTIVE"
+        },
+        "workId": "c94c12da-f66a-4704-9720-dc299c25f567",
+        "workInputId": "c94c12da-f66a-4704-9720-dc299c25f567",
+        "instructionId": "c94c12da-f66a-4704-9720-dc299c25f567",
+        "threadId": "8249d31d-51d0-4e9f-b442-0439dd4a64d3",
+        "projectionWarnings": [],
+        "assistantMessage": {
+          "id": "0672b7ec-580f-4eac-932d-2e2adb0951a6",
+          "threadId": "8249d31d-51d0-4e9f-b442-0439dd4a64d3",
+          "sequence": 2,
+          "role": "assistant",
+          "channel": "text",
+          "originalText": "I started durable Work for this objective. I’ll report progress from verified outcomes and ask before any required approval.",
+          "instructionId": "c94c12da-f66a-4704-9720-dc299c25f567",
+          "workId": "c94c12da-f66a-4704-9720-dc299c25f567",
+          "workInputId": "c94c12da-f66a-4704-9720-dc299c25f567",
+          "resolutionSnapshot": null,
+          "resolutionProvenance": [],
+          "companyTruthSnapshot": null,
+          "outcomeRefs": [
+            {
+              "id": "c94c12da-f66a-4704-9720-dc299c25f567",
+              "kind": "work"
+            },
+            {
+              "id": "c94c12da-f66a-4704-9720-dc299c25f567",
+              "kind": "work_input"
+            },
+            {
+              "id": "e856fc42-fd1b-41e8-ad83-8c39f85fdf02",
+              "kind": "objective_loop",
+              "state": "continue"
+            }
+          ],
+          "createdAt": "2026-09-28T18:43:06.738Z"
+        }
+      },
+      "acceptedAtMs": 5591
+    },
+    "trace": {
+      "atMs": 15052,
+      "text": "Plan recorded\nObjective\nStop\nInspect 3 recorded events\n01\nInstruction received\n12:13 AM\n02\nPlanning\n\nObjective\n\n12:13 AM\n03\nPlan recorded\n\nObjective\n\n12:13 AM",
+      "renderedSequence": [
+        "01",
+        "02",
+        "03"
+      ],
+      "resources": {
+        "domElements": 1470,
+        "transferredBytes": 2789740
+      }
+    },
+    "specialists": {
+      "atMs": 20510,
+      "assignments": [
+        {
+          "id": "4ac01fdc-f522-4faa-8e64-3ef3d8ab056f",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "c94c12da-f66a-4704-9720-dc299c25f567",
+          "planRevisionId": "71fd068a-ad25-4f57-87ad-4319baed7530",
+          "planNodeId": "node_c954e58986eaa71cf9742fd2",
+          "objectiveLoopId": "e856fc42-fd1b-41e8-ad83-8c39f85fdf02",
+          "objectiveStepId": "6168808c-40d7-4623-9f87-c3c15ee40c80",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000049",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+          "capability": "query:pe_world_state",
+          "nodeKind": "query",
+          "state": "completed",
+          "attempt": 1,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800003,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 0,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability query:pe_world_state; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+          "assignmentScore": {
+            "sampleSize": 3,
+            "currentLoad": 0,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+            "medianLatencyMs": null,
+            "historicalEvidence": "UNKNOWN",
+            "humanRejectionRate": null,
+            "qualityFailureRate": null,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": null,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": "2026-09-28T18:43:21.482Z",
+          "completedAt": "2026-09-28T18:43:21.629Z",
+          "failure": null,
+          "createdAt": "2026-09-28T18:43:21.102Z",
+          "updatedAt": "2026-09-28T18:43:21.629Z"
+        }
+      ]
+    },
+    "financialAnalysis": {
+      "atMs": 30012,
+      "text": "06 / UNDERWRITING SUMMARY\nUnderwriting model\nKNOWN\nSUCCEEDED\npersisted run\nVALID\nvalidity\n0\nfailed checks\n\nAtlas control investment case · Atlas institutional LBO · Revenue downside 20% sensitivity (exploratory) · phase9-e2e-v1\n\nGross Sponsor Irr\n40.0%\nrate · DERIVED VALUE\nGross Sponsor Moic\n1.40×\nmultiple · DERIVED VALUE\nSponsor Exit Proceeds\n70\nUSD · money · DERIVED VALUE\nExit Enterprise Value\n100\nUSD · money · DERIVED VALUE\nExit Equity Value\n70\nUSD · money · DERIVED VALUE\nExit Cash\n0\nUSD · money · DERIVED VALUE\nInspect all 33 persisted outputs\nOpen scenario laboratory\nInspect 2 source references\n2 objects · 1 Work link\nAs of Sep 28, 2026, 11:25 PM"
+    },
+    "sourceContext": {
+      "atMs": 30419,
+      "text": "MICROSOFT 365 / SOURCE TRUTH\nConnection and evidence coverage\n\nThese are recorded integration and source-scope states. A healthy connection alone does not verify an individual document.\n\n0 active of 0 configured connections\n\nNo Microsoft Graph connection is recorded for this tenant.\n\nSources bound to pe deal 90000000\n\nAs of 9/29/2026, 12:13:31 AM\n\nNo Microsoft source scope is bound to this selected root. This read does not assess unbound or differently bound sources."
+    },
+    "materialRisk": {
+      "atMs": 40051,
+      "text": "03 / RISK REGISTER\nRisks and findings\nPARTIAL\nOPEN\nCustomer concentration may impair downside debt-service coverage.\nOPEN\nTop customer represents 31% of recurring revenue.\nInspect 2 source references\nPe Deal Risks\n@finnor/private-equity · 90000000-0000-4000-8000-000000000010\nInspect object\nPe Findings\n@finnor/private-equity · 90000000-0000-4000-8000-000000000009\nInspect object\n\nThese are exact recorded references. Document content and anchors require their owning source.\n\n2 objects · 4 Work links\nAs of Sep 29, 2026, 12:13 AM",
+      "exactSources": [
+        "pe deal risks@finnor/private-equity · 90000000-0000-4000-8000-000000000010Inspect object ",
+        "pe findings@finnor/private-equity · 90000000-0000-4000-8000-000000000009Inspect object "
+      ]
+    }
+  },
+  "limitations": [
+    "Controlled Atlas tenant with real canonical records and actual owner sign-in",
+    "The first approved effect and receipt are timed inside sixty seconds; the full IC objective finishes afterward and has its own recorded time",
+    "SSE fallback is exercised by aborting the real connection, without fabricated responses",
+    "Real Microsoft publication remains BLOCKED_EXTERNAL"
+  ],
+  "reproduce": "PLAYWRIGHT_RECORD_VIDEO=1 node scripts/centropy/run-local-e2e.mjs e2e/centropy-real-demo.spec.ts --project=desktop-chromium --workers=1"
+}

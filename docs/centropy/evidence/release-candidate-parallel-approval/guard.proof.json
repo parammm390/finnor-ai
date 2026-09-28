@@ -1,0 +1,187 @@
+{
+  "schema": "centropy.parallel-approval-guard-proof/v1",
+  "status": "PASS_DATABASE_BOUNDARY",
+  "completedAt": "2026-09-28T16:18:55.928Z",
+  "scope": "Rollback-only trigger checks on a real pending specialist action; no approval or provider execution claimed",
+  "input": {
+    "id": "a3a03af7-c983-483c-ac22-077c953dab08",
+    "status": "pending",
+    "business_effect_id": "c4495f95-0c14-42b9-bfb5-5999aa58bfc7",
+    "plan_revision_id": "1fd29d54-a61e-42ae-a2e2-b9ef774ba9d7",
+    "plan_node_id": "node_b6c9cbcef3c8e25f454f4eba",
+    "step_id": "0e733b83-468c-4953-b049-5cfbe8a570e5",
+    "objective_loop_id": "c306d745-ee72-49e2-9136-d464ef5533d6",
+    "objective_revision": 1,
+    "execution_state": "waiting",
+    "iteration_outcome": "awaiting_approval",
+    "completed_at": "2026-09-28T16:08:26.356Z",
+    "revision": 1,
+    "loop_state": "awaiting_approval",
+    "work_id": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+    "work_status": "awaiting_approval",
+    "plan_status": "active"
+  },
+  "migration": {
+    "name": "0149_parallel_objective_approval_guard.sql",
+    "sha256": "78524f9ce0d2399bc46188f675ff1cbe2627bfab7ce2c79aa799751638ad55d9"
+  },
+  "cases": [
+    {
+      "name": "exact wait with Objective continue",
+      "expectedAccepted": true,
+      "accepted": true,
+      "rejection": null,
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "continue",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "exact wait with Objective waiting",
+      "expectedAccepted": true,
+      "accepted": true,
+      "rejection": null,
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "waiting",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "exact wait with Objective awaiting_approval",
+      "expectedAccepted": true,
+      "accepted": true,
+      "rejection": null,
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "awaiting_approval",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "inactive Objective blocked",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "blocked",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "inactive Objective failed",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "failed",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "inactive Objective cancelled",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET state=$1 WHERE id=$2",
+        "parameters": [
+          "cancelled",
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "changed Objective generation",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_loops SET revision=revision+1 WHERE id=$1",
+        "parameters": [
+          "c306d745-ee72-49e2-9136-d464ef5533d6"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "superseded PlanRevision",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact plan is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_plan_revisions SET status='superseded' WHERE id=$1",
+        "parameters": [
+          "1fd29d54-a61e-42ae-a2e2-b9ef774ba9d7"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "terminal Work",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.works SET status='failed' WHERE id=$1",
+        "parameters": [
+          "3519dc23-a617-4c6a-a1e0-3de142725d42"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "failed specialist",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its exact generation is inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_steps SET execution_state='failed' WHERE id=$1",
+        "parameters": [
+          "0e733b83-468c-4953-b049-5cfbe8a570e5"
+        ]
+      },
+      "rolledBack": true
+    },
+    {
+      "name": "finished ordinary step",
+      "expectedAccepted": false,
+      "accepted": false,
+      "rejection": "objective action execution refused because its step is finished or inactive",
+      "change": {
+        "sql": "UPDATE finnor_os.work_objective_steps SET execution_state='completed',iteration_outcome='continue' WHERE id=$1",
+        "parameters": [
+          "0e733b83-468c-4953-b049-5cfbe8a570e5"
+        ]
+      },
+      "rolledBack": true
+    }
+  ],
+  "unchanged": {
+    "beforeSha256": "5093ef50dbbb86a101979834775869be1d9d624839d92ce0450e464e0d7cee54",
+    "afterSha256": "5093ef50dbbb86a101979834775869be1d9d624839d92ce0450e464e0d7cee54"
+  },
+  "reproduce": {
+    "command": "DATABASE_URL=<disposable-local-admin-url> node scripts/centropy/verify-parallel-approval-guard.mjs a3a03af7-c983-483c-ac22-077c953dab08 docs/centropy/evidence/release-candidate-parallel-approval/guard.proof.json",
+    "precondition": "Same action remains pending in its active specialist approval wait"
+  }
+}

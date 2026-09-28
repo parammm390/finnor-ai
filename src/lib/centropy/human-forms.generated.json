@@ -3,6 +3,28 @@
   "generatedFrom": "Actual backend OpenAPI input schemas and product route manifest",
   "forms": [
     {
+      "id": "http.delete.connections.$ref",
+      "capabilityId": "http.delete.connections.$ref",
+      "group": "connections",
+      "title": "Disconnect a provider connection",
+      "method": "DELETE",
+      "routePattern": "connections/:ref",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/security",
+      "humanOnly": false,
+      "pathFields": [
+        "ref"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/connections/[ref]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/connections/{ref}/delete"
+    },
+    {
       "id": "http.delete.integrations.microsoft-graph.source-scopes.$id",
       "capabilityId": "http.delete.integrations.microsoft-graph.source-scopes.$id",
       "group": "microsoft",
@@ -67,15 +89,318 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/user-prefs/delete"
     },
     {
+      "id": "http.post.actions.human.verify_closing_item",
+      "capabilityId": "http.post.actions.human",
+      "group": "closing-verification",
+      "title": "Verify closing item",
+      "method": "POST",
+      "routePattern": "actions/human",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/orchestration",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "threadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actionType": {
+            "type": "string",
+            "const": "verify_closing_item"
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "dealId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "closingItemId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "expectedVersion": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "verifierEmployeeId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "verificationSource": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "documentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "evidenceSourceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "evidenceVersionId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "dealId",
+              "closingItemId",
+              "expectedVersion"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "idempotencyKey",
+          "actionType",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/actions/human/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/actions/human/post"
+    },
+    {
+      "id": "http.post.actions.human.waive_closing_condition",
+      "capabilityId": "http.post.actions.human",
+      "group": "closing-waivers",
+      "title": "Waive closing condition",
+      "method": "POST",
+      "routePattern": "actions/human",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/orchestration",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "threadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actionType": {
+            "type": "string",
+            "const": "waive_closing_condition"
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "dealId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "closingConditionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "expectedVersion": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000
+              }
+            },
+            "required": [
+              "dealId",
+              "closingConditionId",
+              "expectedVersion",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "idempotencyKey",
+          "actionType",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/actions/human/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/actions/human/post"
+    },
+    {
+      "id": "http.post.artifact-templates",
+      "capabilityId": "http.post.artifact-templates",
+      "group": "artifact-records",
+      "title": "Register this exact version as a template",
+      "method": "POST",
+      "routePattern": "artifact-templates",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "templateKey": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{1,158}[a-z0-9]$"
+          }
+        },
+        "required": [
+          "documentId",
+          "versionId",
+          "templateKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/artifact-templates/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/artifact-templates/post"
+    },
+    {
+      "id": "http.post.artifacts",
+      "capabilityId": "http.post.artifacts",
+      "group": "artifact-creation",
+      "title": "Create a blank artifact",
+      "method": "POST",
+      "routePattern": "artifacts",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "xlsx",
+              "docx",
+              "pptx"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/artifacts/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/artifacts/post"
+    },
+    {
+      "id": "http.post.computer.runs.$id.cancel",
+      "capabilityId": "http.post.computer.runs.$id.cancel",
+      "group": "computer-controls",
+      "title": "Cancel a computer run",
+      "method": "POST",
+      "routePattern": "computer/runs/:id/cancel",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/computer",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/computer/runs/[id]/cancel/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/computer/runs/{id}/cancel/post"
+    },
+    {
+      "id": "http.post.connections.$ref.verify",
+      "capabilityId": "http.post.connections.$ref.verify",
+      "group": "connections",
+      "title": "Verify a provider connection",
+      "method": "POST",
+      "routePattern": "connections/:ref/verify",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/security",
+      "humanOnly": false,
+      "pathFields": [
+        "ref"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/connections/[ref]/verify/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/connections/{ref}/verify/post"
+    },
+    {
+      "id": "http.post.connections.google.start",
+      "capabilityId": "http.post.connections.google.start",
+      "group": "connections",
+      "title": "Connect Google",
+      "method": "POST",
+      "routePattern": "connections/google/start",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/security",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "authProfileRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "redirectUri": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "authProfileRef"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/connections/google/start/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/connections/google/start/post"
+    },
+    {
       "id": "http.post.connections.microsoft-graph.start",
       "capabilityId": "http.post.connections.microsoft-graph.start",
-      "group": "microsoft",
+      "group": "connections",
       "title": "Connect Microsoft 365",
       "method": "POST",
       "routePattern": "connections/microsoft-graph/start",
       "operation": null,
       "readOnly": false,
-      "owner": "@finnor/data-platform",
+      "owner": "@finnor/security",
       "humanOnly": false,
       "pathFields": [],
       "schema": {
@@ -192,6 +517,250 @@
       },
       "source": "finnor-os/apps/api/app/api/connections/microsoft-graph/start/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/connections/microsoft-graph/start/post"
+    },
+    {
+      "id": "http.post.corrections",
+      "capabilityId": "http.post.corrections",
+      "group": "memory-corrections",
+      "title": "Correct a recorded answer",
+      "method": "POST",
+      "routePattern": "corrections",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/memory",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "receiptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correctedFact": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "receiptId",
+          "correctedFact"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/corrections/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/corrections/post"
+    },
+    {
+      "id": "http.post.documents.$id.artifact.bindings",
+      "capabilityId": "http.post.documents.$id.artifact.bindings",
+      "group": "artifact-records",
+      "title": "Bind an exact anchor to a source",
+      "method": "POST",
+      "routePattern": "documents/:id/artifact/bindings",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "anchorId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "anchorHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "targetKind": {
+            "type": "string",
+            "enum": [
+              "evidence_version",
+              "canonical_entity",
+              "document_version"
+            ]
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetEntityType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "targetAnchor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "versionId",
+          "anchorId",
+          "anchorHash",
+          "targetKind",
+          "targetId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/documents/{id}/artifact/bindings/post"
+    },
+    {
+      "id": "http.post.documents.$id.artifact.lineage",
+      "capabilityId": "http.post.documents.$id.artifact.lineage",
+      "group": "artifact-records",
+      "title": "Record a version relationship",
+      "method": "POST",
+      "routePattern": "documents/:id/artifact/lineage",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "sourceVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relation": {
+            "type": "string",
+            "enum": [
+              "supersedes",
+              "derived_from",
+              "copied_from",
+              "template_instantiation",
+              "rendered_from",
+              "merged_from"
+            ]
+          }
+        },
+        "required": [
+          "sourceVersionId",
+          "targetVersionId",
+          "relation"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/documents/{id}/artifact/lineage/post"
+    },
+    {
+      "id": "http.post.documents.$id.artifact.publish",
+      "capabilityId": "http.post.documents.$id.artifact.publish",
+      "group": "artifact-records",
+      "title": "Replace the linked Microsoft file",
+      "method": "POST",
+      "routePattern": "documents/:id/artifact/publish",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "localVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "APP_ONLY_FILE_REPLACE",
+              "DELEGATED_FILE_REPLACE"
+            ]
+          }
+        },
+        "required": [
+          "localVersionId",
+          "baseVersionId",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/documents/{id}/artifact/publish/post"
+    },
+    {
+      "id": "http.post.documents.$id.artifact.recalculate",
+      "capabilityId": "http.post.documents.$id.artifact.recalculate",
+      "group": "artifact-records",
+      "title": "Request delegated Excel calculation",
+      "method": "POST",
+      "routePattern": "documents/:id/artifact/recalculate",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/artifacts",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ranges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "worksheetId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "address": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              },
+              "required": [
+                "worksheetId",
+                "address"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "versionId",
+          "ranges"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/documents/{id}/artifact/recalculate/post"
     },
     {
       "id": "http.post.integrations.microsoft-graph.source-scopes",
@@ -321,6 +890,49 @@
       },
       "source": "finnor-os/apps/api/app/api/integrations/microsoft-graph/source-scopes/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/integrations/microsoft-graph/source-scopes/post"
+    },
+    {
+      "id": "http.post.outcome-packs.control",
+      "capabilityId": "http.post.outcome-packs.control",
+      "group": "autonomy",
+      "title": "Enable or disable a bounded mission",
+      "method": "POST",
+      "routePattern": "outcome-packs/control",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/orchestration",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "packId": {
+            "type": "string",
+            "enum": [
+              "deal_to_verified_closing_readiness",
+              "deal_request_resolution",
+              "critical_deal_dependency_resolution",
+              "general_operator_objective"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "packId",
+          "enabled",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/outcome-packs/control/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/outcome-packs/control/post"
     },
     {
       "id": "http.post.outcome-packs.grants",
@@ -5111,6 +5723,73 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/private-equity/ic/committee-configurations/post"
     },
     {
+      "id": "http.post.reconciliation.$id.resolve",
+      "capabilityId": "http.post.reconciliation.$id.resolve",
+      "group": "reconciliation-controls",
+      "title": "Resolve an uncertain effect with evidence",
+      "method": "POST",
+      "routePattern": "reconciliation/:id/resolve",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workflow-runtime",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "happened_as_intended",
+              "definitely_did_not_happen",
+              "happened_differently",
+              "still_unknowable",
+              "legally_compensatable"
+            ]
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "integrationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controlKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "outcome",
+          "evidence",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/reconciliation/[id]/resolve/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/reconciliation/{id}/resolve/post"
+    },
+    {
       "id": "http.post.underwriting.artifact-bindings",
       "capabilityId": "http.post.underwriting.artifact-bindings",
       "group": "model-records",
@@ -5885,6 +6564,47 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/workflows/runs/{id}/retry/post"
     },
     {
+      "id": "http.post.workflows.steps.$id.compensate",
+      "capabilityId": "http.post.workflows.steps.$id.compensate",
+      "group": "workflow-controls",
+      "title": "Request workflow step compensation",
+      "method": "POST",
+      "routePattern": "workflows/steps/:id/compensate",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workflow-runtime",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "controlKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/workflows/steps/{id}/compensate/post"
+    },
+    {
       "id": "http.post.workforce.profiles",
       "capabilityId": "http.post.workforce.profiles",
       "group": "workforce",
@@ -6097,6 +6817,41 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/workforce/proposals/{id}/post"
     },
     {
+      "id": "http.post.works.$id.handoff",
+      "capabilityId": "http.post.works.$id.handoff",
+      "group": "work-controls",
+      "title": "Hand off this Work",
+      "method": "POST",
+      "routePattern": "works/:id/handoff",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/db",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "targetEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "targetEmployeeId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/works/[id]/handoff/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/works/{id}/handoff/post"
+    },
+    {
       "id": "http.put.operating-profile",
       "capabilityId": "http.put.operating-profile",
       "group": "operating-profile",
@@ -6255,85 +7010,16 @@
       "schema": {
         "type": "object",
         "properties": {
-          "homepage": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "bridge",
-                  "map",
-                  "my-day"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "density": {
             "type": "string",
             "enum": [
               "comfortable",
               "compact"
             ]
-          },
-          "pinnedPanels": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 80
-            },
-            "maxItems": 30
-          },
-          "accent": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 40
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "soundEnabled": {
-            "type": "boolean"
-          },
-          "notificationPreferences": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "boolean"
-            },
-            "propertyNames": {
-              "maxLength": 80
-            }
-          },
-          "quietHoursStart": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "quietHoursEnd": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "required": []
       },
       "source": "finnor-os/apps/api/app/api/user-prefs/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/user-prefs/put"

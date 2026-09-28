@@ -4,6 +4,7 @@ import { writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
+import { awaitFixtureRateWindow } from "./fixtures/rate-window"
 
 const finnorRequire = createRequire(resolve(process.cwd(), "finnor-os/package.json"))
 const PgClient = finnorRequire("pg").Client as new (options: { connectionString: string }) => {
@@ -29,6 +30,7 @@ test("show live Atlas specialist work and durably reassign one exact assignment"
   const client = new PgClient({ connectionString: adminUrl! })
   const liveScreenshotPath = testInfo.outputPath("centropy-live-workforce.png")
   const terminalScreenshotPath = testInfo.outputPath("centropy-reassigned-workforce.png")
+  await awaitFixtureRateWindow(testInfo)
   const proofPath = testInfo.outputPath("centropy-live-workforce-reassign.proof.json")
   const observed: Record<string, unknown> = { workId: null, threadId: null, pausedAssignment: null,
     liveVisible: false, reassignmentResponse: null, reassignedAssignment: null,

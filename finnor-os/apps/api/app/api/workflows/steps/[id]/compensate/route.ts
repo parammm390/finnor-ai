@@ -1,12 +1,7 @@
 import { z } from "zod";
 import { initiateCompensation } from "@finnor/workflow-runtime";
 import { authorizeRuntimeControl, errorResponse, requireContext } from "../../../../../../lib/auth";
-
-const BodySchema = z.object({
-  expectedVersion: z.number().int().nonnegative(),
-  reason: z.string().trim().min(1).max(4_000),
-  controlKey: z.string().trim().min(1).max(512).optional(),
-});
+import { InitiateCompensationSchema as BodySchema } from "../../../../../../lib/product-control-schemas";
 
 const STATUS_BY_REASON: Record<string, number> = {
   not_found: 404,

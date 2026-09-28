@@ -303,7 +303,7 @@ function icGroundingReadCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapsho
     ? planningContext as Record<string, unknown> : {};
   const priorIterations = Array.isArray(inspection.priorIterations) ? inspection.priorIterations : [];
   const queryExecutions = Array.isArray(inspection.queryExecutions) ? inspection.queryExecutions.map(record) : [];
-  // A rejected model proposal may be replaced by one canonical grounding read.
+  // IC preparation begins with one exact available canonical grounding read.
   // Do not keep reading the same Deal when a previous objective step already
   // used a query; the next failure must remain visible for recovery.
   if (queryExecutions.some((item) => item.intent === "pe_world_state" && item.status === "succeeded")
@@ -1347,6 +1347,7 @@ export class LLMPlanner implements Planner {
       ?? icExistingCaseRunCandidate(goal, snapshot, opts.planningContext)
       ?? icCaseOpeningCandidate(goal, snapshot, opts.planningContext)
       ?? icRevenueSensitivityCandidate(goal, opts.planningContext)
+      ?? icGroundingReadCandidate(goal, snapshot, opts.planningContext)
       ?? this.deterministicCandidate(instruction, planningInstruction, memory, allowedActionTypes, goal, opts);
     if (!deterministic && goal.criteria.some((criterion) => criterion.criterion.kind === "private_equity_underwriting_scenario")) {
       throw new Error("EXACT_GROWTH_BASE_UNAVAILABLE: no valid canonical base Run with recorded growth-rate and exit-multiple inputs is available for the selected Deal");

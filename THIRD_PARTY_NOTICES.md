@@ -11,7 +11,11 @@ Adapted components: Animated Counter and Fluid Orb.
 
 Copyright (c) 2026 Swami Malode
 
-MIT License with Commons Clause License Condition v1.0 and Attribution.
+Current upstream license verified 2026-09-28: <https://github.com/swamimalode07/rare-ui/blob/main/LICENSE>. Visible credit: [Rare UI](https://rareui.com), also in the repository README.
+
+MIT + Commons Clause License Condition v1.0 + Attribution
+
+Copyright (c) 2026 Swami Malode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -22,13 +26,20 @@ application, website, or product, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-The Software shall not be used, in whole or in substantial part, to create or
-offer a product or service whose primary purpose is to provide a collection of
-UI components, templates, design assets, or developer-facing UI building
-blocks that is substantially similar to, or competes with, Rare UI.
+Attribution Requirement
 
-Attribution to Rare UI must be included in the documentation, credits, or
-about section of any application, website, or product that uses the Software.
+Any project that ships any part of the Software must credit Rare UI with a
+visible link to https://rareui.com, placed where a visitor or user can find it,
+such as a site footer, an about page, a credits screen or a README. The credit
+and the copyright notice above must not be removed from the source you copied.
+
+Commons Clause Restriction
+
+You may use this Software, including for any commercial purpose, so long as you
+do not sell, sublicense, or redistribute the components themselves, whether
+alone, in a bundle, or as a ported version.
+
+No Warranty
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -71,8 +82,7 @@ Source: <https://github.com/facebook/astryx>
 
 Copyright (c) 2026 Meta Platforms, Inc.
 
-Astryx packages are used under the MIT License. The complete license is also
-distributed with each installed `@astryxdesign/*` package.
+Historical candidate only: no `@astryxdesign/*` import is reached by the current CENTROPY workspace. No new Astryx source is vendored or installed in this upgrade.
 
 ## Liquid Orb Editor
 
@@ -88,8 +98,7 @@ complete license is distributed in its source repository.
 
 Source: <https://www.npmjs.com/package/thinking-orbs>
 
-The runtime package is used directly. Its license is distributed in the
-installed package.
+Historical candidate only: no `thinking-orbs` import is reached by the current CENTROPY workspace. Its runtime package is not used by the current orb.
 
 ## Scrim UI
 
@@ -110,3 +119,9 @@ CENTROPY sections, its blue glass palette, responsive scrolling, and reduced
 motion behavior. It is a new TypeScript implementation; Rewamp source code is
 not vendored. The upstream README explicitly presents its designs as
 copy-paste components for use in applications.
+
+The Rewamp LICENSE URL returned 404 during verification on 2026-09-28. No redistribution license is asserted for that project; only the interaction idea is used.
+
+## Supabase JavaScript client
+
+Source license: <https://github.com/supabase/supabase-js/blob/master/LICENSE>. MIT, copyright 2020 Supabase. The package is used for actual owner authentication; its license metadata is recorded in `docs/centropy/library-verification.json`.

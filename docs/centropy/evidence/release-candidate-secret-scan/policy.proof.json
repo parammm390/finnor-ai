@@ -1,10 +1,10 @@
 {
   "schema": "centropy.secret-scan-policy-proof/v1",
   "status": "PASS",
-  "capturedAt": "2026-09-28T04:04:24.412Z",
+  "capturedAt": "2026-09-28T19:59:08.918Z",
   "scannerVersion": "8.24.3",
   "binarySha256": "531b6b70a924b24fe5ccddb83f0d2fdcc68d68fa6abfcf343aa4f4a2ec7ee5ba",
-  "configurationSha256": "50c4dea32a321a3f64978d26328adfb311043b59b8f37f5bdaeb0c7806b1690f",
+  "configurationSha256": "3c8d9ec8dc9f2c9c8170e1e1ee368e19c77a38c372a8c764bb19d1193a7c8431",
   "steps": [
     "Show the default scanner detects the authored high entropy business references",
     "Show the exact field/value/path policy allows those references",

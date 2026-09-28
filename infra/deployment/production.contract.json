@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0148_artifact_underwriting_bindings.sql",
+    "requiredMigrationHead": "0149_parallel_objective_approval_guard.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

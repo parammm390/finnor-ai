@@ -450,11 +450,24 @@ function semanticQueryResult(result: unknown): unknown {
 }
 
 function failureShape(error: unknown): Record<string, unknown> {
-  const message = error instanceof Error ? error.message : String(error);
-  const name = error instanceof Error ? error.name : "Error";
+  // Drizzle wraps the actual database error with SQL and parameter values.
+  // Read the bounded cause so a large plan can neither overflow the failure
+  // column nor turn a business "deadline" field into a false timeout.
+  let cause = error;
+  const seen = new Set<unknown>();
+  for (let depth = 0; depth < 8 && cause instanceof Error && cause.cause instanceof Error && !seen.has(cause.cause); depth++) {
+    seen.add(cause);
+    cause = cause.cause;
+  }
+  const original = cause instanceof Error ? cause.message : String(cause);
+  const message = original.slice(0, 2000);
+  const name = (cause instanceof Error ? cause.name : "Error").slice(0, 160);
+  const code = isRecord(cause) && typeof cause.code === "string" ? cause.code.slice(0, 64) : null;
   return {
     message,
     name,
+    ...(code ? { code } : {}),
+    ...(message !== original ? { messageTruncated: true, messageBytes: Buffer.byteLength(original, "utf8"), messageHash: hash(original) } : {}),
     timeout: name === "AbortError" || /\b(?:timeout|timed out|deadline|aborted?)\b/i.test(message),
     at: new Date().toISOString(),
   };
@@ -580,7 +593,7 @@ async function scheduleIterationTx(
 
 async function scheduleIteration(loop: SchedulableObjectiveLoop, runAt: Date, correlationId?: string): Promise<void> {
   await withTenant(loop.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${loop.tenantId} AND ${workObjectiveLoops.id}=${loop.id} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${loop.tenantId} AND ${workObjectiveLoops.id}=${loop.id} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(
       eq(workObjectiveLoops.tenantId, loop.tenantId),
       eq(workObjectiveLoops.id, loop.id),
@@ -592,7 +605,7 @@ async function scheduleIteration(loop: SchedulableObjectiveLoop, runAt: Date, co
 
 export async function ensureObjectiveIterationDelivery(tenantId: string, objectiveLoopId: string, correlationId?: string): Promise<boolean> {
   return withTenant(tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${tenantId} AND ${workObjectiveLoops.id}=${objectiveLoopId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${tenantId} AND ${workObjectiveLoops.id}=${objectiveLoopId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(
       eq(workObjectiveLoops.tenantId, tenantId),
       eq(workObjectiveLoops.id, objectiveLoopId),
@@ -668,7 +681,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       : defaultObjectiveSuccessCondition(objective);
   }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR NO KEY UPDATE`);
     const [currentWork] = await db.select().from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId))).limit(1);
     const [latestInput] = await db.select({ id: workInputs.id }).from(workInputs)
       .where(and(eq(workInputs.tenantId, ctx.tenantId), eq(workInputs.workId, input.workId)))
@@ -816,9 +829,9 @@ async function workerContext(tenantId: string, workId: string): Promise<{ ctx: T
   });
 }
 
-async function claimStep(tenantId: string, loopId: string, leaseOwner: string, expectedRevision?: number, expectedStepNumber?: number) {
+async function claimStep(tenantId: string, loopId: string, leaseOwner: string, expectedRevision?: number, expectedStepNumber?: number, controllerOnly = false, workforceRecoveryAssignmentId?: string) {
   return withTenant(tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${loopId} AND ${workObjectiveLoops.tenantId}=${tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${loopId} AND ${workObjectiveLoops.tenantId}=${tenantId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId))).limit(1);
     if (!loop) throw new Error("Objective loop not found");
     if (["blocked", "completed", "failed", "cancelled"].includes(loop.state)) return { loop, step: null, terminal: true } as const;
@@ -830,6 +843,9 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
       expectedStepNumber !== undefined
         ? eq(workObjectiveSteps.stepNumber, expectedStepNumber)
         : sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')`,
+      // An event wake's expected number may have become a reserved node since
+      // enqueue. Only its exact assignment delivery may claim that node.
+      controllerOnly && !workforceRecoveryAssignmentId ? sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')` : undefined,
     )).orderBy(desc(workObjectiveSteps.stepNumber)).limit(1);
     if (expectedStepNumber !== undefined && ((unfinished && unfinished.stepNumber !== expectedStepNumber) || (!unfinished && loop.stepCount >= expectedStepNumber))) {
       return { loop, step: null, terminal: true } as const;
@@ -837,6 +853,16 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
     const leaseUntil = new Date(Date.now() + 30_000);
     if (unfinished) {
       if (unfinished.executionRole === "node") {
+        if (controllerOnly) {
+          // Only an explicit recovery delivery may prepare a successor for a
+          // terminal physical owner. Ordinary event wakes cannot steal nodes.
+          const [recoveryOwner] = workforceRecoveryAssignmentId ? await db.select({ id: workforceAssignments.id }).from(workforceAssignments).where(and(
+            eq(workforceAssignments.tenantId, tenantId), eq(workforceAssignments.id, workforceRecoveryAssignmentId),
+            eq(workforceAssignments.objectiveLoopId, loop.id), eq(workforceAssignments.objectiveStepId, unfinished.id),
+            eq(workforceAssignments.workId, loop.workId), inArray(workforceAssignments.state, ["failed", "reassigned"]),
+          )).limit(1) : [];
+          if (!recoveryOwner) return { loop, step: null, terminal: true } as const;
+        }
         if (unfinished.objectiveRevision !== loop.revision || !unfinished.planRevisionId || !unfinished.planNodeId) return { loop, step: null, terminal: true } as const;
         const [activePlan] = await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
           eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, unfinished.planRevisionId), eq(workPlanRevisions.status, "active"),
@@ -1287,7 +1313,9 @@ async function finishIteration(params: {
   wakeClaimedDuringWaitCreation?: boolean;
 }> {
   const result = await withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR UPDATE`);
+    // Loop identity is immutable. Serialize state/fencing changes while allowing
+    // concurrent PlanRevision/assignment foreign-key KEY SHARE checks.
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, params.loop.id)).limit(1);
     if (!current) throw new Error("Objective loop disappeared while finishing an iteration");
     const [currentStep] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id))).limit(1);
@@ -1877,6 +1905,7 @@ export class ObjectiveLoopRuntime {
     expectedRevision?: number;
     expectedStepNumber?: number;
     workforceAssignmentId?: string;
+    workforceRecoveryAssignmentId?: string;
     /** Existing Objective jobs defer; direct/manual invocations may execute the
      * same governed assignment inline without bypassing assignment/lease checks. */
     deferToWorkforceJob?: boolean;
@@ -1884,7 +1913,8 @@ export class ObjectiveLoopRuntime {
     signal?: AbortSignal;
   }): Promise<ObjectiveIterationOutcome> {
     const leaseOwner = params.workforceLeaseOwner ?? randomUUID();
-    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber);
+    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber,
+      params.deferToWorkforceJob === true && !params.workforceAssignmentId, params.workforceRecoveryAssignmentId);
     if (claimed.terminal || !claimed.step) return claimed.loop.state;
     const loop = claimed.loop;
     const step = claimed.step;
@@ -1934,27 +1964,6 @@ export class ObjectiveLoopRuntime {
       await releaseLease(params.tenantId, loop.id, leaseOwner);
       throw error;
     }
-    // PostgreSQL jsonb::text adds whitespace to the wire JSON measured by
-    // bounded(). Leave headroom below the table's 128 KiB inspection check.
-    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ inspection: bounded(inspection, 104_000) as object, inspectionHash, phase: "deciding" }).where(eq(workObjectiveSteps.id, step.id)));
-    await markObjectiveWakeConsumed(params.tenantId, loop.id, loop.revision);
-
-    const unresolved = params.workforceAssignmentId ? null : unresolvedEffect(inspection);
-    if (unresolved) {
-      return (await finishIteration({
-        tenantId: params.tenantId, loop, step, outcome: unresolved.outcome, reason: unresolved.reason,
-        nextStep: unresolved.outcome === "awaiting_approval" ? "Resume this same objective after authorization." : "Observe the durable result when its exact event arrives.",
-        observation: { canonicalInspectionHash: inspectionHash }, progressMade: false,
-        durableWait: { waitFor: unresolved.waitFor, conditionSummary: unresolved.reason },
-      })).outcome;
-    }
-
-    let planRevisionId: string;
-    let planSemanticHash: string;
-    let planGoalHash: string;
-    let planNode: PlanNode;
-    let plannerAttemptId: string;
-    let decision: ObjectiveDecision;
     const active = await activeWorkPlanRevision(params.tenantId, params.workId);
     if (!active && step.planRevisionId) {
       const [completedPlan] = await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
@@ -1979,6 +1988,34 @@ export class ObjectiveLoopRuntime {
         })).outcome;
       }
     }
+    // A generation-pinned specialist cannot become a controller for a new
+    // Plan after inspection races replacement. Never rebind its logical step.
+    if (step.executionRole === "node") {
+      const inspectedCurrency = await currentIterationState(params.tenantId, loop.id, step.id, loop.revision, leaseOwner);
+      if (active?.id !== step.planRevisionId || !inspectedCurrency.current) return inspectedCurrency.state;
+    }
+
+    // PostgreSQL jsonb::text adds whitespace to the wire JSON measured by
+    // bounded(). Leave headroom below the table's 128 KiB inspection check.
+    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ inspection: bounded(inspection, 104_000) as object, inspectionHash, phase: "deciding" }).where(eq(workObjectiveSteps.id, step.id)));
+    await markObjectiveWakeConsumed(params.tenantId, loop.id, loop.revision);
+
+    const unresolved = params.workforceAssignmentId ? null : unresolvedEffect(inspection);
+    if (unresolved) {
+      return (await finishIteration({
+        tenantId: params.tenantId, loop, step, outcome: unresolved.outcome, reason: unresolved.reason,
+        nextStep: unresolved.outcome === "awaiting_approval" ? "Resume this same objective after authorization." : "Observe the durable result when its exact event arrives.",
+        observation: { canonicalInspectionHash: inspectionHash }, progressMade: false,
+        durableWait: { waitFor: unresolved.waitFor, conditionSummary: unresolved.reason },
+      })).outcome;
+    }
+
+    let planRevisionId: string;
+    let planSemanticHash: string;
+    let planGoalHash: string;
+    let planNode: PlanNode;
+    let plannerAttemptId: string;
+    let decision: ObjectiveDecision;
     const [latestHistoricalPlan] = !active ? await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId),
       eq(workPlanRevisions.workId, params.workId),
@@ -2724,7 +2761,7 @@ export async function controlWorkObjective(params: {
     // Global Objective lock order is ObjectiveLoop -> PlanRevision -> logical /
     // physical attempts. Scheduler reservation and iteration finalization already
     // use this order; worker claims take compatible shared generation locks.
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!current) throw new Error("Work has no objective loop");
     const finishControl = async (updated: typeof workObjectiveLoops.$inferSelect) => {
@@ -2761,7 +2798,7 @@ export async function controlWorkObjective(params: {
     // Serialize control with scheduler/claim/effect generation checks. If effect
     // commit won first, the subsequent effect read observes that fact; if control
     // wins, no stale command may cross the provider boundary.
-    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR NO KEY UPDATE`);
     const [activePlan] = await db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId),
       eq(workPlanRevisions.workId, params.workId),

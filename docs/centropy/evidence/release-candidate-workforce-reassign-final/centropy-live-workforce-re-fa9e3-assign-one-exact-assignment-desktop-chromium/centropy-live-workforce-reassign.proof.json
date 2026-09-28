@@ -1,8 +1,8 @@
 {
   "schema": "finnor.centropy.e2e-proof/v1",
   "flow": "atlas_live_workforce_reassignment",
-  "capturedAt": "2026-09-28T01:45:43.448Z",
-  "baseUrl": "http://localhost:3001",
+  "capturedAt": "2026-09-28T20:00:11.362Z",
+  "baseUrl": "http://127.0.0.1:3001",
   "actorEmail": "owner@test-dealer.finnor.local",
   "input": {
     "dealId": "90000000-0000-4000-8000-000000000001",
@@ -10,24 +10,24 @@
     "faultControl": "briefly suspend only the named disposable worker after a persisted active assignment appears"
   },
   "observed": {
-    "workId": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
-    "threadId": "337b83f6-3b5c-44f8-80da-1fa00a25dc27",
+    "workId": "743bf22b-9b17-474b-9b81-b6cc6c7948ea",
+    "threadId": "af7f36ee-8d75-47f6-b592-790f8f1481ff",
     "pausedAssignment": {
-      "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+      "id": "dcf76602-8b2d-495b-8a18-49803fc89d38",
       "state": "queued",
       "capability": "query:open_findings",
       "plan_node_id": "node_b41a89ac6f6407ef2594fd72",
-      "created_at": "2026-09-28 07:15:29.718562+05:30"
+      "created_at": "2026-09-29 01:30:03.61267+05:30"
     },
     "liveVisible": true,
     "reassignmentResponse": {
-      "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+      "id": "dcf76602-8b2d-495b-8a18-49803fc89d38",
       "tenantId": "00000000-0000-4000-8000-000000000001",
-      "workId": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
-      "planRevisionId": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+      "workId": "743bf22b-9b17-474b-9b81-b6cc6c7948ea",
+      "planRevisionId": "3b28eccc-bef7-47ae-9a5a-710e7f429c6b",
       "planNodeId": "node_b41a89ac6f6407ef2594fd72",
-      "objectiveLoopId": "f132a45c-6b9b-458c-a4d5-f0272b4ced62",
-      "objectiveStepId": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc",
+      "objectiveLoopId": "8d8c8f20-6a0c-4695-a1f4-4f162d404b86",
+      "objectiveStepId": "6474b94d-7887-4647-917b-97b880cac01d",
       "objectiveRevision": 1,
       "nodeAttempt": 1,
       "agentProfileId": "90000000-0000-4000-8000-000000000049",
@@ -44,7 +44,7 @@
           "maxQueries": 12,
           "maxReplans": 12,
           "maxKnownTokens": null,
-          "maxWallClockMs": 604800010,
+          "maxWallClockMs": 604800005,
           "maxKnownCostUsd": null,
           "maxPlannerCalls": 12
         },
@@ -69,38 +69,38 @@
       },
       "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
       "assignmentScore": {
-        "sampleSize": 7,
+        "sampleSize": 2,
         "currentLoad": 0,
         "knownCostUsd": null,
         "stableTieBreak": "90000000-0000-4000-8000-000000000049",
-        "medianLatencyMs": 362,
-        "historicalEvidence": "KNOWN",
-        "humanRejectionRate": 0,
-        "qualityFailureRate": 0,
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
         "exactCapabilityMatch": 1,
-        "verifiedCompletionRate": 1,
+        "verifiedCompletionRate": null,
         "promotedRoutingPreference": 0
       },
       "previousAssignmentId": null,
       "reassignmentReason": "OPERATOR_REQUESTED",
       "domainActionId": null,
       "startedAt": null,
-      "completedAt": "2026-09-28T01:45:34.566Z",
+      "completedAt": "2026-09-28T20:00:04.724Z",
       "failure": {
         "code": "OPERATOR_REQUESTED",
-        "actorId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+        "actorId": "64514556-501f-4326-b650-ad687e0f0f47"
       },
-      "createdAt": "2026-09-28T01:45:29.718Z",
-      "updatedAt": "2026-09-28T01:45:34.566Z"
+      "createdAt": "2026-09-28T20:00:03.612Z",
+      "updatedAt": "2026-09-28T20:00:04.724Z"
     },
     "reassignedAssignment": {
-      "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+      "id": "dcf76602-8b2d-495b-8a18-49803fc89d38",
       "tenantId": "00000000-0000-4000-8000-000000000001",
-      "workId": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
-      "planRevisionId": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+      "workId": "743bf22b-9b17-474b-9b81-b6cc6c7948ea",
+      "planRevisionId": "3b28eccc-bef7-47ae-9a5a-710e7f429c6b",
       "planNodeId": "node_b41a89ac6f6407ef2594fd72",
-      "objectiveLoopId": "f132a45c-6b9b-458c-a4d5-f0272b4ced62",
-      "objectiveStepId": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc",
+      "objectiveLoopId": "8d8c8f20-6a0c-4695-a1f4-4f162d404b86",
+      "objectiveStepId": "6474b94d-7887-4647-917b-97b880cac01d",
       "objectiveRevision": 1,
       "nodeAttempt": 1,
       "agentProfileId": "90000000-0000-4000-8000-000000000049",
@@ -117,7 +117,7 @@
           "maxQueries": 12,
           "maxReplans": 12,
           "maxKnownTokens": null,
-          "maxWallClockMs": 604800010,
+          "maxWallClockMs": 604800005,
           "maxKnownCostUsd": null,
           "maxPlannerCalls": 12
         },
@@ -142,38 +142,38 @@
       },
       "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
       "assignmentScore": {
-        "sampleSize": 7,
+        "sampleSize": 2,
         "currentLoad": 0,
         "knownCostUsd": null,
         "stableTieBreak": "90000000-0000-4000-8000-000000000049",
-        "medianLatencyMs": 362,
-        "historicalEvidence": "KNOWN",
-        "humanRejectionRate": 0,
-        "qualityFailureRate": 0,
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
         "exactCapabilityMatch": 1,
-        "verifiedCompletionRate": 1,
+        "verifiedCompletionRate": null,
         "promotedRoutingPreference": 0
       },
       "previousAssignmentId": null,
       "reassignmentReason": "OPERATOR_REQUESTED",
       "domainActionId": null,
       "startedAt": null,
-      "completedAt": "2026-09-28T01:45:34.566Z",
+      "completedAt": "2026-09-28T20:00:04.724Z",
       "failure": {
         "code": "OPERATOR_REQUESTED",
-        "actorId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+        "actorId": "64514556-501f-4326-b650-ad687e0f0f47"
       },
-      "createdAt": "2026-09-28T01:45:29.718Z",
-      "updatedAt": "2026-09-28T01:45:34.566Z"
+      "createdAt": "2026-09-28T20:00:03.612Z",
+      "updatedAt": "2026-09-28T20:00:04.724Z"
     },
     "successorAssignment": {
-      "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd",
+      "id": "d7a1f149-a130-49bf-ab9a-9243b723ac28",
       "tenantId": "00000000-0000-4000-8000-000000000001",
-      "workId": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
-      "planRevisionId": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+      "workId": "743bf22b-9b17-474b-9b81-b6cc6c7948ea",
+      "planRevisionId": "3b28eccc-bef7-47ae-9a5a-710e7f429c6b",
       "planNodeId": "node_b41a89ac6f6407ef2594fd72",
-      "objectiveLoopId": "f132a45c-6b9b-458c-a4d5-f0272b4ced62",
-      "objectiveStepId": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc",
+      "objectiveLoopId": "8d8c8f20-6a0c-4695-a1f4-4f162d404b86",
+      "objectiveStepId": "6474b94d-7887-4647-917b-97b880cac01d",
       "objectiveRevision": 1,
       "nodeAttempt": 1,
       "agentProfileId": "90000000-0000-4000-8000-000000000049",
@@ -190,7 +190,7 @@
           "maxQueries": 12,
           "maxReplans": 12,
           "maxKnownTokens": null,
-          "maxWallClockMs": 604800010,
+          "maxWallClockMs": 604800005,
           "maxKnownCostUsd": null,
           "maxPlannerCalls": 12
         },
@@ -215,33 +215,33 @@
       },
       "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
       "assignmentScore": {
-        "sampleSize": 7,
+        "sampleSize": 2,
         "currentLoad": 1,
         "knownCostUsd": null,
         "stableTieBreak": "90000000-0000-4000-8000-000000000049",
-        "medianLatencyMs": 362,
-        "historicalEvidence": "KNOWN",
-        "humanRejectionRate": 0,
-        "qualityFailureRate": 0,
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
         "exactCapabilityMatch": 1,
-        "verifiedCompletionRate": 1,
+        "verifiedCompletionRate": null,
         "promotedRoutingPreference": 0
       },
-      "previousAssignmentId": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+      "previousAssignmentId": "dcf76602-8b2d-495b-8a18-49803fc89d38",
       "reassignmentReason": "OPERATOR_REQUESTED",
       "domainActionId": null,
-      "startedAt": "2026-09-28T01:45:37.374Z",
-      "completedAt": "2026-09-28T01:45:37.463Z",
+      "startedAt": "2026-09-28T20:00:05.600Z",
+      "completedAt": "2026-09-28T20:00:05.764Z",
       "failure": null,
-      "createdAt": "2026-09-28T01:45:35.152Z",
-      "updatedAt": "2026-09-28T01:45:37.463Z"
+      "createdAt": "2026-09-28T20:00:05.235Z",
+      "updatedAt": "2026-09-28T20:00:05.764Z"
     },
     "terminal": {
       "work": "completed",
       "objective": "completed",
       "verifiedPlan": true
     },
-    "liveScreenshotSha256": "701ea65c947bfb61d93b7dc100dac687ac9b836aa144a57d7279a5ddad278a01"
+    "liveScreenshotSha256": "3fbf850034ab0066764bcbea27e93a1f4cda46db9337b89fcd1bdca7db9fc1c3"
   },
   "steps": [
     "Authenticate owner and submit exact whole-Deal recheck",
@@ -250,7 +250,7 @@
     "Use the human reassignment control against the exact assignment",
     "Resume worker; verify immutable reassignment, successor assignment, terminal Plan proof and reload"
   ],
-  "screenshotSha256": "49ba8e67ef25257a279a9a5e6c8dcf9bc8dccbd14712ae9e7d347a7cf6e5368c",
+  "screenshotSha256": "d9ea9132f20046cbad5f09344b8eee8e1507a6c95de2320d424dca5f9445fce4",
   "reproduce": {
     "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_LOCAL_WORKER_PID=<disposable-worker-pid> CENTROPY_RECOVERY_ADMIN_DATABASE_URL=postgres://<disposable-admin>@127.0.0.1:55441/finnor PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-live-workforce-reassign.spec.ts --project=desktop-chromium --workers=1",
     "requiredEnvironment": [

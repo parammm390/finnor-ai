@@ -102,8 +102,8 @@
 .ct-composer textarea { display: block; width: 100%; min-height: 90px; max-height: 220px; resize: vertical; padding: 14px 15px 4px; background: transparent; color: var(--ct-text); border: 0; outline: 0; font-size: 15px; line-height: 1.55; }
 .ct-composer textarea::placeholder { color: #77899c; }
 .ct-composer footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 2px 11px 10px 15px; }
-.ct-composer__tools { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.ct-composer__hint { display: inline-flex; align-items: center; gap: 6px; color: var(--ct-faint); font-size: 11px; white-space: nowrap; }
+.ct-composer__tools { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 7px; min-width: 0; }
+.ct-composer__hint { display: inline-flex; align-items: center; gap: 6px; color: var(--ct-faint); font-size: 11px; flex-basis: 100%; line-height: 1.4; }
 .ct-composer__tools button { border: 0; background: transparent; color: var(--ct-muted); display: inline-flex; align-items: center; gap: 5px; padding: 5px; }
 .ct-composer__tools button[aria-pressed="true"] { color: var(--ct-accent); }
 .ct-composer__partial, .ct-composer__voice-error { margin: 0 15px 8px !important; font-size: 12px !important; line-height: 1.4 !important; }
@@ -612,7 +612,10 @@
 .ct-artifact__editor { max-width: 800px; }
 .ct-artifact__editor > p { max-width: 680px; }
 .ct-artifact__editor label { display: grid; gap: 8px; margin: 16px 0; color: var(--ct-muted); font-size: 12px; font-weight: 600; }
-.ct-artifact__editor label select, .ct-artifact__editor textarea { width: 100%; font: inherit; font-size: 14px; }
+.ct-artifact__editor label select, .ct-artifact__editor textarea, .ct-artifact__editor label input { width: 100%; min-width: 0; max-width: 100%; font: inherit; font-size: 14px; }
+.ct-artifact__editor label input { min-height: 44px; padding: 10px 12px; border: 1px solid var(--ct-line); border-radius: 7px; color: var(--ct-text); background: var(--ct-raised); }
+.ct-artifact__section section > label { display: grid; gap: 8px; margin: 16px 0; min-width: 0; }
+.ct-artifact__section section > label select { width: 100%; min-width: 0; max-width: 100%; }
 .ct-artifact__editor textarea { min-height: 150px; padding: 15px; border: 1px solid var(--ct-line); border-radius: 7px; color: var(--ct-text); background: var(--ct-raised); line-height: 1.6; resize: vertical; }
 .ct-artifact__editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
 .ct-artifact__editor-actions button { padding: 10px 13px; border: 1px solid var(--ct-accent); border-radius: 7px; color: var(--ct-accent); background: transparent; font-size: 12px; font-weight: 650; }
@@ -934,4 +937,7 @@
 .ct-recorded-value ol { margin: 0; padding-left: 20px; }
 .ct-scenario-periods { border: 1px solid var(--ct-line); padding: 12px; border-radius: 12px; }
 .ct-scenario-periods legend { padding: 0 6px; color: var(--ct-muted); }
+.ct-app[data-density="compact"] .ct-canvas-block { padding-block: 22px 26px; }
+.ct-app[data-density="compact"] .ct-canvas-block > header { margin-bottom: 16px; }
+.ct-app[data-density="compact"] .ct-world__related { padding-block: 10px; }
 @media (max-width: 600px) { .ct-recorded-value dl > div { grid-template-columns: minmax(0,1fr); gap: 4px; } }

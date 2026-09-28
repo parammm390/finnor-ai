@@ -1,0 +1,1664 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "result": "PASS",
+  "flow": "human_closing_decisions",
+  "capturedAt": "2026-09-28T17:33:17.913Z",
+  "fixturePath": ".centropy-certification/atlas-final-v2/human-controls-fixture.json",
+  "fixture": {
+    "schema": "centropy.human-controls-fixture/v1",
+    "authored": true,
+    "createdAt": "2026-09-28T17:33:02.751Z",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "ownerId": "64514556-501f-4326-b650-ad687e0f0f47",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "conditionId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+    "conditionVersion": 1,
+    "itemId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+    "itemVersion": 2,
+    "documentId": "a3a03af7-c983-483c-ac22-077c953dab08",
+    "evidenceSourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+    "evidenceVersionId": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+    "integrationId": "b6e16b9a-ebd4-4bb7-8fe6-243bf119bb9f"
+  },
+  "baseURL": "http://127.0.0.1:3001",
+  "steps": [
+    "Sign in through the real owner form; independently read each disposable record through the application database role and tenant RLS",
+    "Review waive_closing_condition, prove no mutation after intake, separately approve the exact effect, observe canonical state/version, verified effect and finalized receipt, then replay the exact request and reject its changed payload",
+    "Review verify_closing_item, prove no mutation after intake, separately approve the exact effect, observe canonical state/version, verified effect and finalized receipt, then replay the exact request and reject its changed payload"
+  ],
+  "observed": {
+    "decisions": [
+      {
+        "kind": "condition",
+        "input": {
+          "actionType": "waive_closing_condition",
+          "payload": {
+            "dealId": "90000000-0000-4000-8000-000000000001",
+            "closingConditionId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+            "expectedVersion": 1,
+            "reason": "Authored disposable control certification waiver; no live business decision."
+          },
+          "idempotencyKey": "13c4fe91-d294-452c-ac37-e84adecd8ba3"
+        },
+        "draft": {
+          "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "workInputId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "instructionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "threadId": "28e2e90c-0334-404e-a655-1adf0a3a7695",
+          "actionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "actionType": "waive_closing_condition",
+          "status": "awaiting_approval",
+          "result": {
+            "status": "success",
+            "output": {
+              "gated": true,
+              "pendingConfirmation": true,
+              "summary": "waive closing condition on exact canonical target 2c9d7f71-8b41-486b-b247-ecd0ab476fdf in Deal 90000000-0000-4000-8000-000000000001.",
+              "businessEffectId": "d658e27b-4b89-42ca-83a8-56fe59f09cb1",
+              "autonomy": {
+                "eligible": false,
+                "outcome": "not_pack_work",
+                "reasonCodes": [
+                  "NOT_OUTCOME_PACK_WORK"
+                ],
+                "grantId": null,
+                "packId": null,
+                "packVersion": null,
+                "mode": null,
+                "certificationFingerprint": null,
+                "evaluatedAt": "2026-09-28T17:33:07.560Z"
+              }
+            }
+          },
+          "projectionWarnings": []
+        },
+        "before": {
+          "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+          "deal_id": "90000000-0000-4000-8000-000000000001",
+          "state": "open",
+          "version": 1,
+          "waiver_reason": null,
+          "waiver_authority_decision_id": null,
+          "waiver_decision_receipt_id": null
+        },
+        "after": {
+          "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+          "deal_id": "90000000-0000-4000-8000-000000000001",
+          "state": "waived",
+          "version": 2,
+          "waiver_reason": "Authored disposable control certification waiver; no live business decision.",
+          "waiver_authority_decision_id": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee",
+          "waiver_decision_receipt_id": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e"
+        },
+        "replay": {
+          "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "workInputId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "instructionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "threadId": "28e2e90c-0334-404e-a655-1adf0a3a7695",
+          "actionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+          "actionType": "waive_closing_condition",
+          "actionStatus": "completed",
+          "status": "completed",
+          "duplicate": true,
+          "restored": true
+        },
+        "changedPayloadStatus": 409,
+        "effects": [
+          {
+            "id": "d658e27b-4b89-42ca-83a8-56fe59f09cb1",
+            "tenantId": "00000000-0000-4000-8000-000000000001",
+            "domainActionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+            "version": 1,
+            "semanticHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+            "scopeHash": "edb6af68e5ec3887efeb8c9bffd5236030c48b44ce2cb0d8b88cc0d5e9b2fee0",
+            "operationClass": "operational_change",
+            "effect": {
+              "id": "d658e27b-4b89-42ca-83a8-56fe59f09cb1",
+              "mode": "consequential",
+              "delta": {
+                "values": {
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "reason": "Authored disposable control certification waiver; no live business decision.",
+                  "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                  "grounding": {
+                    "deal": {
+                      "state": "active",
+                      "version": 1,
+                      "entityId": "90000000-0000-4000-8000-000000000001",
+                      "entityType": "pe_deal",
+                      "graphVersion": 60
+                    },
+                    "work": {
+                      "entityId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                      "entityType": "work"
+                    },
+                    "entities": [
+                      {
+                        "state": "open",
+                        "version": 1,
+                        "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                        "entityType": "pe_closing_condition"
+                      }
+                    ],
+                    "verticalKey": "private_equity"
+                  },
+                  "expectedVersion": 1,
+                  "closingConditionId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf"
+                },
+                "operation": "waive_closing_condition"
+              },
+              "before": [
+                {
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "values": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "status": "active",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:02.742801+05:30",
+                    "graphVersion": 60,
+                    "actualCloseAt": null
+                  },
+                  "observedAt": "2026-09-28T17:33:07.523Z",
+                  "versionHash": "cea4628bc61781a3728fa78d05acff135a35f37c9c839aa1daf0d135d9f91777"
+                },
+                {
+                  "target": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "kind": "entity",
+                    "type": "pe_closing_condition"
+                  },
+                  "values": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "state": "open",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:02.573619+05:30"
+                  },
+                  "observedAt": "2026-09-28T17:33:07.523Z",
+                  "versionHash": "d89a13daddc5ca8b0fa8c1e70b869ace1c9f62a4b6a3d07a3712890d72660dfc"
+                }
+              ],
+              "source": {
+                "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "actionType": "waive_closing_condition",
+                "domainActionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "objectiveStepId": null
+              },
+              "targets": [
+                {
+                  "id": "90000000-0000-4000-8000-000000000001",
+                  "kind": "entity",
+                  "type": "pe_deal",
+                  "sourcePath": "grounding.deal"
+                },
+                {
+                  "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "kind": "entity",
+                  "type": "pe_closing_condition",
+                  "sourcePath": "grounding.entities[0]"
+                }
+              ],
+              "approval": {
+                "summary": "waive closing condition on exact canonical target 2c9d7f71-8b41-486b-b247-ecd0ab476fdf in Deal 90000000-0000-4000-8000-000000000001.",
+                "required": true,
+                "typedConfirmation": false
+              },
+              "bindings": [],
+              "expected": {
+                "state": {
+                  "state": "waived"
+                },
+                "observation": "canonical_state"
+              },
+              "exposure": null,
+              "authority": {
+                "risk": "high",
+                "policyId": null,
+                "capability": "action:waive_closing_condition",
+                "policyVersion": null
+              },
+              "operation": {
+                "name": "waive_closing_condition",
+                "class": "operational_change",
+                "external": false
+              },
+              "scopeHash": "edb6af68e5ec3887efeb8c9bffd5236030c48b44ce2cb0d8b88cc0d5e9b2fee0",
+              "provenance": {
+                "compiler": "finnor_effect_compiler",
+                "compiledAt": "2026-09-28T17:33:07.523Z",
+                "compilerVersion": 1,
+                "replacementForEffectId": null,
+                "compensationForEffectId": null
+              },
+              "uncertainty": {
+                "unknownOutcome": "reconcile_before_retry",
+                "stalePrecondition": "block_and_recompile"
+              },
+              "semanticHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+              "preconditions": [
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "description": "pe_deal must still match the compiled before-state",
+                  "expectedHash": "cea4628bc61781a3728fa78d05acff135a35f37c9c839aa1daf0d135d9f91777"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "kind": "entity",
+                    "type": "pe_closing_condition"
+                  },
+                  "description": "pe_closing_condition must still match the compiled before-state",
+                  "expectedHash": "d89a13daddc5ca8b0fa8c1e70b869ace1c9f62a4b6a3d07a3712890d72660dfc"
+                }
+              ],
+              "reversibility": {
+                "classification": "unknown_provider_dependent",
+                "compensationCapability": null
+              },
+              "schemaVersion": 1
+            },
+            "status": "verified",
+            "observedResult": {
+              "entity": {
+                "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                "entityType": "pe_closing_condition"
+              },
+              "changed": true,
+              "verified": true,
+              "actionType": "waive_closing_condition",
+              "idempotent": false,
+              "canonicalState": {
+                "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                "dueAt": null,
+                "state": "waived",
+                "dealId": "90000000-0000-4000-8000-000000000001",
+                "version": 2,
+                "category": "certification_fixture",
+                "failedAt": null,
+                "tenantId": "00000000-0000-4000-8000-000000000001",
+                "waivedAt": {},
+                "createdAt": {},
+                "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                "updatedAt": {},
+                "archivedAt": null,
+                "externalId": null,
+                "observedAt": null,
+                "satisfiedAt": null,
+                "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                "sourceSystem": "fixture:centropy-human-controls",
+                "waiverReason": "Authored disposable control certification waiver; no live business decision.",
+                "workstreamId": "90000000-0000-4000-8000-000000000005",
+                "conditionText": "Authored control certification condition — disposable fixture",
+                "failureReason": null,
+                "ownerPartyType": "employee",
+                "evidenceRequired": false,
+                "requiredForClose": false,
+                "responsibleDealPartyId": null,
+                "waiverRequiresApproval": true,
+                "waiverDecisionReceiptId": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+                "waiverAuthorityDecisionId": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee"
+              },
+              "workAttachment": "result_linked",
+              "canonicalObserved": true,
+              "idempotencyIdentity": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+              "canonicalMutationOwner": "waiveClosingCondition"
+            },
+            "verification": {
+              "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+              "state": "verified",
+              "observed": {
+                "entity": {
+                  "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "entityType": "pe_closing_condition"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "waive_closing_condition",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "dueAt": null,
+                  "state": "waived",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "version": 2,
+                  "category": "certification_fixture",
+                  "failedAt": null,
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "waivedAt": {},
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "satisfiedAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "waiverReason": "Authored disposable control certification waiver; no live business decision.",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "conditionText": "Authored control certification condition — disposable fixture",
+                  "failureReason": null,
+                  "ownerPartyType": "employee",
+                  "evidenceRequired": false,
+                  "requiredForClose": false,
+                  "responsibleDealPartyId": null,
+                  "waiverRequiresApproval": true,
+                  "waiverDecisionReceiptId": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+                  "waiverAuthorityDecisionId": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee"
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "canonicalMutationOwner": "waiveClosingCondition"
+              },
+              "checkedAt": "2026-09-28T17:33:10.564Z"
+            },
+            "replacementForEffectId": null,
+            "compensationForEffectId": null,
+            "authorizedAt": "2026-09-28T17:33:08.851Z",
+            "executionStartedAt": "2026-09-28T17:33:10.474Z",
+            "observedAt": "2026-09-28T17:33:10.567Z",
+            "createdAt": "2026-09-28T17:33:07.519Z"
+          }
+        ],
+        "receipts": [
+          {
+            "id": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+            "tenantId": "00000000-0000-4000-8000-000000000001",
+            "workflowRunId": "5373a09b-9cc2-4714-8562-3dacbebb7501",
+            "workflowStepId": "86a88c9a-6de1-4c69-8b7a-5d380ea09bd1",
+            "domainActionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+            "operationId": null,
+            "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+            "objective": "single_action: execute_authorized_effect",
+            "evidence": [
+              {
+                "ref": "86a88c9a-6de1-4c69-8b7a-5d380ea09bd1",
+                "source": "workflow_step",
+                "timestamp": "2026-09-28T17:33:10.400Z"
+              }
+            ],
+            "policyApplied": null,
+            "riskTier": "medium",
+            "proposedAction": {
+              "id": "d658e27b-4b89-42ca-83a8-56fe59f09cb1",
+              "mode": "consequential",
+              "delta": {
+                "values": {
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "reason": "Authored disposable control certification waiver; no live business decision.",
+                  "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                  "grounding": {
+                    "deal": {
+                      "state": "active",
+                      "version": 1,
+                      "entityId": "90000000-0000-4000-8000-000000000001",
+                      "entityType": "pe_deal",
+                      "graphVersion": 60
+                    },
+                    "work": {
+                      "entityId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                      "entityType": "work"
+                    },
+                    "entities": [
+                      {
+                        "state": "open",
+                        "version": 1,
+                        "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                        "entityType": "pe_closing_condition"
+                      }
+                    ],
+                    "verticalKey": "private_equity"
+                  },
+                  "expectedVersion": 1,
+                  "closingConditionId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf"
+                },
+                "operation": "waive_closing_condition"
+              },
+              "before": [
+                {
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "values": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "status": "active",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:02.742801+05:30",
+                    "graphVersion": 60,
+                    "actualCloseAt": null
+                  },
+                  "observedAt": "2026-09-28T17:33:07.523Z",
+                  "versionHash": "cea4628bc61781a3728fa78d05acff135a35f37c9c839aa1daf0d135d9f91777"
+                },
+                {
+                  "target": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "kind": "entity",
+                    "type": "pe_closing_condition"
+                  },
+                  "values": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "state": "open",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:02.573619+05:30"
+                  },
+                  "observedAt": "2026-09-28T17:33:07.523Z",
+                  "versionHash": "d89a13daddc5ca8b0fa8c1e70b869ace1c9f62a4b6a3d07a3712890d72660dfc"
+                }
+              ],
+              "source": {
+                "workId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "actionType": "waive_closing_condition",
+                "domainActionId": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "objectiveStepId": null
+              },
+              "targets": [
+                {
+                  "id": "90000000-0000-4000-8000-000000000001",
+                  "kind": "entity",
+                  "type": "pe_deal",
+                  "sourcePath": "grounding.deal"
+                },
+                {
+                  "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "kind": "entity",
+                  "type": "pe_closing_condition",
+                  "sourcePath": "grounding.entities[0]"
+                }
+              ],
+              "approval": {
+                "summary": "waive closing condition on exact canonical target 2c9d7f71-8b41-486b-b247-ecd0ab476fdf in Deal 90000000-0000-4000-8000-000000000001.",
+                "required": true,
+                "typedConfirmation": false
+              },
+              "bindings": [],
+              "expected": {
+                "state": {
+                  "state": "waived"
+                },
+                "observation": "canonical_state"
+              },
+              "exposure": null,
+              "authority": {
+                "risk": "high",
+                "policyId": null,
+                "capability": "action:waive_closing_condition",
+                "policyVersion": null
+              },
+              "operation": {
+                "name": "waive_closing_condition",
+                "class": "operational_change",
+                "external": false
+              },
+              "scopeHash": "edb6af68e5ec3887efeb8c9bffd5236030c48b44ce2cb0d8b88cc0d5e9b2fee0",
+              "provenance": {
+                "compiler": "finnor_effect_compiler",
+                "compiledAt": "2026-09-28T17:33:07.523Z",
+                "compilerVersion": 1,
+                "replacementForEffectId": null,
+                "compensationForEffectId": null
+              },
+              "uncertainty": {
+                "unknownOutcome": "reconcile_before_retry",
+                "stalePrecondition": "block_and_recompile"
+              },
+              "semanticHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+              "preconditions": [
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "description": "pe_deal must still match the compiled before-state",
+                  "expectedHash": "cea4628bc61781a3728fa78d05acff135a35f37c9c839aa1daf0d135d9f91777"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "kind": "entity",
+                    "type": "pe_closing_condition"
+                  },
+                  "description": "pe_closing_condition must still match the compiled before-state",
+                  "expectedHash": "d89a13daddc5ca8b0fa8c1e70b869ace1c9f62a4b6a3d07a3712890d72660dfc"
+                }
+              ],
+              "reversibility": {
+                "classification": "unknown_provider_dependent",
+                "compensationCapability": null
+              },
+              "schemaVersion": 1
+            },
+            "approval": {
+              "at": "2026-09-28T17:33:08.837Z",
+              "required": true,
+              "approvedBy": "64514556-501f-4326-b650-ad687e0f0f47"
+            },
+            "expectedResult": {
+              "state": {
+                "state": "waived"
+              },
+              "observation": "canonical_state"
+            },
+            "actualResult": {
+              "output": {
+                "entity": {
+                  "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "entityType": "pe_closing_condition"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "waive_closing_condition",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "dueAt": null,
+                  "state": "waived",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "version": 2,
+                  "category": "certification_fixture",
+                  "failedAt": null,
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "waivedAt": {},
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "satisfiedAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "waiverReason": "Authored disposable control certification waiver; no live business decision.",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "conditionText": "Authored control certification condition — disposable fixture",
+                  "failureReason": null,
+                  "ownerPartyType": "employee",
+                  "evidenceRequired": false,
+                  "requiredForClose": false,
+                  "responsibleDealPartyId": null,
+                  "waiverRequiresApproval": true,
+                  "waiverDecisionReceiptId": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+                  "waiverAuthorityDecisionId": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee"
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "canonicalMutationOwner": "waiveClosingCondition"
+              },
+              "status": "success",
+              "verification": {
+                "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+                "state": "verified",
+                "observed": {
+                  "entity": {
+                    "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "entityType": "pe_closing_condition"
+                  },
+                  "changed": true,
+                  "verified": true,
+                  "actionType": "waive_closing_condition",
+                  "idempotent": false,
+                  "canonicalState": {
+                    "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                    "dueAt": null,
+                    "state": "waived",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "version": 2,
+                    "category": "certification_fixture",
+                    "failedAt": null,
+                    "tenantId": "00000000-0000-4000-8000-000000000001",
+                    "waivedAt": {},
+                    "createdAt": {},
+                    "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "updatedAt": {},
+                    "archivedAt": null,
+                    "externalId": null,
+                    "observedAt": null,
+                    "satisfiedAt": null,
+                    "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "sourceSystem": "fixture:centropy-human-controls",
+                    "waiverReason": "Authored disposable control certification waiver; no live business decision.",
+                    "workstreamId": "90000000-0000-4000-8000-000000000005",
+                    "conditionText": "Authored control certification condition — disposable fixture",
+                    "failureReason": null,
+                    "ownerPartyType": "employee",
+                    "evidenceRequired": false,
+                    "requiredForClose": false,
+                    "responsibleDealPartyId": null,
+                    "waiverRequiresApproval": true,
+                    "waiverDecisionReceiptId": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+                    "waiverAuthorityDecisionId": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee"
+                  },
+                  "workAttachment": "result_linked",
+                  "canonicalObserved": true,
+                  "idempotencyIdentity": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                  "canonicalMutationOwner": "waiveClosingCondition"
+                },
+                "checkedAt": "2026-09-28T17:33:10.564Z"
+              }
+            },
+            "failure": null,
+            "correlationId": null,
+            "llmCostUsd": null,
+            "businessEffectId": "d658e27b-4b89-42ca-83a8-56fe59f09cb1",
+            "intendedEffectHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+            "authorizedEffectHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+            "executedEffectHash": "f5212eda4a2e63302df68bf38d08199a66322380ccaf7aa3d469a9a5d2ec233d",
+            "verification": {
+              "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+              "state": "verified",
+              "observed": {
+                "entity": {
+                  "entityId": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "entityType": "pe_closing_condition"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "waive_closing_condition",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "2c9d7f71-8b41-486b-b247-ecd0ab476fdf",
+                  "dueAt": null,
+                  "state": "waived",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "version": 2,
+                  "category": "certification_fixture",
+                  "failedAt": null,
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "waivedAt": {},
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "satisfiedAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "waiverReason": "Authored disposable control certification waiver; no live business decision.",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "conditionText": "Authored control certification condition — disposable fixture",
+                  "failureReason": null,
+                  "ownerPartyType": "employee",
+                  "evidenceRequired": false,
+                  "requiredForClose": false,
+                  "responsibleDealPartyId": null,
+                  "waiverRequiresApproval": true,
+                  "waiverDecisionReceiptId": "36f0f358-4fcb-4ef9-a599-4a79b8171b2e",
+                  "waiverAuthorityDecisionId": "1cfaf8da-1f8f-46b9-8369-c3a4f8e367ee"
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "13c4fe91-d294-452c-ac37-e84adecd8ba3",
+                "canonicalMutationOwner": "waiveClosingCondition"
+              },
+              "checkedAt": "2026-09-28T17:33:10.564Z"
+            },
+            "recoveryEffectId": null,
+            "createdAt": "2026-09-28T17:33:10.384Z",
+            "finalizedAt": "2026-09-28T17:33:10.607Z"
+          }
+        ]
+      },
+      {
+        "kind": "item",
+        "input": {
+          "actionType": "verify_closing_item",
+          "payload": {
+            "dealId": "90000000-0000-4000-8000-000000000001",
+            "closingItemId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+            "expectedVersion": 2,
+            "verificationSource": "Authored disposable control certification source",
+            "evidenceSourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+            "evidenceVersionId": "a0640a90-ed88-467e-bf60-0af6b3ad1727"
+          },
+          "idempotencyKey": "bebfdea1-71da-4dcd-87a8-70d3e012f71f"
+        },
+        "draft": {
+          "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "workInputId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "instructionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "threadId": "523023c5-6e35-465d-87f0-3b2c7044c47d",
+          "actionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "actionType": "verify_closing_item",
+          "status": "awaiting_approval",
+          "result": {
+            "status": "success",
+            "output": {
+              "gated": true,
+              "pendingConfirmation": true,
+              "summary": "verify closing item on exact canonical target bd67999d-45de-41e3-b38b-667d26bf7420 in Deal 90000000-0000-4000-8000-000000000001.",
+              "businessEffectId": "677e3c13-dc77-4c6d-9ba3-5700eb056ce4",
+              "autonomy": {
+                "eligible": false,
+                "outcome": "not_pack_work",
+                "reasonCodes": [
+                  "NOT_OUTCOME_PACK_WORK"
+                ],
+                "grantId": null,
+                "packId": null,
+                "packVersion": null,
+                "mode": null,
+                "certificationFingerprint": null,
+                "evaluatedAt": "2026-09-28T17:33:13.347Z"
+              }
+            }
+          },
+          "projectionWarnings": []
+        },
+        "before": {
+          "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+          "deal_id": "90000000-0000-4000-8000-000000000001",
+          "state": "ready",
+          "version": 2,
+          "verified_by_employee_id": null,
+          "verification_source": null
+        },
+        "after": {
+          "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+          "deal_id": "90000000-0000-4000-8000-000000000001",
+          "state": "verified",
+          "version": 3,
+          "verified_by_employee_id": "64514556-501f-4326-b650-ad687e0f0f47",
+          "verification_source": "Authored disposable control certification source"
+        },
+        "replay": {
+          "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "workInputId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "instructionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "threadId": "523023c5-6e35-465d-87f0-3b2c7044c47d",
+          "actionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+          "actionType": "verify_closing_item",
+          "actionStatus": "completed",
+          "status": "completed",
+          "duplicate": true,
+          "restored": true
+        },
+        "changedPayloadStatus": 409,
+        "effects": [
+          {
+            "id": "677e3c13-dc77-4c6d-9ba3-5700eb056ce4",
+            "tenantId": "00000000-0000-4000-8000-000000000001",
+            "domainActionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+            "version": 1,
+            "semanticHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+            "scopeHash": "626b5836dbec3dd38093c7e5f0dd0c3f93437a4ca987ba23c17f6dd0f93a000a",
+            "operationClass": "operational_change",
+            "effect": {
+              "id": "677e3c13-dc77-4c6d-9ba3-5700eb056ce4",
+              "mode": "consequential",
+              "delta": {
+                "values": {
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                  "grounding": {
+                    "deal": {
+                      "state": "active",
+                      "version": 1,
+                      "entityId": "90000000-0000-4000-8000-000000000001",
+                      "entityType": "pe_deal",
+                      "graphVersion": 61
+                    },
+                    "work": {
+                      "entityId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                      "entityType": "work"
+                    },
+                    "entities": [
+                      {
+                        "state": "ready",
+                        "version": 2,
+                        "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                        "entityType": "pe_closing_item"
+                      }
+                    ],
+                    "verticalKey": "private_equity",
+                    "epistemicImpact": {
+                      "mode": "unconfigured",
+                      "pins": [],
+                      "operational": false,
+                      "reasonCodes": [
+                        "EPISTEMIC_DURABLE_GRAPH_UNCONFIGURED"
+                      ],
+                      "graphVersionId": null
+                    },
+                    "decisionReadiness": {
+                      "ready": true,
+                      "decisionId": "pe:decision:closing-item:bd67999d-45de-41e3-b38b-667d26bf7420",
+                      "decisionType": "closing_item_verification",
+                      "acquisitionOptions": [],
+                      "unresolvedPropositionIds": []
+                    }
+                  },
+                  "closingItemId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "expectedVersion": 2,
+                  "evidenceSourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                  "evidenceVersionId": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                  "verificationSource": "Authored disposable control certification source",
+                  "verifierEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47"
+                },
+                "operation": "verify_closing_item"
+              },
+              "before": [
+                {
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "values": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "status": "active",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:10.52545+05:30",
+                    "graphVersion": 61,
+                    "actualCloseAt": null
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "0ffb5a136bf31f282ff6082127cf8014bf7191439954b7970a07f9987dbfb8c1"
+                },
+                {
+                  "target": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "kind": "entity",
+                    "type": "pe_closing_item"
+                  },
+                  "values": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "state": "ready",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "version": 2,
+                    "updatedAt": "2026-09-28 23:03:02.658453+05:30"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "d835c268c50167233021257c898479d56d03d7fcbae2cc70b2a9b7fdb390f17f"
+                },
+                {
+                  "target": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "kind": "party",
+                    "type": "employee"
+                  },
+                  "values": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "name": "Phase 9 Investment Partner",
+                    "status": "active",
+                    "businessEmail": "owner@test-dealer.finnor.local"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "106e6666523aec3d6e79cee8d26396b5c3ad790757c9a31e5eadaeaed45ad518"
+                },
+                {
+                  "target": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "kind": "entity",
+                    "type": "evidence_source"
+                  },
+                  "values": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "sourceKey": "pe-provider:b6e16b9a-ebd4-4bb7-8fe6-243bf119bb9f:authored-verification-fixture:bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "updatedAt": "2026-09-28T17:33:02.722Z",
+                    "sourceType": "pe_provider_observation"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "dd767ab3c86a1ea4c2de88bfdef743dd10db9a01e93bb3cce9e9565be030b027"
+                },
+                {
+                  "target": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "kind": "entity",
+                    "type": "evidence_source_version"
+                  },
+                  "values": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "asOf": "2026-09-28T17:33:02.668Z",
+                    "sourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "contentHash": "21e149a60b8f15b37a7d5ae82c87d8d125db23dd06cb12aa12415f45475bf9a8"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "d8758940c2bae348a66d6f54b23dfe26061fd4499b050b13c18aa5113912f6fe"
+                }
+              ],
+              "source": {
+                "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "actionType": "verify_closing_item",
+                "domainActionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "objectiveStepId": null
+              },
+              "targets": [
+                {
+                  "id": "90000000-0000-4000-8000-000000000001",
+                  "kind": "entity",
+                  "type": "pe_deal",
+                  "sourcePath": "grounding.deal"
+                },
+                {
+                  "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "kind": "entity",
+                  "type": "pe_closing_item",
+                  "sourcePath": "grounding.entities[0]"
+                },
+                {
+                  "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "kind": "party",
+                  "type": "employee",
+                  "sourcePath": "verifierEmployeeId"
+                },
+                {
+                  "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                  "kind": "entity",
+                  "type": "evidence_source",
+                  "sourcePath": "evidenceSourceId"
+                },
+                {
+                  "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                  "kind": "entity",
+                  "type": "evidence_source_version",
+                  "sourcePath": "evidenceVersionId"
+                }
+              ],
+              "approval": {
+                "summary": "verify closing item on exact canonical target bd67999d-45de-41e3-b38b-667d26bf7420 in Deal 90000000-0000-4000-8000-000000000001.",
+                "required": true,
+                "typedConfirmation": false
+              },
+              "bindings": [],
+              "expected": {
+                "state": {
+                  "state": "verified"
+                },
+                "observation": "canonical_state"
+              },
+              "exposure": null,
+              "authority": {
+                "risk": "high",
+                "policyId": null,
+                "capability": "action:verify_closing_item",
+                "policyVersion": null
+              },
+              "operation": {
+                "name": "verify_closing_item",
+                "class": "operational_change",
+                "external": false
+              },
+              "scopeHash": "626b5836dbec3dd38093c7e5f0dd0c3f93437a4ca987ba23c17f6dd0f93a000a",
+              "provenance": {
+                "compiler": "finnor_effect_compiler",
+                "compiledAt": "2026-09-28T17:33:13.312Z",
+                "compilerVersion": 1,
+                "replacementForEffectId": null,
+                "compensationForEffectId": null
+              },
+              "uncertainty": {
+                "unknownOutcome": "reconcile_before_retry",
+                "stalePrecondition": "block_and_recompile"
+              },
+              "semanticHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+              "preconditions": [
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "description": "pe_deal must still match the compiled before-state",
+                  "expectedHash": "0ffb5a136bf31f282ff6082127cf8014bf7191439954b7970a07f9987dbfb8c1"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "kind": "entity",
+                    "type": "pe_closing_item"
+                  },
+                  "description": "pe_closing_item must still match the compiled before-state",
+                  "expectedHash": "d835c268c50167233021257c898479d56d03d7fcbae2cc70b2a9b7fdb390f17f"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "kind": "party",
+                    "type": "employee"
+                  },
+                  "description": "employee must still match the compiled before-state",
+                  "expectedHash": "106e6666523aec3d6e79cee8d26396b5c3ad790757c9a31e5eadaeaed45ad518"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "kind": "entity",
+                    "type": "evidence_source"
+                  },
+                  "description": "evidence_source must still match the compiled before-state",
+                  "expectedHash": "dd767ab3c86a1ea4c2de88bfdef743dd10db9a01e93bb3cce9e9565be030b027"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "kind": "entity",
+                    "type": "evidence_source_version"
+                  },
+                  "description": "evidence_source_version must still match the compiled before-state",
+                  "expectedHash": "d8758940c2bae348a66d6f54b23dfe26061fd4499b050b13c18aa5113912f6fe"
+                }
+              ],
+              "reversibility": {
+                "classification": "unknown_provider_dependent",
+                "compensationCapability": null
+              },
+              "schemaVersion": 1
+            },
+            "status": "verified",
+            "observedResult": {
+              "entity": {
+                "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                "entityType": "pe_closing_item"
+              },
+              "changed": true,
+              "verified": true,
+              "actionType": "verify_closing_item",
+              "idempotent": false,
+              "canonicalState": {
+                "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                "dueAt": null,
+                "state": "verified",
+                "dealId": "90000000-0000-4000-8000-000000000001",
+                "readyAt": {},
+                "version": 3,
+                "category": "certification_fixture",
+                "itemText": "Authored control certification item — disposable fixture",
+                "tenantId": "00000000-0000-4000-8000-000000000001",
+                "createdAt": {},
+                "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                "updatedAt": {},
+                "archivedAt": null,
+                "externalId": null,
+                "observedAt": null,
+                "verifiedAt": {},
+                "cancelledAt": null,
+                "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                "sourceSystem": "fixture:centropy-human-controls",
+                "workstreamId": "90000000-0000-4000-8000-000000000005",
+                "ownerPartyType": "employee",
+                "requiredForClose": false,
+                "cancellationReason": null,
+                "verificationSource": "Authored disposable control certification source",
+                "verifiedByEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47",
+                "responsibleDealPartyId": null,
+                "verificationEvidenceRequired": true
+              },
+              "workAttachment": "result_linked",
+              "canonicalObserved": true,
+              "idempotencyIdentity": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+              "canonicalMutationOwner": "verifyClosingItem"
+            },
+            "verification": {
+              "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+              "state": "verified",
+              "observed": {
+                "entity": {
+                  "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "entityType": "pe_closing_item"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "verify_closing_item",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "dueAt": null,
+                  "state": "verified",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "readyAt": {},
+                  "version": 3,
+                  "category": "certification_fixture",
+                  "itemText": "Authored control certification item — disposable fixture",
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "verifiedAt": {},
+                  "cancelledAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "ownerPartyType": "employee",
+                  "requiredForClose": false,
+                  "cancellationReason": null,
+                  "verificationSource": "Authored disposable control certification source",
+                  "verifiedByEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "responsibleDealPartyId": null,
+                  "verificationEvidenceRequired": true
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "canonicalMutationOwner": "verifyClosingItem"
+              },
+              "checkedAt": "2026-09-28T17:33:16.562Z"
+            },
+            "replacementForEffectId": null,
+            "compensationForEffectId": null,
+            "authorizedAt": "2026-09-28T17:33:14.451Z",
+            "executionStartedAt": "2026-09-28T17:33:16.486Z",
+            "observedAt": "2026-09-28T17:33:16.564Z",
+            "createdAt": "2026-09-28T17:33:13.310Z"
+          }
+        ],
+        "receipts": [
+          {
+            "id": "8edfbf82-d8e8-4a35-8b5d-4423263ca4cd",
+            "tenantId": "00000000-0000-4000-8000-000000000001",
+            "workflowRunId": "9760ccd5-afd6-4400-8022-ee50725af47a",
+            "workflowStepId": "d206a46e-63c5-4c28-9a1e-e1c0b4a8c0fe",
+            "domainActionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+            "operationId": null,
+            "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+            "objective": "single_action: execute_authorized_effect",
+            "evidence": [
+              {
+                "ref": "d206a46e-63c5-4c28-9a1e-e1c0b4a8c0fe",
+                "source": "workflow_step",
+                "timestamp": "2026-09-28T17:33:16.422Z"
+              }
+            ],
+            "policyApplied": null,
+            "riskTier": "medium",
+            "proposedAction": {
+              "id": "677e3c13-dc77-4c6d-9ba3-5700eb056ce4",
+              "mode": "consequential",
+              "delta": {
+                "values": {
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                  "grounding": {
+                    "deal": {
+                      "state": "active",
+                      "version": 1,
+                      "entityId": "90000000-0000-4000-8000-000000000001",
+                      "entityType": "pe_deal",
+                      "graphVersion": 61
+                    },
+                    "work": {
+                      "entityId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                      "entityType": "work"
+                    },
+                    "entities": [
+                      {
+                        "state": "ready",
+                        "version": 2,
+                        "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                        "entityType": "pe_closing_item"
+                      }
+                    ],
+                    "verticalKey": "private_equity",
+                    "epistemicImpact": {
+                      "mode": "unconfigured",
+                      "pins": [],
+                      "operational": false,
+                      "reasonCodes": [
+                        "EPISTEMIC_DURABLE_GRAPH_UNCONFIGURED"
+                      ],
+                      "graphVersionId": null
+                    },
+                    "decisionReadiness": {
+                      "ready": true,
+                      "decisionId": "pe:decision:closing-item:bd67999d-45de-41e3-b38b-667d26bf7420",
+                      "decisionType": "closing_item_verification",
+                      "acquisitionOptions": [],
+                      "unresolvedPropositionIds": []
+                    }
+                  },
+                  "closingItemId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "expectedVersion": 2,
+                  "evidenceSourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                  "evidenceVersionId": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                  "verificationSource": "Authored disposable control certification source",
+                  "verifierEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47"
+                },
+                "operation": "verify_closing_item"
+              },
+              "before": [
+                {
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "values": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "status": "active",
+                    "version": 1,
+                    "updatedAt": "2026-09-28 23:03:10.52545+05:30",
+                    "graphVersion": 61,
+                    "actualCloseAt": null
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "0ffb5a136bf31f282ff6082127cf8014bf7191439954b7970a07f9987dbfb8c1"
+                },
+                {
+                  "target": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "kind": "entity",
+                    "type": "pe_closing_item"
+                  },
+                  "values": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "state": "ready",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "version": 2,
+                    "updatedAt": "2026-09-28 23:03:02.658453+05:30"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "d835c268c50167233021257c898479d56d03d7fcbae2cc70b2a9b7fdb390f17f"
+                },
+                {
+                  "target": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "kind": "party",
+                    "type": "employee"
+                  },
+                  "values": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "name": "Phase 9 Investment Partner",
+                    "status": "active",
+                    "businessEmail": "owner@test-dealer.finnor.local"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "106e6666523aec3d6e79cee8d26396b5c3ad790757c9a31e5eadaeaed45ad518"
+                },
+                {
+                  "target": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "kind": "entity",
+                    "type": "evidence_source"
+                  },
+                  "values": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "sourceKey": "pe-provider:b6e16b9a-ebd4-4bb7-8fe6-243bf119bb9f:authored-verification-fixture:bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "updatedAt": "2026-09-28T17:33:02.722Z",
+                    "sourceType": "pe_provider_observation"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "dd767ab3c86a1ea4c2de88bfdef743dd10db9a01e93bb3cce9e9565be030b027"
+                },
+                {
+                  "target": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "kind": "entity",
+                    "type": "evidence_source_version"
+                  },
+                  "values": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "asOf": "2026-09-28T17:33:02.668Z",
+                    "sourceId": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "contentHash": "21e149a60b8f15b37a7d5ae82c87d8d125db23dd06cb12aa12415f45475bf9a8"
+                  },
+                  "observedAt": "2026-09-28T17:33:13.312Z",
+                  "versionHash": "d8758940c2bae348a66d6f54b23dfe26061fd4499b050b13c18aa5113912f6fe"
+                }
+              ],
+              "source": {
+                "workId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "actionType": "verify_closing_item",
+                "domainActionId": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "objectiveStepId": null
+              },
+              "targets": [
+                {
+                  "id": "90000000-0000-4000-8000-000000000001",
+                  "kind": "entity",
+                  "type": "pe_deal",
+                  "sourcePath": "grounding.deal"
+                },
+                {
+                  "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "kind": "entity",
+                  "type": "pe_closing_item",
+                  "sourcePath": "grounding.entities[0]"
+                },
+                {
+                  "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "kind": "party",
+                  "type": "employee",
+                  "sourcePath": "verifierEmployeeId"
+                },
+                {
+                  "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                  "kind": "entity",
+                  "type": "evidence_source",
+                  "sourcePath": "evidenceSourceId"
+                },
+                {
+                  "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                  "kind": "entity",
+                  "type": "evidence_source_version",
+                  "sourcePath": "evidenceVersionId"
+                }
+              ],
+              "approval": {
+                "summary": "verify closing item on exact canonical target bd67999d-45de-41e3-b38b-667d26bf7420 in Deal 90000000-0000-4000-8000-000000000001.",
+                "required": true,
+                "typedConfirmation": false
+              },
+              "bindings": [],
+              "expected": {
+                "state": {
+                  "state": "verified"
+                },
+                "observation": "canonical_state"
+              },
+              "exposure": null,
+              "authority": {
+                "risk": "high",
+                "policyId": null,
+                "capability": "action:verify_closing_item",
+                "policyVersion": null
+              },
+              "operation": {
+                "name": "verify_closing_item",
+                "class": "operational_change",
+                "external": false
+              },
+              "scopeHash": "626b5836dbec3dd38093c7e5f0dd0c3f93437a4ca987ba23c17f6dd0f93a000a",
+              "provenance": {
+                "compiler": "finnor_effect_compiler",
+                "compiledAt": "2026-09-28T17:33:13.312Z",
+                "compilerVersion": 1,
+                "replacementForEffectId": null,
+                "compensationForEffectId": null
+              },
+              "uncertainty": {
+                "unknownOutcome": "reconcile_before_retry",
+                "stalePrecondition": "block_and_recompile"
+              },
+              "semanticHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+              "preconditions": [
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "90000000-0000-4000-8000-000000000001",
+                    "kind": "entity",
+                    "type": "pe_deal"
+                  },
+                  "description": "pe_deal must still match the compiled before-state",
+                  "expectedHash": "0ffb5a136bf31f282ff6082127cf8014bf7191439954b7970a07f9987dbfb8c1"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "kind": "entity",
+                    "type": "pe_closing_item"
+                  },
+                  "description": "pe_closing_item must still match the compiled before-state",
+                  "expectedHash": "d835c268c50167233021257c898479d56d03d7fcbae2cc70b2a9b7fdb390f17f"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "kind": "party",
+                    "type": "employee"
+                  },
+                  "description": "employee must still match the compiled before-state",
+                  "expectedHash": "106e6666523aec3d6e79cee8d26396b5c3ad790757c9a31e5eadaeaed45ad518"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "c4ff38f0-b9c8-4592-8b31-5400d7f42123",
+                    "kind": "entity",
+                    "type": "evidence_source"
+                  },
+                  "description": "evidence_source must still match the compiled before-state",
+                  "expectedHash": "dd767ab3c86a1ea4c2de88bfdef743dd10db9a01e93bb3cce9e9565be030b027"
+                },
+                {
+                  "kind": "state_version",
+                  "target": {
+                    "id": "a0640a90-ed88-467e-bf60-0af6b3ad1727",
+                    "kind": "entity",
+                    "type": "evidence_source_version"
+                  },
+                  "description": "evidence_source_version must still match the compiled before-state",
+                  "expectedHash": "d8758940c2bae348a66d6f54b23dfe26061fd4499b050b13c18aa5113912f6fe"
+                }
+              ],
+              "reversibility": {
+                "classification": "unknown_provider_dependent",
+                "compensationCapability": null
+              },
+              "schemaVersion": 1
+            },
+            "approval": {
+              "at": "2026-09-28T17:33:14.442Z",
+              "required": true,
+              "approvedBy": "64514556-501f-4326-b650-ad687e0f0f47"
+            },
+            "expectedResult": {
+              "state": {
+                "state": "verified"
+              },
+              "observation": "canonical_state"
+            },
+            "actualResult": {
+              "output": {
+                "entity": {
+                  "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "entityType": "pe_closing_item"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "verify_closing_item",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "dueAt": null,
+                  "state": "verified",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "readyAt": {},
+                  "version": 3,
+                  "category": "certification_fixture",
+                  "itemText": "Authored control certification item — disposable fixture",
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "verifiedAt": {},
+                  "cancelledAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "ownerPartyType": "employee",
+                  "requiredForClose": false,
+                  "cancellationReason": null,
+                  "verificationSource": "Authored disposable control certification source",
+                  "verifiedByEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "responsibleDealPartyId": null,
+                  "verificationEvidenceRequired": true
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "canonicalMutationOwner": "verifyClosingItem"
+              },
+              "status": "success",
+              "verification": {
+                "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+                "state": "verified",
+                "observed": {
+                  "entity": {
+                    "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "entityType": "pe_closing_item"
+                  },
+                  "changed": true,
+                  "verified": true,
+                  "actionType": "verify_closing_item",
+                  "idempotent": false,
+                  "canonicalState": {
+                    "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                    "dueAt": null,
+                    "state": "verified",
+                    "dealId": "90000000-0000-4000-8000-000000000001",
+                    "readyAt": {},
+                    "version": 3,
+                    "category": "certification_fixture",
+                    "itemText": "Authored control certification item — disposable fixture",
+                    "tenantId": "00000000-0000-4000-8000-000000000001",
+                    "createdAt": {},
+                    "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "updatedAt": {},
+                    "archivedAt": null,
+                    "externalId": null,
+                    "observedAt": null,
+                    "verifiedAt": {},
+                    "cancelledAt": null,
+                    "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "sourceSystem": "fixture:centropy-human-controls",
+                    "workstreamId": "90000000-0000-4000-8000-000000000005",
+                    "ownerPartyType": "employee",
+                    "requiredForClose": false,
+                    "cancellationReason": null,
+                    "verificationSource": "Authored disposable control certification source",
+                    "verifiedByEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47",
+                    "responsibleDealPartyId": null,
+                    "verificationEvidenceRequired": true
+                  },
+                  "workAttachment": "result_linked",
+                  "canonicalObserved": true,
+                  "idempotencyIdentity": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                  "canonicalMutationOwner": "verifyClosingItem"
+                },
+                "checkedAt": "2026-09-28T17:33:16.562Z"
+              }
+            },
+            "failure": null,
+            "correlationId": null,
+            "llmCostUsd": null,
+            "businessEffectId": "677e3c13-dc77-4c6d-9ba3-5700eb056ce4",
+            "intendedEffectHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+            "authorizedEffectHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+            "executedEffectHash": "d0d41714af59b94b2216bf6aa758506c96c8386afd6e42277cf4f7e0f296eacf",
+            "verification": {
+              "basis": "Canonical business-operation outcome state was observed for the exact EffectSet",
+              "state": "verified",
+              "observed": {
+                "entity": {
+                  "entityId": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "entityType": "pe_closing_item"
+                },
+                "changed": true,
+                "verified": true,
+                "actionType": "verify_closing_item",
+                "idempotent": false,
+                "canonicalState": {
+                  "id": "bd67999d-45de-41e3-b38b-667d26bf7420",
+                  "dueAt": null,
+                  "state": "verified",
+                  "dealId": "90000000-0000-4000-8000-000000000001",
+                  "readyAt": {},
+                  "version": 3,
+                  "category": "certification_fixture",
+                  "itemText": "Authored control certification item — disposable fixture",
+                  "tenantId": "00000000-0000-4000-8000-000000000001",
+                  "createdAt": {},
+                  "createdBy": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "updatedAt": {},
+                  "archivedAt": null,
+                  "externalId": null,
+                  "observedAt": null,
+                  "verifiedAt": {},
+                  "cancelledAt": null,
+                  "ownerPartyId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "sourceSystem": "fixture:centropy-human-controls",
+                  "workstreamId": "90000000-0000-4000-8000-000000000005",
+                  "ownerPartyType": "employee",
+                  "requiredForClose": false,
+                  "cancellationReason": null,
+                  "verificationSource": "Authored disposable control certification source",
+                  "verifiedByEmployeeId": "64514556-501f-4326-b650-ad687e0f0f47",
+                  "responsibleDealPartyId": null,
+                  "verificationEvidenceRequired": true
+                },
+                "workAttachment": "result_linked",
+                "canonicalObserved": true,
+                "idempotencyIdentity": "bebfdea1-71da-4dcd-87a8-70d3e012f71f",
+                "canonicalMutationOwner": "verifyClosingItem"
+              },
+              "checkedAt": "2026-09-28T17:33:16.562Z"
+            },
+            "recoveryEffectId": null,
+            "createdAt": "2026-09-28T17:33:16.414Z",
+            "finalizedAt": "2026-09-28T17:33:16.579Z"
+          }
+        ]
+      }
+    ],
+    "rejectedRequests": [
+      {
+        "label": "unsupported human action",
+        "status": 400,
+        "error": {
+          "error": "Invalid human closing decision",
+          "issues": [
+            {
+              "code": "invalid_union_discriminator",
+              "options": [
+                "waive_closing_condition",
+                "verify_closing_item"
+              ],
+              "path": [
+                "actionType"
+              ],
+              "message": "Invalid discriminator value. Expected 'waive_closing_condition' | 'verify_closing_item'"
+            }
+          ]
+        }
+      },
+      {
+        "label": "forged verifier identity",
+        "status": 403,
+        "error": {
+          "error": "You can only record your own verifier identity"
+        }
+      }
+    ],
+    "overflowPx": 0
+  },
+  "screenshotSha256": "65ec80dc3a0861a06077d22bcb79f43d451d6213eff3d239d6bb544793b6a0da",
+  "limitations": [
+    "Authored disposable closing records and exact fixture-emulator evidence; no live closing decision or provider publication",
+    "Service-principal and foreign-tenant denial are not exercised by this browser proof"
+  ],
+  "reproduce": {
+    "preparation": "Run finnor-os/scripts/seed-centropy-human-controls.ts against the named disposable stack to create fresh open/ready records",
+    "command": "node scripts/centropy/run-local-e2e.mjs e2e/centropy-human-closing.spec.ts --project=desktop-chromium --workers=1"
+  }
+}

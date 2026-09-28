@@ -6,6 +6,7 @@ import { centropyGet } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
 import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { PendingEffects } from "../thread/PendingEffects"
+import { HumanControlDesk } from "../controls/HumanControlDesk"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -63,6 +64,9 @@ export function WorldWorkRecord({ workId, onChanged }: { workId: string; onChang
       {aggregate.actions.some((item) => item.status === "pending" || item.status === "needs_human_review") ? <PendingEffects aggregate={aggregate} current={aggregate.read?.complete !== false} refreshKey={String(revision)} onChanged={() => { setRevision((value) => value + 1); onChanged() }} /> : null}
       {aggregate.businessEffects.some((item) => !item.domainActionId) || aggregate.receipts.some((item) => !item.domainActionId) ? <p className="ct-world-work__caveat">Some effects or receipts are outside the action links returned in this Work record. Inspect causal replay for declared relationships and gaps.</p> : null}
       <button type="button" className="ct-world-work__replay" onClick={() => setReplay(true)}>Open causal replay <ArrowRight size={15} /></button>
+      <details className="ct-record-controls"><summary>Review Work responsibility</summary><HumanControlDesk groups={["work-controls"]} paths={{ id: workId }} writable={aggregate.read?.complete !== false} onRecorded={() => { setRevision((value) => value + 1); onChanged() }} /></details>
+      <details className="ct-record-controls"><summary>Correct a recorded answer</summary><p>Your correction is linked to the exact recorded receipt. It is a human correction, not provider evidence.</p><HumanControlDesk groups={["memory-corrections"]} context={{ receiptId: finalized.at(-1)?.id }} writable={aggregate.read?.complete !== false && finalized.length > 0} onRecorded={onChanged} /></details>
+      <details className="ct-record-controls"><summary>Review execution recovery controls</summary><p>Use the exact run, step, or reconciliation case reference from the recorded failure. Resolving an uncertain effect requires supporting evidence.</p><HumanControlDesk groups={["workflow-controls", "reconciliation-controls", "computer-controls"]} writable={aggregate.read?.complete !== false} onRecorded={() => { setRevision((value) => value + 1); onChanged() }} /></details>
     </> : null}
   </div>
 }

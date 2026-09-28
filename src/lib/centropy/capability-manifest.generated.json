@@ -4,8 +4,8 @@
   "capabilities": [
     {
       "capabilityId": "http.delete.connections.$ref",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "DELETE",
       "routePattern": "connections/:ref",
@@ -25,8 +25,7 @@
       "effectClass": "domain_mutation",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
         "source"
@@ -104,8 +103,8 @@
     },
     {
       "capabilityId": "http.delete.push-subscriptions",
-      "family": "push-subscriptions",
-      "owner": "@finnor/api",
+      "family": "device-subscription",
+      "owner": "@finnor/db",
       "transport": "http",
       "method": "DELETE",
       "routePattern": "push-subscriptions",
@@ -123,10 +122,10 @@
       "effectClass": "domain_mutation",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
-        "push-subscriptions"
+        "device-subscription"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -305,7 +304,7 @@
     {
       "capabilityId": "http.get.computer.runs.$id",
       "family": "computer",
-      "owner": "@finnor/api",
+      "owner": "@finnor/computer",
       "transport": "http",
       "method": "GET",
       "routePattern": "computer/runs/:id",
@@ -325,6 +324,7 @@
       "effectClass": null,
       "verificationClass": "canonical_read",
       "presentationTargets": [
+        "THREAD",
         "CANVAS"
       ],
       "invalidationTags": [],
@@ -334,8 +334,8 @@
     },
     {
       "capabilityId": "http.get.connections.$ref",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "GET",
       "routePattern": "connections/:ref",
@@ -355,8 +355,7 @@
       "effectClass": null,
       "verificationClass": "canonical_read",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
@@ -365,8 +364,8 @@
     },
     {
       "capabilityId": "http.get.connections.google.callback",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "GET",
       "routePattern": "connections/google/callback",
@@ -384,8 +383,7 @@
       "effectClass": null,
       "verificationClass": "canonical_read",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
@@ -394,8 +392,8 @@
     },
     {
       "capabilityId": "http.get.connections.microsoft-graph.callback",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "GET",
       "routePattern": "connections/microsoft-graph/callback",
@@ -413,8 +411,7 @@
       "effectClass": null,
       "verificationClass": "canonical_read",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
@@ -423,8 +420,8 @@
     },
     {
       "capabilityId": "http.get.connections.microsoft-graph.status",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "GET",
       "routePattern": "connections/microsoft-graph/status",
@@ -442,8 +439,7 @@
       "effectClass": null,
       "verificationClass": "canonical_read",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
@@ -452,8 +448,8 @@
     },
     {
       "capabilityId": "http.get.corrections",
-      "family": "corrections",
-      "owner": "@finnor/api",
+      "family": "correction",
+      "owner": "@finnor/memory",
       "transport": "http",
       "method": "GET",
       "routePattern": "corrections",
@@ -2665,6 +2661,40 @@
       "source": "finnor-os/apps/api/app/api/actions/[id]/revert/route.ts"
     },
     {
+      "capabilityId": "http.post.actions.human",
+      "family": "action",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "actions/human",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "authority",
+        "company-brain",
+        "semantic-activity"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/actions/human/route.ts"
+    },
+    {
       "capabilityId": "http.post.admin.migrate",
       "family": "admin",
       "owner": "@finnor/api",
@@ -3112,7 +3142,7 @@
     {
       "capabilityId": "http.post.computer.runs.$id.cancel",
       "family": "computer",
-      "owner": "@finnor/api",
+      "owner": "@finnor/computer",
       "transport": "http",
       "method": "POST",
       "routePattern": "computer/runs/:id/cancel",
@@ -3132,10 +3162,11 @@
       "effectClass": "runtime_control",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
+        "THREAD",
         "CANVAS"
       ],
       "invalidationTags": [
-        "computer"
+        "work"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -3143,8 +3174,8 @@
     },
     {
       "capabilityId": "http.post.connections.$ref.verify",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "POST",
       "routePattern": "connections/:ref/verify",
@@ -3164,8 +3195,7 @@
       "effectClass": "runtime_control",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
         "source"
@@ -3176,8 +3206,8 @@
     },
     {
       "capabilityId": "http.post.connections.google.start",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "POST",
       "routePattern": "connections/google/start",
@@ -3195,8 +3225,7 @@
       "effectClass": "domain_mutation",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
         "source"
@@ -3207,8 +3236,8 @@
     },
     {
       "capabilityId": "http.post.connections.microsoft-graph.start",
-      "family": "m365",
-      "owner": "@finnor/data-platform",
+      "family": "connection",
+      "owner": "@finnor/security",
       "transport": "http",
       "method": "POST",
       "routePattern": "connections/microsoft-graph/start",
@@ -3226,8 +3255,7 @@
       "effectClass": "domain_mutation",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "SETTINGS",
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
         "source"
@@ -3238,8 +3266,8 @@
     },
     {
       "capabilityId": "http.post.corrections",
-      "family": "corrections",
-      "owner": "@finnor/api",
+      "family": "correction",
+      "owner": "@finnor/memory",
       "transport": "http",
       "method": "POST",
       "routePattern": "corrections",
@@ -3260,7 +3288,7 @@
         "CANVAS"
       ],
       "invalidationTags": [
-        "corrections"
+        "work"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -4898,8 +4926,8 @@
     },
     {
       "capabilityId": "http.post.push-subscriptions",
-      "family": "push-subscriptions",
-      "owner": "@finnor/api",
+      "family": "device-subscription",
+      "owner": "@finnor/db",
       "transport": "http",
       "method": "POST",
       "routePattern": "push-subscriptions",
@@ -4917,10 +4945,10 @@
       "effectClass": "domain_mutation",
       "verificationClass": "canonical_reread",
       "presentationTargets": [
-        "CANVAS"
+        "SETTINGS"
       ],
       "invalidationTags": [
-        "push-subscriptions"
+        "device-subscription"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -4958,7 +4986,7 @@
     {
       "capabilityId": "http.post.reconciliation.$id.resolve",
       "family": "reconciliation",
-      "owner": "@finnor/api",
+      "owner": "@finnor/workflow-runtime",
       "transport": "http",
       "method": "POST",
       "routePattern": "reconciliation/:id/resolve",
@@ -4981,7 +5009,8 @@
         "CANVAS"
       ],
       "invalidationTags": [
-        "reconciliation"
+        "workflow",
+        "work"
       ],
       "timeoutClass": "WRITE",
       "tests": [],

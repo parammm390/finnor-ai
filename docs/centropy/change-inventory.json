@@ -1,0 +1,3394 @@
+{
+  "schema": "centropy.change-inventory/v1",
+  "generatedAt": "2026-09-28T20:07:21.989523+00:00",
+  "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
+  "auditedMainBaseline": "e464d78ac45dae41435b826757941d008c9b634c",
+  "branch": "codex/centropy-release-candidate",
+  "workingTreeImplementation": true,
+  "comparison": "Fetched origin/main versus complete candidate working tree, plus non-ignored untracked files; no rename inference",
+  "counts": {
+    "total": 541,
+    "added": 379,
+    "modified": 118,
+    "deleted": 44,
+    "currentChangedBytes": 70868210
+  },
+  "files": [
+    {
+      "file": ".github/workflows/marketing-ci.yml",
+      "status": "M",
+      "bytes": 8074,
+      "sha256": "3254197ecb577ea9500432b5cef938df03963c4505ddcb6d4fdc26cf59b4e307"
+    },
+    {
+      "file": ".gitignore",
+      "status": "M",
+      "bytes": 894,
+      "sha256": "7625ca78b3b4372b239db198867dee8cc704fe7254c9415b998eb600b7750d70"
+    },
+    {
+      "file": ".gitleaks.toml",
+      "status": "A",
+      "bytes": 1076,
+      "sha256": "3c8d9ec8dc9f2c9c8170e1e1ee368e19c77a38c372a8c764bb19d1193a7c8431"
+    },
+    {
+      "file": "AGENTS.md",
+      "status": "A",
+      "bytes": 6985,
+      "sha256": "8c15fcfa390820ac1581032f0407a5e0b06ab5a1073b5bad958de96f50b11f0b"
+    },
+    {
+      "file": "README.md",
+      "status": "M",
+      "bytes": 3877,
+      "sha256": "e451035b71be99e098f4c9da7ee594196bd1f7a4b16bb2caca7df96d12cfc2dd"
+    },
+    {
+      "file": "THIRD_PARTY_NOTICES.md",
+      "status": "A",
+      "bytes": 5430,
+      "sha256": "5c52ce9d5b351fc296dc9b694590db244ddc00c313442b8903167dd2a7bbd91d"
+    },
+    {
+      "file": "docs/centropy/capability-coverage.json",
+      "status": "A",
+      "bytes": 666547,
+      "sha256": "1388ff460448e7f30a749c218bfe44f6ada53c47f630657b76e2b18c8088c2fc"
+    },
+    {
+      "file": "docs/centropy/capability-reachability-failure-modes.md",
+      "status": "A",
+      "bytes": 4204,
+      "sha256": "a55e60710568455b8e685858e5e167074391476307d83376d90ec271b53cf722"
+    },
+    {
+      "file": "docs/centropy/change-inventory.json",
+      "status": "A",
+      "hashExclusion": "Inventory itself; self-reference cannot have a stable content hash"
+    },
+    {
+      "file": "docs/centropy/communication-fixture-failure-modes.md",
+      "status": "A",
+      "bytes": 2523,
+      "sha256": "af6e8f4f221494bcd81fa8654c3597a4592e24eaaa91245d40d3738007eba6e0"
+    },
+    {
+      "file": "docs/centropy/completion-audit.md",
+      "status": "A",
+      "bytes": 24905,
+      "sha256": "92c0079d03077e3b15a40d179a8a12b7fff65a23918fb25db1c2d13b987d9984"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-controlled-recovery/recovery.png",
+      "status": "A",
+      "bytes": 208586,
+      "sha256": "70f1017372022ebcae5f18d1d140785ffb9c2fd984f1b7f0ee99ab9cbe697a04"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-controlled-recovery/recovery.proof.json",
+      "status": "A",
+      "bytes": 29869,
+      "sha256": "0bcfbb42d21208464ce6dfb4d46c741f3cb73fcabc873a5028d5bd0ee8e0b487"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-cross-session/active-objective.png",
+      "status": "A",
+      "bytes": 266580,
+      "sha256": "138d222096def2d5a85e0b9dc1f56361d529be9705eaae2f2dff4659f0620e41"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-cross-session/active-objective.proof.json",
+      "status": "A",
+      "bytes": 3872,
+      "sha256": "4b5263b768cade14b26384714e6ff31db7af14e10e4e516680740a227add2098"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-growth-300bps/planning.png",
+      "status": "A",
+      "bytes": 194343,
+      "sha256": "4d8e0b49b6fc1137ec4e623e5f02e122455f8fe630336df89e75e7d0e5e4fefb"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-growth-300bps/planning.proof.json",
+      "status": "A",
+      "bytes": 3838,
+      "sha256": "8b119d6eb43e32cc9e10e424858c2a0cb3e2e395e352933482666bf63e32cbf5"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-growth-300bps/result.png",
+      "status": "A",
+      "bytes": 75928,
+      "sha256": "64e2eda359403f69e18b9414d4e3501d972caacffe1e4425e82a0d1e7590c7cb"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-growth-300bps/terminal.png",
+      "status": "A",
+      "bytes": 252918,
+      "sha256": "8545b25afccfe122f7a63c9629207af5973411ae15ced822006e334b2e1fe114"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-growth-300bps/terminal.proof.json",
+      "status": "A",
+      "bytes": 11164,
+      "sha256": "87ad967a1151cdf93c37060ef9d159560093b42f00e10eb6cc9d8087ba542f9b"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-ic-completion/result.png",
+      "status": "A",
+      "bytes": 72358,
+      "sha256": "5194bb734cffa41e81c16cdbe79ca79c260fab04d28166318e1ea67683399053"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-ic-completion/terminal.png",
+      "status": "A",
+      "bytes": 268353,
+      "sha256": "102f1dea818849ab49c5480e112b88ff558120ebee1c7dadcd428d5b9d61dae2"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-ic-completion/terminal.proof.json",
+      "status": "A",
+      "bytes": 10444,
+      "sha256": "40414d4e32af67dd2db81d6eae2e974bd78053fa0e15700d31f8292b74875308"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-live-workforce/active.png",
+      "status": "A",
+      "bytes": 201445,
+      "sha256": "55442da9a56e23459bf1b1bcb7ab6e8f7d6b3df2eb4be0cf362887248cf6ec61"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-live-workforce/reassign.proof.json",
+      "status": "A",
+      "bytes": 9908,
+      "sha256": "a353b3229fe5fe19bee9b8908bca194dee19ed003f22504d82198dfbe88f821b"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-live-workforce/terminal.png",
+      "status": "A",
+      "bytes": 173260,
+      "sha256": "a086a35b64046b370b03f9bca8b6d20d80b50952bb2bc6d189a7f9e0142dc24d"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-parallel-recheck/terminal.png",
+      "status": "A",
+      "bytes": 207282,
+      "sha256": "fb768ac797e33a379d81b17f58be47659af4d5fb47019de834fd21fce7f1b462"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-parallel-recheck/terminal.proof.json",
+      "status": "A",
+      "bytes": 35276,
+      "sha256": "cfe378e7cd987680e7fc44ac12f1fe73c86548ff00e9d6dea3df216a69acc7f2"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-temporal-replay/question.png",
+      "status": "A",
+      "bytes": 200946,
+      "sha256": "fb292e9f85440666c92e56e5ad3b3131163c7e03cf1fbdc0eb10482be79ae08a"
+    },
+    {
+      "file": "docs/centropy/evidence/atlas-temporal-replay/question.proof.json",
+      "status": "A",
+      "bytes": 11084,
+      "sha256": "f81d2abb532438ba0dc7370515e7bfbc7fb65da38471ca102660a5df15477bb3"
+    },
+    {
+      "file": "docs/centropy/evidence/ic-deck-work-canvas/desktop.png",
+      "status": "A",
+      "bytes": 313986,
+      "sha256": "06df83f92cc64193d800c9315a26b314194e461854259a025b4ccef4253988b1"
+    },
+    {
+      "file": "docs/centropy/evidence/ic-deck-work-canvas/desktop.proof.json",
+      "status": "A",
+      "bytes": 3582,
+      "sha256": "79adeb7b5504da0d6fcc0b2e78c6fd6da0309923465012662a874264a7ca18f0"
+    },
+    {
+      "file": "docs/centropy/evidence/ic-deck-work-canvas/mobile-375.png",
+      "status": "A",
+      "bytes": 153667,
+      "sha256": "e8822f72882d33e7ebea599b2a98ea72f88b5b6376958ce076e2bb048263de85"
+    },
+    {
+      "file": "docs/centropy/evidence/ic-deck-work-canvas/mobile-375.proof.json",
+      "status": "A",
+      "bytes": 3582,
+      "sha256": "32a762b6112d1c94870a5cd7067e76d27085948084d9b913deb52fc79643aabd"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/1280x720/artifact-controls.png",
+      "status": "A",
+      "bytes": 140233,
+      "sha256": "f430f57d6c14cac187d8a3e5a767a5ddeb43a792e729b3de7e326a0e684f22ec"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/1280x720/artifact-controls.proof.json",
+      "status": "A",
+      "bytes": 938549,
+      "sha256": "5adcd14b6b6773d3a6b8005d926ece8373a6acee0ddb642c4e3866baa39e8927"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/1280x720/numeric-version.xlsx",
+      "status": "A",
+      "bytes": 2002,
+      "sha256": "54dc54f9e77cec5a4f8a0f7bba21063b8ab6cd93a43315c46378953abfe54515"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/375x812/artifact-controls.png",
+      "status": "A",
+      "bytes": 60934,
+      "sha256": "3a843889bd4c69c05a4e000404cfb3a290a389ab253b45ee713a4d823be38bba"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/375x812/artifact-controls.proof.json",
+      "status": "A",
+      "bytes": 916141,
+      "sha256": "bcc6fad53b14bba14fe671d3d28072f3543cc57578483520225b4d8fb5e41e2f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-artifact-controls/375x812/numeric-version.xlsx",
+      "status": "A",
+      "bytes": 2002,
+      "sha256": "54dc54f9e77cec5a4f8a0f7bba21063b8ab6cd93a43315c46378953abfe54515"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-fresh-terminal/README.md",
+      "status": "A",
+      "bytes": 1088,
+      "sha256": "1f25188e3a4ea5d3912f5aa3bb9f0c9f0c817f1a2959782613e5607733f737f6"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-fresh-terminal/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 362136,
+      "sha256": "c65f394d9dbb200332c1fb56eb9de5a888e031d31a762c9db649ea99739b338a"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-fresh-terminal/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 425224,
+      "sha256": "ed32734819700374b6a6f8cde99bb9363f7446da60ec430ab26ab88c010b7961"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-fresh-terminal/summary.json",
+      "status": "A",
+      "bytes": 7731,
+      "sha256": "e9c58bba4558621030550b71ca525d6d3c851b6ce8aa0d8646369a69d243bb66"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-repreparation/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 362621,
+      "sha256": "8c9cf52ee66d3a788d8fe47a85712bc7af19c3aee05a917bf079d8693ec6b4a9"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-repreparation/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 356266,
+      "sha256": "6b9e884ded9a3af802d1eced4dddb7d310d9a05e1505e1d39815b752002ba763"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas-repreparation/summary.json",
+      "status": "A",
+      "bytes": 330110,
+      "sha256": "b8f3b532b7e1d1c5896f70021046f6880b135a7cb3d71f6de1d0b6e55fa34192"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 360758,
+      "sha256": "2109787852bceb52b3b55c55e51a1f620dd36f15dd287ba382b2756515580f63"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 425508,
+      "sha256": "f10cebff38fc7c41d23c4789b37057dada9481f251b30159f905fcf92d12c9ef"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-atlas/summary.json",
+      "status": "A",
+      "bytes": 9373,
+      "sha256": "f27624509e22a7022d349619342b67fb02f4aea08ebc1a40aacd5e4773809569"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-blocker/blocker.png",
+      "status": "A",
+      "bytes": 160234,
+      "sha256": "c92d3498e769ad3423dcc915ec9c3aa9191b4874217015197acf63f0d8656270"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-blocker/blocker.proof.json",
+      "status": "A",
+      "bytes": 37689,
+      "sha256": "6daac850d44634d256559b5dcc112899229d08df9692b852a6a1434a03cfe154"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/artifact.png",
+      "status": "A",
+      "bytes": 219654,
+      "sha256": "01c20fbf9c8ab435f3265e2769c1e6bd2363c9bc5866642bfa9c7b42b77c1992"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/canvas.png",
+      "status": "A",
+      "bytes": 247003,
+      "sha256": "f0aeba3772f4828e743df02adfada354bbbdf7b1656ded30790d34140204d848"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/replay.png",
+      "status": "A",
+      "bytes": 241991,
+      "sha256": "1c841e52627b12872bad24ee58e94e60fde1fee2c511892a164eb4b1accf47a8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/sources.png",
+      "status": "A",
+      "bytes": 251326,
+      "sha256": "e46b2fa354a05c8f9d277951671a26e0cc52bf8c8b2516edec00a4d2e4ff3450"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/sweep.proof.json",
+      "status": "A",
+      "bytes": 1250378,
+      "sha256": "42728462ba719763bc790e8f39195dc01209fc282724387b31b91d29c23aa900"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/thread.png",
+      "status": "A",
+      "bytes": 245751,
+      "sha256": "788889437abfbd443de62890eec116157b681a5bd2626db7d0c0357ee85ba218"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-browser/world.png",
+      "status": "A",
+      "bytes": 241923,
+      "sha256": "bc70364bf685abcca5c37e551d9a5d36f75620bfabe0db0391a14156d49ba4b8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-communication/centropy-governed-message-proof-41612130d10dd5bded5862bad72807f7ba047123.json",
+      "status": "A",
+      "bytes": 435126,
+      "sha256": "06b83002c3f01841e6ec281c237b87b507f31df117db34832c8757afcf7c8877"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-communication/centropy-governed-message-screenshot-ef6a7bc676fb1626d6e7b7418c64c4cdc8988198.png",
+      "status": "A",
+      "bytes": 210310,
+      "sha256": "ca64991c4c863c3617d38fb65b5c45f2f58e41f926f5b16d4c0c8aa017596a46"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-communication/centropy-governed-message.png",
+      "status": "A",
+      "bytes": 210310,
+      "sha256": "ca64991c4c863c3617d38fb65b5c45f2f58e41f926f5b16d4c0c8aa017596a46"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-communication/centropy-governed-message.proof.json",
+      "status": "A",
+      "bytes": 435126,
+      "sha256": "06b83002c3f01841e6ec281c237b87b507f31df117db34832c8757afcf7c8877"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/artifact.png",
+      "status": "A",
+      "bytes": 222552,
+      "sha256": "d4d6af15bc158d1c7359d12f40b41ebfd2a134abfb253e835ff83ec688735495"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/canvas.png",
+      "status": "A",
+      "bytes": 245336,
+      "sha256": "d6c9dac1fcb7d7d98c57587480fb4f3721944fc258b2a3bffe9fa257856b1549"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/replay.png",
+      "status": "A",
+      "bytes": 241162,
+      "sha256": "786c8d32473388d0dd58553b182681868bfafb2847616048cbf4de02a356c07b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/sources.png",
+      "status": "A",
+      "bytes": 249300,
+      "sha256": "85a4cd1788d1a4d1d4e0777846319d963baa70f5b03040063929d5c36690989e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/sweep.proof.json",
+      "status": "A",
+      "bytes": 1311451,
+      "sha256": "4f574663af1fa0ebe2abd8b991359fa0070237af27dc7fb8a5d8b8c59ac0570e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/thread.png",
+      "status": "A",
+      "bytes": 244798,
+      "sha256": "3e272f11dc83af471383267ab49b21548dd327de6489a721d1798985ae96c2a2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/world.png",
+      "status": "A",
+      "bytes": 236791,
+      "sha256": "282354998c05ec4fae1f69a5c58bc1676185c0c153117e39af600f042b3a42ec"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/artifact.png",
+      "status": "A",
+      "bytes": 94469,
+      "sha256": "734077ac5a70f660e63de5ee2b34a275caf4b6e0e63a556eb6e0ae11ca8e1997"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/canvas.png",
+      "status": "A",
+      "bytes": 110713,
+      "sha256": "296a4b6f38eae285be2e2957ba095df4f55659c81e58b2fc41fb18a9de83cc31"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/replay.png",
+      "status": "A",
+      "bytes": 91732,
+      "sha256": "e28b8b5ce7998825b09849ce9c4917e054c5e42c97b7068cfb91ac2062fcb873"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/sources.png",
+      "status": "A",
+      "bytes": 114993,
+      "sha256": "a999029b991caafe8c4e053b8a44af21e74d6ef8d80a4f368d498473b6a36a94"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/sweep.proof.json",
+      "status": "A",
+      "bytes": 1163613,
+      "sha256": "3ea1570a7fa94116928bf5989a51e2d835b3fcf4f214282f8428fdd89de3aa7e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/thread.png",
+      "status": "A",
+      "bytes": 91477,
+      "sha256": "a49e6f968e468cceddc2a6e2a783f2392d996f7043b84c31bc946bb365d81bd1"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/world.png",
+      "status": "A",
+      "bytes": 96837,
+      "sha256": "965ba3a91a6e8e06e8c63325fd8a3db550fff226b72ae2038f4dbbd5d2a94f02"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/artifact.png",
+      "status": "A",
+      "bytes": 101478,
+      "sha256": "9299e444a7a107be74a419e409357379670ccdd292a4be72cfb3fdb85a7de456"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/canvas.png",
+      "status": "A",
+      "bytes": 114780,
+      "sha256": "2c7aeae91e31ffab688d0736356f50dc8dd20661c3398c367574f7f84c1645d2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/replay.png",
+      "status": "A",
+      "bytes": 99483,
+      "sha256": "fcb017b3ba0e0251c7032c0404ea22f117f4ba92feef9b1220f7342016670c39"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/sources.png",
+      "status": "A",
+      "bytes": 120491,
+      "sha256": "3dd5fe694bc247bb26c2fb0f6edd2615002e3f1076f357e15a3af0736292960f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/sweep.proof.json",
+      "status": "A",
+      "bytes": 1165208,
+      "sha256": "77b365121434d60249204cce15287f0d8719e1f9b74745a9e61b81132d1824ef"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/thread.png",
+      "status": "A",
+      "bytes": 93606,
+      "sha256": "29d8ccf89c4b8a5707fa8159e50fa144ce11728da95a4fc0556a3fd206e8fb2d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/world.png",
+      "status": "A",
+      "bytes": 102471,
+      "sha256": "c78361755355eedc6a09898fc1e18d6390ed0f10f9f36048c9286c515f17f5c2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/artifact.png",
+      "status": "A",
+      "bytes": 314443,
+      "sha256": "0a59eadd8d08410d2ed3a19fa1b82d7ac4b1fba4254ba327f77424aae040754b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/canvas.png",
+      "status": "A",
+      "bytes": 329928,
+      "sha256": "c292b798455a3b2b6391c74ab2e4e02f86481e6385a059d9e9f75883d0be6ffd"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/replay.png",
+      "status": "A",
+      "bytes": 333504,
+      "sha256": "21397992bdb524ee628dcf4b06554b948478628ef65e823468c114ac56f14e08"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/sources.png",
+      "status": "A",
+      "bytes": 322463,
+      "sha256": "27ee95edc291a1c5be3227207f947cecb152fe76fb3a70c64bd00a0cda7aee12"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/sweep.proof.json",
+      "status": "A",
+      "bytes": 1266463,
+      "sha256": "ff4f24365f627d60d5189a9ae3d9ee3580ad9da7a3eaf7e3234cc323ae3f40d8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/thread.png",
+      "status": "A",
+      "bytes": 313771,
+      "sha256": "9411c167d960eb919fd211bc2bfbe6602cd67225909e13de0f4b332836511ecc"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/world.png",
+      "status": "A",
+      "bytes": 310330,
+      "sha256": "c0526912471fd0582bae793aa45f0cfd48d6ec16416b04a8d4279621cb96aeba"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-compiled-sweep/summary.json",
+      "status": "A",
+      "bytes": 3201,
+      "sha256": "06a36ca0a85f37d0647067a08695a738cdb587f3bb68522e7049ea2fc9645bf3"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-initial/centropy-ic-deck-work-action.png",
+      "status": "A",
+      "bytes": 310156,
+      "sha256": "e80ccf2f10345aa5f835196873cd44739cb0ec758ef2c64f902f12a0082b311d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-initial/centropy-ic-deck-work-action.proof.json",
+      "status": "A",
+      "bytes": 3966,
+      "sha256": "1076529bbedb6330d0cd7e5e04ac7bb1761d1542715d42474cb2e77e9cbc727f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/Atlas-IC.pdf",
+      "status": "A",
+      "bytes": 99579,
+      "sha256": "8856cb27020edd23f4894161fc5849370390e2b5cc7deafd1410be486810d260"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/Atlas-IC.pptx",
+      "status": "A",
+      "bytes": 26147,
+      "sha256": "9dd77605809479fede393c4a43c053f4c1561fdd47f49dc3acdb9a5a30f28be9"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/centropy-ic-deck-work-action.png",
+      "status": "A",
+      "bytes": 156792,
+      "sha256": "918f751420fdb742ff8a6218f42db558c28901f1ce9383d2274c9bffbc3ce461"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/centropy-ic-deck-work-action.proof.json",
+      "status": "A",
+      "bytes": 4880,
+      "sha256": "a81a7aa9f62397b78399332dadae1a822cde4ede42b90dea4366c7e2e8df553f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/package-preservation.proof.json",
+      "status": "A",
+      "bytes": 514,
+      "sha256": "62d2471b3c773036dc152fd0446dec2eabb2be1be7f4c9a7d8b683c80bfce0a2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-1.png",
+      "status": "A",
+      "bytes": 60154,
+      "sha256": "355c9c844dfc5c063d57de7479d71e71e9ae3f1dfd1715b61b35438d411dacc6"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-2.png",
+      "status": "A",
+      "bytes": 134650,
+      "sha256": "8fe020f894c4bed9a326ff421158caed8ead8473956875ab4fe68ea458c4847e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-3.png",
+      "status": "A",
+      "bytes": 69810,
+      "sha256": "56a6bd30838518833f7f53c00c6239fcbb177604200f91f8b59ae1449c05b048"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-4.png",
+      "status": "A",
+      "bytes": 48933,
+      "sha256": "e8a91f9cc9c6ab4acfee4336b350daa5b4da07bbd7657505758607c25982218d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-5.png",
+      "status": "A",
+      "bytes": 87234,
+      "sha256": "a78cd478f0676e2fec3dd09fa0c8720843fad43c57717dbc3cb66cdc3d5cb1be"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck-mobile/slide-6.png",
+      "status": "A",
+      "bytes": 40486,
+      "sha256": "196c69e77c1465bf60d5f977543297e66a1618f183e6e8ef5664255bc4aae4c9"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/Atlas-IC.pdf",
+      "status": "A",
+      "bytes": 115494,
+      "sha256": "e70afd280ad5f8cd40a7a0291a8a3ebfaed2cbffaa2fc02beb50ea000458e0fc"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/Atlas-IC.pptx",
+      "status": "A",
+      "bytes": 26159,
+      "sha256": "27f00cef9edbfc28bfd94bbd78fc47a2e8de31dc73e9f4af727d12da35a87b46"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/centropy-ic-deck-work-action.png",
+      "status": "A",
+      "bytes": 310156,
+      "sha256": "e80ccf2f10345aa5f835196873cd44739cb0ec758ef2c64f902f12a0082b311d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/centropy-ic-deck-work-action.proof.json",
+      "status": "A",
+      "bytes": 4788,
+      "sha256": "ccb3735deed114fdc447792afb7778b7f5964e44dfadc17d93a63dd2947448af"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-1.png",
+      "status": "A",
+      "bytes": 60763,
+      "sha256": "6cc14ffe1f8d276b864594ef4993bc0bf83ffa605cba4946b948f4654781452b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-2.png",
+      "status": "A",
+      "bytes": 127865,
+      "sha256": "00a5168baa4e86e89981da82daeb77f6a268bc5df249a2a289881228d650afdc"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-3.png",
+      "status": "A",
+      "bytes": 86373,
+      "sha256": "c12cf42fd3e8ed52327e8b4d3fae2217c202464112e8f8a4c38477cecd04173b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-4.png",
+      "status": "A",
+      "bytes": 48676,
+      "sha256": "f77590f95d92a17365b7c6e552d677d6cc8d9a721b793a78a20b3c0f10e022ea"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-5.png",
+      "status": "A",
+      "bytes": 79908,
+      "sha256": "ce2ee2666fdcc0ecec79d8dd66d7a7979a7b5f5b3436962b778c7ace6275729c"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-deck/slide-6.png",
+      "status": "A",
+      "bytes": 83783,
+      "sha256": "fc831d1cf6e507bdc40af08f2e5d13258e2df7d759e6dd3e4e784776239243d6"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-deadlock-recovery/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 347255,
+      "sha256": "4e895638de8a83b109832d7c0ad5cdb46e922f53ac5e91f1e0ec98fbe80515dd"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-deadlock-recovery/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 379729,
+      "sha256": "c85654d97385ffac3cf819b1902764c3153c67953f73df6fb4133c6ec13dad53"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-deadlock-recovery/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 10361,
+      "sha256": "732437b43ad77d4cee0d1201ccbca1c31440d52e77e1ce92fe3c003bf5f60e00"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/01-atlas-context.png",
+      "status": "A",
+      "bytes": 202025,
+      "sha256": "d35a3473afd96ddca919b5edbd26519af25f26c5f0875c35f3335792bb83e392"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/02-real-trace.png",
+      "status": "A",
+      "bytes": 208814,
+      "sha256": "b3261960da843ab31dd62226eee255d8eca4856584d510b07f042c801da8db83"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/03-specialists.png",
+      "status": "A",
+      "bytes": 210789,
+      "sha256": "278977b6d49f5a744cbc8013321bb937d218cf48a6469f6811af756d57f16c0c"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/04-financial-sources.png",
+      "status": "A",
+      "bytes": 211527,
+      "sha256": "ba82ad7574b508c6358b7f6a272a342cdb7f64784204da5f5909ffc09a31fe89"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/05-material-risk-and-source.png",
+      "status": "A",
+      "bytes": 190664,
+      "sha256": "a39370b3d9fb6b413b64af14c9e57ddd992f9f59523d3c9329e7e8041338053e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/06-exact-approval-basis.png",
+      "status": "A",
+      "bytes": 193659,
+      "sha256": "f5d49efc61b4febf7daede4d9e4d08063b8255de45b2150c55c74fd7a1c0b6ad"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/07-verified-receipt.png",
+      "status": "A",
+      "bytes": 186935,
+      "sha256": "8b9db689ccd8da1b8eb83f72a9c0a1e47d1ef312cc51763a7f414a24670e34e2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 345851,
+      "sha256": "2e6bbb88296e622e5f054ff1b2ccc07390d1902802419a24985ce5b011dcce42"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 317457,
+      "sha256": "84908de1d318f2506b83559fe1c3c1a6f89e174f17b994633676bda984e4e662"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-delivery-recovery/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 937566,
+      "sha256": "fdc157fbfc89d31f8cd4f9b5e69749c45bb6d2e9fac218c6a04f205fb33b8678"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/README.md",
+      "status": "A",
+      "bytes": 834,
+      "sha256": "08a3eb4f28fa90186e3348e331fd0151241da97aa45e04ffa58ddd571e203e85"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 347450,
+      "sha256": "478afd2c758d104036b155cd5cceb900d8f51c1c3be9f0f3e609de22b57ac0b4"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 306139,
+      "sha256": "187d96d225ed461b63889a838592af5089795152ebcf822b1a6b526dad6adc6a"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-01-atlas-context.png",
+      "status": "A",
+      "bytes": 201925,
+      "sha256": "706f65e84006d28513e8322b3ff6cf9573f03f68305c3d0edae88b29b5e48242"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-02-real-trace.png",
+      "status": "A",
+      "bytes": 208312,
+      "sha256": "87babf3b19f9dd89793695b84ad468e29e7cc793b0414372abac38a691e9978d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-03-specialists.png",
+      "status": "A",
+      "bytes": 211546,
+      "sha256": "e809acb98116e8fa8671008a191f3339b7f39fc69f7beae49e455e57f9c16f8e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-04-financial-sources.png",
+      "status": "A",
+      "bytes": 211100,
+      "sha256": "28759f86e83cb90c07e06cb77a15873fa0e5ed9cd9859ca2602208554d4d408b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-05-material-risk-and-source.png",
+      "status": "A",
+      "bytes": 190475,
+      "sha256": "fe0a7b11c9a0218b081646c842731ed9a54f6abe84dc2df9408306cfb3406437"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-06-exact-approval-basis.png",
+      "status": "A",
+      "bytes": 193432,
+      "sha256": "0d9e2626abf26a4a35b9610a26a879dd94ac1de173349064533082ba25eda9a6"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-07-verified-receipt.png",
+      "status": "A",
+      "bytes": 186923,
+      "sha256": "7e64e564adabbf09bdd29a598338a2f6349d5a2486c0f69bec35022a4f269414"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-effect-recovery/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 949971,
+      "sha256": "9d75ba7a10bc85458a0bd384fd0b6e45fad2f29a2e2ae8404ddb34b3d0efc4a2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-frontier-recovery/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 350308,
+      "sha256": "b29b99492a423df86bc93878740438fb1d63bbcea029b0ee74c6c4da012e96f8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-frontier-recovery/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 375676,
+      "sha256": "bb65287f2c938d0fccf4c74a43c9c7ea9292fc04a3c6e0b782a70bc7d26760fa"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-frontier-recovery/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 4721,
+      "sha256": "204212e1d189e3dbc470b31eed13c26be3d5691002af3e859c064487d07aa405"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-generation-recovery/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 345971,
+      "sha256": "d73683a00f5936ce59d741e189816dd8f637eb9f15e10ef32787ac343d68949a"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-generation-recovery/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 315778,
+      "sha256": "0861b56c0ad2ce7f8aad6910bf3fb1cde5f200ffab7c26f19ae0080f9505c13e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-generation-recovery/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 21497,
+      "sha256": "97edba644dee1a6fa6abf72904f0acd48f41cfc060d9becdb6571f582a1227b0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-interrupted-completion/atlas-autonomous.png",
+      "status": "A",
+      "bytes": 346952,
+      "sha256": "fcedcb5eaa67aedfb890cdf96dfc545ee14680295fe896ac993d797d23d8f163"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-interrupted-completion/atlas-autonomous.proof.json",
+      "status": "A",
+      "bytes": 376539,
+      "sha256": "a096601efd9f58fd350d3bdb1236364b33e35b77d44640ec7e08334edbe74aed"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-stream-verification/README.md",
+      "status": "A",
+      "bytes": 406,
+      "sha256": "d28c22f4669181050d7b9caef44a8258f20e52a9481b4fe9681fd50a7ebf72da"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-demo-stream-verification/interrupted-demo.proof.json",
+      "status": "A",
+      "bytes": 5914494,
+      "sha256": "1390592393f74d2d767c46865dc679cf03a995e70a7ec0733ae4ebbff87cabdc"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth-current/centropy-growth-objective-terminal.png",
+      "status": "A",
+      "bytes": 253636,
+      "sha256": "123ca4541df66e1ecf36e8995ff2769529abe6e923d32611fd1ae00aa9288396"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth-current/centropy-growth-objective-terminal.proof.json",
+      "status": "A",
+      "bytes": 11118,
+      "sha256": "d3fa2a1e98c47c36ac3551ff4d3fe4d3ddcef92ca9402d3188c6f2cb7d043a3a"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth-current/centropy-growth-verified-result.png",
+      "status": "A",
+      "bytes": 75928,
+      "sha256": "64e2eda359403f69e18b9414d4e3501d972caacffe1e4425e82a0d1e7590c7cb"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth-current/summary.json",
+      "status": "A",
+      "bytes": 1539,
+      "sha256": "a39409bb1275dcf86e9d696aade6138376416ac050a8dacee537c54397745ef1"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth/result.png",
+      "status": "A",
+      "bytes": 75928,
+      "sha256": "64e2eda359403f69e18b9414d4e3501d972caacffe1e4425e82a0d1e7590c7cb"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth/terminal.png",
+      "status": "A",
+      "bytes": 253788,
+      "sha256": "759389479d79e0f370bd6ff4f5ab93ce1245847f8f23b499636cca9b107d8738"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-growth/terminal.proof.json",
+      "status": "A",
+      "bytes": 11068,
+      "sha256": "8618195f2b56320c3ce5450b6189a91fc99058d2f8f1f4b23ca380248813f0c7"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-human-closing/human-closing.png",
+      "status": "A",
+      "bytes": 223408,
+      "sha256": "65ec80dc3a0861a06077d22bcb79f43d451d6213eff3d239d6bb544793b6a0da"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-human-closing/human-closing.proof.json",
+      "status": "A",
+      "bytes": 75306,
+      "sha256": "b011f5d07bfeea242185795501704bb27ddd9eb2d59f1c264935d1652f1243d0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-human-controls/centropy-human-controls.png",
+      "status": "A",
+      "bytes": 132323,
+      "sha256": "e40c22b7a6caf7ea9094a96148191db3f20e4823f9d5dce01f75a50f824177dd"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-human-controls/centropy-human-controls.proof.json",
+      "status": "A",
+      "bytes": 3368,
+      "sha256": "be9342c28c66136fd2dae045437ac1ae6920c6afed646e34cdcd214861f6cff3"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/artifact.png",
+      "status": "A",
+      "bytes": 92889,
+      "sha256": "8e13fd9284a798c5364a7d36b9063ef09d402204815119c3bdfbba67bddeef67"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/canvas.png",
+      "status": "A",
+      "bytes": 111677,
+      "sha256": "ad6525d199f849e74957a22a85a0af89a7d425fe11db868fdd14ea46d8c5f662"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/replay.png",
+      "status": "A",
+      "bytes": 93211,
+      "sha256": "c798eba135bc54a216dd3e1e7e2760e6847a1417cd167df9897979775087e337"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/sources.png",
+      "status": "A",
+      "bytes": 116650,
+      "sha256": "49618c2c4e95af9b45b9b5dcbc12297b8e82339bdbdd1132b2ed0a24a5bd36fa"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/sweep.proof.json",
+      "status": "A",
+      "bytes": 1093472,
+      "sha256": "da4cbda02a6a6b1850e99dfbdeab279cddf31abba9940177245551bb853237a7"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/thread.png",
+      "status": "A",
+      "bytes": 93072,
+      "sha256": "87740ec71c949e5f7519ec391497d1ce9081e35d26feaefff5463206ad4aa842"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-mobile375/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/world.png",
+      "status": "A",
+      "bytes": 100364,
+      "sha256": "d03523b528e48d5a7737bfaa8d18acd5110a036c39078c6c8a6ce93ac5b35648"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-objective-runtime/vitest-results.json",
+      "status": "A",
+      "bytes": 9109,
+      "sha256": "666ec744b9547b4b092693bf6a003e23a04180ca70411a1881f1a46f1775487f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-parallel-approval/guard.proof.json",
+      "status": "A",
+      "bytes": 6423,
+      "sha256": "80eb4548d1a4289315e75e7e5965d90555e096633683b5efa5fb7127ceba8e88"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/01-atlas-context.png",
+      "status": "A",
+      "bytes": 200574,
+      "sha256": "f88891edec76ab8300c5dca33324f950329813378e9a2e1aa989ee56588b6c8f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/02-real-trace.png",
+      "status": "A",
+      "bytes": 208633,
+      "sha256": "5b915c496347d53b8b95a8554360b8fbdc2e4e1dddde76e7752c22dad7b2f07e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/03-specialists.png",
+      "status": "A",
+      "bytes": 211683,
+      "sha256": "1cf135da782261afb0e45345298b988f062f7a547dfd16d4d683626d5ece8f24"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/04-financial-sources.png",
+      "status": "A",
+      "bytes": 211298,
+      "sha256": "d259421a988623abcec5c0a3d864fd045a59b460c4f6c5e19fe5aeb006783f8b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/05-material-risk-and-source.png",
+      "status": "A",
+      "bytes": 191025,
+      "sha256": "af3d9b868fb769141a097ea8a16beae53b61b553396d61493cc9e535bf07d3f0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/06-exact-approval-basis.png",
+      "status": "A",
+      "bytes": 193139,
+      "sha256": "ae56ee2a5357fe4250c0b2259120f9e253c3918e6ce3ddec521f22f5282e951d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/07-verified-receipt.png",
+      "status": "A",
+      "bytes": 186588,
+      "sha256": "10c0533f5a4d46da51d454a8119c00a5186f472b111621fc4f826d4d46c3bbdb"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/README.md",
+      "status": "A",
+      "bytes": 898,
+      "sha256": "68e229627307fe3ee16881469f402e959bb8d408285daef71b66c5ce080166db"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/real-demo.proof.json",
+      "status": "A",
+      "bytes": 5787791,
+      "sha256": "44f43d514795024f52f67976f657f990c350db27e7117c8832583fa8cf1f20af"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/summary.json",
+      "status": "A",
+      "bytes": 906,
+      "sha256": "a76625b2152e63d325f0ee6c08e871e2df4e1d4ba6424d748589077dd3e186ff"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-real-demo/video.webm",
+      "status": "A",
+      "bytes": 3517210,
+      "sha256": "7f3936838e95b188df6a4f14ef7da8e0acb505d585749e64f9846e3bbb66655b"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/blocks.png",
+      "status": "A",
+      "bytes": 97307,
+      "sha256": "ac53f80f18983e560ee3b82a61bfdae843ae893dd8de1588134aba3ec1ac9288"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/orb.png",
+      "status": "A",
+      "bytes": 54034,
+      "sha256": "8b9b878b53999bd37541a815cc20b8494e71ac37b826c2c8383fa2526b30b495"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/relationships.png",
+      "status": "A",
+      "bytes": 99073,
+      "sha256": "08ae5360acd835bd8d8e8e586ddcdb643bf476a0b475970c7b09cdbc2ec0bdc7"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/renderer-performance.proof.json",
+      "status": "A",
+      "bytes": 8234,
+      "sha256": "77652c5bb4302b9956afdfc13227dc530388e07f9571d0614627b1b0792ad5cb"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/underwriting.png",
+      "status": "A",
+      "bytes": 113221,
+      "sha256": "85add93beb3256065fe11acea0046515379410fadba947184613e6c95022fb39"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-mobile/blocks.png",
+      "status": "A",
+      "bytes": 74539,
+      "sha256": "66103953b164b020e10ce54183b5728b589e2cb3b1f1de5efb4455ee8aba487e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-mobile/orb.png",
+      "status": "A",
+      "bytes": 45475,
+      "sha256": "51fa85569c02fe6c766385e377ef5b0716f774cb793a8b377eb8854a47f0698c"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-mobile/relationships.png",
+      "status": "A",
+      "bytes": 92022,
+      "sha256": "84e86942592b4dad343dcc6c9cb24d3b7ed19aad6586626d43f085de0670550a"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-mobile/renderer-performance.proof.json",
+      "status": "A",
+      "bytes": 8144,
+      "sha256": "84235b501f271495a72757bf7418b5e5bcda15ed39fe9c9da2da61314bdcf144"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-renderer-performance-mobile/underwriting.png",
+      "status": "A",
+      "bytes": 78975,
+      "sha256": "462110a034b212299b132642414c4e2a15ef50644b50397cb2eb1e7ede135ece"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/canvas.png",
+      "status": "A",
+      "bytes": 111678,
+      "sha256": "a78509557415aabf9f15859090e5321fc64a949e93f9c98901f347434dbf0f84"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/sweep.proof.json",
+      "status": "A",
+      "bytes": 264131,
+      "sha256": "c442797f4eb4cd6e2f5cdfd5d2ac35f43eeca95ef93ad009bc68b47b1deb13c0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-375/thread.png",
+      "status": "A",
+      "bytes": 92377,
+      "sha256": "cd7036b9d70c1cc6b1b3f88523a6aabd66934ffa45d6725c308a728a0e0d5093"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/artifact.png",
+      "status": "A",
+      "bytes": 101122,
+      "sha256": "2ed05fa47634bc176d5f75fa02f8219bbcdb7f3054951a8118b5012be32a5df2"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/canvas.png",
+      "status": "A",
+      "bytes": 115968,
+      "sha256": "1e3128c842b7791ade5cb227c73dfd69bf909e4e3fe25ab72e3f73bfacfffdd6"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/replay.png",
+      "status": "A",
+      "bytes": 100576,
+      "sha256": "68648d0ec76d710e3a91ed0333719a2161e28138fa577ad2cbce7f7d45336259"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/sources.png",
+      "status": "A",
+      "bytes": 122260,
+      "sha256": "656ec9f75cd372f16ecae279bad7f6b55cfea6ef6a844b3a3d3025af3c21610c"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/sweep.proof.json",
+      "status": "A",
+      "bytes": 1098830,
+      "sha256": "1485577e3014d5c882cacdd4d633cda38debf0c08517b067cb934e2826ee6796"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/thread.png",
+      "status": "A",
+      "bytes": 94579,
+      "sha256": "f0633e1c9731d53d6db8f151186e9b8ae3c9bb6bcdeafb8418e2c65d74a8f05d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-mobile-390/world.png",
+      "status": "A",
+      "bytes": 106711,
+      "sha256": "e1866f6d50964c54fb99479f1483e1e00aadde444a0b9f880e46df68a050dbb7"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/artifact.png",
+      "status": "A",
+      "bytes": 328343,
+      "sha256": "fd3d06ca45e2c2641a7362abee25a547121a99e25b697b2e846489db7ba796d0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/canvas.png",
+      "status": "A",
+      "bytes": 327446,
+      "sha256": "68c4964326721240c6768522d526d50e1a89919f47c68da42529f6fbf5ffdf76"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/replay.png",
+      "status": "A",
+      "bytes": 332958,
+      "sha256": "ad018a697882a0097cf29930276697d76e7850d6f824905fbac733a88d35c62e"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/sources.png",
+      "status": "A",
+      "bytes": 322988,
+      "sha256": "1c52cb1d142c3fc3fcafd0223a92b459f83b53b0b76286c0f16ea15d1c79ee28"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/sweep.proof.json",
+      "status": "A",
+      "bytes": 1209077,
+      "sha256": "0757d7cc9e7e49dff3ac74227210d9b81f5bb5ddb16b75b0c50e629d4acf272c"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/thread.png",
+      "status": "A",
+      "bytes": 313480,
+      "sha256": "58d3c71f6af8ddfae0e43d10bd5e94757cbda8b3f74a0180da43899745749f16"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-responsive/centropy-browser-sweep-res-96b9b-ccessible-at-every-viewport-tablet/world.png",
+      "status": "A",
+      "bytes": 314357,
+      "sha256": "72203f67033f96c76d876fe6a7d68b6b7d06cd4a434c59a87f1f8816356980a4"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-secret-scan/policy.proof.json",
+      "status": "A",
+      "bytes": 1950,
+      "sha256": "5fc1d78e516188866e3fa7a4aafb0abd9da54234c8087117b76831ca8d4ac085"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-stale-approval/cancel.proof.json",
+      "status": "A",
+      "bytes": 3834812,
+      "sha256": "fb8b571a9ce017735cfb1eafec1a36c220355d2a2420cd814cca9243e94562d5"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-temporal/centropy-temporal-question-3f263-ity-without-inventing-cause-desktop-chromium/centropy-temporal-question.png",
+      "status": "A",
+      "bytes": 204632,
+      "sha256": "66a1b6f7277f2938876d83c87e8b1de88928d3e9b9ad27fb7df2ac7158850be8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-temporal/centropy-temporal-question-3f263-ity-without-inventing-cause-desktop-chromium/centropy-temporal-question.proof.json",
+      "status": "A",
+      "bytes": 191277,
+      "sha256": "c708e1c2cbc52470c8ff66c14e6bce9b1f4e6e9af99d824b87723bee7007a4ab"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workflow-outcome/workflow-outcome.png",
+      "status": "A",
+      "bytes": 217662,
+      "sha256": "2b84295e6e273389a89639ad0e810c2a14d6d547367db5cc9c7d1fd93cccf1df"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workflow-outcome/workflow-outcome.proof.json",
+      "status": "A",
+      "bytes": 44915,
+      "sha256": "c6335370ef0a0ccd53e0585fbe55883f499b5400fef84ad6e89adecc9cb42f35"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-final/centropy-controlled-recove-488df-olled-canonical-read-outage-desktop-chromium/centropy-controlled-recovery.png",
+      "status": "A",
+      "bytes": 171457,
+      "sha256": "00d911e6c27fc9c5a9b080726cf46a896b415687392c51ea9c523b9614106ad3"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-final/centropy-controlled-recove-488df-olled-canonical-read-outage-desktop-chromium/centropy-controlled-recovery.proof.json",
+      "status": "A",
+      "bytes": 21493,
+      "sha256": "81ba0b6c1ca77dc07da68b85b90c1a4f76d069e720d272785bac96fcd50a1242"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-final/centropy-parallel-deal-rec-f2308-t-governed-specialist-reads-desktop-chromium/centropy-parallel-deal-recheck.png",
+      "status": "A",
+      "bytes": 202721,
+      "sha256": "c48b886e41396929064e5d849446de6019c9d59794ce15adab8a8a923fe20cbb"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-final/centropy-parallel-deal-rec-f2308-t-governed-specialist-reads-desktop-chromium/centropy-parallel-deal-recheck.proof.json",
+      "status": "A",
+      "bytes": 26780,
+      "sha256": "8945e4c525451827249f3b40969ea76526f9c1865052c8889237675fce470631"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-final/summary.json",
+      "status": "A",
+      "bytes": 2429,
+      "sha256": "541996bff36f33b532afeb11689e5e00ca546c473eb74e7e84710228139f6803"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-reassign-final/centropy-live-workforce-re-fa9e3-assign-one-exact-assignment-desktop-chromium/centropy-live-workforce-reassign.proof.json",
+      "status": "A",
+      "bytes": 9943,
+      "sha256": "9d1bd36b9cd39e3f49da503690085bd343e85ce77da1b6aefc44f8d7e169fab8"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-reassign-final/centropy-live-workforce-re-fa9e3-assign-one-exact-assignment-desktop-chromium/centropy-live-workforce.png",
+      "status": "A",
+      "bytes": 198505,
+      "sha256": "3fbf850034ab0066764bcbea27e93a1f4cda46db9337b89fcd1bdca7db9fc1c3"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-reassign-final/centropy-live-workforce-re-fa9e3-assign-one-exact-assignment-desktop-chromium/centropy-reassigned-workforce.png",
+      "status": "A",
+      "bytes": 171478,
+      "sha256": "d9ea9132f20046cbad5f09344b8eee8e1507a6c95de2320d424dca5f9445fce4"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/.last-run.json",
+      "status": "A",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-controlled-recovery.png",
+      "status": "A",
+      "bytes": 207281,
+      "sha256": "a96632dda0db3f8bde083b8580fb7211d40a93a39115667fe7f6709cc63cf62d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-controlled-recovery.proof.json",
+      "status": "A",
+      "bytes": 21502,
+      "sha256": "24c0293273f0ac1d3d70dbf9fa9da6d679c0c1a69ae0f911836fc0dedfe0ac19"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-live-workforce-reassign.proof.json",
+      "status": "A",
+      "bytes": 9944,
+      "sha256": "358ec0db5102891623c336886cd972238962873ce93dc74e68c4b9affbf3e78d"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-live-workforce.png",
+      "status": "A",
+      "bytes": 207473,
+      "sha256": "90a056f3272f76db8c3456cfc15b8e53a0f3ee02a354fb6c703259171d9ca9a0"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-parallel-deal-recheck.png",
+      "status": "A",
+      "bytes": 206701,
+      "sha256": "52bc6ba2185b807280dd4be6dbcc249e6b6209ba7f3e135b855d6ff73539251f"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-parallel-deal-recheck.proof.json",
+      "status": "A",
+      "bytes": 26781,
+      "sha256": "8f74022b030bda4734addeb643326cf38d8fd3d0f7e851396b2fbdb9b982cb28"
+    },
+    {
+      "file": "docs/centropy/evidence/release-candidate-workforce-recovery/centropy-reassigned-workforce.png",
+      "status": "A",
+      "bytes": 173190,
+      "sha256": "3f536ca4e35612e712067a853a3eefd84297433f8f61b4c2c1352ae83c0a0c0a"
+    },
+    {
+      "file": "docs/centropy/golden-flow-certification.md",
+      "status": "A",
+      "bytes": 5384,
+      "sha256": "69f0fbcb4518672745e989c60739660d2e3558d6ab52fd800a484a7cb8c23f49"
+    },
+    {
+      "file": "docs/centropy/historical-certification-ledger.md",
+      "status": "A",
+      "bytes": 27226,
+      "sha256": "98d455a554c78cf706fc7b64be936408ca1466224a550836290fa49e32646501"
+    },
+    {
+      "file": "docs/centropy/ic-repreparation-failure-modes.md",
+      "status": "A",
+      "bytes": 908,
+      "sha256": "4c5c49f5a3bc51c3ad057eba84ef20e627ec4f35f5c44fb4a9c2ae5f851aae0d"
+    },
+    {
+      "file": "docs/centropy/library-verification.json",
+      "status": "A",
+      "bytes": 32193,
+      "sha256": "53e293c6e8159d0d7815e766b589043521f8340e6159a1612a657aaa9d467145"
+    },
+    {
+      "file": "docs/centropy/production-fixture-failure-modes.md",
+      "status": "A",
+      "bytes": 7362,
+      "sha256": "d226c1ae2e9874df3e5d0beb075e42003313dda64a884e0ed9773e8727fffdbe"
+    },
+    {
+      "file": "docs/centropy/release-ci-recovery-failure-modes.md",
+      "status": "A",
+      "bytes": 3516,
+      "sha256": "cc3b72481d6323fc25a1266c9e83a1687f1b7f48be6dc034ece6528c2dac8f3d"
+    },
+    {
+      "file": "docs/centropy/renderer-performance-failure-modes.md",
+      "status": "A",
+      "bytes": 1396,
+      "sha256": "00c028c718913a330a72f0478a7af52d128ade445f988094277977b739db39b3"
+    },
+    {
+      "file": "docs/centropy/secret-scan-policy-failure-modes.md",
+      "status": "A",
+      "bytes": 855,
+      "sha256": "9c99d0a20287affae5d78c8bf194375d6c15cb41918d8889901dba111ef3c7b2"
+    },
+    {
+      "file": "docs/centropy/temporal-fixture-failure-modes.md",
+      "status": "A",
+      "bytes": 1723,
+      "sha256": "948c69859cf596086d76b4bbdcd7182c49dfdef6625122c787c810ed058e8274"
+    },
+    {
+      "file": "docs/centropy/unit-test-curation.json",
+      "status": "A",
+      "bytes": 83705,
+      "sha256": "342ef225e44d8ea57dccdee6c6e056a99f5881445712318ceb687abfdf552c7d"
+    },
+    {
+      "file": "docs/release/generated/action-manifest.json",
+      "status": "M",
+      "bytes": 14287,
+      "sha256": "fd9b879172a80439f13f8f7185d5562781aee48520df6f3eeace2194e45e3fa8"
+    },
+    {
+      "file": "docs/release/generated/action-manifest.md",
+      "status": "M",
+      "bytes": 11858,
+      "sha256": "e14cba6ee465651ebc5525cb3c5dc8d7f76ffc2563e9c96a9cbdc7f95934522e"
+    },
+    {
+      "file": "e2e/centropy-artifact-controls.spec.ts",
+      "status": "A",
+      "bytes": 17050,
+      "sha256": "8e571c8c06897c51dc6a6c2e166bab9d7f4416665da1b044fc0acb07e4adddc6"
+    },
+    {
+      "file": "e2e/centropy-atlas-ic-planning.spec.ts",
+      "status": "A",
+      "bytes": 19924,
+      "sha256": "7414ccfde6c385784f349469e3554538e49e4fff2a86e8dee9485b48e786ec3b"
+    },
+    {
+      "file": "e2e/centropy-autonomous-atlas.spec.ts",
+      "status": "A",
+      "bytes": 21471,
+      "sha256": "75592caee0c585b701faa084c3c64f6bb1b9aae3106260afaa3b1f7bda0674d2"
+    },
+    {
+      "file": "e2e/centropy-blocker-question.spec.ts",
+      "status": "A",
+      "bytes": 5918,
+      "sha256": "e175e8f1db1c52a79ffab0604d5a2eebb1b6c0062f8fad49d8e8869cb26f223c"
+    },
+    {
+      "file": "e2e/centropy-browser-sweep.spec.ts",
+      "status": "A",
+      "bytes": 12996,
+      "sha256": "dc66737fd9d8918f081d253209fd0413d2c85d43d01cff577b7e95152e2f7bae"
+    },
+    {
+      "file": "e2e/centropy-controlled-recovery.spec.ts",
+      "status": "A",
+      "bytes": 10155,
+      "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+    },
+    {
+      "file": "e2e/centropy-cross-session-active-objective.spec.ts",
+      "status": "A",
+      "bytes": 11516,
+      "sha256": "866d56f6c0c571a1730c0e118130dbb8c1ddf29ba7829fb8cf5f9624de9ad473"
+    },
+    {
+      "file": "e2e/centropy-cross-session-draft.spec.ts",
+      "status": "A",
+      "bytes": 9313,
+      "sha256": "f551e2b54091f42c08e2537bfffb5166ca1edd1f517b0d49ac1ed09ef78de7a5"
+    },
+    {
+      "file": "e2e/centropy-governed-message.spec.ts",
+      "status": "A",
+      "bytes": 10611,
+      "sha256": "1894a97683778deb1c5ba8be3568e4129b782c248ba5e7ce74351019cf9edc28"
+    },
+    {
+      "file": "e2e/centropy-growth-300bps.spec.ts",
+      "status": "A",
+      "bytes": 12417,
+      "sha256": "804cf4e795e4ed1c91ef75d66899e3744f1fd1b3564c096d1f9ace222c0f7352"
+    },
+    {
+      "file": "e2e/centropy-growth-instruction.spec.ts",
+      "status": "A",
+      "bytes": 6753,
+      "sha256": "c30c285938470b3b18b2dd2913b94f12bac0fd94a64119e8adcfb4b0c6fb3408"
+    },
+    {
+      "file": "e2e/centropy-growth-objective-terminal.spec.ts",
+      "status": "A",
+      "bytes": 13215,
+      "sha256": "7f2163771c573a84be132c83565befa3fe5b7cd0cebe98291ee6bf68363efcf3"
+    },
+    {
+      "file": "e2e/centropy-human-closing.spec.ts",
+      "status": "A",
+      "bytes": 12694,
+      "sha256": "eacbc5cd7823edfc02d2e53300ef1ee67b084dcf8d5cf44ab38092614189cf76"
+    },
+    {
+      "file": "e2e/centropy-human-controls.spec.ts",
+      "status": "A",
+      "bytes": 7720,
+      "sha256": "0f890f4af39976a0c91cb4992efb7c14ccb80651557888cdb149fcd7c6d7b205"
+    },
+    {
+      "file": "e2e/centropy-ic-artifact.spec.ts",
+      "status": "A",
+      "bytes": 15145,
+      "sha256": "24fd8d0029930521ba5b2f07e355b7fa055f51978659410c5f75db50ab85493f"
+    },
+    {
+      "file": "e2e/centropy-ic-continuation.spec.ts",
+      "status": "A",
+      "bytes": 7493,
+      "sha256": "ed2ab2232ffab8ab1072d80f7658c0ee3b2899180be3d3499baaedfcac90e521"
+    },
+    {
+      "file": "e2e/centropy-ic-deck-work-action.spec.ts",
+      "status": "A",
+      "bytes": 27833,
+      "sha256": "2174668acf36989efc76d155fc6a10aa60e2910b0c16ac8efbb5467d51c8e941"
+    },
+    {
+      "file": "e2e/centropy-ic-memo-recommendation.spec.ts",
+      "status": "A",
+      "bytes": 17724,
+      "sha256": "55eea7716d008e11d1e10653a69f70e39956d76bfab10d5c814bd3d0001359a6"
+    },
+    {
+      "file": "e2e/centropy-ic-objective-recovery.spec.ts",
+      "status": "A",
+      "bytes": 5863,
+      "sha256": "a4071dc251fdff7384a1c29b6617670fc35c9c4fbcaca204797496a146621907"
+    },
+    {
+      "file": "e2e/centropy-ic-terminal-completion.spec.ts",
+      "status": "A",
+      "bytes": 12383,
+      "sha256": "4e9ab3285b0359ed7bdd6f11ddb093c09e9f926f8aba10528cb6e5041081d0d7"
+    },
+    {
+      "file": "e2e/centropy-live-host.spec.ts",
+      "status": "A",
+      "bytes": 4544,
+      "sha256": "9fcfe64134fc4ba5999f69fd516312dba60c5d6a2a629d7ca168711daa01912b"
+    },
+    {
+      "file": "e2e/centropy-live-workforce-reassign.spec.ts",
+      "status": "A",
+      "bytes": 10569,
+      "sha256": "05c3acd30c99a1758f4dfcaeab810841329bb570df42317d0af44b7b931f810d"
+    },
+    {
+      "file": "e2e/centropy-owner-login.spec.ts",
+      "status": "A",
+      "bytes": 2857,
+      "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+    },
+    {
+      "file": "e2e/centropy-parallel-deal-recheck.spec.ts",
+      "status": "A",
+      "bytes": 9933,
+      "sha256": "5c983a76c4f2768e0f5185688595ef061feaf3fb028d8c1250c4cf90d1786363"
+    },
+    {
+      "file": "e2e/centropy-real-demo.spec.ts",
+      "status": "A",
+      "bytes": 16331,
+      "sha256": "05e9920ac336faa0b2a7414cfe30e900a4a5d233ef2d70a65b73145e47d95ed4"
+    },
+    {
+      "file": "e2e/centropy-renderer-performance.spec.ts",
+      "status": "A",
+      "bytes": 7570,
+      "sha256": "b5730cb5e533c2a9661c37c557e8ad11441707b0be3d4d61633ca37e12cbaec1"
+    },
+    {
+      "file": "e2e/centropy-temporal-question.spec.ts",
+      "status": "A",
+      "bytes": 11132,
+      "sha256": "2883dd3c96a8c02b0d111b344a06075c1445149e1f22ddd9a38613e53754271f"
+    },
+    {
+      "file": "e2e/centropy-underwriting-multi-input.spec.ts",
+      "status": "A",
+      "bytes": 11312,
+      "sha256": "4762632d5e2c0807b1c0354a6016a9ae02b1f168513838fabbb49406cdb885c4"
+    },
+    {
+      "file": "e2e/centropy-workflow-outcome.spec.ts",
+      "status": "A",
+      "bytes": 10447,
+      "sha256": "8397f98a2d8d04a033454b73aa432d50ec4f8cc0a6277937d52a33b8b8891159"
+    },
+    {
+      "file": "e2e/fixtures/rate-window.ts",
+      "status": "A",
+      "bytes": 616,
+      "sha256": "dad423ab2d344048d1c56b5093470ba8689946c7fd5b163533ea709c7da69a42"
+    },
+    {
+      "file": "e2e/private-equity-product-contract.spec.ts",
+      "status": "M",
+      "bytes": 3270,
+      "sha256": "1220a0d6254f3b04346f7454cdcf75ae4cf0268740a5933abe4fe7a3a183e6ea"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/[id]/confirm/route.ts",
+      "status": "M",
+      "bytes": 3045,
+      "sha256": "54866c3fdaebaf2d100cc10da36b151d2aad2f7f6573ff963b42501ce58e9a60"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/[id]/escalate/route.ts",
+      "status": "M",
+      "bytes": 2445,
+      "sha256": "e782fde8115765c659f855e8ac29b375e11f0c731ba5f977a15c6c8ddd07c80d"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/[id]/reject/route.ts",
+      "status": "M",
+      "bytes": 2159,
+      "sha256": "d038940410e2cff99cdddabe16d9f7d14976904baae0506c75f8a83964673bcb"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/human/route.ts",
+      "status": "A",
+      "bytes": 10694,
+      "sha256": "5a33493079a91820496b83487bb0f2f0e8cc42e672b00b208e5205586f0a1e2d"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/pending/route.ts",
+      "status": "M",
+      "bytes": 9732,
+      "sha256": "71c3bab299c34cc5fd84f8d2aafeb439b118c2f8bb39ede08f6d7a97d3644b0b"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/review-capability/route.ts",
+      "status": "A",
+      "bytes": 617,
+      "sha256": "92f09343adcb96d3c337b6f82394d1eea3a9a36eb8565601ec977f9efefc4be0"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/actions/route.ts",
+      "status": "M",
+      "bytes": 22304,
+      "sha256": "08b1058ca1b49f428623fe70e0e297913291e5356963b68fe011c41533c25ed7"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/connections/google/start/route.ts",
+      "status": "M",
+      "bytes": 1780,
+      "sha256": "b958fe017db22fa373330e3ea54a21463ee777aa6d3355675b39a4534d0c024b"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/corrections/route.ts",
+      "status": "M",
+      "bytes": 3628,
+      "sha256": "f7ce5e076113be2b16fe029d1f0c48e9eafbffa664c794acf8463e1e33f7f2d9"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/operating-profile/route.ts",
+      "status": "M",
+      "bytes": 3831,
+      "sha256": "20b34d8225e4199581f05fc17d54ca84fe661cb6bbbd55fdf39db487f91e770e"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/outcome-packs/route.ts",
+      "status": "M",
+      "bytes": 8429,
+      "sha256": "1a8797b34b83eb1926fb147dfd5b6897c22f3729e5a61bc44d0ea02d3bbb20de"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/reviewed-deck-link/route.ts",
+      "status": "A",
+      "bytes": 3407,
+      "sha256": "8ba2a17b3b909187ae6eb498bff579db0d3dd345a463c08d3bba4d3282e6e746"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/push-subscriptions/route.ts",
+      "status": "M",
+      "bytes": 1955,
+      "sha256": "4f1e2e758dd1e07fee64b6543f4581e4b3ba2c53be9fcee668abebece1146368"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/reconciliation/[id]/resolve/route.ts",
+      "status": "M",
+      "bytes": 2083,
+      "sha256": "8424e56c644ab84804fbba346bfd0ea75a92fa1f2bf61640e06e840934c6cedc"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/threads/[id]/canvas/route.ts",
+      "status": "A",
+      "bytes": 4919,
+      "sha256": "f6f33cec831df3a303c87bc793154aaa2ddd224d3b1430b67126eeca2b39b732"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/user-prefs/route.ts",
+      "status": "M",
+      "bytes": 3112,
+      "sha256": "dcd170870b0cabf7391d3bf7ca71f87745db1b192c8f85956c3f42aed6cfa266"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/workflows/runs/route.ts",
+      "status": "M",
+      "bytes": 3499,
+      "sha256": "3b374783c54f3dfa9fe6455f058949796ce7b6b4711316184e697c412e650419"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "status": "M",
+      "bytes": 1819,
+      "sha256": "dbfa29d849668e91f9658550e13c9cdc7567124d430a6e9efb03ac3c94b62113"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/works/[id]/objective/route.ts",
+      "status": "M",
+      "bytes": 2701,
+      "sha256": "8ac4d1b1884f4c8e9876950bd7ecf8d553ec9c083479b0eea91ea12cb91ce939"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/works/[id]/retry/route.ts",
+      "status": "M",
+      "bytes": 4486,
+      "sha256": "6e7d12ea3d80d232df7049e76a059cf27d2701f2daea41ac7524a0ea1d55ff77"
+    },
+    {
+      "file": "finnor-os/apps/api/app/api/works/[id]/route.ts",
+      "status": "M",
+      "bytes": 2370,
+      "sha256": "bfafaa0c2f17712dc8aad8fbde375bce270beac500c18c8e1b4557785aecc9f8"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/artifacts.ts",
+      "status": "M",
+      "bytes": 3777,
+      "sha256": "19f2db943a5b6ae6f53a613ea5b389ac5ee4a3e74a8a34c3f2b883bc3ef41af1"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/ic.ts",
+      "status": "M",
+      "bytes": 9730,
+      "sha256": "e0f66cb5370162be2075fc7215c0c7f2544ecebd4ea5fc8295902c27de0838b6"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/operating-profile.ts",
+      "status": "A",
+      "bytes": 2836,
+      "sha256": "ab26027a1918a360f15b40a857dd3eccf335369e03f4dbe228b6c39b24f07c76"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/product-control-schemas.ts",
+      "status": "A",
+      "bytes": 2049,
+      "sha256": "483855619a0a6bca5d0153d47cf80cf5359398fa6ef3bf1e9fe02fcac973cc96"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/run-control-route.ts",
+      "status": "M",
+      "bytes": 2143,
+      "sha256": "63bee7f36851c66de0b06925ca7c39583f44bd8dd672b5d709ca0505ab4d02a1"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/underwriting.ts",
+      "status": "M",
+      "bytes": 11094,
+      "sha256": "c9123769799610aa4c7fee3a825415309059c35649e92909d2642770c20b926c"
+    },
+    {
+      "file": "finnor-os/apps/api/lib/user-preferences.ts",
+      "status": "A",
+      "bytes": 1148,
+      "sha256": "f03f66187b7dafb6a31ee1bd755f07884b57aca30cccb84d8c1207a56880a257"
+    },
+    {
+      "file": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "status": "M",
+      "bytes": 8698,
+      "sha256": "da5fcf0c88a403878f8d4577c3c54dfe855dc4e54950fe561ef259d6a5184df3"
+    },
+    {
+      "file": "finnor-os/apps/worker/src/handlers/run-objective-iteration.ts",
+      "status": "M",
+      "bytes": 1358,
+      "sha256": "bb2ac9bdb8f3b3f5afc27b014ed14bdea81ecc55701028c0cea150695ef61609"
+    },
+    {
+      "file": "finnor-os/docs/authz-matrix.md",
+      "status": "M",
+      "bytes": 10608,
+      "sha256": "11c6cb7011de82a8b35f2a27cb4154be8d7470012d7a8ca38693833bc7919e66"
+    },
+    {
+      "file": "finnor-os/openapi.json",
+      "status": "M",
+      "bytes": 464839,
+      "sha256": "96e3cd334684213f4c4447c68555a0c4f413222d343693216a50375cd63907ab"
+    },
+    {
+      "file": "finnor-os/packages/artifacts/src/creation.ts",
+      "status": "M",
+      "bytes": 44948,
+      "sha256": "8b49e50981e750eaf4319ae476a5a65a5ee34d233360334215bee55f45ead531"
+    },
+    {
+      "file": "finnor-os/packages/artifacts/src/service.ts",
+      "status": "M",
+      "bytes": 38911,
+      "sha256": "1d40e2c66deaa56eb302f03c9c2c263f646c8775d444af5b5e4695d938e899e7"
+    },
+    {
+      "file": "finnor-os/packages/db/event-fabric.ts",
+      "status": "M",
+      "bytes": 21905,
+      "sha256": "35eb20edce990fe1e202200b8e51bfc402e878c5f47cb70977bf356798a594c3"
+    },
+    {
+      "file": "finnor-os/packages/db/index.ts",
+      "status": "M",
+      "bytes": 125498,
+      "sha256": "95f411a31aaf83869e3c258102ef0f6446bfd9de2dfc0f4b13bf2b89baba41a7"
+    },
+    {
+      "file": "finnor-os/packages/db/migration-head.ts",
+      "status": "M",
+      "bytes": 287,
+      "sha256": "35f5f2ee72ca2aec3dfe311c1bb3a7bb74b9747697ad2f64d561b98ec8a75227"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations-bundle.ts",
+      "status": "M",
+      "bytes": 1480817,
+      "sha256": "f1327c9c72055c382408c3b59cf2ff55dd54967a73f0800b6ddb6275da33c3a4"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0141_private_equity_outcome_pack_ids.sql",
+      "status": "A",
+      "bytes": 1099,
+      "sha256": "d6e2fbbf917706c0c6035706373d521c5549d649665bed0e28191914417d73d3"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0142_centropy_canvas_preferences.sql",
+      "status": "A",
+      "bytes": 1953,
+      "sha256": "733fd6c5d8c5c56aa4d749b3b0e6d07170e5628579542d68493c8c6eba21df76"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0143_work_input_context_after_validation.sql",
+      "status": "A",
+      "bytes": 1688,
+      "sha256": "51868fbd49f7251f12bdd48305608c124ad706f7c33c82883dabac9eb68a8019"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0144_ic_business_effect_targets.sql",
+      "status": "A",
+      "bytes": 9131,
+      "sha256": "7c45d93e516a53c4e91a53948ab8192286f7482aabf54eabc70ca04f939f6d9f"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0145_artifact_template_action_replay.sql",
+      "status": "A",
+      "bytes": 514,
+      "sha256": "947abdf1caf0b432ea46f5cbc706d54a7232c00225f14f8601e3392249ded09e"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0146_ic_case_document_links.sql",
+      "status": "A",
+      "bytes": 771,
+      "sha256": "0bc34917b89dac8cba97e16ace99b3db68853edf024fa1edebdf165ac392efcb"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0147_ic_objective_step_budget.sql",
+      "status": "A",
+      "bytes": 611,
+      "sha256": "78ffb5298f750c56d09682e87123e736fe218c8ea62962fe3b8a269392b2a659"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0148_artifact_underwriting_bindings.sql",
+      "status": "A",
+      "bytes": 1700,
+      "sha256": "28a1c20c0a342c3c62f1359021504faf3a286e446ee8093e04ffc4ca2533d5b6"
+    },
+    {
+      "file": "finnor-os/packages/db/migrations/0149_parallel_objective_approval_guard.sql",
+      "status": "A",
+      "bytes": 2932,
+      "sha256": "78524f9ce0d2399bc46188f675ff1cbe2627bfab7ce2c79aa799751638ad55d9"
+    },
+    {
+      "file": "finnor-os/packages/db/schema.ts",
+      "status": "M",
+      "bytes": 311310,
+      "sha256": "b3698ae7dbf2386eb6258c0a139837707a47c48eb4e2b4ba4979f506c309d3b2"
+    },
+    {
+      "file": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "status": "M",
+      "bytes": 89864,
+      "sha256": "581094ad8c61fb278886adfa0196cfcc99cfff3df93fb2ad0703302af377eb6b"
+    },
+    {
+      "file": "finnor-os/packages/domain-plugins/private-equity/schemas.ts",
+      "status": "M",
+      "bytes": 10306,
+      "sha256": "c3bff98fb0d638ba8e4a825a38e5e2989247b08cd094a81e2296a4033a268a36"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/authority-runtime.ts",
+      "status": "M",
+      "bytes": 10521,
+      "sha256": "e7c17c68b7e83f892536ba99c580875a2cf5e680431ba23a0b00fabe84cbf743"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/compiler.ts",
+      "status": "M",
+      "bytes": 73938,
+      "sha256": "a112570e007864b90bc13c31dacd0b41b995d0702c2d799c8b6bf04232f41af5"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
+      "status": "M",
+      "bytes": 16448,
+      "sha256": "e432bc79f61c103070dbc235c842168efecc0ebca9a35cfcb4b2eafb466064c4"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/durable-execution.ts",
+      "status": "M",
+      "bytes": 47164,
+      "sha256": "89e3d78b8ccfc9607e5d2b6d3fc588fe811fc62803b8e39c18ded77f6a1460ad"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/executor.ts",
+      "status": "M",
+      "bytes": 17710,
+      "sha256": "5ba3b6883da64f397c9dbe55387826db81fa372b2b1c604c16f08b88882d9652"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "status": "M",
+      "bytes": 28130,
+      "sha256": "4283c593a4f03ad677e085e1e36d9c0f7d1c981aea1a6337973aa24f60534ba6"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/graph/allowlist-executor.ts",
+      "status": "M",
+      "bytes": 2584,
+      "sha256": "3695a18d5cd239a659423f7b5399f31e9bcd1977de0ca89612e483db93f3c2a4"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/index.ts",
+      "status": "M",
+      "bytes": 105184,
+      "sha256": "1e1fd510b4715f08fe28e17fc82ae66c2a71d520d3e65c669cf7983e5936f57a"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/interaction-context.ts",
+      "status": "M",
+      "bytes": 7619,
+      "sha256": "cb858828603dfd360349bbe54f7079b968edef995064bf7d0eea42830fd5b44b"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/interaction-targeting.ts",
+      "status": "M",
+      "bytes": 1974,
+      "sha256": "99b4fa73060e1e3a0d2e9db9457b08e33d14ce08b21138478cb5d900aa362ba2"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/model-json.ts",
+      "status": "A",
+      "bytes": 1315,
+      "sha256": "bc68574737dcb8f648879aafeb11e76a24ba6541bfd0d380b4ded7f7406fc33d"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/objective-loop.ts",
+      "status": "M",
+      "bytes": 183636,
+      "sha256": "656a790c5856fac4923e7724afa738e32f6cda78234a674831921fe1b67705e2"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/objective-success.ts",
+      "status": "M",
+      "bytes": 58915,
+      "sha256": "93892f67536c10f7646e5fc479228e7493c933e5495851669995a96838c140ec"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/orchestration-kernel.ts",
+      "status": "M",
+      "bytes": 24142,
+      "sha256": "62531c97caf2e320a9a8d638341470e5c36bce1bfc42da2cea7ddfd4c5eb0030"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/outcome-packs.ts",
+      "status": "M",
+      "bytes": 11216,
+      "sha256": "4a19fbf5e8c287442f49880050b18947acefdcbb13fd05eb19ceca580d8bfc3c"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/plan-progress.ts",
+      "status": "M",
+      "bytes": 24489,
+      "sha256": "1372ed8ce569295ab05a67bbe67d99a88108c6763e6f936209899b36ba1e3e18"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/plan-runtime.ts",
+      "status": "M",
+      "bytes": 11715,
+      "sha256": "550ce98a699eec3f3bfd3ab865ae5fc733758a32b2520a36b40af242337b6af1"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/planner.ts",
+      "status": "M",
+      "bytes": 89604,
+      "sha256": "463225ec09dc834219675d2fa9d6c79a68afa2c9a3a4bab37013cf719448e4f7"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "status": "M",
+      "bytes": 14641,
+      "sha256": "2c1ad3566f9bdb20f834a78a3f41fd2db6de26c3848f2f5329edb471010b4397"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/runtime-bridge.ts",
+      "status": "M",
+      "bytes": 12519,
+      "sha256": "f4a14a9789f04f6e78e01e46725615b09ee8b6f0862527754497ba142b563c8b"
+    },
+    {
+      "file": "finnor-os/packages/orchestration/src/workforce-runtime.ts",
+      "status": "M",
+      "bytes": 68728,
+      "sha256": "2560ffed5435bbbc9f8342d732efdce959885113a180a6b15a7649c6580d72f3"
+    },
+    {
+      "file": "finnor-os/packages/planning/src/compiler.ts",
+      "status": "M",
+      "bytes": 33984,
+      "sha256": "5000684a68f560d8583c28045ecd1f694634a625caf83b54553860f86103ba52"
+    },
+    {
+      "file": "finnor-os/packages/policy-schema/src/index.ts",
+      "status": "M",
+      "bytes": 15210,
+      "sha256": "c55a104ba9d13dab675fdf6d5c00154cc4c631a4f9220ff2f11eae05f198e189"
+    },
+    {
+      "file": "finnor-os/packages/private-equity/src/company-brain.ts",
+      "status": "M",
+      "bytes": 85251,
+      "sha256": "93d43e6aa43d94a41b8ef0021eddef0fe3422a0984865f7ed67ef400f67409f1"
+    },
+    {
+      "file": "finnor-os/packages/private-equity/src/ic-repository.ts",
+      "status": "M",
+      "bytes": 154672,
+      "sha256": "5edfa0a62a9c283488b316d5f1f307fd1761b5632f6c95457e21575ee8af7da7"
+    },
+    {
+      "file": "finnor-os/packages/private-equity/src/operational-queries.ts",
+      "status": "M",
+      "bytes": 38527,
+      "sha256": "fadad050b56f04ec7001e08317d983e904ee835a56332b20e5464568c018e451"
+    },
+    {
+      "file": "finnor-os/packages/private-equity/src/temporal-basis.ts",
+      "status": "A",
+      "bytes": 7434,
+      "sha256": "17f7544b73ed2ce077bd0c3d447fa747aee4eafdbc3bb60d0fd32dc55c515968"
+    },
+    {
+      "file": "finnor-os/packages/private-equity/src/underwriting-repository.ts",
+      "status": "M",
+      "bytes": 60940,
+      "sha256": "8bf0697925a6bb0b81a24675a98ef96ff48d618ac4584b2953da1f9c2a4fb8b3"
+    },
+    {
+      "file": "finnor-os/packages/read-models/src/causal-replay.ts",
+      "status": "M",
+      "bytes": 95769,
+      "sha256": "921375b5cdbc90e0559111df1ec7c20f685927251919143a52797c0557479367"
+    },
+    {
+      "file": "finnor-os/packages/read-models/src/workforce-status.ts",
+      "status": "M",
+      "bytes": 16662,
+      "sha256": "6ecc1929f7264e4da5f59a50919c91b0afb668064bc493df777e5863f1883d7d"
+    },
+    {
+      "file": "finnor-os/packages/shared-types/src/objectives.ts",
+      "status": "M",
+      "bytes": 3243,
+      "sha256": "215e655c9afa0e863a329c36e32f529adf02166fa813776584122aca077424ac"
+    },
+    {
+      "file": "finnor-os/packages/shared-types/src/operating-interaction.ts",
+      "status": "M",
+      "bytes": 1399,
+      "sha256": "431359781c5ba7e0f0fbcda8f8dba5ef41aef53d1b91007ade6a0a71c504f4ff"
+    },
+    {
+      "file": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "status": "M",
+      "bytes": 28068,
+      "sha256": "108191452cc928c9fc56befe31faef9ef33a351a5f71dc42d8cdb4ee2089da1c"
+    },
+    {
+      "file": "finnor-os/packages/tools/src/email.ts",
+      "status": "M",
+      "bytes": 5327,
+      "sha256": "b8505084d97619c4b778d58416929522f3318d6d292abca4f0261cbf1f4e1945"
+    },
+    {
+      "file": "finnor-os/packages/tools/src/gmail-observation.ts",
+      "status": "A",
+      "bytes": 8466,
+      "sha256": "4df350143224079e922e2d3c73e3f824941ed9bc21665e22144cb797fe424b3a"
+    },
+    {
+      "file": "finnor-os/packages/tools/src/index.ts",
+      "status": "M",
+      "bytes": 1204,
+      "sha256": "687c23fd694058b4174ec559dab8af25bf8f448f1c9966052375780a13e90029"
+    },
+    {
+      "file": "finnor-os/packages/tools/src/llm.ts",
+      "status": "M",
+      "bytes": 38121,
+      "sha256": "b17daf7563639c63fcecf5e7ee52938d72cf6742371c5163057857dfd5a6401c"
+    },
+    {
+      "file": "finnor-os/packages/tools/src/source-adapters.ts",
+      "status": "M",
+      "bytes": 3790,
+      "sha256": "534695ec971263a69cf66cbb81737991bb0736eec6d3a72250d259d8b32cddc1"
+    },
+    {
+      "file": "finnor-os/scripts/fixtures/phase9-artifacts.ts",
+      "status": "A",
+      "bytes": 2593,
+      "sha256": "e96d46f11ad16d6e5c6c54ff4d251928e28fafc25553b6873cb69f05507900ec"
+    },
+    {
+      "file": "finnor-os/scripts/generate-openapi.ts",
+      "status": "M",
+      "bytes": 56411,
+      "sha256": "8e7853d6a1523513fe5b984916fac61878ef6e332a41422706a35050011f80c7"
+    },
+    {
+      "file": "finnor-os/scripts/release/action-hardening-spec.ts",
+      "status": "M",
+      "bytes": 10031,
+      "sha256": "7f68886c16a8c832ad9ee9a2380dcc96f2c7cfdfb42755df32a0513dd669ce70"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-pe-p3-artifact-os-certification.ts",
+      "status": "M",
+      "bytes": 78063,
+      "sha256": "0c0709fc6f3e0479f434511d935fd868391cf3a058e62aa1d3a45f30840e8ea6"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-pe-p5-actions-ic-certification.ts",
+      "status": "M",
+      "bytes": 40154,
+      "sha256": "672526373e897316f91e27912af3c34e357a92c9514e88059420fa91571a90ae"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-scope1-orchestration-certification.ts",
+      "status": "M",
+      "bytes": 26266,
+      "sha256": "7ae447a50d6ead16fd3c22ec83db6a1a4c22076242ffd6205d7e6ca3c800b487"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-scope2-runtime-certification.ts",
+      "status": "M",
+      "bytes": 77067,
+      "sha256": "c950b1819f6418a5796977a254999fb1d538801067e016963e3c4c9e75115073"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-scope4-digital-twin-certification.ts",
+      "status": "M",
+      "bytes": 32246,
+      "sha256": "c0cf9b44929b5c2be29bb57a175498855136683cfa4d6206e515c6f52090f244"
+    },
+    {
+      "file": "finnor-os/scripts/release/verify-pe-domain-boundary.ts",
+      "status": "M",
+      "bytes": 17105,
+      "sha256": "37d0537818a4732a2b9c75920ea6941d25d2bb080584fd1b9f426be528ae3bac"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-communication-canary.ts",
+      "status": "A",
+      "bytes": 4066,
+      "sha256": "831bf2dfcdcdee97727ee9d08ab4b8e19be85ed976a2518d41159d93a49d372e"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-growth-model.ts",
+      "status": "A",
+      "bytes": 5314,
+      "sha256": "cffaa520369d8dfa4fa2c36cabb01d7e6ba3eee4107415a4faf239eab0879fb8"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-human-controls.ts",
+      "status": "A",
+      "bytes": 5491,
+      "sha256": "a91170fffc0eea016d0f69571e0c31fbd8525a6d65439226e4630ec180a03319"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-ic-template.ts",
+      "status": "A",
+      "bytes": 3280,
+      "sha256": "5af03c581f898abb9fcdc1be839fe38a71ca2663ae274921dc71bff4692be758"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-temporal-baseline.ts",
+      "status": "A",
+      "bytes": 5412,
+      "sha256": "5145ee31dea430ca123ee01504cb65e46e5a675bdd2ef4539eeed5f4ad7314d5"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-temporal-change.ts",
+      "status": "A",
+      "bytes": 8436,
+      "sha256": "5b907ac93719ffd399bcfa4a057354eb00f5dce483ab1a27f2e881d1f99021e3"
+    },
+    {
+      "file": "finnor-os/scripts/seed-centropy-workflow-control.ts",
+      "status": "A",
+      "bytes": 4747,
+      "sha256": "a26cca25e4224445dfaa443f035f6e41e2ec1a3b9ef828243929117ca0119e52"
+    },
+    {
+      "file": "finnor-os/scripts/seed-phase9-e2e.ts",
+      "status": "M",
+      "bytes": 50039,
+      "sha256": "fe14d55eb03ad916c58e11d803d6568f365cda619bd1bb635648af8260969aa4"
+    },
+    {
+      "file": "finnor-os/tests/artifact-corpus/centropy-ic-default-template.pptx",
+      "status": "A",
+      "bytes": 84891,
+      "sha256": "e443b31a6a260f1770c576c92b12607addfe382d6ad648bc9cc39c0e55256f64"
+    },
+    {
+      "file": "finnor-os/tests/artifact-corpus/centropy-ic-local-template.pptx",
+      "status": "A",
+      "bytes": 21326,
+      "sha256": "eede7bb3d55c4407c620223f62fcddf5c7be8a25e5ff558fc35c277b5e6986a8"
+    },
+    {
+      "file": "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
+      "status": "M",
+      "bytes": 32470,
+      "sha256": "5aa05980e2d9f317c0a5f81ce575f700b2862529a6d8462f3c5de5c92ecb6772"
+    },
+    {
+      "file": "finnor-os/tests/integration/private-equity-phase3.test.ts",
+      "status": "M",
+      "bytes": 30981,
+      "sha256": "57943bfeace97115c9e782f22c8a03dfd0d6bc0a72a587cb7bd906ef839dbe9e"
+    },
+    {
+      "file": "finnor-os/tests/unit/artifact-os-contract.test.ts",
+      "status": "D",
+      "previousBytes": 5711,
+      "previousSha256": "811918d87babe7e4d3a52cb2edf4b2668610ef23b3662a1a8dd92578be849514"
+    },
+    {
+      "file": "finnor-os/tests/unit/authz-matrix.test.ts",
+      "status": "D",
+      "previousBytes": 708,
+      "previousSha256": "37359a426a1adc55d4e81056f8a83c5db8e76a87e407bfa05acc919295a36a5e"
+    },
+    {
+      "file": "finnor-os/tests/unit/openapi-operational-query-contract.test.ts",
+      "status": "D",
+      "previousBytes": 3900,
+      "previousSha256": "8cba9070411a7e993cce86309bb1a42603d2bf55fc4c4c58015c148b4921e561"
+    },
+    {
+      "file": "finnor-os/tests/unit/operational-delta-contract.test.ts",
+      "status": "M",
+      "bytes": 781,
+      "sha256": "429e06a1ae3ec21287a51d53bc52cd55a6b55f88bcd0e0c4e6e76688b00fff5f"
+    },
+    {
+      "file": "finnor-os/tests/unit/p3-architecture-contract.test.ts",
+      "status": "D",
+      "previousBytes": 4908,
+      "previousSha256": "b8e3f48c18dd3f024ce5167bb9bfbdefe020da87e2ef80bff463584d5e5947b6"
+    },
+    {
+      "file": "finnor-os/tests/unit/pe5-runtime-boundary.test.ts",
+      "status": "M",
+      "bytes": 3335,
+      "sha256": "cc623be0c9b0b9c14509e690d0716522dd87c6f96938398bfe07d45fa307944d"
+    },
+    {
+      "file": "finnor-os/tests/unit/phase7-workforce-read-surface.test.ts",
+      "status": "M",
+      "bytes": 2544,
+      "sha256": "2ea4aec69b5ed417771c85e9b4cbf0258ba68c7ffe1a28f91d33927b5a9a6056"
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-p5-contract.test.ts",
+      "status": "D",
+      "previousBytes": 10023,
+      "previousSha256": "7d9741dffbe123086c4fe7e78ff7dc519c1ef4bab053a9d8fbc047eac4d291ec"
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-phase4-contract.test.ts",
+      "status": "M",
+      "bytes": 1698,
+      "sha256": "449ee7696983bd1207cc9da0c61033f413300f16d59e177da7b95b9b78cf47b1"
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-planner-isolation.test.ts",
+      "status": "M",
+      "bytes": 5242,
+      "sha256": "35945bb4eac157bf6a213feaa34f4c90a3e26c9885e3fd04d90b2c8ff77c39f4"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-active-work-query.test.ts",
+      "status": "D",
+      "previousBytes": 696,
+      "previousSha256": "d4a357123abff1964cffa981bd9c82ce496399795c4353bbb47c85511973f38e"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-cancellation.test.ts",
+      "status": "D",
+      "previousBytes": 1330,
+      "previousSha256": "c64784af7a76cc2997ff7530c40ccf2d352556af836d418ff10ad870ee7fd817"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-egress-bounds.test.ts",
+      "status": "D",
+      "previousBytes": 4837,
+      "previousSha256": "0b52e416c369bbbc1e419bae1397f28c1fef0ac1e9ef8acba7b09131da876911"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-external-observation.test.ts",
+      "status": "D",
+      "previousBytes": 870,
+      "previousSha256": "87e3696f95a65c5f518c553e8b671288b06eaba46c2eca9493e87520c9cd96cd"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-identity-discovery.test.ts",
+      "status": "D",
+      "previousBytes": 991,
+      "previousSha256": "d65a3c268b405e45c88a5fb5179bbb0b711a509598c582a6d38c3abcdf7a79e1"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-objective-delivery.test.ts",
+      "status": "D",
+      "previousBytes": 1612,
+      "previousSha256": "d75b84de3608199ea016fe7a418e9f4f38cddc33477cab5a3eaf92008efdade2"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-pending-approvals.test.ts",
+      "status": "M",
+      "bytes": 1174,
+      "sha256": "fceb273d88ac440ab3ae0c368be604dcb698bee2d161f91a6081f053bbb28e80"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-policy-revisions.test.ts",
+      "status": "D",
+      "previousBytes": 2395,
+      "previousSha256": "b01bd5bc41766f6270abc9dd0e15672e797ba9f38c22c77046203a9e0a552661"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-receipt-atomicity.test.ts",
+      "status": "D",
+      "previousBytes": 2185,
+      "previousSha256": "5143d121c860563454333e2d16522224edb58d07d9c7f5a98b6e8ef75b26f477"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-receive-work.test.ts",
+      "status": "D",
+      "previousBytes": 1943,
+      "previousSha256": "e92f556d0914e10fd9e47d53f4ca7629872f171f62245e8923bf73d786920ac9"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-terminal-repair-delivery.test.ts",
+      "status": "D",
+      "previousBytes": 893,
+      "previousSha256": "a6551ded6044d73a988a4aa0a9d9ee67ef95f3cbc93ea80d1dcb5ea8f5626fcd"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-work-cases-bounds.test.ts",
+      "status": "D",
+      "previousBytes": 1585,
+      "previousSha256": "7cf819bc095cddd9583cd38d3609faf0b1195f73dd4ac5e97f3bfc91ec93b506"
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-work-recovery-claim.test.ts",
+      "status": "D",
+      "previousBytes": 1501,
+      "previousSha256": "9655f422b6aaf5e1048dc05bb152f5a3b24117b1b9c7f05bff978556345fae0c"
+    },
+    {
+      "file": "finnor-os/tests/unit/scope3-compute-contract.test.ts",
+      "status": "M",
+      "bytes": 4148,
+      "sha256": "86509e115c02c6de4693a99e455d1f6f005b1cb37a1a1ee897260e500d9d5dab"
+    },
+    {
+      "file": "finnor-os/tests/unit/source-adapters.test.ts",
+      "status": "M",
+      "bytes": 588,
+      "sha256": "6ec69560fde4d86c117bbd4e4d1eb175df1865e473bf3a890c853899b1a802b3"
+    },
+    {
+      "file": "finnor-os/tests/unit/tenant-transaction-serialization.test.ts",
+      "status": "D",
+      "previousBytes": 664,
+      "previousSha256": "c873ba5b7120596fa17ec44063a60b768df7c90c66ec059f7b28000086f96d42"
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-api-frontend-contract.test.ts",
+      "status": "M",
+      "bytes": 6060,
+      "sha256": "2277206a9de0db56369d1967c60ef9f6a9335b3816baaf3ab538324f3cc0178f"
+    },
+    {
+      "file": "infra/deployment/production.contract.json",
+      "status": "M",
+      "bytes": 7264,
+      "sha256": "c2148d3b3c3be17711c7a121c75eafd3004469a7e881812d7e613b066ed11c3e"
+    },
+    {
+      "file": "next.config.mjs",
+      "status": "M",
+      "bytes": 5086,
+      "sha256": "d31c4990bae67842feec101a5b8b1af8f491cf7da101dcae0a325500db0db7c9"
+    },
+    {
+      "file": "package.json",
+      "status": "M",
+      "bytes": 2756,
+      "sha256": "a29243128d63e2ba01756f99a38ab99f865f9452c3ca0428d04c8a401b919500"
+    },
+    {
+      "file": "playwright.config.ts",
+      "status": "M",
+      "bytes": 1675,
+      "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+    },
+    {
+      "file": "scripts/centropy/audit-capability-coverage.mjs",
+      "status": "A",
+      "bytes": 15247,
+      "sha256": "fb9c978fedd5c5198f4d3c78a32e36d0423db69993c234d94a330b6d7da550b5"
+    },
+    {
+      "file": "scripts/centropy/generate-capability-manifest.mjs",
+      "status": "A",
+      "bytes": 12674,
+      "sha256": "a10d1ffc5e5367e0c4aba1538a39673d519445a8c4f091f5c716296bbc11bdc9"
+    },
+    {
+      "file": "scripts/centropy/generate-human-forms.mjs",
+      "status": "A",
+      "bytes": 8330,
+      "sha256": "225cf6813dc2ce1c12ca6fe560e6d3b2055722164a6991eb202249205ae7071c"
+    },
+    {
+      "file": "scripts/centropy/renderer-performance.fixture.tsx",
+      "status": "A",
+      "bytes": 6440,
+      "sha256": "15eee1db2f5ef663337b0fe2495deb021d0d466faabbc28f43eb1d24ea10805c"
+    },
+    {
+      "file": "scripts/centropy/run-live-e2e.mjs",
+      "status": "A",
+      "bytes": 1620,
+      "sha256": "3f8b940fc88847bdfb98aedee4f39870ee87b6672236f19a3c2b907e81ae91ba"
+    },
+    {
+      "file": "scripts/centropy/run-local-e2e.mjs",
+      "status": "A",
+      "bytes": 1357,
+      "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+    },
+    {
+      "file": "scripts/centropy/smtp-canary-preload.mjs",
+      "status": "A",
+      "bytes": 7691,
+      "sha256": "0d2b2883421e91068f604c98ed723b112d73654129652ba3ce8ba45125a4a2c5"
+    },
+    {
+      "file": "scripts/centropy/start-certification-stack.mjs",
+      "status": "A",
+      "bytes": 6379,
+      "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+    },
+    {
+      "file": "scripts/centropy/start-renderer-performance.mjs",
+      "status": "A",
+      "bytes": 4644,
+      "sha256": "aca8b35a7a085b67d5896c6a61652534a9940407fe3fdaf633adfb18aa13576c"
+    },
+    {
+      "file": "scripts/centropy/verify-parallel-approval-guard.mjs",
+      "status": "A",
+      "bytes": 5313,
+      "sha256": "1e5f573ad82b2ff6848325b78feba7f59d0743f9b7557ed47aff7443f919a4b4"
+    },
+    {
+      "file": "scripts/centropy/verify-secret-scan-policy.mjs",
+      "status": "A",
+      "bytes": 3829,
+      "sha256": "450e7ef1635590a835f43c07759fe85976588088fc9cc49cfacceb7b5d8685ce"
+    },
+    {
+      "file": "scripts/contrast-audit.mjs",
+      "status": "M",
+      "bytes": 3291,
+      "sha256": "a23d7c1db32d6034a2c7e2ca38b3586946b0e5de15732aec188749a7d683afa0"
+    },
+    {
+      "file": "scripts/create-centropy-ic-template.cjs",
+      "status": "A",
+      "bytes": 2048,
+      "sha256": "80608a635c461d4d67a5280951d380be2dd6de9b156142e6b7397cb669d6f3cb"
+    },
+    {
+      "file": "scripts/generate-workspace-contract.mjs",
+      "status": "M",
+      "bytes": 1525,
+      "sha256": "42e795b6d45261b2eaa6840745744d3699f1d8b13d3cf4993c8435ca50c36ee4"
+    },
+    {
+      "file": "scripts/generated/workspace-contract.ts",
+      "status": "A",
+      "bytes": 8321,
+      "sha256": "a050d940998231416c6d30d8a1512918a95867884903d7e84ab58867360d3ad9"
+    },
+    {
+      "file": "scripts/release/validate-deployment-truth.mjs",
+      "status": "M",
+      "bytes": 14382,
+      "sha256": "c3eeb7ab325a2d346812790b23daf70048b7e8705e6f2339459d61c90efdf336"
+    },
+    {
+      "file": "src/app/api/centropy/[...path]/route.ts",
+      "status": "M",
+      "bytes": 11588,
+      "sha256": "2ccafaa45368b60f5b4e324f27ad0fce19b3d8e219da6549e99a09afa74cde1c"
+    },
+    {
+      "file": "src/app/api/centropy/operational-stream/route.ts",
+      "status": "M",
+      "bytes": 1787,
+      "sha256": "dc714af512845e682a48441037a7efd1c83c1adb15b67985397f77db3f4ebe92"
+    },
+    {
+      "file": "src/app/api/centropy/stream/route.ts",
+      "status": "M",
+      "bytes": 3403,
+      "sha256": "4375d860c5fb2b4676d1536373b0219b70ecb618a80be4f008a8cb773613070b"
+    },
+    {
+      "file": "src/app/centropy/agents/page.tsx",
+      "status": "M",
+      "bytes": 303,
+      "sha256": "58aedc5d16ea45f6cebdeb9fabbeeb99ad28b646379c2ecc95a2ee89218e7e8e"
+    },
+    {
+      "file": "src/app/centropy/deals/[dealId]/[section]/page.tsx",
+      "status": "M",
+      "bytes": 640,
+      "sha256": "9155223a406069fb2ea46ede0d0ffe606c1392eb9bac4ccd92446aae0d257955"
+    },
+    {
+      "file": "src/app/centropy/deals/[dealId]/page.tsx",
+      "status": "M",
+      "bytes": 455,
+      "sha256": "b3e72c5633c1d0d0675f9b64cd49787ab6b0ea83c774e81e46baea687066a693"
+    },
+    {
+      "file": "src/app/centropy/deals/page.tsx",
+      "status": "M",
+      "bytes": 303,
+      "sha256": "58aedc5d16ea45f6cebdeb9fabbeeb99ad28b646379c2ecc95a2ee89218e7e8e"
+    },
+    {
+      "file": "src/app/centropy/investigations/[threadId]/page.tsx",
+      "status": "A",
+      "bytes": 187,
+      "sha256": "80e53ee001174f89097e47d5bbad19c2ea38ef5569d00394a0ba8957050cf557"
+    },
+    {
+      "file": "src/app/centropy/layout.tsx",
+      "status": "M",
+      "bytes": 494,
+      "sha256": "d14e19ea7af13407ee3673a60e17b440bc6438630c386037e906e138991745e4"
+    },
+    {
+      "file": "src/app/centropy/login/page.tsx",
+      "status": "M",
+      "bytes": 207,
+      "sha256": "f2c622983715c0ea47c2d519343c45646a0863df618292293c139f7556455221"
+    },
+    {
+      "file": "src/app/centropy/page.tsx",
+      "status": "M",
+      "bytes": 270,
+      "sha256": "176d201322b145e7f3cafcc890c6cc44a99437777f6f4273efce98fed7b65427"
+    },
+    {
+      "file": "src/app/centropy/providers.tsx",
+      "status": "D",
+      "previousBytes": 936,
+      "previousSha256": "4c50af49033dc526983d9a35c0ffa2402f942dd7fe99a613fd77da904f59a7e0"
+    },
+    {
+      "file": "src/app/centropy/reset-password/page.tsx",
+      "status": "M",
+      "bytes": 246,
+      "sha256": "ccd0ba2f337f914765a816280e71b8e91385f0e60a9fcbe90ffaf7efb1909953"
+    },
+    {
+      "file": "src/app/centropy/work/page.tsx",
+      "status": "M",
+      "bytes": 303,
+      "sha256": "58aedc5d16ea45f6cebdeb9fabbeeb99ad28b646379c2ecc95a2ee89218e7e8e"
+    },
+    {
+      "file": "src/app/centropy/world/page.tsx",
+      "status": "A",
+      "bytes": 171,
+      "sha256": "1b8244490748802323e30d3a07fc4ca69b77c65bdd95574b2aaffeff6634a2ca"
+    },
+    {
+      "file": "src/components/centropy/OperatingCanvas.tsx",
+      "status": "D",
+      "previousBytes": 10588,
+      "previousSha256": "fd4b3b7ba16615a30396af7e1d6910433666209b32ad0dfd025b07d30596a307"
+    },
+    {
+      "file": "src/components/centropy/PersonalizedHome.tsx",
+      "status": "D",
+      "previousBytes": 5268,
+      "previousSha256": "16c227c133fd690e8a9fef4712a90aa779d90d4f0cd5afd15284c310f204b7ee"
+    },
+    {
+      "file": "src/components/centropy/WorkspaceConfigProvider.tsx",
+      "status": "D",
+      "previousBytes": 11707,
+      "previousSha256": "5677da634ccc3e08ec42e2df27ddd57fd958a8c6f8fe2256dab095c657058b8e"
+    },
+    {
+      "file": "src/components/centropy/agents/AgentFleetSurface.tsx",
+      "status": "D",
+      "previousBytes": 10797,
+      "previousSha256": "7c2d4296c6fc10e396b0c0de7ba98f5304d4dc82a7a690082a474f24d3574219"
+    },
+    {
+      "file": "src/components/centropy/agents/agent-workforce-truth.test.ts",
+      "status": "D",
+      "previousBytes": 1125,
+      "previousSha256": "ae514d17a8738fae7062c54f89462f311289f2bc35a6bd4ba4226c6d8258014e"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactCanvas.tsx",
+      "status": "A",
+      "bytes": 22571,
+      "sha256": "3c28a8963a581f665bcb5606c5a4c84885b1add27e9375f84adab69f28bcab81"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
+      "status": "A",
+      "bytes": 5422,
+      "sha256": "887a2e5de07d6d7965f8aec429befda830a5363d937aa115b5ff519943b034b1"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactGovernanceDesk.tsx",
+      "status": "A",
+      "bytes": 7863,
+      "sha256": "a2d0f87c83683772470cbf794918f7fe212a110ca5ddab5c8a326757921d1f27"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactIcHandoff.tsx",
+      "status": "A",
+      "bytes": 10139,
+      "sha256": "4089aed45fd8eb43009611c79899977bf4c0ef25542ccba135c160e44bea6b5b"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactPresentationEditor.tsx",
+      "status": "A",
+      "bytes": 5757,
+      "sha256": "1458feb02f9329ece7db28b2b0a6c6e72e5a8fc55fcc93f64509a717ae5becde"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactPublicationDesk.tsx",
+      "status": "A",
+      "bytes": 15165,
+      "sha256": "f0be7cc938c6e719772e73d25e26ee63d8ae997debae03d24b111fc284d1666f"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactRecordControls.tsx",
+      "status": "A",
+      "bytes": 5386,
+      "sha256": "6361b20954065a525517045ee7e4d7999f91522da3af708cb157db19a64dd2de"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactSpreadsheetEditor.tsx",
+      "status": "A",
+      "bytes": 8148,
+      "sha256": "3c2e049eb12c629b8884b02f30d53b8e16fee39200b71ef9eb0ccb818442cbcf"
+    },
+    {
+      "file": "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
+      "status": "A",
+      "bytes": 9924,
+      "sha256": "e63fce78fb3f2c7038da5bd8e78259cfc0b9768707e8f48efa8951e69f04652a"
+    },
+    {
+      "file": "src/components/centropy/canvas/CanvasDocument.tsx",
+      "status": "A",
+      "bytes": 28308,
+      "sha256": "97a45c1b1cd624898989208cfb3ded98d2740889988ae7d70fe37bc01d72bf52"
+    },
+    {
+      "file": "src/components/centropy/canvas/CanvasSectionNav.tsx",
+      "status": "A",
+      "bytes": 3820,
+      "sha256": "718d31aafd3f745a8c23b7d23d2f7dc7c6d3427de10c5d6f8fddac9ff3f7bf09"
+    },
+    {
+      "file": "src/components/centropy/canvas/CausalReplayPanel.tsx",
+      "status": "A",
+      "bytes": 6103,
+      "sha256": "99741d7d4217748af3b074f396c7defc5d899371a43679c20c39fd8d10588308"
+    },
+    {
+      "file": "src/components/centropy/canvas/IcCaseContinuation.tsx",
+      "status": "A",
+      "bytes": 7267,
+      "sha256": "35acfdbb784d58e18de5754d8966b9777da654fd573699a78d1f8cc2856cf061"
+    },
+    {
+      "file": "src/components/centropy/canvas/IcVoteControl.tsx",
+      "status": "A",
+      "bytes": 7042,
+      "sha256": "c790fc95df70384caf6b90dae1f9d5a08c9bb10eefb59c09f84e6db74e8a7dbc"
+    },
+    {
+      "file": "src/components/centropy/canvas/SourceDiagnostics.tsx",
+      "status": "A",
+      "bytes": 8560,
+      "sha256": "a236ddedafd2fb51aaa8d2473fd30ac127fcb6d965ad888625806ecc30c3b43c"
+    },
+    {
+      "file": "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
+      "status": "A",
+      "bytes": 20412,
+      "sha256": "def4835e8ea9b7c2af0a4a8a1b0264cc87534e86d3817e67d57d83aa2bcfdbaa"
+    },
+    {
+      "file": "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
+      "status": "A",
+      "bytes": 10367,
+      "sha256": "0381f2a9ec8843b4c7f772f84d3d4aca6db3e4cc9120874ce2399d266cabc1f2"
+    },
+    {
+      "file": "src/components/centropy/canvas/canvas-compose.ts",
+      "status": "A",
+      "bytes": 14331,
+      "sha256": "190b3ecd439e4bd2a0ae0e7df996686f4b8414c2b24386e4fe1942f329e30c5a"
+    },
+    {
+      "file": "src/components/centropy/canvas/canvas-contract.ts",
+      "status": "A",
+      "bytes": 6140,
+      "sha256": "f5fb2e4b68bea9623725579a09eac32330ea3cd2191be818e6e15da1c78e6973"
+    },
+    {
+      "file": "src/components/centropy/canvas/canvas-layout.ts",
+      "status": "A",
+      "bytes": 785,
+      "sha256": "569386eb5140d7e24f64769e5b3b3f84299256945b75d2ff16c0c1ad5bf49cfd"
+    },
+    {
+      "file": "src/components/centropy/canvas/causal-replay-contract.ts",
+      "status": "A",
+      "bytes": 2324,
+      "sha256": "9197820f4d10fb54f375b0b47c86a3d641fbe6ef85d2e29f354cbf73d41353c0"
+    },
+    {
+      "file": "src/components/centropy/canvas/ic-vote-model.ts",
+      "status": "A",
+      "bytes": 3525,
+      "sha256": "0c63968e62a0556bc9c7e1e6be75e4e52d0e52545a5ee7b67da56b76b299be16"
+    },
+    {
+      "file": "src/components/centropy/canvas/use-canvas-preferences.ts",
+      "status": "A",
+      "bytes": 5392,
+      "sha256": "a7dc2e8f27e938a7fdbe5fe56379072f391df41b3ce9a17ba28eeb0acef36331"
+    },
+    {
+      "file": "src/components/centropy/canvas/use-canvas-sources.ts",
+      "status": "A",
+      "bytes": 6620,
+      "sha256": "a794bd1d5b2d89e930796a90f6e45840068e1b5c1cdd8a98c732567fb8db49f3"
+    },
+    {
+      "file": "src/components/centropy/canvas/work-deck-model.ts",
+      "status": "A",
+      "bytes": 3889,
+      "sha256": "111d81079c82c85b0c722360ca3646fce1418efdb82c892cb0610cfd4681e1e7"
+    },
+    {
+      "file": "src/components/centropy/controls/ArtifactCreationDesk.tsx",
+      "status": "A",
+      "bytes": 2557,
+      "sha256": "573c57bdddef3f577768677a7998368dd6de17ffaaaab4b050231d0c7e78e6c0"
+    },
+    {
+      "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
+      "status": "A",
+      "bytes": 6510,
+      "sha256": "179b12afb618829594279b65e4971a69ede9293966f0829b835e7e5bead6f646"
+    },
+    {
+      "file": "src/components/centropy/controls/HumanControlDesk.tsx",
+      "status": "A",
+      "bytes": 3742,
+      "sha256": "8c99b6608fe83b083e8e31776e4e4893fd17e6b01e050b7b21a0971239e8d5ad"
+    },
+    {
+      "file": "src/components/centropy/controls/IcHumanControls.tsx",
+      "status": "A",
+      "bytes": 3357,
+      "sha256": "35db1846c69fed25b54d912df4496f7dddff9160e614ac01138889b2820ee92e"
+    },
+    {
+      "file": "src/components/centropy/controls/SettingsDialog.tsx",
+      "status": "A",
+      "bytes": 3037,
+      "sha256": "b65af65bdb575b690ef4b15bfcbb8e4f9c4a029fed110f85f9f9df65641cd207"
+    },
+    {
+      "file": "src/components/centropy/controls/StructuredFields.tsx",
+      "status": "A",
+      "bytes": 11633,
+      "sha256": "9b04bb4e690359e8a87f0ca15eeb02d0771c94c25b11a83a4da4b2b9990bd527"
+    },
+    {
+      "file": "src/components/centropy/controls/SupportingReadDesk.tsx",
+      "status": "A",
+      "bytes": 3578,
+      "sha256": "5559b229a7d503799d921e65e0cb74955453c2f75f0f142c3196f44140955f9e"
+    },
+    {
+      "file": "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
+      "status": "A",
+      "bytes": 4228,
+      "sha256": "f05e05ceb8929783739743cf5e32f219516fb11d3bba08f34e37070bb535e0fd"
+    },
+    {
+      "file": "src/components/centropy/lib/LoginForm.tsx",
+      "status": "M",
+      "bytes": 5252,
+      "sha256": "153dc69b1fe95800429727f656388d665824a60404b8269cd579324016451a14"
+    },
+    {
+      "file": "src/components/centropy/lib/api.ts",
+      "status": "M",
+      "bytes": 9171,
+      "sha256": "03634d8f6b3b9b747506c0ef46b7193c2e46c10a4a72b8ccb2f8f1a3d4054657"
+    },
+    {
+      "file": "src/components/centropy/lib/business-invalidation.ts",
+      "status": "M",
+      "bytes": 2030,
+      "sha256": "66f57c2ba8647801312aa69854932216042aebd09331c120645559f7946aa585"
+    },
+    {
+      "file": "src/components/centropy/lib/workspace-config.generated.ts",
+      "status": "D",
+      "previousBytes": 8321,
+      "previousSha256": "a050d940998231416c6d30d8a1512918a95867884903d7e84ab58867360d3ad9"
+    },
+    {
+      "file": "src/components/centropy/lib/workspace-config.test.ts",
+      "status": "D",
+      "previousBytes": 2467,
+      "previousSha256": "898ce1bf4de8811fd4b74775e289994619cb17be285e937020a790f4f2967ed5"
+    },
+    {
+      "file": "src/components/centropy/lib/workspace-config.ts",
+      "status": "D",
+      "previousBytes": 2201,
+      "previousSha256": "4e7346a9c66cf698de8dc8b21f6fc2881b96bb703a053433f230023aa090332f"
+    },
+    {
+      "file": "src/components/centropy/pe/DealsSurface.tsx",
+      "status": "D",
+      "previousBytes": 7221,
+      "previousSha256": "ee8137a73246a770dbeb2155d94071f48f39720aac6a6575c4f2da31b6a3d0d2"
+    },
+    {
+      "file": "src/components/centropy/pe/PeOperatingContextProvider.tsx",
+      "status": "D",
+      "previousBytes": 5935,
+      "previousSha256": "a0de7ce247e3f03f39c878661b59db60d8fad952a77c2f3ce403230474b2782f"
+    },
+    {
+      "file": "src/components/centropy/pe/WorkSurface.tsx",
+      "status": "D",
+      "previousBytes": 11016,
+      "previousSha256": "0cec5f4a4f1b310041f969c67696aad3281ca688f772ad9454ceeddbed74259e"
+    },
+    {
+      "file": "src/components/centropy/product/CentropyVoiceInput.tsx",
+      "status": "D",
+      "previousBytes": 2475,
+      "previousSha256": "ee488a2a7400240fb65f040c4257b791c3d9ce8a60833f07b7a2f917c7096b90"
+    },
+    {
+      "file": "src/components/centropy/product/CommandInterface.tsx",
+      "status": "D",
+      "previousBytes": 14113,
+      "previousSha256": "3ce6827b5428aa750104e884af967bfc0c951cb10d8503bbc1bca6ac40e08a80"
+    },
+    {
+      "file": "src/components/centropy/product/DealWorkspace.tsx",
+      "status": "D",
+      "previousBytes": 44317,
+      "previousSha256": "a5f9853b476c6830bee9319f0c1eae8cc7eddab75aa9876707993a6100e02115"
+    },
+    {
+      "file": "src/components/centropy/product/ProductDataProvider.tsx",
+      "status": "D",
+      "previousBytes": 3050,
+      "previousSha256": "2709d05d3c10de0657aebc220c7be124fd139f0c9276406d659d4db6f8c0f7dd"
+    },
+    {
+      "file": "src/components/centropy/product/UniversalInspector.tsx",
+      "status": "D",
+      "previousBytes": 15950,
+      "previousSha256": "8a1456d918abcee83c1a8944710d7e3cdaf4c3f9b0954e74ac6f141b9d1d1fc9"
+    },
+    {
+      "file": "src/components/centropy/product/approval-effect-model.ts",
+      "status": "A",
+      "bytes": 2804,
+      "sha256": "ea63e93fdcc0139664767a552278016940ffd9426547483866d36acbe466ac9c"
+    },
+    {
+      "file": "src/components/centropy/product/attention-model.test.ts",
+      "status": "D",
+      "previousBytes": 5031,
+      "previousSha256": "1344fb62edb701fbe7f1c23d36b565626af5e261cf7734385e31deacb20b33c1"
+    },
+    {
+      "file": "src/components/centropy/product/attention-model.ts",
+      "status": "D",
+      "previousBytes": 8428,
+      "previousSha256": "0f735371a947097d68866243fd4e05a97f9ed8fc006b3dd981b84cee8c9b8166"
+    },
+    {
+      "file": "src/components/centropy/product/contracts.ts",
+      "status": "M",
+      "bytes": 13342,
+      "sha256": "3d96572d9035de21ab668de7adf12e0ba7a0155b027fe8b8dbed93c1d58c7ec4"
+    },
+    {
+      "file": "src/components/centropy/product/deal-model.test.ts",
+      "status": "D",
+      "previousBytes": 3275,
+      "previousSha256": "2915b7fb42aaf06b79e42939e2b2560bf384a8f502a178864cbd44de25db2b22"
+    },
+    {
+      "file": "src/components/centropy/product/deal-model.ts",
+      "status": "D",
+      "previousBytes": 8381,
+      "previousSha256": "fcddca96bbac9e9dd06bee8d3e62ca4bae727ed6351be313d7b9eaf55f3e75a2"
+    },
+    {
+      "file": "src/components/centropy/product/instruction-event-model.ts",
+      "status": "A",
+      "bytes": 5477,
+      "sha256": "3636b157ebe3044192d1fe94a8dd7425d2fd8891a0fd9544e6679f3d35ed56a7"
+    },
+    {
+      "file": "src/components/centropy/product/primitives.tsx",
+      "status": "D",
+      "previousBytes": 6825,
+      "previousSha256": "62275faef4b129f552e31db9eb69acae5894243e9975ffabe659d1b6ad640a46"
+    },
+    {
+      "file": "src/components/centropy/product/scenario-branch-model.ts",
+      "status": "A",
+      "bytes": 5793,
+      "sha256": "1a6886d9c4e51e729b9d9d0acfb6dd6e39f7bc758e99863b83976ace0e03c7a3"
+    },
+    {
+      "file": "src/components/centropy/product/sensitivity-model.ts",
+      "status": "A",
+      "bytes": 862,
+      "sha256": "9c1ce1d6f5f143e45ba882336a0e0d5286fcae30e89a14c3e253e828b4587a41"
+    },
+    {
+      "file": "src/components/centropy/product/vendor/LiquidGlassOrb.tsx",
+      "status": "A",
+      "bytes": 9371,
+      "sha256": "af5a165d632286b55e9844064eea39c38672993ce27edfe0d46550f883f0dcd3"
+    },
+    {
+      "file": "src/components/centropy/product/workstation.css",
+      "status": "D",
+      "previousBytes": 39518,
+      "previousSha256": "c3b3e5c5d91dbe897c54f791514c103c2f74c843c103628513c815d2df1343aa"
+    },
+    {
+      "file": "src/components/centropy/runtime/instruction-events.ts",
+      "status": "A",
+      "bytes": 7180,
+      "sha256": "b75dba1cad68e3d1c9be19a624ba0c41695954292e353e505166029130170df6"
+    },
+    {
+      "file": "src/components/centropy/runtime/presence-state.ts",
+      "status": "A",
+      "bytes": 1328,
+      "sha256": "b917f554540fe31ae29ed7c94f0000a069181eb7926969aab5f7d895346aebe1"
+    },
+    {
+      "file": "src/components/centropy/shell/CentropyHost.tsx",
+      "status": "A",
+      "bytes": 561,
+      "sha256": "67f7f41980e42d34bc42dcaa723251d6ed7959df3582e51d0021ca0ed3291458"
+    },
+    {
+      "file": "src/components/centropy/shell/CentropyPresence.tsx",
+      "status": "A",
+      "bytes": 2280,
+      "sha256": "eafaa7ac627ae579d2b1703a648ba8d0a0e9040c45d27fdcef82133a863db808"
+    },
+    {
+      "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
+      "status": "A",
+      "bytes": 39442,
+      "sha256": "39c808b17f32260cc3d6bc0aa938fe91b728ee286fd8a98f016def3da531f6a7"
+    },
+    {
+      "file": "src/components/centropy/shell/HomeCanvas.tsx",
+      "status": "A",
+      "bytes": 7658,
+      "sha256": "04f41fde4af7f230bcf8966f09109702d3f2fca78d2bfa62aaef98ecdf7e4392"
+    },
+    {
+      "file": "src/components/centropy/shell/centropy.css",
+      "status": "A",
+      "bytes": 104655,
+      "sha256": "4feba6f5ba93d318bce76d134eb197f8e37819a69d1da1b122e52a4be8bac837"
+    },
+    {
+      "file": "src/components/centropy/shell/legacy-link.ts",
+      "status": "A",
+      "bytes": 1480,
+      "sha256": "8a2201edae63ca52d3f46fe89c662c0d533af449fd86787b732519a08b2d0f5d"
+    },
+    {
+      "file": "src/components/centropy/surfaces/OperationalSurfaceNav.test.ts",
+      "status": "D",
+      "previousBytes": 1166,
+      "previousSha256": "c7952be520ac5bf48e5a13203b4c410bee2b2f6f40070aaef25deb16d3bb97fc"
+    },
+    {
+      "file": "src/components/centropy/surfaces/OperationalSurfaceNav.tsx",
+      "status": "D",
+      "previousBytes": 1344,
+      "previousSha256": "de8b00728cbb9ae3c4afeeb593137b71495c35cb4659ab1debf0b9af09865fd6"
+    },
+    {
+      "file": "src/components/centropy/surfaces/surface-routes.ts",
+      "status": "D",
+      "previousBytes": 723,
+      "previousSha256": "3b744e504f4f8eec8320251d18c4a68ea7f3cb4ec2a8b336e3b95367a2452596"
+    },
+    {
+      "file": "src/components/centropy/thread/Composer.tsx",
+      "status": "A",
+      "bytes": 8678,
+      "sha256": "dce2c0bda19d142e20e0211e1424e2a82cbf87c093b5fffbedd460049704e093"
+    },
+    {
+      "file": "src/components/centropy/thread/ExecutionObject.tsx",
+      "status": "A",
+      "bytes": 2880,
+      "sha256": "8f6a4dc50b4634670ed2afa2acec76252b5fd75c835269f7610b9868f5320e84"
+    },
+    {
+      "file": "src/components/centropy/thread/ObjectiveControl.tsx",
+      "status": "A",
+      "bytes": 4147,
+      "sha256": "a301c086549f10208d6f754ea6a00e04090515742e144ef4381189f31ce36b54"
+    },
+    {
+      "file": "src/components/centropy/thread/OutcomePacks.tsx",
+      "status": "A",
+      "bytes": 9132,
+      "sha256": "0ea25ba3e1e3d19ec7e78bf1400dbd3e96fa8b604ab78359bcf20d1405e4182e"
+    },
+    {
+      "file": "src/components/centropy/thread/PendingEffects.tsx",
+      "status": "A",
+      "bytes": 13669,
+      "sha256": "94bc07053e942766b7e35146fef2b87df462d22c007b839ce5bf9ffbe41c444a"
+    },
+    {
+      "file": "src/components/centropy/thread/RecordedValue.tsx",
+      "status": "A",
+      "bytes": 1286,
+      "sha256": "f05d2a14ff88d233b757fade114403f85d1c5f197568d97f275c5146e2f24e7b"
+    },
+    {
+      "file": "src/components/centropy/thread/VerifiedIcOutcome.tsx",
+      "status": "A",
+      "bytes": 4085,
+      "sha256": "387b09ba04f12bea013e1d87516fbae748ca935ad52035abe19eaaa9cfc860f7"
+    },
+    {
+      "file": "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
+      "status": "A",
+      "bytes": 5324,
+      "sha256": "e03958fc9ebbf77d46adb23978c3f31223ae837ca11c5b31b9abc93c034a75ab"
+    },
+    {
+      "file": "src/components/centropy/thread/WorkRecovery.tsx",
+      "status": "A",
+      "bytes": 6822,
+      "sha256": "2b9b03264fbd3a4b175883a09d6a1a7c3009e86c6569da446f881ced83334f80"
+    },
+    {
+      "file": "src/components/centropy/thread/WorkforceAssignments.tsx",
+      "status": "A",
+      "bytes": 12049,
+      "sha256": "ff2dfe50b3dde494917330253c26ea1c6fb5adf776c67a87647645176ca8b79b"
+    },
+    {
+      "file": "src/components/centropy/thread/outcome-pack-model.ts",
+      "status": "A",
+      "bytes": 1457,
+      "sha256": "7ca7d60754c769c991950db3d9cfa6d2beefa53b8ad1884e5f43bc7a4927633d"
+    },
+    {
+      "file": "src/components/centropy/thread/pending-effect-model.ts",
+      "status": "A",
+      "bytes": 5331,
+      "sha256": "2a0331e211e74eda704b2876ac20fe70b58c879407c1c4ef8fde84af917d8bf7"
+    },
+    {
+      "file": "src/components/centropy/thread/thread-api.ts",
+      "status": "A",
+      "bytes": 1261,
+      "sha256": "e311c751a724a55f05823fa0ea14b6e61417466403b30aac3b6e019563e8d03f"
+    },
+    {
+      "file": "src/components/centropy/thread/thread-contract.ts",
+      "status": "A",
+      "bytes": 2274,
+      "sha256": "b17707feeb5d03b0fe987b4253879de6358a23c529243d0ace168c633ea7d01a"
+    },
+    {
+      "file": "src/components/centropy/thread/use-investigation.ts",
+      "status": "A",
+      "bytes": 4025,
+      "sha256": "2f532a3959d0d2037a3090b06c455f9e57553b0b1a1ea1b50275e542af18e6fb"
+    },
+    {
+      "file": "src/components/centropy/world/WorldExplorer.tsx",
+      "status": "A",
+      "bytes": 21522,
+      "sha256": "8a5af1d86f788d53b4d0326b81926d0f068091b2d744266796618d265dc0d7a3"
+    },
+    {
+      "file": "src/components/centropy/world/WorldRelationships.tsx",
+      "status": "A",
+      "bytes": 2330,
+      "sha256": "0c067bb5c7f03871d50d306bb1a1c5c94a5170e23d2e7a885de957a14c63d1e4"
+    },
+    {
+      "file": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "status": "A",
+      "bytes": 8320,
+      "sha256": "6bdbddd13f96c33124a8ada98ff56b10b39f06067e5474cb9af41240b963422d"
+    },
+    {
+      "file": "src/components/centropy/world/world-context.ts",
+      "status": "A",
+      "bytes": 1372,
+      "sha256": "efa91beca9b5f8b359317e0a01b199f6d585700b2105ca945da3f5dafe201096"
+    },
+    {
+      "file": "src/lib/centropy/capability-manifest.generated.json",
+      "status": "A",
+      "bytes": 234330,
+      "sha256": "79e2f14be848dd8c0b24cb86201553f9e09179f8827718dc407b06b67d822a07"
+    },
+    {
+      "file": "src/lib/centropy/capability-manifest.ts",
+      "status": "A",
+      "bytes": 2287,
+      "sha256": "02fa17dd0cd1d912c88dfc633922f32877bc26236debfd992838c4a5f49b545f"
+    },
+    {
+      "file": "src/lib/centropy/human-forms.generated.json",
+      "status": "A",
+      "bytes": 213219,
+      "sha256": "c9aff79bf89a5556a1cef5bc40bb304f34443f4031dd085c1be6fad9eacf13c9"
+    },
+    {
+      "file": "src/lib/centropy/supporting-reads.ts",
+      "status": "A",
+      "bytes": 2275,
+      "sha256": "4c6b90f35022b5334b1178d906264672871ea5f748ea6410995531fc2becbb89"
+    }
+  ],
+  "deletedFiles": [
+    "finnor-os/tests/unit/artifact-os-contract.test.ts",
+    "finnor-os/tests/unit/authz-matrix.test.ts",
+    "finnor-os/tests/unit/openapi-operational-query-contract.test.ts",
+    "finnor-os/tests/unit/p3-architecture-contract.test.ts",
+    "finnor-os/tests/unit/private-equity-p5-contract.test.ts",
+    "finnor-os/tests/unit/production-correctness-active-work-query.test.ts",
+    "finnor-os/tests/unit/production-correctness-cancellation.test.ts",
+    "finnor-os/tests/unit/production-correctness-egress-bounds.test.ts",
+    "finnor-os/tests/unit/production-correctness-external-observation.test.ts",
+    "finnor-os/tests/unit/production-correctness-identity-discovery.test.ts",
+    "finnor-os/tests/unit/production-correctness-objective-delivery.test.ts",
+    "finnor-os/tests/unit/production-correctness-policy-revisions.test.ts",
+    "finnor-os/tests/unit/production-correctness-receipt-atomicity.test.ts",
+    "finnor-os/tests/unit/production-correctness-receive-work.test.ts",
+    "finnor-os/tests/unit/production-correctness-terminal-repair-delivery.test.ts",
+    "finnor-os/tests/unit/production-correctness-work-cases-bounds.test.ts",
+    "finnor-os/tests/unit/production-correctness-work-recovery-claim.test.ts",
+    "finnor-os/tests/unit/tenant-transaction-serialization.test.ts",
+    "src/app/centropy/providers.tsx",
+    "src/components/centropy/OperatingCanvas.tsx",
+    "src/components/centropy/PersonalizedHome.tsx",
+    "src/components/centropy/WorkspaceConfigProvider.tsx",
+    "src/components/centropy/agents/AgentFleetSurface.tsx",
+    "src/components/centropy/agents/agent-workforce-truth.test.ts",
+    "src/components/centropy/lib/workspace-config.generated.ts",
+    "src/components/centropy/lib/workspace-config.test.ts",
+    "src/components/centropy/lib/workspace-config.ts",
+    "src/components/centropy/pe/DealsSurface.tsx",
+    "src/components/centropy/pe/PeOperatingContextProvider.tsx",
+    "src/components/centropy/pe/WorkSurface.tsx",
+    "src/components/centropy/product/CentropyVoiceInput.tsx",
+    "src/components/centropy/product/CommandInterface.tsx",
+    "src/components/centropy/product/DealWorkspace.tsx",
+    "src/components/centropy/product/ProductDataProvider.tsx",
+    "src/components/centropy/product/UniversalInspector.tsx",
+    "src/components/centropy/product/attention-model.test.ts",
+    "src/components/centropy/product/attention-model.ts",
+    "src/components/centropy/product/deal-model.test.ts",
+    "src/components/centropy/product/deal-model.ts",
+    "src/components/centropy/product/primitives.tsx",
+    "src/components/centropy/product/workstation.css",
+    "src/components/centropy/surfaces/OperationalSurfaceNav.test.ts",
+    "src/components/centropy/surfaces/OperationalSurfaceNav.tsx",
+    "src/components/centropy/surfaces/surface-routes.ts"
+  ],
+  "routesChanged": [
+    "finnor-os/apps/api/app/api/actions/[id]/confirm/route.ts",
+    "finnor-os/apps/api/app/api/actions/[id]/escalate/route.ts",
+    "finnor-os/apps/api/app/api/actions/[id]/reject/route.ts",
+    "finnor-os/apps/api/app/api/actions/human/route.ts",
+    "finnor-os/apps/api/app/api/actions/pending/route.ts",
+    "finnor-os/apps/api/app/api/actions/review-capability/route.ts",
+    "finnor-os/apps/api/app/api/actions/route.ts",
+    "finnor-os/apps/api/app/api/connections/google/start/route.ts",
+    "finnor-os/apps/api/app/api/corrections/route.ts",
+    "finnor-os/apps/api/app/api/operating-profile/route.ts",
+    "finnor-os/apps/api/app/api/outcome-packs/route.ts",
+    "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/reviewed-deck-link/route.ts",
+    "finnor-os/apps/api/app/api/push-subscriptions/route.ts",
+    "finnor-os/apps/api/app/api/reconciliation/[id]/resolve/route.ts",
+    "finnor-os/apps/api/app/api/threads/[id]/canvas/route.ts",
+    "finnor-os/apps/api/app/api/user-prefs/route.ts",
+    "finnor-os/apps/api/app/api/workflows/runs/route.ts",
+    "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+    "finnor-os/apps/api/app/api/works/[id]/objective/route.ts",
+    "finnor-os/apps/api/app/api/works/[id]/retry/route.ts",
+    "finnor-os/apps/api/app/api/works/[id]/route.ts",
+    "src/app/api/centropy/[...path]/route.ts",
+    "src/app/api/centropy/operational-stream/route.ts",
+    "src/app/api/centropy/stream/route.ts",
+    "src/app/centropy/agents/page.tsx",
+    "src/app/centropy/deals/[dealId]/[section]/page.tsx",
+    "src/app/centropy/deals/[dealId]/page.tsx",
+    "src/app/centropy/deals/page.tsx",
+    "src/app/centropy/investigations/[threadId]/page.tsx",
+    "src/app/centropy/layout.tsx",
+    "src/app/centropy/login/page.tsx",
+    "src/app/centropy/page.tsx",
+    "src/app/centropy/reset-password/page.tsx",
+    "src/app/centropy/work/page.tsx",
+    "src/app/centropy/world/page.tsx"
+  ],
+  "migrationsAdded": [
+    "finnor-os/packages/db/migrations/0141_private_equity_outcome_pack_ids.sql",
+    "finnor-os/packages/db/migrations/0142_centropy_canvas_preferences.sql",
+    "finnor-os/packages/db/migrations/0143_work_input_context_after_validation.sql",
+    "finnor-os/packages/db/migrations/0144_ic_business_effect_targets.sql",
+    "finnor-os/packages/db/migrations/0145_artifact_template_action_replay.sql",
+    "finnor-os/packages/db/migrations/0146_ic_case_document_links.sql",
+    "finnor-os/packages/db/migrations/0147_ic_objective_step_budget.sql",
+    "finnor-os/packages/db/migrations/0148_artifact_underwriting_bindings.sql",
+    "finnor-os/packages/db/migrations/0149_parallel_objective_approval_guard.sql"
+  ],
+  "browserTestsAdded": [
+    "e2e/centropy-artifact-controls.spec.ts",
+    "e2e/centropy-atlas-ic-planning.spec.ts",
+    "e2e/centropy-autonomous-atlas.spec.ts",
+    "e2e/centropy-blocker-question.spec.ts",
+    "e2e/centropy-browser-sweep.spec.ts",
+    "e2e/centropy-controlled-recovery.spec.ts",
+    "e2e/centropy-cross-session-active-objective.spec.ts",
+    "e2e/centropy-cross-session-draft.spec.ts",
+    "e2e/centropy-governed-message.spec.ts",
+    "e2e/centropy-growth-300bps.spec.ts",
+    "e2e/centropy-growth-instruction.spec.ts",
+    "e2e/centropy-growth-objective-terminal.spec.ts",
+    "e2e/centropy-human-closing.spec.ts",
+    "e2e/centropy-human-controls.spec.ts",
+    "e2e/centropy-ic-artifact.spec.ts",
+    "e2e/centropy-ic-continuation.spec.ts",
+    "e2e/centropy-ic-deck-work-action.spec.ts",
+    "e2e/centropy-ic-memo-recommendation.spec.ts",
+    "e2e/centropy-ic-objective-recovery.spec.ts",
+    "e2e/centropy-ic-terminal-completion.spec.ts",
+    "e2e/centropy-live-host.spec.ts",
+    "e2e/centropy-live-workforce-reassign.spec.ts",
+    "e2e/centropy-owner-login.spec.ts",
+    "e2e/centropy-parallel-deal-recheck.spec.ts",
+    "e2e/centropy-real-demo.spec.ts",
+    "e2e/centropy-renderer-performance.spec.ts",
+    "e2e/centropy-temporal-question.spec.ts",
+    "e2e/centropy-underwriting-multi-input.spec.ts",
+    "e2e/centropy-workflow-outcome.spec.ts"
+  ],
+  "unitTestCuration": "docs/centropy/unit-test-curation.json",
+  "limitations": [
+    "Source base identifies the pre-commit checkout; the final release SHA is provided by Git and canonical release metadata",
+    "Inventory self-hash is deliberately excluded; all other listed existing content is hashed",
+    "Ignored credentials, dependency directories, transient logs and fixture databases are excluded"
+  ]
+}

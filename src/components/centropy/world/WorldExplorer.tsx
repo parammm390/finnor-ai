@@ -1,11 +1,13 @@
 "use client"
 
 import { lazy, Suspense, useEffect, useMemo, useState } from "react"
-import { ArrowRight, ArrowUpRight, Clock3, GitBranch, Globe2, Link2, RefreshCw, Search, ShieldCheck } from "lucide-react"
+import { ArrowRight, ArrowUpRight, Clock3, Globe2, Link2, RefreshCw, Search, ShieldCheck } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import { useCompanyBrainRoots } from "@/components/centropy/pe/use-pe-data"
 import { refKey, type CandidateCompanyBrainAction, type CompanyBrainEdge, type CompanyBrainFact, type CompanyBrainNode, type CompanyBrainObjectRef, type CompanyBrainProjection, type CompanyBrainSearchResult, type CompanyBrainSourceRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { WorldWorkRecord } from "./WorldWorkRecord"
+import { capabilityForId } from "@/lib/centropy/capability-manifest"
+const WorldRelationships = lazy(() => import("./WorldRelationships").then((module) => ({ default: module.WorldRelationships })))
 const HumanControlDesk = lazy(() => import("../controls/HumanControlDesk").then((module) => ({ default: module.HumanControlDesk })))
 
 type WorldTab = "overview" | "record" | "relationships" | "provenance" | "history" | "evidence" | "decisions" | "actions"
@@ -27,14 +29,6 @@ const GROUPS: Array<{ id: WorldGroup; label: string }> = [
 const labelType = (type: string) => type.replace(/^pe_/, "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll("_", " ").toLowerCase()
 const textValue = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : typeof value === "string" && /^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/.test(value) ? value.replaceAll("_", " ") : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : value == null ? "No value recorded" : "Structured source value"
 const technicalFact = (fact: CompanyBrainFact) => /(^id$|(?:_|\b)id$|Id$|hash$|Hash$|ref$|Ref$|tenant|^version$|graphVersion|sourceSystem|observedAt)/i.test(fact.key) || (typeof fact.value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{23,}$/i.test(fact.value))
-function relationshipLabel(node: CompanyBrainNode, selected: CompanyBrainNode, edges: CompanyBrainEdge[]): string | null {
-  const direct = edges.find((edge) => refKey(edge.fromRef) === refKey(selected.ref) && refKey(edge.toRef) === refKey(node.ref))
-  if (direct) return labelType(direct.relationship)
-  const incoming = edges.find((edge) => refKey(edge.toRef) === refKey(selected.ref) && refKey(edge.fromRef) === refKey(node.ref))
-  if (incoming) return labelType(incoming.relationship)
-  const indirect = edges.find((edge) => refKey(edge.fromRef) === refKey(node.ref) || refKey(edge.toRef) === refKey(node.ref))
-  return indirect ? `via ${labelType(indirect.relationship)}` : null
-}
 const validDate = (value: string) => new Date(value).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
 const rootKey = (root: PeWorldRootRef) => `${root.entityType}:${root.entityId}`
 function inGroup(node: CompanyBrainNode, group: WorldGroup) {
@@ -75,6 +69,7 @@ export function WorldExplorer({ root, projection, projectionStatus, projectionEr
   const [searching, setSearching] = useState(false)
   const [group, setGroup] = useState<WorldGroup>("all")
   const [controlsOpen, setControlsOpen] = useState(false)
+  const [closingControlsOpen, setClosingControlsOpen] = useState(false)
   const [selected, setSelected] = useState<CompanyBrainObjectRef | null>(initialObject)
   const [tab, setTab] = useState<WorldTab>(initialObject?.type === "work" ? "record" : "overview")
   const [detail, setDetail] = useState<Detail>(null)
@@ -130,6 +125,10 @@ export function WorldExplorer({ root, projection, projectionStatus, projectionEr
 
   function pick(ref: CompanyBrainObjectRef) { setSelected(ref); setTab(ref.type === "work" ? "record" : "overview"); onSelectObject(ref) }
   function selectRoot(next: PeWorldRootRef) { setSelected(null); setGroup("all"); setQuery(""); onSelectRoot(next) }
+  const closingDealId = root?.entityType === "pe_deal" ? root.entityId : selectedNode?.rootRefs.find((ref) => ref.entityType === "pe_deal")?.entityId
+  const closingType = selectedNode?.type === "pe_closing_condition" ? "closing-waivers" : selectedNode?.type === "pe_closing_item" ? "closing-verification" : null
+  const closingVersion = Number(selectedNode?.version)
+  const closingEligible = Boolean(selectedNode && (closingType === "closing-waivers" ? ["open", "evidence_pending"].includes(selectedNode.state ?? "") : selectedNode.state === "ready"))
 
   return <div className="ct-world">
     <header className="ct-world__header"><div><span className="ct-eyebrow">WORLD / COMPANY BRAIN</span><button type="button" onClick={onRefresh} disabled={projectionStatus === "loading"} aria-label="Refresh WORLD projection"><RefreshCw size={15} /> Refresh WORLD</button></div><h2>{root ? projection?.nodes.find((node) => node.ref.type === root.entityType && node.ref.id === root.entityId)?.label ?? "Explore this context" : "Explore institutional truth"}</h2><p>Search connected records, inspect their source trail, and carry an exact object into the Thread.</p></header>
@@ -147,13 +146,14 @@ export function WorldExplorer({ root, projection, projectionStatus, projectionEr
             {tab === "record" && selectedNode.type === "work" ? <WorldWorkRecord key={selectedNode.ref.id} workId={selectedNode.ref.id} onChanged={onRefresh} /> : null}
             {detailLoading ? <p className="ct-world__status" role="status">Reading {tab} from Company Brain…</p> : null}
             {detailError ? <p className="ct-world__error" role="alert">{detailError}</p> : null}
-            {tab === "relationships" || tab === "evidence" || tab === "decisions" ? <div className="ct-world__detail-content"><p>{tab === "relationships" ? "Connected objects" : tab === "evidence" ? "Evidence lineage" : "Decision lineage"}</p>{detail && "nodes" in detail ? <><div className="ct-world__detail-count"><GitBranch size={16} /> {detail.nodes.length} objects · {detail.edges.length} links{detail.page?.truncated ? " · bounded result" : ""}</div>{detail.nodes.filter((node) => refKey(node.ref) !== refKey(selectedNode.ref)).slice(0, 60).map((node) => <button className="ct-world__related" type="button" key={refKey(node.ref)} onClick={() => pick(node.ref)}><span><strong>{node.label}</strong><small>{labelType(node.type)} · {node.state ?? node.epistemicState}{relationshipLabel(node, selectedNode, detail.edges) ? ` · ${relationshipLabel(node, selectedNode, detail.edges)}` : ""}</small></span><ArrowRight size={14} /></button>)}{detail.nodes.length <= 1 ? <p>No linked objects are recorded in this view.</p> : null}</> : null}</div> : null}
+            {tab === "relationships" || tab === "evidence" || tab === "decisions" ? <div className="ct-world__detail-content"><p>{tab === "relationships" ? "Connected objects" : tab === "evidence" ? "Evidence lineage" : "Decision lineage"}</p>{detail && "nodes" in detail ? <Suspense fallback={<p>Opening connected objects…</p>}><WorldRelationships nodes={detail.nodes} edges={detail.edges} selected={selectedNode} truncated={detail.page?.truncated} onSelect={pick} /></Suspense> : null}</div> : null}
             {tab === "provenance" ? <div className="ct-world__detail-content"><p>Source records and attached evidence</p>{detail && "sourceRefs" in detail ? <><div className="ct-world__detail-count"><Link2 size={16} /> {detail.sourceRefs.length} source links · {detail.evidenceNodes.length} evidence objects</div>{detail.sourceRefs.map((source) => <div className="ct-world__source" key={`${source.owner}:${source.table}:${source.id}:${source.fieldPath ?? ""}`}><strong>{labelType(source.table)}</strong><small>{source.owner} · {source.id.slice(0, 12)}</small></div>)}{detail.evidenceNodes.map((node) => <button className="ct-world__related" key={refKey(node.ref)} type="button" onClick={() => pick(node.ref)}>{node.label} <ArrowRight size={14} /></button>)}</> : null}</div> : null}
             {tab === "history" ? <div className="ct-world__detail-content"><p>Canonical history</p>{detail && "entries" in detail ? <><span className="ct-world__detail-count"><Clock3 size={16} /> {detail.support.replaceAll("_", " ")}</span>{detail.entries.map((entry) => <div className="ct-world__history" key={`${entry.version}:${entry.recordedAt}`}><strong>Version {entry.version}</strong><time dateTime={entry.recordedAt}>{validDate(entry.recordedAt)}</time></div>)}{!detail.entries.length ? <p>No version history is supported for this object.</p> : null}</> : null}</div> : null}
-            {tab === "actions" ? <div className="ct-world__detail-content"><p>Candidate actions are evaluated against authority when executed.</p>{detail && "actions" in detail ? <>{detail.actions.map((action) => <div className="ct-world__action" key={action.actionType}><ShieldCheck size={17} /><span><strong>{action.label}</strong><small>Authority required at execution</small></span><button type="button" onClick={() => onAsk(selectedNode, `Prepare this governed action for ${selectedNode.label}: ${action.label}. Verify authority and effects before execution.`)}>Ask <ArrowRight size={13} /></button></div>)}{!detail.actions.length ? <p>No candidate action is recorded for this object.</p> : null}</> : null}</div> : null}
+            {tab === "actions" ? <div className="ct-world__detail-content"><p>Candidate actions are evaluated against authority when executed.</p>{detail && "actions" in detail ? <>{detail.actions.map((action) => <div className="ct-world__action" key={action.actionType}><ShieldCheck size={17} /><span><strong>{action.label}</strong><small>Authority required at execution</small></span><button type="button" onClick={() => onAsk(selectedNode, capabilityForId(`planner.${action.actionType}`)?.humanOnly ? `Open the canonical record for ${selectedNode.label} so I can review its human decision controls.` : `Prepare this governed action for ${selectedNode.label}: ${action.label}. Verify authority and effects before execution.`)}>{capabilityForId(`planner.${action.actionType}`)?.humanOnly ? "Open record" : "Ask"} <ArrowRight size={13} /></button></div>)}{!detail.actions.length ? <p>No candidate action is recorded for this object.</p> : null}</> : null}</div> : null}
           </> : <div className="ct-world__detail-empty"><Globe2 size={25} /><h3>Select a connected object</h3><p>Its facts, provenance, relationships, and decision lineage will open here.</p></div>}</section></div>
       </> : null}
     </>}
     {root && projection ? <details className="ct-record-controls" onToggle={(event) => setControlsOpen(event.currentTarget.open)}><summary>Review institutional and model record changes</summary><p>Record known identities, responsibilities, authority, evidence, or model bindings in the selected investment context.</p>{controlsOpen ? <Suspense fallback={<p>Opening record controls…</p>}><HumanControlDesk groups={["institutional-records", "model-records", "workflow-controls"]} context={{ root, rootRef: root, dealId: root.entityType === "pe_deal" ? root.entityId : undefined, investmentCaseId: projection.nodes.find((node) => node.type === "pe_investment_case")?.ref.id }} writable={projectionStatus === "ready"} onRecorded={onRefresh} /></Suspense> : null}</details> : null}
+    {closingType && selectedNode && closingDealId ? <details id="ct-world-closing-controls" className="ct-record-controls" onToggle={(event) => setClosingControlsOpen(event.currentTarget.open)}><summary>Review this human closing decision</summary><p>You author this decision. Its canonical action is grounded and pauses for a separate exact-effect approval before execution.</p>{closingControlsOpen ? <Suspense fallback={<p>Opening the human decision control…</p>}><HumanControlDesk key={`${selectedNode.ref.id}:${closingVersion}`} groups={[closingType]} context={{ payload: { dealId: closingDealId, ...(closingType === "closing-waivers" ? { closingConditionId: selectedNode.ref.id } : { closingItemId: selectedNode.ref.id }), expectedVersion: closingVersion } }} writable={projectionStatus === "ready" && closingEligible && Number.isInteger(closingVersion) && closingVersion > 0} onRecorded={onRefresh} /></Suspense> : null}</details> : null}
   </div>
 }

@@ -1,0 +1,22 @@
+{
+  "schema": "centropy.real-demo-summary/v1",
+  "result": "PASS_LOCAL_COMPILED",
+  "capturedAt": "2026-09-28T19:57:25.228Z",
+  "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
+  "workingTreeImplementation": true,
+  "workId": "c53301f7-906f-4ef5-a828-e11991f40bf5",
+  "threadId": "a0a6a5ed-5f3b-4be0-8526-48bd12c0f2f0",
+  "firstVerifiedReceiptAtMs": 55145,
+  "fullObjectiveCompletedAtMs": 143302,
+  "verifiedEffects": 6,
+  "finalizedReceipts": 6,
+  "sseEvents": 3,
+  "sseResumedAfter": 2,
+  "resumedSequence": [
+    3
+  ],
+  "pollFallbackStatus": 200,
+  "proofSha256": "44f43d514795024f52f67976f657f990c350db27e7117c8832583fa8cf1f20af",
+  "videoSha256": "7f3936838e95b188df6a4f14ef7da8e0acb505d585749e64f9846e3bbb66655b",
+  "limitation": "Controlled real fixture; full IC objective finishes after the exact 60-second receipt checkpoint. No production host or Microsoft publication claim."
+}

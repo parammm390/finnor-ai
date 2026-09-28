@@ -9,13 +9,9 @@ import { recordCorrection } from "@finnor/memory";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireContext, canApprove, errorResponse } from "../../../lib/auth";
+import { SubmitCorrectionSchema } from "../../../lib/product-control-schemas";
 
 const CORRECTION_ACTION_TYPE = "correct_memory";
-
-const SubmitCorrectionSchema = z.object({
-  receiptId: z.string().uuid(),
-  correctedFact: z.string().min(1).max(2000),
-});
 
 function describeReceiptAnswer(actualResult: unknown): string {
   if (!actualResult || typeof actualResult !== "object") return "(no recorded answer)";

@@ -6,16 +6,18 @@ const dealId = "90000000-0000-4000-8000-000000000001"
 const instruction = "Challenge Atlas's revenue assumptions and prepare tomorrow's IC case."
 const resumeWorkId = process.env.CENTROPY_RESUME_WORK_ID
 const resumeThreadId = process.env.CENTROPY_RESUME_THREAD_ID
-const sequence = resumeWorkId ? ["create_underwriting_run", "select_ic_underwriting_run", "create_ic_memo_draft",
+const resumeReassignId = process.env.CENTROPY_RESUME_REASSIGN_ID
+const existingCaseMode = Boolean(resumeWorkId) && process.env.CENTROPY_RESUME_CASE_MODE !== "fresh"
+const sequence = existingCaseMode ? ["create_underwriting_run", "select_ic_underwriting_run", "create_ic_memo_draft",
   "select_ic_memo_version", "prepare_ic_recommendation", "request_ic_memo_review"] : ["create_underwriting_run", "open_ic_case", "begin_ic_preparation", "create_ic_memo_draft",
   "select_ic_memo_version", "prepare_ic_recommendation", "request_ic_memo_review"]
 type Action = { id: string; actionType: string; status: string; payload: Record<string, unknown> }
 type Effect = { id: string; domainActionId: string; status: string; verification?: { state: string };
   observedResult?: { entity?: { entityId: string; entityType: string }; canonicalState?: Record<string, unknown> } }
-type Work = { work: { id: string; status: string }; objectiveLoop?: { id: string; state: string; reason?: string; successVerification?: { state: string } };
+type Work = { work: { id: string; status: string; initialInstruction: string }; objectiveLoop?: { id: string; state: string; reason?: string; successVerification?: { state: string } };
   actions: Action[]; businessEffects: Effect[]; receipts: Array<{ id: string; domainActionId: string; finalizedAt: string | null; failure: unknown }>;
   planRevisions: Array<{ id: string; status: string; completionProof?: { verified: boolean; evidenceRefs: Array<{ type: string; id: string }> } }>;
-  workforceAssignments: Array<{ id: string; state: string; capability: string; agentProfileId: string }>;
+  workforceAssignments: Array<{ id: string; state: string; capability: string; agentProfileId: string; objectiveStepId: string | null }>;
   queryExecutions: Array<{ id: string; intent: string; status: string }> }
 type Thread = { thread: { id: string; activeWorkId: string | null }; messages: Array<{ id: string; role: string; originalText: string; instructionId: string | null; workId: string | null }> }
 
@@ -58,7 +60,7 @@ test("one Atlas instruction completes sourced IC preparation and restores across
     expect(response.ok(), `${path}: ${response.status()} ${await response.text()}`).toBe(true)
     return await response.json() as T
   }
-  let workId = "", threadId = ""
+  let workId = "", threadId = "", actualInstruction = instruction
   let terminalRestoration = false, verified = false
   const work = async () => (await get<{ work: Work }>(`works/${workId}`)).work
   const identity = async () => {
@@ -77,6 +79,8 @@ test("one Atlas instruction completes sourced IC preparation and restores across
       expect(resumeThreadId).toBeTruthy()
       workId = resumeWorkId; threadId = resumeThreadId!
       const existing = await work()
+      expect(existing.work.initialInstruction).toBeTruthy()
+      actualInstruction = existing.work.initialInstruction
       terminalRestoration = existing.objectiveLoop?.state === "completed"
       observed.intake = { workId, threadId, objectiveId: existing.objectiveLoop?.id, restoredExistingInstruction: true }
       if (existing.work.status === "failed") {
@@ -95,6 +99,26 @@ test("one Atlas instruction completes sourced IC preparation and restores across
         steps.push("Continue the recorded blocked Objective through its actual human control after the planner correction")
       }
       steps.push("Restore the one previously submitted Atlas instruction without creating a new Work or user turn")
+      if (resumeReassignId && !terminalRestoration) {
+        const stranded = (await work()).workforceAssignments.find((row) => row.id === resumeReassignId)
+        expect(stranded?.state).toBe("queued")
+        expect(stranded?.objectiveStepId).toBeTruthy()
+        await page.goto(`/centropy/investigations/${threadId}`)
+        await page.getByRole("button", { name: "Inspect specialist assignments", exact: true }).click()
+        const row = page.locator(".ct-workforce > ol > li").filter({ hasText: stranded!.objectiveStepId! })
+        await expect(row).toHaveCount(1)
+        await row.getByRole("button", { name: "Reassign specialist", exact: true }).click()
+        const reassigned = page.waitForResponse((r) => new URL(r.url()).pathname === `/api/centropy/workforce/assignments/${resumeReassignId}/reassign` && r.request().method() === "POST")
+        await row.getByRole("button", { name: "Confirm reassignment", exact: true }).click()
+        const response = await reassigned
+        expect(response.status(), await response.text()).toBe(200)
+        const result = await response.json()
+        expect(result.assignment).toMatchObject({ id: resumeReassignId, state: "reassigned", reassignmentReason: "OPERATOR_REQUESTED" })
+        const independent = (await work()).workforceAssignments.find((item) => item.id === resumeReassignId)
+        expect(independent?.state).toBe("reassigned")
+        observed.operatorRecovery = { before: stranded, response: result, independent }
+        steps.push("Recover the exact stranded queued specialist through actual owner reassignment, independently read its retained history, and continue the same Work without replaying verified effects")
+      }
     } else {
       await page.getByLabel("Message CENTROPY").fill(instruction)
       const response = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/centropy/actions" && r.request().method() === "POST", { timeout: 60_000 })
@@ -110,7 +134,7 @@ test("one Atlas instruction completes sourced IC preparation and restores across
     if (!terminalRestoration) await expect.poll(async () => {
       const w = await work()
       if (["blocked", "failed"].includes(w.objectiveLoop?.state ?? "")) throw new Error(`Objective stopped: ${w.objectiveLoop?.reason}`)
-      return w.actions.some((a) => (resumeWorkId ? sequence.includes(a.actionType) : a.actionType === sequence[0]) && a.status === "pending")
+      return w.objectiveLoop?.state === "awaiting_approval" && w.actions.some((a) => (resumeWorkId ? sequence.includes(a.actionType) : a.actionType === sequence[0]) && a.status === "pending")
     }, { timeout: 160_000, intervals: [2000, 4000] }).toBe(true)
     const before = await identity()
     expect(before.userTurns).toHaveLength(1)
@@ -151,13 +175,15 @@ test("one Atlas instruction completes sourced IC preparation and restores across
         await effects.getByLabel("I reviewed the exact effect, authority, and expected observation.").check()
         const confirm = page.waitForResponse((r) => new URL(r.url()).pathname === `/api/centropy/actions/${selected!.id}/confirm` && r.request().method() === "POST")
         await effects.getByRole("button", { name: "Confirm effect" }).click()
-        expect((await confirm).status()).toBe(200)
+        const confirmation = await confirm
+        expect(confirmation.status(), await confirmation.text()).toBe(200)
         ;(observed.actionApprovals as unknown[]).push({ actionType, actionId: selected!.id, confirmedBy: "fixture owner in browser" })
       }
       await expect.poll(async () => {
         const w = await work()
         const effect = w.businessEffects.find((e) => e.domainActionId === selected!.id)
         const receipt = w.receipts.find((r) => r.domainActionId === selected!.id)
+        if (w.actions.find((a) => a.id === selected!.id)?.status === "failed") throw new Error(`${actionType} failed with its canonical receipt: ${JSON.stringify(receipt?.failure)}`)
         return w.actions.find((a) => a.id === selected!.id)?.status === "completed"
           && effect?.status === "verified" && Boolean(receipt?.finalizedAt && !receipt.failure)
       }, { timeout: 120_000, intervals: [2000, 4000] }).toBe(true)
@@ -171,14 +197,14 @@ test("one Atlas instruction completes sourced IC preparation and restores across
     expect(terminal.businessEffects.every((e) => e.status === "verified" && e.verification?.state === "verified")).toBe(true)
     expect(terminal.receipts.filter((r) => r.finalizedAt && !r.failure)).toHaveLength(sequence.length)
     expect(terminal.objectiveLoop?.successVerification?.state).toBe("verified")
-    expect(terminal.queryExecutions.some((q) => q.intent === (resumeWorkId ? "closing_readiness" : "pe_world_state") && q.status === "succeeded")).toBe(true)
+    expect(terminal.queryExecutions.some((q) => ["closing_readiness", "pe_world_state"].includes(q.intent) && q.status === "succeeded")).toBe(true)
     expect(terminal.workforceAssignments.some((a) => a.agentProfileId && a.state === "completed")).toBe(true)
     const reviewId = terminal.actions.find((a) => a.actionType === "request_ic_memo_review")!.id
     const reviewEffectId = terminal.businessEffects.find((e) => e.domainActionId === reviewId)!.id
     const proof = terminal.planRevisions.find((p) => p.status === "completed")?.completionProof
     expect(proof?.verified).toBe(true)
     expect(proof?.evidenceRefs).toContainEqual({ type: "business_effect", id: reviewEffectId })
-    const openedId = terminal.actions.find((a) => a.actionType === (resumeWorkId ? "select_ic_underwriting_run" : "open_ic_case"))!.id
+    const openedId = terminal.actions.find((a) => a.actionType === (existingCaseMode ? "select_ic_underwriting_run" : "open_ic_case"))!.id
     const caseId = terminal.businessEffects.find((e) => e.domainActionId === openedId)!.observedResult!.entity!.entityId
     const workspace = await get<{ case: { id: string; state: string; currentMemoId: string; currentRecommendationId: string; primaryUnderwritingRunId: string };
       memo: { id: string; sourceCompleteness: string }; currentRecommendation: { id: string; outcome: string; memoId: string; underwritingRunId: string };
@@ -214,11 +240,11 @@ test("one Atlas instruction completes sourced IC preparation and restores across
     const screenshot = await page.screenshot({ path: screenshotPath, fullPage: true, animations: "disabled" }).catch(() => null)
     const proofPath = testInfo.outputPath("atlas-autonomous.proof.json")
     await writeFile(proofPath, JSON.stringify({ schema: "centropy.e2e-proof/v2", result: verified ? "PASS" : "INCOMPLETE", flows: terminalRestoration ? [2, 10] : [2, 9, 10], capturedAt: new Date().toISOString(),
-      baseUrl, input: { instruction, dealId, fixture: "synthetic disposable Atlas with real persisted artifact bytes" }, steps, observed,
+      baseUrl, input: { instruction: actualInstruction, dealId, fixture: "synthetic disposable Atlas with real persisted artifact bytes" }, steps, observed,
       screenshotSha256: screenshot ? createHash("sha256").update(screenshot).digest("hex") : null,
       reproduce: { mode: resumeWorkId ? "restore-and-recover-existing-instruction" : "fresh-single-instruction",
         stack: "node scripts/centropy/start-certification-stack.mjs --name=<recorded-or-fresh-fixture-name> --production-build",
-        command: `${resumeWorkId ? `CENTROPY_RESUME_WORK_ID=${resumeWorkId} CENTROPY_RESUME_THREAD_ID=${resumeThreadId} ` : ""}node scripts/centropy/run-local-e2e.mjs e2e/centropy-autonomous-atlas.spec.ts --project=desktop-chromium --workers=1`,
+        command: `${resumeWorkId ? `CENTROPY_RESUME_WORK_ID=${resumeWorkId} CENTROPY_RESUME_THREAD_ID=${resumeThreadId} CENTROPY_RESUME_CASE_MODE=${existingCaseMode ? "existing" : "fresh"} ${resumeReassignId ? `CENTROPY_RESUME_REASSIGN_ID=${resumeReassignId} ` : ""}` : ""}node scripts/centropy/run-local-e2e.mjs e2e/centropy-autonomous-atlas.spec.ts --project=desktop-chromium --workers=1`,
         requiredEnvironment: ["TEST_OWNER_EMAIL", "TEST_OWNER_PASSWORD", "matching frontend/API Supabase Auth project", "configured model provider"] },
       limitation: "Local integration proof. No firm template, external publication, human IC decision, or deployed-host certification is implied." }, null, 2) + "\n")
     await testInfo.attach("atlas-autonomous-proof", { path: proofPath, contentType: "application/json" })

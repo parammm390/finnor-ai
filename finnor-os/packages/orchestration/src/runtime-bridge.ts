@@ -91,7 +91,7 @@ export async function assertActionNotCancelledTx(
     }
   }
   if (params.workId) {
-    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id} = ${params.workId} AND ${works.tenantId} = ${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id} = ${params.workId} AND ${works.tenantId} = ${params.tenantId} FOR NO KEY UPDATE`);
     const [work] = await db
       .select({ status: works.status })
       .from(works)
