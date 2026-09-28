@@ -28,6 +28,20 @@ export async function boundedJson(req: Request, maxBytes = 1_048_576): Promise<R
 }
 
 export function artifactErrorResponse(error: unknown): Response {
+  if (error instanceof Error && error.message === "DOCUMENT_VERSION_CONTENT_MISSING") {
+    return Response.json({
+      error: "The recorded document version has no stored content. Its exact version metadata remains available, but content inspection and editing are unavailable.",
+      code: "DOCUMENT_VERSION_CONTENT_MISSING",
+      retryable: false,
+    }, { status: 424, headers: { "cache-control": "no-store" } });
+  }
+  if (error instanceof Error && error.message === "DOCUMENT_VERSION_CONTENT_BACKEND_UNAVAILABLE") {
+    return Response.json({
+      error: "The recorded document version uses a content backend that is currently unavailable.",
+      code: "DOCUMENT_VERSION_CONTENT_BACKEND_UNAVAILABLE",
+      retryable: false,
+    }, { status: 424, headers: { "cache-control": "no-store" } });
+  }
   if (error instanceof ArtifactError) {
     const status = /TOO_LARGE|_LIMIT|PAGE_LIMIT/.test(error.code)
       ? 413

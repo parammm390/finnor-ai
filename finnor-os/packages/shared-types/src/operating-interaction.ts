@@ -15,7 +15,7 @@ export interface OperatingInteractionContext {
   selectedEntities: CanonicalEntityRef<string>[];
   excludedEntities: CanonicalEntityRef<string>[];
   surface: {
-    id: "home" | "work" | "agents" | "deals";
+    id: "centropy" | "world" | "home" | "work" | "agents" | "deals";
     route?: string;
     spatialState?: "canvas" | "detail" | "list" | "map" | "timeline";
   };

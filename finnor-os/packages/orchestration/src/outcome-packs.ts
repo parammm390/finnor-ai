@@ -214,7 +214,7 @@ export async function startOutcomePack(
   input: unknown,
   ctx: TenantContext,
   options: Omit<StartObjectiveOptions, "successCondition" | "outcomePack"> = {},
-): Promise<StartObjectiveResult & { pack: OutcomePackStartBinding }> {
+): Promise<StartObjectiveResult & { pack: OutcomePackStartBinding; attachmentWarnings: Array<{ entityType: string; entityId: string; code: "work_entity_projection_failed" }> }> {
   if (!(OUTCOME_PACK_IDS as readonly string[]).includes(packId)) {
     throw new Error(`Unknown outcome pack: ${packId}`);
   }
@@ -224,12 +224,18 @@ export async function startOutcomePack(
     successCondition: pack.successCondition,
     outcomePack: pack,
   });
+  const attachmentWarnings: Array<{ entityType: string; entityId: string; code: "work_entity_projection_failed" }> = [];
   for (const ref of pack.subjectRefs) {
-    await attachWorkEntity(ctx.tenantId, started.workId, {
-      ...ref,
-      relationship: "target",
-      source: `outcome_pack:${pack.packId}:v${pack.packVersion}`,
-    });
+    try {
+      await attachWorkEntity(ctx.tenantId, started.workId, {
+        ...ref,
+        relationship: "target",
+        source: `outcome_pack:${pack.packId}:v${pack.packVersion}`,
+      });
+    } catch (error) {
+      console.error(`[Outcome Pack ${pack.packId}] subject link failed for Work ${started.workId}`, error instanceof Error ? error.message : String(error));
+      attachmentWarnings.push({ entityType: ref.entityType, entityId: ref.entityId, code: "work_entity_projection_failed" });
+    }
   }
-  return { ...started, pack };
+  return { ...started, pack, attachmentWarnings };
 }

@@ -34,7 +34,7 @@ import {
   type ExternalOperationRow,
 } from "@finnor/tools";
 import type { ArtifactActor } from "./service";
-import { ingestArtifact, interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot } from "./service";
+import { ingestArtifact, interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot, MEDIA } from "./service";
 import { classifyReadback } from "./publication";
 import { recordArtifactMetric } from "./telemetry";
 import { artifactOperationRequestHash, microsoftGraphMutationAudit } from "./provider-operation";
@@ -101,6 +101,91 @@ export async function createBlankArtifact(ctx: ArtifactActor, input: { kind: Cre
     origin: "finnor_generated",
   });
   return created;
+}
+
+export interface GroundedMemoSection {
+  heading: string;
+  paragraphs: readonly { text: string; sourceRefs: readonly string[] }[];
+}
+
+function wordText(value: string): string {
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, "")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+
+function memoParagraph(value: string, heading = false): string {
+  return `<w:p>${heading ? '<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>' : ""}<w:r><w:t xml:space="preserve">${wordText(value)}</w:t></w:r></w:p>`;
+}
+
+/** Materialize only caller-supplied, cited facts. This writer adds no model prose
+ * or inferred investment conclusion; the immutable bytes remain P3-owned. */
+export function groundedMemoBytes(title: string, sections: readonly GroundedMemoSection[]): Buffer {
+  if (!title.trim() || title.length > 500 || sections.length === 0 || sections.length > 32) throw new Error("INVALID_GROUNDED_MEMO");
+  const body = [memoParagraph(title, true)];
+  for (const section of sections) {
+    if (!section.heading.trim() || section.heading.length > 200 || section.paragraphs.length > 100) throw new Error("INVALID_GROUNDED_MEMO");
+    body.push(memoParagraph(section.heading, true));
+    for (const paragraph of section.paragraphs) {
+      if (!paragraph.text.trim() || paragraph.text.length > 3_500 || paragraph.sourceRefs.length === 0 || paragraph.sourceRefs.length > 20
+        || paragraph.sourceRefs.some((ref) => !/^[a-z_]+:[0-9a-f-]{36}$/i.test(ref))) throw new Error("INVALID_GROUNDED_MEMO_SOURCE");
+      body.push(memoParagraph(`${paragraph.text} [Sources: ${paragraph.sourceRefs.join("; ")}]`));
+    }
+  }
+  return writeZip(new Map([
+    ["[Content_Types].xml", xml(`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`)],
+    ["_rels/.rels", rootRelationships("word/document.xml")],
+    ["word/document.xml", xml(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join("")}<w:sectPr/></w:body></w:document>`)],
+  ]));
+}
+
+/** The governed DomainAction ID is the stable Document ID. A retry returns the
+ * first exact version even if the surrounding Deal has since changed. */
+export async function createGroundedMemoArtifact(ctx: ArtifactActor, input: {
+  actionId: string;
+  title: string;
+  sections: readonly GroundedMemoSection[];
+}): Promise<{ documentId: string; version: DocumentVersion; ir: SemanticIR; replayed: boolean }> {
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(input.actionId)) throw new Error("INVALID_GROUNDED_MEMO_ACTION_ID");
+  const title = input.title.trim().toLowerCase().endsWith(".docx") ? input.title.trim() : `${input.title.trim()}.docx`;
+  const bytes = groundedMemoBytes(input.title, input.sections);
+  const sourceRefs = [...new Set(input.sections.flatMap((section) => section.paragraphs.flatMap((paragraph) => paragraph.sourceRefs)))].sort();
+  const ir = await interpret(bytes, { fileName: title });
+  if (ir.kind !== "docx" || ir.warnings.length > 0) throw new Error("GROUNDED_MEMO_PARSE_FAILED");
+  return withTenant(ctx.tenantId, async (db) => {
+    await db.execute(sql`INSERT INTO finnor_os.documents(id,tenant_id,kind,title,source_system,external_id,created_by)
+      VALUES(${input.actionId}::uuid,${ctx.tenantId}::uuid,'docx',${title},'ic_memo_draft',${input.actionId},${ctx.userId})
+      ON CONFLICT (id) DO NOTHING`);
+    const document = await db.execute(sql`SELECT id::text,kind,title,source_system,external_id FROM finnor_os.documents
+      WHERE tenant_id=${ctx.tenantId}::uuid AND id=${input.actionId}::uuid FOR UPDATE`);
+    const row = document.rows[0];
+    if (!row || row.kind !== "docx" || row.title !== title || row.source_system !== "ic_memo_draft" || row.external_id !== input.actionId) {
+      throw new Error("GROUNDED_MEMO_IDENTITY_CONFLICT");
+    }
+    const prior = await db.execute(sql`SELECT id::text FROM finnor_os.document_versions
+      WHERE tenant_id=${ctx.tenantId}::uuid AND document_id=${input.actionId}::uuid AND source_ref=${input.actionId}
+      ORDER BY version_ordinal LIMIT 1`);
+    if (prior.rows[0]) {
+      const loaded = await loadDocumentVersion(db, ctx.tenantId, input.actionId, String(prior.rows[0].id));
+      if (!loaded) throw new Error("GROUNDED_MEMO_VERSION_MISSING");
+      const snapshot = await loadArtifactIRSnapshot(db, ctx.tenantId, loaded.version.id);
+      return { documentId: input.actionId, version: loaded.version, ir: snapshot?.ir ?? await interpret(loaded.bytes, { fileName: title }), replayed: true };
+    }
+    const version = await appendDocumentVersion(db, {
+      tenantId: ctx.tenantId, documentId: input.actionId, bytes, mediaType: MEDIA.docx,
+      format: "docx", origin: "finnor_generated", actor: ctx.userId,
+      sourceSystem: "ic_memo_draft", sourceRef: input.actionId,
+      head: { kind: "current", key: "default", expectedVersionId: null },
+    });
+    await saveArtifactIRSnapshot(db, ctx.tenantId, version.id, ir);
+    await recordBusinessEvent(db, {
+      tenantId: ctx.tenantId, entityType: "document", entityId: input.actionId,
+      eventType: "document_version_observed",
+      payload: { documentVersionId: version.id, format: "docx", semanticHash: ir.semanticHash, origin: "finnor_generated", sourceRefs },
+      source: "ic_memo_draft",
+    });
+    return { documentId: input.actionId, version, ir, replayed: false };
+  });
 }
 
 export type ArtifactCreateWriteMode = "APP_ONLY_FILE_CREATE" | "DELEGATED_FILE_CREATE";

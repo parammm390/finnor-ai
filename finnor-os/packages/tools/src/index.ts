@@ -33,4 +33,5 @@ export * from "./emulators/fault-injection";
 export * from "./emulators/apply-env-faults";
 export * from "./tenant-provider";
 export * from "./source-adapters";
+export * from "./gmail-observation";
 export * from "./source-truth-health";

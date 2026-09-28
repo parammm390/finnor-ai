@@ -377,7 +377,11 @@ function compileOne(input: {
       continue;
     }
     const supporters = materialNodes.filter((node) => (node.supports ?? []).includes(criterion.id));
-    if (materialNodes.length > 0 && supporters.length === 0) {
+    // These two completion guards inspect the state after other work. They are
+    // not business outcomes a query/action/wait must claim to create.
+    const observationalGuard = criterion.criterion.kind === "no_open_execution"
+      || criterion.criterion.kind === "all_objective_effects_verified";
+    if (materialNodes.length > 0 && supporters.length === 0 && !observationalGuard) {
       violations.push(violation(candidate.candidateKey, "COMPLETION_COVERAGE_MISSING", `Completion criterion ${criterion.id} has no material supporting node`, check.key));
     }
     for (const supporter of supporters) {

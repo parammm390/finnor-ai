@@ -1,0 +1,309 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_temporal_recommendation_question",
+  "capturedAt": "2026-09-27T21:16:35.732Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "What changed since yesterday, and does it affect our recommendation?"
+  },
+  "observed": {
+    "workId": "99ab5905-1dfd-45d1-bd3c-f9309c060314",
+    "threadId": "8c1b054a-8b34-4382-8199-5c4ee9b96d12",
+    "workStatus": "completed",
+    "query": {
+      "id": "57cecce4-7ebb-4aa9-bf5a-f4c35b36bbea",
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "workId": "99ab5905-1dfd-45d1-bd3c-f9309c060314",
+      "workInputId": "99ab5905-1dfd-45d1-bd3c-f9309c060314",
+      "intent": "pe_world_state",
+      "request": {
+        "root": {
+          "entityId": "90000000-0000-4000-8000-000000000001",
+          "entityType": "pe_deal"
+        },
+        "intent": "pe_world_state",
+        "compareWindow": "previous_24h"
+      },
+      "executionKey": "99ab5905-1dfd-45d1-bd3c-f9309c060314",
+      "status": "succeeded",
+      "resultSummary": {
+        "root": {
+          "entityId": "90000000-0000-4000-8000-000000000001",
+          "entityType": "pe_deal"
+        },
+        "intent": "pe_world_state",
+        "stateAt": "2026-09-27T21:15:59.991Z",
+        "returned": 1,
+        "truncated": false
+      },
+      "rowCount": 1,
+      "durationMs": 5034,
+      "failure": null,
+      "startedAt": "2026-09-27T21:15:59.969Z",
+      "completedAt": "2026-09-27T21:16:05.007Z"
+    },
+    "evidenceChange": {
+      "id": "semantic:evidence_source_versions:605c2d3f-e930-4213-bf49-29902b26357c:evidence_version_recorded",
+      "occurredAt": "2026-09-27T21:03:59.792Z",
+      "kind": "evidence_version_recorded",
+      "bucket": "in_motion",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "core",
+        "owner": "@finnor/db",
+        "type": "evidence_version",
+        "id": "605c2d3f-e930-4213-bf49-29902b26357c"
+      },
+      "actor": "system",
+      "change": {
+        "type": "evidence_version_recorded",
+        "after": 1,
+        "label": "Evidence version recorded"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "version_of",
+          "type": "evidence_source",
+          "id": "570a7f7e-e79e-4542-bdec-81eb12290ff8",
+          "sourceRef": {
+            "owner": "@finnor/db",
+            "table": "evidence_source_versions",
+            "id": "605c2d3f-e930-4213-bf49-29902b26357c",
+            "fieldPath": "source_id"
+          },
+          "targetRef": {
+            "namespace": "core",
+            "owner": "@finnor/db",
+            "type": "evidence_source",
+            "id": "570a7f7e-e79e-4542-bdec-81eb12290ff8"
+          }
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "evidence_version",
+          "id": "605c2d3f-e930-4213-bf49-29902b26357c",
+          "hash": "6527ab0f90a0ea591e42c207104c64cedcd340b85e378f816eed5cc3455979e3"
+        }
+      ],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "evidence",
+        "evidenceSourceId": "570a7f7e-e79e-4542-bdec-81eb12290ff8",
+        "evidenceVersionId": "605c2d3f-e930-4213-bf49-29902b26357c"
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/db",
+          "table": "evidence_source_versions",
+          "id": "605c2d3f-e930-4213-bf49-29902b26357c"
+        }
+      ],
+      "asOf": "2026-09-27T21:16:25.393Z"
+    },
+    "modelChange": {
+      "id": "semantic:underwriting_runs:58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce:underwriting_run_completed",
+      "occurredAt": "2026-09-27T21:04:00.050Z",
+      "kind": "underwriting_run_completed",
+      "bucket": "verified_outcomes",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "underwriting",
+        "owner": "@finnor/private-equity",
+        "type": "underwriting_run",
+        "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce"
+      },
+      "actor": "human",
+      "actorRef": {
+        "kind": "human",
+        "id": "c5903941-8a3c-4f6a-be86-24aba4ffbbe3"
+      },
+      "workId": "90000000-0000-4000-8000-000000000015",
+      "change": {
+        "type": "underwriting_run_completed",
+        "after": {
+          "status": "SUCCEEDED",
+          "validity": "VALID",
+          "resultHash": "sha256:644530aa083be4c8575ac4e0805340f3ab9f41ef067fea5da967bbd80c83a869"
+        },
+        "label": "Underwriting run completed"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "executed_model_version",
+          "type": "underwriting_model_version",
+          "id": "6699517d-e7a4-4836-bda3-fc7338ef9609",
+          "sourceRef": {
+            "owner": "@finnor/private-equity",
+            "table": "underwriting_runs",
+            "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce",
+            "fieldPath": "model_version_id"
+          },
+          "targetRef": {
+            "namespace": "underwriting",
+            "owner": "@finnor/private-equity",
+            "type": "underwriting_model_version",
+            "id": "6699517d-e7a4-4836-bda3-fc7338ef9609"
+          }
+        },
+        {
+          "relationship": "attached_to_work",
+          "type": "work",
+          "id": "90000000-0000-4000-8000-000000000015",
+          "sourceRef": {
+            "owner": "@finnor/private-equity",
+            "table": "underwriting_runs",
+            "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce",
+            "fieldPath": "work_id"
+          },
+          "targetRef": {
+            "namespace": "core",
+            "owner": "@finnor/db",
+            "type": "work",
+            "id": "90000000-0000-4000-8000-000000000015"
+          }
+        }
+      ],
+      "evidenceRefs": [],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "underwriting",
+        "investmentCaseId": "90000000-0000-4000-8000-000000000002",
+        "runId": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce"
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/private-equity",
+          "table": "underwriting_runs",
+          "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce"
+        }
+      ],
+      "asOf": "2026-09-27T21:16:25.393Z"
+    },
+    "recommendationChange": {
+      "id": "semantic:business_events:8baebe39-542a-4ea4-b9b8-d8a43c50dd09:ic_recommendation_recorded",
+      "occurredAt": "2026-09-27T21:04:00.211Z",
+      "kind": "ic_recommendation_recorded",
+      "bucket": "in_motion",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "private_equity",
+        "owner": "@finnor/private-equity",
+        "type": "pe_ic_recommendation",
+        "id": "90000000-0000-4000-8000-000000000039"
+      },
+      "actor": "human",
+      "actorRef": {
+        "kind": "human",
+        "id": "c5903941-8a3c-4f6a-be86-24aba4ffbbe3"
+      },
+      "change": {
+        "type": "ic_recommendation_created",
+        "after": "created",
+        "label": "Ic Recommendation Created"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "underwriting_run",
+          "type": "underwriting_run",
+          "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce",
+          "sourceRef": {
+            "owner": "@finnor/db",
+            "table": "business_events",
+            "id": "8baebe39-542a-4ea4-b9b8-d8a43c50dd09",
+            "fieldPath": "payload.underwritingRunId"
+          },
+          "targetRef": {
+            "namespace": "underwriting",
+            "owner": "@finnor/private-equity",
+            "type": "underwriting_run",
+            "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce"
+          }
+        }
+      ],
+      "evidenceRefs": [],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "ic",
+        "icCaseId": "90000000-0000-4000-8000-000000000036",
+        "objectRef": {
+          "namespace": "private_equity",
+          "owner": "@finnor/private-equity",
+          "type": "pe_ic_recommendation",
+          "id": "90000000-0000-4000-8000-000000000039"
+        }
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/db",
+          "table": "business_events",
+          "id": "8baebe39-542a-4ea4-b9b8-d8a43c50dd09"
+        }
+      ],
+      "asOf": "2026-09-27T21:16:25.393Z"
+    },
+    "declaredRecommendationRunLink": {
+      "relationship": "underwriting_run",
+      "type": "underwriting_run",
+      "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce",
+      "sourceRef": {
+        "owner": "@finnor/db",
+        "table": "business_events",
+        "id": "8baebe39-542a-4ea4-b9b8-d8a43c50dd09",
+        "fieldPath": "payload.underwritingRunId"
+      },
+      "targetRef": {
+        "namespace": "underwriting",
+        "owner": "@finnor/private-equity",
+        "type": "underwriting_run",
+        "id": "58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce"
+      }
+    },
+    "threadAnswer": "CENTROPY\n02:46 AM\n\n92 recorded Deal changes since 2026-09-26T21:15:59.968Z, including 1 evidence version and 1 Underwriting Run event. An IC recommendation was recorded in this window with an explicit link to Underwriting Run 58bcd3ce-ebd5-4e98-8bc1-2fa044b517ce. The record does not prove that an evidence change caused the recommendation. Historical or source coverage is partial; absence of other changes is unverified.\n\nInspect linked Work"
+  },
+  "steps": [
+    "Authenticate the owner and ask the exact temporal recommendation question from Atlas Deal",
+    "Verify a completed canonical previous-24-hour Work query",
+    "Read the canonical Deal Semantic Activity and verify evidence, Underwriting Run, and IC recommendation events with the declared Run link",
+    "Reopen and reload the Thread answer and its explicit causal and coverage limitations"
+  ],
+  "screenshotSha256": "fb292e9f85440666c92e56e5ad3b3131163c7e03cf1fbdc0eb10482be79ae08a",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npx playwright test e2e/centropy-temporal-question.spec.ts --project=desktop-chromium --workers=1",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "seeded disposable Atlas tenant with canonical history"
+    ]
+  },
+  "limitation": "Local synthetic fixture. The 24-hour historical baseline predates the fixture's canonical history, so the answer must mark baseline coverage unavailable. The evidence-to-model causal edge is unrepresented; the recommendation-to-Run edge is declared. Release-host data and comparison remain open."
+}

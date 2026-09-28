@@ -29,6 +29,8 @@ import {
 import { buildPrivateEquityEpistemicSnapshot } from "./epistemic";
 import { evaluateDealCloseEligibility, loadDealExecutionGraph } from "./repository";
 import { loadPrivateEquityWorldState } from "./world-state";
+import { loadSemanticActivity } from "./semantic-activity";
+import { loadTemporalBasisComparison } from "./temporal-basis";
 import { isPositiveDependencyResolution } from "./state-machines";
 import { loadPrivateEquityAssertions } from "./source-mapping";
 import { PeDomainError, type DealCloseEligibility, type DealExecutionGraph, type PeMutationContext } from "./types";
@@ -362,10 +364,43 @@ async function runQuery(
 ): Promise<PrivateEquityOperationalQueryResult> {
   const ctx = authContext(tenantId, options);
   if (request.intent === "pe_world_state") {
+    if (request.compareWindow && (request.at || request.validAt || request.knowledgeAt)) {
+      throw new PeDomainError("PE_INVALID_TEMPORAL_QUERY", "A rolling comparison cannot be combined with an explicit historical instant");
+    }
     const world = await loadPrivateEquityWorldState(ctx, request.root,
       request.validAt || request.knowledgeAt
         ? { validAt: request.validAt, knowledgeAt: request.knowledgeAt ?? request.at }
         : request.at);
+    const temporalReview: PeWorldStateResult["temporalReview"] = request.compareWindow === "previous_24h"
+      ? await (async () => {
+        const sinceAt = new Date(now.getTime() - 24 * 60 * 60_000).toISOString();
+        const [baseline, activity] = await Promise.all([
+          loadPrivateEquityWorldState(ctx, request.root, sinceAt),
+          loadSemanticActivity(ctx, { root: request.root, limit: 1_000 }),
+        ]);
+        const inWindow = activity.items.filter((item) => item.occurredAt >= sinceAt && item.occurredAt <= now.toISOString());
+        const dealIds = [...new Set([...baseline.deals, ...world.deals, baseline.deal, world.deal].flatMap((row) => typeof row?.id === "string" ? [row.id] : []))];
+        const basis = await loadTemporalBasisComparison(ctx, dealIds, sinceAt, now.toISOString());
+        return {
+          ...basis,
+          sinceAt,
+          untilAt: now.toISOString(),
+          baselineStatus: baseline.temporalCompleteness.status,
+          baselineAt: baseline.temporalCompleteness.baselineAt,
+          activityTruncated: activity.bounds.truncated || inWindow.length > 100,
+          activitySources: activity.sourceStatus,
+          changes: inWindow.slice(0, 100).map((item) => ({
+            id: item.id, kind: item.kind, occurredAt: item.occurredAt, label: item.change.label,
+            subject: { namespace: item.subjectRef.namespace, type: item.subjectRef.type, id: item.subjectRef.id },
+            evidenceRefs: item.evidenceRefs.map((ref) => ({ type: ref.type, id: ref.id, ...(ref.hash ? { hash: ref.hash } : {}) })),
+            causalRefs: item.causalRefs.map((ref) => ({ relationship: ref.relationship, type: ref.type, id: ref.id,
+              sourceRef: { table: ref.sourceRef.table, id: ref.sourceRef.id, ...(ref.sourceRef.fieldPath ? { fieldPath: ref.sourceRef.fieldPath } : {}) } })),
+            sourceRefs: item.sourceRefs.map((ref) => ({ owner: ref.owner, table: ref.table, id: ref.id,
+              ...(ref.fieldPath ? { fieldPath: ref.fieldPath } : {}) })),
+          })),
+        };
+      })()
+      : undefined;
     const page = resultPage(1, 1, 1, 0, null);
     return {
       ...base("pe_world_state", [
@@ -381,8 +416,14 @@ async function runQuery(
         "pe_securities", "pe_debt_facilities", "pe_debt_facility_lenders", "pe_ownership_interests",
         "pe_metric_series", "pe_metric_observations", "pe_benchmarks", "pe_benchmark_observations",
         "pe_outcomes", "pe_exits", "pe_fact_coverage",
+        ...(temporalReview?.changes.flatMap((change) => change.sourceRefs.map((source) => source.table)) ?? []),
+        ...(temporalReview ? ["pe_ic_cases", "pe_ic_recommendations", "underwriting_runs"] : []),
       ], world.stateAt, page),
       ...world,
+      ...(temporalReview ? { temporalReview } : {}),
+      ...(temporalReview && (temporalReview.baselineStatus !== "complete" || temporalReview.activityTruncated || temporalReview.basisCoverage.status !== "complete" || temporalReview.activitySources.some((source) => source.status !== "complete"))
+        ? { status: "partial" as const, truncated: temporalReview.activityTruncated }
+        : {}),
     };
   }
   const { graph, eligibility } = await consistentDealRead(ctx, request.dealId, now);
@@ -645,16 +686,18 @@ export async function interpretPrivateEquityQuestion(
       && !/^\s*(?:what|which|why|how|can|could|would|is|are|show|list|tell|summarize|explain)\b/i.test(normalized)) {
     return { route: "planner", reason: "mutation_or_advice" };
   }
+  const temporalQuestion = /^what changed since yesterday(?:,? and does it affect our recommendation)?\??$/i.test(normalized);
   const peMention = /\b(?:deal|closing|close|workstream|request|deliverable|finding|risk|dependency|milestone|loi|lender|diligence|block|stop|waiting|readiness)\b/i.test(normalized);
   // An exact Work attachment is stronger than NLP. This deliberately lets
   // "what's still missing here?" resolve through its Deal/condition anchors.
-  if (!peMention && !options.workId) return { route: "planner", reason: "not_pe_question" };
+  if (!peMention && !temporalQuestion && !options.workId) return { route: "planner", reason: "not_pe_question" };
   const resolution = await resolvePrivateEquityDealReference(tenantId, normalized, options);
   if (resolution.status === "ambiguous") return { route: "clarify", reason: "ambiguous_deal", resolution };
   if (resolution.status === "not_found") return { route: "clarify", reason: "deal_not_found", resolution };
   const dealId = resolution.dealId;
   let request: PrivateEquityOperationalQueryRequest;
-  if (/\b(?:closing|close|readiness|block|stop|waiting|missing|lender)\b/i.test(normalized)) request = { intent: "closing_readiness", dealId };
+  if (temporalQuestion) request = { intent: "pe_world_state", root: { entityType: "pe_deal", entityId: dealId }, compareWindow: "previous_24h" };
+  else if (/\b(?:closing|close|readiness|block|stop|waiting|missing|lender)\b/i.test(normalized)) request = { intent: "closing_readiness", dealId };
   else if (/\bdependenc/i.test(normalized)) request = { intent: "critical_dependencies", dealId };
   else if (/\brequest/i.test(normalized)) request = { intent: "open_requests", dealId };
   else if (/\bfinding/i.test(normalized)) request = { intent: "open_findings", dealId };

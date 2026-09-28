@@ -14,7 +14,8 @@ import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog
 import { inArray, desc, asc, eq, and, lt, or } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
 import { extractPredicted } from "../../../../lib/predicted-outcome";
-import { eligibleApproversForActions } from "@finnor/authority";
+import { canExerciseAuthority, eligibleApproversForActions } from "@finnor/authority";
+import type { AuthorityResource } from "@finnor/shared-types";
 
 type ReceiptSummary = {
   id: string;
@@ -135,20 +136,38 @@ export async function GET(req: Request): Promise<Response> {
     }
 
     const approversByAction = new Map(Object.entries(await eligibleApproversForActions(ctx.tenantId, actionIds)));
-    const actions = pageRows.map((r) => ({
+    const reviewMarkers = actionIds.length ? await withTenant(ctx.tenantId, (db) => db.select({ domainActionId: actionLog.domainActionId })
+      .from(actionLog).where(and(eq(actionLog.tenantId, ctx.tenantId), eq(actionLog.step, "review_required"), inArray(actionLog.domainActionId, actionIds)))) : [];
+    const reviewRequired = new Set(reviewMarkers.map((row) => row.domainActionId));
+    const actions = await Promise.all(pageRows.map(async (r) => {
+      const chainEligible = approversByAction.get(r.id) ?? [];
+      const authorityContext = r.authorityContext && typeof r.authorityContext === "object" ? r.authorityContext as Record<string, unknown> : {};
+      const directReviewEligible = reviewRequired.has(r.id) && chainEligible.length === 0 && await canExerciseAuthority(ctx, {
+        operation: "approval",
+        capability: `approve:${r.actionType}`,
+        resources: Array.isArray(authorityContext.resources) ? authorityContext.resources as AuthorityResource[] : [],
+        risk: authorityContext.risk === "low" || authorityContext.risk === "high" ? authorityContext.risk : "medium",
+        amountUsd: typeof authorityContext.amountUsd === "number" ? authorityContext.amountUsd : undefined,
+        workId: r.workId ?? undefined,
+        domainActionId: r.id,
+        businessEffectId: r.businessEffectId ?? undefined,
+        businessEffectHash: effectByActionId.get(r.id)?.semanticHash,
+      });
+      return {
       ...r,
       receipt: receiptByActionId.get(r.id) ?? null,
       businessEffect: effectByActionId.get(r.id)?.effect ?? null,
       businessEffectStatus: effectByActionId.get(r.id)?.status ?? null,
       critic: criticByActionId.get(r.id) ?? null,
-      eligibleApproverIds: approversByAction.get(r.id) ?? [],
-      canCurrentEmployeeApprove: (approversByAction.get(r.id) ?? []).includes(ctx.employeeId ?? ctx.userId),
+      eligibleApproverIds: chainEligible,
+      canCurrentEmployeeApprove: chainEligible.includes(ctx.employeeId ?? ctx.userId) || directReviewEligible,
       // jarvis-v3 P4.T1: the plugin's own simulate() prediction, normalized out of
       // the raw predictedReceipt column (already present on `r` via the `...r`
       // spread above) so the Approval Cockpit reads one clean field instead of
       // reaching into simulation.predicted itself. null when no real simulate()
       // ran for this action type — never a fabricated prediction.
       predicted: extractPredicted(r.predictedReceipt),
+      };
     }));
     const last = pageRows.at(-1);
     return Response.json({

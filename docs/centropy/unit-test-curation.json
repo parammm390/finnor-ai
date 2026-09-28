@@ -1,0 +1,1549 @@
+{
+  "scope": "113 original backend unit files; five retired frontend unit files were also removed. Three frontend proxy/auth/context files remain.",
+  "backendFiles": [
+    {
+      "file": "finnor-os/tests/unit/action-route-operational-controls.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "passes a supported read to the fast path without planner-only gates",
+        "keeps mutation/advice instructions on the planner path and observes pressure without rejecting accepted Work"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/anomaly-detector.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "detects a real spike after a variable baseline",
+        "does not call a constant history anomalous"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/api-middleware.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "still rejects an anonymous private API request",
+        "allows an authenticated private API request through"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/api-route-auth-boundary.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "enumerates every API route and requires an explicit boundary for each",
+        "keeps the shared IC route wrappers anchored to requireContext",
+        "has no stale exception: every exception is a real route"
+      ],
+      "remainingSourceReads": true
+    },
+    {
+      "file": "finnor-os/tests/unit/artifact-os-contract.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "keeps package dependency direction within the certified architecture",
+        "keeps Core Document as the only logical artifact owner",
+        "exposes a functional authenticated Artifact Workspace without pretending to render Office",
+        "documents every Artifact Workspace route and every bounded inspector query",
+        "materializes provider bytes only for a live Core Document and preserves replay boundaries"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/artifact-os-core.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "pins every bounded, non-confidential fixture to its exact byte hash",
+        "rejects ZIP bombs before expansion",
+        "rejects traversal names in both writer and package reader",
+        "rejects DTD/entity XML before parser expansion",
+        "never fetches an external relationship and retains it as explicit IR",
+        "rejects an internal relationship with a remote target",
+        "preserves unknown binary parts through a supported edit",
+        "treats embedded OLE as inert opaque bytes and preserves it exactly",
+        "detects VBA, never interprets it, and preserves its exact bytes on a cell edit",
+        "rejects malformed, duplicate-path, encrypted, unsupported, and legacy binary packages explicitly",
+        "enforces a cancellable parser deadline and publishes the complete metric contract",
+        "preserves sheet order, values, formulas, cached values, styles, formats, merges, and panes",
+        "discovers tables and preserves unsupported active/conditional/validation structures in semantic or opaque truth",
+        "parses defined names, validation, conditional formatting, comments, charts, and hidden sheets from exact OOXML parts",
+        "no-op is byte-identical; a target cell edit changes only declared semantic parts",
+        "edits an exact formula, removes cached truth, and marks calculation stale",
+        "creates a certified worksheet and keeps existing worksheet bytes exact",
+        "fails stale, merged-cell, invalid sheet, and unsupported operations without returning bytes",
+        "preserves very-hidden truth and refuses writes into protected worksheets",
+        "proves same-sheet, cross-sheet, range, defined-name, and structured-table dependencies",
+        "marks external, dynamic, unresolved, and unsupported formulas partial without guessed edges",
+        "exposes circular dependencies once and expands bounded ranges exactly",
+        "reads sections, paragraphs/runs/styles, tables, headers/footers, footnotes/endnotes and bookmarks",
+        "discovers comments, hyperlinks, and image anchors without interpreting embedded media",
+        "preserves tracked changes and refuses edits through revision descendants",
+        "supports exact text/table edits and paragraph insertion while preserving untargeted parts",
+        "marks a text-box target unsupported and fails the write",
+        "preserves field-code truth and refuses to rewrite through the field",
+        "keeps stable slides/shapes, masters/layouts/themes, tables, notes, charts, groups and transitions",
+        "supports exact text/table edits and slide reorder with no-op/untargeted fidelity",
+        "duplicates a certified template slide while preserving source/master/layout/theme parts",
+        "refuses overlapping edits and grouped-shape targets",
+        "keeps an embedded workbook opaque and byte-exact through a slide edit",
+        "provides exact page anchors for text and never fabricates OCR",
+        "classifies exact, provider-normalized, and unexpected semantic readback without guessing",
+        "marks an unresolved anchor stale and multiple exact semantic candidates ambiguous",
+        "computes deterministic three-way overlap and only marks safe disjoint edits merge-eligible",
+        "round-trips bounded A1 references and column names",
+        "parses generated formulas or returns an explicit partial result without guessing",
+        "bounds sheet names, ZIP paths, XML trees, anchors, and random package input without process crashes",
+        "keeps semantic hashes canonical and diff identities symmetric"
+      ],
+      "remainingSourceReads": true
+    },
+    {
+      "file": "finnor-os/tests/unit/authz-matrix.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "is derived from every API route and records its guard pattern"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/backup-storage-github.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps every release when there are fewer than the daily cap",
+        "keeps the 14 newest days as daily slots; older-still days may additionally survive as weekly slots",
+        "collapses multiple same-day releases into one daily slot (newest wins), doesn",
+        "keeps weekly releases beyond the daily window, up to the weekly cap",
+        "deletes anything past both the daily and weekly caps",
+        "backupStorageConfig returns null when unset, and the real values when set",
+        "uploadBackup creates a release then uploads the asset to the returned upload_url, zero real calls",
+        "listBackupReleases filters to only backup- tagged releases",
+        "deleteBackupRelease tolerates an already-deleted (404) release",
+        "deleteBackupRelease throws on a real failure"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/builtin-tools-sandbox-posture.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "does not select a live driver at registration from process-global credentials",
+        "registers only the governed single-call adapter before managed secrets are loaded"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/chunking.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns [] for empty or whitespace-only input",
+        "a short text stays as one chunk",
+        "packs multiple short paragraphs into one chunk under the max",
+        "splits into multiple chunks once the max token budget is exceeded",
+        "never splits mid-sentence when a single paragraph exceeds the max",
+        "merges an undersized trailing chunk into its neighbor rather than shipping a near-empty chunk",
+        "stamps every chunk with the source",
+        "defaults entityRefs to [] when not given",
+        "skips empty text with zero chunks written and no error, with no DB access"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/company-party-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "maps business party names onto the existing canonical graph identities",
+        "keeps tenant identity out of resolver payloads",
+        "rejects forged tenant selectors at runtime instead of silently ignoring them"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/compute-backpressure.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "may defer coalescible optional work only before durable acceptance",
+        "preserves required Work after durable acceptance under identical saturation",
+        "reports missing telemetry as degraded rather than fabricating zero demand",
+        "defers only optional pre-acceptance work when telemetry is unavailable"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/compute-governor-routing.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "permits a configured Graph operation without an unrelated model:global policy",
+        "fails closed when a model invocation lacks the mandatory model:global policy"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/computer-execution-fabric.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "exposes one business action and no browser primitives",
+        "requires an exact write envelope and forbids one for read-only",
+        "registers one computer action in the active fixed catalog",
+        "keeps native/API execution ahead of computer use and ambiguity ahead of provisioning",
+        "negotiates only providers with every required capability",
+        "maps the verified Steel 0.18 session lifecycle without leaking SDK shapes",
+        "derives origins only from governed configuration and lets restrictions narrow",
+        "compares semantic effects exactly, including every changed field",
+        "blocks non-idempotent application traffic in read-only mode without relying on labels",
+        "requires literal post-state evidence for a write",
+        "redacts secret-shaped state and sensitive values before persistence"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/confidence-threshold.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns the configured number",
+        "returns undefined when unset \u2014 never fabricates a default",
+        "returns undefined for a non-number value rather than coercing it"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/consolidated-memory.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "zepProviderStatus reports not configured when no env var is set",
+        "mirrorTurnToZep resolves without throwing and makes no network call",
+        "queryConsolidatedFacts returns [] \u2014 never guessed, never a fabricated hit",
+        "reports configured:true once ZEP_API_KEY is present (still untested against a real account)",
+        "semantic array is populated from pgvector alone when no semanticQuery is given, without erroring"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/conversation.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "uses the configured answer model and returns its conversational response",
+        "routes external research to the existing web research action",
+        "keeps internal business questions on the canonical query plane",
+        "never guesses a write when the planner returned no valid action"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/critic.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "criticConfigured reports false when no Bedrock key is set",
+        "criticConfigured reports true once AWS_BEDROCK_API_KEY is set",
+        "returns the parsed verdict when the model responds with clean JSON",
+        "surfaces a flagged verdict with its reason",
+        "degrades to an honest unflagged default when the model response is not valid JSON",
+        "degrades to an honest unflagged default when the JSON doesn",
+        "wraps and rethrows a provider failure rather than swallowing it"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/dlq-triage.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "discards a non-replayable row regardless of kind",
+        "discards validation/terminal/auth kinds even if flagged replayable",
+        "escalates needs_human and config kinds",
+        "escalates a retryable failure sitting in a cluster of 3+ other open siblings",
+        "escalates a retryable failure that",
+        "replays an isolated, low-attempt retryable or provider_down failure"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/email-governed-context.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "uses the selected tenant identity instead of process-global sender state",
+        "rejects a credential context selected for another tenant"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/envelope.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "makeEnvelope stamps the current major version and tenant/type/payload",
+        "accepts an envelope on the current major version",
+        "rejects an unrecognized major version as a terminal (non-retryable) error, not a guess"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/event-wait-matching.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "matches exact canonical Work, PartyRef, resource, event type, and timestamp",
+        "never lets the same Mario satisfy a different Work",
+        "rejects wrong refs and events outside the wait window",
+        "accepts an exact provider conversation or application ref without guessing from text",
+        "does not treat a PartyRef alone as a cross-Work correlation"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/evidence-recorder.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "uses a stable tenant source and delegates content-hash retries idempotently",
+        "refuses a public source returned by an unsafe source implementation"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/evidence.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps chunks bounded and merges a short tail",
+        "fuses lexical and vector rankings by chunk identity",
+        "produces bounded citation excerpts"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/graph-allowlist.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "defaults to DEFAULT_GRAPH_ACTION_TYPES when the env var is unset",
+        "an explicit empty string means an explicit empty allowlist \u2014 NOT the default",
+        "accepts an explicit active action and rejects retired entries"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/holt-winters.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns 14 non-negative bands for a known weekly seasonal series",
+        "refuses insufficient history"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/import-mapping.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/instruction-cancellation-semantics.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "recognizes instruction-level fences and canonical confirmations",
+        "does not widen a historical action rejection into global cancellation"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/instruction-routing-policy.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "preserves deterministic Operational Query Plane reads",
+        "keeps an unsupported non-business question off the heavy objective planner",
+        "does not promote an unsupported read question into an objective",
+        "reserves the atomic route for an exact one-effect candidate",
+        "rejects a nominally atomic instruction when the typed plan reveals a workflow or dependency"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/intelligence-forecasts.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps 14-day bands unavailable until two weekly seasons of real daily history exist"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/learning-digest.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "buckets rows by actionType and status",
+        "computes failureRate against total and rejectionRate against decided, not total",
+        "returns an empty array for no rows",
+        "sorts by total volume descending",
+        "ignores transient statuses (approved/executing) safely \u2014 never crashes, never miscounts a terminal bucket",
+        "stays silent below the minimum sample size, even at 100% failure",
+        "flags an action_type crossing the failure threshold with a real sample",
+        "flags an action_type crossing the rejection threshold with a real decided sample",
+        "appends a critic summary line when there are flagged findings",
+        "returns an empty list when nothing crosses any threshold",
+        "surfaces only turns parseSpokenDecision itself calls unclear",
+        "newest first",
+        "caps at the given limit",
+        "a phrase already added to the tenant",
+        "redacts PII in the surfaced transcript",
+        "empty input yields an empty list"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/llm-routing-observability.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "records the concrete fallback provider and does not add a composite health sample"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/llm-routing.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "fails closed for an unnamed provider and never treats Groq as the route default",
+        "fails closed for an invalid explicit route instead of falling back to defaults",
+        "resolves Mistral from runtime configuration and preserves structured JSON mode",
+        "passes one absolute deadline and caller signal through every fallback attempt",
+        "moves a predictably slow provider behind a fast one for voice"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/logger-pii-redaction.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps only redacted records in the bounded Axiom fallback buffer",
+        "redacts direct, nested, payload, and authorization fields before a log destination receives them"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/microsoft-artifact-transport.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "downloads exact bytes around a stable eTag and exposes bounded provider versions",
+        "creates a large file through bounded upload chunks with fail-on-conflict identity",
+        "enforces the exact eTag, sends If-Match, and blocks labeled app-only replacement",
+        "uses the delegated workbook session header for range read/write, calculation, and close",
+        "rejects malformed metadata and invalid create policies instead of inventing provider identity"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/microsoft365-access-probes.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "accepts only a tenant/application-bound Graph app token and returns no bearer material",
+        "certifies scoped access only when the exact resource succeeds and a known non-covered resource returns 403",
+        "refuses least-privilege claims for readable or inconclusive negative resources",
+        "records the real tenant blast radius for broad access and never issues a write probe"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/microsoft365-provider.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "caches ephemeral tokens by tenant-bound revision and isolates two tenants",
+        "refreshes a token whose safety-margin lifetime is already exhausted",
+        "supports only the deliberate X.509 fallback contract and never needs a client secret",
+        "rejects opaque cursor SSRF before any Graph call",
+        "performs folder-scoped baseline delta, stores terminal cursor, then forces immediate catch-up",
+        "uses organizer transcript delta and falls back only for speaker-attribution denial",
+        "restarts an expanded calendar window as uncovered and completes only after its immediate catch-up",
+        "retains bounded mail attachment metadata without inventing a materialized Document",
+        "fails closed when a terminal cursor changes resource family",
+        "retains a bounded untrusted Teams body without executable HTML",
+        "exposes the configured user feed",
+        "declares seven exact source families without beta or obsolete Teams billing semantics",
+        "keeps calendar cancellation as evidence and uses only provider removal as a tombstone",
+        "preserves Teams edit/thread/delete identity and gives deletion time precedence",
+        "keeps Drive identity stable across rename/move and bounds Lists without inventing Documents",
+        "bounds transcript content and preserves an exact meeting relationship",
+        "reacquires once on 401 and classifies 403/404/429/503 without inventing deletion",
+        "rejects malformed, wrong-content-type, oversized, beta, and cross-resource responses",
+        "audits every physical upload redirect and never collapses them into one invocation",
+        "does not hide an unaudited mutation retry behind token refresh",
+        "stores only a hash-verifiable high-entropy clientState",
+        "caps resource lifetime and computes deterministic 20 percent renewal lead",
+        "does not send clientState during renewal"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/migration-lineage.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "accepts an older known subset and a fully applied release",
+        "fails closed on unfamiliar live migrations with stable, complete diagnostics"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/objective-model-json.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "accepts one JSON decision with provider prose or a markdown fence",
+        "rejects multiple JSON decisions and malformed JSON"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/objective-success-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "evaluates bounded canonical assertions without a model judge",
+        "persists validated OQP requests and rejects model-invented query shapes",
+        "does not let a generic outcome use a message or workflow receipt as sufficient completion evidence"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/observability.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "ToolRegistry.call() adds a breadcrumb and captures a message on failure",
+        "ToolRegistry.call() adds a breadcrumb (no captureMessage) on success",
+        "errorResponse() captures unexpected errors (not AuthError) via Sentry",
+        "errorResponse() does NOT report an AuthError to Sentry \u2014 expected auth failures aren"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/openapi-operational-query-contract.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "composes Work metadata into each strict intent branch",
+        "documents the final public fields on their canonical branches"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/operating-context-research.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "turns the exact ambiguous prompt into one clarification and never guessed research",
+        "resolves all supplied clarification dimensions in one continuation",
+        "routes resolved authenticated context to company-specific WEB research"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/operational-delta-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "round-trips opaque bigint-safe cursors and rejects malformed input",
+        "migration is one RLS ledger with bounded secret-free payloads and covered sources"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/outcome-pack-contracts.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "exposes only the four active Private Equity/Core packs",
+        "binds each deal pack to exact deal-scoped canonical evidence",
+        "rejects retired entity types at the general objective boundary",
+        "uses distinct, content-addressed pack fingerprints"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/p2-llm-faults.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "falls over a malformed JSON response without losing the concrete provider",
+        "converts an abortable provider timeout into a shared deadline error",
+        "preserves caller abort propagation instead of starting a fallback after cancellation",
+        "exposes every purpose/channel route with the configured Mistral/DeepSeek order",
+        "routes GLM, Mistral, and DeepSeek through one Bedrock key with concrete model provenance"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/p3-architecture-contract.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "locks explicit belief states, evidence taxonomy, exact P0 precedence, and separate canonical truth",
+        "locks typed read-only acquisition, safety-first scoring, bounded stopping, P2 monotonicity, and trace redaction",
+        "records the exact current-head source audit and no parallel truth, memory, authority, or BusinessEffect owner",
+        "locks all 20 zero-tolerance gates to executable evidence and the exact frozen corpus"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/pe5-runtime-boundary.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "composes only Core/none and Private Equity contracts",
+        "has no retired action, worker, or scheduler registration",
+        "rejects every former scheduler type before tenant lookup or enqueue",
+        "retains engines but exposes no uncertified Water source/import business mapper",
+        "rejects historical product/query selection"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase6-attention.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "ranks recovery ahead of ordinary assigned Work",
+        "surfaces an overdue explicit deadline before an undated authority boundary",
+        "ranks an approval that unblocks more completion criteria and nodes first",
+        "uses a stable id tie-break independent of database row order",
+        "renders the canonical server order without client-side reranking",
+        "is deterministic for arbitrary input ordering",
+        "does not accept tenant or employee selectors from the client",
+        "reports missing authenticated employee context as unavailable, never queue-clear"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase6-dispatch-health.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "does not invent an external provider dependency for internal messages",
+        "maps email and voice actions to governed identity routes rather than notification providers",
+        "recognizes the reserved SMS route as required health rather than silently treating it as provider-free"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase6-plan-progress.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "advances query -> action -> wait -> check only after each dependency",
+        "holds the same immutable graph while an exact durable wait is unresolved",
+        "creates a timeout child revision instead of treating a timed-out wait as satisfied",
+        "accepts a finalized, non-failing DecisionReceipt when that is the compiled observation contract",
+        "replans after an unsatisfied check and never mistakes graph exhaustion for completion",
+        "selects equally ready nodes by kind and semantic hash, never array position"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase6-planning-compiler.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects empty goals, missing accepted criteria, and model-authored hard constraints",
+        "canonicalizes ConstraintSet and WorldSnapshot ordering deterministically",
+        "binds GoalSpec, ConstraintSet, and WorldSnapshot hashes to exact Work/Input and tenant scope",
+        "accepts a causally complete query graph and emits explicit stable edges",
+        "selects by deterministic risk/side-effect score, never provider order",
+        "uses a stable semantic hash tie-break and refuses a model-declared winner field",
+        "rejects ungrounded goal targets and duplicate consequential effects",
+        "keeps semantic identity invariant under labels, rationale, and row order",
+        "rejects model-proposed human-only capabilities deterministically",
+        "rejects cycles, unknown dependencies, and orphaned consequential work",
+        "rejects budget overflow, weak unbounded waits, and expired deadlines",
+        "rejects unsupported recovery and irreversible work before uncertain observation",
+        "never selects a verified irreversible effect for replay",
+        "rejects duplicate candidate keys and a candidate envelope over the hard budget",
+        "retains unknown cost and latency instead of accepting model estimates"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase6-zep-mapping.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "maps one graph per authenticated employee and one Zep thread per canonical Postgres thread",
+        "never queries or mirrors a legacy tenant/session graph",
+        "fails open to canonical Postgres when configured Zep is unavailable"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase7-learning.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps deterministic failure classes distinct",
+        "does not punish worker quality for provider outage, external failure, rejection, or cancellation",
+        "ignores unverified completions and LLM self-rating fields",
+        "preserves old revision attribution and tenant separation",
+        "requires a meaningful sample before proposing a routing change",
+        "rejects hard-boundary and malicious configuration changes"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase7-workforce-read-surface.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "routes and validates workforce_status without accepting caller tenant selectors",
+        "keeps workforce exceptions inside the P6 deterministic attention rank",
+        "reads all five workforce reasons from the existing attention implementation"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/phase7-workforce.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "applies every hard exclusion before ranking",
+        "hard-excludes a repeatedly failing worker without treating provider or human outcomes as failures",
+        "cannot grant human attestation, voting, or verifier execution",
+        "rejects cross-tenant history/identity and ignores malicious Work-shaped fields",
+        "treats tiny samples as UNKNOWN and falls back to load then stable ID",
+        "uses verified history and promoted guidance only as soft ranking among eligible workers",
+        "caps profile autonomy at the stricter P6 ceiling",
+        "allows a query-only plan to set action budget zero without weakening the query budget"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/pii-redaction.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "redacts real phone and Luhn-valid card values",
+        "preserves research year ranges and durable UUID receipt identifiers"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/planner-memory.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "is opt-in and emits a bounded serialized canonical summary",
+        "retains only bounded structured continuation context"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/predicted-outcome.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns the real predicted object from a genuine predictedReceipt",
+        "returns null for a null predictedReceipt (row predates B2.T2, or no simulate() ran)",
+        "returns null when simulation is missing",
+        "returns null when simulation.predicted is missing (a plugin whose simulate() has no data-backed prediction)",
+        "never throws on a malformed shape"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-epistemic.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "publishes the bounded proposition catalog exactly",
+        "keeps canonical Request state as the winner while retaining contradictory provider evidence",
+        "treats provider, Document, and user claims as evidence without calling them verified",
+        "preserves equal-authority conflict, configured staleness, and first-class unknown",
+        "proves UNKNOWN to KNOWN to STALE and KNOWN to CONFLICTING relative to state_at",
+        "does not admit memory or web as proof of internal Deal state",
+        "hands P4 an exact not-ready decision plus bounded acquisition paths",
+        "maps provider observations to Source Truth observe-only records"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-p1-world.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "preserves the twenty P1 owners, eight IC types, and eighteen Digital Twin types",
+        "uses the existing Epistemic Runtime for canonical state and contradictory evidence",
+        "retains retrieval time and rejects evidence from another world",
+        "routes only explicit valid world roots and fails malformed time closed"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-p5-contract.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "freezes the exact ICCase state vocabulary and explicit transitions",
+        "freezes Question, Condition, Vote and Recommendation semantics",
+        "registers exactly 9 P5 planner-safe actions and keeps sovereign attestations human-only",
+        "rejects tenant and actor selectors from every P5 planner schema",
+        "adds only process-state entity types and does not add an IC Decision owner",
+        "keeps P1 recordDecision/finalizeDecision as the sole finalization mutation owner",
+        "creates no duplicate IC Evidence, Artifact, Work, policy or underwriting store",
+        "enforces exact P5 table tenancy, forced RLS and least-privilege history mutation",
+        "derives Vote and Dissent identity from authenticated canonical employee context",
+        "exposes 30 typed routes with a separate authenticated Vote endpoint and no generic PATCH",
+        "publishes every P5 route in OpenAPI and the authorization matrix",
+        "renders a semantic IC Workspace without raw JSON finance or Decision panels",
+        "enforces the certified hard limits in both database and API/domain boundaries",
+        "exposes the exact metadata-only P5 telemetry contract"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-p5-golden.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "contains exactly the twenty roadmap fixtures in exact order with independent expectations",
+        "keeps the corpus itself deterministic and order-independent where simultaneous arrival is modeled",
+        "preserves the canonical ownership expectations across lifecycle-only fixtures"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-p5-ic-aggregation.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "certifies unanimous approval",
+        "certifies majority approval against the exact denominator",
+        "represents committee approval of a DECLINE recommendation without translating it into an Invest outcome",
+        "applies explicit abstention treatment to quorum and threshold",
+        "fails quorum instead of treating a missing voter as yes",
+        "fails an exact supermajority threshold",
+        "requires an actual Condition for INVEST_WITH_CONDITIONS",
+        "blocks an unresolved required-before-Decision Question",
+        "accepts a governed WAIVED required Question while preserving it in the input",
+        "blocks a required ACTIVE PRE_DECISION Condition",
+        "requires named-role concurrence in addition to the configured base threshold",
+        "fails unsupported custom policy as BLOCKED_CONFIG instead of approximating",
+        "evaluates membership at the explicit aggregation time",
+        "blocks duplicate eligible membership rather than silently counting it twice",
+        "blocks duplicate effective Votes rather than selecting a winner by row order",
+        "blocks a Vote from outside the pinned eligible set",
+        "is independent of member, Vote, Question and Condition input row order",
+        "computes percentage quorum with an exact ceiling",
+        "produces a stable canonical semantic hash for equivalent objects",
+        "strictly parses the pinned Core policy and rejects invented rule forms"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-phase4-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "preserves the 15 historical actions and adds only the 9 certified P5 planner-safe actions",
+        "rejects invented tenant, provider, credential, and integration selectors at the schema boundary",
+        "composes the PE and Core manifests and refuses the retired vertical",
+        "requires a receipt for every PE action and enforces unconditional human floors for waiver and close"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-planner-isolation.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "composes shared and PE actions without exposing Water actions",
+        "uses PE doctrine, exposes epistemic warnings, and rejects a legacy Water Action[] envelope"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/private-equity-state-machines.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "contains the exact bounded transition matrices",
+        "rejects every unlisted state transition",
+        "derives overdue and late from time without mutable states"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/product-readiness.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects a wrong active vertical and a missing authority row",
+        "rejects mixed product epochs",
+        "rejects mixed releases, migrations, and cutover protocols",
+        "accepts only a converged water_retired/private_equity production fleet",
+        "does not infer the final production gate from NODE_ENV"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-active-work-query.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "excludes all immutable terminal states in SQL before the result limit"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-cancellation.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "distinguishes canonical instruction cancellation from action-scoped rejection",
+        "uses one canonical existence query and fails closed when cancellation truth is unavailable"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-egress-bounds.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "keeps every high-volume Work/history read bounded in PostgreSQL",
+        "keeps instruction polling and pending-approval enrichment SQL-bounded",
+        "uses database aggregates for counts and prediction metrics instead of row transfer",
+        "keeps the new index migration additive and aligned with the schema"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-external-observation.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "requires canonical integration-event/wake ingestion after effect settlement",
+        "does not silently discard objective-controller resumption failures"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-identity-discovery.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "shares execution status, credential, restriction, and authority gates"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-intake.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "claims Work/Input before context, conversation, classification, rate limiting, or orchestration on /api/actions",
+        "claims Work/Input before context, conversation, or objective orchestration on /api/objectives",
+        "keeps action core success when assistant projection persistence fails",
+        "keeps objective core success when assistant projection persistence fails",
+        "returns core success with an explicit warning when exact action replay persistence fails",
+        "preserves duplicate action replay status and cached response shape",
+        "truthfully replays canonical action state when the exact response projection is missing",
+        "marks an action setup failure failed and exposes explicit retry instead of replaying an empty duplicate",
+        "marks an objective setup failure failed and never presents a duplicate without a loop or response as an objective replay",
+        "replays duplicate objectives from the stored response without re-entering enrichment or objective setup"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-objective-delivery.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "gives every recovery delivery a monotonic immutable identity",
+        "commits the first Work transition and delivery inside objective creation and repairs both replay paths"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-pending-approvals.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "drains every cursor page before reporting a complete console queue",
+        "uses keyset pagination and one bulk authority projection per API page"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-policy-revisions.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "reads the effective revision and serializes version allocation from revision history",
+        "uses a deterministic version tie-break everywhere current policy is selected",
+        "uses the exact drafted revision for approval timeout and receipt evidence"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-receipt-atomicity.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "claims a step and creates its receipt in one tenant transaction",
+        "finalizes the receipt before the step terminal transaction can commit",
+        "records pause/resume/cancel/retry/escalate receipts inside their mutation transactions"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-receive-work.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "claims instruction and caller idempotency before creating Work",
+        "assembles duplicate metadata only from the input",
+        "rejects contradictory instruction and idempotency claims instead of guessing"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-terminal-repair-delivery.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "commits the failed step receipt, Work recovery transition, and repair job in one tenant transaction"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-work-cases-bounds.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "pages canonical roots and scopes every historical child family to selected ids",
+        "keeps the data array compatible while exposing truthful page and truncation metadata"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-correctness-work-recovery-claim.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [
+        "claims recovery and its exact durable input under one Work lock",
+        "does not perform a read-then-transition recovery in the HTTP route"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/production-target-guard.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "recognizes the contract project through pooled and direct Supabase identities",
+        "does not fossilize the current Supabase region and permits unrelated disposable targets",
+        "rejects the canonical Supabase admin target"
+      ],
+      "remainingSourceReads": true
+    },
+    {
+      "file": "finnor-os/tests/unit/provider-health.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "an unrecorded provider has an empty, non-degraded snapshot",
+        "3 consecutive failures degrade a provider regardless of window size",
+        "a success resets the consecutive-failure streak",
+        "degrades on failure rate only once the minimum sample size is reached",
+        "exactly 0.5 failure rate is NOT degraded (strictly greater than, per spec)",
+        "the window is capped at 50 samples \u2014 oldest fall off first",
+        "p50LatencyMs is the median of recorded latencies",
+        "resetProviderHealth() clears all providers",
+        "providers are tracked independently",
+        "with no history, tries providers in the given order",
+        "once a provider is driven degraded, the composite tries the OTHER provider first \u2014 never drops the degraded one",
+        "if every provider is degraded, order is unchanged from the original (falls through the last resort)",
+        "pinning a specific provider name always resolves to that provider, degraded or not"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/rate-limit-ladder.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "uses Redis first and applies its fixed-window limit",
+        "survives a Redis outage with an alerting in-memory fallback",
+        "fails closed instead of using process memory during a production outage"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/reference-corpus.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects a changed source before parsing or writing any document"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/scope1-orchestration-kernel.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns a bounded, stable subset for 100 independent ready nodes",
+        "never releases a dependent node before every causal prerequisite is verified",
+        "reserves one member of a deterministic resource-conflict set",
+        "consumes shared concurrency, action, attempt, and estimated-cost budgets atomically in frontier order",
+        "creates a distinct attributable logical attempt only for an explicit retry",
+        "treats duplicate in-flight delivery as one claimed logical attempt",
+        "does not collapse provider acknowledgement into verified external reality",
+        "gives ambiguous or verified irreversible effects precedence over cancellation and retry",
+        "preserves VERIFIED irreversible history and reconciles unresolved cross-revision effects",
+        "emits durable-recovery classifications for cancellation, deadline, and stale authority",
+        "resolves a 100-node frontier within a bounded local scheduling envelope",
+        "keeps deep chains, wide fan-out/fan-in, and many durable waits bounded"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/scope3-compute-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "has exactly 75 named, ordered, mapped mandatory cases with no disguised non-gates",
+        "keeps the production handler inventory exhaustive and on one shared registry",
+        "classifies from trusted type and lane only; payload-shaped promotion is inert",
+        "retains one canonical jobs table and no class-specific queue tables",
+        "filters class, protocol, due time, tenant fairness, and epoch inside the claim transaction",
+        "defines four independent bounded task, slot, resource, role, and ingress envelopes",
+        "proves the static ECS database-session envelope and managed pool hard cap",
+        "treats zero healthy capacity and active work as scale pressure, never zero",
+        "uses bounded metric dimensions and freshness-safe scale-in alarms",
+        "keeps scheduler and recovery leadership fenced and class-explicit",
+        "uses the staged cutover fence and exact release identity for all four services",
+        "keeps class profiles portable across the deferred Scope-14 network and Region migration",
+        "keeps Scope-3 ownership on existing jobs and ECS without introducing a future queue or orchestrator"
+      ],
+      "remainingSourceReads": true
+    },
+    {
+      "file": "finnor-os/tests/unit/secrets.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "defaults to the env provider, unloaded until first call",
+        "ensureSecretsLoaded resolves cleanly on the env provider and marks itself loaded",
+        "refuses a production boot when AUTH_DEV_BYPASS is configured, even as 0",
+        "refuses the env provider in production unless the loud emergency override is set",
+        "aws-secrets-manager provider requires FINNOR_SECRET_IDS",
+        "aws-secrets-manager: fetches a secret, sets process.env, dedupes concurrent calls, and retries on a transient failure",
+        "malformed FINNOR_SECRET_IDS JSON throws a clear error, not a cryptic parse failure",
+        "FINNOR_SECRET_IDS as a JSON array (not an object) is rejected the same way",
+        "does not retry a non-retryable AWS error (AccessDenied) \u2014 fails fast",
+        "reads tenant references without env mutation and supports stage/id rotation selectors"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/source-adapters.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "registers no legacy provider-to-business mappings"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/source-truth-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "hashes canonical object state independent of key order",
+        "computes fresh, stale, expired, and unknown from an explicit policy",
+        "classifies exact expected subsets without treating provider acceptance as proof"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/tenant-experience-manifest.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "has only active surfaces and the owner role",
+        "rejects removed surfaces, roles, metrics, and arbitrary extensions",
+        "fails closed to PE V3 at runtime instead of adapting an old row",
+        "converts only neutral presentation state in the release data repair"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/tenant-transaction-serialization.test.ts",
+      "decision": "delete",
+      "reason": "Static/source-text contract duplicated by runtime integration, release policy, or the replacement browser flows.",
+      "originalCaseTitles": [],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/tenant-user-pagination.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "finds a user beyond the first admin listUsers page"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/tool-registry-pii.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "strips a disallowed field before run() is invoked when piiAllowlist is set",
+        "tools without piiAllowlist keep today",
+        "an allowlisted field missing from input is simply omitted, never fabricated"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/tool-registry.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects unknown tools with a typed result, not a throw",
+        "validates input with zod before calling the integration",
+        "retries retryable failures with backoff, then reports integration unavailable (\u00a730)",
+        "does not retry non-retryable errors"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-api-frontend-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "accepts canonical decimal strings and rejects ambiguous floats or formatted money",
+        "accepts only strict Model registration and bounded immutable ModelVersion definitions",
+        "pins a Run to exact InvestmentCase, ModelVersion, worldAt and idempotency identity without actor spoofing",
+        "keeps Scenario overrides explicit, bounded and parent-consistent",
+        "enforces the exact 2,500-cell sensitivity ceiling and explicit output nodes",
+        "requires exact P3 DocumentVersion/ArtifactAnchor identities and an explicit output comparison policy",
+        "publishes every required typed underwriting operation in OpenAPI",
+        "authenticates every underwriting route and derives tenant/actor from the authenticated context",
+        "renders only exact selected-Run values with ModelVersion, node, unit, currency and period identity",
+        "keeps canonical Assumptions, Scenario overrides, P3 projection and Excel comparison visibly distinct"
+      ],
+      "remainingSourceReads": true
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-core.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "uses canonical decimal strings and ROUND_HALF_EVEN",
+        "serializes and hashes without object insertion-order drift",
+        "compiles and executes the standard LBO with debt, exit, and returns",
+        "applies scenarios immutably and executes one-way sensitivities"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-failures.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects duplicate nodes",
+        "rejects a missing dependency",
+        "rejects unit and currency mismatches",
+        "rejects undeclared cycles and malformed solver blocks",
+        "rejects deep or unsupported expression AST and divide by zero",
+        "rejects malformed, oversized decimals and invalid/oversized periods",
+        "fails missing, UNKNOWN, STALE and CONFLICTING required inputs without zero coercion",
+        "allows STALE only when the exact InputNode policy explicitly allows it",
+        "enforces exact truth-class policy",
+        "surfaces negative debt, Sources/Uses overfunding, liquidity shortage and revolver overflow distinctly",
+        "fails closed on non-convergence and reports NON_CONVERGENT validity",
+        "keeps unsupported maturity and ownership failures as completed-but-invalid underwriting",
+        "surfaces exit metric, negative exit equity and zero sponsor denominator failures",
+        "rejects invalid/oversized scenario targets and oversized sensitivities",
+        "retains a failed sensitivity cell rather than interpolating or dropping it",
+        "enforces ModelVersion and result payload hard limits"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-golden.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "contains exactly 20 named, documented, non-circular reference cases"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/underwriting-property.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "same exact model and input snapshot always produce the same semantic result hash",
+        "canonical serialization and hashes ignore object insertion order",
+        "generated balanced LBOs preserve Sources/Uses and every debt roll-forward identity",
+        "generated revolver draws never exceed the exact commitment",
+        "gross sponsor MOIC is positive distributions divided by absolute invested capital",
+        "IRR is undefined for generated cash-flow sequences without a sign change",
+        "scenario overrides never mutate the sealed base snapshot or historical result",
+        "undeclared cycles fail compilation while an exact declared block is structurally accepted",
+        "malformed decimals, NaN and Infinity can never enter a sealed snapshot"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/universal-actions-contract.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "registers exactly the active Core, universal, computer, and Private Equity catalog",
+        "accepts each canonical payload and rejects planner-selected tenant, endpoint, route, or credential fields",
+        "keeps browser and computer as non-executable route vocabulary only",
+        "models delivery, acknowledgement, acceptance, and completion as separate transitions",
+        "extracts nested PartyRefs and canonical refs for the authority boundary"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/vapi-webhook-schema.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "preserves call.customer.number through parsing",
+        "preserves call.phoneNumberId through parsing",
+        "preserves call.phoneNumber.number (dialed number, expanded form)",
+        "preserves call.metadata and call.id alongside the new fields",
+        "preserves unknown extra keys on call via passthrough (e.g. future Vapi fields)",
+        "preserves the bounded causal envelope without requiring provider identifiers",
+        "still accepts a payload with no call object at all"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/voice-objective-control.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "recognizes explicit start, inspect, interruption, continuation, and redirect commands",
+        "does not reinterpret ordinary customer/action language as objective control"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/voice-personas.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "maps only source-owned personas to safe product keys",
+        "does not create an agent edge for unknown or missing persona values"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/voice.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "clear approvals",
+        "clear rejections",
+        "the LAST clear signal wins when the caller changes their mind",
+        "ambiguity fails closed \u2014 never approves",
+        "does not false-match inside other words",
+        "absent extras: behavior is byte-for-byte identical to no second argument",
+        "a configured approve phrase that isn",
+        "a configured reject phrase that isn",
+        "extra phrases still respect last-signal-wins against built-in patterns",
+        "fail-closed is preserved: ambiguity with extras configured still never approves",
+        "extra phrases are escaped, not interpreted as regex \u2014 a phrase containing regex metacharacters matches literally",
+        "extra phrase matching is case-insensitive, like the built-in patterns",
+        "matches a phrase ending in a non-word character positioned at the end of the transcript (lookaround boundary, not \\\\b)",
+        "names the failing integration and asks for the fix on credential errors",
+        "names the integration on outage errors without asking for a key",
+        "degrades gracefully with no integration tag",
+        "appends the yes/no ask"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/voyage-embedder.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "returns FailClosedEmbedder when unconfigured and NODE_ENV is not ",
+        "FailClosedEmbedder.embed() throws a clear error naming EMBEDDINGS_API_KEY, with no network call",
+        "falls back to DeterministicLocalEmbedder when NODE_ENV=test (this suite",
+        "prefers VoyageEmbedder once a real key is configured, in any environment",
+        "embeddingsProviderStatus reports configured:false with no network call when unset",
+        "throws immediately, no network call, when constructed with no key",
+        "embed() posts to Voyage",
+        "sends the model name, output_dimension, and bearer auth header",
+        "embedBatch re-sorts the response by index, so out-of-order API responses stay correct",
+        "retries on a 429, then succeeds",
+        "a 401 is not retried \u2014 surfaces immediately as an error",
+        "batches more than 128 texts into multiple requests"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/web-research-discovery.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "verifies only the bounded top URLs and speaks only from Firecrawl material",
+        "uses Exa-retrieved page text as cited source material when Firecrawl is unavailable",
+        "never treats a bare discovery snippet as factual source material"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/webhook-fuzz.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "rejects malformed or unauthenticated payloads on every provider route without a 5xx"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/work-cases.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "keeps the v6 vocabulary exact and exhaustive for domain actions",
+        "maps workflow run and step states without collapsing failure into success",
+        "uses the v6 projection priority for mixed cases",
+        "lets unanimous durable completion outrank a stale approval-gate trace"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/work-reconciliation-terminal.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "freezes every terminal Work status until explicit continuation or recovery"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/worker-health.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "proves realtime and configured worker capabilities"
+      ],
+      "remainingSourceReads": false
+    },
+    {
+      "file": "finnor-os/tests/unit/workflow-step-job-identity.test.ts",
+      "decision": "retain",
+      "reason": "Runtime or adversarial failure paths beyond the successful browser flows; specific cases below.",
+      "originalCaseTitles": [
+        "preserves the legacy generation-zero key and gives every redrive a fresh key"
+      ],
+      "remainingSourceReads": false
+    }
+  ],
+  "removedMixedCases": [
+    {
+      "file": "operational-delta-contract.test.ts",
+      "title": "migration is one RLS ledger with bounded secret-free payloads and covered sources"
+    },
+    {
+      "file": "phase7-workforce-read-surface.test.ts",
+      "title": "reads all five workforce reasons from the existing attention implementation"
+    },
+    {
+      "file": "production-correctness-pending-approvals.test.ts",
+      "title": "uses keyset pagination and one bulk authority projection per API page"
+    },
+    {
+      "file": "underwriting-api-frontend-contract.test.ts",
+      "title": "publishes every required typed underwriting operation in OpenAPI"
+    },
+    {
+      "file": "underwriting-api-frontend-contract.test.ts",
+      "title": "authenticates every underwriting route and derives tenant/actor from the authenticated context"
+    },
+    {
+      "file": "underwriting-api-frontend-contract.test.ts",
+      "title": "renders only exact selected-Run values with ModelVersion, node, unit, currency and period identity"
+    },
+    {
+      "file": "underwriting-api-frontend-contract.test.ts",
+      "title": "keeps canonical Assumptions, Scenario overrides, P3 projection and Excel comparison visibly distinct"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "has exactly 75 named, ordered, mapped mandatory cases with no disguised non-gates"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "keeps the production handler inventory exhaustive and on one shared registry"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "retains one canonical jobs table and no class-specific queue tables"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "filters class, protocol, due time, tenant fairness, and epoch inside the claim transaction"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "proves the static ECS database-session envelope and managed pool hard cap"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "uses bounded metric dimensions and freshness-safe scale-in alarms"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "keeps scheduler and recovery leadership fenced and class-explicit"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "uses the staged cutover fence and exact release identity for all four services"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "keeps class profiles portable across the deferred Scope-14 network and Region migration"
+    },
+    {
+      "file": "scope3-compute-contract.test.ts",
+      "title": "keeps Scope-3 ownership on existing jobs and ECS without introducing a future queue or orchestrator"
+    }
+  ],
+  "verification": "Full backend unit run: 93 files / 604 cases passed; two stale empty-source-adapter expectations failed. Corrected existing expectations for the Core Gmail observation adapter; focused rerun passed both files / 6 cases. Canonical CI must rerun the whole suite."
+}

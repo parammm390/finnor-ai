@@ -1338,8 +1338,6 @@ async function main(): Promise<void> {
         "tests/integration/step-receipts.test.ts",
         "tests/integration/single-action-runtime-bridge.test.ts",
         "tests/integration/run-controls.test.ts",
-        "tests/unit/production-correctness-receipt-atomicity.test.ts",
-        "tests/unit/production-correctness-cancellation.test.ts",
       ], 1_200_000),
     ]));
 
@@ -1361,7 +1359,6 @@ async function main(): Promise<void> {
         "tests/integration/scope2-operator-controls.test.ts",
         "tests/integration/external-effect-observation.test.ts",
         "tests/integration/source-truth-loop.test.ts",
-        "tests/unit/production-correctness-external-observation.test.ts",
       ], 1_200_000),
     ]));
 

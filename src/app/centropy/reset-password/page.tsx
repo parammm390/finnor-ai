@@ -1,10 +1,5 @@
 import { ResetPasswordForm } from "@/components/centropy/lib/ResetPasswordForm"
 
-export const metadata = {
-  title: "Reset password",
-  description: "Set a new password for your Centropy account.",
-}
+export const metadata = { title: { absolute: "Reset password — CENTROPY" } }
 
-export default function ResetPasswordPage() {
-  return <ResetPasswordForm />
-}
+export default function CentropyResetPasswordPage() { return <ResetPasswordForm /> }

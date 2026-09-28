@@ -5,7 +5,8 @@ import { requireContext, errorResponse, enforceRouteRateLimit } from "../../../l
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { enforceBatchBackpressure } from "../../../lib/backpressure";
 import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
-import { receiveWork, recordWorkResponse, transitionWork, workAggregate } from "@finnor/db";
+import { receiveWork, attachValidatedWorkInputContext, recordWorkResponse, transitionWork, workAggregate, withTenant, domainActions, businessEffects } from "@finnor/db";
+import { and, eq, inArray } from "drizzle-orm";
 import { classifyInstructionRoute, interactionAwareOperationalDecision, interpretOperationalQuery, isConversationalTurn, OperatingInteractionContextError, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { linkEmployeeConversationTurnToWork, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
@@ -235,16 +236,38 @@ export async function POST(req: Request): Promise<Response> {
     }
     const humanCtx = { ...ctx, userId: prepared.employeeId, employeeId: prepared.employeeId };
     const projectionWarnings: ProjectionWarning[] = [];
-    if (!activeContext && prepared.context.resolution.resolvedReferences.length > 0) {
-      activeContext = {
-        version: 1,
-        capturedAt: new Date().toISOString(),
-        source: body.data.channel,
-        selectedEntities: prepared.context.resolution.resolvedReferences.map(({ entityType, entityId }) => ({ entityType, entityId })),
-        excludedEntities: [],
-        surface: { id: "home", route: "/centropy", spatialState: "canvas" },
-        filters: [],
+    if (prepared.context.resolution.status !== "clarification_required" && prepared.context.resolution.resolvedReferences.length > 0) {
+      // Persist canonical conversation resolution alongside an existing Deal
+      // selection. Otherwise a later worker loses the named party while the
+      // Thread still claims that identity was resolved.
+      const base = activeContext ?? {
+        version: 1 as const, capturedAt: new Date().toISOString(), source: body.data.channel,
+        selectedEntities: [], excludedEntities: [],
+        surface: { id: "home" as const, route: "/centropy", spatialState: "canvas" as const }, filters: [],
       };
+      const excluded = new Set(base.excludedEntities.map((ref) => `${ref.entityType}:${ref.entityId}`));
+      const selected = new Map(base.selectedEntities.map((ref) => [`${ref.entityType}:${ref.entityId}`, ref]));
+      for (const { entityType, entityId } of prepared.context.resolution.resolvedReferences) {
+        if (!excluded.has(`${entityType}:${entityId}`)) selected.set(`${entityType}:${entityId}`, { entityType, entityId });
+      }
+      try {
+        activeContext = await resolveOperatingInteractionContext({ tenantId: ctx.tenantId,
+          context: { ...base, selectedEntities: [...selected.values()] }, channel: body.data.channel, workId: received.workId });
+      } catch (error) {
+        return await recoverableWorkError(error, ctx.tenantId, received);
+      }
+    }
+    if (activeContext) {
+      try {
+        await attachValidatedWorkInputContext({
+          tenantId: ctx.tenantId,
+          workId: received.workId,
+          workInputId: received.workInputId,
+          context: activeContext,
+        });
+      } catch (error) {
+        return await recoverableWorkError(error, ctx.tenantId, received);
+      }
     }
     let fastReadDecision;
     let instructionRouteDecision;
@@ -252,13 +275,22 @@ export async function POST(req: Request): Promise<Response> {
       // Classify once before planner-only gates. Authentication and the generic
       // authenticated-route limiter already ran in requireContext; this tighter
       // intake bucket and batch backpressure are reserved for planner work.
-      fastReadDecision = interactionAwareOperationalDecision(interpretOperationalQuery(body.data.instruction), activeContext);
+      fastReadDecision = interactionAwareOperationalDecision(interpretOperationalQuery(body.data.instruction), activeContext, body.data.instruction);
       instructionRouteDecision = classifyInstructionRoute({ instruction: body.data.instruction, fastReadDecision, activeContext, conversational: isConversationalTurn(body.data.instruction) });
       if (instructionRouteDecision.route !== "QUERY") {
         await enforceRouteRateLimit(`intake:${ctx.tenantId}`, Number(process.env.RATE_LIMIT_INTAKE_PER_MINUTE ?? 20));
       }
     } catch (error) {
       return await recoverableWorkError(error, ctx.tenantId, received);
+    }
+    if (body.data.reviewBeforeExecution && instructionRouteDecision.route === "OBJECTIVE") {
+      return recoverableWorkError(
+        new Error("Exact-effect review is not available for a long-running objective."),
+        ctx.tenantId,
+        received,
+        409,
+        { code: "objective_review_unavailable" },
+      );
     }
     if (instructionRouteDecision.route === "OBJECTIVE" || instructionRouteDecision.route === "ATOMIC_EFFECT") {
       try {
@@ -298,6 +330,7 @@ export async function POST(req: Request): Promise<Response> {
         workInputId: received.workInputId,
         idempotencyKey: body.data.idempotencyKey,
         channel: body.data.channel,
+        reviewBeforeExecution: body.data.reviewBeforeExecution,
         activeContext,
         conversationContext: prepared.context,
         fastReadDecision,
@@ -327,8 +360,26 @@ export async function POST(req: Request): Promise<Response> {
     // messages, conversation links, and the exact response replay are ancillary
     // projections: a failure in one must be visible in logs but cannot turn a
     // successful Work into an HTTP/core failure or relabel it failed.
+    const preparedEffects = body.data.reviewBeforeExecution && result.actions.length ? await withTenant(ctx.tenantId, async (db) => {
+      const actionIds = result.actions.map((action) => action.id);
+      const [actionRows, effectRows] = await Promise.all([
+        db.select({ id: domainActions.id, actionType: domainActions.actionType, status: domainActions.status, summary: domainActions.summary, businessEffectId: domainActions.businessEffectId })
+          .from(domainActions).where(and(eq(domainActions.tenantId, ctx.tenantId), inArray(domainActions.id, actionIds))),
+        db.select({ id: businessEffects.id, domainActionId: businessEffects.domainActionId, semanticHash: businessEffects.semanticHash, effect: businessEffects.effect })
+          .from(businessEffects).where(and(eq(businessEffects.tenantId, ctx.tenantId), inArray(businessEffects.domainActionId, actionIds))),
+      ]);
+      const actionById = new Map(actionRows.map((action) => [action.id, action]));
+      const effectByActionId = new Map(effectRows.flatMap((effect) => effect.domainActionId ? [[effect.domainActionId, effect] as const] : []));
+      return actionIds.map((id) => {
+        const action = actionById.get(id);
+        const effect = effectByActionId.get(id);
+        return { actionId: id, actionType: action?.actionType ?? null, status: action?.status ?? "unavailable", summary: action?.summary ?? null,
+          businessEffectId: effect?.id ?? null, semanticHash: effect?.semanticHash ?? null, businessEffect: effect?.effect ?? null };
+      });
+    }) : undefined;
     const response = {
       planned: result.actions,
+      ...(preparedEffects ? { prepared: preparedEffects } : {}),
       ...(result.answer ? { answer: result.answer } : {}),
       ...(result.query ? { query: result.query } : {}),
       ...(result.objective ? { objective: result.objective } : {}),

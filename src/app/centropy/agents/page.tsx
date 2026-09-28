@@ -1,11 +1,6 @@
-import type { Metadata } from "next"
-import AgentFleetSurface from "@/components/centropy/agents/AgentFleetSurface"
+import { redirect } from "next/navigation"
+import { legacyWorldHref } from "@/components/centropy/shell/legacy-link"
 
-export const metadata: Metadata = {
-  title: "Agents — Centropy",
-  description: "Business-shaped governed workers, assignments, human boundaries, evidence, quality, and learning.",
-}
-
-export default function AgentsPage() {
-  return <AgentFleetSurface />
+export default async function LegacyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  redirect(legacyWorldHref(await searchParams))
 }

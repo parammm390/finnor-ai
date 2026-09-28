@@ -1,11 +1,5 @@
-import type { Metadata } from "next"
 import { LoginForm } from "@/components/centropy/lib/LoginForm"
 
-export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to your Centropy command center.",
-}
+export const metadata = { title: { absolute: "Sign in — CENTROPY" } }
 
-export default function CentropyLoginPage() {
-  return <LoginForm />
-}
+export default function CentropyLoginPage() { return <LoginForm /> }

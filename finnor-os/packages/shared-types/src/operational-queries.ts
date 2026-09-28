@@ -149,6 +149,8 @@ export interface PeWorldStateRequest {
   at?: string;
   validAt?: string;
   knowledgeAt?: string;
+  /** A bounded, evidence-backed activity comparison ending at query time. */
+  compareWindow?: "previous_24h";
 }
 
 export type CoreOperationalQueryRequest =
@@ -640,6 +642,34 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
     baselineAt: string | null;
     unavailableEntityTypes: string[];
     reasons: string[];
+  };
+  temporalReview?: {
+    sinceAt: string;
+    untilAt: string;
+    baselineStatus: "complete" | "partial" | "unavailable_before_baseline";
+    baselineAt: string | null;
+    activityTruncated: boolean;
+    activitySources: Array<{ owner: string; status: string; reason?: string }>;
+    basisCoverage: { status: "complete" | "partial" | "unavailable"; truncated: boolean; reasons: string[] };
+    recommendationComparisons: Array<{
+      caseId: string;
+      baseline: { id: string; outcome: string; underwritingRunId: string; memoId: string; rationale: string | null } | null;
+      current: { id: string; outcome: string; underwritingRunId: string; memoId: string; rationale: string | null } | null;
+      assessment: "changed_outcome" | "changed_basis" | "unchanged_record" | "new_recommendation" | "selection_removed" | "no_selected_recommendation" | "unverified";
+      fieldsChanged: string[];
+      sourceRefs: Array<{ table: string; id: string; fieldPath?: string }>;
+    }>;
+    modelComparisons: Array<{ caseId: string; baselineRunId: string; currentRunId: string; changedInputs: Record<string, unknown>; changedOutputs: Record<string, unknown>; sourceRefs: Array<{ table: string; id: string }> }>;
+    changes: Array<{
+      id: string;
+      kind: string;
+      occurredAt: string;
+      label: string;
+      subject: { namespace: string; type: string; id: string };
+      evidenceRefs: Array<{ type: string; id: string; hash?: string }>;
+      causalRefs: Array<{ relationship: string; type: string; id: string; sourceRef: { table: string; id: string; fieldPath?: string } }>;
+      sourceRefs: Array<{ owner: string; table: string; id: string; fieldPath?: string }>;
+    }>;
   };
   strategy: Record<string, unknown> | null;
   opportunity: Record<string, unknown> | null;

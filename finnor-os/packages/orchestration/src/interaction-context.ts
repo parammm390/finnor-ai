@@ -3,7 +3,7 @@ import { canonicalTruthRegistry, resolveTenantVertical, withTenant } from "@finn
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
 import { isRetiredWaterCanonicalEntity, type CanonicalEntityRef, type OperatingInteractionContext } from "@finnor/shared-types";
 import { eq, isNull, or } from "drizzle-orm";
-import type { OperationalQueryDecision } from "./fast-read-lane";
+import { interpretOperationalQuery, type OperationalQueryDecision } from "./fast-read-lane";
 
 export class OperatingInteractionContextError extends Error {
   constructor(
@@ -146,10 +146,20 @@ export function effectiveInteractionTargets(context: OperatingInteractionContext
 export function interactionAwareOperationalDecision(
   decision: OperationalQueryDecision,
   context: OperatingInteractionContext | undefined,
+  instruction?: string,
 ): OperationalQueryDecision {
-  if (decision.route !== "fast_read" || !context) return decision;
-  const hasExplicitScope = effectiveInteractionTargets(context).length > 0;
-  return hasExplicitScope && decision.request.intent !== "company_context"
-    ? { route: "planner", reason: "unsupported" }
-    : decision;
+  if (!context) return decision;
+  const targets = effectiveInteractionTargets(context);
+  if (targets.length === 0) return decision;
+  const exactDeal = targets.length === 1 && targets[0]?.entityType === "pe_deal" ? targets[0].entityId : undefined;
+  const scoped = exactDeal && instruction ? interpretOperationalQuery(instruction, exactDeal) : decision;
+  if (scoped.route === "fast_read" && "dealId" in scoped.request && scoped.request.dealId === exactDeal) {
+    return scoped;
+  }
+  if (scoped.route === "fast_read" && scoped.request.intent === "pe_world_state"
+      && scoped.request.root.entityType === "pe_deal" && scoped.request.root.entityId === exactDeal) {
+    return scoped;
+  }
+  if (decision.route === "fast_read" && decision.request.intent === "company_context") return decision;
+  return decision.route === "fast_read" ? { route: "planner", reason: "unsupported" } : decision;
 }

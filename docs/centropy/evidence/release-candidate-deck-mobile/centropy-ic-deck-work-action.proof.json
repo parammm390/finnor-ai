@@ -1,0 +1,102 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "ic_deck_work_action",
+  "capturedAt": "2026-09-28T01:42:39.149Z",
+  "baseUrl": "http://localhost:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "priorWorkId": "30a54264-aef0-495f-b02a-0e7991e88400",
+    "existingDeckWorkId": null,
+    "existingDeckThreadId": null,
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Turn this into tomorrow's IC deck using our template."
+  },
+  "observed": {
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "icCaseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+    "templateKey": "centropy_ic_default_v1",
+    "templateVersionId": "5ff37ddb-f468-4679-a208-ca4520e7ad33",
+    "agentProfileId": "90000000-0000-4000-8000-000000000053",
+    "agentRevisionId": "90000000-0000-4000-8000-000000000054",
+    "agentGrantConfigured": false,
+    "workId": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+    "threadId": "4f82510e-5f2b-4dfc-8deb-7a4cf082bc56",
+    "actionId": "b46ca441-cdbe-4846-8e73-d2f59c811704",
+    "actionStatus": "completed",
+    "plannerCandidate": "grounded-ic-deck-draft",
+    "workStatus": "awaiting_approval",
+    "approvalStatus": 200,
+    "pendingQueueStatus": 200,
+    "pendingQueueActionFound": true,
+    "finalWorkStatus": "completed",
+    "reloadUiVisible": true,
+    "mobileOverflowPx": 0,
+    "effectStatus": "verified",
+    "receiptFinalized": true,
+    "linkId": "f6881ddc-f4df-4b3e-ba55-492de944f736",
+    "approvedEffectHash": "0cf1c27dd28f7a2dc75d1a3eda5ec3d34a714a06d58e5174cca58f3288c5e3e3",
+    "approvalLogVerified": true,
+    "documentId": "8531c6d5-7b2d-4998-8781-287b0ffd8e52",
+    "documentVersionId": "222a8423-59c1-440c-881b-6f8f12312ff3",
+    "sourceVersionId": "5ff37ddb-f468-4679-a208-ca4520e7ad33",
+    "documentKind": "pptx",
+    "semanticHash": "cf09f013101cfedb7f73d24000400f3973c2b3649697eeca4ed7996ea52f4428",
+    "lineageVerified": true,
+    "idempotentConfirm": true,
+    "reloadVerified": true,
+    "canvasWorkDraftVisible": true,
+    "draftDeepLinkVerified": true,
+    "draftSlidesVisible": true,
+    "noIcCaseOverride": true,
+    "manualCreationCollapsed": true,
+    "activeRefreshVerified": true,
+    "activeObjectiveLoopId": "15a02e0a-d736-42cb-bdba-4c4262f61cd4",
+    "activeInstructionId": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+    "bindingCount": 19,
+    "recordedModelOutputsVerified": true,
+    "contentVerified": true,
+    "download": {
+      "file": "Atlas-IC.pptx",
+      "sha256": "9dd77605809479fede393c4a43c053f4c1561fdd47f49dc3acdb9a5a30f28be9",
+      "bytes": 26147,
+      "versionId": "222a8423-59c1-440c-881b-6f8f12312ff3"
+    },
+    "editedVersionId": "44b84678-9c7c-419f-b9a1-bc2b2d77593c",
+    "editDiff": {
+      "left": "222a8423-59c1-440c-881b-6f8f12312ff3",
+      "right": "44b84678-9c7c-419f-b9a1-bc2b2d77593c",
+      "changes": [
+        {
+          "id": "shape:256:2",
+          "kind": "modified",
+          "before": "72d07e3a5135525d3c4827d13e3406e648e4100c6b955664874c257b9933cb9f",
+          "after": "ce07236d42c1dfe81c69b584317d807105692da6fcbfee147ae9979482b8db04"
+        }
+      ]
+    },
+    "editAndReloadVerified": true,
+    "publication": "BLOCKED_EXTERNAL: no configured SharePoint folder has verified permission for this Deal"
+  },
+  "steps": [
+    "Sign in as fixture owner and verify tenant",
+    "Read the exact READY_FOR_REVIEW IC case and one active PowerPoint template",
+    "Verify the governed IC Agent capability grant and configure a new revision if this disposable fixture is stale",
+    "Submit the exact Golden Flow 4 instruction in the Atlas Deal Thread",
+    "Observe the grounded planner candidate and durable DomainAction",
+    "While approval is pending, reload the Investigation and compare the exact Objective, action IDs, user instruction, and visible persisted trace",
+    "Review and confirm the exact effect if approval is pending",
+    "Verify populated canonical content, exact anchor bindings, action, Business Effect, finalized receipt, canonical Deal link, template lineage, and Artifact version",
+    "Repeat action confirmation without duplication",
+    "Open the verified Work draft from Canvas without an IC case URL override, confirm that duplicate manual creation is collapsed, inspect its exact PPTX slides, reload its deep link, and return to the same draft card",
+    "Verify terminal Work completion"
+  ],
+  "screenshotSha256": "918f751420fdb742ff8a6218f42db558c28901f1ce9383d2274c9bffbc3ce461",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_WORK_ID=30a54264-aef0-495f-b02a-0e7991e88400 PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/centropy-ic-deck-work-action.spec.ts --project=mobile-390",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas fixture with one active PowerPoint template"
+    ]
+  }
+}

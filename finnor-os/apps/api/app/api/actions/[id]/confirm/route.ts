@@ -31,13 +31,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (row.status !== "pending" && row.status !== "needs_human_review") {
       return Response.json({ error: `Action is ${row.status}; only pending actions can be approved` }, { status: 409 });
     }
+    if (row.businessEffectId && !body.data.expectedEffectHash) {
+      return Response.json({ error: "Approval requires the exact reviewed Business Effect hash." }, { status: 400 });
+    }
 
     const result = await getOrchestrator().decide(id, ctx.tenantId, "approve", ctx.userId, {
       role: ctx.role,
       note: body.data.note ?? null,
       typedConfirmation: body.data.typedConfirmation === true,
+      expectedEffectHash: body.data.expectedEffectHash,
     });
+    if (result.status === "failure" && result.output.effectMismatch) return Response.json({ error: result.error, effectMismatch: true }, { status: 409 });
     if (result.status === "failure" && /authority/i.test(result.error ?? "")) return Response.json({ error: result.error, authority: result.output }, { status: 403 });
+    if (result.status === "failure") return Response.json({ error: result.error ?? "Confirmation did not complete" }, { status: 409 });
+    if (result.output.idempotent && !["approved", "executing", "completed"].includes(String(result.output.status))) {
+      return Response.json({ error: `Action is ${String(result.output.status)}; confirmation was not applied` }, { status: 409 });
+    }
     return Response.json({ result });
   } catch (err) {
     return errorResponse(err);

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import {
   agentProfileRevisions,
   agentProfiles,
@@ -363,10 +363,20 @@ export async function requestWorkforceAssignment(params: {
         .for("update");
     }
     const learningIds = profiles.map((row) => row.revision.learningRevisionId).filter((id): id is string => Boolean(id));
-    const [loadRows, observationRows, previousRows, historyRows, promotedLearningRows] = await Promise.all([
+    const [loadRows, profileUsageRows, observationRows, previousRows, historyRows, promotedLearningRows] = await Promise.all([
       db.select({ agentProfileId: workforceAssignments.agentProfileId, count: sql<number>`count(*)::int` }).from(workforceAssignments)
-        .where(and(eq(workforceAssignments.tenantId, params.tenantId), inArray(workforceAssignments.state, [...RUNNING_ASSIGNMENT_STATES])))
+        .innerJoin(works, and(eq(works.tenantId, workforceAssignments.tenantId), eq(works.id, workforceAssignments.workId)))
+        .where(and(eq(workforceAssignments.tenantId, params.tenantId),
+          inArray(workforceAssignments.state, [...RUNNING_ASSIGNMENT_STATES]),
+          notInArray(works.status, ["blocked", "completed", "failed", "cancelled"])))
         .groupBy(workforceAssignments.agentProfileId),
+      db.select({
+        agentProfileId: workforceAssignments.agentProfileId,
+        actions: sql<number>`count(*) FILTER (WHERE ${workforceAssignments.nodeKind} = 'action')::int`,
+        queries: sql<number>`count(*) FILTER (WHERE ${workforceAssignments.nodeKind} = 'query')::int`,
+      }).from(workforceAssignments).where(and(
+        eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.workId, params.workId),
+      )).groupBy(workforceAssignments.agentProfileId),
       db.select().from(learningObservations).where(eq(learningObservations.tenantId, params.tenantId))
         .orderBy(desc(learningObservations.occurredAt)).limit(2_000),
       db.select().from(workforceAssignments).where(and(eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.planRevisionId, params.planRevisionId), eq(workforceAssignments.planNodeId, params.node.id)))
@@ -379,6 +389,7 @@ export async function requestWorkforceAssignment(params: {
         : Promise.resolve([]),
     ]);
     const loads = new Map(loadRows.map((row) => [row.agentProfileId, row.count]));
+    const profileUsage = new Map(profileUsageRows.map((row) => [row.agentProfileId, row]));
     const snapshot = plan.planningSnapshot as PlanningWorldSnapshot;
     const contextClass = `${typeof snapshot.verticalKey === "string" ? snapshot.verticalKey : "unknown"}:${params.node.kind}`;
     const metrics = computeLearningMetrics(observationRows.map(observationShape));
@@ -399,11 +410,15 @@ export async function requestWorkforceAssignment(params: {
         revision: shapedRevision,
         currentLoad: loads.get(profile.id) ?? 0,
         budgetUsage: {
-          actions: params.objectiveLoop.actionCount,
-          queries: params.objectiveLoop.queryCount,
-          replans: Math.max(0, plan.revision - 1),
-          plannerCalls: params.objectiveLoop.stepCount,
-          wallClockMs: Math.max(0, Date.now() - params.objectiveLoop.createdAt.getTime()),
+          // Profile autonomy is scoped to work assigned to this profile. The
+          // Objective's global reservations, planner calls and deadline are
+          // enforced by P6; charging them to every specialist makes later
+          // capabilities permanently unroutable after another worker runs.
+          actions: profileUsage.get(profile.id)?.actions ?? 0,
+          queries: profileUsage.get(profile.id)?.queries ?? 0,
+          replans: 0,
+          plannerCalls: 0,
+          wallClockMs: 0,
           knownCostUsd: null,
           knownTokens: null,
         },
@@ -643,7 +658,6 @@ export async function claimWorkforceAssignment(params: {
     }
     const [scope] = await db.select({
       planStatus: workPlanRevisions.status,
-      planRevision: workPlanRevisions.revision,
       profileStatus: agentProfiles.status,
       revisionStatus: agentProfileRevisions.status,
       revisionProfileId: agentProfileRevisions.agentProfileId,
@@ -702,11 +716,24 @@ export async function claimWorkforceAssignment(params: {
         maxKnownTokens: null,
       },
     );
-    const budgetExhausted = (assignment.nodeKind === "action" && scope.loopActionCount >= limits.maxActions)
-      || (assignment.nodeKind === "query" && scope.loopQueryCount >= limits.maxQueries)
-      || Math.max(0, scope.planRevision - 1) >= limits.maxReplans
-      || scope.loopStepCount >= limits.maxPlannerCalls
-      || Math.max(0, Date.now() - scope.loopCreatedAt.getTime()) >= limits.maxWallClockMs;
+    const [profileUsage] = await db.select({
+      actions: sql<number>`count(*) FILTER (WHERE ${workforceAssignments.nodeKind} = 'action')::int`,
+      queries: sql<number>`count(*) FILTER (WHERE ${workforceAssignments.nodeKind} = 'query')::int`,
+    }).from(workforceAssignments).where(and(
+      eq(workforceAssignments.tenantId, params.tenantId),
+      eq(workforceAssignments.workId, assignment.workId),
+      eq(workforceAssignments.agentProfileId, assignment.agentProfileId),
+    ));
+    // The current assignment was already reserved, so equality is allowed at
+    // claim. A stale or over-reserved claim still fails closed. Wall time is
+    // measured from this assignment, not from a Work that may await humans for
+    // days; the Objective deadline remains an independent global boundary.
+    const budgetExhausted = (assignment.nodeKind === "action" && (profileUsage?.actions ?? 0) > limits.maxActions)
+      || (assignment.nodeKind === "query" && (profileUsage?.queries ?? 0) > limits.maxQueries)
+      || scope.loopActionCount > scope.loopMaxActions
+      || scope.loopQueryCount > scope.loopMaxQueries
+      || Date.now() >= scope.loopDeadlineAt.getTime()
+      || Math.max(0, Date.now() - assignment.createdAt.getTime()) >= limits.maxWallClockMs;
     const reassignmentReason: WorkforceReassignmentReason | null = !routeAvailable(scope.modelRoute as AgentModelRoute)
       ? "MODEL_ROUTE_UNAVAILABLE"
       : budgetExhausted
@@ -845,7 +872,10 @@ export async function finalizeWorkforceAssignment(params: {
     if (!step?.completedAt) {
       // A true process crash never reaches this branch. A controlled early return
       // relinquishes only the assignment lease; exact ObjectiveStep identity remains.
-      await db.update(workforceAssignments).set({ state: "queued", leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(eq(workforceAssignments.id, assignment.id));
+      // Running cannot jump directly to queued under the canonical lifecycle.
+      // Relinquish into waiting, then make the same unfinished attempt runnable.
+      await db.update(workforceAssignments).set({ state: "waiting", leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(and(eq(workforceAssignments.id, assignment.id), eq(workforceAssignments.state, "running")));
+      await db.update(workforceAssignments).set({ state: "queued", updatedAt: new Date() }).where(and(eq(workforceAssignments.id, assignment.id), eq(workforceAssignments.state, "waiting")));
       return;
     }
     const outcome = params.objectiveOutcome ?? step.iterationOutcome;

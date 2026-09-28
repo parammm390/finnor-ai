@@ -898,6 +898,49 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
   });
 }
 
+/** Freeze the tenant-validated interaction context on the already-claimed input.
+ * Intake must claim Work before resolving references, so it cannot safely store
+ * browser context in receiveWork. Once validated, this is a write-once field:
+ * retries may repeat the same snapshot but may never replace its provenance. */
+export async function attachValidatedWorkInputContext(params: {
+  tenantId: string;
+  workId: string;
+  workInputId: string;
+  context: unknown;
+}): Promise<void> {
+  const snapshot = boundedProvenance(params.context);
+  if (!snapshot) throw new Error("Validated Work input context must be an object");
+  const hash = provenanceHash(snapshot);
+  const capturedAt = provenanceCapturedAt(snapshot);
+  await withTenant(params.tenantId, async (db) => {
+    const [attached] = await db.update(schema.workInputs).set({
+      contextSnapshot: snapshot,
+      contextSnapshotHash: hash,
+      contextCapturedAt: capturedAt,
+    }).where(and(
+      eq(schema.workInputs.tenantId, params.tenantId),
+      eq(schema.workInputs.workId, params.workId),
+      eq(schema.workInputs.id, params.workInputId),
+      isNull(schema.workInputs.contextSnapshot),
+      isNull(schema.workInputs.contextSnapshotHash),
+    )).returning({ id: schema.workInputs.id });
+    if (attached) return;
+    const [existing] = await db.select({
+      contextSnapshot: schema.workInputs.contextSnapshot,
+      contextSnapshotHash: schema.workInputs.contextSnapshotHash,
+      contextCapturedAt: schema.workInputs.contextCapturedAt,
+    }).from(schema.workInputs).where(and(
+      eq(schema.workInputs.tenantId, params.tenantId),
+      eq(schema.workInputs.workId, params.workId),
+      eq(schema.workInputs.id, params.workInputId),
+    )).limit(1);
+    if (!existing) throw new Error("Work input not found");
+    if (!existing.contextSnapshotHash || !existing.contextCapturedAt || canonicalJson(existing.contextSnapshot) !== canonicalJson(snapshot)) {
+      throw new Error("Work input context is already bound to different provenance");
+    }
+  });
+}
+
 /** Transfer responsibility for an existing Work without replacing its objective,
  * inputs, causal history, active context, or durable children. The current owner is
  * the only employee who may hand it off; the row lock and optional expected owner

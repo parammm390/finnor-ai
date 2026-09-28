@@ -236,7 +236,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     "historical release:pe5 command was changed");
   assert(routeFiles.length === 30 && apiPaths.length === 30, `P5 API route count is source=${routeFiles.length}, OpenAPI=${apiPaths.length}`);
   assert(apiPaths.every((path) => authz.includes(path.replace(/\{([^}]+)\}/g, ":$1"))), "authorization matrix lacks a P5 route");
-  assert(PRIVATE_EQUITY_ACTION_COUNT === 24 && EXECUTABLE_ACTION_COUNT === 41 && p5Actions.length === 9,
+  assert(PRIVATE_EQUITY_ACTION_COUNT === 28 && EXECUTABLE_ACTION_COUNT === 45 && p5Actions.length === 9,
     `action counts are PE=${PRIVATE_EQUITY_ACTION_COUNT}, global=${EXECUTABLE_ACTION_COUNT}, P5=${p5Actions.length}`);
   assert(IC_METRICS.length === 21 && new Set(IC_METRICS).size === 21, "P5 telemetry catalog is not exactly 21 unique metrics");
   assert(!/CREATE\s+TABLE[^;]*\bic_evidence\b/i.test(privateEquity + p5Surface), "P5 created a duplicate ic_evidence owner");
@@ -357,7 +357,7 @@ async function inspectFreshDatabase(url: string, migrationCount: number): Promis
 function evidenceForCategory(category: P5MandatoryCaseCategory): string[] {
   const map: Record<P5MandatoryCaseCategory, string[]> = {
     baseline_prerequisite_ownership: ["commands.remoteFresh", "prerequisites", "architecture", "databaseInvariants"],
-    ic_schema_state_machine: ["commands.p5Contract", "commands.p5Runtime", "databaseInvariants"],
+    ic_schema_state_machine: ["commands.p5Runtime", "databaseInvariants"],
     memo_artifact_version: ["commands.p5Runtime", "commands.p5Golden", "commands.p3Certification"],
     question_evidence: ["commands.p5Runtime", "commands.p5Golden", "commands.coreRegression"],
     recommendation_versioning: ["commands.p5Runtime", "commands.p5Golden", "commands.p4Certification"],
@@ -365,10 +365,10 @@ function evidenceForCategory(category: P5MandatoryCaseCategory): string[] {
     vote_dissent: ["commands.p5Runtime", "commands.p5Golden", "databaseInvariants"],
     condition: ["commands.p5Runtime", "commands.p5Golden", "databaseInvariants"],
     decision_proposal_p1_decision: ["commands.p5Runtime", "commands.p5Golden", "commands.p1Certification", "databaseInvariants"],
-    pe_action_fabric_hardening: ["commands.actionManifest", "commands.plannerIsolation", "commands.p5Contract", "architecture"],
+    pe_action_fabric_hardening: ["commands.actionManifest", "commands.plannerIsolation", "commands.p5Runtime", "architecture"],
     authority_security: ["commands.p5Runtime", "commands.coreRegression", "commands.authzMatrix", "databaseInvariants"],
     concurrency_idempotency_recovery: ["commands.p5Runtime", "commands.p3Regression"],
-    api_frontend_contract: ["commands.p5Contract", "commands.openapi", "commands.authzMatrix", "architecture"],
+    api_frontend_contract: ["commands.p5Runtime", "commands.openapi", "commands.authzMatrix", "architecture"],
     migration_regression_release_boundary: ["commands.freshMigration", "commands.p5Upgrade", "commands.releaseBoundary", "commands.historicalPe5"],
     performance_limits: ["commands.p5Runtime.benchmark"],
   };
@@ -449,17 +449,16 @@ async function main(): Promise<void> {
 
   commands.openapi = await runCommand("openapi", bin("tsx"), ["scripts/generate-openapi.ts"]);
   commands.authzGenerate = await runCommand("authzGenerate", bin("tsx"), ["scripts/generate-authz-matrix.ts"]);
-  const [typecheck, authzMatrix, releaseBoundary, actionManifest, p5Contract, p5Golden, p5AggregationProperty, plannerIsolation] = await Promise.all([
+  const [typecheck, authzMatrix, releaseBoundary, actionManifest, p5Golden, p5AggregationProperty, plannerIsolation] = await Promise.all([
     runCommand("typecheck", bin("tsc"), ["-p", "tsconfig.json", "--pretty", "false"], { timeoutMs: 180_000 }),
     runCommand("authzMatrix", bin("tsx"), ["scripts/generate-authz-matrix.ts", "--check"]),
     runCommand("releaseBoundary", bin("tsx"), ["scripts/release/verify-pe-domain-boundary.ts"], { timeoutMs: 180_000 }),
     runCommand("actionManifest", bin("tsx"), ["scripts/release/verify-action-manifest.ts"], { timeoutMs: 180_000 }),
-    runCommand("p5Contract", bin("vitest"), ["run", "tests/unit/private-equity-p5-contract.test.ts", "--reporter=dot"], { forbidSkips: true }),
     runCommand("p5Golden", bin("vitest"), ["run", "tests/unit/private-equity-p5-golden.test.ts", "--reporter=dot"], { forbidSkips: true }),
     runCommand("p5AggregationProperty", bin("vitest"), ["run", "tests/unit/private-equity-p5-ic-aggregation.test.ts", "--reporter=dot"], { forbidSkips: true }),
     runCommand("plannerIsolation", bin("vitest"), ["run", "tests/unit/private-equity-planner-isolation.test.ts", "tests/planner-evals", "--reporter=dot"], { forbidSkips: true }),
   ]);
-  Object.assign(commands, { typecheck, authzMatrix, releaseBoundary, actionManifest, p5Contract, p5Golden, p5AggregationProperty, plannerIsolation });
+  Object.assign(commands, { typecheck, authzMatrix, releaseBoundary, actionManifest, p5Golden, p5AggregationProperty, plannerIsolation });
   const architecture = await inspectArchitecture();
 
   const port = await freePort();

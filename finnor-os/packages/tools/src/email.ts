@@ -7,20 +7,28 @@ import type { TenantCredentialContext } from "@finnor/security";
 
 export type GmailCredentialContext = TenantCredentialContext<"gmail">;
 
-let transporterOverride: Transporter | null = null;
-let gmailFetchOverride: typeof fetch | null = null;
+// The explicit testing seam must survive a Next server bundle boundary: the
+// fixture bootstrap and an API route can load separate copies of this module.
+const transportKey = Symbol.for("finnor.tools.testing.emailTransport");
+const gmailFetchKey = Symbol.for("finnor.tools.testing.gmailFetch");
+const testInjections = globalThis as unknown as Record<symbol, unknown>;
+function transportOverride(): Transporter | null { return (testInjections[transportKey] as Transporter | undefined) ?? null; }
+function fetchOverride(): typeof fetch | null { return (testInjections[gmailFetchKey] as typeof fetch | undefined) ?? null; }
 
 /** Tests inject a stub transport here; production uses the governed Gmail context. */
 export function setEmailTransportForTesting(t: Transporter | null): void {
-  transporterOverride = t;
+  if (t) testInjections[transportKey] = t;
+  else delete testInjections[transportKey];
 }
 
 export function setGmailFetchForTesting(value: typeof fetch | null): void {
-  gmailFetchOverride = value;
+  if (value) testInjections[gmailFetchKey] = value;
+  else delete testInjections[gmailFetchKey];
 }
 
 function getTransporter(context: GmailCredentialContext): Transporter {
-  if (transporterOverride) return transporterOverride;
+  const override = transportOverride();
+  if (override) return override;
   if (context.credentials.authMethod !== "app_password" || !context.credentials.appPassword) {
     throw new IntegrationError("email", "Gmail SMTP app-password credentials are unavailable", false);
   }
@@ -49,7 +57,7 @@ async function sendGmailApi(opts: { to: string; subject: string; body: string },
     "",
     opts.body,
   ].join("\r\n");
-  const response = await (gmailFetchOverride ?? fetch)("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+  const response = await (fetchOverride() ?? fetch)("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({ raw: base64Url(raw) }),
@@ -70,7 +78,7 @@ export async function sendEmail(opts: {
   body: string;
 }, context: GmailCredentialContext): Promise<{ messageId: string }> {
   if (context.tenantId !== opts.tenantId) throw new IntegrationError("email", "Gmail credential context tenant mismatch", false);
-  if (!transporterOverride && context.credentials.authMethod === "oauth2") {
+  if (!transportOverride() && context.credentials.authMethod === "oauth2") {
     try {
       return await sendGmailApi(opts, context);
     } catch (err) {
@@ -95,9 +103,9 @@ export async function sendEmail(opts: {
 /** Verify SMTP credentials without sending anything. */
 export async function verifyEmailTransport(context: GmailCredentialContext): Promise<boolean> {
   try {
-    if (!transporterOverride && context.credentials.authMethod === "oauth2") {
+    if (!transportOverride() && context.credentials.authMethod === "oauth2") {
       if (!context.credentials.accessToken) return false;
-      const response = await (gmailFetchOverride ?? fetch)("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+      const response = await (fetchOverride() ?? fetch)("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
         headers: { authorization: `Bearer ${context.credentials.accessToken}` },
       });
       return response.ok;

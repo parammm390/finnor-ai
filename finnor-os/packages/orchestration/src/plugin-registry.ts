@@ -18,6 +18,36 @@ import universalActionsPlugin from "../../domain-plugins/universal-actions/index
 import computerTaskPlugin from "../../domain-plugins/computer-task/index";
 import privateEquityPlugin, { PRIVATE_EQUITY_ACTION_TYPES } from "../../domain-plugins/private-equity/index";
 
+type CompactSchema = {
+  type?: string;
+  format?: string;
+  enum?: unknown[];
+  properties?: Record<string, CompactSchema>;
+  additionalProperties?: CompactSchema | boolean;
+  required?: string[];
+  items?: CompactSchema;
+  anyOf?: CompactSchema[];
+  oneOf?: CompactSchema[];
+};
+
+function compactFieldSchema(schema: CompactSchema, depth = 0): string {
+  if (schema.enum?.length) return `enum(${schema.enum.slice(0, 24).map(String).join("|")})`;
+  if (schema.format === "uuid") return "uuid";
+  if (schema.properties && depth < 4) {
+    const required = new Set(schema.required ?? []);
+    const fields = Object.entries(schema.properties).map(([name, child]) =>
+      `${name}${required.has(name) ? "*" : "?"}:${compactFieldSchema(child, depth + 1)}`);
+    return `{${fields.join(",")}}`;
+  }
+  if (schema.type === "array") return `array<${schema.items ? compactFieldSchema(schema.items, depth + 1) : "any"}>`;
+  if (schema.type === "object" && schema.additionalProperties && typeof schema.additionalProperties === "object") {
+    return `record<${compactFieldSchema(schema.additionalProperties, depth + 1)}>`;
+  }
+  const variants = schema.anyOf ?? schema.oneOf;
+  if (variants?.length) return variants.slice(0, 4).map((item) => compactFieldSchema(item, depth + 1)).join("|");
+  return schema.type ?? "any";
+}
+
 export class PluginRegistry {
   private byActionType = new Map<string, DomainEnginePlugin>();
 
@@ -71,11 +101,22 @@ export class PluginRegistry {
   }
 
   private specCache = new Map<string, string>();
+  private fieldCache = new Map<string, ReadonlySet<string>>();
+
+  /** Context may fill only fields declared by the actual payload owner. */
+  payloadFieldNames(actionType: string): ReadonlySet<string> {
+    const cached = this.fieldCache.get(actionType);
+    if (cached) return cached;
+    const schema = this.resolve(actionType)?.payloadSchemas?.[actionType];
+    const json = schema ? zodToJsonSchema(schema, { $refStrategy: "none" }) as CompactSchema : {};
+    const fields = new Set(Object.keys(json.properties ?? {}));
+    this.fieldCache.set(actionType, fields);
+    return fields;
+  }
 
   /** Compact payload spec for the Planner prompt: one line per action type,
-   *  `field*` = required, `field?` = optional, `field:enum(a|b)` for enums.
-   *  ~10x fewer tokens than full JSON Schema — lower latency, no TPM stalls —
-   *  while still telling the model exactly which field names to emit.
+   *  `field*` = required, `field?` = optional. Nested reference keys remain
+   *  visible so a required PartyRef does not collapse to an opaque `object`.
    *  Cached: plugins register once at startup, so this is stable per process. */
   payloadSpecJson(allowedActionTypes?: readonly string[]): string {
     const allowed = allowedActionTypes ? new Set(allowedActionTypes) : null;
@@ -90,16 +131,11 @@ export class PluginRegistry {
         lines.push(`${actionType}: (free-form object)`);
         continue;
       }
-      const json = zodToJsonSchema(schema, { $refStrategy: "none" }) as {
-        properties?: Record<string, { type?: string; enum?: unknown[]; format?: string }>;
-        required?: string[];
-      };
+      const json = zodToJsonSchema(schema, { $refStrategy: "none" }) as CompactSchema;
       const required = new Set(json.required ?? []);
       const fields = Object.entries(json.properties ?? {}).map(([name, def]) => {
         const mark = required.has(name) ? "*" : "?";
-        if (def.enum) return `${name}${mark}:enum(${def.enum.join("|")})`;
-        const t = def.format === "uuid" ? "uuid" : (def.type ?? "any");
-        return `${name}${mark}:${t}`;
+        return `${name}${mark}:${compactFieldSchema(def)}`;
       });
       lines.push(`${actionType}: ${fields.join(", ")}`);
     }

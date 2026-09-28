@@ -6,6 +6,13 @@ const version = z.number().int().positive();
 const dateTime = z.string().datetime({ offset: true });
 const text = z.string().trim().min(1).max(10_000);
 const shortText = z.string().trim().min(1).max(500);
+const underwritingScalar = z.union([z.string().max(4_096), z.boolean()]);
+const underwritingValue = z.union([
+  underwritingScalar,
+  z.record(underwritingScalar).superRefine((value, context) => {
+    if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.custom, message: "Series exceeds 240 values" });
+  }),
+]);
 
 const InternalPartyRefSchema = z.object({
   partyType: z.enum(["employee", "team"]),
@@ -37,6 +44,25 @@ export const IC_SOURCE_REFERENCE_SCHEMA = z.discriminatedUnion("kind", [
 ]);
 
 export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
+  create_underwriting_run: z.object({
+    dealId: uuid,
+    investmentCaseId: uuid,
+    modelVersionId: uuid,
+    scenarioId: uuid.optional(),
+    scenario: z.object({
+      name: shortText,
+      overrides: z.array(z.object({
+        nodeId: z.string().regex(/^[a-z][a-z0-9_.:-]{0,199}$/),
+        value: underwritingValue,
+        reason: z.string().trim().min(1).max(1_000),
+      }).strict()).min(1).max(100),
+    }).strict().optional(),
+    baseRunId: uuid.optional(),
+  }).strict().superRefine((value, context) => {
+    if (value.scenario && value.scenarioId) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "Choose one existing scenarioId or one new scenario" });
+    }
+  }),
   open_ic_case: z.object({
     dealId: uuid,
     icCaseId: uuid.optional(),
@@ -50,6 +76,20 @@ export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
     dealId: uuid,
     icCaseId: uuid,
     expectedCaseVersion: version,
+  }).strict(),
+  create_ic_deck_draft: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+    templateKey: z.string().regex(/^[a-z0-9][a-z0-9_-]{1,158}[a-z0-9]$/),
+    templateVersionId: uuid,
+    title: shortText,
+  }).strict(),
+  create_ic_memo_draft: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+    title: shortText,
   }).strict(),
   select_ic_memo_version: z.object({
     dealId: uuid,
@@ -93,6 +133,13 @@ export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
     dealId: uuid,
     icCaseId: uuid,
     expectedCaseVersion: version,
+  }).strict(),
+  prepare_ic_recommendation: z.object({
+    dealId: uuid,
+    icCaseId: uuid,
+    expectedCaseVersion: version,
+    memoId: uuid,
+    underwritingRunId: uuid,
   }).strict(),
   satisfy_ic_condition: z.object({
     dealId: uuid,

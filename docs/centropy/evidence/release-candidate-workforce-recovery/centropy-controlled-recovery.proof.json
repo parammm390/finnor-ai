@@ -1,0 +1,577 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_controlled_canonical_read_recovery",
+  "capturedAt": "2026-09-28T00:24:25.658Z",
+  "baseUrl": "http://localhost:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Recheck the entire deal before IC.",
+    "failure": "revoke the disposable app-role canonical history-coverage read, then restore"
+  },
+  "observed": {
+    "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+    "threadId": "7e5948f6-4142-4171-9c48-f09e9a5598a1",
+    "failedState": {
+      "work": "blocked",
+      "objective": "blocked",
+      "reason": "The node's durable Objective attempt ended in failure."
+    },
+    "recoveredState": {
+      "work": "completed",
+      "objective": "completed"
+    },
+    "completedQueriesBefore": [
+      {
+        "id": "b592b7d6-27ba-4f4a-963b-0f51eb0e5c19",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:1:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 164,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:06.025Z",
+        "completedAt": "2026-09-28T00:24:06.193Z"
+      },
+      {
+        "id": "c296db68-7d38-438f-a2c2-249a17e9c0ca",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:2:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 160,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:06.037Z",
+        "completedAt": "2026-09-28T00:24:06.206Z"
+      }
+    ],
+    "failedQueriesBefore": [
+      {
+        "id": "b7adaab7-d325-423b-ae79-7ebddb053d9b",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:3:decision-query",
+        "status": "failed",
+        "resultSummary": null,
+        "rowCount": 0,
+        "durationMs": 33,
+        "failure": {
+          "code": "PE_QUERY_FAILED"
+        },
+        "startedAt": "2026-09-28T00:24:06.293Z",
+        "completedAt": "2026-09-28T00:24:06.333Z"
+      },
+      {
+        "id": "a4ceabf5-f774-478e-ad9c-accff797f065",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:4:decision-query",
+        "status": "failed",
+        "resultSummary": null,
+        "rowCount": 0,
+        "durationMs": 20,
+        "failure": {
+          "code": "PE_QUERY_FAILED"
+        },
+        "startedAt": "2026-09-28T00:24:08.775Z",
+        "completedAt": "2026-09-28T00:24:08.798Z"
+      }
+    ],
+    "completedQueriesAfter": [
+      {
+        "id": "71fac37c-0047-4729-9234-ba09a78a8604",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:1:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 133,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:03.317Z",
+        "completedAt": "2026-09-28T00:24:05.506Z"
+      },
+      {
+        "id": "4b7dde0f-3aa8-4f2e-94ba-a338a2682c19",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:2:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 131,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:05.370Z",
+        "completedAt": "2026-09-28T00:24:05.512Z"
+      },
+      {
+        "id": "3347060f-aa8a-4282-b344-c86386407cc7",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:3:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 178,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:05.803Z",
+        "completedAt": "2026-09-28T00:24:05.997Z"
+      },
+      {
+        "id": "b592b7d6-27ba-4f4a-963b-0f51eb0e5c19",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:1:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 164,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:06.025Z",
+        "completedAt": "2026-09-28T00:24:06.193Z"
+      },
+      {
+        "id": "c296db68-7d38-438f-a2c2-249a17e9c0ca",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:2:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 160,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:06.037Z",
+        "completedAt": "2026-09-28T00:24:06.206Z"
+      },
+      {
+        "id": "9270f1f6-3f7f-4710-8616-dcaa6e26167c",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:4:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 79,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:08.065Z",
+        "completedAt": "2026-09-28T00:24:08.433Z"
+      },
+      {
+        "id": "bb84dd5d-f6e6-40fc-9b77-d8aef2be809d",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:1:step:5:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 43,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:10.400Z",
+        "completedAt": "2026-09-28T00:24:10.446Z"
+      },
+      {
+        "id": "ad440dcf-13b4-4667-baca-537681c968b7",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:6:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 838,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:14.476Z",
+        "completedAt": "2026-09-28T00:24:17.955Z"
+      },
+      {
+        "id": "633ef835-9f80-4c0d-a4a4-8bf46c0d5fc3",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:7:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 698,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:17.690Z",
+        "completedAt": "2026-09-28T00:24:18.413Z"
+      },
+      {
+        "id": "a7213c21-ec67-464f-a6fc-7b568a5aab60",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:8:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 435,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:18.341Z",
+        "completedAt": "2026-09-28T00:24:18.789Z"
+      },
+      {
+        "id": "3af49c9c-11b0-4ada-ba62-8d62d66cf9de",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:6:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 255,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:19.106Z",
+        "completedAt": "2026-09-28T00:24:19.397Z"
+      },
+      {
+        "id": "7fb4db47-f9a2-40e1-ba45-bb646b1a8754",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:7:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 211,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:19.114Z",
+        "completedAt": "2026-09-28T00:24:19.365Z"
+      },
+      {
+        "id": "559b051f-1986-4c3d-bc12-249bfb8a748b",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:8:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state",
+          "stateAt": "2026-09-28T00:24:19.431Z",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 196,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:19.367Z",
+        "completedAt": "2026-09-28T00:24:19.570Z"
+      },
+      {
+        "id": "3f20650b-969b-4f12-a6fb-9a5944a5bbec",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:revision:2:step:9:inspect:business-state",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 117,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:20.044Z",
+        "completedAt": "2026-09-28T00:24:20.911Z"
+      },
+      {
+        "id": "19c99852-b36a-4582-8af3-a9c75e1a43f9",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:step:9:success:criterion:2",
+        "status": "succeeded",
+        "resultSummary": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state",
+          "stateAt": "2026-09-28T00:24:21.047Z",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 37,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:21.039Z",
+        "completedAt": "2026-09-28T00:24:21.079Z"
+      },
+      {
+        "id": "533f068d-a5a2-471c-8062-9f4cce610005",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:step:9:success:criterion:3",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 34,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:21.084Z",
+        "completedAt": "2026-09-28T00:24:21.122Z"
+      },
+      {
+        "id": "a25236cf-7427-49e7-b1c6-8f4fa8c51f05",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "f4cea92a-378e-4bc3-907f-c7fba3087227",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:54eb8607-c4a6-4000-86e7-0f70e0836948:step:9:success:criterion:4",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 35,
+        "failure": null,
+        "startedAt": "2026-09-28T00:24:21.127Z",
+        "completedAt": "2026-09-28T00:24:21.165Z"
+      }
+    ],
+    "businessEffectsBefore": [],
+    "businessEffectsAfter": [],
+    "receiptsBefore": [],
+    "receiptsAfter": [],
+    "recoveryControl": "objective_continue",
+    "preservedExecutionIds": [
+      "b592b7d6-27ba-4f4a-963b-0f51eb0e5c19",
+      "c296db68-7d38-438f-a2c2-249a17e9c0ca"
+    ],
+    "failureVisible": true,
+    "finalVisible": true
+  },
+  "steps": [
+    "Authenticate owner and load Atlas Deal",
+    "Revoke one disposable app-role canonical read and submit the whole-Deal Objective",
+    "Observe completed sibling reads and failed PE world read plus visible failure",
+    "Restore the read grant and use the real Work retry or Objective continue control",
+    "Verify preserved completed query IDs, successful missing read, terminal Plan proof, and reloaded UI"
+  ],
+  "screenshotSha256": "a96632dda0db3f8bde083b8580fb7211d40a93a39115667fe7f6709cc63cf62d",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_RECOVERY_ADMIN_DATABASE_URL=postgres://<disposable-admin>@127.0.0.1:55441/finnor PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-controlled-recovery.spec.ts --project=desktop-chromium --workers=1",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas database and worker"
+    ]
+  },
+  "limitation": "This controlled local outage exercises partial canonical reads. It creates no external Business Effect, so a once-only external side-effect recovery still requires a separate proof. The test never runs against a non-local database."
+}

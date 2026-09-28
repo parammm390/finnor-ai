@@ -1,0 +1,257 @@
+{
+  "schema": "centropy.certification-summary/v1",
+  "capturedAt": "2026-09-28T00:20:29.681Z",
+  "flows": [
+    2,
+    9,
+    10
+  ],
+  "input": {
+    "instruction": "Challenge Atlas's revenue assumptions and prepare tomorrow's IC case.",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "fixture": "synthetic disposable Atlas with real persisted artifact bytes"
+  },
+  "workId": "30a54264-aef0-495f-b02a-0e7991e88400",
+  "threadId": "d49df4a8-0900-438d-9aef-f3d0ea4a83d4",
+  "objectiveId": "41635e9b-44c3-47b6-8115-3e761461178d",
+  "objectiveState": "completed",
+  "success": "verified",
+  "caseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+  "caseState": "READY_FOR_REVIEW",
+  "memo": {
+    "id": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "revision": 1,
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-09-28T05:49:28.763+05:30",
+    "createdBy": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+    "icCaseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+    "documentId": "71e6bb61-6c33-4214-9327-435510d1706c",
+    "artifactRole": "MEMO",
+    "idempotencyKey": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+    "semanticChecks": {},
+    "evidenceCutoffAt": "2026-09-28T05:49:17.644+05:30",
+    "investmentCaseId": "90000000-0000-4000-8000-000000000002",
+    "supersedesMemoId": null,
+    "documentVersionId": "178a505a-00a5-4e4b-b081-1c836ea7fec4",
+    "sourceCompleteness": "COMPLETE",
+    "underwritingRunId": "2725d358-1036-411e-9f7a-ca1c3e6eca97",
+    "changeClassification": "INITIAL"
+  },
+  "recommendation": {
+    "id": "96b00411-2034-413e-8c27-0d598959905e",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "memoId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+    "outcome": "CONTINUE_DILIGENCE",
+    "revision": 1,
+    "rationale": "Continue diligence before an investment decision. The selected memo 2c8f3831-7dc7-4ed1-a703-918fca56d32e is grounded in valid Underwriting Run 2725d358-1036-411e-9f7a-ca1c3e6eca97. The current Deal graph records 1 unresolved high or critical risk(s) and 1 unresolved material or critical finding(s): 90000000-0000-4000-8000-000000000010, 90000000-0000-4000-8000-000000000009. The committee must assess these items; this recommendation does not cast a vote or finalize a decision.",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-09-28T05:49:44.760567+05:30",
+    "icCaseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+    "authoredBy": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+    "scenarioId": "faf398fa-f33d-48f4-ada6-ac65b6e46e52",
+    "idempotencyKey": "d3116db6-1725-43ec-8999-b4e5975fffdf",
+    "investmentCaseId": "90000000-0000-4000-8000-000000000002",
+    "underwritingRunId": "2725d358-1036-411e-9f7a-ca1c3e6eca97",
+    "supersedesRecommendationId": null
+  },
+  "actions": [
+    {
+      "actionType": "create_underwriting_run",
+      "actionId": "b296312c-79da-469b-a380-74e79058c315",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "open_ic_case",
+      "actionId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "begin_ic_preparation",
+      "actionId": "7e305909-7915-46a4-a7bd-ba48910330dd",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "create_ic_memo_draft",
+      "actionId": "71e6bb61-6c33-4214-9327-435510d1706c",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "select_ic_memo_version",
+      "actionId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "prepare_ic_recommendation",
+      "actionId": "d3116db6-1725-43ec-8999-b4e5975fffdf",
+      "confirmedBy": "fixture owner in browser"
+    },
+    {
+      "actionType": "request_ic_memo_review",
+      "actionId": "9246df2f-a4d4-4bca-9ff5-6b630bb7ea8f",
+      "confirmedBy": "fixture owner in browser"
+    }
+  ],
+  "verifiedEffects": [
+    {
+      "id": "dfeda1bb-4661-4109-a221-2f707aeb6ad1",
+      "actionId": "b296312c-79da-469b-a380-74e79058c315",
+      "status": "verified"
+    },
+    {
+      "id": "6ee5b2a9-dd62-4bfc-b2fa-618dee2266dc",
+      "actionId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+      "status": "verified"
+    },
+    {
+      "id": "f208512f-cfe5-4193-a179-a21b98be867c",
+      "actionId": "7e305909-7915-46a4-a7bd-ba48910330dd",
+      "status": "verified"
+    },
+    {
+      "id": "c2ac8650-9183-4d49-94cc-c51e10411e22",
+      "actionId": "71e6bb61-6c33-4214-9327-435510d1706c",
+      "status": "verified"
+    },
+    {
+      "id": "288faa02-b2bd-4a15-be11-9b55b58710e0",
+      "actionId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+      "status": "verified"
+    },
+    {
+      "id": "f8c026eb-1834-48dd-9ee3-c09d0c38961b",
+      "actionId": "d3116db6-1725-43ec-8999-b4e5975fffdf",
+      "status": "verified"
+    },
+    {
+      "id": "9ac1c151-7195-4cf7-b9dd-bdfc53af3c80",
+      "actionId": "9246df2f-a4d4-4bca-9ff5-6b630bb7ea8f",
+      "status": "verified"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "d2a4bf44-16c2-4988-8c05-c8408b80d2be",
+      "actionId": "b296312c-79da-469b-a380-74e79058c315",
+      "finalizedAt": "2026-09-28T00:17:39.508Z"
+    },
+    {
+      "id": "f448f025-6748-469c-8d0b-095df8b77168",
+      "actionId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+      "finalizedAt": "2026-09-28T00:17:51.485Z"
+    },
+    {
+      "id": "7915b715-418b-46d0-99f5-89c532e500f1",
+      "actionId": "7e305909-7915-46a4-a7bd-ba48910330dd",
+      "finalizedAt": "2026-09-28T00:18:05.055Z"
+    },
+    {
+      "id": "f4309100-9641-44ae-9b75-4ac09a356bda",
+      "actionId": "71e6bb61-6c33-4214-9327-435510d1706c",
+      "finalizedAt": "2026-09-28T00:19:17.792Z"
+    },
+    {
+      "id": "86927bb3-e5ee-42ce-b792-459a74bdde1c",
+      "actionId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+      "finalizedAt": "2026-09-28T00:19:28.835Z"
+    },
+    {
+      "id": "ba77f36d-30b5-4e28-ae52-b5fd5645c439",
+      "actionId": "d3116db6-1725-43ec-8999-b4e5975fffdf",
+      "finalizedAt": "2026-09-28T00:19:44.867Z"
+    },
+    {
+      "id": "2424b36e-7b8d-4c95-b3d5-9babda4bc79d",
+      "actionId": "9246df2f-a4d4-4bca-9ff5-6b630bb7ea8f",
+      "finalizedAt": "2026-09-28T00:19:56.876Z"
+    }
+  ],
+  "restoration": {
+    "before": {
+      "workId": "30a54264-aef0-495f-b02a-0e7991e88400",
+      "objectiveId": "41635e9b-44c3-47b6-8115-3e761461178d",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "b296312c-79da-469b-a380-74e79058c315"
+      ],
+      "assignmentIds": [
+        "1d85efc4-c5e8-42bc-bd40-94e034b9df90",
+        "6d817fa8-4bc6-49df-b83a-b87d512fe100",
+        "9146266c-3528-44d0-a55b-ee0961612184",
+        "c5a1b0fa-c420-4c6b-96b1-2b8d640ef373",
+        "e630887c-bdfb-4822-8ba0-1c5a08adf917",
+        "f33405f5-2ae0-400e-8664-372be7aad8a5"
+      ],
+      "planIds": [
+        "39b4885c-9fe8-46fc-802d-dd5f879fdb0e",
+        "a5ce111a-ee81-4629-b32b-a447cd3ce2de"
+      ],
+      "userTurns": [
+        {
+          "id": "ef84a211-1e6b-49d4-8b19-449a17e8673d",
+          "instructionId": "30a54264-aef0-495f-b02a-0e7991e88400",
+          "workId": "30a54264-aef0-495f-b02a-0e7991e88400"
+        }
+      ]
+    },
+    "refreshed": {
+      "workId": "30a54264-aef0-495f-b02a-0e7991e88400",
+      "objectiveId": "41635e9b-44c3-47b6-8115-3e761461178d",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "b296312c-79da-469b-a380-74e79058c315"
+      ],
+      "assignmentIds": [
+        "1d85efc4-c5e8-42bc-bd40-94e034b9df90",
+        "6d817fa8-4bc6-49df-b83a-b87d512fe100",
+        "9146266c-3528-44d0-a55b-ee0961612184",
+        "c5a1b0fa-c420-4c6b-96b1-2b8d640ef373",
+        "e630887c-bdfb-4822-8ba0-1c5a08adf917",
+        "f33405f5-2ae0-400e-8664-372be7aad8a5"
+      ],
+      "planIds": [
+        "39b4885c-9fe8-46fc-802d-dd5f879fdb0e",
+        "a5ce111a-ee81-4629-b32b-a447cd3ce2de"
+      ],
+      "userTurns": [
+        {
+          "id": "ef84a211-1e6b-49d4-8b19-449a17e8673d",
+          "instructionId": "30a54264-aef0-495f-b02a-0e7991e88400",
+          "workId": "30a54264-aef0-495f-b02a-0e7991e88400"
+        }
+      ]
+    },
+    "reopened": {
+      "workId": "30a54264-aef0-495f-b02a-0e7991e88400",
+      "objectiveId": "41635e9b-44c3-47b6-8115-3e761461178d",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "b296312c-79da-469b-a380-74e79058c315"
+      ],
+      "assignmentIds": [
+        "1d85efc4-c5e8-42bc-bd40-94e034b9df90",
+        "6d817fa8-4bc6-49df-b83a-b87d512fe100",
+        "9146266c-3528-44d0-a55b-ee0961612184",
+        "c5a1b0fa-c420-4c6b-96b1-2b8d640ef373",
+        "e630887c-bdfb-4822-8ba0-1c5a08adf917",
+        "f33405f5-2ae0-400e-8664-372be7aad8a5"
+      ],
+      "planIds": [
+        "39b4885c-9fe8-46fc-802d-dd5f879fdb0e",
+        "a5ce111a-ee81-4629-b32b-a447cd3ce2de"
+      ],
+      "userTurns": [
+        {
+          "id": "ef84a211-1e6b-49d4-8b19-449a17e8673d",
+          "instructionId": "30a54264-aef0-495f-b02a-0e7991e88400",
+          "workId": "30a54264-aef0-495f-b02a-0e7991e88400"
+        }
+      ]
+    },
+    "firstBrowserClosed": true,
+    "freshBrowserLaunched": true,
+    "storedSessionReused": false
+  },
+  "proofSha256": "f10cebff38fc7c41d23c4789b37057dada9481f251b30159f905fcf92d12c9ef",
+  "screenshotSha256": "2109787852bceb52b3b55c55e51a1f620dd36f15dd287ba382b2756515580f63"
+}

@@ -1,11 +1,6 @@
-import type { Metadata } from "next"
-import DealsSurface from "@/components/centropy/pe/DealsSurface"
+import { redirect } from "next/navigation"
+import { legacyWorldHref } from "@/components/centropy/shell/legacy-link"
 
-export const metadata: Metadata = {
-  title: "Deals — Centropy",
-  description: "A source-backed master Deal book and deep Private Equity workspace.",
-}
-
-export default function DealsPage() {
-  return <DealsSurface />
+export default async function LegacyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  redirect(legacyWorldHref(await searchParams))
 }

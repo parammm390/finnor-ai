@@ -1,0 +1,289 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_ic_terminal_completion",
+  "capturedAt": "2026-09-27T20:45:08.349Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "workId": "18b2fe1e-b65f-4732-bf17-eafe49f7aeff",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "threadId": "ee6a1223-29ec-46ea-a7f7-7f110afe4bee",
+    "disposableFixture": true
+  },
+  "observed": {
+    "workId": "18b2fe1e-b65f-4732-bf17-eafe49f7aeff",
+    "beforeState": "completed",
+    "afterState": "completed",
+    "workStatus": "completed",
+    "caseId": "f48f565c-82de-4704-85cc-affef4b04150",
+    "threadId": "ee6a1223-29ec-46ea-a7f7-7f110afe4bee",
+    "reviewEffectId": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+    "evidenceRefs": [
+      {
+        "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+        "type": "business_effect"
+      }
+    ],
+    "actionIds": [
+      "0176a01e-d32e-401e-a92e-2af4f911710e",
+      "43d3dcc7-a8cb-4485-83ad-54c357a21cb5",
+      "6d8f5322-0c35-4f9a-8d99-5e88527444f1",
+      "7f449cb3-17d7-411d-8a7f-0cec24b10689",
+      "d2480192-aff6-49c4-9fbb-03d7bb9b5cc3",
+      "f48f565c-82de-4704-85cc-affef4b04150",
+      "fe758a83-5696-4ac4-a757-6425aa059773"
+    ],
+    "effectStatuses": [
+      {
+        "id": "1c4e5e1a-c5dd-484a-bd87-ec0ec07746a7",
+        "status": "verified"
+      },
+      {
+        "id": "c1a8a751-be24-4479-945a-4677538766b9",
+        "status": "verified"
+      },
+      {
+        "id": "a9b439e0-35f1-438a-862f-333a6f6a272d",
+        "status": "verified"
+      },
+      {
+        "id": "73c823ae-4aae-46b1-8662-b0e5b49f74ad",
+        "status": "verified"
+      },
+      {
+        "id": "0e971579-1b4f-4774-9cac-b211164b319b",
+        "status": "verified"
+      },
+      {
+        "id": "39325149-b3c6-4522-bb8a-11da8d65c089",
+        "status": "verified"
+      },
+      {
+        "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+        "status": "verified"
+      }
+    ],
+    "receiptCount": 7,
+    "planCompletionProof": {
+      "version": 1,
+      "verified": true,
+      "verifiedAt": "2026-09-27T19:13:59.754Z",
+      "evidenceRefs": [
+        {
+          "id": "0e971579-1b4f-4774-9cac-b211164b319b",
+          "type": "business_effect"
+        },
+        {
+          "id": "1c4e5e1a-c5dd-484a-bd87-ec0ec07746a7",
+          "type": "business_effect"
+        },
+        {
+          "id": "39325149-b3c6-4522-bb8a-11da8d65c089",
+          "type": "business_effect"
+        },
+        {
+          "id": "73c823ae-4aae-46b1-8662-b0e5b49f74ad",
+          "type": "business_effect"
+        },
+        {
+          "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+          "type": "business_effect"
+        },
+        {
+          "id": "a9b439e0-35f1-438a-862f-333a6f6a272d",
+          "type": "business_effect"
+        },
+        {
+          "id": "c1a8a751-be24-4479-945a-4677538766b9",
+          "type": "business_effect"
+        },
+        {
+          "id": "41094b61-cbe2-47df-bb70-c22c1e7e50ba",
+          "type": "document_version"
+        },
+        {
+          "id": "f48f565c-82de-4704-85cc-affef4b04150",
+          "type": "pe_ic_case"
+        },
+        {
+          "id": "f7655ede-a82f-43e4-b507-ec1177c4c568",
+          "type": "pe_ic_recommendation"
+        },
+        {
+          "id": "83f2d334-15f8-48fd-a7e8-01a995d27a7c",
+          "type": "underwriting_run"
+        }
+      ],
+      "verification": {
+        "state": "verified",
+        "results": [
+          {
+            "kind": "no_open_execution",
+            "basis": "No objective execution or approval responsibility remains open.",
+            "index": 0,
+            "satisfied": true,
+            "evidenceRefs": []
+          },
+          {
+            "kind": "all_objective_effects_verified",
+            "basis": "All 7 objective Business Effects are verified.",
+            "index": 1,
+            "observed": [
+              {
+                "id": "1c4e5e1a-c5dd-484a-bd87-ec0ec07746a7",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "c1a8a751-be24-4479-945a-4677538766b9",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "a9b439e0-35f1-438a-862f-333a6f6a272d",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "73c823ae-4aae-46b1-8662-b0e5b49f74ad",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "0e971579-1b4f-4774-9cac-b211164b319b",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "39325149-b3c6-4522-bb8a-11da8d65c089",
+                "status": "verified",
+                "verification": "verified"
+              },
+              {
+                "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+                "status": "verified",
+                "verification": "verified"
+              }
+            ],
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "1c4e5e1a-c5dd-484a-bd87-ec0ec07746a7",
+                "type": "business_effect"
+              },
+              {
+                "id": "c1a8a751-be24-4479-945a-4677538766b9",
+                "type": "business_effect"
+              },
+              {
+                "id": "a9b439e0-35f1-438a-862f-333a6f6a272d",
+                "type": "business_effect"
+              },
+              {
+                "id": "73c823ae-4aae-46b1-8662-b0e5b49f74ad",
+                "type": "business_effect"
+              },
+              {
+                "id": "0e971579-1b4f-4774-9cac-b211164b319b",
+                "type": "business_effect"
+              },
+              {
+                "id": "39325149-b3c6-4522-bb8a-11da8d65c089",
+                "type": "business_effect"
+              },
+              {
+                "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+                "type": "business_effect"
+              }
+            ]
+          },
+          {
+            "kind": "private_equity_ic_preparation",
+            "basis": "The Work-linked IC Case has a fresh eligible underwriting run, persisted memo content, exact recommendation, and an unblocked review basis.",
+            "index": 2,
+            "observed": {
+              "asOf": "2026-09-27T19:13:59.731Z",
+              "state": "READY_FOR_REVIEW",
+              "caseId": "f48f565c-82de-4704-85cc-affef4b04150"
+            },
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "f48f565c-82de-4704-85cc-affef4b04150",
+                "type": "pe_ic_case"
+              },
+              {
+                "id": "83f2d334-15f8-48fd-a7e8-01a995d27a7c",
+                "type": "underwriting_run"
+              },
+              {
+                "id": "41094b61-cbe2-47df-bb70-c22c1e7e50ba",
+                "type": "document_version"
+              },
+              {
+                "id": "f7655ede-a82f-43e4-b507-ec1177c4c568",
+                "type": "pe_ic_recommendation"
+              }
+            ]
+          },
+          {
+            "kind": "decision_evidence",
+            "basis": "1 completion evidence items were deterministically verified; minimum 1.",
+            "index": 3,
+            "observed": [
+              {
+                "basis": "The exact objective Business Effect is verified by canonical business state.",
+                "satisfied": true
+              }
+            ],
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "7dfe87fd-45c2-4ee4-9172-d69143495b45",
+                "type": "business_effect"
+              }
+            ]
+          }
+        ],
+        "version": 1,
+        "evidence": [
+          {
+            "kind": "business_effect",
+            "businessEffectId": "7dfe87fd-45c2-4ee4-9172-d69143495b45"
+          }
+        ],
+        "checkedAt": "2026-09-27T19:13:59.754Z",
+        "conditionHash": "b3920eb5ba7065ff7c9199a82488d2a376ca85661c605cc13b1ee9c04eddf7b0",
+        "queryExecutionIds": []
+      },
+      "planRevisionId": "0d87e9ef-9a18-4192-b62d-10765d257ee0",
+      "goalSemanticHash": "sha256:830ff9fc9993d338280155caf48c1f685792130e7fa1e64e3d1899c31756cf2d",
+      "planSemanticHash": "sha256:c9f8855e0f0c8b892dc118fde9c8e32410395441a59b4b79066a484030d82c19",
+      "finalPlanRevisionId": "0d87e9ef-9a18-4192-b62d-10765d257ee0",
+      "successConditionHash": "sha256:b3920eb5ba7065ff7c9199a82488d2a376ca85661c605cc13b1ee9c04eddf7b0"
+    },
+    "reloadState": "READY_FOR_REVIEW",
+    "restoredResult": "CENTROPY · VERIFIED WORK RESULT\nIC preparation completed\n\nThe Objective reached its verified completion condition. Its exact review effect and completed Plan are recorded on this Work.\n\nIC case · READY FOR REVIEW\n\nCurrent recommendation: continue diligence.\n\nSelected memo is recorded on this IC case.\n\nInspect case and sources in Canvas\nVerification references",
+    "restoredIcCaseRead": "f48f565c-82de-4704-85cc-affef4b04150",
+    "controlResponse": null
+  },
+  "steps": [
+    "Sign in as the fixture owner",
+    "Verify seven completed actions, exact Business Effects, finalized receipts, and READY_FOR_REVIEW IC case",
+    "Governedly continue the same Work if it has not completed",
+    "Wait for completed Objective and Work",
+    "Verify the completion proof cites the exact review Business Effect",
+    "Verify no duplicate actions",
+    "Reopen the Investigation without an IC case URL override, reload it, and observe the final verified result, recommendation, memo, and exact Work-linked case"
+  ],
+  "screenshotSha256": "102f1dea818849ab49c5480e112b88ff558120ebee1c7dadcd428d5b9d61dae2",
+  "resultScreenshotSha256": "5194bb734cffa41e81c16cdbe79ca79c260fab04d28166318e1ea67683399053",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_WORK_ID=<prepared disposable Atlas Work> CENTROPY_THREAD_ID=<persisted investigation thread> PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npx playwright test e2e/centropy-ic-terminal-completion.spec.ts --project=desktop-chromium",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "local frontend, API, worker, and disposable DB fixture"
+    ]
+  }
+}

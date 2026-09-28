@@ -30,6 +30,7 @@ const PE_TARGET_FIELDS: Readonly<Record<string, string>> = {
 export function applyOperatingInteractionTargets<T extends PlannedInteractionAction>(
   actions: T[],
   context: OperatingInteractionContext | null | undefined,
+  acceptedFields?: ReadonlySet<string>,
 ): T[] {
   if (!context) return actions;
   const targets = effectiveInteractionTargets(context);
@@ -41,7 +42,7 @@ export function applyOperatingInteractionTargets<T extends PlannedInteractionAct
     }
     for (const target of targets) {
       const field = PE_TARGET_FIELDS[target.entityType];
-      if (field && !(field in payload)) payload = { ...payload, [field]: target.entityId };
+      if (field && (!acceptedFields || acceptedFields.has(field)) && !(field in payload)) payload = { ...payload, [field]: target.entityId };
     }
     return payload === action.payload
       ? action

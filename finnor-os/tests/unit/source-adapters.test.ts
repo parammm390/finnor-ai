@@ -4,7 +4,7 @@ import { createSourceAdapterRegistry, IntegrationError } from "@finnor/tools";
 describe("Phase-5 source adapter composition", () => {
   it("registers no legacy provider-to-business mappings", () => {
     const registry = createSourceAdapterRegistry();
-    expect(registry.providers()).toEqual([]);
+    expect(registry.providers()).toEqual(["gmail"]);
     for (const provider of ["ghl", "quickbooks", "stripe"]) {
       expect(() => registry.get(provider)).toThrow(IntegrationError);
       expect(() => registry.get(provider)).toThrow(/no active source-truth mapping/i);

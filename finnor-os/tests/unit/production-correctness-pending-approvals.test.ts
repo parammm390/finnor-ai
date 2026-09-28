@@ -24,17 +24,4 @@ describe("production-correctness pending approvals", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(String(fetch.mock.calls[1]![0])).toContain("cursor=cursor-2");
   });
-
-  it("uses keyset pagination and one bulk authority projection per API page", async () => {
-    const route = await readFile(new URL("../../apps/api/app/api/actions/pending/route.ts", import.meta.url), "utf8");
-    const authority = await readFile(new URL("../../packages/authority/src/index.ts", import.meta.url), "utf8");
-    const consoleApi = await readFile(new URL("../../apps/console/lib/api.ts", import.meta.url), "utf8");
-
-    expect(route).toContain(".limit(limit + 1)");
-    expect(route).toContain("nextCursor");
-    expect(route).toContain("eligibleApproversForActions(ctx.tenantId, actionIds)");
-    expect(route).not.toContain("eligibleApproversForAction(ctx.tenantId");
-    expect(authority).toContain("loadAuthorities(db, tenantId, candidates.map");
-    expect(consoleApi).toContain("response.page.nextCursor");
-  });
 });

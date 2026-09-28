@@ -138,8 +138,12 @@ export interface FastReadOnlyRouterDeps {
 const ACTIVE_INTENTS = new Set<string>(OPERATIONAL_QUERY_INTENTS);
 const PE_INTENTS = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
 const MUTATION = /\b(?:send|email|message|call|create|update|delete|remove|assign|handoff|delegate|schedule|reschedule|share|approve|reject|close|waive|execute|change)\b/i;
-const QUESTION = /\?|\b(?:what|which|who|show|list|give|are|is|how|status|context|readiness|open|find)\b/i;
+const QUESTION = /\?|\b(?:what|which|who|why|show|list|give|are|is|how|status|context|readiness|open|find)\b/i;
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
+// A mention of "Work" can also describe the product or its replay semantics.
+// Claim a deterministic collection read only when the user asks for records.
+const WORK_RECORD = /(?:work(?:\s+items?)?|tasks?)/i;
+const WORK_LIST_REQUEST = new RegExp(`\\b(?:show|list|find|give(?:\\s+me)?|pull\\s+up)\\s+(?:me\\s+)?(?:the\\s+)?(?:my\\s+|our\\s+|all\\s+)?(?:open\\s+|active\\s+|pending\\s+|due\\s+|overdue\\s+)?${WORK_RECORD.source}\\b|\\bhow\\s+many\\s+(?:open\\s+|active\\s+|pending\\s+)?${WORK_RECORD.source}\\b|\\b(?:what|which)\\s+(?:open\\s+|active\\s+|pending\\s+|due\\s+|overdue\\s+)?${WORK_RECORD.source}\\s+(?:are|is|do|did|were|have|has)\\b|\\b(?:my|our)\\s+(?:open\\s+|active\\s+|pending\\s+|due\\s+|overdue\\s+)?${WORK_RECORD.source}\\s*\\??$`, "i");
 
 function cleanQuery(value: string): string {
   return value.replace(/\?/g, " ").replace(/\s+/g, " ").trim().slice(0, 500);
@@ -155,16 +159,24 @@ function dealRequest(
     | "open_deal_risks"
     | "critical_dependencies"
     | "closing_readiness">,
+  scopedDealId?: string,
 ): OperationalQueryDecision {
-  const dealId = instruction.match(UUID)?.[0];
+  const dealId = instruction.match(UUID)?.[0] ?? scopedDealId;
   if (!dealId) return { route: "planner", reason: "external_or_ambiguous" };
   return { route: "fast_read", confidence: "high", request: { intent, dealId } };
 }
 
-export function interpretOperationalQuery(instruction: string): OperationalQueryDecision {
+export function interpretOperationalQuery(instruction: string, scopedDealId?: string): OperationalQueryDecision {
   const text = instruction.trim();
   if (!text || !QUESTION.test(text)) return { route: "planner", reason: "not_question" };
   if (MUTATION.test(text)) return { route: "planner", reason: "mutation_or_advice" };
+
+  if (/^what changed since yesterday(?:,? and does it affect our recommendation)?\??$/i.test(text)) {
+    const dealId = text.match(UUID)?.[0] ?? scopedDealId;
+    return dealId
+      ? { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType: "pe_deal", entityId: dealId }, compareWindow: "previous_24h" } }
+      : { route: "planner", reason: "external_or_ambiguous" };
+  }
 
   if (/\b(?:pe\s+)?world\s+state\b/i.test(text)) {
     const entityId = text.match(UUID)?.[0];
@@ -175,13 +187,17 @@ export function interpretOperationalQuery(instruction: string): OperationalQuery
     return { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType, entityId } } };
   }
 
-  if (/\bclosing\s+readiness\b/i.test(text)) return dealRequest(text, "closing_readiness");
-  if (/\bcritical\s+dependenc(?:y|ies)\b/i.test(text)) return dealRequest(text, "critical_dependencies");
-  if (/\b(?:open\s+)?deal\s+risks?\b/i.test(text)) return dealRequest(text, "open_deal_risks");
-  if (/\b(?:open\s+)?findings?\b/i.test(text)) return dealRequest(text, "open_findings");
-  if (/\b(?:open\s+)?requests?\b/i.test(text)) return dealRequest(text, "open_requests");
-  if (/\bworkstreams?\b/i.test(text)) return dealRequest(text, "deal_workstreams");
-  if (/\bdeal\s+(?:context|overview|status)\b/i.test(text)) return dealRequest(text, "deal_context");
+  if (/^why\s+(?:is|are)\s+.{1,100}\s+blocked\??$/i.test(text)
+      || /\bwhat\s+is\s+blocking\s+(?:this\s+)?deal\b/i.test(text)) {
+    return dealRequest(text, "closing_readiness", scopedDealId);
+  }
+  if (/\bclosing\s+readiness\b/i.test(text)) return dealRequest(text, "closing_readiness", scopedDealId);
+  if (/\bcritical\s+dependenc(?:y|ies)\b/i.test(text)) return dealRequest(text, "critical_dependencies", scopedDealId);
+  if (/\b(?:open\s+)?deal\s+risks?\b/i.test(text)) return dealRequest(text, "open_deal_risks", scopedDealId);
+  if (/\b(?:open\s+)?findings?\b/i.test(text)) return dealRequest(text, "open_findings", scopedDealId);
+  if (/\b(?:open\s+)?requests?\b/i.test(text)) return dealRequest(text, "open_requests", scopedDealId);
+  if (/\bworkstreams?\b/i.test(text)) return dealRequest(text, "deal_workstreams", scopedDealId);
+  if (/\bdeal\s+(?:context|overview|status)\b/i.test(text)) return dealRequest(text, "deal_context", scopedDealId);
 
   if (/\b(?:team\s+roster|members?\s+of\s+(?:the\s+)?team)\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "team_roster", query: cleanQuery(text) } };
@@ -195,7 +211,11 @@ export function interpretOperationalQuery(instruction: string): OperationalQuery
   if (/\b(?:attention|what\s+(?:needs|requires)\s+(?:my\s+)?attention|what\s+should\s+i\s+do\s+next)\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "attention_queue" } };
   }
-  if (/\b(?:work|task)s?\b/i.test(text)) {
+  // Replay and trace are product concepts, not Work collection filters.
+  if (/\b(?:work\s+replay|instruction\s+trace)\b/i.test(text)) {
+    return { route: "planner", reason: "unsupported" };
+  }
+  if (WORK_LIST_REQUEST.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "work_list", openOnly: /\bopen\b/i.test(text) } };
   }
   if (/\b(?:company|organization)\s+(?:context|graph|relationships?)\b/i.test(text)) {
@@ -203,6 +223,9 @@ export function interpretOperationalQuery(instruction: string): OperationalQuery
   }
   if (/\b(?:context|details?)\s+(?:for|about)\s+\S+/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "party_context", query: cleanQuery(text) } };
+  }
+  if (/^(?:how\s+(?:does|do|is|are|can)\b|what\s+(?:is|are|does|can)\b|explain\b|show\s+me\s+how\b)/i.test(text)) {
+    return { route: "planner", reason: "unsupported" };
   }
   if (/\b(?:who\s+is|find|lookup|show)\b/i.test(text)) {
     return { route: "fast_read", confidence: "high", request: { intent: "party_lookup", query: cleanQuery(text) } };
@@ -280,6 +303,12 @@ export function validateOperationalQueryRequest(
     if (value?.at !== undefined && (typeof value.at !== "string" || !Number.isFinite(Date.parse(value.at)))) {
       return { success: false, error: "PE world-state at must be an ISO timestamp" };
     }
+    if (value?.compareWindow !== undefined && value.compareWindow !== "previous_24h") {
+      return { success: false, error: "Unsupported PE world-state comparison window" };
+    }
+    if (value?.compareWindow && (value.at || value.validAt || value.knowledgeAt)) {
+      return { success: false, error: "A rolling PE comparison cannot use a separate historical instant" };
+    }
   } else if (PE_INTENTS.has(intent)) {
     if (typeof value?.dealId !== "string" || !UUID.test(value.dealId)) {
       return { success: false, error: "Private Equity operational queries require a valid dealId" };
@@ -341,32 +370,104 @@ function answerOperationalQuery(execution: OperationalQueryExecution): AnswerEnv
   } else if (result.intent === "closing_readiness") {
     facts.push({ label: "Eligible", value: result.eligible ? "Yes" : "No" });
     facts.push({ label: "Blocking conditions", value: String(result.blockingConditions.length) });
+    const named = (rows: Record<string, unknown>[], field: string, kind: string) => rows
+      .map((row) => {
+        const name = typeof row[field] === "string" ? String(row[field]).trim() : "";
+        const state = typeof row.state === "string" ? String(row.state).replaceAll("_", " ") : "";
+        return name ? `${kind} “${name}”${state ? ` (${state})` : ""}` : "";
+      })
+      .filter(Boolean);
+    const reasons = [
+      ...named(result.blockingConditions, "condition", "Unmet closing condition"),
+      ...named(result.failedConditions, "condition", "Failed closing condition"),
+      ...named(result.unverifiedClosingItems, "item", "Unverified closing item"),
+      ...result.integrityErrors.map((error) => `Integrity error: ${error}`),
+    ];
+    const listedBlockers = `${reasons.slice(0, 3).join("; ")}${reasons.length > 3 ? `; and ${reasons.length - 3} more` : ""}`;
     summary = result.eligible
       ? "The deal is currently eligible to close under the verified controls."
-      : `The deal is not ready to close; ${result.blockingConditions.length} blocking conditions remain.`;
+      : reasons.length > 0
+        ? `The deal is not ready to close. Recorded blockers: ${listedBlockers}${/[.!?]$/.test(listedBlockers) ? "" : "."}`
+        : "The deal is not ready to close. The readiness record has no named closing blocker; inspect its status, dependencies, and evidence coverage.";
   } else if (result.intent === "pe_world_state") {
     facts.push({ label: "Temporal completeness", value: result.temporalCompleteness.status });
     facts.push({ label: "State at", value: result.stateAt });
-    summary = `PE world state is ${result.temporalCompleteness.status} at ${result.stateAt}.`;
+    if (result.temporalReview) {
+      const review = result.temporalReview;
+      const evidenceChanges = review.changes.filter((item) => item.kind === "evidence_version_recorded");
+      const modelChanges = review.changes.filter((item) => item.kind === "underwriting_run_completed" || item.kind === "underwriting_run_failed");
+      const recommendationChanges = review.changes.filter((item) => item.kind === "ic_recommendation_recorded");
+      const recommendationRunRefs = recommendationChanges.flatMap((item) => item.causalRefs.filter((ref) => ref.relationship === "underwriting_run").map((ref) => ref.id));
+      const linkedRun = modelChanges.find((item) => recommendationRunRefs.includes(item.subject.id));
+      const incomplete = review.baselineStatus !== "complete" || review.activityTruncated || review.basisCoverage.status !== "complete" || review.activitySources.some((source) => source.status !== "complete");
+      facts.push({ label: "Window", value: `${review.sinceAt} to ${review.untilAt}` });
+      facts.push({ label: "Recorded changes shown", value: `${review.changes.length}${review.activityTruncated ? "+ (truncated)" : ""}` });
+      facts.push({ label: "Evidence versions", value: String(evidenceChanges.length) });
+      facts.push({ label: "Underwriting runs", value: String(modelChanges.length) });
+      facts.push({ label: "IC recommendation events", value: String(recommendationChanges.length) });
+      facts.push({ label: "Historical baseline", value: review.baselineStatus === "unavailable_before_baseline" ? `Unavailable before ${review.baselineAt ?? "the recorded baseline"}` : review.baselineStatus });
+      facts.push({ label: "IC basis coverage", value: review.basisCoverage.status });
+      for (const comparison of review.recommendationComparisons.slice(0, 6)) {
+        const before = comparison.baseline?.outcome.replaceAll("_", " ").toLowerCase();
+        const current = comparison.current?.outcome.replaceAll("_", " ").toLowerCase();
+        facts.push({ label: `Recommendation · ${comparison.caseId}`, value: comparison.assessment === "unverified"
+          ? `Prior selection is unverified; current selection: ${current ?? "none recorded"}`
+          : `${before ?? "no selected recommendation"} → ${current ?? "no selected recommendation"} · ${comparison.assessment.replaceAll("_", " ")}` });
+      }
+      for (const comparison of review.modelComparisons.slice(0, 6)) {
+        facts.push({ label: `Selected model basis · ${comparison.caseId}`, value: `${comparison.baselineRunId} → ${comparison.currentRunId}; changed inputs: ${Object.keys(comparison.changedInputs).join(", ") || "none"}; ${Object.keys(comparison.changedOutputs).length} changed outputs` });
+      }
+      for (const [index, change] of review.changes.filter((item) => ["evidence_version_recorded", "underwriting_run_completed", "underwriting_run_failed", "ic_recommendation_recorded", "ic_case_transition"].includes(item.kind)).slice(0, 6).entries()) {
+        const source = change.sourceRefs[0];
+        facts.push({ label: `Observed change ${index + 1}`, value: `${change.label} at ${change.occurredAt}${source ? ` · ${source.table}:${source.id}` : ""}` });
+      }
+      const verifiedComparisons = review.recommendationComparisons.filter((item) => item.assessment !== "unverified");
+      const recommendationImpact = verifiedComparisons.length
+        ? verifiedComparisons.slice(0, 3).map((item) => {
+          const before = item.baseline?.outcome.replaceAll("_", " ").toLowerCase() ?? "no selected recommendation";
+          const current = item.current?.outcome.replaceAll("_", " ").toLowerCase() ?? "no selected recommendation";
+          const basis = item.assessment === "changed_basis"
+            ? "; the recorded Run, memo or rationale basis changed"
+            : "";
+          return `IC recommendation for case ${item.caseId}: ${before} → ${current} (${item.assessment.replaceAll("_", " ")}${basis})${item.current ? `, explicitly based on Run ${item.current.underwritingRunId} and memo ${item.current.memoId}` : ""}.`;
+        }).join(" ")
+        : linkedRun
+        ? `An IC recommendation was recorded in this window with an explicit link to Underwriting Run ${linkedRun.subject.id}.`
+        : recommendationChanges.length
+          ? "An IC recommendation event was recorded, but this bounded read did not prove a changed underwriting basis."
+          : "This bounded read did not show an IC recommendation change; it does not prove the recommendation was unaffected.";
+      const modelImpact = review.modelComparisons.slice(0, 3).map((item) => {
+        const inputs = Object.keys(item.changedInputs).length;
+        const outputs = Object.keys(item.changedOutputs).length;
+        return `The selected model comparison for case ${item.caseId} records ${inputs} changed input${inputs === 1 ? "" : "s"} and ${outputs} changed output${outputs === 1 ? "" : "s"}.`;
+      }).join(" ");
+      summary = `${review.changes.length}${review.activityTruncated ? " or more" : ""} recorded Deal changes since ${review.sinceAt}, including ${evidenceChanges.length} evidence version${evidenceChanges.length === 1 ? "" : "s"} and ${modelChanges.length} Underwriting Run event${modelChanges.length === 1 ? "" : "s"}. ${recommendationImpact}${modelImpact ? ` ${modelImpact}` : ""} The record does not prove that an evidence change caused the recommendation.${incomplete ? " Historical or source coverage is partial; absence of other changes is unverified." : ""}`;
+    } else {
+      summary = `PE world state is ${result.temporalCompleteness.status} at ${result.stateAt}.`;
+    }
   } else if ("resolution" in result) {
     facts.push({ label: "Resolution", value: String(result.resolution) });
   }
 
   const source = result.source as OperationalQuerySource;
+  const review = result.intent === "pe_world_state" ? result.temporalReview : undefined;
+  const temporalEvidence = review?.changes.flatMap((change) => change.sourceRefs.map((ref) => ({
+    source: ref.table, ref: ref.id, timestamp: change.occurredAt, kind: "CANONICAL" as const,
+  }))).slice(0, 30);
   return {
     kind: "answer",
     intent: result.intent,
     readOnly: true,
     spokenSummary: summary,
     display: { title: title(result.intent), facts },
-    evidence: source.tables.map((table) => ({
+    evidence: temporalEvidence?.length ? temporalEvidence : source.tables.map((table) => ({
       source: table,
       ref: "tenant-scoped",
       timestamp: result.asOf,
       kind: "CANONICAL" as const,
     })),
     asOf: result.asOf,
-    freshness: { status: "fresh", observedAt: result.asOf },
+    freshness: { status: review && (review.baselineStatus !== "complete" || review.activityTruncated || review.activitySources.some((item) => item.status !== "complete")) ? "unknown" : "fresh", observedAt: result.asOf },
     query: execution,
   };
 }

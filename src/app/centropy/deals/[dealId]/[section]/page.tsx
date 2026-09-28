@@ -1,15 +1,9 @@
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import DealWorkspace from "@/components/centropy/product/DealWorkspace"
+import { redirect, notFound } from "next/navigation"
+import { legacyWorldHref } from "@/components/centropy/shell/legacy-link"
 import { DEAL_SECTION_KEYS, type DealSectionKey } from "@/components/centropy/pe/context-routing"
 
-export const metadata: Metadata = {
-  title: "Deal Workspace — Centropy",
-  description: "A persistent source-backed Private Equity operating context.",
-}
-
-export default async function DealSectionPage({ params }: { params: Promise<{ section: string }> }) {
-  const { section } = await params
-  if (!DEAL_SECTION_KEYS.includes(section as DealSectionKey)) notFound()
-  return <DealWorkspace />
+export default async function LegacySectionPage({ params, searchParams }: { params: Promise<{ dealId: string; section: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { dealId, section } = await params
+  if (!/^[0-9a-f-]{36}$/i.test(dealId) || !DEAL_SECTION_KEYS.includes(section as DealSectionKey)) notFound()
+  redirect(legacyWorldHref(await searchParams, dealId))
 }

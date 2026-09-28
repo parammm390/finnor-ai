@@ -517,7 +517,9 @@ export async function bindArtifact(ctx: ArtifactActor, documentId: string, input
       ? await db.execute(sql`SELECT id FROM finnor_os.evidence_source_versions WHERE tenant_id=${ctx.tenantId}::uuid AND id=${input.targetId}::uuid`)
       : input.targetKind === "document_version"
         ? await db.execute(sql`SELECT id FROM finnor_os.document_versions WHERE tenant_id=${ctx.tenantId}::uuid AND id=${input.targetId}::uuid`)
-        : await db.execute(sql`SELECT finnor_os.canonical_entity_tenant(${input.targetEntityType ?? null},${input.targetId}::uuid)::text target_tenant`);
+        : input.targetEntityType === "underwriting_run"
+          ? await db.execute(sql`SELECT tenant_id::text target_tenant FROM finnor_os.underwriting_runs WHERE tenant_id=${ctx.tenantId}::uuid AND id=${input.targetId}::uuid`)
+          : await db.execute(sql`SELECT finnor_os.canonical_entity_tenant(${input.targetEntityType ?? null},${input.targetId}::uuid)::text target_tenant`);
     const targetVisible = input.targetKind === "canonical_entity"
       ? target.rows[0]?.target_tenant === ctx.tenantId
       : Boolean(target.rows[0]);
@@ -555,27 +557,93 @@ export async function listArtifactTemplates(ctx: ArtifactActor) {
   });
 }
 
-export async function instantiateArtifactTemplate(ctx: ArtifactActor, input: { templateKey: string; title: string }) {
+async function existingTemplateInstantiation(db: Db, ctx: ArtifactActor, input: { title: string; templateVersionId?: string; idempotencyKey?: string }) {
+  if (!input.idempotencyKey) return null;
+  const result = await db.execute(sql`
+    SELECT document.id::text AS document_id,document.title,version.id::text AS version_id,version.source_ref
+    FROM finnor_os.documents document
+    JOIN finnor_os.document_versions version ON version.tenant_id=document.tenant_id AND version.document_id=document.id
+    WHERE document.tenant_id=${ctx.tenantId}::uuid AND document.source_system='template_instantiation'
+      AND document.external_id=${input.idempotencyKey} AND version.origin='template_instantiation'
+    ORDER BY version.version_ordinal LIMIT 1
+  `);
+  const row = result.rows[0];
+  if (!row) return null;
+  ensure(row.title === input.title && row.source_ref === input.templateVersionId, "TEMPLATE_INSTANTIATION_IDEMPOTENCY_CONFLICT");
+  const documentId = String(row.document_id);
+  const versionId = String(row.version_id);
+  const loaded = await loadDocumentVersion(db, ctx.tenantId, documentId, versionId);
+  ensure(loaded, "TEMPLATE_VERSION_NOT_FOUND");
+  const snapshot = await loadArtifactIRSnapshot(db, ctx.tenantId, versionId);
+  ensure(snapshot, "TEMPLATE_IR_SNAPSHOT_NOT_FOUND");
+  return { documentId, version: loaded.version, ir: snapshot.ir, replayed: true };
+}
+
+export interface GroundedTemplateField {
+  text: string;
+  sources: Array<{ targetKind: "canonical_entity" | "evidence_version" | "document_version"; targetId: string; targetEntityType?: string; targetAnchor?: string }>;
+}
+
+export async function instantiateArtifactTemplate(ctx: ArtifactActor, input: { templateKey: string; title: string; templateVersionId?: string; idempotencyKey?: string; fields?: Record<string, GroundedTemplateField> }) {
+  ensure(/^[a-z0-9][a-z0-9_-]{1,158}[a-z0-9]$/.test(input.templateKey), "INVALID_TEMPLATE_KEY");
+  ensure(input.title.trim().length > 0 && input.title.length <= 500, "INVALID_ARTIFACT_TITLE");
+  ensure(!input.idempotencyKey || Boolean(input.templateVersionId), "TEMPLATE_VERSION_REQUIRED_FOR_REPLAY");
   const prepared = await withTenant(ctx.tenantId, async (db) => {
+    const existing = await existingTemplateInstantiation(db, ctx, input);
+    if (existing) return { existing };
     const template = await db.execute(sql`
-      SELECT version_id FROM finnor_os.artifact_templates WHERE tenant_id=${ctx.tenantId}::uuid AND template_key=${input.templateKey}
+      SELECT version_id,status FROM finnor_os.artifact_templates WHERE tenant_id=${ctx.tenantId}::uuid AND template_key=${input.templateKey}
       ORDER BY created_at DESC LIMIT 1
     `);
-    ensure(template.rows[0], "TEMPLATE_NOT_FOUND");
+    ensure(template.rows[0] && template.rows[0].status === "active", "TEMPLATE_NOT_FOUND");
     const versionId = String(template.rows[0]!.version_id);
+    ensure(!input.templateVersionId || input.templateVersionId === versionId, "TEMPLATE_VERSION_CHANGED");
     const source = await db.execute(sql`SELECT document_id FROM finnor_os.document_versions WHERE tenant_id=${ctx.tenantId}::uuid AND id=${versionId}::uuid`);
     ensure(source.rows[0], "TEMPLATE_VERSION_NOT_FOUND");
     const loaded = await loadDocumentVersion(db, ctx.tenantId, String(source.rows[0]!.document_id), versionId);
     ensure(loaded, "TEMPLATE_VERSION_NOT_FOUND");
     return { versionId, loaded };
   });
-  const ir = await interpret(prepared.loaded.bytes, { fileName: input.title });
+  if (prepared.existing) return prepared.existing;
+  let bytes = prepared.loaded.bytes;
+  let ir = await interpret(bytes, { fileName: input.title });
+  const fieldAnchors: Array<{ id: string; sources: GroundedTemplateField["sources"] }> = [];
+  if (input.fields) {
+    ensure(ir.kind === "pptx", "GROUNDED_TEMPLATE_REQUIRES_PRESENTATION");
+    ensure(Object.keys(input.fields).length > 0 && Object.keys(input.fields).length <= 40, "TEMPLATE_FIELD_LIMIT");
+    const operations: PresentationOperation[] = [];
+    for (const node of ir.nodes.filter((item) => ["shape", "tableCell", "notes"].includes(item.kind))) {
+      const text = typeof node.data.text === "string" ? node.data.text : "";
+      const tokens = [...text.matchAll(/\{\{([a-z][a-z0-9_]{0,63})\}\}/g)];
+      if (!tokens.length) continue;
+      ensure(node.data.editable !== false, "TEMPLATE_FIELD_NOT_EDITABLE");
+      const sources: GroundedTemplateField["sources"] = [];
+      const populated = text.replace(/\{\{([a-z][a-z0-9_]{0,63})\}\}/g, (_token, key: string) => {
+        const field = input.fields![key];
+        ensure(field && field.text.trim() && field.text.length <= 3_500 && field.sources.length > 0 && field.sources.length <= 40, "TEMPLATE_FIELD_NOT_GROUNDED");
+        sources.push(...field.sources);
+        return field.text;
+      });
+      ensure(!populated.includes("{{"), "UNRESOLVED_TEMPLATE_FIELD");
+      operations.push({ type: node.kind === "notes" ? "update_notes" : node.kind === "tableCell" ? "replace_table_cell" : "replace_text", anchor: node.id, expectedHash: node.hash, text: populated });
+      fieldAnchors.push({ id: node.id, sources });
+    }
+    ensure(operations.length > 0 && operations.length <= 80, "TEMPLATE_HAS_NO_CONTENT_FIELDS");
+    ensure(fieldAnchors.reduce((count, field) => count + field.sources.length, 0) <= 200, "TEMPLATE_BINDING_LIMIT");
+    bytes = patchPresentation(new OfficePackage(bytes), operations);
+    ir = await interpret(bytes, { fileName: input.title });
+  }
   return withTenant(ctx.tenantId, async (db) => {
-    const document = await createDocument(db, { tenantId: ctx.tenantId, kind: ir.kind, title: input.title, provenance: { createdBy: ctx.userId, sourceSystem: "template_instantiation" } });
+    if (input.idempotencyKey) {
+      await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`${ctx.tenantId}:template_instantiation:${input.idempotencyKey}`},1445))`);
+      const existing = await existingTemplateInstantiation(db, ctx, input);
+      if (existing) return existing;
+    }
+    const document = await createDocument(db, { tenantId: ctx.tenantId, kind: ir.kind, title: input.title, provenance: { createdBy: ctx.userId, sourceSystem: "template_instantiation", ...(input.idempotencyKey ? { externalId: input.idempotencyKey } : {}) } });
     const version = await appendDocumentVersion(db, {
       tenantId: ctx.tenantId,
       documentId: document.documentId,
-      bytes: prepared.loaded.bytes,
+      bytes,
       mediaType: prepared.loaded.version.media_type,
       format: prepared.loaded.version.format,
       origin: "template_instantiation",
@@ -584,11 +652,30 @@ export async function instantiateArtifactTemplate(ctx: ArtifactActor, input: { t
       head: { kind: "current", key: "default", expectedVersionId: null },
     });
     await saveArtifactIRSnapshot(db, ctx.tenantId, version.id, ir);
+    for (const field of fieldAnchors) {
+      const anchor = ir.nodes.find((node) => node.id === field.id);
+      ensure(anchor, "TEMPLATE_ANCHOR_LOST");
+      const unique = new Map(field.sources.map((source) => [canonical(source), source]));
+      for (const source of unique.values()) {
+        const target = source.targetKind === "canonical_entity"
+          ? source.targetEntityType === "underwriting_run"
+            ? await db.execute(sql`SELECT tenant_id::text target_tenant FROM finnor_os.underwriting_runs WHERE tenant_id=${ctx.tenantId}::uuid AND id=${source.targetId}::uuid`)
+            : await db.execute(sql`SELECT finnor_os.canonical_entity_tenant(${source.targetEntityType ?? null},${source.targetId}::uuid)::text target_tenant`)
+          : source.targetKind === "evidence_version"
+            ? await db.execute(sql`SELECT id FROM finnor_os.evidence_source_versions WHERE tenant_id=${ctx.tenantId}::uuid AND id=${source.targetId}::uuid`)
+            : await db.execute(sql`SELECT id FROM finnor_os.document_versions WHERE tenant_id=${ctx.tenantId}::uuid AND id=${source.targetId}::uuid`);
+        ensure(source.targetKind === "canonical_entity" ? target.rows[0]?.target_tenant === ctx.tenantId : Boolean(target.rows[0]), "ARTIFACT_BINDING_TARGET_NOT_VISIBLE");
+        await db.execute(sql`
+          INSERT INTO finnor_os.artifact_bindings(tenant_id,version_id,anchor_id,anchor_hash,target_kind,target_id,target_entity_type,target_anchor,actor_id,created_by)
+          VALUES(${ctx.tenantId}::uuid,${version.id}::uuid,${anchor.id},${anchor.hash},${source.targetKind},${source.targetId}::uuid,${source.targetEntityType ?? null},${source.targetAnchor ?? null},${ctx.userId}::uuid,${ctx.userId})
+        `);
+      }
+    }
     await db.execute(sql`
       INSERT INTO finnor_os.artifact_lineage_edges(tenant_id,source_version_id,target_version_id,relation)
       VALUES(${ctx.tenantId}::uuid,${prepared.versionId}::uuid,${version.id}::uuid,'template_instantiation')
     `);
-    return { documentId: document.documentId, version, ir };
+    return { documentId: document.documentId, version, ir, replayed: false };
   });
 }
 
@@ -597,7 +684,7 @@ export async function artifactContext(ctx: ArtifactActor, documentId: string, ve
   return withTenant(ctx.tenantId, async (db) => {
     // One transaction-scoped client is intentionally queried serially.
     const comments = await db.execute(sql`SELECT * FROM finnor_os.artifact_comments WHERE tenant_id=${ctx.tenantId}::uuid AND version_id=${versionId}::uuid ORDER BY created_at LIMIT 200`);
-    const reviews = await db.execute(sql`SELECT * FROM finnor_os.artifact_reviews WHERE tenant_id=${ctx.tenantId}::uuid AND version_id=${versionId}::uuid ORDER BY created_at LIMIT 200`);
+    const reviews = await db.execute(sql`SELECT * FROM finnor_os.artifact_reviews WHERE tenant_id=${ctx.tenantId}::uuid AND version_id=${versionId}::uuid ORDER BY created_at,id LIMIT 200`);
     const bindings = await db.execute(sql`SELECT * FROM finnor_os.artifact_bindings WHERE tenant_id=${ctx.tenantId}::uuid AND version_id=${versionId}::uuid LIMIT 200`);
     const lineage = await db.execute(sql`SELECT * FROM finnor_os.artifact_lineage_edges WHERE tenant_id=${ctx.tenantId}::uuid AND (source_version_id=${versionId}::uuid OR target_version_id=${versionId}::uuid) LIMIT 200`);
     const remaps = await db.execute(sql`SELECT * FROM finnor_os.artifact_anchor_remaps WHERE tenant_id=${ctx.tenantId}::uuid AND (source_version_id=${versionId}::uuid OR target_version_id=${versionId}::uuid) LIMIT 200`);

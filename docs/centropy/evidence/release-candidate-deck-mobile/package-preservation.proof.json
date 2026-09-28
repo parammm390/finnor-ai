@@ -1,0 +1,16 @@
+{
+  "templateByteSha256": "e443b31a6a260f1770c576c92b12607addfe382d6ad648bc9cc39c0e55256f64",
+  "downloadByteSha256": "9dd77605809479fede393c4a43c053f4c1561fdd47f49dc3acdb9a5a30f28be9",
+  "packageParts": 40,
+  "changedParts": [
+    "ppt/slides/slide1.xml",
+    "ppt/slides/slide2.xml",
+    "ppt/slides/slide3.xml",
+    "ppt/slides/slide4.xml",
+    "ppt/slides/slide5.xml",
+    "ppt/slides/slide6.xml"
+  ],
+  "mastersLayoutsThemesRelationshipsPreserved": true,
+  "slides": 6,
+  "zipDirectoryEntriesOmitted": true
+}

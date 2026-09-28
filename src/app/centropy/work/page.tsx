@@ -1,11 +1,6 @@
-import type { Metadata } from "next"
-import WorkSurface from "@/components/centropy/pe/WorkSurface"
+import { redirect } from "next/navigation"
+import { legacyWorldHref } from "@/components/centropy/shell/legacy-link"
 
-export const metadata: Metadata = {
-  title: "Work — Centropy",
-  description: "Business-facing Work with plans, execution, effects, receipts, proof, recovery, and outcomes.",
-}
-
-export default function CentropyWorkPage() {
-  return <WorkSurface />
+export default async function LegacyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  redirect(legacyWorldHref(await searchParams))
 }

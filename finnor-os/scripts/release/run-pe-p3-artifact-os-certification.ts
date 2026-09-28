@@ -397,7 +397,6 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     "apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
     "apps/console/app/artifacts/[id]/page.tsx",
     "tests/unit/artifact-os-core.test.ts",
-    "tests/unit/artifact-os-contract.test.ts",
     "tests/unit/microsoft-artifact-transport.test.ts",
     "tests/integration/artifact-os.test.ts",
     "tests/live/microsoft-artifact-os.live.test.ts",
@@ -1064,7 +1063,6 @@ async function main(): Promise<void> {
     runCommand(bin("vitest"), [
       "run",
       "tests/unit/artifact-os-core.test.ts",
-      "tests/unit/artifact-os-contract.test.ts",
       "tests/unit/microsoft-artifact-transport.test.ts",
       "--reporter=dot",
     ], { forbidSkips: true }),

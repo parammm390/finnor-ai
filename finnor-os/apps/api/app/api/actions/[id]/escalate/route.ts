@@ -33,6 +33,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const result = await getOrchestrator().decide(id, ctx.tenantId, "escalate", ctx.userId, { role: ctx.role, note: body.data.note ?? null });
+    if (result.status === "failure") return Response.json({ error: result.error ?? "Escalation did not complete" }, { status: 409 });
+    if (result.output.idempotent && result.output.status !== "needs_human_review") {
+      return Response.json({ error: `Action is ${String(result.output.status)}; escalation was not applied` }, { status: 409 });
+    }
     return Response.json({ result });
   } catch (err) {
     return errorResponse(err);

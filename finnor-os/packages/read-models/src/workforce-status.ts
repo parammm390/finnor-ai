@@ -5,6 +5,7 @@ import {
   learningProposals,
   learningRevisions,
   workforceAssignments,
+  works,
   withTenant,
 } from "@finnor/db";
 import type {
@@ -23,7 +24,7 @@ import {
   type AgentModelRoute,
   type LearningObservation,
 } from "@finnor/workforce";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, inArray, notInArray, sql } from "drizzle-orm";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -183,19 +184,24 @@ export async function workforceStatus(
         eq(workforceAssignments.tenantId, tenantId),
         inArray(workforceAssignments.agentProfileId, profileIds),
       )).orderBy(desc(workforceAssignments.createdAt), desc(workforceAssignments.id)).limit(ASSIGNMENT_HISTORY_LIMIT + 1),
-      db.select().from(workforceAssignments).where(and(
+      db.select(getTableColumns(workforceAssignments)).from(workforceAssignments).innerJoin(works, and(
+        eq(works.tenantId, workforceAssignments.tenantId), eq(works.id, workforceAssignments.workId),
+      )).where(and(
         eq(workforceAssignments.tenantId, tenantId),
         inArray(workforceAssignments.agentProfileId, profileIds),
         inArray(workforceAssignments.state, ACTIVE_ASSIGNMENT_STATES),
+        notInArray(works.status, ["blocked", "completed", "failed", "cancelled"]),
       )).orderBy(desc(workforceAssignments.createdAt), desc(workforceAssignments.id)),
       db.selectDistinctOn([workforceAssignments.agentProfileId]).from(workforceAssignments).where(and(
         eq(workforceAssignments.tenantId, tenantId),
         inArray(workforceAssignments.agentProfileId, profileIds),
       )).orderBy(asc(workforceAssignments.agentProfileId), desc(workforceAssignments.createdAt), desc(workforceAssignments.id)),
-      db.select({ agentProfileId: workforceAssignments.agentProfileId, count: sql<number>`count(*)::int` }).from(workforceAssignments).where(and(
+      db.select({ agentProfileId: workforceAssignments.agentProfileId, count: sql<number>`count(*)::int` }).from(workforceAssignments)
+        .innerJoin(works, and(eq(works.tenantId, workforceAssignments.tenantId), eq(works.id, workforceAssignments.workId))).where(and(
         eq(workforceAssignments.tenantId, tenantId),
         inArray(workforceAssignments.agentProfileId, profileIds),
         inArray(workforceAssignments.state, [...LOAD_BEARING_ASSIGNMENTS]),
+        notInArray(works.status, ["blocked", "completed", "failed", "cancelled"]),
       )).groupBy(workforceAssignments.agentProfileId),
       db.select().from(learningProposals).where(and(
         eq(learningProposals.tenantId, tenantId),

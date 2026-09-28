@@ -7,6 +7,7 @@ import type {
   SourceSyncPage,
 } from "@finnor/shared-types";
 import { IntegrationError } from "./errors";
+import { GmailSentMessageAdapter } from "./gmail-observation";
 
 export interface SourceAdapterContext {
   tenantId: string;
@@ -59,9 +60,22 @@ export class SourceAdapterRegistry {
   }
 }
 
-/** The active composition is intentionally empty. PE observations enter through the
- * typed @finnor/private-equity evidence boundary; reusable provider transports stay
- * exported from their own modules. */
+const adapterTestKey = Symbol.for("finnor.tools.testing.sourceAdapters");
+/** Explicit test injection, shared across server bundle copies. No environment
+ * variable, HTTP input, or tenant config can install an adapter. */
+export function setSourceAdapterForTesting(provider: string, adapter: SourceAdapter | null): void {
+  const globals = globalThis as unknown as Record<symbol, unknown>;
+  const entries = (globals[adapterTestKey] as Map<string, SourceAdapter> | undefined) ?? new Map<string, SourceAdapter>();
+  if (adapter) { if (adapter.provider !== provider) throw new Error("Test adapter provider mismatch"); entries.set(provider, adapter); }
+  else entries.delete(provider);
+  globals[adapterTestKey] = entries;
+}
+
+/** Core communication readback retains provider evidence only. It installs no
+ * legacy provider-to-business mapper or Private Equity financial state writer. */
 export function createSourceAdapterRegistry(): SourceAdapterRegistry {
-  return new SourceAdapterRegistry();
+  const overrides = (globalThis as unknown as Record<symbol, unknown>)[adapterTestKey] as Map<string, SourceAdapter> | undefined;
+  const registry = new SourceAdapterRegistry().register(overrides?.get("gmail") ?? new GmailSentMessageAdapter());
+  for (const [provider, adapter] of overrides ?? []) if (provider !== "gmail") registry.register(adapter);
+  return registry;
 }
