@@ -3,8 +3,8 @@
   "status": "PASS_LOCAL",
   "capturedAt": "2026-09-28T23:06:47.395Z",
   "lockfileSha256": {
-    "package-lock.json": "feef0c2803f235ba20063da5ef4f630477f02b0a630c6a26bb97e6df8ee41bf7",
-    "finnor-os/package-lock.json": "9096252566eaa1749408337979f984600de63b53210aa12ede2922ca2263fe7a"
+    "package-lock.json": "e653c6f26ee8c6843bb3abaf6331cb63d08ba5060bf7a2ca8a1c1769b8fc3847",
+    "finnor-os/package-lock.json": "3e15a32cb2df1de647b7a0b5aca5a002f2008e01be62dfce33597a8708ef1a8d"
   },
   "observedVersions": {
     "rootNodemailer": "10.0.11",
@@ -12,8 +12,8 @@
     "backendFastUri": "3.1.8"
   },
   "osv": {
-    "capturedAt": "2026-09-28T22:58:38.393Z",
-    "packages": 971,
+    "capturedAt": "2026-09-28T23:18:25.630Z",
+    "packages": 1004,
     "findings": []
   },
   "smtp": {
@@ -57,7 +57,7 @@
     "npm run release:preflight"
   ],
   "scope": [
-    "OSV queried all 971 distinct package versions across the three checked-in lockfiles",
+    "OSV queried all 1004 distinct package versions across the three checked-in lockfiles",
     "SMTP acceptance is observed only at loopback, not a real mailbox",
     "GitHub exact-head verdict and production release remain unverified"
   ],
@@ -128,5 +128,12 @@
       "durationMs": 95864
     },
     "logSha256": "d72f2ee5b73f0d51200711b2b2868f4a1fd2efd017da64f06e7bd671ccaf69e4"
+  },
+  "peerResolution": {
+    "legacyPeerDeps": false,
+    "cleanRootInstall": "PASS",
+    "cleanBackendInstall": "PASS",
+    "webpack": "5.111.1",
+    "note": "Project npm configuration overrides the local user legacy-peer-deps=true; clean installs ran with --legacy-peer-deps=false"
   }
 }
