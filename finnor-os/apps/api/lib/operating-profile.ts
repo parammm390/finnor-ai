@@ -52,4 +52,3 @@ export const OperatingProfileUpdateSchema = z.object({
   company: CompanyProfileSchema.optional(),
   employee: EmployeeProfileSchema.optional(),
 }).refine((value) => Boolean(value.company || value.employee), "company or employee profile is required");
-

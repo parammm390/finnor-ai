@@ -64,5 +64,5 @@ export async function verifyActionManifest(): Promise<void> {
 
 void verifyActionManifest().catch((error) => {
   console.error(error);
-  process.exitCode = 1;
+  process.exit(1);
 });

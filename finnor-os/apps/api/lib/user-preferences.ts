@@ -18,4 +18,3 @@ export const UserPreferencesPatchSchema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "quiet hours must include both times or neither" });
   }
 });
-

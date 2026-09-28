@@ -1,19 +1,25 @@
 {
   "schema": "centropy.change-inventory/v1",
-  "generatedAt": "2026-09-28T20:07:21.989523+00:00",
+  "generatedAt": "2026-09-28T21:07:48.803761+00:00",
   "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
   "auditedMainBaseline": "e464d78ac45dae41435b826757941d008c9b634c",
   "branch": "codex/centropy-release-candidate",
   "workingTreeImplementation": true,
   "comparison": "Fetched origin/main versus complete candidate working tree, plus non-ignored untracked files; no rename inference",
   "counts": {
-    "total": 541,
+    "total": 553,
     "added": 379,
-    "modified": 118,
+    "modified": 130,
     "deleted": 44,
-    "currentChangedBytes": 70868210
+    "currentChangedBytes": 71053780
   },
   "files": [
+    {
+      "file": ".github/workflows/ci.yml",
+      "status": "M",
+      "bytes": 4546,
+      "sha256": "81511c8183da49c596218445a51db3b54b7519070e4c00865bc1ebab3cf68019"
+    },
     {
       "file": ".github/workflows/marketing-ci.yml",
       "status": "M",
@@ -1420,8 +1426,8 @@
     {
       "file": "docs/centropy/release-ci-recovery-failure-modes.md",
       "status": "A",
-      "bytes": 3516,
-      "sha256": "cc3b72481d6323fc25a1266c9e83a1687f1b7f48be6dc034ece6528c2dac8f3d"
+      "bytes": 7471,
+      "sha256": "011352ac36e87ba80ba46cb1e6440d8381c6a1a0a25f477288a35fe9a702cc66"
     },
     {
       "file": "docs/centropy/renderer-performance-failure-modes.md",
@@ -1786,8 +1792,8 @@
     {
       "file": "finnor-os/apps/api/lib/operating-profile.ts",
       "status": "A",
-      "bytes": 2836,
-      "sha256": "ab26027a1918a360f15b40a857dd3eccf335369e03f4dbe228b6c39b24f07c76"
+      "bytes": 2835,
+      "sha256": "3105a958a302291fd4d8066eda13906380ae1e4d5326477c990290cb3924aa77"
     },
     {
       "file": "finnor-os/apps/api/lib/product-control-schemas.ts",
@@ -1810,8 +1816,8 @@
     {
       "file": "finnor-os/apps/api/lib/user-preferences.ts",
       "status": "A",
-      "bytes": 1148,
-      "sha256": "f03f66187b7dafb6a31ee1bd755f07884b57aca30cccb84d8c1207a56880a257"
+      "bytes": 1147,
+      "sha256": "95f54763babb92f4c0f8697334e934f32f22e04dae042f7798914076a114111d"
     },
     {
       "file": "finnor-os/apps/supplier-canary/api/index.mjs",
@@ -1830,6 +1836,30 @@
       "status": "M",
       "bytes": 10608,
       "sha256": "11c6cb7011de82a8b35f2a27cb4154be8d7470012d7a8ca38693833bc7919e66"
+    },
+    {
+      "file": "finnor-os/docs/release/phase4-company-brain-certification.json",
+      "status": "M",
+      "bytes": 9291,
+      "sha256": "775912dc0d270e6b71cc18f9a946c00606e2158d3b5477aa0038a97fbc5d148d"
+    },
+    {
+      "file": "finnor-os/docs/release/phase4-company-brain-certification.md",
+      "status": "M",
+      "bytes": 2670,
+      "sha256": "37eb4884107f5023a6e0f1d371b6a3535c77ba9762d1a6207fd0b4f1a409150b"
+    },
+    {
+      "file": "finnor-os/docs/release/scope5-epistemic-impact-certification.json",
+      "status": "M",
+      "bytes": 6297,
+      "sha256": "24e2747b7d8065f78056ac5ea2c80b597c066bd163a29c0be95de9bb135c70ff"
+    },
+    {
+      "file": "finnor-os/docs/release/scope5-epistemic-impact-certification.md",
+      "status": "M",
+      "bytes": 3296,
+      "sha256": "6bffb28999298f132d3878a90c73db2e1e4a0a334e307423f5356b23e0b5c88c"
     },
     {
       "file": "finnor-os/openapi.json",
@@ -2192,6 +2222,18 @@
       "sha256": "7f68886c16a8c832ad9ee9a2380dcc96f2c7cfdfb42755df32a0513dd669ce70"
     },
     {
+      "file": "finnor-os/scripts/release/migrate-production.ts",
+      "status": "M",
+      "bytes": 4978,
+      "sha256": "0db4bd17c300a0fe9da8d10c89547f598d5772926a94958cec58ddd7ff6967b5"
+    },
+    {
+      "file": "finnor-os/scripts/release/rollout-scope5-production.ts",
+      "status": "M",
+      "bytes": 10280,
+      "sha256": "2116f2df2d8cf413d415e62be1d16c47e773f381f70a98a77a8192ed22475fc8"
+    },
+    {
       "file": "finnor-os/scripts/release/run-pe-p3-artifact-os-certification.ts",
       "status": "M",
       "bytes": 78063,
@@ -2202,6 +2244,12 @@
       "status": "M",
       "bytes": 40154,
       "sha256": "672526373e897316f91e27912af3c34e357a92c9514e88059420fa91571a90ae"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-pe-p7-workforce-learning-certification.ts",
+      "status": "M",
+      "bytes": 25854,
+      "sha256": "ee9807049b519fe39e49d7670d6bb6b46ace0fe1e98da5d40f88e3cbfec7fa8e"
     },
     {
       "file": "finnor-os/scripts/release/run-scope1-orchestration-certification.ts",
@@ -2216,16 +2264,34 @@
       "sha256": "c950b1819f6418a5796977a254999fb1d538801067e016963e3c4c9e75115073"
     },
     {
+      "file": "finnor-os/scripts/release/run-scope3-focused-tests.ts",
+      "status": "M",
+      "bytes": 6301,
+      "sha256": "7c0d0085591a9489ef9285aa2c7e0f3c266b77bea6c45475898c7b1970ec34fd"
+    },
+    {
       "file": "finnor-os/scripts/release/run-scope4-digital-twin-certification.ts",
       "status": "M",
-      "bytes": 32246,
-      "sha256": "c0cf9b44929b5c2be29bb57a175498855136683cfa4d6206e515c6f52090f244"
+      "bytes": 32241,
+      "sha256": "01804e021ea9d91d80289001008a4643231835332ca0d3f29c2384f3e9a29c9b"
+    },
+    {
+      "file": "finnor-os/scripts/release/run-scope5-epistemic-impact-certification.ts",
+      "status": "M",
+      "bytes": 67185,
+      "sha256": "5ece36054501e2ecebd65960420b8e41a8c1ed28e0891b075996caa57197b086"
+    },
+    {
+      "file": "finnor-os/scripts/release/verify-action-manifest.ts",
+      "status": "M",
+      "bytes": 4124,
+      "sha256": "ce2b31be74a8e62fe036d65f73622aa7478bb94a0cd14e7a416526e1120c5be8"
     },
     {
       "file": "finnor-os/scripts/release/verify-pe-domain-boundary.ts",
       "status": "M",
-      "bytes": 17105,
-      "sha256": "37d0537818a4732a2b9c75920ea6941d25d2bb080584fd1b9f426be528ae3bac"
+      "bytes": 17100,
+      "sha256": "84813f76b36561c0b1347fc0e419ba9dfb8c42ec2b83e9416d1b339240c5f8b6"
     },
     {
       "file": "finnor-os/scripts/seed-centropy-communication-canary.ts",
@@ -2298,6 +2364,12 @@
       "status": "M",
       "bytes": 30981,
       "sha256": "57943bfeace97115c9e782f22c8a03dfd0d6bc0a72a587cb7bd906ef839dbe9e"
+    },
+    {
+      "file": "finnor-os/tests/integration/scope1-orchestration-concurrency.test.ts",
+      "status": "M",
+      "bytes": 36805,
+      "sha256": "f568c2c433a281dbd58ce2585f1a034547565d0f7d7905d54cf313aca1ed927a"
     },
     {
       "file": "finnor-os/tests/unit/artifact-os-contract.test.ts",

@@ -8,7 +8,7 @@ Live provider evidence: **BLOCKED_EXTERNAL**
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| fresh-database | PASS_INTEGRATION | 141 forward migrations; head 0139; 18 forced-RLS history owners |
+| fresh-database | PASS_INTEGRATION | 151 forward migrations; head 0139; 18 forced-RLS history owners |
 | populated-upgrade | PASS_INTEGRATION | 0138 populated Core identities and PE Strategy preserved byte-for-byte; zero fabricated Scope 4 rows; honest baselines |
 | typecheck | PASS_LOCAL | repository TypeScript project |
 | relationship-contracts | PASS_LOCAL | 66 runtime relationship contracts exactly match checked-in certification matrix |
@@ -41,12 +41,12 @@ Live provider evidence: **BLOCKED_EXTERNAL**
 
 | Operation | Samples | p50 ms | p95 ms | max ms | p95 guardrail ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| company lookup/search | 12 | 5.78 | 9.2 | 9.2 | 1000 |
-| Company projection | 12 | 124.66 | 140.18 | 140.18 | 3500 |
-| Fund/portfolio projection | 12 | 121.76 | 135.51 | 135.51 | 4000 |
-| bounded traversal | 12 | 0.68 | 0.71 | 0.71 | 100 |
-| historical/as-of projection | 12 | 121.92 | 135.1 | 135.1 | 4000 |
-| ownership closed-world as-of | 12 | 3.28 | 3.59 | 3.59 | 1000 |
+| company lookup/search | 12 | 3.25 | 4.94 | 4.94 | 1000 |
+| Company projection | 12 | 73.47 | 91.28 | 91.28 | 3500 |
+| Fund/portfolio projection | 12 | 75.95 | 92.46 | 92.46 | 4000 |
+| bounded traversal | 12 | 0.39 | 0.42 | 0.42 | 100 |
+| historical/as-of projection | 12 | 71.3 | 99.61 | 99.61 | 4000 |
+| ownership closed-world as-of | 12 | 2.19 | 2.89 | 2.89 | 1000 |
 
 PostgreSQL met all measured guardrails. The evidence does not justify a graph database, bakeoff, or dual-write.
 

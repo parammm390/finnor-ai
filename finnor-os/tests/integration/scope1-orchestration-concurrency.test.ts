@@ -64,24 +64,6 @@ function queryNode(id: string): PlanNode {
   };
 }
 
-function checkNode(id: string): PlanNode {
-  return {
-    id,
-    kind: "check",
-    dependsOn: [],
-    supports: ["criterion:done"],
-    preconditions: [],
-    expectedEffects: [],
-    recovery: { version: 1, on: ["failure", "stale", "timeout", "divergence"], mode: "replan", maxAttempts: 1, neverReplayVerifiedIrreversibleEffect: true },
-    criterionId: `criterion:${id}`,
-    assertion: { satisfied: true },
-    observation: { version: 1, source: "objective_success", assertion: { satisfied: true }, freshness: "current" },
-    semanticHash: hash(`node:${id}`),
-    estimatedCostMicros: 0,
-    estimatedLatencyMs: 1,
-  };
-}
-
 function actionNode(id: string, workId: string): PlanNode {
   const payload = { title: `Exact task for ${workId}`, targetId: workId };
   return {
@@ -286,7 +268,10 @@ describe.skipIf(!available)("Scope 1 persisted orchestration concurrency", () =>
   });
 
   it("lets 100 independent ready nodes progress in bounded atomic batches", async () => {
-    const f = await fixture(() => Array.from({ length: 100 }, (_, index) => checkNode(`independent-${String(index).padStart(3, "0")}`)), { maxParallelNodes: 32, maxNodeAttempts: 100 });
+    // Completion checks seal the same Objective; these waits have independent
+    // event correlations. This fixture measures reservation, not event delivery.
+    const f = await fixture(() => Array.from({ length: 100 }, (_, index) => waitNode(`independent-${String(index).padStart(3, "0")}`)), { maxParallelNodes: 32, maxNodeAttempts: 100 });
+    await admin.query("UPDATE finnor_os.work_objective_loops SET max_waits=100 WHERE tenant_id=$1 AND id=$2", [tenantId, f.loopId]);
     const reservedIds = new Set<string>();
     for (const expected of [32, 32, 32, 4]) {
       const result = await reserve(f, 32);
@@ -308,6 +293,7 @@ describe.skipIf(!available)("Scope 1 persisted orchestration concurrency", () =>
     const current = await loop(f.loopId);
     expect(current.nodeAttemptCount).toBe(100);
     expect(current.stepCount).toBe(100);
+    expect(current.waitCount).toBe(100);
   });
 
   it("serializes 100 same-node schedulers and 100 physical claim contenders to one winner", async () => {

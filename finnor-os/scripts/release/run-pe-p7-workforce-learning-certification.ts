@@ -257,14 +257,13 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     attention: "packages/read-models/src/attention-query.ts",
     migration: `packages/db/migrations/${P7_MIGRATION}`,
     openapi: "openapi.json",
-    productDataProvider: "../src/components/centropy/product/ProductDataProvider.tsx",
-    workforceHook: "../src/components/centropy/pe/use-pe-data.ts",
+    workforceSurface: "../src/components/centropy/thread/WorkforceAssignments.tsx",
+    workspaceShell: "../src/components/centropy/shell/CentropyWorkspace.tsx",
     configureRoute: "apps/api/app/api/workforce/profiles/route.ts",
     reassignRoute: "apps/api/app/api/workforce/assignments/[id]/reassign/route.ts",
     proposalRoute: "apps/api/app/api/workforce/proposals/[id]/route.ts",
   } as const;
   const source = Object.fromEntries(await Promise.all(Object.entries(paths).map(async ([key, path]) => [key, await readFile(resolve(ROOT, path), "utf8")]))) as Record<keyof typeof paths, string>;
-  const frontend = await readFile(resolve(REPOSITORY_ROOT, "src/components/centropy/agents/AgentFleetSurface.tsx"), "utf8");
   // Phase 8 owns the browser contract in the PE surface contracts module; the
   // former monolithic root client was deliberately deleted during the
   // surface cutover. Keep this release gate pointed at the live typed contract
@@ -308,21 +307,24 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
   for (const route of ["/api/workforce/profiles", "/api/workforce/assignments/{id}/reassign", "/api/workforce/proposals/{id}", "/api/queries"]) assert(source.openapi.includes(`\"${route}\"`), `OpenAPI is missing ${route}`);
   assert(source.configureRoute.includes("configureAgentProfile") && source.reassignRoute.includes("reassignWorkforceAssignment") && source.proposalRoute.includes("promoteLearningProposal"), "P7 API routes are not bound to governed runtime functions");
   await access(resolve(REPOSITORY_ROOT, "src/components/centropy/agents/agent-fleet.ts")).then(() => { throw new Error("static frontend agent-fleet authority still exists"); }, () => undefined);
-  // The current product data provider owns the browser contract; keep this gate
-  // pointed at that live typed path instead of a retired monolithic client.
+  // The current Work-scoped assignment surface reads and validates the canonical
+  // projection directly; the retired fleet page and product provider do not exist.
   assert(
-    !frontend.includes("AGENT_FLEET") &&
-      frontend.includes("usePeProductData") &&
-      frontend.includes('product.workforce.status === "error"') &&
-      frontend.includes("product.workforce.data") &&
-      frontend.includes("No static persona, decorative agent, or tenant-wide worker was substituted") &&
-      source.productDataProvider.includes("useWorkforceStatus") &&
-      source.productDataProvider.includes("const workforce = useWorkforceStatus") &&
-      source.workforceHook.includes("export function useWorkforceStatus") &&
-      source.workforceHook.includes("stateFor: workforceState"),
-    "Centropy workforce surface is not backend-truth-only",
+    source.workforceSurface.includes('centropyGet("read-models/workforce-status"') &&
+      source.workforceSurface.includes("PageSchema.parse(response).data") &&
+      source.workforceSurface.includes("assignment.workId === workId") &&
+      source.workforceSurface.includes('parsed.sourceStatus.status === "partial"') &&
+      source.workforceSurface.includes("Workforce pagination did not advance") &&
+      source.workforceSurface.includes("No agent profile is configured in the current tenant read.") &&
+      source.workspaceShell.includes('import("../thread/WorkforceAssignments")') &&
+      source.workspaceShell.includes("<WorkforceAssignments key={activeWorkId} workId={activeWorkId}"),
+    "Centropy Work-scoped workforce surface is not bound to the canonical read model",
   );
-  assert(frontend.includes("worker.runtimeStatus") && frontend.includes("profileById.has(worker.id)"), "Centropy workforce surface does not bind canonical worker and profile status");
+  assert(source.workforceSurface.includes("workers.get(assignment.agentProfileId)") &&
+    source.workforceSurface.includes("worker?.activeRevision?.id === assignment.agentRevisionId") &&
+    source.workforceSurface.includes("aggregate?.businessEffects.find") &&
+    source.workforceSurface.includes("aggregate?.receipts.find"),
+  "Centropy workforce surface does not bind exact persisted assignment, profile, effect, and receipt");
   for (const status of ["idle", "working", "waiting", "blocked", "failed", "unavailable"]) assert(peContracts.includes(`\"${status}\"`), `workforce contract omits ${status}`);
   assert(peContracts.includes('configurationState: "configured" | "unconfigured"'), "workforce contract omits explicit configuration state");
   assert(peContracts.includes('status: "complete" | "partial"') && peContracts.includes("truncatedSources"), "PE browser contract does not preserve workforce source completeness");
@@ -338,7 +340,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     newTables: tables,
     workforcePackageDependencies: 0,
     workforceJobs: ["run_workforce_assignment", "learning_digest"],
-    frontendAuthority: "canonical-workforce-status-only",
+    frontendAuthority: "work-scoped-canonical-workforce-status-only",
   };
 }
 
@@ -435,5 +437,5 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   console.error(`P7_CERTIFICATION_FAIL ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
-  process.exitCode = 1;
+  process.exit(1);
 });

@@ -93,7 +93,10 @@ async function populatedUpgrade(): Promise<void> {
         FROM finnor_os.external_organizations o WHERE o.id=$1`,[companyId,sourceId])).rows[0];
     } finally { await client.end(); }
     const applied = await migrate(url,files);
-    assert.deepEqual(applied,["0140_scope5_epistemic_impact.sql",CURRENT_MIGRATION_HEAD]);
+    const forwardNames = files.filter((file) => file.name >= "0140_scope5_epistemic_impact.sql").map((file) => file.name);
+    assert.equal(forwardNames[0], "0140_scope5_epistemic_impact.sql");
+    assert.equal(forwardNames.at(-1), CURRENT_MIGRATION_HEAD);
+    assert.deepEqual(applied, forwardNames);
     const verify = new pg.Client({ connectionString:url }); await verify.connect();
     try {
       await verify.query("SELECT set_config('app.tenant_id',$1,false),set_config('app.user_id',$2,false)",[tenantId,userId]);
@@ -117,7 +120,7 @@ async function populatedUpgrade(): Promise<void> {
         validAt:new Date(0).toISOString(),knownAt:new Date(0).toISOString()});
       assert.equal(replay.status,"UNAVAILABLE_BEFORE_BASELINE");
       assert.equal((await baselineDurableEpistemicGraph(tenantId)).complete,true);
-      pass("populated-upgrade",`0139→0140→0141 preserved existing canonical/evidence rows; new epistemic tables empty until explicit baseline; pre-baseline replay unavailable`);
+      pass("populated-upgrade",`0139→${CURRENT_MIGRATION_HEAD} preserved existing canonical/evidence rows; new epistemic tables empty until explicit baseline; pre-baseline replay unavailable`);
     } finally { await verify.end(); }
   });
 }

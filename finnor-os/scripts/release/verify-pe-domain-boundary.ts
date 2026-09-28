@@ -347,5 +347,5 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   void verifyPeDomainBoundary()
     .then((result) => console.log(`PE-DOMAIN-BOUNDARY PASS files=${result.scannedFiles} actions=32 queries=14 negative_injection=PASS`))
-    .catch((error) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
+    .catch((error) => { console.error(error instanceof Error ? error.message : error); process.exit(1); });
 }
