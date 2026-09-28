@@ -25,7 +25,7 @@ import {
 import { and, eq } from "drizzle-orm";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CONSEQUENTIAL = /\b(?:email|call|text|contact|message|send|create|update|delete|remove|notify|handoff|delegate|assign|schedule|reschedule|share|approve|reject|close|waive|continue|finish|repeat|do\s+that)\b/i;
+const CONSEQUENTIAL = /\b(?:email|call|text|contact|message|ask|tell|send|create|update|delete|remove|notify|handoff|delegate|assign|schedule|reschedule|share|approve|reject|close|waive|continue|finish|repeat|do\s+that)\b/i;
 const PRONOUN = /\b(?:him|her|them|it|that person|that contact|that work|do that|continue that)\b/i;
 
 export type NamedExpressionCue = "party" | "history";
@@ -161,6 +161,7 @@ export async function prepareEmployeeConversationTurn(params: {
         messageLimit: 1,
       })
     : null;
+  if (params.threadId && !existing) throw new Error("conversation_thread_not_found");
   const thread = existing?.thread ?? await createEmployeeConversationThread({
     tenantId: params.ctx.tenantId,
     ownerEmployeeId: employeeId,

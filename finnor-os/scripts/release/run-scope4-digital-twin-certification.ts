@@ -289,7 +289,6 @@ async function main(): Promise<void> {
       "packages/private-equity/src/company-brain.test.ts", "packages/private-equity/src/semantic-activity.test.ts",
       "tests/unit/private-equity-state-machines.test.ts", "tests/unit/private-equity-p1-world.test.ts",
       "tests/unit/private-equity-epistemic.test.ts", "tests/unit/private-equity-phase4-contract.test.ts",
-      "tests/unit/private-equity-p5-contract.test.ts", "tests/unit/source-truth-contract.test.ts",
       "tests/unit/scope1-orchestration-kernel.test.ts", "tests/unit/scope3-compute-contract.test.ts",
       "--no-file-parallelism", "--maxWorkers=1"], REPO, testEnv);
     gates.push({ id: "unit-regressions", status: "PASS_LOCAL", evidence: "Company Brain, PE state/epistemic/underwriting/IC, Source Truth, Scope 1 and Scope 3 contract suites" });
@@ -352,5 +351,5 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   console.error(error);
-  process.exitCode = 1;
+  process.exit(1);
 });

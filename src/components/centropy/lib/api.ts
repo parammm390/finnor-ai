@@ -9,6 +9,7 @@
 
 import { getCurrentAccessToken } from "./centropy-auth"
 import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
+import { resolveProductRoute } from "@/lib/centropy/capability-manifest"
 
 const TEST_KEY_STORAGE = "centropy_admin_key"
 const LEGACY_TEST_KEY_STORAGE = "jarvis_admin_key"
@@ -133,7 +134,7 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     status = res.status
     const value = await readJson<T>(res, method, path)
     if (method !== "GET") {
-      publishBusinessInvalidation({ tags: mutationProjectionTags(path), source: "mutation", path })
+      publishBusinessInvalidation({ tags: mutationProjectionTags(path, method), source: "mutation", path })
     }
     return value
   } catch (error) {
@@ -150,11 +151,27 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
   }
 }
 
+const pendingReads = new Map<string, Promise<unknown>>()
+
+/** Share concurrent canonical reads within one exact authenticated session.
+ * No resolved response is cached, and writes always retain their own request. */
+function sharedRead<T>(method: "GET" | "POST", path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
+  const key = JSON.stringify([authHeaders(), method, path, body, params])
+  const existing = pendingReads.get(key)
+  if (existing) return existing as Promise<T>
+  const request = centropyRequest<T>(method, path, body, params)
+  pendingReads.set(key, request)
+  void request.finally(() => { if (pendingReads.get(key) === request) pendingReads.delete(key) }).catch(() => {})
+  return request
+}
+
 export async function centropyGet<T>(path: string, params?: Record<string, string>): Promise<T> {
-  return centropyRequest<T>("GET", path, undefined, params)
+  return sharedRead<T>("GET", path, undefined, params)
 }
 
 export async function centropyPost<T>(path: string, body: unknown): Promise<T> {
+  const capability = resolveProductRoute("POST", path.replace(/^\/+/, "").split("/"))
+  if (capability?.classification === "READ") return sharedRead<T>("POST", path, body)
   return centropyRequest<T>("POST", path, body)
 }
 
@@ -162,6 +179,36 @@ export async function centropyPut<T>(path: string, body: unknown): Promise<T> {
   return centropyRequest<T>("PUT", path, body)
 }
 
-export async function centropyDelete<T>(path: string): Promise<T> {
-  return centropyRequest<T>("DELETE", path)
+export async function centropyDelete<T>(path: string, body?: unknown): Promise<T> {
+  return centropyRequest<T>("DELETE", path, body)
+}
+
+/** Download immutable bytes through the same authenticated, tenant-scoped proxy. */
+export async function centropyDownload(path: string, fileName: string, params: Record<string, string>): Promise<void> {
+  const started = performance.now()
+  let status = 0
+  const controller = new AbortController()
+  const timer = globalThis.setTimeout(() => controller.abort(), CENTROPY_GET_TIMEOUT_MS)
+  try {
+    const response = await fetch(`/api/centropy/${path}?${new URLSearchParams(params)}`, {
+      headers: authHeaders(), cache: "no-store", signal: controller.signal,
+    })
+    status = response.status
+    if (!response.ok) await readJson(response, "GET", path)
+    const bytes = await response.blob()
+    const href = URL.createObjectURL(bytes)
+    const link = document.createElement("a")
+    link.href = href
+    link.download = fileName.replace(/[\r\n"\\/]/g, "_").slice(0, 200)
+    link.click()
+    globalThis.setTimeout(() => URL.revokeObjectURL(href), 1_000)
+  } catch (error) {
+    if (isAbortError(error)) { status = 504; throw new CentropyApiError("Artifact download timed out", 504) }
+    if (error instanceof CentropyApiError) throw error
+    status = 503
+    throw new CentropyApiError(`Artifact download unavailable: ${errorMessage(error)}`, 503)
+  } finally {
+    globalThis.clearTimeout(timer)
+    publish({ method: "GET", path: `/${path}`, status, ms: Math.round(performance.now() - started), at: Date.now() })
+  }
 }

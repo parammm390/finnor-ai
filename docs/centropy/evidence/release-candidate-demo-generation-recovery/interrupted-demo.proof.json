@@ -1,0 +1,526 @@
+{
+  "schema": "centropy.real-demo-proof/v1",
+  "result": "INCOMPLETE",
+  "capturedAt": "2026-09-28T19:09:49.297Z",
+  "baseURL": "http://127.0.0.1:3001",
+  "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+  "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+  "threadId": "f8cf36cc-eada-4af1-9c31-fb71db8d5c2a",
+  "instructionId": "31aa6053-a33f-4036-a147-07153d53a74b",
+  "observed": {
+    "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+    "authoredFixture": true,
+    "checkpoints": [
+      {
+        "phase": "01-atlas-context",
+        "atMs": 1107,
+        "screenshot": "01-atlas-context.png",
+        "sha256": "7220ed3914a440476b0f01f05e20055a53035ecf7e59386b20e2f7d88cf8fe48"
+      },
+      {
+        "phase": "02-real-trace",
+        "atMs": 15173,
+        "screenshot": "02-real-trace.png",
+        "sha256": "cb6bb220e76fb1377ad7d56210830ed8b82e9b26bafb136d024c3e8e636cd190"
+      },
+      {
+        "phase": "03-specialists",
+        "atMs": 20592,
+        "screenshot": "03-specialists.png",
+        "sha256": "8bd1b6f63bd4a2336c67c568912a9183860bf7b94048519ac3f18de84292e6f8"
+      },
+      {
+        "phase": "04-financial-sources",
+        "atMs": 30497,
+        "screenshot": "04-financial-sources.png",
+        "sha256": "6a7867203d83dda3b6e8c1b4a299befc1e5053f34ad9c4e5e953462fcae072a5"
+      },
+      {
+        "phase": "05-material-risk-and-source",
+        "atMs": 40153,
+        "screenshot": "05-material-risk-and-source.png",
+        "sha256": "789fff46a2704c5053cb80af002c64510c69dd4a54336d428476865e39d72772"
+      }
+    ],
+    "approvals": [],
+    "streamResponses": [
+      {
+        "status": 404,
+        "type": "application/json",
+        "atMs": 5200
+      },
+      {
+        "status": 200,
+        "type": "text/event-stream",
+        "atMs": 5488
+      }
+    ],
+    "intake": {
+      "input": {
+        "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+        "instructionId": "31aa6053-a33f-4036-a147-07153d53a74b",
+        "idempotencyKey": "31aa6053-a33f-4036-a147-07153d53a74b",
+        "threadId": "f8cf36cc-eada-4af1-9c31-fb71db8d5c2a",
+        "channel": "text",
+        "activeContext": {
+          "version": 1,
+          "capturedAt": "2026-09-28T19:09:06.391Z",
+          "source": "text",
+          "selectedEntities": [
+            {
+              "entityType": "pe_deal",
+              "entityId": "90000000-0000-4000-8000-000000000001"
+            }
+          ],
+          "excludedEntities": [],
+          "surface": {
+            "id": "deals",
+            "spatialState": "canvas"
+          },
+          "filters": []
+        }
+      },
+      "response": {
+        "planned": [],
+        "objective": {
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "state": "continue",
+          "route": "OBJECTIVE"
+        },
+        "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+        "workInputId": "31aa6053-a33f-4036-a147-07153d53a74b",
+        "instructionId": "31aa6053-a33f-4036-a147-07153d53a74b",
+        "threadId": "f8cf36cc-eada-4af1-9c31-fb71db8d5c2a",
+        "projectionWarnings": [],
+        "assistantMessage": {
+          "id": "9c78b446-364e-4afd-ba5f-e3373bb64ca1",
+          "threadId": "f8cf36cc-eada-4af1-9c31-fb71db8d5c2a",
+          "sequence": 2,
+          "role": "assistant",
+          "channel": "text",
+          "originalText": "I started durable Work for this objective. I’ll report progress from verified outcomes and ask before any required approval.",
+          "instructionId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "workInputId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "resolutionSnapshot": null,
+          "resolutionProvenance": [],
+          "companyTruthSnapshot": null,
+          "outcomeRefs": [
+            {
+              "id": "31aa6053-a33f-4036-a147-07153d53a74b",
+              "kind": "work"
+            },
+            {
+              "id": "31aa6053-a33f-4036-a147-07153d53a74b",
+              "kind": "work_input"
+            },
+            {
+              "id": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+              "kind": "objective_loop",
+              "state": "continue"
+            }
+          ],
+          "createdAt": "2026-09-28T19:09:06.608Z"
+        }
+      },
+      "acceptedAtMs": 5409
+    },
+    "trace": {
+      "atMs": 15060,
+      "text": "Plan recorded\nObjective\nStop\nInspect 3 recorded events\n01\nInstruction received\n12:39 AM\n02\nPlanning\n\nObjective\n\n12:39 AM\n03\nPlan recorded\n\nObjective\n\n12:39 AM",
+      "renderedSequence": [
+        "01",
+        "02",
+        "03"
+      ],
+      "resources": {
+        "domElements": 1488,
+        "transferredBytes": 4698876
+      }
+    },
+    "specialists": {
+      "atMs": 20511,
+      "assignments": [
+        {
+          "id": "0d9e71f1-2628-434f-95ea-6652be6435c4",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6",
+          "planNodeId": "node_c954e58986eaa71cf9742fd2",
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "objectiveStepId": "b0d1fe23-1a7b-48dc-9514-e7925e4ff5b2",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000049",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+          "capability": "query:pe_world_state",
+          "nodeKind": "query",
+          "state": "completed",
+          "attempt": 1,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800004,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 0,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability query:pe_world_state; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+          "assignmentScore": {
+            "sampleSize": 6,
+            "currentLoad": 0,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+            "medianLatencyMs": 110,
+            "historicalEvidence": "KNOWN",
+            "humanRejectionRate": 0,
+            "qualityFailureRate": 0,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": 1,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": "2026-09-28T19:09:09.743Z",
+          "completedAt": "2026-09-28T19:09:09.849Z",
+          "failure": null,
+          "createdAt": "2026-09-28T19:09:07.920Z",
+          "updatedAt": "2026-09-28T19:09:09.849Z"
+        },
+        {
+          "id": "3a0ee82f-f825-4179-848f-0de6ed3ed311",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6",
+          "planNodeId": "node_3e8069602dad563dfdd1d1fd",
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "objectiveStepId": "31b593d5-de80-4d09-92aa-7ad8efa57bc2",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000051",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000052",
+          "capability": "check:objective_success",
+          "nodeKind": "check",
+          "state": "completed",
+          "attempt": 1,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800004,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 0,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability check:objective_success; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000051.",
+          "assignmentScore": {
+            "sampleSize": 59,
+            "currentLoad": 0,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000051",
+            "medianLatencyMs": 94,
+            "historicalEvidence": "KNOWN",
+            "humanRejectionRate": 0,
+            "qualityFailureRate": 0.9322033898305084,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": 0.06779661016949153,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": "2026-09-28T19:09:13.732Z",
+          "completedAt": "2026-09-28T19:09:13.760Z",
+          "failure": null,
+          "createdAt": "2026-09-28T19:09:11.748Z",
+          "updatedAt": "2026-09-28T19:09:13.760Z"
+        },
+        {
+          "id": "870cea0c-5664-4f36-bfc9-1a28a82c5e15",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6",
+          "planNodeId": "node_9bc740c984b94de409fce949",
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "objectiveStepId": "cd8daae3-c163-43b2-b975-5167b93131c9",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000051",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000052",
+          "capability": "check:objective_success",
+          "nodeKind": "check",
+          "state": "completed",
+          "attempt": 1,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800004,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 0,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability check:objective_success; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000051.",
+          "assignmentScore": {
+            "sampleSize": 59,
+            "currentLoad": 1,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000051",
+            "medianLatencyMs": 94,
+            "historicalEvidence": "KNOWN",
+            "humanRejectionRate": 0,
+            "qualityFailureRate": 0.9322033898305084,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": 0.06779661016949153,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": "2026-09-28T19:09:14.013Z",
+          "completedAt": "2026-09-28T19:09:14.069Z",
+          "failure": null,
+          "createdAt": "2026-09-28T19:09:11.766Z",
+          "updatedAt": "2026-09-28T19:09:14.069Z"
+        },
+        {
+          "id": "43192482-2ed6-4fe9-9c91-e83a23d9e399",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6",
+          "planNodeId": "node_b1144ebe89a6f61f8b9367ae",
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "objectiveStepId": "850ae64c-489c-42f5-b2ea-22064854bfd0",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000049",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+          "capability": "check:objective_success",
+          "nodeKind": "check",
+          "state": "cancelled",
+          "attempt": 0,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800004,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 1,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability check:objective_success; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+          "assignmentScore": {
+            "sampleSize": 57,
+            "currentLoad": 0,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+            "medianLatencyMs": 89,
+            "historicalEvidence": "KNOWN",
+            "humanRejectionRate": 0,
+            "qualityFailureRate": 1,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": 0,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": null,
+          "completedAt": "2026-09-28T19:09:14.171Z",
+          "failure": {
+            "code": "PLAN_SUPERSEDED",
+            "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6"
+          },
+          "createdAt": "2026-09-28T19:09:11.784Z",
+          "updatedAt": "2026-09-28T19:09:14.171Z"
+        },
+        {
+          "id": "4fa124b8-6fee-4a99-8467-496010af6276",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workId": "31aa6053-a33f-4036-a147-07153d53a74b",
+          "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6",
+          "planNodeId": "node_0dc3f516252f3e5f43d2bf30",
+          "objectiveLoopId": "e9dd2bb3-f703-4217-b82d-bf8910f08d89",
+          "objectiveStepId": "6958306e-c233-4d0d-a462-aa3775de46d9",
+          "objectiveRevision": 1,
+          "nodeAttempt": 1,
+          "agentProfileId": "90000000-0000-4000-8000-000000000049",
+          "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+          "capability": "check:objective_success",
+          "nodeKind": "check",
+          "state": "cancelled",
+          "attempt": 0,
+          "leaseOwner": null,
+          "leaseUntil": null,
+          "budgetSnapshot": {
+            "p6": {
+              "maxActions": 20,
+              "maxQueries": 16,
+              "maxReplans": 72,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 604800004,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 72
+            },
+            "usage": {
+              "actions": 0,
+              "queries": 1,
+              "replans": 0,
+              "knownTokens": null,
+              "wallClockMs": 0,
+              "knownCostUsd": null,
+              "plannerCalls": 0
+            },
+            "profile": {
+              "maxActions": 4,
+              "maxQueries": 10,
+              "maxReplans": 4,
+              "maxKnownTokens": null,
+              "maxWallClockMs": 900000,
+              "maxKnownCostUsd": null,
+              "maxPlannerCalls": 6
+            }
+          },
+          "assignmentReason": "Eligible exact capability check:objective_success; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+          "assignmentScore": {
+            "sampleSize": 57,
+            "currentLoad": 1,
+            "knownCostUsd": null,
+            "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+            "medianLatencyMs": 89,
+            "historicalEvidence": "KNOWN",
+            "humanRejectionRate": 0,
+            "qualityFailureRate": 1,
+            "exactCapabilityMatch": 1,
+            "verifiedCompletionRate": 0,
+            "promotedRoutingPreference": 0
+          },
+          "previousAssignmentId": null,
+          "reassignmentReason": null,
+          "domainActionId": null,
+          "startedAt": null,
+          "completedAt": "2026-09-28T19:09:14.171Z",
+          "failure": {
+            "code": "PLAN_SUPERSEDED",
+            "planRevisionId": "be90d24e-9075-46d1-a9cf-e637dab467a6"
+          },
+          "createdAt": "2026-09-28T19:09:11.804Z",
+          "updatedAt": "2026-09-28T19:09:14.171Z"
+        }
+      ]
+    },
+    "financialAnalysis": {
+      "atMs": 30014,
+      "text": "06 / UNDERWRITING SUMMARY\nUnderwriting model\nKNOWN\nSUCCEEDED\npersisted run\nVALID\nvalidity\n0\nfailed checks\n\nAtlas control investment case · Atlas institutional LBO · Revenue downside 20% sensitivity (exploratory) · phase9-e2e-v1\n\nGross Sponsor Irr\n40.0%\nrate · DERIVED VALUE\nGross Sponsor Moic\n1.40×\nmultiple · DERIVED VALUE\nSponsor Exit Proceeds\n70\nUSD · money · DERIVED VALUE\nExit Enterprise Value\n100\nUSD · money · DERIVED VALUE\nExit Equity Value\n70\nUSD · money · DERIVED VALUE\nExit Cash\n0\nUSD · money · DERIVED VALUE\nInspect all 33 persisted outputs\nOpen scenario laboratory\nInspect 2 source references\n2 objects · 1 Work link\nAs of Sep 29, 2026, 12:33 AM"
+    },
+    "sourceContext": {
+      "atMs": 30416,
+      "text": "MICROSOFT 365 / SOURCE TRUTH\nConnection and evidence coverage\n\nThese are recorded integration and source-scope states. A healthy connection alone does not verify an individual document.\n\n0 active of 0 configured connections\n\nNo Microsoft Graph connection is recorded for this tenant.\n\nSources bound to pe deal 90000000\n\nAs of 9/29/2026, 12:39:31 AM\n\nNo Microsoft source scope is bound to this selected root. This read does not assess unbound or differently bound sources."
+    },
+    "materialRisk": {
+      "atMs": 40052,
+      "text": "03 / RISK REGISTER\nRisks and findings\nPARTIAL\nOPEN\nCustomer concentration may impair downside debt-service coverage.\nOPEN\nTop customer represents 31% of recurring revenue.\nInspect 2 source references\nPe Deal Risks\n@finnor/private-equity · 90000000-0000-4000-8000-000000000010\nInspect object\nPe Findings\n@finnor/private-equity · 90000000-0000-4000-8000-000000000009\nInspect object\n\nThese are exact recorded references. Document content and anchors require their owning source.\n\n2 objects · 4 Work links\nAs of Sep 29, 2026, 12:39 AM",
+      "exactSources": [
+        "pe deal risks@finnor/private-equity · 90000000-0000-4000-8000-000000000010Inspect object ",
+        "pe findings@finnor/private-equity · 90000000-0000-4000-8000-000000000009Inspect object "
+      ]
+    }
+  },
+  "limitations": [
+    "Controlled Atlas tenant with real canonical records and actual owner sign-in",
+    "The first approved effect and receipt are timed inside sixty seconds; the full IC objective finishes afterward and has its own recorded time",
+    "SSE fallback is exercised by aborting the real connection, without fabricated responses",
+    "Real Microsoft publication remains BLOCKED_EXTERNAL"
+  ],
+  "reproduce": "PLAYWRIGHT_RECORD_VIDEO=1 node scripts/centropy/run-local-e2e.mjs e2e/centropy-real-demo.spec.ts --project=desktop-chromium --workers=1"
+}

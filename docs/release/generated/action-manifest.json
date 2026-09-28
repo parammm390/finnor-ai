@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-23T17:37:13.906Z",
-  "actionCount": 41,
+  "generatedAt": "2026-09-28T18:32:00.400Z",
+  "actionCount": 45,
   "actions": [
     {
       "plugin": "universal-actions",
@@ -14,17 +14,17 @@
       "plugin": "private-equity",
       "actionType": "attach_ic_question_evidence",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "begin_ic_preparation",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -54,25 +54,41 @@
       "plugin": "private-equity",
       "actionType": "create_closing_condition",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "create_deal_request",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "create_ic_deck_draft",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 1282,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 1312
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "create_ic_memo_draft",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 1282,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "create_ic_question",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -84,11 +100,19 @@
     },
     {
       "plugin": "private-equity",
+      "actionType": "create_underwriting_run",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 1282,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 1312
+    },
+    {
+      "plugin": "private-equity",
       "actionType": "declare_deal_closed",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -118,17 +142,17 @@
       "plugin": "private-equity",
       "actionType": "link_deal_dependency",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "mark_dependency_resolved",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -142,17 +166,17 @@
       "plugin": "private-equity",
       "actionType": "open_ic_case",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "open_workstream",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -166,25 +190,33 @@
       "plugin": "private-equity",
       "actionType": "prepare_ic_decision_proposal",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
+    },
+    {
+      "plugin": "private-equity",
+      "actionType": "prepare_ic_recommendation",
+      "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sourceLine": 1282,
+      "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "raise_deal_risk",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "record_finding",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -198,9 +230,9 @@
       "plugin": "private-equity",
       "actionType": "request_ic_memo_review",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -214,33 +246,33 @@
       "plugin": "private-equity",
       "actionType": "resolve_deal_risk",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "resolve_finding",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "satisfy_closing_condition",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "satisfy_ic_condition",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -262,17 +294,17 @@
       "plugin": "private-equity",
       "actionType": "select_ic_memo_version",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "select_ic_underwriting_run",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -294,17 +326,17 @@
       "plugin": "private-equity",
       "actionType": "submit_condition_evidence",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "submit_deliverable",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "universal-actions",
@@ -318,17 +350,17 @@
       "plugin": "private-equity",
       "actionType": "verify_closing_item",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     },
     {
       "plugin": "private-equity",
       "actionType": "waive_closing_condition",
       "sourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "sourceLine": 813,
+      "sourceLine": 1282,
       "schemaSourcePath": "finnor-os/packages/domain-plugins/private-equity/index.ts",
-      "schemaSourceLine": 839
+      "schemaSourceLine": 1312
     }
   ]
 }

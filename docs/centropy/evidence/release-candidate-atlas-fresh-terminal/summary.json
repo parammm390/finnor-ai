@@ -1,0 +1,186 @@
+{
+  "result": "PASS",
+  "scope": "compiled_local_fixture",
+  "flows": [
+    2,
+    9,
+    10
+  ],
+  "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+  "threadId": "e6cc63e8-9d6a-42a6-9e32-8acb19540419",
+  "caseId": "8c0b3d9b-b3f0-4caf-b289-1b94c9b0a5f8",
+  "objectiveId": "c306d745-ee72-49e2-9136-d464ef5533d6",
+  "objectiveState": "completed",
+  "successVerification": "verified",
+  "memoVersion": "747773bd-a91f-4bbf-9dc5-b3564a9924f5",
+  "recommendation": {
+    "id": "651ec63a-5f81-4fbe-9f7c-758a2c474cc5",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "memoId": "75421b5b-c8f3-4f0c-ba41-a14ec4a78a45",
+    "outcome": "CONTINUE_DILIGENCE",
+    "revision": 1,
+    "rationale": "Continue diligence before an investment decision. The selected sourced memo and valid underwriting run record 1 unresolved high or critical risk(s) and 1 unresolved material or critical finding(s): Untitled recorded item; Untitled recorded item. Committee review is required. The exact memo, run, and item references are attached to this recommendation.",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-09-28T21:50:12.73591+05:30",
+    "icCaseId": "8c0b3d9b-b3f0-4caf-b289-1b94c9b0a5f8",
+    "authoredBy": "64514556-501f-4326-b650-ad687e0f0f47",
+    "scenarioId": "3b81f2ce-4dda-469b-9200-76cfe9d275a3",
+    "idempotencyKey": "f2e631a3-e605-4bb7-b121-a3ff1663ff33",
+    "investmentCaseId": "90000000-0000-4000-8000-000000000002",
+    "underwritingRunId": "3b5e7e8b-a99d-4ac2-8811-ac689eabaa1c",
+    "supersedesRecommendationId": null
+  },
+  "verifiedEffects": 7,
+  "finalizedReceipts": 7,
+  "reopenedBrowser": {
+    "before": {
+      "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+      "objectiveId": "c306d745-ee72-49e2-9136-d464ef5533d6",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "8c0b3d9b-b3f0-4caf-b289-1b94c9b0a5f8",
+        "a3a03af7-c983-483c-ac22-077c953dab08",
+        "e74a663c-54e6-41d2-a7eb-a87be78b0557",
+        "ea19653f-4556-4fab-9368-a5cb57eab20a"
+      ],
+      "assignmentIds": [
+        "13313bab-6318-4bc2-8af6-ff7f088236ad",
+        "13e71e4d-a11a-486c-8177-d496a4413abb",
+        "2069f88b-da2c-4ccf-8d4d-137e3009b63d",
+        "604f0a6b-6dca-47d0-bb10-db6053e33199",
+        "6873ffdd-124d-44b3-935d-b50c5a3a80b1",
+        "69b0baaf-9c2b-4750-95e1-9668dd2b6667",
+        "6ebf4e3f-63ab-4139-9b96-593aa78e8478",
+        "8fe6237a-4f20-43d3-9f96-8f3bd59cd8db",
+        "9627b295-a688-4a80-b056-6bdf32e9b5c3",
+        "96e7a070-6a39-4e65-8f8b-35820b8d5d57",
+        "a1ebea52-b419-4b2b-b522-bdae08419043",
+        "a858f87a-89a3-47ec-aa8d-7e15524d85c0",
+        "aef42cc4-a119-417b-96bc-9874e403ee2f",
+        "afd496d9-5620-4c8e-97db-54af22a7cb66",
+        "b4db353a-f34b-4eeb-b929-7647cb29e6fa",
+        "bb21a05e-5561-4421-ae42-8b14bad9d7ec",
+        "ec0d5f8c-081b-42a1-8c65-e44ba65f2dd2",
+        "edf36eb1-d181-4bc2-9551-592f6a3dd35e",
+        "f53ebf44-8e53-468e-91c2-7e7000eff814",
+        "fda754c0-5cec-46a8-82bc-2415ae7a9b1b",
+        "fed2472e-b97f-4f83-8489-44b0578bac44"
+      ],
+      "planIds": [
+        "10a7d4a4-68de-43a3-9560-969f9057b158",
+        "1fd29d54-a61e-42ae-a2e2-b9ef774ba9d7",
+        "3b22bda0-3789-48ae-8437-dae941eb5787",
+        "41c243cb-ff00-488c-985a-31a8fe4a16df",
+        "f2dd9850-b514-4089-b916-6d5e9762baf5"
+      ],
+      "userTurns": [
+        {
+          "id": "671028c1-578c-404d-b318-7ee3952fdf4e",
+          "instructionId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+          "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42"
+        }
+      ]
+    },
+    "refreshed": {
+      "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+      "objectiveId": "c306d745-ee72-49e2-9136-d464ef5533d6",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "8c0b3d9b-b3f0-4caf-b289-1b94c9b0a5f8",
+        "a3a03af7-c983-483c-ac22-077c953dab08",
+        "e74a663c-54e6-41d2-a7eb-a87be78b0557",
+        "ea19653f-4556-4fab-9368-a5cb57eab20a"
+      ],
+      "assignmentIds": [
+        "13313bab-6318-4bc2-8af6-ff7f088236ad",
+        "13e71e4d-a11a-486c-8177-d496a4413abb",
+        "2069f88b-da2c-4ccf-8d4d-137e3009b63d",
+        "604f0a6b-6dca-47d0-bb10-db6053e33199",
+        "6873ffdd-124d-44b3-935d-b50c5a3a80b1",
+        "69b0baaf-9c2b-4750-95e1-9668dd2b6667",
+        "6ebf4e3f-63ab-4139-9b96-593aa78e8478",
+        "8fe6237a-4f20-43d3-9f96-8f3bd59cd8db",
+        "9627b295-a688-4a80-b056-6bdf32e9b5c3",
+        "96e7a070-6a39-4e65-8f8b-35820b8d5d57",
+        "a1ebea52-b419-4b2b-b522-bdae08419043",
+        "a858f87a-89a3-47ec-aa8d-7e15524d85c0",
+        "aef42cc4-a119-417b-96bc-9874e403ee2f",
+        "afd496d9-5620-4c8e-97db-54af22a7cb66",
+        "b4db353a-f34b-4eeb-b929-7647cb29e6fa",
+        "bb21a05e-5561-4421-ae42-8b14bad9d7ec",
+        "ec0d5f8c-081b-42a1-8c65-e44ba65f2dd2",
+        "edf36eb1-d181-4bc2-9551-592f6a3dd35e",
+        "f53ebf44-8e53-468e-91c2-7e7000eff814",
+        "fda754c0-5cec-46a8-82bc-2415ae7a9b1b",
+        "fed2472e-b97f-4f83-8489-44b0578bac44"
+      ],
+      "planIds": [
+        "10a7d4a4-68de-43a3-9560-969f9057b158",
+        "1fd29d54-a61e-42ae-a2e2-b9ef774ba9d7",
+        "3b22bda0-3789-48ae-8437-dae941eb5787",
+        "41c243cb-ff00-488c-985a-31a8fe4a16df",
+        "f2dd9850-b514-4089-b916-6d5e9762baf5"
+      ],
+      "userTurns": [
+        {
+          "id": "671028c1-578c-404d-b318-7ee3952fdf4e",
+          "instructionId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+          "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42"
+        }
+      ]
+    },
+    "reopened": {
+      "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+      "objectiveId": "c306d745-ee72-49e2-9136-d464ef5533d6",
+      "state": "awaiting_approval",
+      "actionIds": [
+        "8c0b3d9b-b3f0-4caf-b289-1b94c9b0a5f8",
+        "a3a03af7-c983-483c-ac22-077c953dab08",
+        "e74a663c-54e6-41d2-a7eb-a87be78b0557",
+        "ea19653f-4556-4fab-9368-a5cb57eab20a"
+      ],
+      "assignmentIds": [
+        "13313bab-6318-4bc2-8af6-ff7f088236ad",
+        "13e71e4d-a11a-486c-8177-d496a4413abb",
+        "2069f88b-da2c-4ccf-8d4d-137e3009b63d",
+        "604f0a6b-6dca-47d0-bb10-db6053e33199",
+        "6873ffdd-124d-44b3-935d-b50c5a3a80b1",
+        "69b0baaf-9c2b-4750-95e1-9668dd2b6667",
+        "6ebf4e3f-63ab-4139-9b96-593aa78e8478",
+        "8fe6237a-4f20-43d3-9f96-8f3bd59cd8db",
+        "9627b295-a688-4a80-b056-6bdf32e9b5c3",
+        "96e7a070-6a39-4e65-8f8b-35820b8d5d57",
+        "a1ebea52-b419-4b2b-b522-bdae08419043",
+        "a858f87a-89a3-47ec-aa8d-7e15524d85c0",
+        "aef42cc4-a119-417b-96bc-9874e403ee2f",
+        "afd496d9-5620-4c8e-97db-54af22a7cb66",
+        "b4db353a-f34b-4eeb-b929-7647cb29e6fa",
+        "bb21a05e-5561-4421-ae42-8b14bad9d7ec",
+        "ec0d5f8c-081b-42a1-8c65-e44ba65f2dd2",
+        "edf36eb1-d181-4bc2-9551-592f6a3dd35e",
+        "f53ebf44-8e53-468e-91c2-7e7000eff814",
+        "fda754c0-5cec-46a8-82bc-2415ae7a9b1b",
+        "fed2472e-b97f-4f83-8489-44b0578bac44"
+      ],
+      "planIds": [
+        "10a7d4a4-68de-43a3-9560-969f9057b158",
+        "1fd29d54-a61e-42ae-a2e2-b9ef774ba9d7",
+        "3b22bda0-3789-48ae-8437-dae941eb5787",
+        "41c243cb-ff00-488c-985a-31a8fe4a16df",
+        "f2dd9850-b514-4089-b916-6d5e9762baf5"
+      ],
+      "userTurns": [
+        {
+          "id": "671028c1-578c-404d-b318-7ee3952fdf4e",
+          "instructionId": "3519dc23-a617-4c6a-a1e0-3de142725d42",
+          "workId": "3519dc23-a617-4c6a-a1e0-3de142725d42"
+        }
+      ]
+    },
+    "firstBrowserClosed": true,
+    "freshBrowserLaunched": true,
+    "storedSessionReused": false
+  },
+  "proofSha256": "ed32734819700374b6a6f8cde99bb9363f7446da60ec430ab26ab88c010b7961",
+  "screenshotSha256": "c65f394d9dbb200332c1fb56eb9de5a888e031d31a762c9db649ea99739b338a"
+}

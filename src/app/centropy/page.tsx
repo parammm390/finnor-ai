@@ -1,11 +1,8 @@
 import type { Metadata } from "next"
-import PersonalizedHome from "@/components/centropy/PersonalizedHome"
 
 export const metadata: Metadata = {
-  title: "Home — Centropy",
-  description: "Server-ranked decisions, evidence gaps, risks, closing blockers, Work, and verified outcomes.",
+  title: { absolute: "CENTROPY" },
+  description: "Persistent private equity Investigations, governed Work, and institutional analysis.",
 }
 
-export default function CentropyPage() {
-  return <PersonalizedHome />
-}
+export default function CentropyPage() { return null }

@@ -112,14 +112,16 @@ async function assertMaterialPolicyStillValid(tenantId: string, effect: Business
 /** Scope-1 generation fence at the final effect boundary. The Work row is locked
  * before the PlanRevision row, matching plan selection, so cancellation and
  * supersession serialize with the provider commit point instead of racing a
- * stale preflight read. Historical/non-plan actions retain their existing path. */
+ * stale preflight read. Non-key locks retain that writer fence while permitting
+ * child evidence's foreign-key checks on these immutable parent identities.
+ * Historical/non-plan actions retain their existing path. */
 async function orchestrationGenerationViolationTx(
   db: Db,
   tenantId: string,
   action: typeof domainActions.$inferSelect,
 ): Promise<string | null> {
   if (action.workId) {
-    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${tenantId} AND ${works.id}=${action.workId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${tenantId} AND ${works.id}=${action.workId} FOR NO KEY UPDATE`);
     const [work] = await db.select({ status: works.status }).from(works).where(and(
       eq(works.tenantId, tenantId),
       eq(works.id, action.workId),
@@ -128,7 +130,7 @@ async function orchestrationGenerationViolationTx(
     if (["cancelled", "completed", "failed"].includes(work.status)) return `Work is ${work.status}`;
   }
   if (!action.planRevisionId) return null;
-  await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${tenantId} AND ${workPlanRevisions.id}=${action.planRevisionId} FOR UPDATE`);
+  await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${tenantId} AND ${workPlanRevisions.id}=${action.planRevisionId} FOR NO KEY UPDATE`);
   const [plan] = await db.select({
     status: workPlanRevisions.status,
     workId: workPlanRevisions.workId,

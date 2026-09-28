@@ -1,0 +1,131 @@
+{
+  "schema": "centropy.real-demo-proof/v1",
+  "result": "INCOMPLETE",
+  "capturedAt": "2026-09-28T18:55:30.796Z",
+  "baseURL": "http://127.0.0.1:3001",
+  "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+  "workId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+  "threadId": "532af0cb-c09e-4da1-9302-34d8727b5a8b",
+  "instructionId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+  "observed": {
+    "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+    "authoredFixture": true,
+    "checkpoints": [
+      {
+        "phase": "01-atlas-context",
+        "atMs": 1524,
+        "screenshot": "01-atlas-context.png",
+        "sha256": "51acfeeefb49f4b321f38ca4bceb861f8adccb51456b652cb1f2acba735a8207"
+      },
+      {
+        "phase": "02-real-trace",
+        "atMs": 15135,
+        "screenshot": "02-real-trace.png",
+        "sha256": "fa5e48e34214ee4b8918be6e5b733726f24ac8e032310b55fea977614603dace"
+      }
+    ],
+    "approvals": [],
+    "streamResponses": [
+      {
+        "status": 404,
+        "type": "application/json",
+        "atMs": 5231
+      },
+      {
+        "status": 200,
+        "type": "text/event-stream",
+        "atMs": 5532
+      }
+    ],
+    "intake": {
+      "input": {
+        "instruction": "Challenge the revenue case and prepare tomorrow's IC.",
+        "instructionId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+        "idempotencyKey": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+        "threadId": "532af0cb-c09e-4da1-9302-34d8727b5a8b",
+        "channel": "text",
+        "activeContext": {
+          "version": 1,
+          "capturedAt": "2026-09-28T18:55:06.621Z",
+          "source": "text",
+          "selectedEntities": [
+            {
+              "entityType": "pe_deal",
+              "entityId": "90000000-0000-4000-8000-000000000001"
+            }
+          ],
+          "excludedEntities": [],
+          "surface": {
+            "id": "deals",
+            "spatialState": "canvas"
+          },
+          "filters": []
+        }
+      },
+      "response": {
+        "planned": [],
+        "objective": {
+          "objectiveLoopId": "de2e4139-67f4-4b2f-ac11-3dd7778f60b4",
+          "state": "continue",
+          "route": "OBJECTIVE"
+        },
+        "workId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+        "workInputId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+        "instructionId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+        "threadId": "532af0cb-c09e-4da1-9302-34d8727b5a8b",
+        "projectionWarnings": [],
+        "assistantMessage": {
+          "id": "485d7b9c-bf3b-4cf4-98b8-6216c0e11860",
+          "threadId": "532af0cb-c09e-4da1-9302-34d8727b5a8b",
+          "sequence": 2,
+          "role": "assistant",
+          "channel": "text",
+          "originalText": "I started durable Work for this objective. I’ll report progress from verified outcomes and ask before any required approval.",
+          "instructionId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+          "workId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+          "workInputId": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+          "resolutionSnapshot": null,
+          "resolutionProvenance": [],
+          "companyTruthSnapshot": null,
+          "outcomeRefs": [
+            {
+              "id": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+              "kind": "work"
+            },
+            {
+              "id": "a25b8712-dcd8-4fba-898b-a8fa73644a19",
+              "kind": "work_input"
+            },
+            {
+              "id": "de2e4139-67f4-4b2f-ac11-3dd7778f60b4",
+              "kind": "objective_loop",
+              "state": "continue"
+            }
+          ],
+          "createdAt": "2026-09-28T18:55:06.853Z"
+        }
+      },
+      "acceptedAtMs": 5435
+    },
+    "trace": {
+      "atMs": 15039,
+      "text": "Plan recorded\nObjective\nStop\nInspect 3 recorded events\n01\nInstruction received\n12:25 AM\n02\nPlanning\n\nObjective\n\n12:25 AM\n03\nPlan recorded\n\nObjective\n\n12:25 AM",
+      "renderedSequence": [
+        "01",
+        "02",
+        "03"
+      ],
+      "resources": {
+        "domElements": 1478,
+        "transferredBytes": 3819229
+      }
+    }
+  },
+  "limitations": [
+    "Controlled Atlas tenant with real canonical records and actual owner sign-in",
+    "The first approved effect and receipt are timed inside sixty seconds; the full IC objective finishes afterward and has its own recorded time",
+    "SSE fallback is exercised by aborting the real connection, without fabricated responses",
+    "Real Microsoft publication remains BLOCKED_EXTERNAL"
+  ],
+  "reproduce": "PLAYWRIGHT_RECORD_VIDEO=1 node scripts/centropy/run-local-e2e.mjs e2e/centropy-real-demo.spec.ts --project=desktop-chromium --workers=1"
+}

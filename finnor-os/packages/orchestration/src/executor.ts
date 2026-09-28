@@ -24,7 +24,7 @@ import { evaluateEffectAutonomy, recordShadowEffect } from "./autonomy";
 import { ActionGroundingError } from "@finnor/plugins-shared";
 
 export interface Executor {
-  execute(action: DomainAction, policy: DomainPolicy): Promise<ExecutionResult>;
+  execute(action: DomainAction, policy: DomainPolicy, options?: { reviewBeforeExecution?: boolean }): Promise<ExecutionResult>;
   /** Optional: best-effort cleanup on reject (e.g. closing a paused graph thread). */
   close?(actionId: string, tenantId: string, actionType: string): Promise<void>;
 }
@@ -35,7 +35,7 @@ export class GatedExecutor implements Executor {
     private tools: ToolRegistry,
   ) {}
 
-  async execute(action: DomainAction, policy: DomainPolicy): Promise<ExecutionResult> {
+  async execute(action: DomainAction, policy: DomainPolicy, options?: { reviewBeforeExecution?: boolean }): Promise<ExecutionResult> {
     const plugin = this.plugins.resolve(action.actionType);
     if (!plugin) {
       return { status: "failure", output: {}, error: `No plugin handles ${action.actionType}` };
@@ -101,7 +101,10 @@ export class GatedExecutor implements Executor {
     const approval = approvalRequirementForAction(action.actionType, policy.requiresConfirmation, draft.requiresConfirmation);
     let effect;
     try {
-      effect = await ensureBusinessEffect({ action, draft, policy, approval });
+      effect = await ensureBusinessEffect({ action, draft, policy, approval: {
+        ...approval,
+        requiresConfirmation: approval.requiresConfirmation || options?.reviewBeforeExecution === true,
+      } });
     } catch (error) {
       if (!(error instanceof BusinessEffectBoundaryError)) throw error;
       await this.setStatus(action, "needs_human_review");
@@ -165,14 +168,14 @@ export class GatedExecutor implements Executor {
     // ---------------- THE CONFIRMATION GATE ----------------
     // The fixed release floor is authoritative: a plugin draft cannot lower a
     // required floor or turn a no-side-effect action into an approval item.
-    if ((approval.requiresConfirmation || requiresAuthorityGate || requiresAutonomyGate) && action.status !== "approved" && action.status !== "executing") {
+    if ((approval.requiresConfirmation || requiresAuthorityGate || requiresAutonomyGate || (options?.reviewBeforeExecution === true && Boolean(effect))) && action.status !== "approved" && action.status !== "executing") {
       await withTenant(action.tenantId, async (db) => {
         await db
           .update(domainActions)
           .set({ status: "pending", summary: effect?.approval.summary ?? draft.summary, payload: draft.payload })
           .where(and(eq(domainActions.id, action.id), eq(domainActions.tenantId, action.tenantId)));
       });
-      await appendEpisode(action.tenantId, action.id, "gate", {}, { gated: true, summary: effect?.approval.summary ?? draft.summary, businessEffectId: effect?.id ?? null, semanticHash: effect?.semanticHash ?? null });
+      await appendEpisode(action.tenantId, action.id, "gate", {}, { gated: true, reviewBeforeExecution: options?.reviewBeforeExecution === true, summary: effect?.approval.summary ?? draft.summary, businessEffectId: effect?.id ?? null, semanticHash: effect?.semanticHash ?? null });
       // The durable queue/attention surface is the approval notification. Legacy
       // direct Web Push and Vapi nudge jobs were retired in Scope 2 because they
       // could issue an untracked provider mutation outside the Effect Protocol.

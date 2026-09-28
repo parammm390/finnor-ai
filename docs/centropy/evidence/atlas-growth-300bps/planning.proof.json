@@ -1,0 +1,107 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_growth_natural_language_planning",
+  "capturedAt": "2026-09-27T20:43:31.638Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Take growth down 300bps and exit at 9x."
+  },
+  "observed": {
+    "submissionStatus": 202,
+    "workId": "9cf6eea1-54c1-4537-a54b-e984f13bb178",
+    "threadId": "1feddbd9-8d20-4c1c-b72c-173d378bc98c",
+    "objectiveLoopId": "6b6fa57f-6642-42f3-bf88-ff4b9b6338be",
+    "workStatus": "awaiting_approval",
+    "objectiveState": "awaiting_approval",
+    "actionId": "6f3519f2-7a65-49f0-b8a3-e687690dcc7b",
+    "actionStatus": "pending",
+    "actionPayload": {
+      "dealId": "90000000-0000-4000-8000-000000000001",
+      "workId": "9cf6eea1-54c1-4537-a54b-e984f13bb178",
+      "worldAt": "2026-09-27T18:42:05.273Z",
+      "scenario": {
+        "name": "Revenue growth down 300bps; exit 9x",
+        "overrides": [
+          {
+            "value": {
+              "P001:2027-01-01:2027-12-31": "0.07"
+            },
+            "nodeId": "operating.revenue_growth",
+            "reason": "Exact 300 basis-point decrease from each recorded base growth rate; exploratory scenario, not a reported forecast."
+          },
+          {
+            "value": "9",
+            "nodeId": "exit.multiple",
+            "reason": "Requested 9x exit multiple in the same scenario."
+          }
+        ]
+      },
+      "baseRunId": "d84d0a97-852d-4399-a581-85914c5199fb",
+      "grounding": {
+        "deal": {
+          "state": "active",
+          "version": 1,
+          "entityId": "90000000-0000-4000-8000-000000000001",
+          "entityType": "pe_deal",
+          "graphVersion": 31
+        },
+        "work": {
+          "entityId": "9cf6eea1-54c1-4537-a54b-e984f13bb178",
+          "entityType": "work"
+        },
+        "entities": [
+          {
+            "state": "active",
+            "version": 2,
+            "entityId": "90000000-0000-4000-8000-000000000002",
+            "entityType": "pe_investment_case"
+          },
+          {
+            "state": "sha256:92316b374c49ad2a39bcd6c266661c72fc636a75cc11fd2c4c7a067f9c6cf0d6",
+            "entityId": "1cdebf1c-c805-4405-8ddd-d30dfbb37946",
+            "entityType": "underwriting_model_version"
+          }
+        ],
+        "verticalKey": "private_equity"
+      },
+      "modelVersionId": "1cdebf1c-c805-4405-8ddd-d30dfbb37946",
+      "investmentCaseId": "90000000-0000-4000-8000-000000000002"
+    },
+    "plannerAttempts": [
+      {
+        "status": "succeeded",
+        "failure": null
+      }
+    ],
+    "objectiveSteps": [
+      {
+        "stepNumber": 1,
+        "decisionKind": "action",
+        "failure": null
+      },
+      {
+        "stepNumber": 2,
+        "decisionKind": null,
+        "failure": null
+      }
+    ]
+  },
+  "steps": [
+    "Sign in as owner",
+    "Submit the exact growth instruction from the selected Atlas Deal",
+    "Read the durable Work until a grounded underwriting action is staged",
+    "Verify its base Run and both exact overrides before any approval"
+  ],
+  "screenshotSha256": "4d8e0b49b6fc1137ec4e623e5f02e122455f8fe630336df89e75e7d0e5e4fefb",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_GROWTH_BASE_RUN_ID=<growth base Run> PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npx playwright test e2e/centropy-growth-instruction.spec.ts --project=desktop-chromium",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas growth model and local stack"
+    ]
+  },
+  "limitation": "This phase checks natural-language action grounding. The separate growth-300bps E2E verifies financial execution, diff, lineage, and reload. Release certification remains open."
+}

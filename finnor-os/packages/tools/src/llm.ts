@@ -361,6 +361,7 @@ export class BedrockConverseProvider implements LLMProvider {
     if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
     assertSelectedAwsRegion(this.region);
     this.lastUsage = undefined;
+    const planningCall = opts.purpose === "planning" && opts.channel !== "voice";
     return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel }, async () => {
     const res = await fetchWithCallBudget(
       `https://bedrock-runtime.${this.region}.amazonaws.com/model/${this.modelId}/converse`,
@@ -372,11 +373,11 @@ export class BedrockConverseProvider implements LLMProvider {
           messages: [
             { role: "user", content: [{ text: opts.user }] },
           ],
-          inferenceConfig: { maxTokens: 700, temperature: 0.1 },
+          inferenceConfig: { maxTokens: planningCall ? 1400 : 700, temperature: 0.1 },
         }),
       },
       opts,
-      8_000,
+      planningCall ? 25_000 : 8_000,
     );
     if (!res.ok) {
       const body = await res.text().catch(() => "");

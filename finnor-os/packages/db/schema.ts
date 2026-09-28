@@ -1224,6 +1224,30 @@ export const employeeConversationThreads = pgTable(
   ],
 );
 
+// Thread-owned presentation preference. Financial, Work, and source facts are
+// always recomposed from their canonical owners, never stored in this row.
+export const centropyCanvasPreferences = pgTable(
+  "centropy_canvas_preferences",
+  {
+    tenantId: uuid("tenant_id").notNull(),
+    ownerEmployeeId: uuid("owner_employee_id").notNull(),
+    threadId: uuid("thread_id").notNull(),
+    schemaVersion: integer("schema_version").notNull().default(1),
+    uiRevision: integer("ui_revision").notNull().default(1),
+    layout: jsonb("layout").$type<{ mode: "document"; blockIds: string[] }>().notNull(),
+    selectedBlockId: text("selected_block_id"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.ownerEmployeeId, t.threadId] }),
+    foreignKey({
+      columns: [t.tenantId, t.threadId, t.ownerEmployeeId],
+      foreignColumns: [employeeConversationThreads.tenantId, employeeConversationThreads.id, employeeConversationThreads.ownerEmployeeId],
+      name: "centropy_canvas_preferences_thread_owner_fkey",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const employeeConversationMessages = pgTable(
   "employee_conversation_messages",
   {

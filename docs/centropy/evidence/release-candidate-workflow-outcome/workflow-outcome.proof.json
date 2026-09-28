@@ -1,0 +1,1289 @@
+{
+  "schema": "centropy.workflow-outcome-proof/v1",
+  "result": "PASS",
+  "capturedAt": "2026-09-28T17:52:07.329Z",
+  "observed": {
+    "workerHold": {
+      "pid": 8077,
+      "observedCommand": "/usr/local/bin/node --import tsx apps/worker/src/index.ts",
+      "reason": "Prevent authored fixture job delivery while certifying run controls"
+    },
+    "fixture": {
+      "schema": "centropy.workflow-control-fixture/v1",
+      "authored": true,
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "ownerId": "64514556-501f-4326-b650-ad687e0f0f47",
+      "workId": "43caada4-5942-4c97-8d5c-7c4b924cabf3",
+      "commandId": "839695b7-f4b5-43fc-84b7-eeef2cf9ea5e",
+      "workflowRunId": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+      "stepIds": [
+        "444fbe20-045e-4d84-991e-0f74a1189dbb",
+        "08939233-c3ae-4602-8f24-3a6e039285ba"
+      ],
+      "alreadyExisted": false,
+      "run": {
+        "id": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "commandId": "839695b7-f4b5-43fc-84b7-eeef2cf9ea5e",
+        "workId": "43caada4-5942-4c97-8d5c-7c4b924cabf3",
+        "workflowType": "authored_workflow_control_fixture",
+        "status": "failed",
+        "version": 2,
+        "protocolVersion": 2,
+        "createdAt": "2026-09-28T17:52:01.349Z",
+        "updatedAt": "2026-09-28T17:52:01.494Z"
+      },
+      "steps": [
+        {
+          "id": "444fbe20-045e-4d84-991e-0f74a1189dbb",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workflowRunId": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+          "stepType": "authored_local_owner_read",
+          "sequence": 0,
+          "status": "completed",
+          "idempotencyKey": "a47733d0-52e0-495a-9a2b-03a3019baa43:0",
+          "leaseExpiresAt": null,
+          "attempts": 1,
+          "dispatchGeneration": 0,
+          "evidence": {
+            "output": {
+              "source": "finnor_os.users",
+              "ownerId": "64514556-501f-4326-b650-ad687e0f0f47",
+              "ownerStatus": "active",
+              "noBusinessAssertion": true
+            },
+            "authored": true
+          },
+          "terminalReason": null,
+          "payload": {
+            "authored": true
+          },
+          "correlationId": null,
+          "domainActionId": null,
+          "businessEffectId": null,
+          "executionState": "verified",
+          "claimedAt": "2026-09-28T17:52:01.397Z",
+          "effectCommitAt": null,
+          "cancellationRequestedAt": null,
+          "protocolVersion": 2,
+          "claimToken": null,
+          "claimFence": 1,
+          "claimOwner": null,
+          "leaseHeartbeatAt": null,
+          "causalReadyAt": "2026-09-28T17:52:01.374Z",
+          "executionEligibleAt": "2026-09-28T17:52:01.397Z",
+          "eligibilityEvidence": {
+            "authored": true,
+            "processId": 8678,
+            "physicalJobId": "59c51087-bf93-48a5-9baa-f9d80c2e5ae8",
+            "noProviderOperation": true
+          },
+          "createdAt": "2026-09-28T17:52:01.349Z",
+          "updatedAt": "2026-09-28T17:52:01.419Z"
+        },
+        {
+          "id": "08939233-c3ae-4602-8f24-3a6e039285ba",
+          "tenantId": "00000000-0000-4000-8000-000000000001",
+          "workflowRunId": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+          "stepType": "authored_known_failure_before_effect",
+          "sequence": 1,
+          "status": "failed",
+          "idempotencyKey": "a47733d0-52e0-495a-9a2b-03a3019baa43:1",
+          "leaseExpiresAt": null,
+          "attempts": 1,
+          "dispatchGeneration": 0,
+          "evidence": {},
+          "terminalReason": "Authored controlled failure before any provider operation",
+          "payload": {
+            "context": {
+              "authored_local_owner_read": {
+                "source": "finnor_os.users",
+                "ownerId": "64514556-501f-4326-b650-ad687e0f0f47",
+                "ownerStatus": "active",
+                "noBusinessAssertion": true
+              }
+            },
+            "authored": true
+          },
+          "correlationId": null,
+          "domainActionId": null,
+          "businessEffectId": null,
+          "executionState": "failed_before_effect",
+          "claimedAt": "2026-09-28T17:52:01.467Z",
+          "effectCommitAt": null,
+          "cancellationRequestedAt": null,
+          "protocolVersion": 2,
+          "claimToken": null,
+          "claimFence": 1,
+          "claimOwner": null,
+          "leaseHeartbeatAt": null,
+          "causalReadyAt": "2026-09-28T17:52:01.451Z",
+          "executionEligibleAt": "2026-09-28T17:52:01.467Z",
+          "eligibilityEvidence": {
+            "authored": true,
+            "processId": 8678,
+            "physicalJobId": "441b95d0-27b4-4e4b-9d42-e230ebda6b7e",
+            "noProviderOperation": true
+          },
+          "createdAt": "2026-09-28T17:52:01.349Z",
+          "updatedAt": "2026-09-28T17:52:01.475Z"
+        }
+      ]
+    },
+    "retry": {
+      "run": {
+        "id": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "commandId": "839695b7-f4b5-43fc-84b7-eeef2cf9ea5e",
+        "workId": "43caada4-5942-4c97-8d5c-7c4b924cabf3",
+        "workflowType": "authored_workflow_control_fixture",
+        "status": "running",
+        "version": 3,
+        "protocolVersion": 2,
+        "createdAt": "2026-09-28T17:52:01.349Z",
+        "updatedAt": "2026-09-28T17:52:04.860Z"
+      }
+    },
+    "staleVersionStatus": 409,
+    "recoveredSteps": [
+      {
+        "id": "444fbe20-045e-4d84-991e-0f74a1189dbb",
+        "status": "completed",
+        "execution_state": "verified",
+        "evidence": {
+          "output": {
+            "source": "finnor_os.users",
+            "ownerId": "64514556-501f-4326-b650-ad687e0f0f47",
+            "ownerStatus": "active",
+            "noBusinessAssertion": true
+          },
+          "authored": true
+        },
+        "dispatch_generation": 0
+      },
+      {
+        "id": "08939233-c3ae-4602-8f24-3a6e039285ba",
+        "status": "pending",
+        "execution_state": "authorized",
+        "evidence": {},
+        "dispatch_generation": 1
+      }
+    ],
+    "cancel": {
+      "run": {
+        "id": "a47733d0-52e0-495a-9a2b-03a3019baa43",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "commandId": "839695b7-f4b5-43fc-84b7-eeef2cf9ea5e",
+        "workId": "43caada4-5942-4c97-8d5c-7c4b924cabf3",
+        "workflowType": "authored_workflow_control_fixture",
+        "status": "cancelled",
+        "version": 4,
+        "protocolVersion": 2,
+        "createdAt": "2026-09-28T17:52:01.349Z",
+        "updatedAt": "2026-09-28T17:52:05.185Z"
+      }
+    },
+    "controlReceipts": [
+      {
+        "id": "9b7b735b-0ee9-487c-bed3-51521114e786",
+        "objective": "retry workflow run a47733d0-52e0-495a-9a2b-03a3019baa43",
+        "approval": {
+          "at": "2026-09-28T17:52:04.879Z",
+          "required": true,
+          "approvedBy": "64514556-501f-4326-b650-ad687e0f0f47"
+        },
+        "actual_result": {
+          "status": "running",
+          "version": 3
+        },
+        "finalized_at": "2026-09-28T17:52:04.882Z"
+      },
+      {
+        "id": "3f64fa0b-ade2-4b41-9421-93ecc86acce7",
+        "objective": "cancel workflow run a47733d0-52e0-495a-9a2b-03a3019baa43",
+        "approval": {
+          "at": "2026-09-28T17:52:05.191Z",
+          "required": true,
+          "approvedBy": "64514556-501f-4326-b650-ad687e0f0f47"
+        },
+        "actual_result": {
+          "status": "cancelled",
+          "version": 4
+        },
+        "finalized_at": "2026-09-28T17:52:05.192Z"
+      }
+    ],
+    "workerResumed": true,
+    "catalog": {
+      "packs": [
+        {
+          "definition": {
+            "contractVersion": 1,
+            "id": "deal_to_verified_closing_readiness",
+            "version": 1,
+            "title": "Deal to verified closing readiness",
+            "objectiveClass": "private_equity_closing_readiness",
+            "supportedTenantPrerequisites": [
+              "one exact active deal",
+              "current diligence and closing truth"
+            ],
+            "requiredCapabilities": [
+              {
+                "capability": "private_equity_source",
+                "required": true,
+                "maxSourceLagMs": 300000,
+                "acceptedModes": [
+                  "real",
+                  "sandbox"
+                ]
+              }
+            ],
+            "allowedEffectClasses": [
+              "internal_draft",
+              "internal_write",
+              "operational_change",
+              "external_side_effect",
+              "durable_workflow"
+            ],
+            "permanentlyApprovalRequiredEffectClasses": [
+              "operational_change",
+              "financial_write",
+              "external_side_effect",
+              "external_spend",
+              "batch_external",
+              "durable_workflow"
+            ],
+            "authorityRequirements": [
+              "the exact deal remains in scope",
+              "current policy and authority revisions remain valid"
+            ],
+            "approvalBoundaries": [
+              "all consequential external communication",
+              "all closing, waiver, assignment, and deal-state changes"
+            ],
+            "recoveryPaths": [
+              "re-inspect canonical deal truth",
+              "wait for exact evidence",
+              "replan",
+              "reconcile",
+              "escalate"
+            ],
+            "compensationCapabilities": [
+              "only compensation explicitly named by the frozen BusinessEffect"
+            ],
+            "irreversibilityBoundaries": [
+              "delivered communications and completed external effects remain historical truth"
+            ],
+            "evidenceRequirements": [
+              "verified closing-condition propositions",
+              "resolved critical dependencies",
+              "current closing-readiness query"
+            ],
+            "terminalBlockedConditions": [
+              "ambiguous deal",
+              "unverified closing item",
+              "contradicted proposition",
+              "open critical dependency"
+            ],
+            "verificationRules": [
+              "closing_readiness.eligible is true",
+              "UNKNOWN, STALE, CONFLICTING, UNCERTAIN, or CONTRADICTED truth cannot pass"
+            ],
+            "slos": [
+              {
+                "metric": "cross_tenant_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Tenant isolation is an invariant."
+              },
+              {
+                "metric": "unapproved_effects_outside_grant",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Every consequential effect cites current authority."
+              },
+              {
+                "metric": "duplicate_consequential_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Durable effect identity prevents duplicates."
+              },
+              {
+                "metric": "false_verified_success",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Provider acknowledgement is never canonical verification."
+              },
+              {
+                "metric": "secret_exposure",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Credentials remain inside the governed security boundary."
+              },
+              {
+                "metric": "verification_coverage",
+                "comparison": "gte",
+                "threshold": 1,
+                "unit": "ratio",
+                "critical": true,
+                "rationale": "Every certified terminal result is verified."
+              },
+              {
+                "metric": "event_to_resume_latency",
+                "comparison": "lte",
+                "threshold": 60000,
+                "unit": "milliseconds",
+                "critical": false,
+                "rationale": "Matched evidence wakes durable Work promptly."
+              }
+            ],
+            "dependencyVersions": {
+              "effectCompiler": 1,
+              "objectiveController": 1,
+              "autonomySemantics": 1,
+              "sourceTruth": 1,
+              "verification": 1
+            }
+          },
+          "fingerprint": "586fa866d6d25d7a6d8f477a8fe4bbf1af2fd3aa1247fb15791d98e252f43971",
+          "setting": {
+            "enabled": true,
+            "defaultMode": "approval",
+            "revision": 0
+          },
+          "certifications": [],
+          "readiness": {
+            "state": "UNCERTIFIED",
+            "eligible": false,
+            "gates": [
+              {
+                "code": "BOUNDED_EVIDENCE_READ",
+                "passed": true,
+                "observed": false,
+                "required": false
+              },
+              {
+                "code": "MIN_VERIFIED_SAMPLE",
+                "passed": false,
+                "observed": 0,
+                "required": 20
+              },
+              {
+                "code": "FULL_VERIFICATION_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "FULL_VERIFIED_EFFECT_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "VERIFIED_SUCCESS_RATE",
+                "passed": false,
+                "observed": 0,
+                "required": 0.95
+              },
+              {
+                "code": "DIVERGENCE_RATE",
+                "passed": true,
+                "observed": 0,
+                "required": 0.01
+              },
+              {
+                "code": "ZERO_UNCERTAIN_OUTCOMES",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_DUPLICATE_EFFECTS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_POLICY_AUTHORITY_VIOLATIONS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "RECOVERY_QUALITY",
+                "passed": true,
+                "observed": 1,
+                "required": 0.99
+              },
+              {
+                "code": "CURRENT_LIVE_CERTIFICATION",
+                "passed": false,
+                "observed": false,
+                "required": true
+              }
+            ],
+            "metrics": {
+              "totalRuns": 0,
+              "verifiedRuns": 0,
+              "verificationCoverage": 0,
+              "verifiedEffectCoverage": 0,
+              "verifiedSuccessRate": 0,
+              "divergentEffects": 0,
+              "divergenceRate": 0,
+              "rejectedActions": 0,
+              "humanRejectionRate": 0,
+              "uncertainOutcomes": 0,
+              "duplicateConsequentialEffects": 0,
+              "policyOrAuthorityViolations": 0,
+              "compensationCount": 0,
+              "manualEscalations": 0,
+              "recoveryRate": 1
+            },
+            "evaluatedAt": "2026-09-28T17:52:05.743Z"
+          }
+        },
+        {
+          "definition": {
+            "contractVersion": 1,
+            "id": "deal_request_resolution",
+            "version": 1,
+            "title": "Open deal requests to verified resolution",
+            "objectiveClass": "private_equity_request_resolution",
+            "supportedTenantPrerequisites": [
+              "one exact active deal",
+              "current request and evidence truth"
+            ],
+            "requiredCapabilities": [
+              {
+                "capability": "private_equity_source",
+                "required": true,
+                "maxSourceLagMs": 300000,
+                "acceptedModes": [
+                  "real",
+                  "sandbox"
+                ]
+              },
+              {
+                "capability": "communications",
+                "required": false,
+                "maxSourceLagMs": 300000,
+                "acceptedModes": [
+                  "real",
+                  "sandbox"
+                ]
+              }
+            ],
+            "allowedEffectClasses": [
+              "internal_draft",
+              "internal_write",
+              "operational_change",
+              "external_side_effect",
+              "durable_workflow"
+            ],
+            "permanentlyApprovalRequiredEffectClasses": [
+              "operational_change",
+              "financial_write",
+              "external_side_effect",
+              "external_spend",
+              "batch_external",
+              "durable_workflow"
+            ],
+            "authorityRequirements": [
+              "the exact deal remains in scope",
+              "current policy and authority revisions remain valid"
+            ],
+            "approvalBoundaries": [
+              "all consequential external communication",
+              "all closing, waiver, assignment, and deal-state changes"
+            ],
+            "recoveryPaths": [
+              "re-inspect canonical deal truth",
+              "wait for exact evidence",
+              "replan",
+              "reconcile",
+              "escalate"
+            ],
+            "compensationCapabilities": [
+              "only compensation explicitly named by the frozen BusinessEffect"
+            ],
+            "irreversibilityBoundaries": [
+              "delivered communications and completed external effects remain historical truth"
+            ],
+            "evidenceRequirements": [
+              "request lifecycle evidence",
+              "matched inbound evidence when waiting",
+              "zero open scoped requests"
+            ],
+            "terminalBlockedConditions": [
+              "ambiguous requested party",
+              "stale source",
+              "unmatched or conflicting evidence"
+            ],
+            "verificationRules": [
+              "open_requests returns no rows for the certified scope",
+              "a sent message alone is not request fulfillment"
+            ],
+            "slos": [
+              {
+                "metric": "cross_tenant_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Tenant isolation is an invariant."
+              },
+              {
+                "metric": "unapproved_effects_outside_grant",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Every consequential effect cites current authority."
+              },
+              {
+                "metric": "duplicate_consequential_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Durable effect identity prevents duplicates."
+              },
+              {
+                "metric": "false_verified_success",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Provider acknowledgement is never canonical verification."
+              },
+              {
+                "metric": "secret_exposure",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Credentials remain inside the governed security boundary."
+              },
+              {
+                "metric": "verification_coverage",
+                "comparison": "gte",
+                "threshold": 1,
+                "unit": "ratio",
+                "critical": true,
+                "rationale": "Every certified terminal result is verified."
+              },
+              {
+                "metric": "event_to_resume_latency",
+                "comparison": "lte",
+                "threshold": 60000,
+                "unit": "milliseconds",
+                "critical": false,
+                "rationale": "Matched evidence wakes durable Work promptly."
+              }
+            ],
+            "dependencyVersions": {
+              "effectCompiler": 1,
+              "objectiveController": 1,
+              "autonomySemantics": 1,
+              "sourceTruth": 1,
+              "verification": 1
+            }
+          },
+          "fingerprint": "20ab9383614c1b3fb6f70d55fd3c4373613eb77370c821428968a79c29ce383f",
+          "setting": {
+            "enabled": true,
+            "defaultMode": "approval",
+            "revision": 0
+          },
+          "certifications": [],
+          "readiness": {
+            "state": "UNCERTIFIED",
+            "eligible": false,
+            "gates": [
+              {
+                "code": "BOUNDED_EVIDENCE_READ",
+                "passed": true,
+                "observed": false,
+                "required": false
+              },
+              {
+                "code": "MIN_VERIFIED_SAMPLE",
+                "passed": false,
+                "observed": 0,
+                "required": 20
+              },
+              {
+                "code": "FULL_VERIFICATION_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "FULL_VERIFIED_EFFECT_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "VERIFIED_SUCCESS_RATE",
+                "passed": false,
+                "observed": 0,
+                "required": 0.95
+              },
+              {
+                "code": "DIVERGENCE_RATE",
+                "passed": true,
+                "observed": 0,
+                "required": 0.01
+              },
+              {
+                "code": "ZERO_UNCERTAIN_OUTCOMES",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_DUPLICATE_EFFECTS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_POLICY_AUTHORITY_VIOLATIONS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "RECOVERY_QUALITY",
+                "passed": true,
+                "observed": 1,
+                "required": 0.99
+              },
+              {
+                "code": "CURRENT_LIVE_CERTIFICATION",
+                "passed": false,
+                "observed": false,
+                "required": true
+              }
+            ],
+            "metrics": {
+              "totalRuns": 0,
+              "verifiedRuns": 0,
+              "verificationCoverage": 0,
+              "verifiedEffectCoverage": 0,
+              "verifiedSuccessRate": 0,
+              "divergentEffects": 0,
+              "divergenceRate": 0,
+              "rejectedActions": 0,
+              "humanRejectionRate": 0,
+              "uncertainOutcomes": 0,
+              "duplicateConsequentialEffects": 0,
+              "policyOrAuthorityViolations": 0,
+              "compensationCount": 0,
+              "manualEscalations": 0,
+              "recoveryRate": 1
+            },
+            "evaluatedAt": "2026-09-28T17:52:05.752Z"
+          }
+        },
+        {
+          "definition": {
+            "contractVersion": 1,
+            "id": "critical_deal_dependency_resolution",
+            "version": 1,
+            "title": "Critical deal dependency to verified resolution",
+            "objectiveClass": "private_equity_dependency_resolution",
+            "supportedTenantPrerequisites": [
+              "one exact active deal",
+              "current dependency graph"
+            ],
+            "requiredCapabilities": [
+              {
+                "capability": "private_equity_source",
+                "required": true,
+                "maxSourceLagMs": 300000,
+                "acceptedModes": [
+                  "real",
+                  "sandbox"
+                ]
+              }
+            ],
+            "allowedEffectClasses": [
+              "internal_draft",
+              "internal_write",
+              "operational_change",
+              "external_side_effect",
+              "durable_workflow"
+            ],
+            "permanentlyApprovalRequiredEffectClasses": [
+              "operational_change",
+              "financial_write",
+              "external_side_effect",
+              "external_spend",
+              "batch_external",
+              "durable_workflow"
+            ],
+            "authorityRequirements": [
+              "the exact deal remains in scope",
+              "current policy and authority revisions remain valid"
+            ],
+            "approvalBoundaries": [
+              "all consequential external communication",
+              "all closing, waiver, assignment, and deal-state changes"
+            ],
+            "recoveryPaths": [
+              "re-inspect canonical deal truth",
+              "wait for exact evidence",
+              "replan",
+              "reconcile",
+              "escalate"
+            ],
+            "compensationCapabilities": [
+              "only compensation explicitly named by the frozen BusinessEffect"
+            ],
+            "irreversibilityBoundaries": [
+              "delivered communications and completed external effects remain historical truth"
+            ],
+            "evidenceRequirements": [
+              "dependency graph",
+              "linked Work and owner evidence",
+              "zero unresolved critical dependencies"
+            ],
+            "terminalBlockedConditions": [
+              "dependency cycle",
+              "unknown blocker state",
+              "missing authority",
+              "unverified resolution"
+            ],
+            "verificationRules": [
+              "critical_dependencies returns no unresolved rows",
+              "dependency resolution is re-read from canonical truth"
+            ],
+            "slos": [
+              {
+                "metric": "cross_tenant_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Tenant isolation is an invariant."
+              },
+              {
+                "metric": "unapproved_effects_outside_grant",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Every consequential effect cites current authority."
+              },
+              {
+                "metric": "duplicate_consequential_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Durable effect identity prevents duplicates."
+              },
+              {
+                "metric": "false_verified_success",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Provider acknowledgement is never canonical verification."
+              },
+              {
+                "metric": "secret_exposure",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Credentials remain inside the governed security boundary."
+              },
+              {
+                "metric": "verification_coverage",
+                "comparison": "gte",
+                "threshold": 1,
+                "unit": "ratio",
+                "critical": true,
+                "rationale": "Every certified terminal result is verified."
+              },
+              {
+                "metric": "event_to_resume_latency",
+                "comparison": "lte",
+                "threshold": 60000,
+                "unit": "milliseconds",
+                "critical": false,
+                "rationale": "Matched evidence wakes durable Work promptly."
+              }
+            ],
+            "dependencyVersions": {
+              "effectCompiler": 1,
+              "objectiveController": 1,
+              "autonomySemantics": 1,
+              "sourceTruth": 1,
+              "verification": 1
+            }
+          },
+          "fingerprint": "40e5ca11764900e48e7595fc780bbd7a2ae795c840ec6080dd54bed97e49961b",
+          "setting": {
+            "enabled": true,
+            "defaultMode": "approval",
+            "revision": 0
+          },
+          "certifications": [],
+          "readiness": {
+            "state": "UNCERTIFIED",
+            "eligible": false,
+            "gates": [
+              {
+                "code": "BOUNDED_EVIDENCE_READ",
+                "passed": true,
+                "observed": false,
+                "required": false
+              },
+              {
+                "code": "MIN_VERIFIED_SAMPLE",
+                "passed": false,
+                "observed": 0,
+                "required": 20
+              },
+              {
+                "code": "FULL_VERIFICATION_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "FULL_VERIFIED_EFFECT_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "VERIFIED_SUCCESS_RATE",
+                "passed": false,
+                "observed": 0,
+                "required": 0.95
+              },
+              {
+                "code": "DIVERGENCE_RATE",
+                "passed": true,
+                "observed": 0,
+                "required": 0.01
+              },
+              {
+                "code": "ZERO_UNCERTAIN_OUTCOMES",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_DUPLICATE_EFFECTS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_POLICY_AUTHORITY_VIOLATIONS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "RECOVERY_QUALITY",
+                "passed": true,
+                "observed": 1,
+                "required": 0.99
+              },
+              {
+                "code": "CURRENT_LIVE_CERTIFICATION",
+                "passed": false,
+                "observed": false,
+                "required": true
+              }
+            ],
+            "metrics": {
+              "totalRuns": 0,
+              "verifiedRuns": 0,
+              "verificationCoverage": 0,
+              "verifiedEffectCoverage": 0,
+              "verifiedSuccessRate": 0,
+              "divergentEffects": 0,
+              "divergenceRate": 0,
+              "rejectedActions": 0,
+              "humanRejectionRate": 0,
+              "uncertainOutcomes": 0,
+              "duplicateConsequentialEffects": 0,
+              "policyOrAuthorityViolations": 0,
+              "compensationCount": 0,
+              "manualEscalations": 0,
+              "recoveryRate": 1
+            },
+            "evaluatedAt": "2026-09-28T17:52:05.752Z"
+          }
+        },
+        {
+          "definition": {
+            "contractVersion": 1,
+            "id": "general_operator_objective",
+            "version": 1,
+            "title": "Bounded operator objective to verified resolution",
+            "objectiveClass": "bounded_operator_resolution",
+            "supportedTenantPrerequisites": [
+              "explicit bounded objective",
+              "unambiguous active subject",
+              "explicit success condition"
+            ],
+            "requiredCapabilities": [],
+            "allowedEffectClasses": [
+              "internal_draft",
+              "internal_write",
+              "operational_change",
+              "external_side_effect",
+              "durable_workflow"
+            ],
+            "permanentlyApprovalRequiredEffectClasses": [
+              "operational_change",
+              "financial_write",
+              "external_side_effect",
+              "external_spend",
+              "batch_external",
+              "durable_workflow"
+            ],
+            "authorityRequirements": [
+              "the exact deal remains in scope",
+              "current policy and authority revisions remain valid"
+            ],
+            "approvalBoundaries": [
+              "all consequential external communication",
+              "all closing, waiver, assignment, and deal-state changes"
+            ],
+            "recoveryPaths": [
+              "re-inspect canonical deal truth",
+              "wait for exact evidence",
+              "replan",
+              "reconcile",
+              "escalate"
+            ],
+            "compensationCapabilities": [
+              "only compensation explicitly named by the frozen BusinessEffect"
+            ],
+            "irreversibilityBoundaries": [
+              "delivered communications and completed external effects remain historical truth"
+            ],
+            "evidenceRequirements": [
+              "persisted explicit success condition",
+              "current canonical evidence",
+              "verified effects"
+            ],
+            "terminalBlockedConditions": [
+              "scope expansion",
+              "material ambiguity",
+              "unsupported capability",
+              "stale truth",
+              "human stop"
+            ],
+            "verificationRules": [
+              "the persisted condition passes without weakening",
+              "model-authored claims never substitute for canonical evidence"
+            ],
+            "slos": [
+              {
+                "metric": "cross_tenant_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Tenant isolation is an invariant."
+              },
+              {
+                "metric": "unapproved_effects_outside_grant",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Every consequential effect cites current authority."
+              },
+              {
+                "metric": "duplicate_consequential_effects",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Durable effect identity prevents duplicates."
+              },
+              {
+                "metric": "false_verified_success",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Provider acknowledgement is never canonical verification."
+              },
+              {
+                "metric": "secret_exposure",
+                "comparison": "eq",
+                "threshold": 0,
+                "unit": "count",
+                "critical": true,
+                "rationale": "Credentials remain inside the governed security boundary."
+              },
+              {
+                "metric": "verification_coverage",
+                "comparison": "gte",
+                "threshold": 1,
+                "unit": "ratio",
+                "critical": true,
+                "rationale": "Every certified terminal result is verified."
+              },
+              {
+                "metric": "event_to_resume_latency",
+                "comparison": "lte",
+                "threshold": 60000,
+                "unit": "milliseconds",
+                "critical": false,
+                "rationale": "Matched evidence wakes durable Work promptly."
+              }
+            ],
+            "dependencyVersions": {
+              "effectCompiler": 1,
+              "objectiveController": 1,
+              "autonomySemantics": 1,
+              "sourceTruth": 1,
+              "verification": 1
+            }
+          },
+          "fingerprint": "54e4e3f7a942a9481f36e2c2f46cc0cadc67148cd96831566167ecf5beae2b16",
+          "setting": {
+            "enabled": true,
+            "defaultMode": "approval",
+            "revision": 0
+          },
+          "certifications": [],
+          "readiness": {
+            "state": "UNCERTIFIED",
+            "eligible": false,
+            "gates": [
+              {
+                "code": "BOUNDED_EVIDENCE_READ",
+                "passed": true,
+                "observed": false,
+                "required": false
+              },
+              {
+                "code": "MIN_VERIFIED_SAMPLE",
+                "passed": false,
+                "observed": 0,
+                "required": 20
+              },
+              {
+                "code": "FULL_VERIFICATION_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "FULL_VERIFIED_EFFECT_COVERAGE",
+                "passed": false,
+                "observed": 0,
+                "required": 1
+              },
+              {
+                "code": "VERIFIED_SUCCESS_RATE",
+                "passed": false,
+                "observed": 0,
+                "required": 0.95
+              },
+              {
+                "code": "DIVERGENCE_RATE",
+                "passed": true,
+                "observed": 0,
+                "required": 0.01
+              },
+              {
+                "code": "ZERO_UNCERTAIN_OUTCOMES",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_DUPLICATE_EFFECTS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "ZERO_POLICY_AUTHORITY_VIOLATIONS",
+                "passed": true,
+                "observed": 0,
+                "required": 0
+              },
+              {
+                "code": "RECOVERY_QUALITY",
+                "passed": true,
+                "observed": 1,
+                "required": 0.99
+              },
+              {
+                "code": "CURRENT_LIVE_CERTIFICATION",
+                "passed": false,
+                "observed": false,
+                "required": true
+              }
+            ],
+            "metrics": {
+              "totalRuns": 0,
+              "verifiedRuns": 0,
+              "verificationCoverage": 0,
+              "verifiedEffectCoverage": 0,
+              "verifiedSuccessRate": 0,
+              "divergentEffects": 0,
+              "divergenceRate": 0,
+              "rejectedActions": 0,
+              "humanRejectionRate": 0,
+              "uncertainOutcomes": 0,
+              "duplicateConsequentialEffects": 0,
+              "policyOrAuthorityViolations": 0,
+              "compensationCount": 0,
+              "manualEscalations": 0,
+              "recoveryRate": 1
+            },
+            "evaluatedAt": "2026-09-28T17:52:05.753Z"
+          }
+        }
+      ]
+    },
+    "mission": {
+      "input": {
+        "packId": "deal_to_verified_closing_readiness",
+        "input": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "mode": "shadow"
+        },
+        "channel": "console",
+        "threadId": "60cd1e80-a157-4fd9-9abd-f4e892521ec8",
+        "instructionId": "75cdad91-14ca-4261-a0ec-63d134dccf02",
+        "idempotencyKey": "75cdad91-14ca-4261-a0ec-63d134dccf02",
+        "activeContext": {
+          "version": 1,
+          "capturedAt": "2026-09-28T17:52:05.898Z",
+          "source": "console",
+          "selectedEntities": [
+            {
+              "entityType": "pe_deal",
+              "entityId": "90000000-0000-4000-8000-000000000001"
+            }
+          ],
+          "excludedEntities": [],
+          "surface": {
+            "id": "deals",
+            "spatialState": "canvas"
+          },
+          "filters": []
+        }
+      },
+      "accepted": {
+        "outcomePack": {
+          "workId": "75cdad91-14ca-4261-a0ec-63d134dccf02",
+          "workInputId": "75cdad91-14ca-4261-a0ec-63d134dccf02",
+          "instructionId": "75cdad91-14ca-4261-a0ec-63d134dccf02",
+          "objectiveLoopId": "f2206e43-dde4-4c82-8ba9-3f22044aa607",
+          "state": "continue",
+          "duplicate": false,
+          "pack": {
+            "packId": "deal_to_verified_closing_readiness",
+            "packVersion": 1,
+            "mode": "shadow",
+            "objective": "Deal to verified closing readiness for deal 90000000-0000-4000-8000-000000000001.",
+            "subjectRefs": [
+              {
+                "entityType": "pe_deal",
+                "entityId": "90000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "successCondition": {
+              "version": 1,
+              "statement": "Deal to verified closing readiness for deal 90000000-0000-4000-8000-000000000001.",
+              "mode": "all",
+              "source": "explicit",
+              "criteria": [
+                {
+                  "kind": "no_open_execution"
+                },
+                {
+                  "kind": "canonical_query",
+                  "request": {
+                    "intent": "closing_readiness",
+                    "dealId": "90000000-0000-4000-8000-000000000001"
+                  },
+                  "assertion": {
+                    "path": [
+                      "eligible"
+                    ],
+                    "operator": "eq",
+                    "expected": true
+                  }
+                },
+                {
+                  "kind": "decision_evidence",
+                  "minimumCount": 1,
+                  "accepted": [
+                    "canonical_query",
+                    "business_effect",
+                    "matched_event",
+                    "delegation",
+                    "computer_run"
+                  ]
+                }
+              ]
+            },
+            "input": {
+              "mode": "shadow",
+              "dealId": "90000000-0000-4000-8000-000000000001"
+            },
+            "certificationFingerprint": "586fa866d6d25d7a6d8f477a8fe4bbf1af2fd3aa1247fb15791d98e252f43971"
+          },
+          "attachmentWarnings": []
+        },
+        "threadId": "60cd1e80-a157-4fd9-9abd-f4e892521ec8",
+        "projectionWarnings": []
+      }
+    },
+    "missionStopped": {
+      "status": 200,
+      "result": {
+        "status": "cancelled",
+        "rejectedActions": 0,
+        "cancelledRuns": 0,
+        "inFlightActions": 0
+      }
+    }
+  },
+  "steps": [
+    "Create an authored canonical workflow with a real local read and controlled known failure",
+    "Sign in as the actual owner and inspect exact run/steps",
+    "Review and retry the recorded version",
+    "Reject a stale version and independently prove the completed step/evidence survived and failed step was redriven",
+    "Cancel the authored fixture and independently read both finalized control receipts",
+    "Start a bounded shadow Outcome Pack through the normal UI, restore on reload, replay exact intake and stop the fixture"
+  ],
+  "screenshotSha256": "2b84295e6e273389a89639ad0e810c2a14d6d547367db5cc9c7d1fd93cccf1df",
+  "limitations": [
+    "Authored disposable local-read workflow; no provider effect or live business workflow completion is claimed",
+    "Outcome Pack shadow mode does not certify autopilot eligibility or external effects"
+  ],
+  "reproduce": "node scripts/centropy/run-local-e2e.mjs e2e/centropy-workflow-outcome.spec.ts --project=desktop-chromium --workers=1"
+}

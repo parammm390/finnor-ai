@@ -145,7 +145,7 @@ export function integrationEventMatchesWait(event: EventRow, wait: WaitRow): boo
 }
 
 async function appendWakeWorkEventTx(db: Db, wait: WaitRow, event: EventRow, cause: "event" | "deadline"): Promise<void> {
-  await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${wait.tenantId} AND ${works.id}=${wait.workId} FOR UPDATE`);
+  await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${wait.tenantId} AND ${works.id}=${wait.workId} FOR NO KEY UPDATE`);
   const [work] = await db.select().from(works).where(and(eq(works.tenantId, wait.tenantId), eq(works.id, wait.workId))).limit(1);
   if (!work) throw new Error("Event wait Work disappeared while claiming wake");
   const [latest] = await db.select({ maxSeq: sql<number>`coalesce(max(${workEvents.seq}),0)::int` }).from(workEvents).where(eq(workEvents.workId, wait.workId));
@@ -167,7 +167,7 @@ async function claimWaitWakeTx(
   event: EventRow,
   cause: "event" | "deadline",
 ): Promise<{ waitId: string; wakeClaimId: string } | null> {
-  await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${wait.tenantId} AND ${workObjectiveLoops.id}=${wait.objectiveLoopId} FOR UPDATE`);
+  await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${wait.tenantId} AND ${workObjectiveLoops.id}=${wait.objectiveLoopId} FOR NO KEY UPDATE`);
   const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, wait.tenantId), eq(workObjectiveLoops.id, wait.objectiveLoopId))).limit(1);
   if (!loop) throw new Error("Event wait Objective Loop disappeared");
   const [activePlan] = wait.planRevisionId ? await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(

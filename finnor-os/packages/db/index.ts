@@ -869,7 +869,7 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
 
     let currentStatus = work.status;
     if (!created) {
-      await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${work.id} FOR UPDATE`);
+      await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${work.id} FOR NO KEY UPDATE`);
       const [latest] = await db.select({ maxSeq: sql<number>`coalesce(max(${schema.workEvents.seq}), 0)::int` }).from(schema.workEvents).where(eq(schema.workEvents.workId, work.id));
       const resumesFailure = work.status === "failed";
       if (resumesFailure) currentStatus = "recovery";
@@ -898,6 +898,49 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
   });
 }
 
+/** Freeze the tenant-validated interaction context on the already-claimed input.
+ * Intake must claim Work before resolving references, so it cannot safely store
+ * browser context in receiveWork. Once validated, this is a write-once field:
+ * retries may repeat the same snapshot but may never replace its provenance. */
+export async function attachValidatedWorkInputContext(params: {
+  tenantId: string;
+  workId: string;
+  workInputId: string;
+  context: unknown;
+}): Promise<void> {
+  const snapshot = boundedProvenance(params.context);
+  if (!snapshot) throw new Error("Validated Work input context must be an object");
+  const hash = provenanceHash(snapshot);
+  const capturedAt = provenanceCapturedAt(snapshot);
+  await withTenant(params.tenantId, async (db) => {
+    const [attached] = await db.update(schema.workInputs).set({
+      contextSnapshot: snapshot,
+      contextSnapshotHash: hash,
+      contextCapturedAt: capturedAt,
+    }).where(and(
+      eq(schema.workInputs.tenantId, params.tenantId),
+      eq(schema.workInputs.workId, params.workId),
+      eq(schema.workInputs.id, params.workInputId),
+      isNull(schema.workInputs.contextSnapshot),
+      isNull(schema.workInputs.contextSnapshotHash),
+    )).returning({ id: schema.workInputs.id });
+    if (attached) return;
+    const [existing] = await db.select({
+      contextSnapshot: schema.workInputs.contextSnapshot,
+      contextSnapshotHash: schema.workInputs.contextSnapshotHash,
+      contextCapturedAt: schema.workInputs.contextCapturedAt,
+    }).from(schema.workInputs).where(and(
+      eq(schema.workInputs.tenantId, params.tenantId),
+      eq(schema.workInputs.workId, params.workId),
+      eq(schema.workInputs.id, params.workInputId),
+    )).limit(1);
+    if (!existing) throw new Error("Work input not found");
+    if (!existing.contextSnapshotHash || !existing.contextCapturedAt || canonicalJson(existing.contextSnapshot) !== canonicalJson(snapshot)) {
+      throw new Error("Work input context is already bound to different provenance");
+    }
+  });
+}
+
 /** Transfer responsibility for an existing Work without replacing its objective,
  * inputs, causal history, active context, or durable children. The current owner is
  * the only employee who may hand it off; the row lock and optional expected owner
@@ -905,7 +948,7 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
  * is persisted so a restarted objective worker continues as that employee. */
 export async function handoffWork(params: HandoffWorkParams): Promise<HandoffWorkResult> {
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(
       eq(schema.works.tenantId, params.tenantId),
       eq(schema.works.id, params.workId),
@@ -989,7 +1032,10 @@ export async function transitionWorkTx(
   payload: Record<string, unknown> = {},
   patch: TransitionWorkPatch = {},
 ): Promise<void> {
-  await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${workId} AND ${schema.works.tenantId} = ${tenantId} FOR UPDATE`);
+  // Work identity is immutable here. Serialize status/event writers without
+  // blocking foreign-key KEY SHARE locks held by concurrent evidence appends.
+  // FOR UPDATE created a Work -> ObjectiveStep -> Work cycle under real workers.
+  await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${workId} AND ${schema.works.tenantId} = ${tenantId} FOR NO KEY UPDATE`);
   const [work] = await db.select().from(schema.works).where(and(eq(schema.works.id, workId), eq(schema.works.tenantId, tenantId))).limit(1);
   if (!work) throw new Error("Work not found");
   if (patch.expectedStatus && work.status !== patch.expectedStatus) {
@@ -1085,7 +1131,7 @@ export async function claimWorkRecovery(params: {
   input: typeof schema.workInputs.$inferSelect | null;
 }> {
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(
       eq(schema.works.id, params.workId),
       eq(schema.works.tenantId, params.tenantId),
@@ -1162,7 +1208,7 @@ export async function beginWorkPlannerAttempt(params: {
   decisionContextHash: string | null;
 }> {
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${params.workId} AND ${schema.works.tenantId} = ${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${params.workId} AND ${schema.works.tenantId} = ${params.tenantId} FOR NO KEY UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.id, params.workId), eq(schema.works.tenantId, params.tenantId))).limit(1);
     if (!work) throw new Error("Work not found");
     const [existing] = await db.select().from(schema.workPlannerAttempts).where(and(eq(schema.workPlannerAttempts.workId, params.workId), eq(schema.workPlannerAttempts.attemptKey, params.attemptKey))).limit(1);
@@ -1310,7 +1356,10 @@ async function planRevisionTransition(
  * must name and supersede the exact current parent. */
 export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanParams): Promise<typeof schema.workPlanRevisions.$inferSelect> {
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR UPDATE`);
+    // The Work identity is immutable. Serialize competing plan writers while
+    // permitting specialist-finalization foreign-key KEY SHARE checks. A full
+    // UPDATE lock here can deadlock with the Plan's assignment fencing trigger.
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id}=${params.workId} AND ${schema.works.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [attempt] = await db.select().from(schema.workPlannerAttempts).where(and(
       eq(schema.workPlannerAttempts.tenantId, params.tenantId),
       eq(schema.workPlannerAttempts.id, params.plannerAttemptId),
@@ -1454,7 +1503,7 @@ export async function activeWorkPlanRevision(tenantId: string, workId: string): 
 export async function completeWorkPlanRevision(params: { tenantId: string; planRevisionId: string; completionProof: Record<string, unknown> }): Promise<boolean> {
   if (params.completionProof.version !== 1 || params.completionProof.verified !== true) throw new Error("A verified CompletionProof is required");
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${schema.workPlanRevisions} WHERE ${schema.workPlanRevisions.id}=${params.planRevisionId} AND ${schema.workPlanRevisions.tenantId}=${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${schema.workPlanRevisions} WHERE ${schema.workPlanRevisions.id}=${params.planRevisionId} AND ${schema.workPlanRevisions.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [revision] = await db.select().from(schema.workPlanRevisions).where(and(
       eq(schema.workPlanRevisions.tenantId, params.tenantId),
       eq(schema.workPlanRevisions.id, params.planRevisionId),

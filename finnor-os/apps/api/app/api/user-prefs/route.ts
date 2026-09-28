@@ -4,27 +4,8 @@
 
 import { userPrefs, withTenant } from "@finnor/db";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
+import { UserPreferencesPatchSchema } from "../../../lib/user-preferences";
 import { errorResponse, requireContext } from "../../../lib/auth";
-
-const ClockSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be HH:MM (24-hour time)");
-const PrefsPatchSchema = z.object({
-  homepage: z.enum(["bridge", "map", "my-day"]).nullable().optional(),
-  density: z.enum(["comfortable", "compact"]).optional(),
-  pinnedPanels: z.array(z.string().min(1).max(80)).max(30).optional(),
-  accent: z.string().min(1).max(40).nullable().optional(),
-  soundEnabled: z.boolean().optional(),
-  notificationPreferences: z.record(z.string().max(80), z.boolean()).optional(),
-  quietHoursStart: ClockSchema.nullable().optional(),
-  quietHoursEnd: ClockSchema.nullable().optional(),
-}).superRefine((value, ctx) => {
-  const starts = value.quietHoursStart !== undefined;
-  const ends = value.quietHoursEnd !== undefined;
-  if (starts !== ends) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "quietHoursStart and quietHoursEnd must be changed together" });
-  if (starts && (value.quietHoursStart === null) !== (value.quietHoursEnd === null)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "quiet hours must include both times or neither" });
-  }
-});
 
 function defaultPrefs() {
   return {
@@ -72,7 +53,7 @@ export async function GET(req: Request): Promise<Response> {
 export async function PUT(req: Request): Promise<Response> {
   try {
     const ctx = await requireContext(req);
-    const parsed = PrefsPatchSchema.safeParse(await req.json().catch(() => null));
+    const parsed = UserPreferencesPatchSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
     const patch = parsed.data;
     const prefs = await withTenant(ctx.tenantId, async (db) => {

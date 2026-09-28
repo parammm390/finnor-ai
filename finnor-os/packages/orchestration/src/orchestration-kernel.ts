@@ -235,8 +235,10 @@ export async function reserveReadyPlanFrontier(params: {
   maxReady?: number;
 }): Promise<FrontierReservationResult> {
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${params.objectiveLoopId} FOR UPDATE`);
-    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${params.planRevisionId} FOR UPDATE`);
+    // Identity keys are immutable. Keep exclusive state-writer serialization and
+    // generation fences, while permitting in-flight step foreign-key checks.
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${params.objectiveLoopId} FOR NO KEY UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.id}=${params.planRevisionId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, params.objectiveLoopId))).limit(1);
     const [plan] = await db.select().from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, params.planRevisionId), eq(workPlanRevisions.workId, params.workId))).limit(1);
     const [work] = await db.select().from(works).where(and(eq(works.tenantId, params.tenantId), eq(works.id, params.workId))).limit(1);

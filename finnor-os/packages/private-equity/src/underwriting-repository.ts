@@ -91,6 +91,7 @@ export interface CreateUnderwritingRunInput {
   worldAt: string;
   idempotencyKey: string;
   scenarioId?: string;
+  baseRunId?: string;
   workId?: string;
   explicitInputs?: Readonly<Record<string, ExplicitUnderwritingInput>>;
 }
@@ -633,6 +634,8 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   assertPeUuid(input.investmentCaseId, "investmentCaseId");
   assertPeUuid(input.modelVersionId, "modelVersionId");
   if (input.scenarioId) assertPeUuid(input.scenarioId, "scenarioId");
+  if (input.baseRunId) assertPeUuid(input.baseRunId, "baseRunId");
+  if (input.baseRunId && input.explicitInputs) fail("MODEL_SCHEMA_INVALID", "A pinned base Run cannot be combined with newly resolved explicit inputs");
   const worldAt = normalizedWorldAt(input.worldAt);
   return peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
@@ -640,7 +643,20 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
     const clock = (await client.query<{ now: Date }>("SELECT transaction_timestamp() now")).rows[0]!.now;
     if (new Date(worldAt).getTime() > clock.getTime()) fail("INVALID_PERIOD", "worldAt cannot be in the future");
     const scenario = await loadScenario(client, ctx.auth.tenantId, input.scenarioId, row);
-    const baseSnapshot = await resolveInputSnapshot(client, ctx.auth.tenantId, row, compiled, worldAt, input.explicitInputs ?? {});
+    const baseSnapshot = input.baseRunId ? await (async () => {
+      const base = (await client.query<StoredRunIntegrity & { investment_case_id: string; model_version_id: string; scenario_id: string | null; world_at: Date }>(
+        `SELECT id::text,investment_case_id::text,model_version_id::text,scenario_id::text,world_at,
+                input_hash,input_snapshot,result_hash,result
+           FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2`,
+        [ctx.auth.tenantId, input.baseRunId],
+      )).rows[0];
+      if (!base) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Pinned base Underwriting Run was not found in the authenticated tenant");
+      assertStoredRunIntegrity(ctx.auth.tenantId, base);
+      if (base.investment_case_id !== input.investmentCaseId || base.model_version_id !== input.modelVersionId || base.scenario_id !== null || asIso(base.world_at) !== worldAt) {
+        fail("SCENARIO_INVALID_TARGET", "Pinned base Run must be a canonical run at the exact InvestmentCase, ModelVersion, and worldAt");
+      }
+      return sealInputSnapshot(base.input_snapshot);
+    })() : await resolveInputSnapshot(client, ctx.auth.tenantId, row, compiled, worldAt, input.explicitInputs ?? {});
     const applied = applyScenario(compiled, baseSnapshot, scenario);
     return { row, compiled, baseSnapshot, effectiveSnapshot: applied.snapshot, scenario, scenarioSemanticHash: applied.scenarioSemanticHash };
   }, { readOnly: true });
@@ -889,7 +905,14 @@ export async function listUnderwritingWorkspace(ctx: PeMutationContext, investme
     const versions = await client.query("SELECT id,model_id,version_key,semantic_hash,schema_version,financial_convention_version,minimum_engine_version,parent_version_id,created_by,created_at FROM finnor_os.underwriting_model_versions WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const inputBindings = await client.query("SELECT model_version_id,input_node_id,source_kind,assumption_id,evidence_version_id,document_id,document_version_id,anchor_id,anchor_hash,value_path,value_selector,stale_after_days,created_at FROM finnor_os.underwriting_model_input_bindings WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY model_version_id,input_node_id LIMIT 10000", [ctx.auth.tenantId, investmentCaseId]);
     const scenarios = await client.query("SELECT * FROM finnor_os.underwriting_scenarios WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
-    const runs = await client.query("SELECT id,model_version_id,scenario_id,work_id,world_at,computed_at,engine_version,model_semantic_hash,input_hash,input_snapshot,result_hash,status,validity,failure_code,idempotency_key,created_by,result FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY computed_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
+    const runs = await client.query(`SELECT run.id,run.model_version_id,run.scenario_id,run.work_id,run.world_at,run.computed_at,
+        run.engine_version,run.model_semantic_hash,run.input_hash,run.input_snapshot,run.result_hash,
+        run.status,run.validity,run.failure_code,run.idempotency_key,run.created_by,run.result,
+        EXISTS (SELECT 1 FROM finnor_os.underwriting_sensitivity_cells cell
+                 WHERE cell.tenant_id=run.tenant_id AND cell.run_id=run.id) AS sensitivity_cell
+      FROM finnor_os.underwriting_runs run
+      WHERE run.tenant_id=$1 AND run.investment_case_id=$2
+      ORDER BY run.computed_at DESC,run.id LIMIT 200`, [ctx.auth.tenantId, investmentCaseId]);
     const sensitivities = await client.query("SELECT * FROM finnor_os.underwriting_sensitivities WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 100", [ctx.auth.tenantId, investmentCaseId]);
     const bindings = await client.query("SELECT * FROM finnor_os.underwriting_artifact_bindings WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const projections = await client.query("SELECT * FROM finnor_os.underwriting_artifact_projections WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);

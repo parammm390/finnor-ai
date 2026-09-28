@@ -20,9 +20,8 @@
 
 export const runtime = "edge"
 
-const OS_API = process.env.NEXT_PUBLIC_OS_API_URL
-
 export async function GET(req: Request): Promise<Response> {
+  const OS_API = process.env.FINNOR_OS_API_URL ?? process.env.NEXT_PUBLIC_OS_API_URL
   if (!OS_API) return Response.json({ error: "Centropy proxy is not configured" }, { status: 500 })
 
   const incoming = new URL(req.url)

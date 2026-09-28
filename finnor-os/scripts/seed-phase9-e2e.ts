@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import pg from "pg";
+import { fixtureMemoBytes, fixtureQoeBytes } from "./fixtures/phase9-artifacts";
+import { ingestArtifact, registerArtifactTemplate } from "@finnor/artifacts";
 import {
   closePool,
   completeWorkPlanRevision,
@@ -127,6 +130,14 @@ const MEMBER_TWO_ID = "90000000-0000-4000-8000-000000000045";
 const MEMBER_THREE_ID = "90000000-0000-4000-8000-000000000046";
 const OBJECTIVE_LOOP_ID = "90000000-0000-4000-8000-000000000047";
 const OBJECTIVE_STEP_ID = "90000000-0000-4000-8000-000000000048";
+const DEAL_RESEARCH_PROFILE_ID = "90000000-0000-4000-8000-000000000049";
+const DEAL_RESEARCH_REVISION_ID = "90000000-0000-4000-8000-000000000050";
+const UNDERWRITING_PROFILE_ID = "90000000-0000-4000-8000-000000000051";
+const UNDERWRITING_REVISION_ID = "90000000-0000-4000-8000-000000000052";
+const IC_PREPARATION_PROFILE_ID = "90000000-0000-4000-8000-000000000053";
+const IC_PREPARATION_REVISION_ID = "90000000-0000-4000-8000-000000000054";
+const IC_MEMO_PROFILE_ID = "90000000-0000-4000-8000-000000000055";
+const IC_MEMO_REVISION_ID = "90000000-0000-4000-8000-000000000056";
 const FOREIGN_TENANT_ID = "99999999-9999-4999-8999-999999999990";
 const FOREIGN_OWNER_ID = "99999999-9999-4999-8999-999999999991";
 const FOREIGN_ORGANIZATION_ID = "99999999-9999-4999-8999-999999999992";
@@ -242,20 +253,32 @@ async function main(): Promise<void> {
        ) VALUES($1,$2,$3,'private_equity:ic_process',1,$4::jsonb,false,now())`,
       [POLICY_REVISION_ID, TENANT_ID, POLICY_ID, JSON.stringify(policy)],
     );
+    await admin.query("BEGIN");
     await admin.query(
       `INSERT INTO finnor_os.documents(id,tenant_id,kind,title,source_system,created_by) VALUES
        ($1,$3,'ic_memo','Atlas Investment Committee Memo','certification:phase9',$4),
        ($2,$3,'quality_of_earnings','Atlas Quality of Earnings Report','certification:phase9',$4)`,
       [MEMO_DOCUMENT_ID, QOE_DOCUMENT_ID, TENANT_ID, ownerId],
     );
+    const memoBytes = fixtureMemoBytes();
+    const qoeBytes = fixtureQoeBytes();
+    const memoHash = createHash("sha256").update(memoBytes).digest("hex");
+    const qoeHash = createHash("sha256").update(qoeBytes).digest("hex");
     await admin.query(
       `INSERT INTO finnor_os.document_versions(
          id,tenant_id,document_id,version_ordinal,origin,format,media_type,byte_sha256,size_bytes,created_by
        ) VALUES
-       ($1,$3,$4,1,'finnor_generated','docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',$6,12400,$7),
-       ($2,$3,$5,1,'manual_upload','pdf','application/pdf',$8,28100,$7)`,
-      [MEMO_VERSION_ID, QOE_VERSION_ID, TENANT_ID, MEMO_DOCUMENT_ID, QOE_DOCUMENT_ID, "a".repeat(64), ownerId, "b".repeat(64)],
+       ($1,$3,$4,1,'finnor_generated','docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',$6,$7,$8),
+       ($2,$3,$5,1,'manual_upload','pdf','application/pdf',$9,$10,$8)`,
+      [MEMO_VERSION_ID, QOE_VERSION_ID, TENANT_ID, MEMO_DOCUMENT_ID, QOE_DOCUMENT_ID, memoHash, memoBytes.length, ownerId, qoeHash, qoeBytes.length],
     );
+    await admin.query(
+      `INSERT INTO finnor_os.document_version_contents(tenant_id,version_id,storage_backend,bytes,media_type,size_bytes,sha256) VALUES
+       ($1,$2,'postgres',$4,'application/vnd.openxmlformats-officedocument.wordprocessingml.document',$6,$8),
+       ($1,$3,'postgres',$5,'application/pdf',$7,$9)`,
+      [TENANT_ID, MEMO_VERSION_ID, QOE_VERSION_ID, memoBytes, qoeBytes, memoBytes.length, qoeBytes.length, memoHash, qoeHash],
+    );
+    await admin.query("COMMIT");
 
     process.env.DATABASE_URL = APP_URL;
     await closePool();
@@ -591,6 +614,9 @@ async function main(): Promise<void> {
       underwritingRunId: run.id,
       idempotencyKey: "phase9-open-voting-v1",
     });
+    // Keep an otherwise complete disposable fixture at the exact human voting
+    // boundary for browser certification. The default seed remains DECIDED.
+    if (process.env.PHASE9_IC_VOTING_FIXTURE !== "1") {
     const votingBasisVersion = Number(voting.case.votingBasisVersion);
     await recordIcVote(ctx, { id: VOTE_ONE_ID, icCaseId: IC_CASE_ID, recommendationId: IC_RECOMMENDATION_ID, memoId: IC_MEMO_ID, underwritingRunId: run.id, expectedVotingBasisVersion: votingBasisVersion, choice: "APPROVE", rationale: "Approve the exact represented basis.", idempotencyKey: "phase9-vote-one-v1" });
     await recordIcVote(context(TENANT_ID, MEMBER_TWO_ID), { id: VOTE_TWO_ID, icCaseId: IC_CASE_ID, recommendationId: IC_RECOMMENDATION_ID, memoId: IC_MEMO_ID, underwritingRunId: run.id, expectedVotingBasisVersion: votingBasisVersion, choice: "APPROVE", rationale: "Approve with the recorded closing condition.", idempotencyKey: "phase9-vote-two-v1" });
@@ -618,6 +644,7 @@ async function main(): Promise<void> {
       rationale: "Finalized from the pinned memo, P4 run, evidence-backed question, recommendation, quorum, votes, dissent, and satisfied pre-decision condition.",
       idempotencyKey: "phase9-finalize-decision-v1",
     });
+    }
 
     await attachWorkToDealGraph(ctx, {
       dealId: DEAL_ID,
@@ -792,6 +819,48 @@ async function main(): Promise<void> {
         configHash, ownerId,
       ],
     );
+    for (const profile of [
+      {
+        id: DEAL_RESEARCH_PROFILE_ID, revisionId: DEAL_RESEARCH_REVISION_ID,
+        key: "deal-research-analyst", name: "Deal Research Analyst",
+        grants: ["query:pe_world_state", "query:deal_context", "query:closing_readiness", "query:open_deal_risks", "query:open_findings"]
+          .map((capability) => ({ kind: "query", capability }))
+          .concat([{ kind: "check", capability: "check:objective_success" }]),
+      },
+      {
+        id: UNDERWRITING_PROFILE_ID, revisionId: UNDERWRITING_REVISION_ID,
+        key: "underwriting-analyst", name: "Underwriting Analyst",
+        grants: [{ kind: "action", capability: "create_underwriting_run" }, { kind: "query", capability: "query:pe_world_state" }, { kind: "check", capability: "check:objective_success" }],
+      },
+      {
+        id: IC_PREPARATION_PROFILE_ID, revisionId: IC_PREPARATION_REVISION_ID,
+        key: "ic-preparation-analyst", name: "IC Preparation Analyst",
+        grants: ["open_ic_case", "begin_ic_preparation", "create_ic_deck_draft", "select_ic_underwriting_run", "create_ic_question", "request_ic_memo_review", "prepare_ic_decision_proposal"]
+          .map((capability) => ({ kind: "action", capability }))
+          .concat([{ kind: "query", capability: "query:pe_world_state" }, { kind: "check", capability: "check:objective_success" }]),
+      },
+      {
+        id: IC_MEMO_PROFILE_ID, revisionId: IC_MEMO_REVISION_ID,
+        key: "ic-memo-analyst", name: "IC Memo Analyst",
+        grants: ["create_ic_memo_draft", "select_ic_memo_version", "prepare_ic_recommendation", "request_ic_memo_review"]
+          .map((capability) => ({ kind: "action", capability })),
+      },
+    ]) {
+      await admin.query("INSERT INTO finnor_os.agent_profiles(id,tenant_id,key,name) VALUES($1,$2,$3,$4)", [profile.id, TENANT_ID, profile.key, profile.name]);
+      await admin.query(
+        `INSERT INTO finnor_os.agent_profile_revisions(
+           id,tenant_id,agent_profile_id,revision,model_route,capability_grants,max_concurrent_assignments,autonomy_limits,planning_hints,status,config_hash,created_by
+         ) VALUES($1,$2,$3,1,$4::jsonb,$5::jsonb,2,$6::jsonb,$7::jsonb,'active',$8,$9)`,
+        [
+          profile.revisionId, TENANT_ID, profile.id,
+          JSON.stringify({ provider: "orchestration_runtime", model: null, purpose: "objective_execution" }),
+          JSON.stringify(profile.grants),
+          JSON.stringify({ maxActions: 4, maxQueries: 10, maxReplans: 4, maxPlannerCalls: 6, maxWallClockMs: 900000, maxKnownCostUsd: null, maxKnownTokens: null }),
+          JSON.stringify({}),
+          sha(`phase9:agent:${profile.key}:v1`), ownerId,
+        ],
+      );
+    }
     await admin.query(
       `INSERT INTO finnor_os.workforce_assignments(
          id,tenant_id,work_id,plan_revision_id,plan_node_id,objective_loop_id,objective_step_id,
@@ -848,6 +917,19 @@ async function main(): Promise<void> {
       ],
     });
 
+    const localTemplateBytes = await readFile(new URL("../tests/artifact-corpus/centropy-ic-local-template.pptx", import.meta.url));
+    const localTemplateActor = { tenantId: TENANT_ID, userId: ownerId, role: "owner" as const };
+    const localTemplate = await ingestArtifact(localTemplateActor, {
+      title: "CENTROPY local IC test template.pptx",
+      bytes: localTemplateBytes,
+      origin: "manual_upload",
+      sourceSystem: "certification:phase9-local-template",
+    });
+    await registerArtifactTemplate(localTemplateActor, localTemplate.documentId, {
+      versionId: localTemplate.version.id,
+      templateKey: "centropy_ic_local_test_v1",
+    });
+
     await admin.query(
       `INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,'phase9-foreign-project','Phase 9 tenant-isolation project')`,
       [FOREIGN_TENANT_ID],
@@ -889,6 +971,8 @@ async function main(): Promise<void> {
       blockerWorkId: BLOCKER_WORK_ID,
       underwritingRunId: run.id,
       icCaseId: IC_CASE_ID,
+      localTemplateDocumentId: localTemplate.documentId,
+      localTemplateVersionId: localTemplate.version.id,
       foreignDealId: FOREIGN_DEAL_ID,
     }));
   } finally {

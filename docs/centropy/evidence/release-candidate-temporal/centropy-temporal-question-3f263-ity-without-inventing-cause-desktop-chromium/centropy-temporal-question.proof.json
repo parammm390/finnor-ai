@@ -1,0 +1,5035 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_temporal_recommendation_question",
+  "capturedAt": "2026-09-28T02:18:21.068Z",
+  "baseUrl": "http://127.0.0.1:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "What changed since yesterday, and does it affect our recommendation?"
+  },
+  "observed": {
+    "workId": "fa75d3c8-6cda-4194-9362-2c881ff537cf",
+    "threadId": "4f6a6936-fc7d-451c-b17c-059cb35cabf2",
+    "workStatus": "completed",
+    "query": {
+      "id": "fb70865f-b760-42e8-896f-5d1a4579f4ee",
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "workId": "fa75d3c8-6cda-4194-9362-2c881ff537cf",
+      "workInputId": "fa75d3c8-6cda-4194-9362-2c881ff537cf",
+      "intent": "pe_world_state",
+      "request": {
+        "root": {
+          "entityId": "90000000-0000-4000-8000-000000000001",
+          "entityType": "pe_deal"
+        },
+        "intent": "pe_world_state",
+        "compareWindow": "previous_24h"
+      },
+      "executionKey": "fa75d3c8-6cda-4194-9362-2c881ff537cf",
+      "status": "succeeded",
+      "resultSummary": {
+        "root": {
+          "entityId": "90000000-0000-4000-8000-000000000001",
+          "entityType": "pe_deal"
+        },
+        "intent": "pe_world_state",
+        "stateAt": "2026-09-28T02:17:58.534Z",
+        "returned": 1,
+        "truncated": true
+      },
+      "rowCount": 1,
+      "durationMs": 902,
+      "failure": null,
+      "startedAt": "2026-09-28T02:17:58.522Z",
+      "completedAt": "2026-09-28T02:17:59.424Z"
+    },
+    "evidenceChange": {
+      "id": "semantic:evidence_source_versions:4ee57841-b6e7-4d6c-8432-b160ed78ad03:evidence_version_recorded",
+      "occurredAt": "2026-09-28T01:55:19.569Z",
+      "kind": "evidence_version_recorded",
+      "bucket": "in_motion",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "core",
+        "owner": "@finnor/db",
+        "type": "evidence_version",
+        "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03"
+      },
+      "actor": "system",
+      "change": {
+        "type": "evidence_version_recorded",
+        "after": 2,
+        "label": "Evidence version recorded"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "version_of",
+          "type": "evidence_source",
+          "id": "614f935b-feb1-4425-ab16-c2e3d81a47e8",
+          "sourceRef": {
+            "owner": "@finnor/db",
+            "table": "evidence_source_versions",
+            "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03",
+            "fieldPath": "source_id"
+          },
+          "targetRef": {
+            "namespace": "core",
+            "owner": "@finnor/db",
+            "type": "evidence_source",
+            "id": "614f935b-feb1-4425-ab16-c2e3d81a47e8"
+          }
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "evidence_version",
+          "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03",
+          "hash": "67bdce106d4872f485609715695d8d80d9378cad93eba2fe0b5d32f7a060ec32"
+        }
+      ],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "evidence",
+        "evidenceSourceId": "614f935b-feb1-4425-ab16-c2e3d81a47e8",
+        "evidenceVersionId": "4ee57841-b6e7-4d6c-8432-b160ed78ad03"
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/db",
+          "table": "evidence_source_versions",
+          "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03"
+        }
+      ],
+      "asOf": "2026-09-28T02:18:18.563Z"
+    },
+    "modelChange": {
+      "id": "semantic:underwriting_runs:1cadb79d-7dfe-41b3-a62e-c7011c8fca24:underwriting_run_completed",
+      "occurredAt": "2026-09-28T01:55:19.539Z",
+      "kind": "underwriting_run_completed",
+      "bucket": "verified_outcomes",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "underwriting",
+        "owner": "@finnor/private-equity",
+        "type": "underwriting_run",
+        "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+      },
+      "actor": "human",
+      "actorRef": {
+        "kind": "human",
+        "id": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+      },
+      "change": {
+        "type": "underwriting_run_completed",
+        "after": {
+          "status": "SUCCEEDED",
+          "validity": "VALID",
+          "resultHash": "sha256:210e78583f06a1a3dc63326caffef2c36884e94f2704fb056c5e5217c7229f5d"
+        },
+        "label": "Underwriting run completed"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "executed_model_version",
+          "type": "underwriting_model_version",
+          "id": "e25e4967-e475-4b83-87cd-64f3f7350530",
+          "sourceRef": {
+            "owner": "@finnor/private-equity",
+            "table": "underwriting_runs",
+            "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+            "fieldPath": "model_version_id"
+          },
+          "targetRef": {
+            "namespace": "underwriting",
+            "owner": "@finnor/private-equity",
+            "type": "underwriting_model_version",
+            "id": "e25e4967-e475-4b83-87cd-64f3f7350530"
+          }
+        },
+        {
+          "relationship": "evaluated_scenario",
+          "type": "underwriting_scenario",
+          "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+          "sourceRef": {
+            "owner": "@finnor/private-equity",
+            "table": "underwriting_runs",
+            "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+            "fieldPath": "scenario_id"
+          },
+          "targetRef": {
+            "namespace": "underwriting",
+            "owner": "@finnor/private-equity",
+            "type": "underwriting_scenario",
+            "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd"
+          }
+        }
+      ],
+      "evidenceRefs": [],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "underwriting",
+        "investmentCaseId": "90000000-0000-4000-8000-000000000002",
+        "runId": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/private-equity",
+          "table": "underwriting_runs",
+          "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+        }
+      ],
+      "asOf": "2026-09-28T02:18:18.563Z"
+    },
+    "recommendationChange": {
+      "id": "semantic:business_events:6b35f50f-8698-42c3-aa21-e108ed64eeb1:ic_recommendation_recorded",
+      "occurredAt": "2026-09-28T02:07:16.202Z",
+      "kind": "ic_recommendation_recorded",
+      "bucket": "in_motion",
+      "rootRefs": [
+        {
+          "entityType": "pe_deal",
+          "entityId": "90000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "subjectRef": {
+        "namespace": "private_equity",
+        "owner": "@finnor/private-equity",
+        "type": "pe_ic_recommendation",
+        "id": "51d34b57-6a6b-4606-bf29-cb36c878b4a1"
+      },
+      "actor": "human",
+      "actorRef": {
+        "kind": "human",
+        "id": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+      },
+      "change": {
+        "type": "ic_recommendation_created",
+        "after": "created",
+        "label": "Ic Recommendation Created"
+      },
+      "reasonCode": null,
+      "causalRefs": [
+        {
+          "relationship": "underwriting_run",
+          "type": "underwriting_run",
+          "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+          "sourceRef": {
+            "owner": "@finnor/db",
+            "table": "business_events",
+            "id": "6b35f50f-8698-42c3-aa21-e108ed64eeb1",
+            "fieldPath": "payload.underwritingRunId"
+          },
+          "targetRef": {
+            "namespace": "underwriting",
+            "owner": "@finnor/private-equity",
+            "type": "underwriting_run",
+            "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+          }
+        }
+      ],
+      "evidenceRefs": [],
+      "receiptRefs": [],
+      "proofRefs": [],
+      "blocks": [],
+      "unblocks": [],
+      "inspectionTarget": {
+        "kind": "ic",
+        "icCaseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+        "objectRef": {
+          "namespace": "private_equity",
+          "owner": "@finnor/private-equity",
+          "type": "pe_ic_recommendation",
+          "id": "51d34b57-6a6b-4606-bf29-cb36c878b4a1"
+        }
+      },
+      "sourceRefs": [
+        {
+          "owner": "@finnor/db",
+          "table": "business_events",
+          "id": "6b35f50f-8698-42c3-aa21-e108ed64eeb1"
+        }
+      ],
+      "asOf": "2026-09-28T02:18:18.563Z"
+    },
+    "declaredRecommendationRunLink": {
+      "relationship": "underwriting_run",
+      "type": "underwriting_run",
+      "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+      "sourceRef": {
+        "owner": "@finnor/db",
+        "table": "business_events",
+        "id": "6b35f50f-8698-42c3-aa21-e108ed64eeb1",
+        "fieldPath": "payload.underwritingRunId"
+      },
+      "targetRef": {
+        "namespace": "underwriting",
+        "owner": "@finnor/private-equity",
+        "type": "underwriting_run",
+        "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+      }
+    },
+    "threadAnswer": "CENTROPY\n07:47 AM\n\n100 or more recorded Deal changes since 2026-09-27T02:17:58.519Z, including 1 evidence version and 1 Underwriting Run event. IC recommendation for case 69dfece1-c000-489d-98a9-d6ea918c492b: continue diligence → continue diligence (changed basis; the recorded Run, memo or rationale basis changed), explicitly based on Run 1cadb79d-7dfe-41b3-a62e-c7011c8fca24 and memo abfcf949-8deb-447d-9f82-a9fced4875b1. IC recommendation for case 90000000-0000-4000-8000-000000000036: invest with conditions → invest with conditions (unchanged record), explicitly based on Run 4c2b51d6-e682-411f-a73b-1c16befcf82d and memo 90000000-0000-4000-8000-000000000037. The selected model comparison for case 69dfece1-c000-489d-98a9-d6ea918c492b records 6 changed inputs and 16 changed outputs. The record does not prove that an evidence change caused the recommendation. Historical or source coverage is partial; absence of other changes is unverified.\n\nInspect linked Work",
+    "historicalComparison": {
+      "fixture": {
+        "schema": "centropy.current-temporal-fixture/v1",
+        "fixture": "atlas-temporal-clone",
+        "sourceFixture": "atlas-release-v1",
+        "recordedAt": "2026-09-28T02:07:16.221Z",
+        "dealId": "90000000-0000-4000-8000-000000000001",
+        "caseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+        "baselineRecommendationId": "96b00411-2034-413e-8c27-0d598959905e",
+        "currentRecommendationId": "51d34b57-6a6b-4606-bf29-cb36c878b4a1",
+        "baselineRunId": "2725d358-1036-411e-9f7a-ca1c3e6eca97",
+        "currentRunId": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+        "baselineRunHash": "sha256:49abedda2e3ec7a4ac12f26d349c229c9866bb8998860c33bf927e15c0e3e518",
+        "currentRunHash": "sha256:210e78583f06a1a3dc63326caffef2c36884e94f2704fb056c5e5217c7229f5d",
+        "baselineMemoId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+        "currentMemoId": "abfcf949-8deb-447d-9f82-a9fced4875b1",
+        "currentMemoDocumentId": "cbbdbead-09d1-4032-bcc0-e6f1f1265953",
+        "currentMemoVersionId": "59c5088a-6ec7-470b-a4f4-2a5bf301281b",
+        "evidenceSourceId": "614f935b-feb1-4425-ab16-c2e3d81a47e8",
+        "evidenceVersionId": "4ee57841-b6e7-4d6c-8432-b160ed78ad03",
+        "evidenceContentHash": "67bdce106d4872f485609715695d8d80d9378cad93eba2fe0b5d32f7a060ec32",
+        "providerEffect": "none",
+        "missingCausalEdge": "evidence-to-model",
+        "mutations": [
+          "createUnderwritingRun",
+          "appendEvidenceVersion",
+          "attachCanonicalEvidence",
+          "ingestArtifact",
+          "attachCanonicalDocument",
+          "selectPrimaryIcUnderwritingRun",
+          "selectIcMemoVersion",
+          "createIcRecommendation"
+        ],
+        "fixtureOnly": true
+      },
+      "review": {
+        "recommendationComparisons": [
+          {
+            "caseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+            "baseline": {
+              "id": "96b00411-2034-413e-8c27-0d598959905e",
+              "outcome": "CONTINUE_DILIGENCE",
+              "underwritingRunId": "2725d358-1036-411e-9f7a-ca1c3e6eca97",
+              "memoId": "2c8f3831-7dc7-4ed1-a703-918fca56d32e",
+              "rationale": "Continue diligence before an investment decision. The selected memo 2c8f3831-7dc7-4ed1-a703-918fca56d32e is grounded in valid Underwriting Run 2725d358-1036-411e-9f7a-ca1c3e6eca97. The current Deal graph records 1 unresolved high or critical risk(s) and 1 unresolved material or critical finding(s): 90000000-0000-4000-8000-000000000010, 90000000-0000-4000-8000-000000000009. The committee must assess these items; this recommendation does not cast a vote or finalize a decision."
+            },
+            "current": {
+              "id": "51d34b57-6a6b-4606-bf29-cb36c878b4a1",
+              "outcome": "CONTINUE_DILIGENCE",
+              "underwritingRunId": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+              "memoId": "abfcf949-8deb-447d-9f82-a9fced4875b1",
+              "rationale": "Continue diligence. The recorded recommendation outcome is unchanged; its selected model sensitivity and sourced memo basis changed. This controlled comparison makes no evidence-to-model causal assertion."
+            },
+            "assessment": "changed_basis",
+            "fieldsChanged": [
+              "underwritingRunId",
+              "memoId",
+              "rationale"
+            ],
+            "sourceRefs": [
+              {
+                "table": "canonical_entity_versions",
+                "id": "69dfece1-c000-489d-98a9-d6ea918c492b",
+                "fieldPath": "current_recommendation_id"
+              },
+              {
+                "table": "pe_ic_recommendations",
+                "id": "96b00411-2034-413e-8c27-0d598959905e"
+              },
+              {
+                "table": "pe_ic_recommendations",
+                "id": "51d34b57-6a6b-4606-bf29-cb36c878b4a1"
+              }
+            ]
+          },
+          {
+            "caseId": "90000000-0000-4000-8000-000000000036",
+            "baseline": {
+              "id": "90000000-0000-4000-8000-000000000039",
+              "outcome": "INVEST_WITH_CONDITIONS",
+              "underwritingRunId": "4c2b51d6-e682-411f-a73b-1c16befcf82d",
+              "memoId": "90000000-0000-4000-8000-000000000037",
+              "rationale": "Proceed on the exact memo and P4 run while retaining the explicit customer-renewal closing condition."
+            },
+            "current": {
+              "id": "90000000-0000-4000-8000-000000000039",
+              "outcome": "INVEST_WITH_CONDITIONS",
+              "underwritingRunId": "4c2b51d6-e682-411f-a73b-1c16befcf82d",
+              "memoId": "90000000-0000-4000-8000-000000000037",
+              "rationale": "Proceed on the exact memo and P4 run while retaining the explicit customer-renewal closing condition."
+            },
+            "assessment": "unchanged_record",
+            "fieldsChanged": [],
+            "sourceRefs": [
+              {
+                "table": "canonical_entity_versions",
+                "id": "90000000-0000-4000-8000-000000000036",
+                "fieldPath": "current_recommendation_id"
+              },
+              {
+                "table": "pe_ic_recommendations",
+                "id": "90000000-0000-4000-8000-000000000039"
+              },
+              {
+                "table": "pe_ic_recommendations",
+                "id": "90000000-0000-4000-8000-000000000039"
+              }
+            ]
+          }
+        ],
+        "modelComparisons": [
+          {
+            "caseId": "69dfece1-c000-489d-98a9-d6ea918c492b",
+            "baselineRunId": "2725d358-1036-411e-9f7a-ca1c3e6eca97",
+            "currentRunId": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+            "changedInputs": {
+              "exit.multiple": {
+                "left": {
+                  "unit": "multiple",
+                  "shape": "scalar",
+                  "value": "5",
+                  "nodeId": "exit.multiple",
+                  "status": "KNOWN",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "90000000-0000-4000-8000-000000000004",
+                      "kind": "p1_assumption",
+                      "versionId": "41fbe138-5508-4056-be8a-adaad7dbbb5b",
+                      "effectiveAt": "2026-09-26T00:13:07.443Z"
+                    },
+                    {
+                      "id": "7615387d-a371-4314-843e-5e229f3f7280",
+                      "kind": "evidence_version",
+                      "retrievedAt": "2026-09-28T00:13:07.428Z"
+                    }
+                  ],
+                  "truthClass": "CANONICAL_ASSUMPTION"
+                },
+                "right": {
+                  "unit": "multiple",
+                  "shape": "scalar",
+                  "value": "9",
+                  "nodeId": "exit.multiple",
+                  "reason": "Requested 9x exit multiple in the same scenario.",
+                  "status": "KNOWN",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "90000000-0000-4000-8000-000000000004",
+                      "kind": "p1_assumption",
+                      "versionId": "41fbe138-5508-4056-be8a-adaad7dbbb5b",
+                      "effectiveAt": "2026-09-26T00:13:07.443Z"
+                    },
+                    {
+                      "id": "7615387d-a371-4314-843e-5e229f3f7280",
+                      "kind": "evidence_version",
+                      "retrievedAt": "2026-09-28T00:13:07.428Z"
+                    }
+                  ],
+                  "truthClass": "SCENARIO_OVERRIDE"
+                }
+              },
+              "operating.base_revenue": {
+                "left": null,
+                "right": {
+                  "unit": "money",
+                  "shape": "scalar",
+                  "value": "100",
+                  "nodeId": "operating.base_revenue",
+                  "status": "KNOWN",
+                  "currency": "USD",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "operating.base_revenue",
+                      "kind": "model_parameter"
+                    }
+                  ],
+                  "truthClass": "MODEL_PARAMETER"
+                }
+              },
+              "operating.ebitda_explicit": {
+                "left": {
+                  "unit": "money",
+                  "shape": "series",
+                  "value": {
+                    "P001:2027-01-01:2027-12-31": "20"
+                  },
+                  "nodeId": "operating.ebitda_explicit",
+                  "status": "KNOWN",
+                  "currency": "USD",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "operating.ebitda_explicit",
+                      "kind": "model_parameter"
+                    }
+                  ],
+                  "truthClass": "MODEL_PARAMETER"
+                },
+                "right": null
+              },
+              "operating.ebitda_margin": {
+                "left": null,
+                "right": {
+                  "unit": "rate",
+                  "shape": "series",
+                  "value": {
+                    "P001:2027-01-01:2027-12-31": "0.2"
+                  },
+                  "nodeId": "operating.ebitda_margin",
+                  "status": "KNOWN",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "operating.ebitda_margin",
+                      "kind": "model_parameter"
+                    }
+                  ],
+                  "truthClass": "MODEL_PARAMETER"
+                }
+              },
+              "operating.revenue_explicit": {
+                "left": {
+                  "unit": "money",
+                  "shape": "series",
+                  "value": {
+                    "P001:2027-01-01:2027-12-31": "80"
+                  },
+                  "nodeId": "operating.revenue_explicit",
+                  "reason": "Exploratory 20% reduction to the persisted base revenue series for this Work; this is a sensitivity, not a sourced forecast.",
+                  "status": "KNOWN",
+                  "currency": "USD",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "operating.revenue_explicit",
+                      "kind": "model_parameter"
+                    }
+                  ],
+                  "truthClass": "SCENARIO_OVERRIDE"
+                },
+                "right": null
+              },
+              "operating.revenue_growth": {
+                "left": null,
+                "right": {
+                  "unit": "rate",
+                  "shape": "series",
+                  "value": {
+                    "P001:2027-01-01:2027-12-31": "0.07"
+                  },
+                  "nodeId": "operating.revenue_growth",
+                  "reason": "Exact 300 basis-point decrease from each recorded base growth rate; exploratory scenario, not a reported forecast.",
+                  "status": "KNOWN",
+                  "valueType": "decimal",
+                  "provenance": [
+                    {
+                      "id": "operating.revenue_growth",
+                      "kind": "model_parameter"
+                    }
+                  ],
+                  "truthClass": "SCENARIO_OVERRIDE"
+                }
+              }
+            },
+            "changedOutputs": {
+              "gross_sponsor_irr": {
+                "left": "0.400000000000000000000001052318084",
+                "right": "2.280000000000000000000009135058262"
+              },
+              "gross_sponsor_moic": {
+                "left": "1.4",
+                "right": "3.28"
+              },
+              "gross_sponsor_xirr": {
+                "left": "0.4000000000000000000000010523180844",
+                "right": "2.280000000000000000000009135058262"
+              },
+              "output.debt.total.cash_sweep": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "20"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "21.4"
+                }
+              },
+              "output.debt.total.ending_principal": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "30"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "28.6"
+                }
+              },
+              "output.exit.debt": {
+                "left": "30",
+                "right": "28.6"
+              },
+              "output.exit.enterprise_value": {
+                "left": "100",
+                "right": "192.6"
+              },
+              "output.exit.equity_value": {
+                "left": "70",
+                "right": "164"
+              },
+              "output.exit.metric_value": {
+                "left": "20",
+                "right": "21.4"
+              },
+              "output.exit.net_debt": {
+                "left": "30",
+                "right": "28.6"
+              },
+              "output.forecast.ebit": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "20"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "21.4"
+                }
+              },
+              "output.forecast.ebitda": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "20"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "21.4"
+                }
+              },
+              "output.forecast.levered_fcf": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "20"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "21.4"
+                }
+              },
+              "output.forecast.revenue": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "80"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "107"
+                }
+              },
+              "output.forecast.unlevered_fcf": {
+                "left": {
+                  "P001:2027-01-01:2027-12-31": "20"
+                },
+                "right": {
+                  "P001:2027-01-01:2027-12-31": "21.4"
+                }
+              },
+              "sponsor_exit_proceeds": {
+                "left": "70",
+                "right": "164"
+              }
+            },
+            "sourceRefs": [
+              {
+                "table": "underwriting_runs",
+                "id": "2725d358-1036-411e-9f7a-ca1c3e6eca97"
+              },
+              {
+                "table": "underwriting_runs",
+                "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+              }
+            ]
+          }
+        ],
+        "basisCoverage": {
+          "status": "complete",
+          "truncated": false,
+          "reasons": []
+        },
+        "sinceAt": "2026-09-27T02:18:15.885Z",
+        "untilAt": "2026-09-28T02:18:15.885Z",
+        "baselineStatus": "partial",
+        "baselineAt": "2026-09-26T00:13:03.320Z",
+        "activityTruncated": true,
+        "activitySources": [
+          {
+            "owner": "P1 Private Equity world",
+            "status": "partial",
+            "reason": "Core Document metadata has no temporal version; historical payload is an explicitly marked current projection; Core Work relationship metadata has no temporal version; historical payload is an explicitly marked current projection; Core approval requests have no temporal versions; historical payload is explicitly marked current or reference-only; Core DecisionReceipts have no temporal versions; historical payload is explicitly marked current or reference-only"
+          },
+          {
+            "owner": "P4 underwriting",
+            "status": "complete"
+          },
+          {
+            "owner": "P6 Work",
+            "status": "complete"
+          },
+          {
+            "owner": "P7 workforce",
+            "status": "complete"
+          },
+          {
+            "owner": "Attention",
+            "status": "complete"
+          },
+          {
+            "owner": "P5 IC",
+            "status": "complete"
+          }
+        ],
+        "changes": [
+          {
+            "id": "semantic:business_events:6b35f50f-8698-42c3-aa21-e108ed64eeb1:ic_recommendation_recorded",
+            "kind": "ic_recommendation_recorded",
+            "occurredAt": "2026-09-28T02:07:16.202Z",
+            "label": "Ic Recommendation Created",
+            "subject": {
+              "namespace": "private_equity",
+              "type": "pe_ic_recommendation",
+              "id": "51d34b57-6a6b-4606-bf29-cb36c878b4a1"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "underwriting_run",
+                "type": "underwriting_run",
+                "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+                "sourceRef": {
+                  "table": "business_events",
+                  "id": "6b35f50f-8698-42c3-aa21-e108ed64eeb1",
+                  "fieldPath": "payload.underwritingRunId"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "business_events",
+                "id": "6b35f50f-8698-42c3-aa21-e108ed64eeb1"
+              }
+            ]
+          },
+          {
+            "id": "semantic:business_events:bfc32aa5-5656-4961-9c11-840a9bc53ae8:ic_memo_version_selected",
+            "kind": "ic_memo_version_selected",
+            "occurredAt": "2026-09-28T01:55:19.647Z",
+            "label": "Ic Memo Version Selected",
+            "subject": {
+              "namespace": "private_equity",
+              "type": "pe_ic_memo",
+              "id": "abfcf949-8deb-447d-9f82-a9fced4875b1"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "underwriting_run",
+                "type": "underwriting_run",
+                "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+                "sourceRef": {
+                  "table": "business_events",
+                  "id": "bfc32aa5-5656-4961-9c11-840a9bc53ae8",
+                  "fieldPath": "payload.underwritingRunId"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "business_events",
+                "id": "bfc32aa5-5656-4961-9c11-840a9bc53ae8"
+              }
+            ]
+          },
+          {
+            "id": "semantic:business_events:bc2f6785-4625-45d1-aeee-2013e6d9150a:document_linked",
+            "kind": "document_linked",
+            "occurredAt": "2026-09-28T01:55:19.606Z",
+            "label": "Document Linked",
+            "subject": {
+              "namespace": "private_equity",
+              "type": "pe_document_link",
+              "id": "fba6c447-1f17-4357-b0fa-a30837c675d2"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "business_events",
+                "id": "bc2f6785-4625-45d1-aeee-2013e6d9150a"
+              }
+            ]
+          },
+          {
+            "id": "semantic:document_versions:59c5088a-6ec7-470b-a4f4-2a5bf301281b:document_version_created",
+            "kind": "document_version_created",
+            "occurredAt": "2026-09-28T01:55:19.602Z",
+            "label": "Document version created",
+            "subject": {
+              "namespace": "core",
+              "type": "document_version",
+              "id": "59c5088a-6ec7-470b-a4f4-2a5bf301281b"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "version_of",
+                "type": "document",
+                "id": "cbbdbead-09d1-4032-bcc0-e6f1f1265953",
+                "sourceRef": {
+                  "table": "document_versions",
+                  "id": "59c5088a-6ec7-470b-a4f4-2a5bf301281b",
+                  "fieldPath": "document_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "document_versions",
+                "id": "59c5088a-6ec7-470b-a4f4-2a5bf301281b"
+              }
+            ]
+          },
+          {
+            "id": "semantic:documents:cbbdbead-09d1-4032-bcc0-e6f1f1265953:document_created",
+            "kind": "document_created",
+            "occurredAt": "2026-09-28T01:55:19.597Z",
+            "label": "Document created",
+            "subject": {
+              "namespace": "core",
+              "type": "document",
+              "id": "cbbdbead-09d1-4032-bcc0-e6f1f1265953"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "documents",
+                "id": "cbbdbead-09d1-4032-bcc0-e6f1f1265953"
+              }
+            ]
+          },
+          {
+            "id": "semantic:evidence_source_versions:4ee57841-b6e7-4d6c-8432-b160ed78ad03:evidence_version_recorded",
+            "kind": "evidence_version_recorded",
+            "occurredAt": "2026-09-28T01:55:19.569Z",
+            "label": "Evidence version recorded",
+            "subject": {
+              "namespace": "core",
+              "type": "evidence_version",
+              "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03"
+            },
+            "evidenceRefs": [
+              {
+                "type": "evidence_version",
+                "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03",
+                "hash": "67bdce106d4872f485609715695d8d80d9378cad93eba2fe0b5d32f7a060ec32"
+              }
+            ],
+            "causalRefs": [
+              {
+                "relationship": "version_of",
+                "type": "evidence_source",
+                "id": "614f935b-feb1-4425-ab16-c2e3d81a47e8",
+                "sourceRef": {
+                  "table": "evidence_source_versions",
+                  "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03",
+                  "fieldPath": "source_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "evidence_source_versions",
+                "id": "4ee57841-b6e7-4d6c-8432-b160ed78ad03"
+              }
+            ]
+          },
+          {
+            "id": "semantic:underwriting_runs:1cadb79d-7dfe-41b3-a62e-c7011c8fca24:underwriting_run_completed",
+            "kind": "underwriting_run_completed",
+            "occurredAt": "2026-09-28T01:55:19.539Z",
+            "label": "Underwriting run completed",
+            "subject": {
+              "namespace": "underwriting",
+              "type": "underwriting_run",
+              "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "executed_model_version",
+                "type": "underwriting_model_version",
+                "id": "e25e4967-e475-4b83-87cd-64f3f7350530",
+                "sourceRef": {
+                  "table": "underwriting_runs",
+                  "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+                  "fieldPath": "model_version_id"
+                }
+              },
+              {
+                "relationship": "evaluated_scenario",
+                "type": "underwriting_scenario",
+                "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+                "sourceRef": {
+                  "table": "underwriting_runs",
+                  "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24",
+                  "fieldPath": "scenario_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/private-equity",
+                "table": "underwriting_runs",
+                "id": "1cadb79d-7dfe-41b3-a62e-c7011c8fca24"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:eca5ff53-5a6c-4781-9c41-2081dbe9e011:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:39.575Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_65569529c0bd2e6f098cc2f3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "eca5ff53-5a6c-4781-9c41-2081dbe9e011",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "eca5ff53-5a6c-4781-9c41-2081dbe9e011",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "eca5ff53-5a6c-4781-9c41-2081dbe9e011"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:a908f3cb-e73d-4db7-bfb3-39d93be27c4d:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:39.514Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_ab7245bf4fe0d313cddb26a4"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a908f3cb-e73d-4db7-bfb3-39d93be27c4d",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a908f3cb-e73d-4db7-bfb3-39d93be27c4d",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "a908f3cb-e73d-4db7-bfb3-39d93be27c4d"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:0bf913d7-3519-4fc1-a444-c65e30b071fc:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:39.507Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "0bf913d7-3519-4fc1-a444-c65e30b071fc"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0bf913d7-3519-4fc1-a444-c65e30b071fc",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_65569529c0bd2e6f098cc2f3",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0bf913d7-3519-4fc1-a444-c65e30b071fc",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0bf913d7-3519-4fc1-a444-c65e30b071fc",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "0bf913d7-3519-4fc1-a444-c65e30b071fc"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:383831de-f6b3-4b93-8462-2ef0c3e04dfa:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:39.507Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "383831de-f6b3-4b93-8462-2ef0c3e04dfa"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "383831de-f6b3-4b93-8462-2ef0c3e04dfa",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_ab7245bf4fe0d313cddb26a4",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "383831de-f6b3-4b93-8462-2ef0c3e04dfa",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "383831de-f6b3-4b93-8462-2ef0c3e04dfa",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "383831de-f6b3-4b93-8462-2ef0c3e04dfa"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:5793887b-cdfe-4456-ba28-190e28254e61:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:39.507Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "5793887b-cdfe-4456-ba28-190e28254e61"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5793887b-cdfe-4456-ba28-190e28254e61",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_74491fed60be5c3ecbe129f9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5793887b-cdfe-4456-ba28-190e28254e61",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5793887b-cdfe-4456-ba28-190e28254e61",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "5793887b-cdfe-4456-ba28-190e28254e61"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:430bdbfd-63d0-4e10-a354-144229f7fd07:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:39.502Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_192d026e4e7a63a3e09ab2b9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "430bdbfd-63d0-4e10-a354-144229f7fd07",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "430bdbfd-63d0-4e10-a354-144229f7fd07",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "430bdbfd-63d0-4e10-a354-144229f7fd07"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:cee185a0-f8c9-4135-bcc1-b4a2b3759704:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:39.502Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "cee185a0-f8c9-4135-bcc1-b4a2b3759704"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cee185a0-f8c9-4135-bcc1-b4a2b3759704",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_192d026e4e7a63a3e09ab2b9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cee185a0-f8c9-4135-bcc1-b4a2b3759704",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cee185a0-f8c9-4135-bcc1-b4a2b3759704",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "cee185a0-f8c9-4135-bcc1-b4a2b3759704"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:f7ff1fed-5bc0-42f3-8312-3c4d86612e6d:completion_proof_verified:completion_proof",
+            "kind": "completion_proof_verified",
+            "occurredAt": "2026-09-28T01:45:39.494Z",
+            "label": "Completion proof verified",
+            "subject": {
+              "namespace": "planning",
+              "type": "completion_proof",
+              "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "proves_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                  "fieldPath": "completion_proof"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "fieldPath": "completion_proof"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:54b3ba65-8901-4b0e-9a89-05c3c100ba90:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:39.264Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_74491fed60be5c3ecbe129f9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "54b3ba65-8901-4b0e-9a89-05c3c100ba90",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "54b3ba65-8901-4b0e-9a89-05c3c100ba90",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "54b3ba65-8901-4b0e-9a89-05c3c100ba90"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:24f4b8ad-10f1-47b9-96ac-acb4d80764bc:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:37.466Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_b41a89ac6f6407ef2594fd72"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "24f4b8ad-10f1-47b9-96ac-acb4d80764bc"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:75fa6592-676b-4fe0-8aab-2c19d742acdd:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:37.463Z",
+            "label": "Agent assignment reassigned",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b41a89ac6f6407ef2594fd72",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd",
+                  "fieldPath": "agent_revision_id"
+                }
+              },
+              {
+                "relationship": "reassigned_from",
+                "type": "workforce_assignment",
+                "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd",
+                  "fieldPath": "previous_assignment_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "75fa6592-676b-4fe0-8aab-2c19d742acdd"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:3bf9bce5-c373-4186-bc1a-8d3bf44f48ea:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:35.353Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_246468a8fbcbc17132fc649c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "3bf9bce5-c373-4186-bc1a-8d3bf44f48ea",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "3bf9bce5-c373-4186-bc1a-8d3bf44f48ea",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "3bf9bce5-c373-4186-bc1a-8d3bf44f48ea"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:e825fb06-f1e9-42a4-a5d4-64612bec3e63:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:35.351Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "e825fb06-f1e9-42a4-a5d4-64612bec3e63"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e825fb06-f1e9-42a4-a5d4-64612bec3e63",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_246468a8fbcbc17132fc649c",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e825fb06-f1e9-42a4-a5d4-64612bec3e63",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e825fb06-f1e9-42a4-a5d4-64612bec3e63",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "e825fb06-f1e9-42a4-a5d4-64612bec3e63"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:c5b056d3-cfd8-4151-8d28-f1a4f48de1a5:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:45:35.337Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_44add19a0fc8a5049ed91eec"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "c5b056d3-cfd8-4151-8d28-f1a4f48de1a5",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "c5b056d3-cfd8-4151-8d28-f1a4f48de1a5",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "c5b056d3-cfd8-4151-8d28-f1a4f48de1a5"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:a04e0d7f-88d6-4bbb-b0c3-514444daa02a:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:35.333Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "a04e0d7f-88d6-4bbb-b0c3-514444daa02a"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a04e0d7f-88d6-4bbb-b0c3-514444daa02a",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_44add19a0fc8a5049ed91eec",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a04e0d7f-88d6-4bbb-b0c3-514444daa02a",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a04e0d7f-88d6-4bbb-b0c3-514444daa02a",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "a04e0d7f-88d6-4bbb-b0c3-514444daa02a"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:45:34.566Z",
+            "label": "Agent assignment reassigned",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b41a89ac6f6407ef2594fd72",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "e0bcdf56-5bd6-494d-b2fb-b7b4328ec6b1"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:f7ff1fed-5bc0-42f3-8312-3c4d86612e6d:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:45:29.661Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:8a1ccae3e6f5853c5f168ce5100e260685570e13aac93f124b8a267fb3980935"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:f7ff1fed-5bc0-42f3-8312-3c4d86612e6d:plan_revision_created",
+            "kind": "plan_revision_created",
+            "occurredAt": "2026-09-28T01:45:29.661Z",
+            "label": "Plan revision created",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "e5b98138-6225-4c38-a371-5fa6a8fb6bee",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d",
+                  "fieldPath": "work_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "f7ff1fed-5bc0-42f3-8312-3c4d86612e6d"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:b0d54709-c727-4c96-a3c2-08589e8de829:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:28.802Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "b0d54709-c727-4c96-a3c2-08589e8de829"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b0d54709-c727-4c96-a3c2-08589e8de829",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_65569529c0bd2e6f098cc2f3",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b0d54709-c727-4c96-a3c2-08589e8de829",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b0d54709-c727-4c96-a3c2-08589e8de829",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "b0d54709-c727-4c96-a3c2-08589e8de829"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:cd7893c8-973b-4286-b2e3-1e8106d769c3:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:28.802Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "cd7893c8-973b-4286-b2e3-1e8106d769c3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cd7893c8-973b-4286-b2e3-1e8106d769c3",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_74491fed60be5c3ecbe129f9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cd7893c8-973b-4286-b2e3-1e8106d769c3",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cd7893c8-973b-4286-b2e3-1e8106d769c3",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "cd7893c8-973b-4286-b2e3-1e8106d769c3"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:39c91dc9-4057-4a4b-806d-fcc3547bbc9b:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:28.800Z",
+            "label": "Plan node Failed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_ab7245bf4fe0d313cddb26a4"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "39c91dc9-4057-4a4b-806d-fcc3547bbc9b",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "39c91dc9-4057-4a4b-806d-fcc3547bbc9b",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "39c91dc9-4057-4a4b-806d-fcc3547bbc9b"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:a51e3254-aac6-40f7-a807-3537bf12fea3:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:28.800Z",
+            "label": "Agent assignment Failed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "a51e3254-aac6-40f7-a807-3537bf12fea3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a51e3254-aac6-40f7-a807-3537bf12fea3",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_ab7245bf4fe0d313cddb26a4",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a51e3254-aac6-40f7-a807-3537bf12fea3",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a51e3254-aac6-40f7-a807-3537bf12fea3",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "a51e3254-aac6-40f7-a807-3537bf12fea3"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:0ca73295-92bb-4376-867e-2fda5b042bde:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:28.799Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_192d026e4e7a63a3e09ab2b9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "0ca73295-92bb-4376-867e-2fda5b042bde",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "0ca73295-92bb-4376-867e-2fda5b042bde",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "0ca73295-92bb-4376-867e-2fda5b042bde"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:1db48ed9-afa6-44c4-82cc-4447f34ced69:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:28.799Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "1db48ed9-afa6-44c4-82cc-4447f34ced69"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "1db48ed9-afa6-44c4-82cc-4447f34ced69",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_192d026e4e7a63a3e09ab2b9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "1db48ed9-afa6-44c4-82cc-4447f34ced69",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "1db48ed9-afa6-44c4-82cc-4447f34ced69",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "1db48ed9-afa6-44c4-82cc-4447f34ced69"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:901b10a6-7ff3-4eba-9b49-94cf74a18c8f:completion_proof_verified:completion_proof",
+            "kind": "completion_proof_verified",
+            "occurredAt": "2026-09-28T01:44:28.791Z",
+            "label": "Completion proof verified",
+            "subject": {
+              "namespace": "planning",
+              "type": "completion_proof",
+              "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "proves_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                  "fieldPath": "completion_proof"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "fieldPath": "completion_proof"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:5df00b6b-21a1-411b-8ef0-be95b7e166fa:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:26.504Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_74491fed60be5c3ecbe129f9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "5df00b6b-21a1-411b-8ef0-be95b7e166fa",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "5df00b6b-21a1-411b-8ef0-be95b7e166fa",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "5df00b6b-21a1-411b-8ef0-be95b7e166fa"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:b8ebea70-3288-48f5-9452-3cecd78022a6:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:26.504Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_65569529c0bd2e6f098cc2f3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "b8ebea70-3288-48f5-9452-3cecd78022a6",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "b8ebea70-3288-48f5-9452-3cecd78022a6",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "b8ebea70-3288-48f5-9452-3cecd78022a6"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:a97111c2-4fbd-484b-ba50-c38ca88187c0:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:26.380Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_44add19a0fc8a5049ed91eec"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a97111c2-4fbd-484b-ba50-c38ca88187c0",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a97111c2-4fbd-484b-ba50-c38ca88187c0",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "a97111c2-4fbd-484b-ba50-c38ca88187c0"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:c07721da-93e9-451d-9ebc-2c64a0c9335a:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:26.377Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "c07721da-93e9-451d-9ebc-2c64a0c9335a"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "c07721da-93e9-451d-9ebc-2c64a0c9335a",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_44add19a0fc8a5049ed91eec",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "c07721da-93e9-451d-9ebc-2c64a0c9335a",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "c07721da-93e9-451d-9ebc-2c64a0c9335a",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "c07721da-93e9-451d-9ebc-2c64a0c9335a"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:a78cc401-5f85-44b3-a3c4-f6d426ef67c1:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:26.325Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_b41a89ac6f6407ef2594fd72"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a78cc401-5f85-44b3-a3c4-f6d426ef67c1",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a78cc401-5f85-44b3-a3c4-f6d426ef67c1",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "a78cc401-5f85-44b3-a3c4-f6d426ef67c1"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:0b634548-14d4-4222-9444-4da40452b2b1:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:26.322Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "0b634548-14d4-4222-9444-4da40452b2b1"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0b634548-14d4-4222-9444-4da40452b2b1",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b41a89ac6f6407ef2594fd72",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0b634548-14d4-4222-9444-4da40452b2b1",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "0b634548-14d4-4222-9444-4da40452b2b1",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "0b634548-14d4-4222-9444-4da40452b2b1"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:8f0090b9-74f8-4c8c-9d81-e351df7ec281:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:26.315Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_246468a8fbcbc17132fc649c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "8f0090b9-74f8-4c8c-9d81-e351df7ec281",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "8f0090b9-74f8-4c8c-9d81-e351df7ec281",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "8f0090b9-74f8-4c8c-9d81-e351df7ec281"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:89c830cc-2ac9-4cff-a890-359eee8f087a:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:26.314Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "89c830cc-2ac9-4cff-a890-359eee8f087a"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "89c830cc-2ac9-4cff-a890-359eee8f087a",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_246468a8fbcbc17132fc649c",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "89c830cc-2ac9-4cff-a890-359eee8f087a",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "89c830cc-2ac9-4cff-a890-359eee8f087a",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "89c830cc-2ac9-4cff-a890-359eee8f087a"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:901b10a6-7ff3-4eba-9b49-94cf74a18c8f:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:44:24.713Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:ae3190b9121d9d7834d98e89fc4dbd17244c4e08d1afbd5c7e5120928a392e5c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:901b10a6-7ff3-4eba-9b49-94cf74a18c8f:plan_revision_created",
+            "kind": "plan_revision_created",
+            "occurredAt": "2026-09-28T01:44:24.713Z",
+            "label": "Plan revision created",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "4f556e20-5cc6-4ac2-9a11-136c112fab16",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f",
+                  "fieldPath": "work_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "901b10a6-7ff3-4eba-9b49-94cf74a18c8f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:7ff41e01-5953-427b-9137-fa559b6b6518:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:13.764Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_65569529c0bd2e6f098cc2f3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "7ff41e01-5953-427b-9137-fa559b6b6518",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "7ff41e01-5953-427b-9137-fa559b6b6518",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "7ff41e01-5953-427b-9137-fa559b6b6518"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:64d8047f-ae9e-4dc3-b655-1fefcd331c80:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:13.695Z",
+            "label": "Plan node Failed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_ab7245bf4fe0d313cddb26a4"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "64d8047f-ae9e-4dc3-b655-1fefcd331c80",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "64d8047f-ae9e-4dc3-b655-1fefcd331c80",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "64d8047f-ae9e-4dc3-b655-1fefcd331c80"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:cac3cf7a-8330-4ab0-ac68-74f079a10575:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:13.694Z",
+            "label": "Agent assignment Failed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "cac3cf7a-8330-4ab0-ac68-74f079a10575"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cac3cf7a-8330-4ab0-ac68-74f079a10575",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_ab7245bf4fe0d313cddb26a4",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cac3cf7a-8330-4ab0-ac68-74f079a10575",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cac3cf7a-8330-4ab0-ac68-74f079a10575",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "cac3cf7a-8330-4ab0-ac68-74f079a10575"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:24e682cd-f17c-4628-ab34-552b56623722:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:13.643Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "24e682cd-f17c-4628-ab34-552b56623722"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "24e682cd-f17c-4628-ab34-552b56623722",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_74491fed60be5c3ecbe129f9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "24e682cd-f17c-4628-ab34-552b56623722",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "24e682cd-f17c-4628-ab34-552b56623722",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "24e682cd-f17c-4628-ab34-552b56623722"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:a7e449c6-3441-4239-abcd-9e4c1731c7c3:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:13.643Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "a7e449c6-3441-4239-abcd-9e4c1731c7c3"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a7e449c6-3441-4239-abcd-9e4c1731c7c3",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_65569529c0bd2e6f098cc2f3",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a7e449c6-3441-4239-abcd-9e4c1731c7c3",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a7e449c6-3441-4239-abcd-9e4c1731c7c3",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "a7e449c6-3441-4239-abcd-9e4c1731c7c3"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:a403d8ad-9fef-4575-96a0-0e5d15eed3f8:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:13.637Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_192d026e4e7a63a3e09ab2b9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a403d8ad-9fef-4575-96a0-0e5d15eed3f8",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a403d8ad-9fef-4575-96a0-0e5d15eed3f8",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "a403d8ad-9fef-4575-96a0-0e5d15eed3f8"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:aedd729e-51a1-4c1a-9021-7d5ef5cf7773:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:13.636Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "aedd729e-51a1-4c1a-9021-7d5ef5cf7773"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "aedd729e-51a1-4c1a-9021-7d5ef5cf7773",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_192d026e4e7a63a3e09ab2b9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "aedd729e-51a1-4c1a-9021-7d5ef5cf7773",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "aedd729e-51a1-4c1a-9021-7d5ef5cf7773",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "aedd729e-51a1-4c1a-9021-7d5ef5cf7773"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:21d3795b-09ca-44fe-99f1-d064ee1e5a79:completion_proof_verified:completion_proof",
+            "kind": "completion_proof_verified",
+            "occurredAt": "2026-09-28T01:44:13.629Z",
+            "label": "Completion proof verified",
+            "subject": {
+              "namespace": "planning",
+              "type": "completion_proof",
+              "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "proves_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                  "fieldPath": "completion_proof"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "fieldPath": "completion_proof"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:d46e1a10-6f47-476b-a6f7-020d1e0fa065:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:11.550Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_74491fed60be5c3ecbe129f9"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "d46e1a10-6f47-476b-a6f7-020d1e0fa065",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "d46e1a10-6f47-476b-a6f7-020d1e0fa065",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "d46e1a10-6f47-476b-a6f7-020d1e0fa065"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:2dfc0393-8fec-4c4f-b60f-a6a667f0bcf8:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:11.493Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_44add19a0fc8a5049ed91eec"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "2dfc0393-8fec-4c4f-b60f-a6a667f0bcf8",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "2dfc0393-8fec-4c4f-b60f-a6a667f0bcf8",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "2dfc0393-8fec-4c4f-b60f-a6a667f0bcf8"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:77ed71da-cfe4-4ac7-9021-85ecf831f720:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:11.488Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "77ed71da-cfe4-4ac7-9021-85ecf831f720"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "77ed71da-cfe4-4ac7-9021-85ecf831f720",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_44add19a0fc8a5049ed91eec",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "77ed71da-cfe4-4ac7-9021-85ecf831f720",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "77ed71da-cfe4-4ac7-9021-85ecf831f720",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "77ed71da-cfe4-4ac7-9021-85ecf831f720"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:8a61922a-e3a8-41f6-bbc9-f7c64e4a0150:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:11.264Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_b41a89ac6f6407ef2594fd72"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "8a61922a-e3a8-41f6-bbc9-f7c64e4a0150",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "8a61922a-e3a8-41f6-bbc9-f7c64e4a0150",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "8a61922a-e3a8-41f6-bbc9-f7c64e4a0150"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:41bde868-4037-4812-bb55-b866b2aa61ad:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:11.263Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "41bde868-4037-4812-bb55-b866b2aa61ad"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "41bde868-4037-4812-bb55-b866b2aa61ad",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b41a89ac6f6407ef2594fd72",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "41bde868-4037-4812-bb55-b866b2aa61ad",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "41bde868-4037-4812-bb55-b866b2aa61ad",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "41bde868-4037-4812-bb55-b866b2aa61ad"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:cd52b6c0-e2c0-4f7d-b3bc-6656be499e80:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:11.255Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_246468a8fbcbc17132fc649c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "cd52b6c0-e2c0-4f7d-b3bc-6656be499e80",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "cd52b6c0-e2c0-4f7d-b3bc-6656be499e80",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "cd52b6c0-e2c0-4f7d-b3bc-6656be499e80"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:a5c5c921-1b84-4aef-96ce-9c37de87ca52:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:11.254Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "a5c5c921-1b84-4aef-96ce-9c37de87ca52"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a5c5c921-1b84-4aef-96ce-9c37de87ca52",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_246468a8fbcbc17132fc649c",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a5c5c921-1b84-4aef-96ce-9c37de87ca52",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "a5c5c921-1b84-4aef-96ce-9c37de87ca52",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "a5c5c921-1b84-4aef-96ce-9c37de87ca52"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:21d3795b-09ca-44fe-99f1-d064ee1e5a79:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:44:09.065Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:bb7ee67621d59e879df8fbd1e55e05af718db4595faf8ffdea7cc04d70a437b5"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:21d3795b-09ca-44fe-99f1-d064ee1e5a79:replan",
+            "kind": "replan",
+            "occurredAt": "2026-09-28T01:44:09.065Z",
+            "label": "Work replanned",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "supersedes_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79",
+                  "fieldPath": "parent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "21d3795b-09ca-44fe-99f1-d064ee1e5a79"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:fffc6867-d9dd-49ad-9b1f-8f67a128aa35:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:44:02.910Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_44add19a0fc8a5049ed91eec"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "fffc6867-d9dd-49ad-9b1f-8f67a128aa35",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "fffc6867-d9dd-49ad-9b1f-8f67a128aa35",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "fffc6867-d9dd-49ad-9b1f-8f67a128aa35"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:d5c0050d-2e84-4ec3-b234-452083ac08ad:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:44:02.910Z",
+            "label": "Agent assignment reassigned",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_44add19a0fc8a5049ed91eec",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad",
+                  "fieldPath": "agent_revision_id"
+                }
+              },
+              {
+                "relationship": "reassigned_from",
+                "type": "workforce_assignment",
+                "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad",
+                  "fieldPath": "previous_assignment_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "d5c0050d-2e84-4ec3-b234-452083ac08ad"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:e4fb7e89-f047-4767-a4a9-bea8ec00de9f:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:43:58.801Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_44add19a0fc8a5049ed91eec"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e4fb7e89-f047-4767-a4a9-bea8ec00de9f",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e4fb7e89-f047-4767-a4a9-bea8ec00de9f",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "e4fb7e89-f047-4767-a4a9-bea8ec00de9f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:b25d7c04-0933-4a59-b70c-09e77b90ea2c:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:43:58.800Z",
+            "label": "Agent assignment Failed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_44add19a0fc8a5049ed91eec",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "b25d7c04-0933-4a59-b70c-09e77b90ea2c"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:555a8875-07f5-4044-9c48-c97dad0e12cc:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:43:58.616Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_246468a8fbcbc17132fc649c"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "555a8875-07f5-4044-9c48-c97dad0e12cc",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "555a8875-07f5-4044-9c48-c97dad0e12cc",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "555a8875-07f5-4044-9c48-c97dad0e12cc"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:e4352867-0620-430f-965a-4574910b3ee7:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:43:58.615Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "e4352867-0620-430f-965a-4574910b3ee7"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e4352867-0620-430f-965a-4574910b3ee7",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_246468a8fbcbc17132fc649c",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e4352867-0620-430f-965a-4574910b3ee7",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e4352867-0620-430f-965a-4574910b3ee7",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "e4352867-0620-430f-965a-4574910b3ee7"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:6ca69444-a456-4290-8b66-d3205eb5b3db:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:43:58.588Z",
+            "label": "Plan node Continue",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_b41a89ac6f6407ef2594fd72"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "6ca69444-a456-4290-8b66-d3205eb5b3db",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "6ca69444-a456-4290-8b66-d3205eb5b3db",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "6ca69444-a456-4290-8b66-d3205eb5b3db"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:bf594088-6279-4d05-bfbf-a3c54968fb5a:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:43:58.587Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "bf594088-6279-4d05-bfbf-a3c54968fb5a"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "bf594088-6279-4d05-bfbf-a3c54968fb5a",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b41a89ac6f6407ef2594fd72",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "bf594088-6279-4d05-bfbf-a3c54968fb5a",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "bf594088-6279-4d05-bfbf-a3c54968fb5a",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "bf594088-6279-4d05-bfbf-a3c54968fb5a"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:43:57.064Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:bb7ee67621d59e879df8fbd1e55e05af718db4595faf8ffdea7cc04d70a437b5"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb:plan_revision_created",
+            "kind": "plan_revision_created",
+            "occurredAt": "2026-09-28T01:43:57.064Z",
+            "label": "Plan revision created",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "9e1a733b-4598-40c2-9c59-af7107a2ff5d",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb",
+                  "fieldPath": "work_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "4d0dc94d-56e5-4dbf-b6d6-753468f5bbbb"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:3e0aefef-d358-4bbd-9a1a-8caf24a6b2fa:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:42:11.811Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_2c5239822b641b02234a2b7e"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "3e0aefef-d358-4bbd-9a1a-8caf24a6b2fa",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "3e0aefef-d358-4bbd-9a1a-8caf24a6b2fa",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "3e0aefef-d358-4bbd-9a1a-8caf24a6b2fa"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:5bbfa2af-2a5a-43d6-a770-f99a206aadaf:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:42:11.803Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "5bbfa2af-2a5a-43d6-a770-f99a206aadaf"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5bbfa2af-2a5a-43d6-a770-f99a206aadaf",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_2c5239822b641b02234a2b7e",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5bbfa2af-2a5a-43d6-a770-f99a206aadaf",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5bbfa2af-2a5a-43d6-a770-f99a206aadaf",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "5bbfa2af-2a5a-43d6-a770-f99a206aadaf"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:cdd922a8-b471-4625-b3c4-df3f2aa2c5dd:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:42:11.803Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "cdd922a8-b471-4625-b3c4-df3f2aa2c5dd"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cdd922a8-b471-4625-b3c4-df3f2aa2c5dd",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_87a419ac68ecc5d5f3f63675",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cdd922a8-b471-4625-b3c4-df3f2aa2c5dd",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "cdd922a8-b471-4625-b3c4-df3f2aa2c5dd",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "cdd922a8-b471-4625-b3c4-df3f2aa2c5dd"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:2735dad6-16f9-4d96-bcc2-0030b91c8c65:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:42:11.799Z",
+            "label": "Plan node Failed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_8266d9b1538e0a5ddc35890f"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "2735dad6-16f9-4d96-bcc2-0030b91c8c65",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "2735dad6-16f9-4d96-bcc2-0030b91c8c65",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "2735dad6-16f9-4d96-bcc2-0030b91c8c65"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:a81adecb-6203-40b6-b5ab-18a38abd7663:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:42:11.796Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_66429146293fb0fa6002e302"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a81adecb-6203-40b6-b5ab-18a38abd7663",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "a81adecb-6203-40b6-b5ab-18a38abd7663",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "a81adecb-6203-40b6-b5ab-18a38abd7663"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:5cb60277-a598-4d06-9fdd-b6a88826b751:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:42:11.796Z",
+            "label": "Agent assignment Failed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "5cb60277-a598-4d06-9fdd-b6a88826b751"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5cb60277-a598-4d06-9fdd-b6a88826b751",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_8266d9b1538e0a5ddc35890f",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5cb60277-a598-4d06-9fdd-b6a88826b751",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5cb60277-a598-4d06-9fdd-b6a88826b751",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "5cb60277-a598-4d06-9fdd-b6a88826b751"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:5a5c0063-6a4d-4f3a-9a77-64814796f42f:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:42:11.795Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "5a5c0063-6a4d-4f3a-9a77-64814796f42f"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5a5c0063-6a4d-4f3a-9a77-64814796f42f",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_66429146293fb0fa6002e302",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5a5c0063-6a4d-4f3a-9a77-64814796f42f",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "5a5c0063-6a4d-4f3a-9a77-64814796f42f",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "5a5c0063-6a4d-4f3a-9a77-64814796f42f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:e0ff9f0e-f9e9-4723-b444-902261caf485:completion_proof_verified:completion_proof",
+            "kind": "completion_proof_verified",
+            "occurredAt": "2026-09-28T01:42:11.783Z",
+            "label": "Completion proof verified",
+            "subject": {
+              "namespace": "planning",
+              "type": "completion_proof",
+              "id": "e0ff9f0e-f9e9-4723-b444-902261caf485"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "proves_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                  "fieldPath": "completion_proof"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "fieldPath": "completion_proof"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:277b0683-5529-4fb8-8951-192e1c765f98:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:42:11.647Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "277b0683-5529-4fb8-8951-192e1c765f98"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "277b0683-5529-4fb8-8951-192e1c765f98",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_36c1cff61ce154310b6b545b",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "277b0683-5529-4fb8-8951-192e1c765f98",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000054",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "277b0683-5529-4fb8-8951-192e1c765f98",
+                  "fieldPath": "agent_revision_id"
+                }
+              },
+              {
+                "relationship": "materialized_action",
+                "type": "domain_action",
+                "id": "b46ca441-cdbe-4846-8e73-d2f59c811704",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "277b0683-5529-4fb8-8951-192e1c765f98",
+                  "fieldPath": "domain_action_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "277b0683-5529-4fb8-8951-192e1c765f98"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:e1e47e54-7e3b-4052-a7c5-0cb568563d52:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:42:09.297Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_87a419ac68ecc5d5f3f63675"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e1e47e54-7e3b-4052-a7c5-0cb568563d52",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e1e47e54-7e3b-4052-a7c5-0cb568563d52",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "e1e47e54-7e3b-4052-a7c5-0cb568563d52"
+              }
+            ]
+          },
+          {
+            "id": "semantic:decision_receipts:3818f8d5-b907-4ffd-8f25-819a05a9e300:receipt_finalized",
+            "kind": "receipt_finalized",
+            "occurredAt": "2026-09-28T01:42:08.286Z",
+            "label": "Decision receipt finalized",
+            "subject": {
+              "namespace": "core",
+              "type": "decision_receipt",
+              "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300"
+            },
+            "evidenceRefs": [
+              {
+                "type": "workflow_step",
+                "id": "4658b9eb-2e7f-4433-9e92-8de25889d57f"
+              }
+            ],
+            "causalRefs": [
+              {
+                "relationship": "records_action",
+                "type": "domain_action",
+                "id": "b46ca441-cdbe-4846-8e73-d2f59c811704",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300",
+                  "fieldPath": "domain_action_id"
+                }
+              },
+              {
+                "relationship": "verifies_effect",
+                "type": "business_effect",
+                "id": "112998db-0ade-4da0-80f7-d367f870f083",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300",
+                  "fieldPath": "business_effect_id"
+                }
+              },
+              {
+                "relationship": "records_workflow_run",
+                "type": "workflow_run",
+                "id": "9267f8ac-1827-4363-8e52-a1dc30ddd0db",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300",
+                  "fieldPath": "workflow_run_id"
+                }
+              },
+              {
+                "relationship": "records_workflow_step",
+                "type": "workflow_step",
+                "id": "4658b9eb-2e7f-4433-9e92-8de25889d57f",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300",
+                  "fieldPath": "workflow_step_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "decision_receipts",
+                "id": "3818f8d5-b907-4ffd-8f25-819a05a9e300"
+              }
+            ]
+          },
+          {
+            "id": "semantic:business_events:90c270c7-e9a0-4f94-871e-23bda88d9a6d:document_linked",
+            "kind": "document_linked",
+            "occurredAt": "2026-09-28T01:42:08.180Z",
+            "label": "Document Linked",
+            "subject": {
+              "namespace": "private_equity",
+              "type": "pe_document_link",
+              "id": "f6881ddc-f4df-4b3e-ba55-492de944f736"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "business_events",
+                "id": "90c270c7-e9a0-4f94-871e-23bda88d9a6d"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:e13a2fa7-1d21-4913-a35c-ab17a428c4d3:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:41:47.206Z",
+            "label": "Plan node Awaiting Approval",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_36c1cff61ce154310b6b545b"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e13a2fa7-1d21-4913-a35c-ab17a428c4d3",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e13a2fa7-1d21-4913-a35c-ab17a428c4d3",
+                  "fieldPath": "plan_revision_id"
+                }
+              },
+              {
+                "relationship": "domain_action",
+                "type": "domain_action",
+                "id": "b46ca441-cdbe-4846-8e73-d2f59c811704",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "e13a2fa7-1d21-4913-a35c-ab17a428c4d3",
+                  "fieldPath": "domain_action_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "e13a2fa7-1d21-4913-a35c-ab17a428c4d3"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:e0ff9f0e-f9e9-4723-b444-902261caf485:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:41:45.171Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:d9a02098b65cc2a71f136f52105e00150024b25fb19186e53f7ae8c26dabeb43"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:e0ff9f0e-f9e9-4723-b444-902261caf485:plan_revision_created",
+            "kind": "plan_revision_created",
+            "occurredAt": "2026-09-28T01:41:45.171Z",
+            "label": "Plan revision created",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "e0ff9f0e-f9e9-4723-b444-902261caf485"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "d2a7eff1-2944-40a6-8eb1-6e5555bb65b8",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "e0ff9f0e-f9e9-4723-b444-902261caf485",
+                  "fieldPath": "work_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "e0ff9f0e-f9e9-4723-b444-902261caf485"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:fb00ebc0-7281-4c8c-9ced-57df2094f4ea:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:22:22.762Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_838355e6f419c1430e5286aa"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "fb00ebc0-7281-4c8c-9ced-57df2094f4ea",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "fb00ebc0-7281-4c8c-9ced-57df2094f4ea",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "fb00ebc0-7281-4c8c-9ced-57df2094f4ea"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:641ad9ea-9cbd-4ca4-b703-afa070c41694:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:22:22.678Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "641ad9ea-9cbd-4ca4-b703-afa070c41694"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "641ad9ea-9cbd-4ca4-b703-afa070c41694",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_f82e3a4362c23fdb9d5b0c68",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "641ad9ea-9cbd-4ca4-b703-afa070c41694",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "641ad9ea-9cbd-4ca4-b703-afa070c41694",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "641ad9ea-9cbd-4ca4-b703-afa070c41694"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:6ea656d6-c160-466a-a706-7089ebfe14ff:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:22:22.678Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "6ea656d6-c160-466a-a706-7089ebfe14ff"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "6ea656d6-c160-466a-a706-7089ebfe14ff",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_d2ff3210b41bf53cdbb3af01",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "6ea656d6-c160-466a-a706-7089ebfe14ff",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "6ea656d6-c160-466a-a706-7089ebfe14ff",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "6ea656d6-c160-466a-a706-7089ebfe14ff"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:de8e2ae0-6528-4db0-8b03-c016f89c21ca:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:22:22.678Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "de8e2ae0-6528-4db0-8b03-c016f89c21ca"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "de8e2ae0-6528-4db0-8b03-c016f89c21ca",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_838355e6f419c1430e5286aa",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "de8e2ae0-6528-4db0-8b03-c016f89c21ca",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "de8e2ae0-6528-4db0-8b03-c016f89c21ca",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "de8e2ae0-6528-4db0-8b03-c016f89c21ca"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:08f3e2b6-b7cd-4af1-b53d-f0c24d9258ca:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:22:22.672Z",
+            "label": "Plan node Completed",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_e441df7a8969d730b301c171"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "08f3e2b6-b7cd-4af1-b53d-f0c24d9258ca",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "08f3e2b6-b7cd-4af1-b53d-f0c24d9258ca",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "08f3e2b6-b7cd-4af1-b53d-f0c24d9258ca"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:e9fbd163-0bc6-47a9-8406-f33abf3b6d30:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:22:22.672Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "e9fbd163-0bc6-47a9-8406-f33abf3b6d30"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e9fbd163-0bc6-47a9-8406-f33abf3b6d30",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_e441df7a8969d730b301c171",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e9fbd163-0bc6-47a9-8406-f33abf3b6d30",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000050",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "e9fbd163-0bc6-47a9-8406-f33abf3b6d30",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "e9fbd163-0bc6-47a9-8406-f33abf3b6d30"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:9d06f157-c72c-4a93-b2ce-8abc7a0377ce:completion_proof_verified:completion_proof",
+            "kind": "completion_proof_verified",
+            "occurredAt": "2026-09-28T01:22:22.662Z",
+            "label": "Completion proof verified",
+            "subject": {
+              "namespace": "planning",
+              "type": "completion_proof",
+              "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "proves_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                  "fieldPath": "completion_proof"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "fieldPath": "completion_proof"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:ef0430b7-3140-490a-b705-740a0915c18d:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:22:22.559Z",
+            "label": "Agent assignment Completed",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "ef0430b7-3140-490a-b705-740a0915c18d"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "ef0430b7-3140-490a-b705-740a0915c18d",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_b8560b6b2820a8b5676afc3e",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "ef0430b7-3140-490a-b705-740a0915c18d",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000054",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "ef0430b7-3140-490a-b705-740a0915c18d",
+                  "fieldPath": "agent_revision_id"
+                }
+              },
+              {
+                "relationship": "materialized_action",
+                "type": "domain_action",
+                "id": "b70a6c77-fbea-4491-a754-8d2ab6800370",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "ef0430b7-3140-490a-b705-740a0915c18d",
+                  "fieldPath": "domain_action_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "ef0430b7-3140-490a-b705-740a0915c18d"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:b64e1dd7-cfb0-4f8a-aedb-38606a14c6d0:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:22:22.391Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_d2ff3210b41bf53cdbb3af01"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "b64e1dd7-cfb0-4f8a-aedb-38606a14c6d0",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "b64e1dd7-cfb0-4f8a-aedb-38606a14c6d0",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "b64e1dd7-cfb0-4f8a-aedb-38606a14c6d0"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:014adb45-e57f-4f9b-a0a5-6a786d838a7f:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:22:22.235Z",
+            "label": "Plan node Deciding",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_f82e3a4362c23fdb9d5b0c68"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "014adb45-e57f-4f9b-a0a5-6a786d838a7f",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "014adb45-e57f-4f9b-a0a5-6a786d838a7f",
+                  "fieldPath": "plan_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "014adb45-e57f-4f9b-a0a5-6a786d838a7f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:decision_receipts:b9aa84f6-1a32-43d8-a13a-74550c5d488b:receipt_finalized",
+            "kind": "receipt_finalized",
+            "occurredAt": "2026-09-28T01:22:21.071Z",
+            "label": "Decision receipt finalized",
+            "subject": {
+              "namespace": "core",
+              "type": "decision_receipt",
+              "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b"
+            },
+            "evidenceRefs": [
+              {
+                "type": "workflow_step",
+                "id": "8bd2f95b-fa4a-42b2-8a81-8aa5f76349ef"
+              }
+            ],
+            "causalRefs": [
+              {
+                "relationship": "records_action",
+                "type": "domain_action",
+                "id": "b70a6c77-fbea-4491-a754-8d2ab6800370",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b",
+                  "fieldPath": "domain_action_id"
+                }
+              },
+              {
+                "relationship": "verifies_effect",
+                "type": "business_effect",
+                "id": "408a1d29-919d-43df-b43f-8ddb033c6a7f",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b",
+                  "fieldPath": "business_effect_id"
+                }
+              },
+              {
+                "relationship": "records_workflow_run",
+                "type": "workflow_run",
+                "id": "47b2c3ca-3166-40d9-ab29-b92c9019e26e",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b",
+                  "fieldPath": "workflow_run_id"
+                }
+              },
+              {
+                "relationship": "records_workflow_step",
+                "type": "workflow_step",
+                "id": "8bd2f95b-fa4a-42b2-8a81-8aa5f76349ef",
+                "sourceRef": {
+                  "table": "decision_receipts",
+                  "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b",
+                  "fieldPath": "workflow_step_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "decision_receipts",
+                "id": "b9aa84f6-1a32-43d8-a13a-74550c5d488b"
+              }
+            ]
+          },
+          {
+            "id": "semantic:business_events:9d683f8a-6eb3-469b-a5b1-f5015e5b985f:document_linked",
+            "kind": "document_linked",
+            "occurredAt": "2026-09-28T01:22:20.930Z",
+            "label": "Document Linked",
+            "subject": {
+              "namespace": "private_equity",
+              "type": "pe_document_link",
+              "id": "a569384e-f2d9-482e-8f48-dbc332874bb0"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "business_events",
+                "id": "9d683f8a-6eb3-469b-a5b1-f5015e5b985f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_objective_steps:d6315bca-1a67-4e2b-b910-403d8384bd9f:plan_node_transition",
+            "kind": "plan_node_transition",
+            "occurredAt": "2026-09-28T01:22:02.357Z",
+            "label": "Plan node Awaiting Approval",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_node",
+              "id": "node_b8560b6b2820a8b5676afc3e"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "objective_step_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "d6315bca-1a67-4e2b-b910-403d8384bd9f",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "executes_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "d6315bca-1a67-4e2b-b910-403d8384bd9f",
+                  "fieldPath": "plan_revision_id"
+                }
+              },
+              {
+                "relationship": "domain_action",
+                "type": "domain_action",
+                "id": "b70a6c77-fbea-4491-a754-8d2ab6800370",
+                "sourceRef": {
+                  "table": "work_objective_steps",
+                  "id": "d6315bca-1a67-4e2b-b910-403d8384bd9f",
+                  "fieldPath": "domain_action_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_objective_steps",
+                "id": "d6315bca-1a67-4e2b-b910-403d8384bd9f"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:9d06f157-c72c-4a93-b2ce-8abc7a0377ce:goal_changed:goal_spec",
+            "kind": "goal_changed",
+            "occurredAt": "2026-09-28T01:22:00.521Z",
+            "label": "Goal and completion criteria selected",
+            "subject": {
+              "namespace": "planning",
+              "type": "goal",
+              "id": "sha256:d965f510536ed34bd1e86c7957f08c8b267b36608db551df83eecdb350da1004"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "defined_by_plan_revision",
+                "type": "plan_revision",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                  "fieldPath": "goal_spec"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                "fieldPath": "goal_spec"
+              }
+            ]
+          },
+          {
+            "id": "semantic:work_plan_revisions:9d06f157-c72c-4a93-b2ce-8abc7a0377ce:plan_revision_created",
+            "kind": "plan_revision_created",
+            "occurredAt": "2026-09-28T01:22:00.521Z",
+            "label": "Plan revision created",
+            "subject": {
+              "namespace": "planning",
+              "type": "plan_revision",
+              "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "plan_for_work",
+                "type": "work",
+                "id": "51c08ff6-f96b-49f8-9bc6-cf88f4a3c64d",
+                "sourceRef": {
+                  "table": "work_plan_revisions",
+                  "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce",
+                  "fieldPath": "work_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "work_plan_revisions",
+                "id": "9d06f157-c72c-4a93-b2ce-8abc7a0377ce"
+              }
+            ]
+          },
+          {
+            "id": "semantic:workforce_assignments:48c4277c-a05b-4dcc-b425-d2a9f29c901f:assignment_state",
+            "kind": "assignment_state",
+            "occurredAt": "2026-09-28T01:16:05.389Z",
+            "label": "Agent assignment Cancelled",
+            "subject": {
+              "namespace": "workforce",
+              "type": "agent_assignment",
+              "id": "48c4277c-a05b-4dcc-b425-d2a9f29c901f"
+            },
+            "evidenceRefs": [],
+            "causalRefs": [
+              {
+                "relationship": "assigned_to_work",
+                "type": "work",
+                "id": "e3bce5a5-103f-44e1-ab7d-e15000a937a9",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "48c4277c-a05b-4dcc-b425-d2a9f29c901f",
+                  "fieldPath": "work_id"
+                }
+              },
+              {
+                "relationship": "assigned_to_plan_node",
+                "type": "plan_node",
+                "id": "node_54688188e650142ff4184802",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "48c4277c-a05b-4dcc-b425-d2a9f29c901f",
+                  "fieldPath": "plan_node_id"
+                }
+              },
+              {
+                "relationship": "uses_agent_revision",
+                "type": "agent_revision",
+                "id": "90000000-0000-4000-8000-000000000052",
+                "sourceRef": {
+                  "table": "workforce_assignments",
+                  "id": "48c4277c-a05b-4dcc-b425-d2a9f29c901f",
+                  "fieldPath": "agent_revision_id"
+                }
+              }
+            ],
+            "sourceRefs": [
+              {
+                "owner": "@finnor/db",
+                "table": "workforce_assignments",
+                "id": "48c4277c-a05b-4dcc-b425-d2a9f29c901f"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "steps": [
+    "Authenticate the owner and ask the exact temporal recommendation question from Atlas Deal",
+    "Verify a completed canonical previous-24-hour Work query",
+    "Read the canonical Deal Semantic Activity and verify evidence, Underwriting Run, and IC recommendation events with the declared Run link",
+    "Reopen and reload the Thread answer and its explicit causal and coverage limitations"
+  ],
+  "screenshotSha256": "66a1b6f7277f2938876d83c87e8b1de88928d3e9b9ad27fb7df2ac7158850be8",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-temporal-question.spec.ts --project=desktop-chromium --workers=1",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "seeded disposable Atlas tenant with canonical history"
+    ]
+  },
+  "limitation": "Local authored historical fixture in a named database clone. The complete yesterday/current selected bases and exact model deltas are verified. Evidence-to-model causality is unrepresented; recommendation-to-Run linkage is canonical. This is not production history or live-host certification."
+}

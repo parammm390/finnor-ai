@@ -144,6 +144,8 @@ export interface InstructionOptions {
   activeContext?: OperatingInteractionContext | Record<string, unknown>;
   conversationContext?: EmployeeConversationContext;
   channel?: "voice" | "text" | "console";
+  /** Persist a review gate for every consequential node in this PlanGraph. */
+  reviewBeforeExecution?: boolean;
   signal?: AbortSignal;
   deadlineAt?: number;
   deadlineMs?: number;
@@ -318,6 +320,7 @@ export class FinnorOrchestrator implements Orchestrator {
     expectedRevision?: number;
     expectedStepNumber?: number;
     workforceAssignmentId?: string;
+    workforceRecoveryAssignmentId?: string;
     deferToWorkforceJob?: boolean;
     workforceLeaseOwner?: string;
     signal?: AbortSignal;
@@ -710,6 +713,7 @@ export class FinnorOrchestrator implements Orchestrator {
     }
 
     if (instructionRoute?.route === "OBJECTIVE") {
+      if (opts.reviewBeforeExecution) throw new Error("Exact-effect review is not available for a long-running objective.");
       await emitInstructionEvent(ctx.tenantId, instructionId, "planning", { route: "objective" });
       if (await isInstructionCancelled(ctx.tenantId, instructionId)) return { actions: [], workId, workInputId, instructionId };
       const started = await this.startObjective(instruction, ctx, {
@@ -840,6 +844,13 @@ export class FinnorOrchestrator implements Orchestrator {
       ? instructionRoute!
       : finalizeInstructionRouteFromPlan(instructionRoute!, planning.compilation.selected?.graph);
     if (finalRoute.route === "OBJECTIVE") {
+      if (opts.reviewBeforeExecution) {
+        const failure = { code: "objective_review_unavailable", message: "Exact-effect review is not available for a long-running objective." };
+        await finishWorkPlannerAttempt({ tenantId: ctx.tenantId, attemptId: plannerAttempt.id, status: "failed", failure });
+        await transitionWork(ctx.tenantId, workId, "failed", "review_unavailable", failure, { failure, expectedWorkInputId: workInputId });
+        await emitInstructionEvent(ctx.tenantId, instructionId, "failed", { error: failure.message, workId, recoverable: true });
+        throw new Error(failure.message);
+      }
       // Preserve proposal/violation evidence on the attempt, but do not persist or
       // materialize an atomic graph that routing proved belongs to ObjectiveLoop.
       await recordRejectedWorkPlan({
@@ -929,6 +940,11 @@ export class FinnorOrchestrator implements Orchestrator {
     await Promise.all(
       actions.map((action) => appendEpisode(ctx.tenantId, action.id, "planned", { instruction }, { actionType: action.actionType, reasoning: action.reasoning ?? null })),
     );
+    // The marker survives this request. A dependent node that becomes ready after
+    // an earlier approval must still stop at its own exact-effect review gate.
+    if (opts.reviewBeforeExecution) {
+      await Promise.all(actions.map((action) => appendEpisode(ctx.tenantId, action.id, "review_required", { instructionId }, { planRevisionId: materialized.planRevisionId })));
+    }
     const readiness = await Promise.all(actions.map(async (action) => ({ action, ready: await isPlanActionReady(ctx.tenantId, action.id) })));
     await Promise.all(
       readiness.filter(({ ready }) => ready).map(async ({ action: rawAction }) => {
@@ -950,7 +966,7 @@ export class FinnorOrchestrator implements Orchestrator {
             sourceKind: EXTERNAL_RESEARCH_ACTION_TYPES.has(action.actionType) ? "WEB" : "CANONICAL",
           });
         }
-        const result = await this.executor.execute(action, policy);
+        const result = await this.executor.execute(action, policy, { reviewBeforeExecution: opts.reviewBeforeExecution });
         await this.reflectWithRetry(action, policy, result);
         // result.status is "success" even for a merely-GATED action (it succeeded at
         // drafting, not at doing) — awaitingApproval is what actually distinguishes
@@ -1049,6 +1065,7 @@ export class FinnorOrchestrator implements Orchestrator {
       plannerAttemptId?: string;
       planRevisionId?: string;
       planNodeId?: string;
+      reviewBeforeExecution?: boolean;
     } = {},
   ): Promise<{ action: DomainAction; result: ExecutionResult }> {
     if (isRetiredWaterAction(actionType)) throw new RetiredVerticalError("water");
@@ -1140,7 +1157,7 @@ export class FinnorOrchestrator implements Orchestrator {
       action.policyId = policy.id;
       action.policyVersion = policy.version;
     }
-    const result = await this.executor.execute(action, policy);
+    const result = await this.executor.execute(action, policy, { reviewBeforeExecution: opts.reviewBeforeExecution });
     await this.reflectWithRetry(action, policy, result);
     return { action, result };
   }
@@ -1559,8 +1576,18 @@ export class FinnorOrchestrator implements Orchestrator {
     tenantId: string,
     decision: "approve" | "reject" | "escalate",
     decidedBy: string,
-    opts?: { role?: string; note?: string | null; reason?: string | null; typedConfirmation?: boolean },
+    opts?: { role?: string; note?: string | null; reason?: string | null; typedConfirmation?: boolean; expectedEffectHash?: string },
   ): Promise<ExecutionResult> {
+    if (decision === "approve" && opts?.expectedEffectHash) {
+      const [reviewed] = await withTenant(tenantId, (db) => db.select({ semanticHash: businessEffects.semanticHash })
+        .from(domainActions)
+        .innerJoin(businessEffects, and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, domainActions.businessEffectId)))
+        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId)))
+        .limit(1));
+      if (reviewed?.semanticHash !== opts.expectedEffectHash) {
+        return { status: "failure", output: { effectMismatch: true }, error: "The Business Effect differs from the reviewed version. Refresh and review again." };
+      }
+    }
     const humanDecision = decision === "approve" || decision === "reject";
     const approverAuthority = humanDecision
       ? await evaluateActionApproval({ tenantId, userId: decidedBy, employeeId: /^[0-9a-f-]{36}$/i.test(decidedBy) ? decidedBy : undefined, role: (opts?.role as Role | undefined) ?? "owner" }, actionId)
@@ -1647,6 +1674,9 @@ export class FinnorOrchestrator implements Orchestrator {
       const [effect] = before?.businessEffectId
         ? await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, before.businessEffectId))).limit(1)
         : [];
+      if (decision === "approve" && opts?.expectedEffectHash && effect?.semanticHash !== opts.expectedEffectHash) {
+        return { claimed: null, current: before ?? null, effectMismatch: true as const };
+      }
       if (decision === "approve" && before && isConsequentialAction(before.actionType, before.payload as Record<string, unknown>) && !effect) {
         return { claimed: null, current: before, effectBoundary: true as const };
       }
@@ -1731,6 +1761,9 @@ export class FinnorOrchestrator implements Orchestrator {
     }
     if ("effectBoundary" in transition && transition.effectBoundary) {
       return { status: "failure", output: { effectBoundary: "effect_missing" }, error: "Approval refused: the consequential action has no frozen Business Effect." };
+    }
+    if ("effectMismatch" in transition && transition.effectMismatch) {
+      return { status: "failure", output: { effectMismatch: true }, error: "The Business Effect differs from the reviewed version. Refresh and review again." };
     }
     if ("cancelledBoundary" in transition && transition.cancelledBoundary) {
       return {
@@ -1895,10 +1928,16 @@ export class FinnorOrchestrator implements Orchestrator {
       }
       const ready = await readyPlanActions(tenantId, planId);
       if (ready.length === 0) return;
+      const reviewRows = await withTenant(tenantId, (db) => db.select({ domainActionId: actionLog.domainActionId }).from(actionLog).where(and(
+        eq(actionLog.tenantId, tenantId),
+        eq(actionLog.step, "review_required"),
+        inArray(actionLog.domainActionId, ready.map((action) => action.id)),
+      )));
+      const reviewRequired = new Set(reviewRows.map((row) => row.domainActionId));
       await Promise.all(
         ready.map(async (action) => {
           const policy = await this.loadPolicy(action);
-          const result = await this.executor.execute(action, policy);
+          const result = await this.executor.execute(action, policy, { reviewBeforeExecution: reviewRequired.has(action.id) });
           await this.reflectWithRetry(action, policy, result);
           if (action.workId) await reconcileWorkStatus(tenantId, action.workId);
         }),

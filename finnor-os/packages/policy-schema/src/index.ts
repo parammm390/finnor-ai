@@ -74,9 +74,8 @@ export const OperatingInteractionContextSchema = z.object({
   selectedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   excludedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   surface: z.object({
-    id: z.enum(["home", "work", "agents", "deals"]),
-    // Accept the old path while saved contexts and deployed clients are migrating.
-    route: z.string().max(300).regex(/^\/(?:centropy|jarvis)(?:\/|$)/).optional(),
+    id: z.enum(["centropy", "world", "home", "work", "agents", "deals"]),
+    route: z.string().regex(/^\/(?:centropy|jarvis)(?:\/|$)/).max(300).optional(),
     spatialState: z.enum(["canvas", "detail", "list", "map", "timeline"]).optional(),
   }).strict(),
   filters: z.array(z.object({
@@ -107,6 +106,9 @@ export type OperatingInteractionContextInput = z.infer<typeof OperatingInteracti
 export const SubmitInstructionSchema = z.object({
   instruction: z.string().min(1).max(10_000),
   channel: z.enum(["voice", "text", "console"]).default("console"),
+  // Interactive clients may request a frozen, reviewable effect before any
+  // consequential action is released. Legacy automation keeps its current mode.
+  reviewBeforeExecution: z.boolean().optional(),
   sessionId: z.string().optional(),
   // A4.T6: opt-in only — deriving a key from instruction text by default would risk
   // silently collapsing two genuinely different instructions that happen to share the
@@ -137,6 +139,7 @@ const ObjectiveCriterionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("no_open_execution") }).strict(),
   z.object({ kind: z.literal("all_objective_effects_verified"), minimumCount: z.number().int().min(0).max(25) }).strict(),
   z.object({ kind: z.literal("canonical_query"), request: z.record(z.unknown()), assertion: ObjectiveAssertionSchema }).strict(),
+  z.object({ kind: z.literal("private_equity_ic_preparation"), dealId: z.string().uuid(), requireScenario: z.boolean().optional() }).strict(),
   z.object({ kind: z.literal("matched_wait"), minimumCount: z.number().int().min(1).max(25), eventType: z.string().min(1).max(200).optional() }).strict(),
   z.object({ kind: z.literal("delegation_state"), minimumCount: z.number().int().min(1).max(25), requiredStatus: z.enum(["acknowledged", "accepted", "completed"]) }).strict(),
   z.object({ kind: z.literal("computer_run_state"), minimumCount: z.number().int().min(1).max(25), requiredStatus: z.literal("succeeded"), evidenceRequired: z.boolean() }).strict(),
@@ -162,7 +165,7 @@ export const StartObjectiveSchema = z.object({
   activeContext: OperatingInteractionContextSchema.optional(),
   successCondition: ObjectiveSuccessConditionInputSchema.optional(),
   budgets: z.object({
-    maxSteps: z.number().int().min(1).max(50).optional(),
+    maxSteps: z.number().int().min(1).max(96).optional(),
     maxActions: z.number().int().min(0).max(25).optional(),
     maxQueries: z.number().int().min(1).max(50).optional(),
     maxPlannerFailures: z.number().int().min(1).max(10).optional(),
@@ -184,13 +187,14 @@ export const StartOutcomePackSchema = z.object({
   packId: OutcomePackIdSchema,
   input: z.record(z.unknown()),
   channel: z.enum(["voice", "text", "console"]).default("console"),
+  threadId: z.string().uuid().optional(),
   sessionId: z.string().max(500).optional(),
   instructionId: z.string().uuid().optional(),
   workId: z.string().uuid().optional(),
   idempotencyKey: z.string().min(1).max(200).optional(),
   activeContext: OperatingInteractionContextSchema.optional(),
   budgets: z.object({
-    maxSteps: z.number().int().min(1).max(50).optional(),
+    maxSteps: z.number().int().min(1).max(96).optional(),
     maxActions: z.number().int().min(0).max(25).optional(),
     maxQueries: z.number().int().min(1).max(50).optional(),
     maxPlannerFailures: z.number().int().min(1).max(10).optional(),
@@ -230,6 +234,8 @@ export const HandoffWorkSchema = z.object({
 
 export const ConfirmActionSchema = z.object({
   note: z.string().max(2000).optional(),
+  // Binds an interactive approval to the exact effect the reviewer saw.
+  expectedEffectHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   // TYPED_REQUIRED actions must carry an explicit confirmation signal. The
   // orchestrator records this in immutable action-log input and refuses a normal
   // approval with this field absent.

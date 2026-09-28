@@ -1,0 +1,775 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_parallel_deal_recheck",
+  "capturedAt": "2026-09-28T20:01:14.804Z",
+  "baseUrl": "http://127.0.0.1:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Recheck the entire deal before IC."
+  },
+  "observed": {
+    "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+    "threadId": "e0113317-b28f-40c8-bd75-e401ab1cb055",
+    "objectiveLoopId": "7b2f834d-da8b-4bd7-af02-91466b571c59",
+    "workStatus": "completed",
+    "objectiveState": "completed",
+    "planId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+    "queryNodes": [
+      {
+        "id": "node_246468a8fbcbc17132fc649c",
+        "kind": "query",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "recovery": {
+          "on": [
+            "failure",
+            "stale",
+            "divergence"
+          ],
+          "mode": "retry",
+          "version": 1,
+          "maxAttempts": 2,
+          "neverReplayVerifiedIrreversibleEffect": true
+        },
+        "supports": [
+          "criterion_5_abcb92a05c9c"
+        ],
+        "dependsOn": [],
+        "observation": {
+          "source": "operational_query",
+          "version": 1,
+          "assertion": {
+            "intent": "open_deal_risks",
+            "status": "ok"
+          },
+          "freshness": "current"
+        },
+        "semanticHash": "sha256:ad255fb75df83e83772666027578edac75478e34693505e58e77478257c0d2ac",
+        "preconditions": [],
+        "expectedEffects": [
+          {
+            "kind": "query_result",
+            "assertion": {
+              "intent": "open_deal_risks",
+              "status": "ok"
+            }
+          }
+        ],
+        "estimatedLatencyMs": null,
+        "estimatedCostMicros": null
+      },
+      {
+        "id": "node_44add19a0fc8a5049ed91eec",
+        "kind": "query",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "recovery": {
+          "on": [
+            "failure",
+            "stale",
+            "divergence"
+          ],
+          "mode": "retry",
+          "version": 1,
+          "maxAttempts": 2,
+          "neverReplayVerifiedIrreversibleEffect": true
+        },
+        "supports": [
+          "criterion_3_78e5597ea222"
+        ],
+        "dependsOn": [],
+        "observation": {
+          "source": "operational_query",
+          "version": 1,
+          "assertion": {
+            "intent": "pe_world_state",
+            "status": "ok"
+          },
+          "freshness": "current"
+        },
+        "semanticHash": "sha256:eeb7b70882364b2659912a1d16519be4c71165d529d075a1ba567ed91debd50f",
+        "preconditions": [],
+        "expectedEffects": [
+          {
+            "kind": "query_result",
+            "assertion": {
+              "intent": "pe_world_state",
+              "status": "ok"
+            }
+          }
+        ],
+        "estimatedLatencyMs": null,
+        "estimatedCostMicros": null
+      },
+      {
+        "id": "node_b41a89ac6f6407ef2594fd72",
+        "kind": "query",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "recovery": {
+          "on": [
+            "failure",
+            "stale",
+            "divergence"
+          ],
+          "mode": "retry",
+          "version": 1,
+          "maxAttempts": 2,
+          "neverReplayVerifiedIrreversibleEffect": true
+        },
+        "supports": [
+          "criterion_4_0e26d2516ae7"
+        ],
+        "dependsOn": [],
+        "observation": {
+          "source": "operational_query",
+          "version": 1,
+          "assertion": {
+            "intent": "open_findings",
+            "status": "ok"
+          },
+          "freshness": "current"
+        },
+        "semanticHash": "sha256:ab5446a56ea64ffc3021cbce131883096f3c2990fab6baadb225153299249ab3",
+        "preconditions": [],
+        "expectedEffects": [
+          {
+            "kind": "query_result",
+            "assertion": {
+              "intent": "open_findings",
+              "status": "ok"
+            }
+          }
+        ],
+        "estimatedLatencyMs": null,
+        "estimatedCostMicros": null
+      }
+    ],
+    "assignments": [
+      {
+        "id": "f702d922-a7c3-4cde-8175-65a805d1afca",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "planRevisionId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+        "planNodeId": "node_b41a89ac6f6407ef2594fd72",
+        "objectiveLoopId": "7b2f834d-da8b-4bd7-af02-91466b571c59",
+        "objectiveStepId": "9b787f30-53a0-475a-8ea4-fd14e869df72",
+        "objectiveRevision": 1,
+        "nodeAttempt": 1,
+        "agentProfileId": "90000000-0000-4000-8000-000000000049",
+        "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+        "capability": "query:open_findings",
+        "nodeKind": "query",
+        "state": "completed",
+        "attempt": 1,
+        "leaseOwner": null,
+        "leaseUntil": null,
+        "budgetSnapshot": {
+          "p6": {
+            "maxActions": 5,
+            "maxQueries": 12,
+            "maxReplans": 12,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 604800005,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 12
+          },
+          "usage": {
+            "actions": 0,
+            "queries": 0,
+            "replans": 0,
+            "knownTokens": null,
+            "wallClockMs": 0,
+            "knownCostUsd": null,
+            "plannerCalls": 0
+          },
+          "profile": {
+            "maxActions": 4,
+            "maxQueries": 10,
+            "maxReplans": 4,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 900000,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 6
+          }
+        },
+        "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+        "assignmentScore": {
+          "sampleSize": 3,
+          "currentLoad": 0,
+          "knownCostUsd": null,
+          "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+          "medianLatencyMs": null,
+          "historicalEvidence": "UNKNOWN",
+          "humanRejectionRate": null,
+          "qualityFailureRate": null,
+          "exactCapabilityMatch": 1,
+          "verifiedCompletionRate": null,
+          "promotedRoutingPreference": 0
+        },
+        "previousAssignmentId": null,
+        "reassignmentReason": null,
+        "domainActionId": null,
+        "startedAt": "2026-09-28T20:01:06.219Z",
+        "completedAt": "2026-09-28T20:01:06.411Z",
+        "failure": null,
+        "createdAt": "2026-09-28T20:01:04.299Z",
+        "updatedAt": "2026-09-28T20:01:06.411Z"
+      },
+      {
+        "id": "2ca6a29d-fe85-49ee-ae53-4b19cdf01f38",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "planRevisionId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+        "planNodeId": "node_246468a8fbcbc17132fc649c",
+        "objectiveLoopId": "7b2f834d-da8b-4bd7-af02-91466b571c59",
+        "objectiveStepId": "b3872b6d-0b54-40f8-9a84-7e6ca318e0b8",
+        "objectiveRevision": 1,
+        "nodeAttempt": 1,
+        "agentProfileId": "90000000-0000-4000-8000-000000000049",
+        "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+        "capability": "query:open_deal_risks",
+        "nodeKind": "query",
+        "state": "completed",
+        "attempt": 1,
+        "leaseOwner": null,
+        "leaseUntil": null,
+        "budgetSnapshot": {
+          "p6": {
+            "maxActions": 5,
+            "maxQueries": 12,
+            "maxReplans": 12,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 604800005,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 12
+          },
+          "usage": {
+            "actions": 0,
+            "queries": 1,
+            "replans": 0,
+            "knownTokens": null,
+            "wallClockMs": 0,
+            "knownCostUsd": null,
+            "plannerCalls": 0
+          },
+          "profile": {
+            "maxActions": 4,
+            "maxQueries": 10,
+            "maxReplans": 4,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 900000,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 6
+          }
+        },
+        "assignmentReason": "Eligible exact capability query:open_deal_risks; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+        "assignmentScore": {
+          "sampleSize": 3,
+          "currentLoad": 1,
+          "knownCostUsd": null,
+          "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+          "medianLatencyMs": null,
+          "historicalEvidence": "UNKNOWN",
+          "humanRejectionRate": null,
+          "qualityFailureRate": null,
+          "exactCapabilityMatch": 1,
+          "verifiedCompletionRate": null,
+          "promotedRoutingPreference": 0
+        },
+        "previousAssignmentId": null,
+        "reassignmentReason": null,
+        "domainActionId": null,
+        "startedAt": "2026-09-28T20:01:06.226Z",
+        "completedAt": "2026-09-28T20:01:06.425Z",
+        "failure": null,
+        "createdAt": "2026-09-28T20:01:04.320Z",
+        "updatedAt": "2026-09-28T20:01:06.425Z"
+      },
+      {
+        "id": "b6b893ed-cd12-4d8f-9196-3b9550fc7619",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "planRevisionId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+        "planNodeId": "node_44add19a0fc8a5049ed91eec",
+        "objectiveLoopId": "7b2f834d-da8b-4bd7-af02-91466b571c59",
+        "objectiveStepId": "a4ba8769-d1c2-47a2-9992-2ba0d3121344",
+        "objectiveRevision": 1,
+        "nodeAttempt": 1,
+        "agentProfileId": "90000000-0000-4000-8000-000000000051",
+        "agentRevisionId": "90000000-0000-4000-8000-000000000052",
+        "capability": "query:pe_world_state",
+        "nodeKind": "query",
+        "state": "completed",
+        "attempt": 1,
+        "leaseOwner": null,
+        "leaseUntil": null,
+        "budgetSnapshot": {
+          "p6": {
+            "maxActions": 5,
+            "maxQueries": 12,
+            "maxReplans": 12,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 604800005,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 12
+          },
+          "usage": {
+            "actions": 0,
+            "queries": 0,
+            "replans": 0,
+            "knownTokens": null,
+            "wallClockMs": 0,
+            "knownCostUsd": null,
+            "plannerCalls": 0
+          },
+          "profile": {
+            "maxActions": 4,
+            "maxQueries": 10,
+            "maxReplans": 4,
+            "maxKnownTokens": null,
+            "maxWallClockMs": 900000,
+            "maxKnownCostUsd": null,
+            "maxPlannerCalls": 6
+          }
+        },
+        "assignmentReason": "Eligible exact capability query:pe_world_state; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000051.",
+        "assignmentScore": {
+          "sampleSize": 3,
+          "currentLoad": 0,
+          "knownCostUsd": null,
+          "stableTieBreak": "90000000-0000-4000-8000-000000000051",
+          "medianLatencyMs": null,
+          "historicalEvidence": "UNKNOWN",
+          "humanRejectionRate": null,
+          "qualityFailureRate": null,
+          "exactCapabilityMatch": 1,
+          "verifiedCompletionRate": null,
+          "promotedRoutingPreference": 0
+        },
+        "previousAssignmentId": null,
+        "reassignmentReason": null,
+        "domainActionId": null,
+        "startedAt": "2026-09-28T20:01:06.401Z",
+        "completedAt": "2026-09-28T20:01:06.528Z",
+        "failure": null,
+        "createdAt": "2026-09-28T20:01:04.337Z",
+        "updatedAt": "2026-09-28T20:01:06.528Z"
+      }
+    ],
+    "queryExecutions": [
+      {
+        "id": "e758e88e-dbfe-448b-a61a-85d40713b38f",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:revision:1:step:1:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 107,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:06.272Z",
+        "completedAt": "2026-09-28T20:01:06.387Z"
+      },
+      {
+        "id": "ee76283c-a208-4cd7-9d5f-ed5db1c7ccd4",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:revision:1:step:2:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 101,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:06.283Z",
+        "completedAt": "2026-09-28T20:01:06.389Z"
+      },
+      {
+        "id": "67aa4f01-d022-48b0-a2e5-ec03938d82c8",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:revision:1:step:3:decision-query",
+        "status": "succeeded",
+        "resultSummary": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state",
+          "stateAt": "2026-09-28T20:01:06.446Z",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 59,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:06.439Z",
+        "completedAt": "2026-09-28T20:01:06.500Z"
+      },
+      {
+        "id": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "pe_world_state",
+        "request": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:step:4:success:criterion:2",
+        "status": "succeeded",
+        "resultSummary": {
+          "root": {
+            "entityId": "90000000-0000-4000-8000-000000000001",
+            "entityType": "pe_deal"
+          },
+          "intent": "pe_world_state",
+          "stateAt": "2026-09-28T20:01:10.678Z",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 54,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:10.674Z",
+        "completedAt": "2026-09-28T20:01:10.730Z"
+      },
+      {
+        "id": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "open_findings",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:step:4:success:criterion:3",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_findings",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 55,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:10.733Z",
+        "completedAt": "2026-09-28T20:01:10.790Z"
+      },
+      {
+        "id": "3a407f47-3a03-4331-b4e5-cc40477f58ef",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "03025b7a-9fe3-4708-ae1f-804c993c2323",
+        "workInputId": null,
+        "intent": "open_deal_risks",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks"
+        },
+        "executionKey": "objective:7b2f834d-da8b-4bd7-af02-91466b571c59:step:4:success:criterion:4",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "open_deal_risks",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 43,
+        "failure": null,
+        "startedAt": "2026-09-28T20:01:10.794Z",
+        "completedAt": "2026-09-28T20:01:10.839Z"
+      }
+    ],
+    "verification": {
+      "state": "verified",
+      "results": [
+        {
+          "kind": "no_open_execution",
+          "basis": "No objective execution or approval responsibility remains open.",
+          "index": 0,
+          "satisfied": true,
+          "evidenceRefs": []
+        },
+        {
+          "kind": "all_objective_effects_verified",
+          "basis": "All 0 objective Business Effects are verified.",
+          "index": 1,
+          "observed": [],
+          "satisfied": true,
+          "evidenceRefs": []
+        },
+        {
+          "kind": "canonical_query",
+          "basis": "The current Operational Query result satisfies the persisted assertion.",
+          "index": 2,
+          "observed": {
+            "path": [
+              "root",
+              "entityId"
+            ],
+            "actual": "90000000-0000-4000-8000-000000000001",
+            "expected": "90000000-0000-4000-8000-000000000001",
+            "operator": "eq"
+          },
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+              "type": "work_query_execution"
+            }
+          ],
+          "queryExecutionId": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f"
+        },
+        {
+          "kind": "canonical_query",
+          "basis": "The current Operational Query result satisfies the persisted assertion.",
+          "index": 3,
+          "observed": {
+            "path": [
+              "status"
+            ],
+            "actual": "ok",
+            "expected": "ok",
+            "operator": "eq"
+          },
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+              "type": "work_query_execution"
+            }
+          ],
+          "queryExecutionId": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e"
+        },
+        {
+          "kind": "canonical_query",
+          "basis": "The current Operational Query result satisfies the persisted assertion.",
+          "index": 4,
+          "observed": {
+            "path": [
+              "status"
+            ],
+            "actual": "ok",
+            "expected": "ok",
+            "operator": "eq"
+          },
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "3a407f47-3a03-4331-b4e5-cc40477f58ef",
+              "type": "work_query_execution"
+            }
+          ],
+          "queryExecutionId": "3a407f47-3a03-4331-b4e5-cc40477f58ef"
+        }
+      ],
+      "version": 1,
+      "evidence": [],
+      "checkedAt": "2026-09-28T20:01:10.840Z",
+      "conditionHash": "ebd89c71b06f2c6094d8b707468565869b3aa4d0e53b1fa3c8e11e9d43ae589d",
+      "queryExecutionIds": [
+        "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+        "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+        "3a407f47-3a03-4331-b4e5-cc40477f58ef"
+      ]
+    },
+    "completionProof": {
+      "version": 1,
+      "verified": true,
+      "verifiedAt": "2026-09-28T20:01:10.840Z",
+      "evidenceRefs": [
+        {
+          "id": "3a407f47-3a03-4331-b4e5-cc40477f58ef",
+          "type": "work_query_execution"
+        },
+        {
+          "id": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+          "type": "work_query_execution"
+        },
+        {
+          "id": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+          "type": "work_query_execution"
+        }
+      ],
+      "verification": {
+        "state": "verified",
+        "results": [
+          {
+            "kind": "no_open_execution",
+            "basis": "No objective execution or approval responsibility remains open.",
+            "index": 0,
+            "satisfied": true,
+            "evidenceRefs": []
+          },
+          {
+            "kind": "all_objective_effects_verified",
+            "basis": "All 0 objective Business Effects are verified.",
+            "index": 1,
+            "observed": [],
+            "satisfied": true,
+            "evidenceRefs": []
+          },
+          {
+            "kind": "canonical_query",
+            "basis": "The current Operational Query result satisfies the persisted assertion.",
+            "index": 2,
+            "observed": {
+              "path": [
+                "root",
+                "entityId"
+              ],
+              "actual": "90000000-0000-4000-8000-000000000001",
+              "expected": "90000000-0000-4000-8000-000000000001",
+              "operator": "eq"
+            },
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+                "type": "work_query_execution"
+              }
+            ],
+            "queryExecutionId": "6458d97d-1eb6-4f44-8003-f2ed19c1b64f"
+          },
+          {
+            "kind": "canonical_query",
+            "basis": "The current Operational Query result satisfies the persisted assertion.",
+            "index": 3,
+            "observed": {
+              "path": [
+                "status"
+              ],
+              "actual": "ok",
+              "expected": "ok",
+              "operator": "eq"
+            },
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+                "type": "work_query_execution"
+              }
+            ],
+            "queryExecutionId": "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e"
+          },
+          {
+            "kind": "canonical_query",
+            "basis": "The current Operational Query result satisfies the persisted assertion.",
+            "index": 4,
+            "observed": {
+              "path": [
+                "status"
+              ],
+              "actual": "ok",
+              "expected": "ok",
+              "operator": "eq"
+            },
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "3a407f47-3a03-4331-b4e5-cc40477f58ef",
+                "type": "work_query_execution"
+              }
+            ],
+            "queryExecutionId": "3a407f47-3a03-4331-b4e5-cc40477f58ef"
+          }
+        ],
+        "version": 1,
+        "evidence": [],
+        "checkedAt": "2026-09-28T20:01:10.840Z",
+        "conditionHash": "ebd89c71b06f2c6094d8b707468565869b3aa4d0e53b1fa3c8e11e9d43ae589d",
+        "queryExecutionIds": [
+          "6458d97d-1eb6-4f44-8003-f2ed19c1b64f",
+          "7df0c2c8-5149-45a3-80c3-adc1cfb49e8e",
+          "3a407f47-3a03-4331-b4e5-cc40477f58ef"
+        ]
+      },
+      "planRevisionId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+      "goalSemanticHash": "sha256:ebf2fc77ad7f75255656e8f91c5f9291882200569b70eca0a34495b5b56ad4ff",
+      "planSemanticHash": "sha256:1bf81b33796dc6a2482c993bd2c3884a41502a1004b68d1edf0e23796c899790",
+      "finalPlanRevisionId": "e58a34bd-fd31-415d-a6a9-7a428ce82bac",
+      "successConditionHash": "sha256:ebd89c71b06f2c6094d8b707468565869b3aa4d0e53b1fa3c8e11e9d43ae589d"
+    },
+    "canvasReads": "Objective\n\nCaptured as durable Work\n\nWork Plan\n\nRevision 1 · initial\n\nWork execution\n\n0 recorded Work actions · 10 completed canonical reads (closing readiness, open findings, open deal risks, pe world state) · 0 observed business effects\n\nVerification\n\nCompletion proof verified\n\nOutcome\n\nVerify the accepted GoalSpec against current canonical business state.",
+    "overlapPairs": [
+      [
+        "f702d922-a7c3-4cde-8175-65a805d1afca",
+        "2ca6a29d-fe85-49ee-ae53-4b19cdf01f38"
+      ],
+      [
+        "f702d922-a7c3-4cde-8175-65a805d1afca",
+        "b6b893ed-cd12-4d8f-9196-3b9550fc7619"
+      ],
+      [
+        "2ca6a29d-fe85-49ee-ae53-4b19cdf01f38",
+        "b6b893ed-cd12-4d8f-9196-3b9550fc7619"
+      ]
+    ],
+    "workforceVisible": true,
+    "canvasVisible": true
+  },
+  "steps": [
+    "Authenticate owner and submit the exact whole-Deal recheck",
+    "Inspect the immutable PlanGraph for three independent Deal-bound canonical reads and dependent checks",
+    "Wait for actual specialist assignments and verify overlapping execution intervals",
+    "Verify the three Work-linked queries and terminal success/CompletionProof",
+    "Reopen the Thread, inspect individual specialist assignments, Canvas source-read counts, and reload persistence"
+  ],
+  "screenshotSha256": "c48b886e41396929064e5d849446de6019c9d59794ce15adab8a8a923fe20cbb",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-parallel-deal-recheck.spec.ts --project=desktop-chromium",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas Deal and local worker stack"
+    ]
+  },
+  "limitation": "Local fixture proof. Release-host execution, operator redirection during live specialist work, and material source synthesis remain open."
+}

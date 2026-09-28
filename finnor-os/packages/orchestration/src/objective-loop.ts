@@ -8,7 +8,8 @@
 
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
+import { assembleOperatingContext } from "./operating-context";
+import { and, asc, desc, eq, inArray, isNotNull, lt, lte, sql } from "drizzle-orm";
 import type { DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
 import {
   MAX_HIGH_EGRESS_ROWS,
@@ -33,6 +34,7 @@ import {
   receiveWork,
   tenantSettings,
   transitionWork,
+  transitionWorkTx,
   users,
   withTenant,
   workAggregate,
@@ -42,6 +44,7 @@ import {
   workEventWaits,
   workEvents,
   workInputs,
+  workPlannerAttempts,
   workPlanRevisions,
   workRecoveryDecisions,
   workforceAssignments,
@@ -78,6 +81,7 @@ import { resolveProviderForPurpose } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
 import { plannerActionTypesForVertical, planningCapabilitiesForVertical } from "./plugin-registry";
 import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
+import { parseModelJson } from "./model-json";
 import { PlanCompilationError, deterministicPlanActionId, selectPlanRevision } from "./plan-runtime";
 import { resolvePlanProgress, type PlanReplanCause } from "./plan-progress";
 import { irreversibleEffectReplayFence, reserveReadyPlanFrontier, type FrontierReservationResult } from "./orchestration-kernel";
@@ -91,7 +95,11 @@ import { ingestIntegrationEvent, markObjectiveWakeConsumed, objectiveWakeContext
 import { resolveOperatingInteractionContext } from "./interaction-context";
 import {
   defaultObjectiveSuccessCondition,
+  redirectedObjectiveSuccessCondition,
   evaluateObjectiveSuccessCondition,
+  icReviewCompletionEvidence,
+  icDeckCompletionEvidence,
+  underwritingCompletionEvidence,
   inspectCurrentObjectiveSuccessState,
   ObjectiveCompletionEvidenceSchema,
   parseObjectiveCompletionEvidence,
@@ -171,6 +179,7 @@ export interface ObjectiveInspection extends Record<string, unknown> {
   objective: Record<string, unknown>;
   companyGraph: Record<string, unknown>;
   businessState: unknown;
+  privateEquityIcBasis?: unknown;
   companyContext?: unknown;
   executionAccess: Record<string, unknown>;
   computerRuns: unknown[];
@@ -179,11 +188,123 @@ export interface ObjectiveInspection extends Record<string, unknown> {
   eventWake: unknown;
   eventWaits: unknown[];
   integrationEvents: unknown[];
+  queryExecutions: unknown[];
   actions: unknown[];
   businessEffects: unknown[];
   operations: unknown[];
   receipts: unknown[];
   priorIterations: unknown[];
+}
+
+async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, workId: string): Promise<Record<string, unknown>> {
+  return withTenant(tenantId, async (db) => {
+    const investments = await db.execute(sql`
+      SELECT id::text,title,state,version FROM finnor_os.pe_investment_cases
+      WHERE tenant_id=${tenantId}::uuid AND deal_id=${dealId}::uuid
+      ORDER BY updated_at DESC,id LIMIT 8
+    `);
+    const versions = await db.execute(sql`
+      SELECT version.id::text,version.investment_case_id::text,version.version_key,version.model_definition
+      FROM finnor_os.underwriting_model_versions version
+      JOIN finnor_os.pe_investment_cases investment
+        ON investment.tenant_id=version.tenant_id AND investment.id=version.investment_case_id
+      WHERE version.tenant_id=${tenantId}::uuid AND investment.deal_id=${dealId}::uuid
+      ORDER BY version.created_at DESC,version.id LIMIT 8
+    `);
+    const runs = await db.execute(sql`
+      SELECT run.id::text,run.investment_case_id::text,run.model_version_id::text,run.work_id::text,
+             run.scenario_id::text,run.status,run.validity,run.computed_at,run.input_snapshot
+      FROM finnor_os.underwriting_runs run
+      JOIN finnor_os.pe_investment_cases investment
+        ON investment.tenant_id=run.tenant_id AND investment.id=run.investment_case_id
+      WHERE run.tenant_id=${tenantId}::uuid AND investment.deal_id=${dealId}::uuid
+      ORDER BY CASE WHEN run.work_id=${workId}::uuid THEN 0 WHEN run.scenario_id IS NULL THEN 1 ELSE 2 END,
+        run.computed_at DESC,run.id LIMIT 16
+    `);
+    const cases = await db.execute(sql`
+      SELECT id::text,investment_case_id::text,committee_config_version_id::text,final_decision_id::text,
+             state,version,primary_underwriting_run_id::text,current_memo_id::text,current_deck_id::text,current_recommendation_id::text
+      FROM finnor_os.pe_ic_cases
+      WHERE tenant_id=${tenantId}::uuid AND deal_id=${dealId}::uuid
+      ORDER BY updated_at DESC,id LIMIT 8
+    `);
+    const configs = await db.execute(sql`
+      SELECT id::text,config_version,committee_org_unit_id::text
+      FROM finnor_os.pe_ic_committee_config_versions
+      WHERE tenant_id=${tenantId}::uuid ORDER BY created_at DESC,id LIMIT 8
+    `);
+    const templates = await db.execute(sql`
+      SELECT DISTINCT ON (template_key) template_key,version_id::text,kind,status
+      FROM finnor_os.artifact_templates
+      WHERE tenant_id=${tenantId}::uuid ORDER BY template_key,created_at DESC LIMIT 20
+    `);
+    const memoDrafts = await db.execute(sql`
+      SELECT link.entity_id::text ic_case_id,document.id::text document_id,
+             version.id::text document_version_id,version.created_at,
+             document.external_id action_id
+      FROM finnor_os.pe_document_links link
+      JOIN finnor_os.documents document ON document.tenant_id=link.tenant_id AND document.id=link.document_id
+      JOIN finnor_os.document_versions version ON version.tenant_id=document.tenant_id AND version.document_id=document.id
+      WHERE link.tenant_id=${tenantId}::uuid AND link.deal_id=${dealId}::uuid
+        AND link.entity_type='pe_ic_case' AND link.archived_at IS NULL
+        AND document.source_system='ic_memo_draft' AND document.archived_at IS NULL
+        AND version.source_ref=document.external_id
+      ORDER BY version.created_at DESC,version.id LIMIT 12
+    `);
+    const memoSelections = await db.execute(sql`
+      SELECT id::text,ic_case_id::text,document_id::text,document_version_id::text,
+             source_completeness,underwriting_run_id::text,created_at
+      FROM finnor_os.pe_ic_memos WHERE tenant_id=${tenantId}::uuid AND deal_id=${dealId}::uuid
+        AND artifact_role='MEMO' ORDER BY created_at DESC,id LIMIT 12
+    `);
+    return {
+      dealId,
+      investmentCases: investments.rows,
+      modelVersions: versions.rows.map((raw) => {
+        const row = raw as Record<string, unknown>;
+        const definition = isRecord(row.model_definition) ? row.model_definition : {};
+        const nodes = Array.isArray(definition.nodes) ? definition.nodes : [];
+        return {
+          id: row.id, investmentCaseId: row.investment_case_id, versionKey: row.version_key,
+          // The objective planner can only construct or validate these scenario
+          // inputs. Carrying every model node for every historical version can
+          // exceed the durable inspection bound and erase the entire IC basis.
+          inputNodes: nodes.filter((node) => isRecord(node) && node.kind === "input"
+            && ["operating.revenue_explicit", "operating.revenue_growth", "exit.multiple"].includes(String(node.id)))
+            .map((node) => ({ id: node.id, unit: node.unit, shape: node.shape, valueType: node.valueType })),
+        };
+      }),
+      recentRuns: runs.rows.map((raw) => {
+        const row = raw as Record<string, unknown>;
+        const snapshot = isRecord(row.input_snapshot) ? row.input_snapshot : {};
+        const values = isRecord(snapshot.values) ? snapshot.values : {};
+        const revenue = isRecord(values["operating.revenue_explicit"]) ? values["operating.revenue_explicit"] : null;
+        const growth = isRecord(values["operating.revenue_growth"]) ? values["operating.revenue_growth"] : null;
+        const exitMultiple = isRecord(values["exit.multiple"]) ? values["exit.multiple"] : null;
+        return {
+          id: row.id, investmentCaseId: row.investment_case_id, modelVersionId: row.model_version_id,
+          workId: row.work_id, scenarioId: row.scenario_id, status: row.status, validity: row.validity, computedAt: row.computed_at,
+          revenueInput: revenue ? { nodeId: revenue.nodeId, status: revenue.status, value: revenue.value } : null,
+          growthInput: growth ? { nodeId: growth.nodeId, status: growth.status, value: growth.value } : null,
+          exitMultipleInput: exitMultiple ? { nodeId: exitMultiple.nodeId, status: exitMultiple.status, value: exitMultiple.value } : null,
+        };
+      }),
+      icCases: cases.rows.map((raw) => {
+        const row = raw as Record<string, unknown>;
+        return {
+          id: row.id, investmentCaseId: row.investment_case_id, committeeConfigVersionId: row.committee_config_version_id,
+          state: row.state, version: row.version, primaryUnderwritingRunId: row.primary_underwriting_run_id,
+          currentMemoId: row.current_memo_id, currentDeckId: row.current_deck_id,
+          currentRecommendationId: row.current_recommendation_id,
+          finalDecisionId: row.final_decision_id,
+        };
+      }),
+      committeeConfigVersions: configs.rows,
+      artifactTemplates: templates.rows,
+      generatedMemoDrafts: memoDrafts.rows,
+      memoSelections: memoSelections.rows,
+    };
+  });
 }
 
 export interface ObjectiveDecisionPlanner {
@@ -254,6 +375,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
+/** The Work context and entity links are separate canonical records. Passing
+ * their containing inspection object to canonicalRefsFromContext loses both. */
+export function objectivePlanningRefs(inspection: Pick<ObjectiveInspection, "work" | "companyGraph" | "privateEquityIcBasis">): Array<{ entityType: string; entityId: string; sourceRef: string }> {
+  const context = isRecord(inspection.work.activeContext) ? inspection.work.activeContext : {};
+  const selected = { focusedEntity: context.focusedEntity, selectedEntities: context.selectedEntities };
+  const contextRefs = [...canonicalRefsFromContext(selected), ...privateEquityRefsFromContext(selected)]
+    .map((ref) => ({ ...ref, sourceRef: "work.active_context" }));
+  const links = Array.isArray(inspection.companyGraph.entityLinks)
+    ? inspection.companyGraph.entityLinks.filter((link) => isRecord(link) && ["about", "target"].includes(String(link.relationship)))
+    : [];
+  const linkRefs = links.flatMap((link) => [...canonicalRefsFromContext({ entityRefs: [link] }), ...privateEquityRefsFromContext(link)]
+    .map((ref) => ({ ...ref, sourceRef: isRecord(link) && typeof link.id === "string" ? `work_entity_links:${link.id}` : "work_entity_links" })));
+  const basis = isRecord(inspection.privateEquityIcBasis) ? inspection.privateEquityIcBasis : {};
+  const basisRefs: Array<{ entityType: string; entityId: string; sourceRef: string }> = [];
+  for (const [field, entityType] of [
+    ["investmentCases", "pe_investment_case"], ["recentRuns", "underwriting_run"],
+    ["icCases", "pe_ic_case"], ["memoSelections", "pe_ic_memo"],
+  ] as const) {
+    const rows = Array.isArray(basis[field]) ? basis[field] : [];
+    for (const row of rows) {
+      if (!isRecord(row) || typeof row.id !== "string" || !/^[0-9a-f-]{36}$/i.test(row.id)) continue;
+      basisRefs.push({ entityType, entityId: row.id, sourceRef: `private_equity_ic_basis.${field}` });
+    }
+  }
+  const unique = new Map<string, (typeof contextRefs)[number]>();
+  for (const ref of [...contextRefs, ...linkRefs, ...basisRefs]) {
+    const key = `${ref.entityType}:${ref.entityId}`;
+    if (!unique.has(key)) unique.set(key, ref);
+  }
+  return [...unique.values()];
+}
+
 function intakeAuthorityContext(ctx: TenantContext): Record<string, unknown> {
   if (!ctx.employeeId && ctx.userId.startsWith("system:")) return { principal: ctx.userId, kind: "service" };
   return {
@@ -297,11 +450,24 @@ function semanticQueryResult(result: unknown): unknown {
 }
 
 function failureShape(error: unknown): Record<string, unknown> {
-  const message = error instanceof Error ? error.message : String(error);
-  const name = error instanceof Error ? error.name : "Error";
+  // Drizzle wraps the actual database error with SQL and parameter values.
+  // Read the bounded cause so a large plan can neither overflow the failure
+  // column nor turn a business "deadline" field into a false timeout.
+  let cause = error;
+  const seen = new Set<unknown>();
+  for (let depth = 0; depth < 8 && cause instanceof Error && cause.cause instanceof Error && !seen.has(cause.cause); depth++) {
+    seen.add(cause);
+    cause = cause.cause;
+  }
+  const original = cause instanceof Error ? cause.message : String(cause);
+  const message = original.slice(0, 2000);
+  const name = (cause instanceof Error ? cause.name : "Error").slice(0, 160);
+  const code = isRecord(cause) && typeof cause.code === "string" ? cause.code.slice(0, 64) : null;
   return {
     message,
     name,
+    ...(code ? { code } : {}),
+    ...(message !== original ? { messageTruncated: true, messageBytes: Buffer.byteLength(original, "utf8"), messageHash: hash(original) } : {}),
     timeout: name === "AbortError" || /\b(?:timeout|timed out|deadline|aborted?)\b/i.test(message),
     at: new Date().toISOString(),
   };
@@ -320,38 +486,7 @@ function channel(value: string): LLMChannel {
  * a bare object. Extract one balanced object, then let the strict decision schema
  * remain the authority. A second JSON value is rejected so commentary can never
  * smuggle an additional autonomous step into the iteration. */
-export function parseObjectiveModelJson(raw: string): unknown {
-  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  try {
-    return JSON.parse(cleaned);
-  } catch (originalError) {
-    const start = cleaned.indexOf("{");
-    if (start < 0) throw originalError;
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-    let end = -1;
-    for (let index = start; index < cleaned.length; index += 1) {
-      const character = cleaned[index]!;
-      if (inString) {
-        if (escaped) escaped = false;
-        else if (character === "\\") escaped = true;
-        else if (character === '"') inString = false;
-        continue;
-      }
-      if (character === '"') inString = true;
-      else if (character === "{") depth += 1;
-      else if (character === "}") {
-        depth -= 1;
-        if (depth === 0) { end = index; break; }
-      }
-    }
-    if (end < 0) throw originalError;
-    const suffix = cleaned.slice(end + 1).replace(/^\s*```/, "").trim();
-    if (/^[{[]/.test(suffix)) throw new Error("Objective decision provider returned more than one JSON value");
-    return JSON.parse(cleaned.slice(start, end + 1));
-  }
-}
+export const parseObjectiveModelJson = parseModelJson;
 
 export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
   private provider: LLMProvider | undefined;
@@ -458,7 +593,7 @@ async function scheduleIterationTx(
 
 async function scheduleIteration(loop: SchedulableObjectiveLoop, runAt: Date, correlationId?: string): Promise<void> {
   await withTenant(loop.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${loop.tenantId} AND ${workObjectiveLoops.id}=${loop.id} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${loop.tenantId} AND ${workObjectiveLoops.id}=${loop.id} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(
       eq(workObjectiveLoops.tenantId, loop.tenantId),
       eq(workObjectiveLoops.id, loop.id),
@@ -470,7 +605,7 @@ async function scheduleIteration(loop: SchedulableObjectiveLoop, runAt: Date, co
 
 export async function ensureObjectiveIterationDelivery(tenantId: string, objectiveLoopId: string, correlationId?: string): Promise<boolean> {
   return withTenant(tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${tenantId} AND ${workObjectiveLoops.id}=${objectiveLoopId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${tenantId} AND ${workObjectiveLoops.id}=${objectiveLoopId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(
       eq(workObjectiveLoops.tenantId, tenantId),
       eq(workObjectiveLoops.id, objectiveLoopId),
@@ -546,7 +681,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       : defaultObjectiveSuccessCondition(objective);
   }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR NO KEY UPDATE`);
     const [currentWork] = await db.select().from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId))).limit(1);
     const [latestInput] = await db.select({ id: workInputs.id }).from(workInputs)
       .where(and(eq(workInputs.tenantId, ctx.tenantId), eq(workInputs.workId, input.workId)))
@@ -606,6 +741,11 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       )).limit(1);
       if (setting && !setting.enabled) throw new Error(`Outcome Pack ${options.outcomePack.packId} is disabled: ${setting.reason ?? "operator control"}`);
     }
+    // IC preparation spans a grounded read, underwriting, case opening, and
+    // human approval waits. Each continuation materializes its own PlanRevision
+    // and bounded node attempts, so the generic twelve-step budget expires
+    // before the second approval can be exercised.
+    const isIcPreparation = successCondition.criteria.some((criterion) => criterion.kind === "private_equity_ic_preparation");
     const [created] = await db.insert(workObjectiveLoops).values({
       tenantId: ctx.tenantId,
       workId: input.workId,
@@ -614,9 +754,13 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       state: "continue",
       createdBy: ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null),
       initialChannel: options.channel ?? "text",
-      maxSteps: options.maxSteps ?? 12,
-      maxActions: options.maxActions ?? 5,
-      maxQueries: options.maxQueries ?? 12,
+      maxSteps: options.maxSteps ?? (isIcPreparation ? 72 : 12),
+      // An IC Objective reserves action attempts for underwriting, case opening,
+      // memo/deck preparation, exact-version selection, recommendation, and
+      // review. The reservation budget includes safe failed attempts, not just
+      // verified business effects.
+      maxActions: options.maxActions ?? (isIcPreparation ? 20 : 5),
+      maxQueries: options.maxQueries ?? (isIcPreparation ? 16 : 12),
       maxPlannerFailures: options.maxPlannerFailures ?? 3,
       maxConsecutiveNoProgress: options.maxConsecutiveNoProgress ?? 3,
       deadlineAt: options.deadlineAt ?? new Date(Date.now() + 7 * 86_400_000),
@@ -685,9 +829,9 @@ async function workerContext(tenantId: string, workId: string): Promise<{ ctx: T
   });
 }
 
-async function claimStep(tenantId: string, loopId: string, leaseOwner: string, expectedRevision?: number, expectedStepNumber?: number) {
+async function claimStep(tenantId: string, loopId: string, leaseOwner: string, expectedRevision?: number, expectedStepNumber?: number, controllerOnly = false, workforceRecoveryAssignmentId?: string) {
   return withTenant(tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${loopId} AND ${workObjectiveLoops.tenantId}=${tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${loopId} AND ${workObjectiveLoops.tenantId}=${tenantId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId))).limit(1);
     if (!loop) throw new Error("Objective loop not found");
     if (["blocked", "completed", "failed", "cancelled"].includes(loop.state)) return { loop, step: null, terminal: true } as const;
@@ -699,6 +843,9 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
       expectedStepNumber !== undefined
         ? eq(workObjectiveSteps.stepNumber, expectedStepNumber)
         : sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')`,
+      // An event wake's expected number may have become a reserved node since
+      // enqueue. Only its exact assignment delivery may claim that node.
+      controllerOnly && !workforceRecoveryAssignmentId ? sql`(${workObjectiveSteps.executionRole} IS NULL OR ${workObjectiveSteps.executionRole}='controller')` : undefined,
     )).orderBy(desc(workObjectiveSteps.stepNumber)).limit(1);
     if (expectedStepNumber !== undefined && ((unfinished && unfinished.stepNumber !== expectedStepNumber) || (!unfinished && loop.stepCount >= expectedStepNumber))) {
       return { loop, step: null, terminal: true } as const;
@@ -706,6 +853,16 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
     const leaseUntil = new Date(Date.now() + 30_000);
     if (unfinished) {
       if (unfinished.executionRole === "node") {
+        if (controllerOnly) {
+          // Only an explicit recovery delivery may prepare a successor for a
+          // terminal physical owner. Ordinary event wakes cannot steal nodes.
+          const [recoveryOwner] = workforceRecoveryAssignmentId ? await db.select({ id: workforceAssignments.id }).from(workforceAssignments).where(and(
+            eq(workforceAssignments.tenantId, tenantId), eq(workforceAssignments.id, workforceRecoveryAssignmentId),
+            eq(workforceAssignments.objectiveLoopId, loop.id), eq(workforceAssignments.objectiveStepId, unfinished.id),
+            eq(workforceAssignments.workId, loop.workId), inArray(workforceAssignments.state, ["failed", "reassigned"]),
+          )).limit(1) : [];
+          if (!recoveryOwner) return { loop, step: null, terminal: true } as const;
+        }
         if (unfinished.objectiveRevision !== loop.revision || !unfinished.planRevisionId || !unfinished.planNodeId) return { loop, step: null, terminal: true } as const;
         const [activePlan] = await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
           eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, unfinished.planRevisionId), eq(workPlanRevisions.status, "active"),
@@ -792,6 +949,8 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     workId,
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
+  const privateEquityIcBasis = businessRequest.intent === "closing_readiness"
+    ? await inspectPrivateEquityIcBasis(tenantId, businessRequest.dealId, workId) : undefined;
   const objectiveSteps = aggregate.objectiveSteps as Array<typeof workObjectiveSteps.$inferSelect>;
   const actorId = ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null);
   const [identityAccess, computerConfig, computerRunRows, delegationRows, acknowledgementRows, eventWake] = await Promise.all([
@@ -935,13 +1094,38 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
       workId: event.workId, occurredAt: event.occurredAt instanceof Date ? event.occurredAt.toISOString() : event.occurredAt,
       trustClass: event.trustClass,
     })),
-    businessState: bounded(businessState, 40_000),
-    actions,
-    businessEffects: effectRows.map((effect) => ({
-      ...effect,
-      observedAt: effect.observedAt?.toISOString() ?? null,
-      observedResult: bounded(effect.observedResult, 12_000),
+    queryExecutions: (aggregate.queryExecutions as Array<Record<string, unknown>>).map((query) => ({
+      id: query.id, intent: query.intent, status: query.status,
     })),
+    businessState: bounded(businessState, 40_000),
+    ...(privateEquityIcBasis ? { privateEquityIcBasis: bounded(privateEquityIcBasis, 16_000) } : {}),
+    actions,
+    // The immutable EffectSet and full verifier receipt stay in their own
+    // canonical tables. Carry the fields needed to reason about this Work's
+    // progress and resource identity; copying every before/delta/observed blob
+    // into every later Objective inspection grows past its durable JSON limit.
+    businessEffects: effectRows.map((effect) => {
+      const effectSet = isRecord(effect.effect) ? effect.effect : {};
+      const verification = isRecord(effect.verification) ? effect.verification : {};
+      return {
+        id: effect.id,
+        domainActionId: effect.domainActionId,
+        status: effect.status,
+        effect: {
+          id: effectSet.id,
+          source: effectSet.source,
+          targets: effectSet.targets,
+          expected: effectSet.expected,
+          operation: effectSet.operation,
+          semanticHash: effectSet.semanticHash,
+          delta: bounded(effectSet.delta, 1_000),
+          before: bounded(effectSet.before, 1_000),
+        },
+        verification: { state: verification.state, basis: verification.basis, checkedAt: verification.checkedAt },
+        observedAt: effect.observedAt?.toISOString() ?? null,
+        observedResult: bounded(effect.observedResult, 4_000),
+      };
+    }),
     operations,
     receipts,
     priorIterations: objectiveSteps.filter((item) => item.id !== step.id).slice(-8).map((item) => ({
@@ -1129,7 +1313,9 @@ async function finishIteration(params: {
   wakeClaimedDuringWaitCreation?: boolean;
 }> {
   const result = await withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR UPDATE`);
+    // Loop identity is immutable. Serialize state/fencing changes while allowing
+    // concurrent PlanRevision/assignment foreign-key KEY SHARE checks.
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, params.loop.id)).limit(1);
     if (!current) throw new Error("Objective loop disappeared while finishing an iteration");
     const [currentStep] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id))).limit(1);
@@ -1259,6 +1445,17 @@ async function finishIteration(params: {
       leaseUntil: nodeAttempt ? current.leaseUntil : null,
       updatedAt: new Date(),
     }).where(eq(workObjectiveLoops.id, current.id)).returning();
+    if (["completed", "blocked", "failed", "cancelled"].includes(outcome)) {
+      // A PlanGraph may reserve several check nodes before the first one
+      // completes the Objective. Its unused queued assignments must release
+      // capacity atomically with the terminal loop transition. Keep claimed
+      // and running assignments intact for their own effect reconciliation.
+      await db.update(workforceAssignments).set({
+        state: "cancelled", completedAt: new Date(), leaseOwner: null, leaseUntil: null,
+        failure: { code: "OBJECTIVE_TERMINAL", objectiveState: outcome }, updatedAt: new Date(),
+      }).where(and(eq(workforceAssignments.tenantId, params.tenantId),
+        eq(workforceAssignments.objectiveLoopId, current.id), eq(workforceAssignments.state, "queued")));
+    }
     let finalLoop = updated!;
     let wakeClaimedDuringWaitCreation = false;
     if ((stepOutcome === "waiting" || stepOutcome === "awaiting_approval") && params.durableWait) {
@@ -1518,13 +1715,12 @@ async function objectivePlanningInputs(params: {
     .map((effect) => effect.semanticHash);
   const stateProjection = objectiveStateProjection(params.inspection);
   const stateHash = planningHash(stateProjection);
-  const rawRefs = canonicalRefsFromContext({ work: params.inspection.work, companyGraph: params.inspection.companyGraph });
-  const refs = rawRefs.filter((ref, index, all) => all.findIndex((candidate) => candidate.entityType === ref.entityType && candidate.entityId === ref.entityId) === index);
+  const refs = objectivePlanningRefs(params.inspection);
   const targets = refs.map((ref) => ({
     kind: "entity" as const,
     type: ref.entityType,
     id: ref.entityId,
-    sourceRef: "work.active_context",
+    sourceRef: ref.sourceRef,
   }));
   const condition = parseObjectiveSuccessCondition(params.loop.successCondition);
   const authority = await employeeAuthoritySnapshot(params.ctx).catch(() => ({
@@ -1709,6 +1905,7 @@ export class ObjectiveLoopRuntime {
     expectedRevision?: number;
     expectedStepNumber?: number;
     workforceAssignmentId?: string;
+    workforceRecoveryAssignmentId?: string;
     /** Existing Objective jobs defer; direct/manual invocations may execute the
      * same governed assignment inline without bypassing assignment/lease checks. */
     deferToWorkforceJob?: boolean;
@@ -1716,7 +1913,8 @@ export class ObjectiveLoopRuntime {
     signal?: AbortSignal;
   }): Promise<ObjectiveIterationOutcome> {
     const leaseOwner = params.workforceLeaseOwner ?? randomUUID();
-    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber);
+    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber,
+      params.deferToWorkforceJob === true && !params.workforceAssignmentId, params.workforceRecoveryAssignmentId);
     if (claimed.terminal || !claimed.step) return claimed.loop.state;
     const loop = claimed.loop;
     const step = claimed.step;
@@ -1766,25 +1964,6 @@ export class ObjectiveLoopRuntime {
       await releaseLease(params.tenantId, loop.id, leaseOwner);
       throw error;
     }
-    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ inspection: bounded(inspection, 128_000) as object, inspectionHash, phase: "deciding" }).where(eq(workObjectiveSteps.id, step.id)));
-    await markObjectiveWakeConsumed(params.tenantId, loop.id, loop.revision);
-
-    const unresolved = params.workforceAssignmentId ? null : unresolvedEffect(inspection);
-    if (unresolved) {
-      return (await finishIteration({
-        tenantId: params.tenantId, loop, step, outcome: unresolved.outcome, reason: unresolved.reason,
-        nextStep: unresolved.outcome === "awaiting_approval" ? "Resume this same objective after authorization." : "Observe the durable result when its exact event arrives.",
-        observation: { canonicalInspectionHash: inspectionHash }, progressMade: false,
-        durableWait: { waitFor: unresolved.waitFor, conditionSummary: unresolved.reason },
-      })).outcome;
-    }
-
-    let planRevisionId: string;
-    let planSemanticHash: string;
-    let planGoalHash: string;
-    let planNode: PlanNode;
-    let plannerAttemptId: string;
-    let decision: ObjectiveDecision;
     const active = await activeWorkPlanRevision(params.tenantId, params.workId);
     if (!active && step.planRevisionId) {
       const [completedPlan] = await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
@@ -1809,6 +1988,34 @@ export class ObjectiveLoopRuntime {
         })).outcome;
       }
     }
+    // A generation-pinned specialist cannot become a controller for a new
+    // Plan after inspection races replacement. Never rebind its logical step.
+    if (step.executionRole === "node") {
+      const inspectedCurrency = await currentIterationState(params.tenantId, loop.id, step.id, loop.revision, leaseOwner);
+      if (active?.id !== step.planRevisionId || !inspectedCurrency.current) return inspectedCurrency.state;
+    }
+
+    // PostgreSQL jsonb::text adds whitespace to the wire JSON measured by
+    // bounded(). Leave headroom below the table's 128 KiB inspection check.
+    await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ inspection: bounded(inspection, 104_000) as object, inspectionHash, phase: "deciding" }).where(eq(workObjectiveSteps.id, step.id)));
+    await markObjectiveWakeConsumed(params.tenantId, loop.id, loop.revision);
+
+    const unresolved = params.workforceAssignmentId ? null : unresolvedEffect(inspection);
+    if (unresolved) {
+      return (await finishIteration({
+        tenantId: params.tenantId, loop, step, outcome: unresolved.outcome, reason: unresolved.reason,
+        nextStep: unresolved.outcome === "awaiting_approval" ? "Resume this same objective after authorization." : "Observe the durable result when its exact event arrives.",
+        observation: { canonicalInspectionHash: inspectionHash }, progressMade: false,
+        durableWait: { waitFor: unresolved.waitFor, conditionSummary: unresolved.reason },
+      })).outcome;
+    }
+
+    let planRevisionId: string;
+    let planSemanticHash: string;
+    let planGoalHash: string;
+    let planNode: PlanNode;
+    let plannerAttemptId: string;
+    let decision: ObjectiveDecision;
     const [latestHistoricalPlan] = !active ? await withTenant(params.tenantId, (db) => db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId),
       eq(workPlanRevisions.workId, params.workId),
@@ -1998,6 +2205,31 @@ export class ObjectiveLoopRuntime {
             useDatabase: true,
           });
         } else {
+          // A retry with the same GoalSpec must learn from the compiler's
+          // persisted rejection. The next proposal still passes every hard
+          // schema, grounding, authority, and completion check independently.
+          const [previousRejected] = await withTenant(params.tenantId, (db) => db.select({
+            candidatePlans: workPlannerAttempts.candidatePlans,
+            compilationResult: workPlannerAttempts.compilationResult,
+          }).from(workPlannerAttempts).where(and(
+            eq(workPlannerAttempts.tenantId, params.tenantId),
+            eq(workPlannerAttempts.workId, params.workId),
+            lt(workPlannerAttempts.attempt, canonicalAttempt!.attempt),
+            inArray(workPlannerAttempts.status, ["failed", "timed_out"]),
+            sql`${workPlannerAttempts.goalSpec}->>'objective' = ${inputs.goal.objective}`,
+            sql`${workPlannerAttempts.goalSpec}->>'workInputId' = ${inputs.goal.workInputId}`,
+            sql`${workPlannerAttempts.goalSpec}->'successCondition' = ${JSON.stringify(inputs.goal.successCondition)}::jsonb`,
+            isNotNull(workPlannerAttempts.candidatePlans),
+          )).orderBy(desc(workPlannerAttempts.attempt)).limit(1));
+          const previousCompilation = previousRejected?.compilationResult as { candidates?: Array<{ candidateKey?: string; violations?: unknown[] }> } | null | undefined;
+          const operating = await assembleOperatingContext(ctx, {
+            instruction: loop.objective,
+            workId: params.workId,
+            ...(isRecord(inspection.work.activeContext) ? { activeContext: inspection.work.activeContext } : {}),
+            includeMemory: false,
+            includeSemanticMemory: false,
+            includeCanonicalBusinessState: false,
+          });
           planning = await this.canonicalPlanner.plan(loop.objective, ctx, EMPTY_OBJECTIVE_MEMORY, {
             workId: params.workId,
             workInputId: inputs.workInputId,
@@ -2005,12 +2237,17 @@ export class ObjectiveLoopRuntime {
             decisionContextHash: canonicalAttempt.decisionContextHash ?? inputs.snapshot.decisionContextHash,
             channel: channel(loop.initialChannel),
             signal: params.signal,
-            deadlineAt: Math.min(loop.deadlineAt.getTime(), Date.now() + 15_000),
+            deadlineAt: Math.min(loop.deadlineAt.getTime(), Date.now() + 30_000),
             planDeadlineAt: loop.deadlineAt.toISOString(),
             goalSpec: inputs.goal,
             constraints: inputs.constraints,
             planningSnapshot: inputs.snapshot,
             planningContext: inspection,
+            operatingContext: operating.context,
+            proposalFeedback: previousRejected ? {
+              candidates: previousRejected.candidatePlans,
+              violations: previousCompilation?.candidates?.map((candidate) => ({ candidateKey: candidate.candidateKey, violations: candidate.violations })) ?? [],
+            } : undefined,
             parentRevisionId: lineageParent?.id,
             priorVerifiedEffectHashes: inputs.verifiedIrreversibleEffectHashes,
           });
@@ -2087,6 +2324,7 @@ export class ObjectiveLoopRuntime {
         let assigned = 0;
         let humanRequired = 0;
         let failed = 0;
+        const assignmentFailures: string[] = [];
         for (const item of reservation.reservations) {
           const requested = await requestWorkforceAssignment({
             tenantId: params.tenantId,
@@ -2102,7 +2340,10 @@ export class ObjectiveLoopRuntime {
             continue;
           }
           if (requested.status === "human_required") humanRequired += 1;
-          else failed += 1;
+          else {
+            failed += 1;
+            assignmentFailures.push(requested.reason);
+          }
           await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
             phase: requested.status === "human_required" ? "observing" : "finished",
             executionState: requested.status === "human_required" ? "waiting" : "failed",
@@ -2123,7 +2364,26 @@ export class ObjectiveLoopRuntime {
           }).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id), eq(workObjectiveLoops.revision, loop.revision))));
           return "waiting";
         }
-        if (failed > 0) await scheduleIteration(reservedLoop, new Date(), params.workId);
+        if (failed > 0 && assigned === 0) {
+          // The canonical state cannot change merely by planning the same
+          // unassignable node again. Stop after one recorded failure instead of
+          // burning every action reservation and planner attempt in a loop.
+          const reason = [...new Set(assignmentFailures)].join("; ") || "No eligible worker is available for the ready PlanNode.";
+          const blocked = await withTenant(params.tenantId, async (db) => {
+            const [updated] = await db.update(workObjectiveLoops).set({
+              state: "blocked", reason, nextStep: "Configure an eligible AgentProfileRevision, then explicitly continue this Objective.",
+              nextRunAt: null, leaseOwner: null, leaseUntil: null, updatedAt: new Date(),
+            }).where(and(
+              eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id),
+              eq(workObjectiveLoops.revision, loop.revision), eq(workObjectiveLoops.state, "continue"),
+            )).returning();
+            if (updated) await transitionWorkTx(db, params.tenantId, params.workId, "blocked", "objective_workforce_assignment_unavailable", {
+              objectiveLoopId: loop.id, planRevisionId, failedPlanNodes: failed, reason,
+            });
+            return Boolean(updated);
+          });
+          return blocked ? "blocked" : "continue";
+        }
         return "continue";
       }
       // A concurrent worker/wake/control transition may consume the frontier after
@@ -2248,10 +2508,28 @@ export class ObjectiveLoopRuntime {
       }
       const condition = parseObjectiveSuccessCondition(loop.successCondition);
       const evidence = parseObjectiveCompletionEvidence(decision.evidence);
+      const completionInspection = await inspectCurrentObjectiveSuccessState(params.tenantId, params.workId, loop.id);
+      const acceptsEffect = condition.criteria.some((criterion) => criterion.kind === "decision_evidence" && criterion.accepted.includes("business_effect"));
+      const derivedEvidence = evidence.length === 0 && acceptsEffect
+        ? condition.criteria.some((criterion) => criterion.kind === "private_equity_ic_deck_draft")
+          ? icDeckCompletionEvidence(completionInspection)
+          : condition.criteria.some((criterion) => criterion.kind === "private_equity_underwriting_scenario")
+          ? underwritingCompletionEvidence(completionInspection)
+          : condition.criteria.some((criterion) => criterion.kind === "private_equity_ic_preparation")
+            ? icReviewCompletionEvidence(completionInspection)
+            : null
+        : null;
+      if (derivedEvidence) evidence.push(derivedEvidence);
+      const completionDecision = derivedEvidence
+        ? { ...decision, evidence: [...(decision.evidence ?? []), derivedEvidence] }
+        : decision;
+      if (derivedEvidence) {
+        await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({ decision: completionDecision }).where(eq(workObjectiveSteps.id, step.id)));
+      }
       const requestedVerificationQueries = condition.criteria.filter((criterion) => criterion.kind === "canonical_query").length
         + evidence.filter((item) => item.kind === "canonical_query").length;
       if (loop.queryCount + requestedVerificationQueries > loop.maxQueries) {
-        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective completion verification would exceed the configured ${loop.maxQueries}-query budget.`, decision, observation: { requestedVerificationQueries, remainingQueries: Math.max(0, loop.maxQueries - loop.queryCount) }, progressMade: false })).outcome;
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective completion verification would exceed the configured ${loop.maxQueries}-query budget.`, decision: completionDecision, observation: { requestedVerificationQueries, remainingQueries: Math.max(0, loop.maxQueries - loop.queryCount) }, progressMade: false })).outcome;
       }
       const successVerification = await evaluateObjectiveSuccessCondition({
         tenantId: params.tenantId,
@@ -2259,7 +2537,7 @@ export class ObjectiveLoopRuntime {
         loopId: loop.id,
         stepNumber: step.stepNumber,
         condition,
-        inspection: await inspectCurrentObjectiveSuccessState(params.tenantId, params.workId, loop.id),
+        inspection: completionInspection,
         evidence,
       });
       if (successVerification.state === "verified") {
@@ -2271,7 +2549,7 @@ export class ObjectiveLoopRuntime {
             step,
             outcome: "continue",
             reason: "Completion verification raced a newer PlanRevision; current truth must be verified against the new active graph.",
-            decision,
+            decision: completionDecision,
             observation: { stalePlanRevisionId: planRevisionId, activePlanRevisionId: currentPlan?.id ?? null, successVerification },
             successVerification,
             progressMade: false,
@@ -2292,7 +2570,7 @@ export class ObjectiveLoopRuntime {
         };
         const planCompleted = await completeWorkPlanRevision({ tenantId: params.tenantId, planRevisionId, completionProof: completionProof as unknown as Record<string, unknown> });
         if (!planCompleted) throw new Error("CompletionProof could not atomically complete the active PlanRevision");
-        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "completed", reason: decision.reason, decision, observation: { ...decision.outcome, successVerification, completionProof }, successVerification, progressMade: true, queryIncrement: successVerification.queryExecutionIds.length })).outcome;
+        return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "completed", reason: decision.reason, decision: completionDecision, observation: { ...decision.outcome, successVerification, completionProof }, successVerification, progressMade: true, queryIncrement: successVerification.queryExecutionIds.length })).outcome;
       }
       const failedKinds = successVerification.results.filter((result) => !result.satisfied).map((result) => result.kind);
       return (await finishIteration({
@@ -2302,7 +2580,7 @@ export class ObjectiveLoopRuntime {
         outcome: successVerification.state === "blocked" ? "blocked" : "continue",
         reason: `Completion was rejected because the persisted business success condition is not verified: ${failedKinds.join(", ") || "unknown condition"}.`,
         nextStep: successVerification.state === "blocked" ? "Obtain the required manual verification or redirect the objective with an authorized success condition." : "Re-inspect current business state and choose one bounded step toward the unsatisfied success condition.",
-        decision,
+        decision: completionDecision,
         observation: { proposedOutcome: decision.outcome, successVerification },
         successVerification,
         progressMade: false,
@@ -2483,9 +2761,33 @@ export async function controlWorkObjective(params: {
     // Global Objective lock order is ObjectiveLoop -> PlanRevision -> logical /
     // physical attempts. Scheduler reservation and iteration finalization already
     // use this order; worker claims take compatible shared generation locks.
-    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!current) throw new Error("Work has no objective loop");
+    const finishControl = async (updated: typeof workObjectiveLoops.$inferSelect) => {
+      const workStatus = updated.state === "continue" ? "executing" : updated.state;
+      // Commit the Objective and its parent Work together. A failed Work must be
+      // explicitly claimed for recovery before it can resume; if that fence
+      // rejects the transition, the Objective revision must roll back too.
+      await transitionWorkTx(db, params.tenantId, params.workId, workStatus, `objective_${params.command}`, {
+        objectiveLoopId: updated.id,
+        actorId: params.actorId,
+        revision: updated.revision,
+        objective: params.command === "redirect" ? updated.objective : undefined,
+      }, updated.state === "cancelled"
+        ? { finalOutcome: { kind: "objective", objectiveLoopId: updated.id, state: "cancelled", actorId: params.actorId } }
+        : {});
+      await db.update(outcomePackRuns).set({
+        status: params.command === "cancel" ? "cancelled"
+          : params.command === "interrupt" ? "paused"
+            : params.command === "redirect" ? "blocked"
+              : "active",
+        blockedReason: params.command === "redirect" ? "Objective redirect invalidated the certified pack scope; review or start a new pack run." : null,
+        completedAt: params.command === "cancel" ? new Date() : null,
+        updatedAt: new Date(),
+      }).where(and(eq(outcomePackRuns.tenantId, params.tenantId), eq(outcomePackRuns.workId, params.workId)));
+      return updated;
+    };
     if (current.state === "cancelled" && params.command === "cancel") {
       cancellationAlreadyRecorded = true;
       return current;
@@ -2496,7 +2798,7 @@ export async function controlWorkObjective(params: {
     // Serialize control with scheduler/claim/effect generation checks. If effect
     // commit won first, the subsequent effect read observes that fact; if control
     // wins, no stale command may cross the provider boundary.
-    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR UPDATE`);
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR NO KEY UPDATE`);
     const [activePlan] = await db.select().from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId),
       eq(workPlanRevisions.workId, params.workId),
@@ -2666,20 +2968,22 @@ export async function controlWorkObjective(params: {
     }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, current.id), sql`${workObjectiveSteps.completedAt} IS NULL`));
     if (params.command === "interrupt") {
       const [updated] = await db.update(workObjectiveLoops).set({ state: "blocked", reason: `Interrupted by ${params.actorId}.`, nextStep: "Explicitly continue or redirect this objective.", nextRunAt: null, leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, current.id)).returning();
-      return updated!;
+      return finishControl(updated!);
     }
     if (params.command === "cancel") {
       const [updated] = await db.update(workObjectiveLoops).set({
         state: "cancelled", reason: `Responsibility explicitly cancelled by ${params.actorId}.`, nextStep: null,
         nextRunAt: null, leaseOwner: null, leaseUntil: null, completedAt: new Date(), cancelledAt: new Date(), updatedAt: new Date(),
       }).where(eq(workObjectiveLoops.id, current.id)).returning();
-      return updated!;
+      return finishControl(updated!);
     }
     if (params.command === "redirect" && !params.objective?.trim()) throw new Error("Redirect requires a non-empty objective");
     const [updated] = await db.update(workObjectiveLoops).set({
       ...(params.command === "redirect" ? {
         objective: params.objective!.trim(),
-        successCondition: params.successCondition ? parseObjectiveSuccessCondition(params.successCondition) : defaultObjectiveSuccessCondition(params.objective!.trim()),
+        successCondition: params.successCondition
+          ? parseObjectiveSuccessCondition(params.successCondition)
+          : redirectedObjectiveSuccessCondition(parseObjectiveSuccessCondition(current.successCondition), params.objective!.trim()),
         successVerification: null,
         successVerifiedAt: null,
       } : {}),
@@ -2687,23 +2991,17 @@ export async function controlWorkObjective(params: {
       // is unchanged. This makes any pre-interrupt job provably stale and gives the
       // resumed first step a fresh durable idempotency key.
       revision: current.revision + 1,
+      // Planner failures and no-progress streaks are scoped to this scheduling
+      // generation. An explicit recovery gets a fresh retry allowance while the
+      // immutable attempts and cumulative action/step budgets remain intact.
+      plannerFailureCount: 0,
+      consecutiveNoProgress: 0,
       state: "continue", reason: params.command === "redirect" ? `Objective redirected by ${params.actorId}.` : `Objective continued by ${params.actorId}.`,
       nextStep: "Inspect current canonical business state.", nextRunAt: new Date(), completedAt: null, leaseOwner: null, leaseUntil: null, updatedAt: new Date(),
     }).where(eq(workObjectiveLoops.id, current.id)).returning();
-    return updated!;
+    return finishControl(updated!);
   });
   if (cancellationAlreadyRecorded) return loop;
-  await withTenant(params.tenantId, (db) => db.update(outcomePackRuns).set({
-    status: params.command === "cancel" ? "cancelled"
-      : params.command === "interrupt" ? "paused"
-        : params.command === "redirect" ? "blocked"
-          : "active",
-    blockedReason: params.command === "redirect" ? "Objective redirect invalidated the certified pack scope; review or start a new pack run." : null,
-    completedAt: params.command === "cancel" ? new Date() : null,
-    updatedAt: new Date(),
-  }).where(and(eq(outcomePackRuns.tenantId, params.tenantId), eq(outcomePackRuns.workId, params.workId))));
-  const workStatus = loop.state === "continue" ? "executing" : loop.state;
-  await transitionWork(params.tenantId, params.workId, workStatus, `objective_${params.command}`, { objectiveLoopId: loop.id, actorId: params.actorId, revision: loop.revision, objective: params.command === "redirect" ? loop.objective : undefined }, loop.state === "cancelled" ? { finalOutcome: { kind: "objective", objectiveLoopId: loop.id, state: "cancelled", actorId: params.actorId } } : {});
   if (loop.state === "continue") await scheduleIteration(loop, new Date(), params.correlationId);
   return loop;
 }

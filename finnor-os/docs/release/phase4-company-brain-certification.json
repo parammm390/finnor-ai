@@ -1,16 +1,16 @@
 {
   "phase": "Phase 4 — Company Brain / PE Digital Twin",
   "status": "PASS_INTEGRATION",
-  "startedAt": "2026-09-22T20:02:47.461Z",
-  "completedAt": "2026-09-22T20:05:22.490Z",
-  "migrationHead": "0140_scope5_epistemic_impact.sql",
+  "startedAt": "2026-09-28T21:00:00.212Z",
+  "completedAt": "2026-09-28T21:01:24.513Z",
+  "migrationHead": "0149_parallel_objective_approval_guard.sql",
   "evidenceLevels": {
     "local": "PASS_LOCAL",
     "database": "PASS_INTEGRATION",
     "liveProviders": "BLOCKED_EXTERNAL"
   },
   "freshDatabase": {
-    "head": "0140_scope5_epistemic_impact.sql",
+    "head": "0149_parallel_objective_approval_guard.sql",
     "tables": 18,
     "forcedRls": true,
     "historyTriggers": true,
@@ -19,7 +19,17 @@
   "populatedUpgrade": {
     "applied": [
       "0139_scope4_pe_digital_twin.sql",
-      "0140_scope5_epistemic_impact.sql"
+      "0140_scope5_epistemic_impact.sql",
+      "0141_private_equity_outcome_pack_ids.sql",
+      "0141_restricted_digest_projection_access.sql",
+      "0142_centropy_canvas_preferences.sql",
+      "0143_work_input_context_after_validation.sql",
+      "0144_ic_business_effect_targets.sql",
+      "0145_artifact_template_action_replay.sql",
+      "0146_ic_case_document_links.sql",
+      "0147_ic_objective_step_budget.sql",
+      "0148_artifact_underwriting_bindings.sql",
+      "0149_parallel_objective_approval_guard.sql"
     ],
     "identitiesPreserved": 3,
     "fabricatedScope4Rows": 0,
@@ -44,49 +54,49 @@
       {
         "operation": "company lookup/search",
         "samples": 12,
-        "p50Ms": 5.78,
-        "p95Ms": 9.2,
-        "maxMs": 9.2,
+        "p50Ms": 3.25,
+        "p95Ms": 4.94,
+        "maxMs": 4.94,
         "thresholdMs": 1000
       },
       {
         "operation": "Company projection",
         "samples": 12,
-        "p50Ms": 124.66,
-        "p95Ms": 140.18,
-        "maxMs": 140.18,
+        "p50Ms": 73.47,
+        "p95Ms": 91.28,
+        "maxMs": 91.28,
         "thresholdMs": 3500
       },
       {
         "operation": "Fund/portfolio projection",
         "samples": 12,
-        "p50Ms": 121.76,
-        "p95Ms": 135.51,
-        "maxMs": 135.51,
+        "p50Ms": 75.95,
+        "p95Ms": 92.46,
+        "maxMs": 92.46,
         "thresholdMs": 4000
       },
       {
         "operation": "bounded traversal",
         "samples": 12,
-        "p50Ms": 0.68,
-        "p95Ms": 0.71,
-        "maxMs": 0.71,
+        "p50Ms": 0.39,
+        "p95Ms": 0.42,
+        "maxMs": 0.42,
         "thresholdMs": 100
       },
       {
         "operation": "historical/as-of projection",
         "samples": 12,
-        "p50Ms": 121.92,
-        "p95Ms": 135.1,
-        "maxMs": 135.1,
+        "p50Ms": 71.3,
+        "p95Ms": 99.61,
+        "maxMs": 99.61,
         "thresholdMs": 4000
       },
       {
         "operation": "ownership closed-world as-of",
         "samples": 12,
-        "p50Ms": 3.28,
-        "p95Ms": 3.59,
-        "maxMs": 3.59,
+        "p50Ms": 2.19,
+        "p95Ms": 2.89,
+        "maxMs": 2.89,
         "thresholdMs": 1000
       }
     ],
@@ -97,16 +107,16 @@
             "Node Type": "Unique",
             "Parallel Aware": false,
             "Async Capable": false,
-            "Startup Cost": 851.68,
-            "Total Cost": 861.25,
+            "Startup Cost": 857.68,
+            "Total Cost": 867.25,
             "Plan Rows": 1222,
-            "Plan Width": 959,
-            "Actual Startup Time": 2.73,
-            "Actual Total Time": 3.12,
+            "Plan Width": 958,
+            "Actual Startup Time": 1.492,
+            "Actual Total Time": 1.688,
             "Actual Rows": 1800,
             "Actual Loops": 1,
             "Disabled": false,
-            "Shared Hit Blocks": 682,
+            "Shared Hit Blocks": 688,
             "Shared Read Blocks": 0,
             "Shared Dirtied Blocks": 0,
             "Shared Written Blocks": 0,
@@ -122,12 +132,12 @@
                 "Parent Relationship": "Outer",
                 "Parallel Aware": false,
                 "Async Capable": false,
-                "Startup Cost": 851.68,
-                "Total Cost": 854.87,
+                "Startup Cost": 857.68,
+                "Total Cost": 860.87,
                 "Plan Rows": 1276,
-                "Plan Width": 959,
-                "Actual Startup Time": 2.73,
-                "Actual Total Time": 2.793,
+                "Plan Width": 958,
+                "Actual Startup Time": 1.492,
+                "Actual Total Time": 1.529,
                 "Actual Rows": 1800,
                 "Actual Loops": 1,
                 "Disabled": false,
@@ -140,7 +150,7 @@
                 "Sort Method": "quicksort",
                 "Sort Space Used": 1569,
                 "Sort Space Type": "Memory",
-                "Shared Hit Blocks": 682,
+                "Shared Hit Blocks": 688,
                 "Shared Read Blocks": 0,
                 "Shared Dirtied Blocks": 0,
                 "Shared Written Blocks": 0,
@@ -159,17 +169,17 @@
                     "Relation Name": "canonical_entity_versions",
                     "Alias": "canonical_entity_versions",
                     "Startup Cost": 0,
-                    "Total Cost": 785.86,
+                    "Total Cost": 791.86,
                     "Plan Rows": 1276,
-                    "Plan Width": 959,
-                    "Actual Startup Time": 0.012,
-                    "Actual Total Time": 1.469,
+                    "Plan Width": 958,
+                    "Actual Startup Time": 0.006,
+                    "Actual Total Time": 0.781,
                     "Actual Rows": 1800,
                     "Actual Loops": 1,
                     "Disabled": false,
                     "Filter": "((tenant_id = '60000000-0000-4000-8000-000000000001'::uuid) AND (recorded_at <= now()) AND (entity_type = ANY ('{external_organization,pe_portfolio_holding,pe_ownership_interest,pe_metric_series,pe_metric_observation}'::text[])))",
                     "Rows Removed by Filter": 2573,
-                    "Shared Hit Blocks": 682,
+                    "Shared Hit Blocks": 688,
                     "Shared Read Blocks": 0,
                     "Shared Dirtied Blocks": 0,
                     "Shared Written Blocks": 0,
@@ -185,7 +195,7 @@
             ]
           },
           "Planning": {
-            "Shared Hit Blocks": 76,
+            "Shared Hit Blocks": 72,
             "Shared Read Blocks": 0,
             "Shared Dirtied Blocks": 0,
             "Shared Written Blocks": 0,
@@ -196,9 +206,9 @@
             "Temp Read Blocks": 0,
             "Temp Written Blocks": 0
           },
-          "Planning Time": 0.391,
+          "Planning Time": 0.216,
           "Triggers": [],
-          "Execution Time": 3.229
+          "Execution Time": 1.748
         }
       ]
     }
@@ -207,7 +217,7 @@
     {
       "id": "fresh-database",
       "status": "PASS_INTEGRATION",
-      "evidence": "141 forward migrations; head 0139; 18 forced-RLS history owners"
+      "evidence": "151 forward migrations; head 0139; 18 forced-RLS history owners"
     },
     {
       "id": "populated-upgrade",

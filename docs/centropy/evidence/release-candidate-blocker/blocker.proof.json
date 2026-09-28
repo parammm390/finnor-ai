@@ -1,0 +1,880 @@
+{
+  "schema": "centropy.e2e-proof/v2",
+  "flow": "golden_flow_1",
+  "result": "passed",
+  "capturedAt": "2026-09-28T01:32:35.221Z",
+  "input": {
+    "instruction": "Why is Atlas blocked?",
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "baseURL": "http://localhost:3001"
+  },
+  "observed": {
+    "intake": {
+      "planned": [],
+      "answer": {
+        "kind": "answer",
+        "intent": "closing_readiness",
+        "readOnly": true,
+        "spokenSummary": "The deal is not ready to close. Recorded blockers: Unmet closing condition “Top-customer renewal evidence is verified against the signed contract.” (evidence pending).",
+        "display": {
+          "title": "Closing Readiness",
+          "facts": [
+            {
+              "label": "Status",
+              "value": "ok"
+            },
+            {
+              "label": "Records",
+              "value": "1"
+            },
+            {
+              "label": "Eligible",
+              "value": "No"
+            },
+            {
+              "label": "Blocking conditions",
+              "value": "1"
+            }
+          ]
+        },
+        "evidence": [
+          {
+            "source": "evidence_source_versions",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_closing_conditions",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_closing_items",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_deal_risks",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_deals",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_dependencies",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_evidence_links",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          },
+          {
+            "source": "pe_findings",
+            "ref": "tenant-scoped",
+            "timestamp": "2026-09-28T01:32:25.209Z",
+            "kind": "CANONICAL"
+          }
+        ],
+        "asOf": "2026-09-28T01:32:25.209Z",
+        "freshness": {
+          "status": "fresh",
+          "observedAt": "2026-09-28T01:32:25.209Z"
+        },
+        "query": {
+          "request": {
+            "intent": "closing_readiness",
+            "dealId": "90000000-0000-4000-8000-000000000001"
+          },
+          "result": {
+            "kind": "operational_query_result",
+            "status": "ok",
+            "data": {},
+            "version": 1,
+            "intent": "closing_readiness",
+            "source": {
+              "kind": "canonical_postgres",
+              "tables": [
+                "evidence_source_versions",
+                "pe_closing_conditions",
+                "pe_closing_items",
+                "pe_deal_risks",
+                "pe_deals",
+                "pe_dependencies",
+                "pe_evidence_links",
+                "pe_findings"
+              ]
+            },
+            "asOf": "2026-09-28T01:32:25.209Z",
+            "count": 1,
+            "truncated": false,
+            "page": {
+              "limit": 50,
+              "returned": 1,
+              "totalCount": 1,
+              "totalCountExact": true,
+              "hasMore": false,
+              "nextCursor": null,
+              "truncated": false
+            },
+            "meta": {
+              "version": 1,
+              "source": {
+                "kind": "canonical_postgres",
+                "tables": [
+                  "evidence_source_versions",
+                  "pe_closing_conditions",
+                  "pe_closing_items",
+                  "pe_deal_risks",
+                  "pe_deals",
+                  "pe_dependencies",
+                  "pe_evidence_links",
+                  "pe_findings"
+                ]
+              },
+              "asOf": "2026-09-28T01:32:25.209Z"
+            },
+            "dealId": "90000000-0000-4000-8000-000000000001",
+            "eligible": false,
+            "eligibility": {
+              "dealId": "90000000-0000-4000-8000-000000000001",
+              "eligible": false,
+              "dealState": "active",
+              "dealVersion": 1,
+              "graphVersion": 32,
+              "invalidWaivers": [],
+              "integrityErrors": [],
+              "failedConditions": [],
+              "signedLoiPresent": true,
+              "blockingConditions": [
+                {
+                  "id": "90000000-0000-4000-8000-000000000011",
+                  "state": "evidence_pending",
+                  "condition": "Top-customer renewal evidence is verified against the signed contract."
+                }
+              ],
+              "blockingDependencies": [
+                {
+                  "blocked": {
+                    "entityId": "90000000-0000-4000-8000-000000000011",
+                    "entityType": "pe_closing_condition"
+                  },
+                  "blocker": {
+                    "entityId": "90000000-0000-4000-8000-000000000010",
+                    "entityType": "pe_deal_risk"
+                  },
+                  "relation": "blocks",
+                  "dependencyId": "90000000-0000-4000-8000-000000000014"
+                }
+              ],
+              "unverifiedClosingItems": []
+            },
+            "blockingConditions": [
+              {
+                "id": "90000000-0000-4000-8000-000000000011",
+                "state": "evidence_pending",
+                "condition": "Top-customer renewal evidence is verified against the signed contract."
+              }
+            ],
+            "failedConditions": [],
+            "unverifiedClosingItems": [],
+            "blockingDependencies": [
+              {
+                "blocked": {
+                  "entityId": "90000000-0000-4000-8000-000000000011",
+                  "entityType": "pe_closing_condition"
+                },
+                "blocker": {
+                  "entityId": "90000000-0000-4000-8000-000000000010",
+                  "entityType": "pe_deal_risk"
+                },
+                "relation": "blocks",
+                "dependencyId": "90000000-0000-4000-8000-000000000014"
+              }
+            ],
+            "invalidWaivers": [],
+            "integrityErrors": [],
+            "criticalDependencies": [
+              {
+                "dependencyId": "90000000-0000-4000-8000-000000000014",
+                "blocker": {
+                  "entityType": "pe_deal_risk",
+                  "entityId": "90000000-0000-4000-8000-000000000010"
+                },
+                "blocked": {
+                  "entityType": "pe_closing_condition",
+                  "entityId": "90000000-0000-4000-8000-000000000011"
+                },
+                "resolved": false,
+                "blockerState": "open",
+                "blockedState": "evidence_pending",
+                "blockerDueAt": null,
+                "blockedDueAt": null,
+                "workRefs": [
+                  {
+                    "workId": "90000000-0000-4000-8000-000000000015",
+                    "entityType": "pe_deal_risk",
+                    "entityId": "90000000-0000-4000-8000-000000000010"
+                  },
+                  {
+                    "workId": "90000000-0000-4000-8000-000000000017",
+                    "entityType": "pe_deal_risk",
+                    "entityId": "90000000-0000-4000-8000-000000000010"
+                  },
+                  {
+                    "workId": "90000000-0000-4000-8000-000000000017",
+                    "entityType": "pe_closing_condition",
+                    "entityId": "90000000-0000-4000-8000-000000000011"
+                  }
+                ],
+                "ownerRefs": [
+                  {
+                    "partyType": "employee",
+                    "partyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+                  },
+                  {
+                    "partyType": "employee",
+                    "partyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+                  }
+                ],
+                "paths": [
+                  [
+                    {
+                      "entityType": "pe_deal_risk",
+                      "entityId": "90000000-0000-4000-8000-000000000010"
+                    },
+                    {
+                      "entityType": "pe_closing_condition",
+                      "entityId": "90000000-0000-4000-8000-000000000011"
+                    }
+                  ]
+                ]
+              }
+            ],
+            "relevantFindings": [
+              {
+                "id": "90000000-0000-4000-8000-000000000009",
+                "dealId": "90000000-0000-4000-8000-000000000001",
+                "workstreamId": "90000000-0000-4000-8000-000000000005",
+                "relatedRequestId": "90000000-0000-4000-8000-000000000007",
+                "statement": "Top customer represents 31% of recurring revenue.",
+                "severity": "critical",
+                "materiality": "critical",
+                "ownerPartyType": "employee",
+                "ownerPartyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+                "state": "open",
+                "createdAt": "2026-09-28T00:13:07.496Z",
+                "updatedAt": "2026-09-28T00:13:07.496Z",
+                "evidenceRefs": [
+                  "7615387d-a371-4314-843e-5e229f3f7280"
+                ],
+                "riskRefs": [
+                  "90000000-0000-4000-8000-000000000010"
+                ],
+                "epistemicWarnings": []
+              }
+            ],
+            "relevantDealRisks": [
+              {
+                "id": "90000000-0000-4000-8000-000000000010",
+                "dealId": "90000000-0000-4000-8000-000000000001",
+                "workstreamId": "90000000-0000-4000-8000-000000000005",
+                "statement": "Customer concentration may impair downside debt-service coverage.",
+                "severity": "critical",
+                "ownerPartyType": "employee",
+                "ownerPartyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+                "response": "Require signed renewal support and reflect concentration in the downside underwriting case.",
+                "state": "open",
+                "createdAt": "2026-09-28T00:13:07.504Z",
+                "updatedAt": "2026-09-28T00:13:07.504Z",
+                "evidenceRefs": [
+                  "7615387d-a371-4314-843e-5e229f3f7280"
+                ],
+                "findingRefs": [
+                  "90000000-0000-4000-8000-000000000009"
+                ],
+                "epistemicWarnings": []
+              }
+            ],
+            "epistemicWarnings": [
+              {
+                "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                "predicate": "closing_condition.evidence_sufficient",
+                "status": "UNKNOWN",
+                "reason": "No evidence",
+                "evidenceRefs": []
+              },
+              {
+                "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.waiver_valid",
+                "predicate": "closing_condition.waiver_valid",
+                "status": "UNKNOWN",
+                "reason": "No evidence",
+                "evidenceRefs": []
+              }
+            ],
+            "decisionReadiness": [
+              {
+                "decisionId": "pe:decision:closing-condition:90000000-0000-4000-8000-000000000011",
+                "decisionType": "closing_condition_satisfaction",
+                "ready": false,
+                "unresolvedPropositionIds": [
+                  "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient"
+                ],
+                "acquisitionOptions": [
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                    "adapterId": "CLARIFICATION_REQUEST",
+                    "kind": "ASK",
+                    "reason": "No evidence currently supports the required proposition."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                    "adapterId": "EVIDENCE_CORPUS_RETRIEVAL",
+                    "kind": "RETRIEVE",
+                    "reason": "No evidence currently supports the required proposition."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                    "adapterId": "SOURCE_TRUTH_OBSERVATION",
+                    "kind": "INSPECT",
+                    "reason": "No evidence currently supports the required proposition."
+                  }
+                ]
+              },
+              {
+                "decisionId": "pe:decision:closing-item:90000000-0000-4000-8000-000000000012",
+                "decisionType": "closing_item_verification",
+                "ready": true,
+                "unresolvedPropositionIds": [],
+                "acquisitionOptions": []
+              },
+              {
+                "decisionId": "pe:decision:deal-close:90000000-0000-4000-8000-000000000001",
+                "decisionType": "deal_close",
+                "ready": false,
+                "unresolvedPropositionIds": [
+                  "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible"
+                ],
+                "acquisitionOptions": [
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible",
+                    "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                    "kind": "READ",
+                    "reason": "Re-run canonical PE2 close eligibility after blockers change."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible",
+                    "adapterId": "WORK_EVENT_WAIT",
+                    "kind": "WAIT",
+                    "reason": "Wait for an already-active Work event and then re-read; waiting does not mutate the Deal."
+                  }
+                ]
+              },
+              {
+                "decisionId": "pe:decision:request-fulfillment:90000000-0000-4000-8000-000000000007",
+                "decisionType": "request_fulfillment",
+                "ready": false,
+                "unresolvedPropositionIds": [
+                  "pe:v1:90000000-0000-4000-8000-000000000001:pe_deliverable:90000000-0000-4000-8000-000000000008:deliverable.accepted",
+                  "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled"
+                ],
+                "acquisitionOptions": [
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deliverable:90000000-0000-4000-8000-000000000008:deliverable.accepted",
+                    "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                    "kind": "READ",
+                    "reason": "Re-read canonical Deliverable acceptance."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                    "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                    "kind": "READ",
+                    "reason": "Re-read the canonical Request and accepted Deliverable state."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                    "adapterId": "CLARIFICATION_REQUEST",
+                    "kind": "ASK",
+                    "reason": "Ask for a precise source or missing intent; user input remains an assertion."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                    "adapterId": "EVIDENCE_CORPUS_RETRIEVAL",
+                    "kind": "RETRIEVE",
+                    "reason": "Inspect the requested material as evidence only."
+                  },
+                  {
+                    "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                    "adapterId": "SOURCE_TRUTH_OBSERVATION",
+                    "kind": "INSPECT",
+                    "reason": "Inspect a configured provider without mutating the Deal."
+                  }
+                ]
+              }
+            ],
+            "queryTrace": [
+              "closing_readiness",
+              "critical_dependencies",
+              "open_findings",
+              "open_deal_risks"
+            ],
+            "execution": {
+              "id": "96e2044a-75c0-48c4-b00a-b211a9cd9c07",
+              "workId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+              "workInputId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+              "executionKey": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+              "status": "succeeded"
+            }
+          },
+          "metadata": {
+            "queryId": "96e2044a-75c0-48c4-b00a-b211a9cd9c07",
+            "source": "postgresql",
+            "durationMs": 1996,
+            "startedAt": "2026-09-28T01:32:25.199Z",
+            "completedAt": "2026-09-28T01:32:26.296Z"
+          }
+        }
+      },
+      "query": {
+        "request": {
+          "intent": "closing_readiness",
+          "dealId": "90000000-0000-4000-8000-000000000001"
+        },
+        "result": {
+          "kind": "operational_query_result",
+          "status": "ok",
+          "data": {},
+          "version": 1,
+          "intent": "closing_readiness",
+          "source": {
+            "kind": "canonical_postgres",
+            "tables": [
+              "evidence_source_versions",
+              "pe_closing_conditions",
+              "pe_closing_items",
+              "pe_deal_risks",
+              "pe_deals",
+              "pe_dependencies",
+              "pe_evidence_links",
+              "pe_findings"
+            ]
+          },
+          "asOf": "2026-09-28T01:32:25.209Z",
+          "count": 1,
+          "truncated": false,
+          "page": {
+            "limit": 50,
+            "returned": 1,
+            "totalCount": 1,
+            "totalCountExact": true,
+            "hasMore": false,
+            "nextCursor": null,
+            "truncated": false
+          },
+          "meta": {
+            "version": 1,
+            "source": {
+              "kind": "canonical_postgres",
+              "tables": [
+                "evidence_source_versions",
+                "pe_closing_conditions",
+                "pe_closing_items",
+                "pe_deal_risks",
+                "pe_deals",
+                "pe_dependencies",
+                "pe_evidence_links",
+                "pe_findings"
+              ]
+            },
+            "asOf": "2026-09-28T01:32:25.209Z"
+          },
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "eligible": false,
+          "eligibility": {
+            "dealId": "90000000-0000-4000-8000-000000000001",
+            "eligible": false,
+            "dealState": "active",
+            "dealVersion": 1,
+            "graphVersion": 32,
+            "invalidWaivers": [],
+            "integrityErrors": [],
+            "failedConditions": [],
+            "signedLoiPresent": true,
+            "blockingConditions": [
+              {
+                "id": "90000000-0000-4000-8000-000000000011",
+                "state": "evidence_pending",
+                "condition": "Top-customer renewal evidence is verified against the signed contract."
+              }
+            ],
+            "blockingDependencies": [
+              {
+                "blocked": {
+                  "entityId": "90000000-0000-4000-8000-000000000011",
+                  "entityType": "pe_closing_condition"
+                },
+                "blocker": {
+                  "entityId": "90000000-0000-4000-8000-000000000010",
+                  "entityType": "pe_deal_risk"
+                },
+                "relation": "blocks",
+                "dependencyId": "90000000-0000-4000-8000-000000000014"
+              }
+            ],
+            "unverifiedClosingItems": []
+          },
+          "blockingConditions": [
+            {
+              "id": "90000000-0000-4000-8000-000000000011",
+              "state": "evidence_pending",
+              "condition": "Top-customer renewal evidence is verified against the signed contract."
+            }
+          ],
+          "failedConditions": [],
+          "unverifiedClosingItems": [],
+          "blockingDependencies": [
+            {
+              "blocked": {
+                "entityId": "90000000-0000-4000-8000-000000000011",
+                "entityType": "pe_closing_condition"
+              },
+              "blocker": {
+                "entityId": "90000000-0000-4000-8000-000000000010",
+                "entityType": "pe_deal_risk"
+              },
+              "relation": "blocks",
+              "dependencyId": "90000000-0000-4000-8000-000000000014"
+            }
+          ],
+          "invalidWaivers": [],
+          "integrityErrors": [],
+          "criticalDependencies": [
+            {
+              "dependencyId": "90000000-0000-4000-8000-000000000014",
+              "blocker": {
+                "entityType": "pe_deal_risk",
+                "entityId": "90000000-0000-4000-8000-000000000010"
+              },
+              "blocked": {
+                "entityType": "pe_closing_condition",
+                "entityId": "90000000-0000-4000-8000-000000000011"
+              },
+              "resolved": false,
+              "blockerState": "open",
+              "blockedState": "evidence_pending",
+              "blockerDueAt": null,
+              "blockedDueAt": null,
+              "workRefs": [
+                {
+                  "workId": "90000000-0000-4000-8000-000000000015",
+                  "entityType": "pe_deal_risk",
+                  "entityId": "90000000-0000-4000-8000-000000000010"
+                },
+                {
+                  "workId": "90000000-0000-4000-8000-000000000017",
+                  "entityType": "pe_deal_risk",
+                  "entityId": "90000000-0000-4000-8000-000000000010"
+                },
+                {
+                  "workId": "90000000-0000-4000-8000-000000000017",
+                  "entityType": "pe_closing_condition",
+                  "entityId": "90000000-0000-4000-8000-000000000011"
+                }
+              ],
+              "ownerRefs": [
+                {
+                  "partyType": "employee",
+                  "partyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+                },
+                {
+                  "partyType": "employee",
+                  "partyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+                }
+              ],
+              "paths": [
+                [
+                  {
+                    "entityType": "pe_deal_risk",
+                    "entityId": "90000000-0000-4000-8000-000000000010"
+                  },
+                  {
+                    "entityType": "pe_closing_condition",
+                    "entityId": "90000000-0000-4000-8000-000000000011"
+                  }
+                ]
+              ]
+            }
+          ],
+          "relevantFindings": [
+            {
+              "id": "90000000-0000-4000-8000-000000000009",
+              "dealId": "90000000-0000-4000-8000-000000000001",
+              "workstreamId": "90000000-0000-4000-8000-000000000005",
+              "relatedRequestId": "90000000-0000-4000-8000-000000000007",
+              "statement": "Top customer represents 31% of recurring revenue.",
+              "severity": "critical",
+              "materiality": "critical",
+              "ownerPartyType": "employee",
+              "ownerPartyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+              "state": "open",
+              "createdAt": "2026-09-28T00:13:07.496Z",
+              "updatedAt": "2026-09-28T00:13:07.496Z",
+              "evidenceRefs": [
+                "7615387d-a371-4314-843e-5e229f3f7280"
+              ],
+              "riskRefs": [
+                "90000000-0000-4000-8000-000000000010"
+              ],
+              "epistemicWarnings": []
+            }
+          ],
+          "relevantDealRisks": [
+            {
+              "id": "90000000-0000-4000-8000-000000000010",
+              "dealId": "90000000-0000-4000-8000-000000000001",
+              "workstreamId": "90000000-0000-4000-8000-000000000005",
+              "statement": "Customer concentration may impair downside debt-service coverage.",
+              "severity": "critical",
+              "ownerPartyType": "employee",
+              "ownerPartyId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+              "response": "Require signed renewal support and reflect concentration in the downside underwriting case.",
+              "state": "open",
+              "createdAt": "2026-09-28T00:13:07.504Z",
+              "updatedAt": "2026-09-28T00:13:07.504Z",
+              "evidenceRefs": [
+                "7615387d-a371-4314-843e-5e229f3f7280"
+              ],
+              "findingRefs": [
+                "90000000-0000-4000-8000-000000000009"
+              ],
+              "epistemicWarnings": []
+            }
+          ],
+          "epistemicWarnings": [
+            {
+              "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+              "predicate": "closing_condition.evidence_sufficient",
+              "status": "UNKNOWN",
+              "reason": "No evidence",
+              "evidenceRefs": []
+            },
+            {
+              "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.waiver_valid",
+              "predicate": "closing_condition.waiver_valid",
+              "status": "UNKNOWN",
+              "reason": "No evidence",
+              "evidenceRefs": []
+            }
+          ],
+          "decisionReadiness": [
+            {
+              "decisionId": "pe:decision:closing-condition:90000000-0000-4000-8000-000000000011",
+              "decisionType": "closing_condition_satisfaction",
+              "ready": false,
+              "unresolvedPropositionIds": [
+                "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient"
+              ],
+              "acquisitionOptions": [
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                  "adapterId": "CLARIFICATION_REQUEST",
+                  "kind": "ASK",
+                  "reason": "No evidence currently supports the required proposition."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                  "adapterId": "EVIDENCE_CORPUS_RETRIEVAL",
+                  "kind": "RETRIEVE",
+                  "reason": "No evidence currently supports the required proposition."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_closing_condition:90000000-0000-4000-8000-000000000011:closing_condition.evidence_sufficient",
+                  "adapterId": "SOURCE_TRUTH_OBSERVATION",
+                  "kind": "INSPECT",
+                  "reason": "No evidence currently supports the required proposition."
+                }
+              ]
+            },
+            {
+              "decisionId": "pe:decision:closing-item:90000000-0000-4000-8000-000000000012",
+              "decisionType": "closing_item_verification",
+              "ready": true,
+              "unresolvedPropositionIds": [],
+              "acquisitionOptions": []
+            },
+            {
+              "decisionId": "pe:decision:deal-close:90000000-0000-4000-8000-000000000001",
+              "decisionType": "deal_close",
+              "ready": false,
+              "unresolvedPropositionIds": [
+                "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible"
+              ],
+              "acquisitionOptions": [
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible",
+                  "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                  "kind": "READ",
+                  "reason": "Re-run canonical PE2 close eligibility after blockers change."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deal:90000000-0000-4000-8000-000000000001:deal.close_eligible",
+                  "adapterId": "WORK_EVENT_WAIT",
+                  "kind": "WAIT",
+                  "reason": "Wait for an already-active Work event and then re-read; waiting does not mutate the Deal."
+                }
+              ]
+            },
+            {
+              "decisionId": "pe:decision:request-fulfillment:90000000-0000-4000-8000-000000000007",
+              "decisionType": "request_fulfillment",
+              "ready": false,
+              "unresolvedPropositionIds": [
+                "pe:v1:90000000-0000-4000-8000-000000000001:pe_deliverable:90000000-0000-4000-8000-000000000008:deliverable.accepted",
+                "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled"
+              ],
+              "acquisitionOptions": [
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_deliverable:90000000-0000-4000-8000-000000000008:deliverable.accepted",
+                  "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                  "kind": "READ",
+                  "reason": "Re-read canonical Deliverable acceptance."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                  "adapterId": "CANONICAL_OPERATIONAL_QUERY",
+                  "kind": "READ",
+                  "reason": "Re-read the canonical Request and accepted Deliverable state."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                  "adapterId": "CLARIFICATION_REQUEST",
+                  "kind": "ASK",
+                  "reason": "Ask for a precise source or missing intent; user input remains an assertion."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                  "adapterId": "EVIDENCE_CORPUS_RETRIEVAL",
+                  "kind": "RETRIEVE",
+                  "reason": "Inspect the requested material as evidence only."
+                },
+                {
+                  "propositionId": "pe:v1:90000000-0000-4000-8000-000000000001:pe_request:90000000-0000-4000-8000-000000000007:request.fulfilled",
+                  "adapterId": "SOURCE_TRUTH_OBSERVATION",
+                  "kind": "INSPECT",
+                  "reason": "Inspect a configured provider without mutating the Deal."
+                }
+              ]
+            }
+          ],
+          "queryTrace": [
+            "closing_readiness",
+            "critical_dependencies",
+            "open_findings",
+            "open_deal_risks"
+          ],
+          "execution": {
+            "id": "96e2044a-75c0-48c4-b00a-b211a9cd9c07",
+            "workId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+            "workInputId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+            "executionKey": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+            "status": "succeeded"
+          }
+        },
+        "metadata": {
+          "queryId": "96e2044a-75c0-48c4-b00a-b211a9cd9c07",
+          "source": "postgresql",
+          "durationMs": 1996,
+          "startedAt": "2026-09-28T01:32:25.199Z",
+          "completedAt": "2026-09-28T01:32:26.296Z"
+        }
+      },
+      "workId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+      "workInputId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+      "instructionId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+      "threadId": "bbbd2d57-8c63-4b16-842a-c594b1021f01",
+      "projectionWarnings": [],
+      "assistantMessage": {
+        "id": "66956aa9-3f09-46b2-be6b-2ad35dde0ccd",
+        "threadId": "bbbd2d57-8c63-4b16-842a-c594b1021f01",
+        "sequence": 2,
+        "role": "assistant",
+        "channel": "text",
+        "originalText": "The deal is not ready to close. Recorded blockers: Unmet closing condition “Top-customer renewal evidence is verified against the signed contract.” (evidence pending).",
+        "instructionId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "workId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "workInputId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "resolutionSnapshot": null,
+        "resolutionProvenance": [],
+        "companyTruthSnapshot": null,
+        "outcomeRefs": [
+          {
+            "id": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+            "kind": "work"
+          },
+          {
+            "id": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+            "kind": "work_input"
+          },
+          {
+            "asOf": "2026-09-28T01:32:25.209Z",
+            "kind": "work_query",
+            "intent": "closing_readiness"
+          }
+        ],
+        "createdAt": "2026-09-28T01:32:26.376Z"
+      }
+    },
+    "canonicalRead": [
+      {
+        "id": "96e2044a-75c0-48c4-b00a-b211a9cd9c07",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "workId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "workInputId": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "intent": "closing_readiness",
+        "request": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness"
+        },
+        "executionKey": "778bd0df-9e5c-4b47-a0c3-4bbeb9818e34",
+        "status": "succeeded",
+        "resultSummary": {
+          "dealId": "90000000-0000-4000-8000-000000000001",
+          "intent": "closing_readiness",
+          "returned": 1,
+          "truncated": false
+        },
+        "rowCount": 1,
+        "durationMs": 1079,
+        "failure": null,
+        "startedAt": "2026-09-28T01:32:25.210Z",
+        "completedAt": "2026-09-28T01:32:26.294Z"
+      }
+    ],
+    "answer": "CENTROPY\n07:02 AM\n\nThe deal is not ready to close. Recorded blockers: Unmet closing condition “Top-customer renewal evidence is verified against the signed contract.” (evidence pending).\n\nInspect linked Work",
+    "blocker": "Top-customer renewal evidence is verified against the signed contract.",
+    "sourceUrl": "http://localhost:3001/centropy/world?threadId=bbbd2d57-8c63-4b16-842a-c594b1021f01&root=%7B%22entityType%22%3A%22pe_deal%22%2C%22entityId%22%3A%2290000000-0000-4000-8000-000000000001%22%7D&object=%7B%22namespace%22%3A%22private_equity%22%2C%22owner%22%3A%22%40finnor%2Fprivate-equity%22%2C%22type%22%3A%22pe_closing_condition%22%2C%22id%22%3A%2290000000-0000-4000-8000-000000000011%22%7D",
+    "noDuplicateUserTurn": true,
+    "elapsedMs": 18455
+  },
+  "steps": [
+    "Sign in as the fixture owner",
+    "Ask the exact Atlas blocking question",
+    "Verify the canonical closing-readiness query, completed Work, and absence of Objective/actions/effects",
+    "Compare the named Thread blocker with the canonical Canvas record",
+    "Open its exact WORLD source and reload",
+    "Check persisted instruction uniqueness and viewport overflow"
+  ],
+  "screenshotSha256": "c92d3498e769ad3423dcc915ec9c3aa9191b4874217015197acf63f0d8656270",
+  "reproduce": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/centropy-blocker-question.spec.ts --project=desktop-chromium --workers=1"
+}

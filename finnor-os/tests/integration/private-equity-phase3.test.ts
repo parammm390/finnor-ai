@@ -576,7 +576,9 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 3 truth and cognition"
     );
     expect(plannerCalls).toBe(0);
     expect(result.query?.request).toEqual({ intent: "closing_readiness", dealId });
-    expect(result.answer?.spokenSummary).toMatch(/not ready to close.*2 blocking conditions remain/i);
+    expect(result.answer?.spokenSummary).toMatch(/not ready to close/i);
+    expect(result.answer?.spokenSummary).toContain("Final lender commitment is issued.");
+    expect(result.answer?.spokenSummary).toContain("Regulatory consent evidence is received.");
   }, 30_000);
 
   it("fails closed across tenants and the retired vertical while preserving shared Core query registration", async () => {

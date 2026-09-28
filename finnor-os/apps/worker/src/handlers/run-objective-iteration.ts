@@ -13,6 +13,7 @@ export const runObjectiveIteration: JobHandler = async (payload) => {
     tenantId,
     workId,
     objectiveLoopId,
+    ...(typeof payload.workforceRecoveryAssignmentId === "string" ? { workforceRecoveryAssignmentId: payload.workforceRecoveryAssignmentId } : {}),
     ...(Number.isInteger(payload.expectedRevision) ? { expectedRevision: Number(payload.expectedRevision) } : {}),
     ...(Number.isInteger(payload.expectedStepNumber) ? { expectedStepNumber: Number(payload.expectedStepNumber) } : {}),
     deferToWorkforceJob: true,

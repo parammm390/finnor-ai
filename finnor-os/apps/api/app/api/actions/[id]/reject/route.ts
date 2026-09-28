@@ -27,7 +27,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const result = await getOrchestrator().decide(id, ctx.tenantId, "reject", ctx.userId, { role: ctx.role, reason: body.data.reason ?? null });
     if (result.status === "failure" && /authority/i.test(result.error ?? "")) return Response.json({ error: result.error, authority: result.output }, { status: 403 });
-    if (result.output.idempotent) return Response.json({ status: result.output.status, idempotent: true });
+    if (result.status === "failure") return Response.json({ error: result.error ?? "Rejection did not complete" }, { status: 409 });
+    if (result.output.idempotent) {
+      if (result.output.status !== "rejected") return Response.json({ error: `Action is ${String(result.output.status)}; rejection was not applied` }, { status: 409 });
+      return Response.json({ status: "rejected", idempotent: true });
+    }
     return Response.json({ status: "rejected" });
   } catch (err) {
     return errorResponse(err);

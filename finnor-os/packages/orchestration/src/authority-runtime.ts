@@ -105,10 +105,10 @@ export function actionAuthorityRequest(action: DomainAction, policy: DomainPolic
     ? draft.businessEffect.targets.map((target) => ({ type: target.type, ...(UUID.test(target.id) ? { id: target.id } : {}) }))
     : authorityResourcesFromPayload(draft.payload ?? action.payload);
   const primaryTypeByAction: Record<string, string> = {
-    open_ic_case: "pe_ic_case", begin_ic_preparation: "pe_ic_case",
+    open_ic_case: "pe_ic_case", begin_ic_preparation: "pe_ic_case", create_ic_memo_draft: "pe_ic_case",
     select_ic_memo_version: "pe_ic_memo", select_ic_underwriting_run: "pe_ic_case",
     create_ic_question: "pe_ic_question", attach_ic_question_evidence: "pe_ic_question",
-    request_ic_memo_review: "pe_ic_case", satisfy_ic_condition: "pe_ic_condition",
+    request_ic_memo_review: "pe_ic_case", prepare_ic_recommendation: "pe_ic_recommendation", satisfy_ic_condition: "pe_ic_condition",
     prepare_ic_decision_proposal: "pe_ic_decision_proposal",
     open_workstream: "pe_workstream", create_deal_request: "pe_request", submit_deliverable: "pe_deliverable",
     record_finding: "pe_finding", resolve_finding: "pe_finding", raise_deal_risk: "pe_deal_risk",

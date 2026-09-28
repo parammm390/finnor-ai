@@ -35,8 +35,13 @@ export class AllowlistExecutor implements Executor {
     return this.allowlist.has(actionType) ? this.graph : this.legacy;
   }
 
-  execute(action: DomainAction, policy: DomainPolicy): Promise<ExecutionResult> {
-    return this.resolve(action.actionType).execute(action, policy);
+  execute(action: DomainAction, policy: DomainPolicy, options?: { reviewBeforeExecution?: boolean }): Promise<ExecutionResult> {
+    // The graph executor has no prepare-only contract. Fail closed rather than
+    // letting an allowlisted action bypass an interactive review request.
+    if (options?.reviewBeforeExecution && this.allowlist.has(action.actionType)) {
+      return Promise.resolve({ status: "failure", output: { reviewUnavailable: true }, error: "Exact-effect review is unavailable for this graph action.", errorKind: "config" });
+    }
+    return this.resolve(action.actionType).execute(action, policy, options);
   }
 
   async close(actionId: string, tenantId: string, actionType: string): Promise<void> {

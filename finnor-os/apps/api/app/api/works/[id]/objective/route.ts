@@ -1,4 +1,4 @@
-import { receiveWork, workAggregate } from "@finnor/db";
+import { receiveWork, WorkTransitionConflictError, workAggregate } from "@finnor/db";
 import { ControlObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
@@ -47,6 +47,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
     return Response.json({ objective }, { status: objective.state === "continue" ? 202 : 200 });
   } catch (error) {
+    if (error instanceof WorkTransitionConflictError) {
+      return Response.json({ error: error.message, code: "work_recovery_required" }, { status: 409 });
+    }
     return errorResponse(error);
   }
 }

@@ -1,0 +1,311 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_growth_objective_terminal",
+  "capturedAt": "2026-09-28T00:48:26.053Z",
+  "baseUrl": "http://localhost:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "workId": "8e622226-42b5-4a35-ae41-cca293c65014",
+    "threadId": "7cc1c2b6-4691-46d1-8b06-8e4be3d25271",
+    "baseRunId": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+    "instruction": "Take growth down 300bps and exit at 9x.",
+    "disposableFixture": true
+  },
+  "observed": {
+    "workId": "8e622226-42b5-4a35-ae41-cca293c65014",
+    "threadId": "7cc1c2b6-4691-46d1-8b06-8e4be3d25271",
+    "before": {
+      "actionStatus": "pending",
+      "objectiveState": "awaiting_approval",
+      "workStatus": "awaiting_approval"
+    },
+    "approvalStatus": 200,
+    "actionId": "2ccb4032-20e4-414d-9abe-1dfdbd1a3655",
+    "effectId": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+    "receiptId": "fd06af27-59c9-4035-a446-c46010c6a890",
+    "scenarioId": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+    "branchRunId": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+    "objectiveState": "completed",
+    "workStatus": "completed",
+    "successVerification": {
+      "state": "verified",
+      "results": [
+        {
+          "kind": "no_open_execution",
+          "basis": "No objective execution or approval responsibility remains open.",
+          "index": 0,
+          "satisfied": true,
+          "evidenceRefs": []
+        },
+        {
+          "kind": "all_objective_effects_verified",
+          "basis": "All 1 objective Business Effects are verified.",
+          "index": 1,
+          "observed": [
+            {
+              "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+              "status": "verified",
+              "verification": "verified"
+            }
+          ],
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+              "type": "business_effect"
+            }
+          ]
+        },
+        {
+          "kind": "private_equity_underwriting_scenario",
+          "basis": "The Work-linked valid Run changed every recorded growth-rate period by exactly 300bps and set the exit multiple to 9x; the base Run is unchanged.",
+          "index": 2,
+          "observed": {
+            "baseRunId": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+            "baseGrowth": {
+              "P001:2027-01-01:2027-12-31": "0.1"
+            },
+            "scenarioId": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+            "branchRunId": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+            "branchGrowth": {
+              "P001:2027-01-01:2027-12-31": "0.07"
+            },
+            "exitMultiple": "9"
+          },
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+              "type": "underwriting_run"
+            },
+            {
+              "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+              "type": "underwriting_scenario"
+            },
+            {
+              "id": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+              "type": "underwriting_run"
+            },
+            {
+              "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+              "type": "business_effect"
+            },
+            {
+              "id": "fd06af27-59c9-4035-a446-c46010c6a890",
+              "type": "decision_receipt"
+            }
+          ]
+        },
+        {
+          "kind": "decision_evidence",
+          "basis": "1 completion evidence items were deterministically verified; minimum 1.",
+          "index": 3,
+          "observed": [
+            {
+              "basis": "The exact objective Business Effect is verified by canonical business state.",
+              "satisfied": true
+            }
+          ],
+          "satisfied": true,
+          "evidenceRefs": [
+            {
+              "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+              "type": "business_effect"
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "evidence": [
+        {
+          "kind": "business_effect",
+          "businessEffectId": "d49154e6-b99f-4811-9092-6bb77a5a836e"
+        }
+      ],
+      "checkedAt": "2026-09-28T00:48:13.798Z",
+      "conditionHash": "12a103e16d17935cb8d1843236445e3fa528090ef9b8ff4918bf94f9dff31ff1",
+      "queryExecutionIds": []
+    },
+    "planCompletionProof": {
+      "version": 1,
+      "verified": true,
+      "verifiedAt": "2026-09-28T00:48:13.798Z",
+      "evidenceRefs": [
+        {
+          "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+          "type": "business_effect"
+        },
+        {
+          "id": "fd06af27-59c9-4035-a446-c46010c6a890",
+          "type": "decision_receipt"
+        },
+        {
+          "id": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+          "type": "underwriting_run"
+        },
+        {
+          "id": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+          "type": "underwriting_run"
+        },
+        {
+          "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+          "type": "underwriting_scenario"
+        }
+      ],
+      "verification": {
+        "state": "verified",
+        "results": [
+          {
+            "kind": "no_open_execution",
+            "basis": "No objective execution or approval responsibility remains open.",
+            "index": 0,
+            "satisfied": true,
+            "evidenceRefs": []
+          },
+          {
+            "kind": "all_objective_effects_verified",
+            "basis": "All 1 objective Business Effects are verified.",
+            "index": 1,
+            "observed": [
+              {
+                "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+                "status": "verified",
+                "verification": "verified"
+              }
+            ],
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+                "type": "business_effect"
+              }
+            ]
+          },
+          {
+            "kind": "private_equity_underwriting_scenario",
+            "basis": "The Work-linked valid Run changed every recorded growth-rate period by exactly 300bps and set the exit multiple to 9x; the base Run is unchanged.",
+            "index": 2,
+            "observed": {
+              "baseRunId": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+              "baseGrowth": {
+                "P001:2027-01-01:2027-12-31": "0.1"
+              },
+              "scenarioId": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+              "branchRunId": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+              "branchGrowth": {
+                "P001:2027-01-01:2027-12-31": "0.07"
+              },
+              "exitMultiple": "9"
+            },
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "bee8df8e-d65a-4c47-b9e6-acc2c60f010c",
+                "type": "underwriting_run"
+              },
+              {
+                "id": "016e120b-a34d-4104-81aa-c82fbc45d5fd",
+                "type": "underwriting_scenario"
+              },
+              {
+                "id": "d111cba2-e5b7-41d2-8461-bc06fd5abf04",
+                "type": "underwriting_run"
+              },
+              {
+                "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+                "type": "business_effect"
+              },
+              {
+                "id": "fd06af27-59c9-4035-a446-c46010c6a890",
+                "type": "decision_receipt"
+              }
+            ]
+          },
+          {
+            "kind": "decision_evidence",
+            "basis": "1 completion evidence items were deterministically verified; minimum 1.",
+            "index": 3,
+            "observed": [
+              {
+                "basis": "The exact objective Business Effect is verified by canonical business state.",
+                "satisfied": true
+              }
+            ],
+            "satisfied": true,
+            "evidenceRefs": [
+              {
+                "id": "d49154e6-b99f-4811-9092-6bb77a5a836e",
+                "type": "business_effect"
+              }
+            ]
+          }
+        ],
+        "version": 1,
+        "evidence": [
+          {
+            "kind": "business_effect",
+            "businessEffectId": "d49154e6-b99f-4811-9092-6bb77a5a836e"
+          }
+        ],
+        "checkedAt": "2026-09-28T00:48:13.798Z",
+        "conditionHash": "12a103e16d17935cb8d1843236445e3fa528090ef9b8ff4918bf94f9dff31ff1",
+        "queryExecutionIds": []
+      },
+      "planRevisionId": "4a2df558-9f89-45f9-9141-2db0c7931d34",
+      "goalSemanticHash": "sha256:1692270c6a779fe41655ae396830ce49594e91af394735d3844bd1e3b0fecf24",
+      "planSemanticHash": "sha256:8e17d3aa01985d6730b62fe43039bae09b7da91c9c8c4201bd346e289c65bada",
+      "finalPlanRevisionId": "4a2df558-9f89-45f9-9141-2db0c7931d34",
+      "successConditionHash": "sha256:12a103e16d17935cb8d1843236445e3fa528090ef9b8ff4918bf94f9dff31ff1"
+    },
+    "baseHash": "sha256:ccb312d0bbbff0db372cf4fd46a8eadb016935b913aa36d86156596f0f9bc6fe",
+    "baseHashAfter": "sha256:ccb312d0bbbff0db372cf4fd46a8eadb016935b913aa36d86156596f0f9bc6fe",
+    "growthDeltaBps": -300,
+    "exitMultiple": "9",
+    "changedInputs": [
+      "exit.multiple",
+      "operating.revenue_growth"
+    ],
+    "changedOutputs": [
+      "gross_sponsor_irr",
+      "gross_sponsor_moic",
+      "gross_sponsor_xirr",
+      "output.debt.total.cash_sweep",
+      "output.debt.total.ending_principal",
+      "output.exit.debt",
+      "output.exit.enterprise_value",
+      "output.exit.equity_value",
+      "output.exit.metric_value",
+      "output.exit.net_debt",
+      "output.forecast.ebit",
+      "output.forecast.ebitda",
+      "output.forecast.levered_fcf",
+      "output.forecast.revenue",
+      "output.forecast.unlevered_fcf",
+      "sponsor_exit_proceeds"
+    ],
+    "scenarioIdsBefore": [
+      "faf398fa-f33d-48f4-ada6-ac65b6e46e52"
+    ],
+    "newScenario": true,
+    "restored": true,
+    "canvasRestored": true
+  },
+  "steps": [
+    "Authenticate owner",
+    "Read exact pending Work action and immutable growth-model base",
+    "Review and confirm its frozen Business Effect",
+    "Wait for completed Objective and Work",
+    "Verify exact success condition, effect, receipt, Scenario, valid Run, unchanged base, diff, CompletionProof, and reload"
+  ],
+  "screenshotSha256": "123ca4541df66e1ecf36e8995ff2769529abe6e923d32611fd1ae00aa9288396",
+  "resultScreenshotSha256": "64e2eda359403f69e18b9414d4e3501d972caacffe1e4425e82a0d1e7590c7cb",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_WORK_ID=<prepared growth Work> CENTROPY_THREAD_ID=<persisted Investigation> CENTROPY_GROWTH_BASE_RUN_ID=<growth base Run> PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-growth-objective-terminal.spec.ts --project=desktop-chromium",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "local disposable Atlas fixture"
+    ]
+  },
+  "limitation": "Synthetic local proof. Configured release host certification remains open."
+}

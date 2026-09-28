@@ -26,6 +26,7 @@ vercel_output.txt
 # Playwright (Phase 7 §7.10) run artifacts — never source
 /playwright-report/
 /test-results/
+/.centropy-certification/
 
 # D9.T4 — scripts/lighthouse-gate.mjs run output, regenerated fresh every run
 /lighthouse-run-*.json

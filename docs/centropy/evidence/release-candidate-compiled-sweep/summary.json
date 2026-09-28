@@ -1,0 +1,94 @@
+{
+  "schema": "centropy.compiled-viewport-summary/v1",
+  "result": "PASS_LOCAL_COMPILED",
+  "passed": 4,
+  "skipped": 0,
+  "testRunnerExitCode": 0,
+  "sourceBaseCommit": "6e6de1423862b09134dbd4a277e0f59f1c2e6f50",
+  "workingTreeImplementation": true,
+  "proofs": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "result": "PASS_LOCAL_COMPILED",
+      "blockCount": 8,
+      "timingsMs": {
+        "initialAuthenticatedHome": 98,
+        "openInvestigation": 386,
+        "artifactPreview": 362,
+        "relationshipView": 2019
+      },
+      "automatedWcagViolations": 0,
+      "browserErrors": 0,
+      "proof": "docs/centropy/evidence/release-candidate-compiled-sweep/390x844/sweep.proof.json",
+      "sha256": "77b365121434d60249204cce15287f0d8719e1f9b74745a9e61b81132d1824ef"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS_LOCAL_COMPILED",
+      "blockCount": 8,
+      "timingsMs": {
+        "initialAuthenticatedHome": 92,
+        "openInvestigation": 422,
+        "artifactPreview": 363,
+        "relationshipView": 1988
+      },
+      "automatedWcagViolations": 0,
+      "browserErrors": 0,
+      "proof": "docs/centropy/evidence/release-candidate-compiled-sweep/1280x720/sweep.proof.json",
+      "sha256": "4f574663af1fa0ebe2abd8b991359fa0070237af27dc7fb8a5d8b8c59ac0570e"
+    },
+    {
+      "viewport": {
+        "width": 834,
+        "height": 1194
+      },
+      "result": "PASS_LOCAL_COMPILED",
+      "blockCount": 8,
+      "timingsMs": {
+        "initialAuthenticatedHome": 110,
+        "openInvestigation": 390,
+        "artifactPreview": 363,
+        "relationshipView": 2076
+      },
+      "automatedWcagViolations": 0,
+      "browserErrors": 0,
+      "proof": "docs/centropy/evidence/release-candidate-compiled-sweep/834x1194/sweep.proof.json",
+      "sha256": "ff4f24365f627d60d5189a9ae3d9ee3580ad9da7a3eaf7e3234cc323ae3f40d8"
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "result": "PASS_LOCAL_COMPILED",
+      "blockCount": 8,
+      "timingsMs": {
+        "initialAuthenticatedHome": 84,
+        "openInvestigation": 407,
+        "artifactPreview": 359,
+        "relationshipView": 2038
+      },
+      "automatedWcagViolations": 0,
+      "browserErrors": 0,
+      "proof": "docs/centropy/evidence/release-candidate-compiled-sweep/375x812/sweep.proof.json",
+      "sha256": "3ea1570a7fa94116928bf5989a51e2d835b3fcf4f214282f8428fdd89de3aa7e"
+    }
+  ],
+  "manualScreenshotReview": [
+    "1280x720/thread.png: readable composer, controls separated",
+    "390x844/canvas.png: readable heading, source links and instrument controls",
+    "375x812/artifact.png: pinned original memo readable with source/version controls",
+    "834x1194/canvas.png: Canvas and Thread remain readable"
+  ],
+  "limitations": [
+    "Compiled localhost, authenticated warm navigation measurements; no production network/load claim",
+    "Scoped automated WCAG checks and keyboard interactions; no unexecuted screen-reader session",
+    "Actual original Atlas has eight blocks; twenty-block and large-data stress is separately authored component evidence"
+  ]
+}

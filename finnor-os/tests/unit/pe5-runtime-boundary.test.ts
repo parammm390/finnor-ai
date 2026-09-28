@@ -47,7 +47,7 @@ describe("Phase 5 executable runtime boundary", () => {
   });
 
   it("retains engines but exposes no uncertified Water source/import business mapper", () => {
-    expect(createSourceAdapterRegistry().providers()).toEqual([]);
+    expect(createSourceAdapterRegistry().providers()).toEqual(["gmail"]);
     expect(() => createSourceAdapterRegistry().get("ghl")).toThrow(/no active source-truth mapping/i);
     expect(activeImportEntityTypes()).toEqual([]);
     expect(activeCanonicalImportWriterTypes()).toEqual([]);

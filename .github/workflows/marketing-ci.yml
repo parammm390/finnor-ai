@@ -55,6 +55,9 @@ jobs:
       # of just a local convention.
       - run: npm run lint
       - run: npm run workspace:check
+      - run: npm run centropy:manifest:check
+      - run: npm run centropy:forms:check
+      - run: npm run test:unit
       - run: npx tsc --noEmit -p tsconfig.json
       # Run every credential-free release policy before merge. The production-only
       # workflow used to be the first place the P8 reachability verifier ran, which

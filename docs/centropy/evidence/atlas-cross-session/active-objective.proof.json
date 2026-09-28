@@ -1,0 +1,103 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_active_objective_cross_session",
+  "capturedAt": "2026-09-27T20:53:08.745Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Take growth down 300bps and exit at 9x.",
+    "separateBrowserContexts": true
+  },
+  "observed": {
+    "workId": "06a0febe-2675-4422-86a3-907144a45830",
+    "threadId": "9fa793e3-a7a7-4d5e-8591-592151aa4056",
+    "instructionId": "06a0febe-2675-4422-86a3-907144a45830",
+    "actionId": "b8590e3e-40d7-4507-81d5-747c9bfc3a98",
+    "baseRunId": "d84d0a97-852d-4399-a581-85914c5199fb",
+    "beforeIdentity": {
+      "workId": "06a0febe-2675-4422-86a3-907144a45830",
+      "objectiveLoopId": "b5babc34-be30-4871-a0c2-d0b3936975ac",
+      "actionIds": [
+        "b8590e3e-40d7-4507-81d5-747c9bfc3a98"
+      ],
+      "planIds": [
+        "f247ab0e-729e-4a1a-a884-a605e1528f87"
+      ],
+      "assignmentIds": [
+        "d57e33e3-81ca-4856-8d45-32d546fd32a7"
+      ],
+      "userTurns": [
+        {
+          "id": "ae5e9043-24db-44b9-832b-ecd9f1377507",
+          "instructionId": "06a0febe-2675-4422-86a3-907144a45830"
+        }
+      ]
+    },
+    "afterRefreshIdentity": {
+      "workId": "06a0febe-2675-4422-86a3-907144a45830",
+      "objectiveLoopId": "b5babc34-be30-4871-a0c2-d0b3936975ac",
+      "actionIds": [
+        "b8590e3e-40d7-4507-81d5-747c9bfc3a98"
+      ],
+      "planIds": [
+        "f247ab0e-729e-4a1a-a884-a605e1528f87"
+      ],
+      "assignmentIds": [
+        "d57e33e3-81ca-4856-8d45-32d546fd32a7"
+      ],
+      "userTurns": [
+        {
+          "id": "ae5e9043-24db-44b9-832b-ecd9f1377507",
+          "instructionId": "06a0febe-2675-4422-86a3-907144a45830"
+        }
+      ]
+    },
+    "afterNewSessionIdentity": {
+      "workId": "06a0febe-2675-4422-86a3-907144a45830",
+      "objectiveLoopId": "b5babc34-be30-4871-a0c2-d0b3936975ac",
+      "actionIds": [
+        "b8590e3e-40d7-4507-81d5-747c9bfc3a98"
+      ],
+      "planIds": [
+        "f247ab0e-729e-4a1a-a884-a605e1528f87"
+      ],
+      "assignmentIds": [
+        "d57e33e3-81ca-4856-8d45-32d546fd32a7"
+      ],
+      "userTurns": [
+        {
+          "id": "ae5e9043-24db-44b9-832b-ecd9f1377507",
+          "instructionId": "06a0febe-2675-4422-86a3-907144a45830"
+        }
+      ]
+    },
+    "firstContextClosed": true,
+    "secondContextHadNoCookies": true,
+    "sameIdentityAfterRefresh": true,
+    "sameIdentityAfterNewSession": true,
+    "pendingEffectRestored": true,
+    "canvasRestored": true,
+    "workforceRestored": true,
+    "noDuplicateWorkOrAction": true
+  },
+  "steps": [
+    "Authenticate and submit one Deal-scoped Objective",
+    "Wait for the real Underwriting Analyst assignment and exact pending action",
+    "Record durable Thread, instruction, Work, Objective, Plan, assignment, and action IDs",
+    "Refresh the first browser while approval is pending and compare identities",
+    "Close the first browser context",
+    "Start a new cookie-free context, authenticate again, and open the persisted Investigation without a root URL override",
+    "Verify the same pending Effect, Objective, Canvas, specialist assignment, and all IDs without a duplicate"
+  ],
+  "screenshotSha256": "138d222096def2d5a85e0b9dc1f56361d529be9705eaae2f2dff4659f0620e41",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npx playwright test e2e/centropy-cross-session-active-objective.spec.ts --project=desktop-chromium",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas growth model and local stack"
+    ]
+  },
+  "limitation": "Local fixture proof. It leaves the exact Effect pending for governed approval; release-host and separate-machine continuity remain open."
+}

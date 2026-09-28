@@ -1,0 +1,253 @@
+{
+  "schema": "centropy.renderer-performance-proof/v1",
+  "result": "PASS",
+  "capturedAt": "2026-09-28T17:28:58.530Z",
+  "inputs": ".centropy-certification/renderer-performance/inputs.json",
+  "observed": {
+    "viewport": {
+      "width": 375,
+      "height": 812
+    },
+    "inputs": {
+      "schema": "centropy.renderer-benchmark/v1",
+      "authored": true,
+      "noBusinessAssertions": true,
+      "serverMode": "isolated_production_components_esbuild",
+      "inputs": {
+        "canvasBlocks": 20,
+        "rowsPerBlock": 5,
+        "underwritingOutputs": 1000,
+        "relationshipNodes": 10000,
+        "relationshipEdges": 20000,
+        "orbState": "WORKING",
+        "orbSize": 98
+      },
+      "sourceHashes": {
+        "scripts/centropy/renderer-performance.fixture.tsx": "15eee1db2f5ef663337b0fe2495deb021d0d466faabbc28f43eb1d24ea10805c",
+        "src/components/centropy/canvas/CanvasDocument.tsx": "97a45c1b1cd624898989208cfb3ded98d2740889988ae7d70fe37bc01d72bf52",
+        "src/components/centropy/canvas/canvas-contract.ts": "f5fb2e4b68bea9623725579a09eac32330ea3cd2191be818e6e15da1c78e6973",
+        "src/components/centropy/world/WorldRelationships.tsx": "0c067bb5c7f03871d50d306bb1a1c5c94a5170e23d2e7a885de957a14c63d1e4",
+        "src/components/centropy/shell/CentropyPresence.tsx": "eafaa7ac627ae579d2b1703a648ba8d0a0e9040c45d27fdcef82133a863db808",
+        "src/components/centropy/product/vendor/LiquidGlassOrb.tsx": "af5a165d632286b55e9844064eea39c38672993ce27edfe0d46550f883f0dcd3"
+      },
+      "productionCss": [
+        "0vsp0up7518ih.css",
+        "14x4da6_fxjhh.css",
+        "1ds4e2a54w93d.css",
+        "1n8pkpdjs93c3.css"
+      ],
+      "limits": [
+        "Navigation adapter only; no business API, financial calculation or active business agent",
+        "This bundle is an isolated benchmark; production Next.js timings are recorded separately"
+      ]
+    },
+    "inputsSha256": "4f45fbacdb2dfbcbe137be2bd25ef45b7806ea7a85416759a2029c91b540849f",
+    "modes": {
+      "blocks": {
+        "renderToTwoFramesMs": 81.90000000037253,
+        "longTasksMs": [],
+        "longTaskSupported": true,
+        "domElements": 1109,
+        "viewport": 375,
+        "pageWidth": 375
+      },
+      "underwriting": {
+        "renderToTwoFramesMs": 74.29999999981374,
+        "longTasksMs": [],
+        "longTaskSupported": true,
+        "domElements": 5120,
+        "viewport": 375,
+        "pageWidth": 375
+      },
+      "relationships": {
+        "renderToTwoFramesMs": 476.29999999981374,
+        "longTasksMs": [
+          473
+        ],
+        "longTaskSupported": true,
+        "domElements": 451,
+        "viewport": 375,
+        "pageWidth": 375
+      },
+      "orb": {
+        "renderToTwoFramesMs": 31.5,
+        "longTasksMs": [
+          473
+        ],
+        "longTaskSupported": true,
+        "domElements": 27,
+        "viewport": 375,
+        "pageWidth": 375
+      }
+    },
+    "screenshots": [
+      {
+        "mode": "blocks",
+        "path": "blocks.png",
+        "sha256": "66103953b164b020e10ce54183b5728b589e2cb3b1f1de5efb4455ee8aba487e"
+      },
+      {
+        "mode": "underwriting",
+        "path": "underwriting.png",
+        "sha256": "462110a034b212299b132642414c4e2a15ef50644b50397cb2eb1e7ede135ece"
+      },
+      {
+        "mode": "relationships",
+        "path": "relationships.png",
+        "sha256": "84e86942592b4dad343dcc6c9cb24d3b7ed19aad6586626d43f085de0670550a"
+      },
+      {
+        "mode": "orb",
+        "path": "orb.png",
+        "sha256": "51fa85569c02fe6c766385e377ef5b0716f774cb793a8b377eb8854a47f0698c"
+      }
+    ],
+    "orb": {
+      "mobile": true,
+      "webglComponentMounted": false,
+      "supported": null,
+      "frameIntervalsMs": [
+        13.600000000186355,
+        16.699999999999818,
+        16.700000000000045,
+        16.600000000000136,
+        16.699999999999818,
+        16.40000000000009,
+        16.90000000000009,
+        15.699999999999818,
+        17.700000000000045,
+        16.600000000000136,
+        15.699999999999818,
+        17.700000000000045,
+        16.600000000000136,
+        16.699999999999818,
+        16.600000000000136,
+        16.700000000000045,
+        16.59999999999991,
+        16.799999999999955,
+        16.700000000000045,
+        16.59999999999991,
+        15.600000000000136,
+        17.700000000000045,
+        16.699999999999818,
+        16.600000000000136,
+        16.700000000000045,
+        16.699999999999818,
+        16.600000000000136,
+        16.700000000000045,
+        16.59999999999991,
+        16.700000000000045,
+        16.799999999999955,
+        16.59999999999991,
+        16.700000000000273,
+        16.59999999999991,
+        16.699999999999818,
+        16.59999999999991,
+        16.700000000000273,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.699999999999818,
+        16.59999999999991,
+        16.700000000000273,
+        16.699999999999818,
+        16.59999999999991,
+        16.700000000000273,
+        16.699999999999818,
+        16.59999999999991,
+        16.700000000000273,
+        16.699999999999818,
+        16.700000000000273,
+        15.599999999999909,
+        16.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.800000000000182,
+        17.59999999999991,
+        16.59999999999991,
+        16.800000000000182,
+        16.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.699999999999818,
+        16.59999999999991,
+        16.700000000000273,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.59999999999991,
+        16.800000000000182,
+        16.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991,
+        16.699999999999818,
+        15.700000000000273,
+        17.59999999999991,
+        16.699999999999818,
+        16.700000000000273,
+        16.699999999999818,
+        16.700000000000273,
+        16.59999999999991
+      ]
+    },
+    "reducedMotion": {
+      "webglComponentMounted": false,
+      "staticFallbackVisible": true
+    },
+    "resources": {
+      "transferredBytes": 744851,
+      "decodedBytes": 741551,
+      "scripts": [
+        {
+          "name": "/assets/renderer-performance.fixture.js",
+          "bytes": 340648
+        },
+        {
+          "name": "/assets/chunk-JBZ3VVMX.js",
+          "bytes": 8652
+        },
+        {
+          "name": "/assets/chunk-44NV3JW7.js",
+          "bytes": 65828
+        },
+        {
+          "name": "/assets/chunk-LWYZVOCJ.js",
+          "bytes": 158676
+        },
+        {
+          "name": "/assets/chunk-SEIWK2GS.js",
+          "bytes": 943
+        }
+      ]
+    },
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36",
+    "runtimeErrors": []
+  },
+  "steps": [
+    "Mount and scroll all 20 validated Canvas blocks",
+    "Open and reach the last of 1,000 actual underwriting renderer rows",
+    "Render 10,000 authored objects and 20,000 authored links with the disclosed 60-row display bound",
+    "Measure the actual Orb component with browser frame intervals",
+    "Verify reduced-motion, mobile and offscreen component gating"
+  ],
+  "limitations": [
+    "Authored UNKNOWN UI inputs; no backend load or financial calculation is claimed",
+    "Isolated esbuild production-mode component bundle, not the deployed Next.js bundle",
+    "Browser frame intervals measure this host only; GPU support is recorded rather than assumed",
+    "Actual business agent trace and authenticated product routes are certified separately"
+  ],
+  "reproduce": {
+    "server": "node scripts/centropy/start-renderer-performance.mjs",
+    "test": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:3339 npx playwright test e2e/centropy-renderer-performance.spec.ts --workers=1"
+  }
+}

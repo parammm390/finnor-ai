@@ -1,0 +1,97 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "human_record_controls",
+  "capturedAt": "2026-09-28T03:17:31.272Z",
+  "baseUrl": "http://127.0.0.1:3001",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "benchmarkKey": "browser-benchmark-72afa7a1-62f1-4777-9c9c-d7d5542ee7ea",
+    "density": "compact",
+    "fixtureOnly": true
+  },
+  "observed": {
+    "preferences": {
+      "homepage": null,
+      "density": "compact",
+      "pinnedPanels": [],
+      "accent": null,
+      "soundEnabled": false,
+      "notificationPreferences": {},
+      "quietHoursStart": null,
+      "quietHoursEnd": null
+    },
+    "institutionalSelectors": [
+      "Closed world claim",
+      "Create benchmark",
+      "Create debt facility",
+      "Create fund",
+      "Create metric series",
+      "Create portfolio holding",
+      "Create security",
+      "Create vehicle",
+      "Link debt facility lender",
+      "Link fund vehicle",
+      "Link strategy mandate",
+      "Record benchmark observation",
+      "Record company hierarchy",
+      "Record company party role",
+      "Record exit",
+      "Record fact coverage",
+      "Record identity resolution",
+      "Record metric observation",
+      "Record outcome",
+      "Record ownership",
+      "Resolve identity as known",
+      "Restate benchmark observation",
+      "Restate metric observation",
+      "Revise fact coverage",
+      "Revise ownership",
+      "Transition fund",
+      "Transition vehicle"
+    ],
+    "benchmark": {
+      "row": {
+        "id": "81bcebb7-9f34-403a-966f-1b66d1e586d3",
+        "tenantId": "00000000-0000-4000-8000-000000000001",
+        "benchmarkKey": "browser-benchmark-72afa7a1-62f1-4777-9c9c-d7d5542ee7ea",
+        "name": "Authored browser benchmark",
+        "metricKey": "revenue_growth",
+        "unit": "rate",
+        "currencyCode": null,
+        "cohortDefinition": {},
+        "version": 1,
+        "sourceSystem": "api:pe-digital-twin",
+        "externalId": null,
+        "createdBy": "dc5e9c60-7e75-4801-aba3-8ac0ae060075",
+        "observedAt": null,
+        "createdAt": "2026-09-28T03:17:30.156Z",
+        "updatedAt": "2026-09-28T03:17:30.156Z"
+      },
+      "changed": true,
+      "idempotent": false
+    },
+    "benchmarkReadback": [
+      {
+        "id": "81bcebb7-9f34-403a-966f-1b66d1e586d3",
+        "benchmark_key": "browser-benchmark-72afa7a1-62f1-4777-9c9c-d7d5542ee7ea",
+        "name": "Authored browser benchmark",
+        "metric_key": "revenue_growth",
+        "unit": "rate"
+      }
+    ],
+    "overflowPx": 0,
+    "preferencesRestored": true
+  },
+  "steps": [
+    "Authenticate as the actual owner",
+    "Review a preference change; verify no write before explicit attestation",
+    "Record it, independently read it, close by keyboard and verify returned focus, then reload",
+    "Open WORLD institutional controls and enumerate all 27 registered selectors",
+    "Review and record an authored benchmark, then independently read its canonical Company Brain object",
+    "Verify no viewport overflow; restore the original preferences"
+  ],
+  "screenshotSha256": "e40c22b7a6caf7ea9094a96148191db3f20e4823f9d5dce01f75a50f824177dd",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-human-controls.spec.ts --project=desktop-chromium --workers=1"
+  }
+}

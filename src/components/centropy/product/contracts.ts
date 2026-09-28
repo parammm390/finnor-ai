@@ -98,6 +98,8 @@ export interface UnderwritingRun {
   id: string
   modelVersionId: string
   scenarioId: string | null
+  /** A persisted sensitivity cell is a comparison result, never a new base run. */
+  sensitivityCell?: boolean
   workId: string | null
   worldAt: string
   computedAt: string
@@ -123,6 +125,24 @@ export interface UnderwritingRun {
     solverDiagnostics: Array<Record<string, unknown>>
     failure?: { code: string; message: string; details: Record<string, unknown> }
   }
+}
+
+export interface UnderwritingRunDiff {
+  leftRunId: string
+  rightRunId: string
+  modelVersionChanged: boolean
+  modelSemanticHashChanged: boolean
+  engineVersionChanged: boolean
+  scenarioIdentityChanged: boolean
+  artifactBindingChanged: boolean
+  changedInputs: Record<string, { left: UnderwritingInput | null; right: UnderwritingInput | null }>
+  causalAttribution: "DEPENDENCY_GRAPH" | "MODEL_CHANGED"
+  causalChangedInputsByOutput: Record<string, string[]>
+  changedOutputs: Record<string, { left: UnderwritingValue | null; right: UnderwritingValue | null }>
+  changedChecks: string[]
+  sponsorCashFlowsChanged: boolean
+  solverBehaviorChanged: boolean
+  scenarioChanged: boolean
 }
 
 export interface UnderwritingWorkspace {
@@ -151,7 +171,7 @@ export interface UnderwritingLineage {
 export type IcRecord = Record<string, unknown> & { id?: string }
 export interface IcWorkspace {
   viewer: { employeeId: string | null }
-  case: IcRecord & { id: string; dealId: string; investmentCaseId: string; state: string; version: number; voteSetVersion: number; votingBasisVersion: number | null; primaryUnderwritingRunId: string | null }
+  case: IcRecord & { id: string; dealId: string; investmentCaseId: string; state: string; version: number; voteSetVersion: number; votingBasisVersion: number | null; currentRecommendationId: string | null; currentMemoId: string | null; primaryUnderwritingRunId: string | null }
   investmentCase: IcRecord & { id: string; title?: string; summary?: string | null; state?: string; version?: number }
   committee: { config: IcRecord; members: IcRecord[] }
   memo: IcRecord | null
@@ -174,9 +194,18 @@ export interface IcWorkspace {
 }
 
 export interface WorkAggregateView {
+  read?: { limit: number; complete: boolean; truncatedTables: string[] }
   work: { id: string; status: string; initialInstruction: string; executionModel: string | null; currentOwnerId: string | null; assignedTo: string | null; createdAt: string; updatedAt: string; failure: unknown; recovery: unknown; finalOutcome: unknown }
+  plannerAttempts?: Array<{ id: string; attempt: number; status: string; failure: unknown; compilationResult: unknown }>
+  outcomePack?: {
+    id: string; workId: string; objectiveLoopId: string; packId: string; packVersion: number;
+    mode: "shadow" | "approval" | "autopilot"; status: string; objective: string;
+    subjectRefs: unknown; blockedReason: string | null; finalVerification: unknown;
+    updatedAt: string; completedAt: string | null;
+    latestAutonomyDecision: { outcome: string; eligible: boolean; reasonCodes: string[]; evaluatedAt: string } | null;
+  } | null
   planRevisions: Array<{ id: string; revision: number; parentRevisionId: string | null; reason: string; status: string; goalSpec: unknown; constraintSet: unknown; planningSnapshot: unknown; validation: unknown; planGraph: unknown; score: unknown; graphHash: string; semanticHash: string; completionProof: unknown; selectedAt: string; completedAt: string | null }>
-  actions: Array<{ id: string; actionType: string; status: string; planRevisionId: string | null; planNodeId: string | null; groundedPayload: unknown; predictedReceipt: unknown; createdAt: string }>
+  actions: Array<{ id: string; actionType: string; status: string; summary?: string | null; planRevisionId: string | null; planNodeId: string | null; groundedPayload: unknown; predictedReceipt: unknown; createdAt: string }>
   businessEffects: Array<{ id: string; domainActionId: string | null; status: string; effect: unknown; observedResult: unknown; verification: unknown; semanticHash: string }>
   objectiveSteps: Array<{ id: string; stepNumber: number; phase: string; decisionKind: string | null; planRevisionId: string | null; planNodeId: string | null; observation: unknown; recoveryKind: string | null; failure: unknown; iterationOutcome: string | null; completedAt: string | null }>
   queryExecutions: Array<{ id: string; status: string; intent: string; resultSummary: unknown }>
@@ -209,5 +238,7 @@ export interface PeProductData {
 
 export interface CommandOpenOptions {
   prompt?: string
+  startAtReview?: boolean
   target?: InspectionTarget
+  read?: { intent: "closing_readiness" | "open_deal_risks" | "open_findings" | "open_requests" | "deal_workstreams" | "critical_dependencies"; dealId: string; idempotencyKey: string }
 }

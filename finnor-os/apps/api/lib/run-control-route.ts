@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { RunControlResult } from "@finnor/workflow-runtime";
 import { requireContext, authorizeRuntimeControl, errorResponse } from "./auth";
 
-const BodySchema = z.object({ expectedVersion: z.number().int().nonnegative() });
+export const WorkflowRunControlSchema = z.object({ expectedVersion: z.number().int().nonnegative() });
 
 const STATUS_BY_REASON: Record<string, number> = {
   not_found: 404,
@@ -28,7 +28,7 @@ export function makeRunControlRoute(fn: RunControlFn) {
       if (authority.outcome !== "allowed") {
         return Response.json({ error: `Your role (${ctx.role}) cannot control workflow runs` }, { status: 403 });
       }
-      const body = BodySchema.safeParse(await req.json().catch(() => ({})));
+      const body = WorkflowRunControlSchema.safeParse(await req.json().catch(() => ({})));
       if (!body.success) {
         return Response.json({ error: "Invalid body — expectedVersion (number) is required" }, { status: 400 });
       }

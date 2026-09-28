@@ -350,7 +350,7 @@ async function inspectUnderwritingBasisTx(
   policy: IcPolicySnapshot,
 ): Promise<IcUnderwritingBasis> {
   const row = (await client.query<SqlRow>(
-    `SELECT id::text,tenant_id::text,investment_case_id::text,model_version_id::text,scenario_id::text,
+    `SELECT id::text,tenant_id::text,investment_case_id::text,model_version_id::text,scenario_id::text,work_id::text,
             world_at,computed_at,engine_version,model_semantic_hash,input_hash,result_hash,status,validity,
             failure_code,result->'checks' checks
        FROM finnor_os.underwriting_runs
@@ -726,6 +726,9 @@ export async function selectIcMemoVersion(ctx: PeMutationContext, input: {
     }
     const process = await loadCaseForUpdate(client, bound.auth.tenantId, input.icCaseId);
     expectedVersion(Number(process.version), input.expectedCaseVersion, "ICCase");
+    if (["DECIDED", "WITHDRAWN", "SUPERSEDED"].includes(process.state)) {
+      throw new PeDomainError("IC_TERMINAL", "An exact memo or deck version cannot be selected into a terminal IC case");
+    }
     await requireMemoDocumentVersionTx(client, process, input.documentId, input.documentVersionId);
     const prior = (await client.query<{ id: string; revision: number }>(
       `SELECT id::text,revision FROM finnor_os.pe_ic_memos WHERE tenant_id=$1 AND ic_case_id=$2 AND artifact_role=$3 ORDER BY revision DESC LIMIT 1`,
@@ -1138,10 +1141,12 @@ export async function createIcRecommendation(ctx: PeMutationContext, input: {
     if (!run) throw new PeDomainError("IC_RUN_NOT_FOUND", "Primary UnderwritingRun was not found for the InvestmentCase");
     const policy = await policyForCase(client, bound.auth.tenantId, process.id);
     await requireEligibleUnderwritingBasisTx(client, bound.auth.tenantId, process.investment_case_id, runId, policy.snapshot);
-    const prior = process.current_recommendation_id ? (await client.query<{ id: string; revision: number }>(
-      "SELECT id::text,revision FROM finnor_os.pe_ic_recommendations WHERE tenant_id=$1 AND ic_case_id=$2 AND id=$3",
-      [bound.auth.tenantId, process.id, process.current_recommendation_id],
-    )).rows[0] : undefined;
+    // Changing the selected Run or memo clears the current recommendation.
+    // Revision history still exists and must remain monotonic for this Case.
+    const prior = (await client.query<{ id: string; revision: number }>(
+      "SELECT id::text,revision FROM finnor_os.pe_ic_recommendations WHERE tenant_id=$1 AND ic_case_id=$2 ORDER BY revision DESC LIMIT 1",
+      [bound.auth.tenantId, process.id],
+    )).rows[0];
     const created = (await client.query<SqlRow>(
       `INSERT INTO finnor_os.pe_ic_recommendations(
         id,tenant_id,deal_id,investment_case_id,ic_case_id,revision,supersedes_recommendation_id,

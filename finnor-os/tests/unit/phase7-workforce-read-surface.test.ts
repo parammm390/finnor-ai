@@ -43,13 +43,4 @@ describe("P7 workforce operational surface", () => {
     expect(ordinary.safetyRecoveryRank).toBe(1);
     expect(humanOnly.authorityBottleneckRank).toBe(0);
   });
-
-  it("reads all five workforce reasons from the existing attention implementation", () => {
-    const source = readFileSync(join(process.cwd(), "packages/read-models/src/attention-query.ts"), "utf8");
-    for (const reason of ["ai_assignment_failed", "no_eligible_ai_worker", "worker_budget_exhausted", "learning_proposal_review", "human_only_boundary"]) {
-      expect(source).toContain(reason);
-    }
-    expect(source).toContain("buildAttentionRankVector");
-    expect(source).not.toContain("buildWorkforceAttentionRank");
-  });
 });

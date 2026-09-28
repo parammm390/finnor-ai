@@ -22,6 +22,8 @@ import {
   internalEvents,
   workObjectiveLoops,
   communicationIdentities,
+  externalContacts,
+  users,
   applicationAccounts,
   authProfiles,
   businessEffects,
@@ -122,7 +124,33 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
       `);
       return result.rows[0] ? "verified" : "not_found";
     }
-    case "underwritingRunId": {
+    case "templateVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT version_id::text AS id FROM finnor_os.artifact_templates
+        WHERE tenant_id=${tenantId}::uuid AND version_id=${value}::uuid AND status='active' LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "underwritingRunId":
+    case "primaryUnderwritingRunId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "modelVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_model_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "scenarioId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_scenarios WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "baseRunId": {
       const result = await db.execute<{ id: string }>(sql`
         SELECT id::text FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
       `);
@@ -143,7 +171,7 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
     deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
     dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
     closingItemId: "pe_closing_item", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
-    icCaseId: "pe_ic_case", memoSelectionId: "pe_ic_memo", questionId: "pe_ic_question",
+    icCaseId: "pe_ic_case", memoId: "pe_ic_memo", memoSelectionId: "pe_ic_memo", recommendationId: "pe_ic_recommendation", questionId: "pe_ic_question",
     conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
   };
   const entityType = privateEquityTypeByField[field];
@@ -288,9 +316,10 @@ const EFFECT_RESOURCE_KEYS: Record<string, string> = {
   dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
   closingItemId: "pe_closing_item", evidenceSourceId: "evidence_source", evidenceVersionId: "evidence_source_version",
   verifierEmployeeId: "employee", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
-  icCaseId: "pe_ic_case", memoSelectionId: "pe_ic_memo", questionId: "pe_ic_question",
+  icCaseId: "pe_ic_case", memoId: "pe_ic_memo", memoSelectionId: "pe_ic_memo", recommendationId: "pe_ic_recommendation", questionId: "pe_ic_question",
   conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
-  underwritingRunId: "underwriting_run", documentVersionId: "document_version",
+  underwritingRunId: "underwriting_run", primaryUnderwritingRunId: "underwriting_run", documentVersionId: "document_version", templateVersionId: "document_version",
+  modelVersionId: "underwriting_model_version", scenarioId: "underwriting_scenario", baseRunId: "underwriting_run",
   committeeConfigVersionId: "pe_ic_committee_config_version", scheduledInternalEventId: "internal_event",
 };
 
@@ -380,7 +409,10 @@ function collectEffectTargets(value: unknown, actionId: string, path = ""): Busi
     const type = EFFECT_RESOURCE_KEYS[key] ?? (key.endsWith("Ids") ? EFFECT_RESOURCE_KEYS[`${key.slice(0, -3)}Id`] : undefined);
     if (type) {
       const ids = Array.isArray(child) ? child : [child];
-      for (const id of ids) if (typeof id === "string" && UUID_RE.test(id)) targets.push({ kind: "entity", type, id, sourcePath: childPath });
+      // Employees are PartyRefs, including an explicitly grounded human
+      // verifier. Preserve that kind so the compiler and DB scope boundary use
+      // the same canonical party owner and tenant checks.
+      for (const id of ids) if (typeof id === "string" && UUID_RE.test(id)) targets.push({ kind: type === "employee" ? "party" : "entity", type, id, sourcePath: childPath });
     } else if (EFFECT_RECIPIENT_KEYS[key] && typeof child === "string" && child.trim()) {
       targets.push({ kind: "resource", type: EFFECT_RECIPIENT_KEYS[key]!, id: child.trim(), sourcePath: childPath });
     } else {
@@ -435,6 +467,22 @@ async function safePrivateEquityState(db: Db, tenantId: string, type: string, id
     `);
     return result.rows[0] ?? null;
   }
+  if (type === "pe_ic_recommendation") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",memo_id::text "memoId",
+             underwriting_run_id::text "underwritingRunId",outcome,revision,created_at "createdAt"
+      FROM finnor_os.pe_ic_recommendations WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_document_link") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,deal_id::text "dealId",entity_id::text "entityId",
+             document_id::text "documentId",link_role "linkRole",version,updated_at "updatedAt"
+      FROM finnor_os.pe_document_links WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
   if (type === "pe_ic_decision_proposal") {
     const result = await db.execute<Record<string, unknown>>(sql`
       SELECT id::text id,ic_case_id::text "icCaseId",case_version "caseVersion",
@@ -448,6 +496,20 @@ async function safePrivateEquityState(db: Db, tenantId: string, type: string, id
       SELECT id::text id,investment_case_id::text "investmentCaseId",status,validity,input_hash "inputHash",
              result_hash "resultHash",computed_at "computedAt"
         FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_model_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",semantic_hash "semanticHash",created_at "createdAt"
+        FROM finnor_os.underwriting_model_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_scenario") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",model_version_id::text "modelVersionId",semantic_hash "semanticHash",created_at "createdAt"
+        FROM finnor_os.underwriting_scenarios WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
     `);
     return result.rows[0] ?? null;
   }
@@ -489,6 +551,14 @@ async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTa
   const peState = await safePrivateEquityState(db, tenantId, target.type, target.id);
   if (peState) return peState;
   switch (target.type) {
+    case "external_contact": {
+      const [row] = await db.select({ id: externalContacts.id, name: externalContacts.name, businessEmail: externalContacts.businessEmail }).from(externalContacts).where(and(eq(externalContacts.tenantId, tenantId), eq(externalContacts.id, target.id))).limit(1);
+      return row ?? null;
+    }
+    case "employee": {
+      const [row] = await db.select({ id: users.id, name: users.displayName, businessEmail: users.email, status: users.status }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.id, target.id))).limit(1);
+      return row ?? null;
+    }
     case "task": {
       const [row] = await db.select({ id: tasks.id, subjectType: tasks.subjectType, subjectId: tasks.subjectId, title: tasks.title, dueAt: tasks.dueAt, assignedPartyType: tasks.assignedPartyType, assignedPartyId: tasks.assignedPartyId, status: tasks.status, priority: tasks.priority }).from(tasks).where(and(eq(tasks.tenantId, tenantId), eq(tasks.id, target.id))).limit(1);
       return row ? { ...row, dueAt: iso(row.dueAt) } : null;
@@ -506,7 +576,7 @@ async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTa
       return row ? { ...row, acknowledgementDeadline: iso(row.acknowledgementDeadline), completionDeadline: iso(row.completionDeadline) } : null;
     }
     case "communication_identity": {
-      const [row] = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider, channel: communicationIdentities.channel, status: communicationIdentities.status, authProfileId: communicationIdentities.authProfileId, updatedAt: communicationIdentities.updatedAt }).from(communicationIdentities).where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.id, target.id))).limit(1);
+      const [row] = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider, channel: communicationIdentities.channel, address: communicationIdentities.address, status: communicationIdentities.status, authProfileId: communicationIdentities.authProfileId, updatedAt: communicationIdentities.updatedAt }).from(communicationIdentities).where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.id, target.id))).limit(1);
       return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
     }
     case "application_account": {
@@ -711,11 +781,16 @@ async function compileBusinessEffectWithDb(params: {
   // precondition would let the runtime's own executing/approval/wait transitions
   // invalidate the exact action they coordinate. A reference to any other Work
   // remains a normal frozen target.
-  const initialTargets = collectEffectTargets(payload, params.action.id).filter((target) => !(
-    target.type === "work"
-    && target.id === params.action.workId
-    && params.action.actionType !== "handoff_work"
-  ));
+  const initialTargets = collectEffectTargets(payload, params.action.id).filter((target) => {
+    if (target.type === "work" && target.id === params.action.workId && params.action.actionType !== "handoff_work") return false;
+    // P4 Run, Scenario and ModelVersion records deliberately have no Core
+    // canonical-truth-registry entry. The BusinessEffect scope still freezes
+    // their exact IDs in delta.values, and PE grounding verifies tenant/Deal
+    // ownership. Its polymorphic target guard accepts only P1/Core entities.
+    if (params.action.actionType === "create_underwriting_run"
+      && ["underwriting_run", "underwriting_scenario", "underwriting_model_version"].includes(target.type)) return false;
+    return true;
+  });
   const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external));
   if (resolved.bindings.some((binding) => binding.selection === "fixed" && binding.authProfileRef && !binding.authProfileId)) {
     throw new BusinessEffectBoundaryError("effect_missing", "The requested governed authentication profile does not exist in this tenant");

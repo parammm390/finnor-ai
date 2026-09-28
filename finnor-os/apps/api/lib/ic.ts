@@ -83,6 +83,12 @@ export const IcSelectMemoSchema = z.object({
   idempotencyKey,
 }).strict();
 
+export const IcReviewedDeckLinkSchema = z.object({
+  expectedCaseVersion: caseVersion,
+  documentId: IcUuidSchema,
+  documentVersionId: IcUuidSchema,
+}).strict();
+
 export const IcSelectUnderwritingRunSchema = z.object({
   expectedCaseVersion: caseVersion,
   underwritingRunId: IcUuidSchema,

@@ -1,4 +1,8 @@
-export type ProjectionTag = "preferences" | "company-brain" | "semantic-activity" | "work" | "agents" | "authority"
+import { resolveProductRoute, type ProductMethod } from "@/lib/centropy/capability-manifest"
+
+export type ProjectionTag = "preferences" | "company-brain" | "semantic-activity" | "work" | "agents" | "authority" |
+  "underwriting" | "ic" | "artifact" | "source" | "thread" | "canvas" | "objective" | "workflow" | "workforce" |
+  "workspace" | "preference" | "operating-profile" | "outcome-pack" | "receipt" | "m365" | "corrections" | "connections"
 
 export interface BusinessInvalidationSignal {
   tags: readonly ProjectionTag[]
@@ -20,17 +24,11 @@ export function publishBusinessInvalidation(signal: Omit<BusinessInvalidationSig
   listeners.forEach((listener) => listener(event))
 }
 
-/** POST is also used by the read-only Company Brain projection. Those reads do
- * not publish a false mutation signal. Real writes invalidate only active PE
- * projections; the server remains the source of truth on the next read. */
-export function mutationProjectionTags(path: string): ProjectionTag[] {
-  const clean = path.replace(/^\/+/, "")
-  if (clean === "workspace-config") return ["preferences"]
-  if (clean.startsWith("company-brain/") || clean === "semantic-activity" || clean === "queries") return []
-  if (clean === "actions") return ["work", "company-brain", "semantic-activity", "authority"]
-  if (/^actions\/[^/]+\/(confirm|reject|escalate|revert)$/.test(clean)) return ["work", "company-brain", "semantic-activity", "authority"]
-  if (/^works\/[^/]+\/(retry|handoff)$/.test(clean) || /^instructions\/[^/]+\/cancel$/.test(clean)) return ["work", "company-brain", "semantic-activity"]
-  return ["company-brain", "semantic-activity"]
+/** The same route manifest that guards the proxy owns targeted invalidation. */
+export function mutationProjectionTags(path: string, method: ProductMethod = "POST"): ProjectionTag[] {
+  const capability = resolveProductRoute(method, path.replace(/^\/+/, "").split("/"))
+  if (!capability || capability.classification === "READ") return []
+  return capability.invalidationTags as ProjectionTag[]
 }
 
 export function businessEventProjectionTags(eventType: string, entityType: string): ProjectionTag[] {

@@ -136,9 +136,14 @@ export const UnderwritingCreateRunSchema = z.object({
   worldAt: z.string().datetime({ offset: true }),
   idempotencyKey: z.string().trim().min(1).max(240),
   scenarioId: UnderwritingUuidSchema.optional(),
+  baseRunId: UnderwritingUuidSchema.optional(),
   workId: UnderwritingUuidSchema.optional(),
   explicitInputs: z.record(ExplicitInputSchema).optional(),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (value.baseRunId && value.explicitInputs) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "A pinned baseRunId cannot be combined with newly resolved explicit inputs" });
+  }
+});
 
 const SensitivityAxisSchema = z.object({
   nodeId: z.string().min(1).max(200),

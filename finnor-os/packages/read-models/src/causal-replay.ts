@@ -161,7 +161,7 @@ function actionEventStage(step: string): CausalReplayStage {
   if (/recover|retry|reconcil/i.test(step)) return "recovery";
   if (/gate|confirm|reject|approv|escalat/i.test(step)) return "approval";
   if (/verif|reflect/i.test(step)) return "verification";
-  if (/dispatch|execut|complete|result/i.test(step)) return "execution";
+  if (/dispatch|execut|complete|result|updat|creat|delet/i.test(step)) return "execution";
   return "planning";
 }
 
@@ -500,7 +500,7 @@ export async function causalReplayProjection(
       });
       addEdge({ from: id, to: contextId, relation: "captured_context", evidenceRefs: [`${sourceRef("work_inputs", input.id)}.context_snapshot`], explanation: "The immutable input row stores the exact interaction context supplied with this instruction." });
     } else {
-      addMissing(`missing:interaction-context:${input.id}`, iso(input.createdAt), "This legacy Work input has no immutable interaction-context snapshot.", id);
+      addMissing(`missing:interaction-context:${input.id}`, iso(input.createdAt), "This Work input has no immutable interaction-context snapshot.", id);
     }
   }
 
@@ -1091,6 +1091,8 @@ export async function causalReplayProjection(
     addNode({ id, stage: operation.status === "failed" || operation.status === "unknown" ? "failure" : "provider", title: `${humanize(operation.capability)} provider operation`, summary: `${operation.provider ?? "provider unavailable"} · ${humanize(operation.status)}`, status: operation.status, occurredAt: iso(operation.updatedAt), sourceRefs: [sourceRef("integration_operations", operation.id)], evidence: [evidence("integration_operations", operation.id, iso(operation.updatedAt), operation.response === null ? "unavailable" : "available", operation.requestHash)], facts: sanitizeExecutionValue({ provider: operation.provider, capability: operation.capability, operationKey: operation.operationKey, requestHash: operation.requestHash, response: operation.response }, viewer.role) as Record<string, unknown>, entityRefs: [] });
     const step = stepNodeById.get(operation.workflowStepId);
     if (step) addEdge({ from: step, to: id, relation: "dispatched_provider_operation", evidenceRefs: [`${sourceRef("integration_operations", operation.id)}.workflow_step_id`], explanation: "The provider operation is keyed to the exact workflow step." });
+    const actionId = workflowStepRows.find((candidate) => candidate.id === operation.workflowStepId)?.domainActionId;
+    if (actionId && step) providerNodesByAction.set(actionId, [...(providerNodesByAction.get(actionId) ?? []), id]);
   }
   for (const event of extra.outboxRows) {
     const id = `outbox-event:${event.id}`;
@@ -1223,7 +1225,8 @@ export async function causalReplayProjection(
 
   for (const event of workEvents.filter((event) => /fail|block|recover|reconcil|cancel|interrupted/i.test(event.eventType))) {
     const id = `work-event:${event.id}`;
-    const stage: CausalReplayStage = /recover|reconcil/i.test(event.eventType) ? "recovery" : "failure";
+    const stage: CausalReplayStage = event.eventType === "children_reconciled" ? "verification"
+      : /recover|reconcil/i.test(event.eventType) ? "recovery" : "failure";
     addNode({ id, stage, title: humanize(event.eventType), summary: `${event.fromStatus ?? "start"} → ${event.toStatus}`, status: event.toStatus, occurredAt: iso(event.createdAt), sourceRefs: [sourceRef("work_events", event.id)], evidence: [evidence("work_events", event.id, iso(event.createdAt))], facts: sanitizeExecutionValue(event.payload, viewer.role) as Record<string, unknown>, entityRefs: [] });
   }
 
@@ -1283,7 +1286,7 @@ export async function causalReplayProjection(
     moments,
     explanation: {
       trigger: firstInput ? `${humanize(firstInput.channel)} instruction: ${firstInput.instructionText.slice(0, 500)}` : "No durable Work input is available.",
-      context: plannerAttempts.some((attempt) => attempt.decisionContextSnapshot) ? "FINNOR froze decision-time interaction, entity, source, cohort, and authority provenance before planning." : inputs.some((input) => input.contextSnapshot) ? "The explicit interaction context is preserved; assembled planner provenance is incomplete." : "Decision-time context is unavailable for this legacy Work.",
+      context: plannerAttempts.some((attempt) => attempt.decisionContextSnapshot) ? "FINNOR froze decision-time interaction, entity, source, cohort, and authority provenance before planning." : inputs.some((input) => input.contextSnapshot) ? "The explicit interaction context is preserved; assembled planner provenance is incomplete." : "Decision-time context is unavailable for this Work.",
       plan: actions.length ? `${actions.length} exact DomainAction${actions.length === 1 ? " was" : "s were"} proposed with ${actions.reduce((count, action) => count + action.dependsOn.length, 0)} stored dependenc${actions.reduce((count, action) => count + action.dependsOn.length, 0) === 1 ? "y" : "ies"}.` : queryExecutions.length ? `${queryExecutions.length} deterministic read executed; no consequential action was invented.` : "No action plan is recorded.",
       governance: `${extra.authorityRows.length} immutable authority decision${extra.authorityRows.length === 1 ? "" : "s"}; ${approvals.length} approval request${approvals.length === 1 ? "" : "s"}${approvals.some((approval) => approval.status === "rejected") ? ", including a permanent rejection" : ""}.`,
       execution: providers ? `${providers} provider, communication, integration, or computer execution record${providers === 1 ? "" : "s"} preserve intent separately from acknowledgement.` : "No provider execution was required or durably recorded.",

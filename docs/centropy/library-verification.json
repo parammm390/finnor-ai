@@ -1,0 +1,687 @@
+{
+  "schema": "centropy.library-verification/v1",
+  "verifiedAt": "2026-09-28T18:44:09.104Z",
+  "method": "Actual active-route import graph, installed lock versions and license files; primary upstream notices verified. Per-package attributable Next.js bundle bytes are not inferred from source bytes.",
+  "packages": [
+    {
+      "name": "@supabase/supabase-js",
+      "version": "2.99.3",
+      "license": "MIT",
+      "localLicenseFiles": [],
+      "importedBy": [
+        "src/components/centropy/lib/centropy-auth.tsx",
+        "src/lib/centropy/supabase-browser.ts"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": "https://github.com/supabase/supabase-js/blob/master/LICENSE"
+    },
+    {
+      "name": "framer-motion",
+      "version": "11.18.2",
+      "license": "MIT",
+      "localLicenseFiles": [
+        {
+          "path": "node_modules/framer-motion/LICENSE.md",
+          "sha256": "5ff46083b88563822b0560dd6221ab89d2f74bc97a52d4c97a75020fd62c6f32"
+        }
+      ],
+      "importedBy": [
+        "src/components/centropy/canvas/CanvasSectionNav.tsx"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": null
+    },
+    {
+      "name": "lucide-react",
+      "version": "0.424.0",
+      "license": "ISC",
+      "localLicenseFiles": [
+        {
+          "path": "node_modules/lucide-react/LICENSE",
+          "sha256": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc"
+        }
+      ],
+      "importedBy": [
+        "src/components/centropy/canvas/ArtifactCanvas.tsx",
+        "src/components/centropy/canvas/ArtifactIcHandoff.tsx",
+        "src/components/centropy/canvas/ArtifactPublicationDesk.tsx",
+        "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
+        "src/components/centropy/canvas/CanvasDocument.tsx",
+        "src/components/centropy/canvas/CausalReplayPanel.tsx",
+        "src/components/centropy/canvas/IcCaseContinuation.tsx",
+        "src/components/centropy/canvas/IcVoteControl.tsx",
+        "src/components/centropy/canvas/SourceDiagnostics.tsx",
+        "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
+        "src/components/centropy/lib/LoginForm.tsx",
+        "src/components/centropy/lib/ResetPasswordForm.tsx",
+        "src/components/centropy/shell/CentropyWorkspace.tsx",
+        "src/components/centropy/shell/HomeCanvas.tsx",
+        "src/components/centropy/thread/Composer.tsx",
+        "src/components/centropy/thread/ExecutionObject.tsx",
+        "src/components/centropy/thread/ObjectiveControl.tsx",
+        "src/components/centropy/thread/OutcomePacks.tsx",
+        "src/components/centropy/thread/PendingEffects.tsx",
+        "src/components/centropy/thread/WorkRecovery.tsx",
+        "src/components/centropy/thread/WorkforceAssignments.tsx",
+        "src/components/centropy/world/WorldExplorer.tsx",
+        "src/components/centropy/world/WorldRelationships.tsx",
+        "src/components/centropy/world/WorldWorkRecord.tsx"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": "https://github.com/lucide-icons/lucide.git"
+    },
+    {
+      "name": "next",
+      "version": "16.3.4",
+      "license": "MIT",
+      "localLicenseFiles": [
+        {
+          "path": "node_modules/next/license.md",
+          "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224"
+        }
+      ],
+      "importedBy": [
+        "src/app/centropy/agents/page.tsx",
+        "src/app/centropy/bridge/page.tsx",
+        "src/app/centropy/classic/page.tsx",
+        "src/app/centropy/customers/page.tsx",
+        "src/app/centropy/deals/[dealId]/[section]/page.tsx",
+        "src/app/centropy/deals/[dealId]/page.tsx",
+        "src/app/centropy/deals/page.tsx",
+        "src/app/centropy/investigations/[threadId]/page.tsx",
+        "src/app/centropy/money/page.tsx",
+        "src/app/centropy/next/page.tsx",
+        "src/app/centropy/page.tsx",
+        "src/app/centropy/schedule/page.tsx",
+        "src/app/centropy/showtime/page.tsx",
+        "src/app/centropy/stage/page.tsx",
+        "src/app/centropy/work/page.tsx",
+        "src/app/centropy/world/page.tsx",
+        "src/components/centropy/canvas/CanvasDocument.tsx",
+        "src/components/centropy/controls/ArtifactCreationDesk.tsx",
+        "src/components/centropy/controls/CanonicalRecordForm.tsx",
+        "src/components/centropy/lib/LoginForm.tsx",
+        "src/components/centropy/lib/ResetPasswordForm.tsx",
+        "src/components/centropy/shell/CentropyHost.tsx",
+        "src/components/centropy/shell/CentropyWorkspace.tsx"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": "https://nextjs.org"
+    },
+    {
+      "name": "react",
+      "version": "19.2.8",
+      "license": "MIT",
+      "localLicenseFiles": [
+        {
+          "path": "node_modules/react/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "importedBy": [
+        "src/app/centropy/layout.tsx",
+        "src/components/centropy/canvas/ArtifactCanvas.tsx",
+        "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
+        "src/components/centropy/canvas/ArtifactGovernanceDesk.tsx",
+        "src/components/centropy/canvas/ArtifactIcHandoff.tsx",
+        "src/components/centropy/canvas/ArtifactPresentationEditor.tsx",
+        "src/components/centropy/canvas/ArtifactPublicationDesk.tsx",
+        "src/components/centropy/canvas/ArtifactRecordControls.tsx",
+        "src/components/centropy/canvas/ArtifactSpreadsheetEditor.tsx",
+        "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
+        "src/components/centropy/canvas/CanvasDocument.tsx",
+        "src/components/centropy/canvas/CanvasSectionNav.tsx",
+        "src/components/centropy/canvas/CausalReplayPanel.tsx",
+        "src/components/centropy/canvas/IcCaseContinuation.tsx",
+        "src/components/centropy/canvas/IcVoteControl.tsx",
+        "src/components/centropy/canvas/SourceDiagnostics.tsx",
+        "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
+        "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
+        "src/components/centropy/canvas/use-canvas-preferences.ts",
+        "src/components/centropy/canvas/use-canvas-sources.ts",
+        "src/components/centropy/controls/ArtifactCreationDesk.tsx",
+        "src/components/centropy/controls/CanonicalRecordForm.tsx",
+        "src/components/centropy/controls/HumanControlDesk.tsx",
+        "src/components/centropy/controls/IcHumanControls.tsx",
+        "src/components/centropy/controls/SettingsDialog.tsx",
+        "src/components/centropy/controls/StructuredFields.tsx",
+        "src/components/centropy/controls/SupportingReadDesk.tsx",
+        "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
+        "src/components/centropy/lib/LoginForm.tsx",
+        "src/components/centropy/lib/ResetPasswordForm.tsx",
+        "src/components/centropy/lib/centropy-auth.tsx",
+        "src/components/centropy/pe/use-pe-data.ts",
+        "src/components/centropy/product/useProductRequest.ts",
+        "src/components/centropy/product/vendor/LiquidGlassOrb.tsx",
+        "src/components/centropy/shell/CentropyHost.tsx",
+        "src/components/centropy/shell/CentropyPresence.tsx",
+        "src/components/centropy/shell/CentropyWorkspace.tsx",
+        "src/components/centropy/shell/HomeCanvas.tsx",
+        "src/components/centropy/thread/Composer.tsx",
+        "src/components/centropy/thread/ObjectiveControl.tsx",
+        "src/components/centropy/thread/OutcomePacks.tsx",
+        "src/components/centropy/thread/PendingEffects.tsx",
+        "src/components/centropy/thread/RecordedValue.tsx",
+        "src/components/centropy/thread/WorkRecovery.tsx",
+        "src/components/centropy/thread/WorkforceAssignments.tsx",
+        "src/components/centropy/thread/use-investigation.ts",
+        "src/components/centropy/world/WorldExplorer.tsx",
+        "src/components/centropy/world/WorldWorkRecord.tsx"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": "https://github.com/react/react.git"
+    },
+    {
+      "name": "zod",
+      "version": "3.25.76",
+      "license": "MIT",
+      "localLicenseFiles": [
+        {
+          "path": "node_modules/zod/LICENSE",
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8"
+        }
+      ],
+      "importedBy": [
+        "src/components/centropy/canvas/ArtifactCanvas.tsx",
+        "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
+        "src/components/centropy/canvas/ArtifactGovernanceDesk.tsx",
+        "src/components/centropy/canvas/ArtifactIcHandoff.tsx",
+        "src/components/centropy/canvas/ArtifactPresentationEditor.tsx",
+        "src/components/centropy/canvas/ArtifactPublicationDesk.tsx",
+        "src/components/centropy/canvas/ArtifactRecordControls.tsx",
+        "src/components/centropy/canvas/ArtifactSpreadsheetEditor.tsx",
+        "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
+        "src/components/centropy/canvas/IcCaseContinuation.tsx",
+        "src/components/centropy/canvas/IcVoteControl.tsx",
+        "src/components/centropy/canvas/SourceDiagnostics.tsx",
+        "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
+        "src/components/centropy/canvas/canvas-contract.ts",
+        "src/components/centropy/canvas/causal-replay-contract.ts",
+        "src/components/centropy/canvas/ic-vote-model.ts",
+        "src/components/centropy/canvas/use-canvas-preferences.ts",
+        "src/components/centropy/controls/ArtifactCreationDesk.tsx",
+        "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
+        "src/components/centropy/shell/HomeCanvas.tsx",
+        "src/components/centropy/thread/OutcomePacks.tsx",
+        "src/components/centropy/thread/WorkforceAssignments.tsx",
+        "src/components/centropy/thread/pending-effect-model.ts",
+        "src/components/centropy/thread/thread-contract.ts"
+      ],
+      "compatibility": "Production Next.js build and authenticated viewport/browser tests executed; exact proof links below",
+      "additionalDependencies": "Existing locked dependency; this completion patch adds no package dependency",
+      "licenseSource": "git+https://github.com/colinhacks/zod.git"
+    }
+  ],
+  "components": [
+    {
+      "name": "Rare UI Fluid Orb",
+      "source": "https://github.com/swamimalode07/rare-ui/blob/main/LICENSE",
+      "license": "MIT + Commons Clause + Attribution",
+      "file": "src/components/centropy/product/vendor/LiquidGlassOrb.tsx",
+      "why": "Runtime presence state with controlled GPU work and a reduced-motion/mobile fallback",
+      "dependencies": [
+        "react"
+      ],
+      "restyling": "CENTROPY blueDrop palette; real PresenceState drives the state; visibility-controlled lazy mount",
+      "attribution": "Copyright 2026 Swami Malode; visible https://rareui.com credit in README and THIRD_PARTY_NOTICES",
+      "restrictions": "No redistribution of the components themselves as standalone, bundled or ported components",
+      "maintenance": "Small vendored adaptation, no upstream auto-update; exact source hash recorded",
+      "measuredSource": {
+        "path": "src/components/centropy/product/vendor/LiquidGlassOrb.tsx",
+        "sourceBytes": 9371,
+        "gzippedSourceBytes": 3519,
+        "sha256": "af5a165d632286b55e9844064eea39c38672993ce27edfe0d46550f883f0dcd3"
+      },
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    },
+    {
+      "name": "Rare UI animated-counter pattern",
+      "source": "https://github.com/swamimalode07/rare-ui/blob/main/LICENSE",
+      "license": "Same Rare UI terms; historical source notice retained",
+      "why": "Existing counter pattern; no third-party counter runtime import is asserted by the current workspace audit",
+      "dependencies": [],
+      "restyling": "No new counter package installed",
+      "attribution": "README and THIRD_PARTY_NOTICES",
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    },
+    {
+      "name": "Kansho patterns",
+      "source": "https://github.com/joeyvansommeren/kansho-ui/blob/main/LICENSE",
+      "license": "MIT",
+      "why": "Readable canonical plan, verification, permission and communication inspection",
+      "dependencies": [],
+      "restyling": "Original typed CENTROPY rendering over recorded canonical state; no demonstration business data",
+      "attribution": "Copyright 2026 Joey van Sommeren; THIRD_PARTY_NOTICES",
+      "maintenance": "Pattern adaptation maintained locally",
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    },
+    {
+      "name": "LerSent001 orb palette",
+      "source": "https://github.com/LerSent001/orb/blob/main/LICENSE",
+      "license": "MIT",
+      "why": "User-supplied blueDrop palette/glass direction",
+      "dependencies": [],
+      "restyling": "Applied to small local shader rather than adding Three.js",
+      "attribution": "Copyright 2026 LerSent001; source comment and THIRD_PARTY_NOTICES",
+      "maintenance": "Palette design input; no upstream runtime imported",
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    },
+    {
+      "name": "Scrim approval pattern",
+      "source": "https://scrimui.dev/components/approval-request",
+      "license": "MIT, stated on primary component page",
+      "why": "Explicit effect, authority and evidence review before actual human confirmation",
+      "dependencies": [],
+      "restyling": "Canonical IDs, frozen effect, policy and real receipt replace demo content; no fabricated countdown",
+      "attribution": "THIRD_PARTY_NOTICES",
+      "maintenance": "Local governed implementation",
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    },
+    {
+      "name": "Rewamp navigation idea",
+      "source": "https://github.com/palakonweb/Rewamp-UI/blob/main/README.md",
+      "license": "No standalone license verified; LICENSE URL returned 404",
+      "file": "src/components/centropy/canvas/CanvasSectionNav.tsx",
+      "why": "Clear focus on a persisted Canvas section",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "restyling": "New TypeScript implementation with native keyboard buttons, reduced motion and persisted section selection",
+      "attribution": "Source comment and THIRD_PARTY_NOTICES",
+      "maintenance": "No upstream source vendored",
+      "measuredSource": {
+        "path": "src/components/centropy/canvas/CanvasSectionNav.tsx",
+        "sourceBytes": 3820,
+        "gzippedSourceBytes": 1456,
+        "sha256": "718d31aafd3f745a8c23b7d23d2f7dc7c6d3427de10c5d6f8fddac9ff3f7bf09"
+      },
+      "compatibility": "Existing production React/Next build passes; no alternative design-system runtime added",
+      "accessibilityEvidence": "docs/centropy/evidence/release-candidate-compiled-sweep/",
+      "performanceEvidence": "docs/centropy/evidence/release-candidate-renderer-performance-desktop/"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "Astryx",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "React Bits Pro",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "Libraries.dev Orbs",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "Libraries.dev Bots",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "Designeer",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "Broad UI",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    },
+    {
+      "name": "shadcn",
+      "decision": "NOT_ADDED_TO_ACTIVE_WORKSPACE",
+      "reason": "The local typed components implement the required path; an additional runtime or copied component was unnecessary",
+      "license": "No license/commercial-permission claim made for an unused candidate",
+      "compatibility": "No imported candidate to certify",
+      "bundleImpact": "No new import in the active route graph",
+      "sourceAvailability": "Not relied on; no copied source",
+      "maintenance": "Not added"
+    }
+  ],
+  "bundleMeasurement": {
+    "allBuildChunks": [
+      {
+        "path": ".next/static/chunks/04ybu_bfk-9th.js",
+        "sourceBytes": 46812,
+        "gzippedSourceBytes": 15107,
+        "sha256": "4a5a7a41a65a5c45781e17c41581839ca8bf015cbc3b5595d3042a993272e5bb"
+      },
+      {
+        "path": ".next/static/chunks/0_yn-aphk15zg.js",
+        "sourceBytes": 40438,
+        "gzippedSourceBytes": 13721,
+        "sha256": "9dff2da97b9877a6db586404efcaeae7c43c3ea00e8077c04ba0509c26f8e102"
+      },
+      {
+        "path": ".next/static/chunks/0c-wm0riyo6lb.js",
+        "sourceBytes": 3885,
+        "gzippedSourceBytes": 1598,
+        "sha256": "4e1ef0232cf6f3705e0abea068726dee08d99ad1e1f01023f3fcce2b117e89bf"
+      },
+      {
+        "path": ".next/static/chunks/0cz1d0mv5g_q7.js",
+        "sourceBytes": 112594,
+        "gzippedSourceBytes": 39627,
+        "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+      },
+      {
+        "path": ".next/static/chunks/0enqu-9zj212o.js",
+        "sourceBytes": 22158,
+        "gzippedSourceBytes": 6108,
+        "sha256": "aa291bb6087f4773bd8aa36d244567af2f319d385298a9ba04ab8e3c0ff7bbfb"
+      },
+      {
+        "path": ".next/static/chunks/0gd-llt113ani.js",
+        "sourceBytes": 6117,
+        "gzippedSourceBytes": 2343,
+        "sha256": "796fbc9661004348faafbbae63a26d25d97795f37739ab1f0bba5803b21423d5"
+      },
+      {
+        "path": ".next/static/chunks/0iw0k_u95vr-r.js",
+        "sourceBytes": 118511,
+        "gzippedSourceBytes": 39601,
+        "sha256": "498b2209f7d1a03ecdf5c3f44ad6f4569a1e72dd45d29d6764ba099e687cd866"
+      },
+      {
+        "path": ".next/static/chunks/0k4fiblvhb-hw.js",
+        "sourceBytes": 196876,
+        "gzippedSourceBytes": 52076,
+        "sha256": "9df0877227e07052d925a997c0b5af5a67f30157ba57b7915e9ddb7e2c59d55b"
+      },
+      {
+        "path": ".next/static/chunks/0mtzl52dxvqt5.js",
+        "sourceBytes": 121733,
+        "gzippedSourceBytes": 13942,
+        "sha256": "ab3e41298a6237d04a5024f93db43c80ed133e0d8e8269547d65390458ee9402"
+      },
+      {
+        "path": ".next/static/chunks/0zr7ibz5of9j3.js",
+        "sourceBytes": 2060,
+        "gzippedSourceBytes": 992,
+        "sha256": "d8d8daf23f3994e87370d7d513ea651d47fdcc09716145828bcbb65e396cb33c"
+      },
+      {
+        "path": ".next/static/chunks/0zrq952m18fj3.js",
+        "sourceBytes": 61708,
+        "gzippedSourceBytes": 14518,
+        "sha256": "b4553dea600fda6152969978da23b678770d267ffac4c5213f2c04b7b7c37465"
+      },
+      {
+        "path": ".next/static/chunks/117al69wvdrji.js",
+        "sourceBytes": 1420,
+        "gzippedSourceBytes": 793,
+        "sha256": "058b1c22c0e2f485645683872185d75053fe81a7e1dfc7b490828b82b52ee87d"
+      },
+      {
+        "path": ".next/static/chunks/153am3jnd9wub.js",
+        "sourceBytes": 55616,
+        "gzippedSourceBytes": 19096,
+        "sha256": "156c7129c97eea0164041baff7197266091dc534ed291d2d2473285cff19c2f6"
+      },
+      {
+        "path": ".next/static/chunks/16r-dg_882izs.js",
+        "sourceBytes": 4935,
+        "gzippedSourceBytes": 2059,
+        "sha256": "789478d58237ebc4bc5e9ef1bdc3fe3fdd35012f1dcc52a7a7a682f358ab9475"
+      },
+      {
+        "path": ".next/static/chunks/16rrnx234a23a.js",
+        "sourceBytes": 36080,
+        "gzippedSourceBytes": 11853,
+        "sha256": "c6b251aa31632b0d9de48d9e4c5284b8b1752dec23f7392ed7bf5bf4983a4e48"
+      },
+      {
+        "path": ".next/static/chunks/1ax37cddtt6ik.css",
+        "sourceBytes": 91259,
+        "gzippedSourceBytes": 15107,
+        "sha256": "fa56d376ba7517aa97108bbf6331bd664ff392549ffcb48543ee9f38842a6759"
+      },
+      {
+        "path": ".next/static/chunks/1ds4e2a54w93d.css",
+        "sourceBytes": 35251,
+        "gzippedSourceBytes": 5798,
+        "sha256": "b11f731403c347300b983d2cadc1e5d7f840dac2334c414aa772d637c3e932f2"
+      },
+      {
+        "path": ".next/static/chunks/1n8pkpdjs93c3.css",
+        "sourceBytes": 4154,
+        "gzippedSourceBytes": 1184,
+        "sha256": "b0bba644fb01abbcca84b6bab6edbaad36956c778f3ec9adb98a4479401cbd08"
+      },
+      {
+        "path": ".next/static/chunks/1ozi2y2d6lhv9.js",
+        "sourceBytes": 33713,
+        "gzippedSourceBytes": 9112,
+        "sha256": "f12bf4912b41998f1e69a48e217162437cdb881499dd068caa47532452b99950"
+      },
+      {
+        "path": ".next/static/chunks/1s6p8j6s2eck0.js",
+        "sourceBytes": 18613,
+        "gzippedSourceBytes": 4961,
+        "sha256": "2c7bd9a5e3858e6d9654fa2590df9278138c19ff2b0e08472bb024c2853bdd13"
+      },
+      {
+        "path": ".next/static/chunks/1v4zhjnzsoe3j.js",
+        "sourceBytes": 8093,
+        "gzippedSourceBytes": 2894,
+        "sha256": "b5a9d985c433e6df5fb421c6e0389f3f08d26bc7c3d737a76f7c7aa5e1820faf"
+      },
+      {
+        "path": ".next/static/chunks/2-jkw8xc9p2ix.js",
+        "sourceBytes": 2621,
+        "gzippedSourceBytes": 1310,
+        "sha256": "ee108e7835f02bb51cf187f248212b595d3addb95604fdf8b3c04d45e4e77897"
+      },
+      {
+        "path": ".next/static/chunks/24e0r90werjc-.js",
+        "sourceBytes": 154325,
+        "gzippedSourceBytes": 42664,
+        "sha256": "4a72272d158a8109fb691880f97355989739a392de97616917fce3f14e6ce8ef"
+      },
+      {
+        "path": ".next/static/chunks/296fnaov_tqh-.js",
+        "sourceBytes": 60126,
+        "gzippedSourceBytes": 14859,
+        "sha256": "d895ac7a5fbd36d4de6bd30d6050c44d63a2e78574356ed5805c581d58db84d4"
+      },
+      {
+        "path": ".next/static/chunks/2avo7e3mw6nu2.js",
+        "sourceBytes": 113892,
+        "gzippedSourceBytes": 44240,
+        "sha256": "7bf603daf723e03b7d74a1848ffb891bf7468577d1f6932d3ebb140669abdb03"
+      },
+      {
+        "path": ".next/static/chunks/2d79s_0e__8m5.js",
+        "sourceBytes": 9598,
+        "gzippedSourceBytes": 3239,
+        "sha256": "f0d58fa319a0559defbc08382652ca52a8b8ad4a48a9d80e9634b1eb76fe3429"
+      },
+      {
+        "path": ".next/static/chunks/2mgu5qvjjs4-4.js",
+        "sourceBytes": 3556,
+        "gzippedSourceBytes": 1723,
+        "sha256": "e11c8fee6b7beefd90a5d03e749854b7da5b1a1f3845bfbcd5e58db7fadeff2e"
+      },
+      {
+        "path": ".next/static/chunks/2nt_w_t2vf026.js",
+        "sourceBytes": 178614,
+        "gzippedSourceBytes": 10317,
+        "sha256": "1c6f5d15116c60094e0a1ee5a6dd3f6338ad1489fa6fdf90e58a717df9f00290"
+      },
+      {
+        "path": ".next/static/chunks/2pcrqd7u9gaj6.js",
+        "sourceBytes": 26834,
+        "gzippedSourceBytes": 8048,
+        "sha256": "9149105b0a7b882b80fd352d6ce79661252c15dbc53e0794cab075f0c85bcc56"
+      },
+      {
+        "path": ".next/static/chunks/2y9-k91fq3l-1.js",
+        "sourceBytes": 8812,
+        "gzippedSourceBytes": 3042,
+        "sha256": "b41bbece121eb1a3001a85c55c29ef1b07f749f71b1323746f25d6dd478c95e5"
+      },
+      {
+        "path": ".next/static/chunks/34tnouxpbrqfx.css",
+        "sourceBytes": 36425,
+        "gzippedSourceBytes": 8533,
+        "sha256": "725b42507708bd392204b3340b92ae4cda02e429bb1de01e6a0a653b70ceb6e0"
+      },
+      {
+        "path": ".next/static/chunks/3719pficrtb45.js",
+        "sourceBytes": 6852,
+        "gzippedSourceBytes": 3060,
+        "sha256": "20e98dbbb4186cb56f5549be446f43d300f597ac7c1c484c67c7ba197b23a526"
+      },
+      {
+        "path": ".next/static/chunks/3_7luwy4t2ew9.js",
+        "sourceBytes": 30393,
+        "gzippedSourceBytes": 9895,
+        "sha256": "2075d397647c9ccb7216bd8eea3b25b5c4bcb612c252598512c6233e9cc77a46"
+      },
+      {
+        "path": ".next/static/chunks/3_nfh7qsej4qd.js",
+        "sourceBytes": 2408,
+        "gzippedSourceBytes": 1149,
+        "sha256": "ccad8c7e32149b3472fe6857b5345385215d24e692c20cce1bdf65a6677c1ded"
+      },
+      {
+        "path": ".next/static/chunks/3_o57pvy-fqp0.js",
+        "sourceBytes": 8623,
+        "gzippedSourceBytes": 3123,
+        "sha256": "93c25f682562bfc560c46e1095c5be5a0de9be8461d100600c7e3ead72ea1c02"
+      },
+      {
+        "path": ".next/static/chunks/3dfxnhth5m0eh.js",
+        "sourceBytes": 5791,
+        "gzippedSourceBytes": 2444,
+        "sha256": "4f03662fc7b149c19fa40f487aa21615c0a7d4b856bd665376857e9743df1bfb"
+      },
+      {
+        "path": ".next/static/chunks/3ehwu7e94sps4.js",
+        "sourceBytes": 3964,
+        "gzippedSourceBytes": 1728,
+        "sha256": "4b7e98013df1845881d3b86cf57d450cde55eb56cc54d39b1187f05d4ad9cac3"
+      },
+      {
+        "path": ".next/static/chunks/3jzem43tusx_y.js",
+        "sourceBytes": 8366,
+        "gzippedSourceBytes": 3178,
+        "sha256": "d0a4a5d737bd575f5a2a03c12b2903826930b4fbc8b6d51a50b056007127b956"
+      },
+      {
+        "path": ".next/static/chunks/3kcwdxml13ts7.js",
+        "sourceBytes": 17156,
+        "gzippedSourceBytes": 6015,
+        "sha256": "9c7bdb26b7cf4363711273df55415aa14cbff8f8a27c910e77808029960a14f8"
+      },
+      {
+        "path": ".next/static/chunks/3or2bmdkwb2s-.js",
+        "sourceBytes": 2344,
+        "gzippedSourceBytes": 767,
+        "sha256": "f0713c5fc69a2fd8a0c924227dbbb3689b57c16c9db29e26f7cc5e6b1ded5098"
+      },
+      {
+        "path": ".next/static/chunks/3qbequxsweioq.js",
+        "sourceBytes": 140599,
+        "gzippedSourceBytes": 38582,
+        "sha256": "681e26bd47b8f7089cbf3322ee1a852ed5fddf4549fe97fc363b4dc69d056531"
+      },
+      {
+        "path": ".next/static/chunks/3yukpg1je4c1z.js",
+        "sourceBytes": 4937,
+        "gzippedSourceBytes": 1852,
+        "sha256": "33d11764fd7ddd44f9e6d82664dad5355bb8021390d8ebc3f6ef89ac75db4734"
+      },
+      {
+        "path": ".next/static/chunks/3z5q91wa1l111.js",
+        "sourceBytes": 7490,
+        "gzippedSourceBytes": 2512,
+        "sha256": "45e54762ce01e4e99552912cd92cf8efd81b3791a1ab38b4a1c410bc1037f926"
+      },
+      {
+        "path": ".next/static/chunks/41gi92tnekhgo.js",
+        "sourceBytes": 477563,
+        "gzippedSourceBytes": 148843,
+        "sha256": "5a04aa08f5e46e062261d3bf07edb922a36b94346030ab66d2d24dff77649ec5"
+      },
+      {
+        "path": ".next/static/chunks/42m4ggo7_jowa.js",
+        "sourceBytes": 13016,
+        "gzippedSourceBytes": 4025,
+        "sha256": "6e757ad5822e9d5b282e1e4652d31a5393082b149e8d0e781e42321162971350"
+      },
+      {
+        "path": ".next/static/chunks/43sg49gy7w5-s.js",
+        "sourceBytes": 3001,
+        "gzippedSourceBytes": 1335,
+        "sha256": "7eb654889920502be779749360c6b1446859595e7acbc8824cd7c55a819fa0ea"
+      },
+      {
+        "path": ".next/static/chunks/turbopack-3sh_ljtycak6d.js",
+        "sourceBytes": 10090,
+        "gzippedSourceBytes": 4014,
+        "sha256": "599e97f820c3593df7e20c79adc00ba5f7d6dff20ab376191a14b31af8bd6049"
+      }
+    ],
+    "scope": "Whole frontend build, including other retained routes. Source gzip is not isolated emitted bundle attribution."
+  },
+  "proofs": [
+    "docs/centropy/evidence/release-candidate-compiled-sweep/",
+    "docs/centropy/evidence/release-candidate-renderer-performance-desktop/",
+    "docs/centropy/evidence/release-candidate-renderer-performance-mobile/"
+  ],
+  "limitations": [
+    "Automated axe results do not replace all assistive-technology evaluation",
+    "No upstream maintenance SLA or unmeasured individual emitted bundle cost is asserted",
+    "Unused candidates are rejected without assuming a redistribution license"
+  ]
+}

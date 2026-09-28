@@ -1,0 +1,263 @@
+{
+  "schema": "finnor.centropy.e2e-proof/v1",
+  "flow": "atlas_live_workforce_reassignment",
+  "capturedAt": "2026-09-28T00:25:10.914Z",
+  "baseUrl": "http://localhost:3001",
+  "actorEmail": "owner@test-dealer.finnor.local",
+  "input": {
+    "dealId": "90000000-0000-4000-8000-000000000001",
+    "instruction": "Recheck the entire deal before IC.",
+    "faultControl": "briefly suspend only the named disposable worker after a persisted active assignment appears"
+  },
+  "observed": {
+    "workId": "bde9217a-5f50-4e72-b1c5-cfbb37833e89",
+    "threadId": "0acd6689-793b-4e0a-aee4-6e0caa52c5ce",
+    "pausedAssignment": {
+      "id": "93302acc-2f28-4617-afff-b2e7996019da",
+      "state": "queued",
+      "capability": "query:open_findings",
+      "plan_node_id": "node_b41a89ac6f6407ef2594fd72",
+      "created_at": "2026-09-28 05:54:33.962448+05:30"
+    },
+    "liveVisible": true,
+    "reassignmentResponse": {
+      "id": "93302acc-2f28-4617-afff-b2e7996019da",
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "workId": "bde9217a-5f50-4e72-b1c5-cfbb37833e89",
+      "planRevisionId": "64aebcc3-60b9-4fd1-93a8-596e71dcf165",
+      "planNodeId": "node_b41a89ac6f6407ef2594fd72",
+      "objectiveLoopId": "3a86081c-0546-414d-b46f-362d0275e427",
+      "objectiveStepId": "9a8ba813-15a7-4a16-8d94-d47b7fe5d61d",
+      "objectiveRevision": 1,
+      "nodeAttempt": 1,
+      "agentProfileId": "90000000-0000-4000-8000-000000000049",
+      "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+      "capability": "query:open_findings",
+      "nodeKind": "query",
+      "state": "reassigned",
+      "attempt": 0,
+      "leaseOwner": null,
+      "leaseUntil": null,
+      "budgetSnapshot": {
+        "p6": {
+          "maxActions": 5,
+          "maxQueries": 12,
+          "maxReplans": 12,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 604800050,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 12
+        },
+        "usage": {
+          "actions": 0,
+          "queries": 0,
+          "replans": 0,
+          "knownTokens": null,
+          "wallClockMs": 0,
+          "knownCostUsd": null,
+          "plannerCalls": 0
+        },
+        "profile": {
+          "maxActions": 4,
+          "maxQueries": 10,
+          "maxReplans": 4,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 900000,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 6
+        }
+      },
+      "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+      "assignmentScore": {
+        "sampleSize": 2,
+        "currentLoad": 0,
+        "knownCostUsd": null,
+        "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
+        "exactCapabilityMatch": 1,
+        "verifiedCompletionRate": null,
+        "promotedRoutingPreference": 0
+      },
+      "previousAssignmentId": null,
+      "reassignmentReason": "OPERATOR_REQUESTED",
+      "domainActionId": null,
+      "startedAt": null,
+      "completedAt": "2026-09-28T00:24:59.836Z",
+      "failure": {
+        "code": "OPERATOR_REQUESTED",
+        "actorId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+      },
+      "createdAt": "2026-09-28T00:24:33.962Z",
+      "updatedAt": "2026-09-28T00:24:59.836Z"
+    },
+    "reassignedAssignment": {
+      "id": "93302acc-2f28-4617-afff-b2e7996019da",
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "workId": "bde9217a-5f50-4e72-b1c5-cfbb37833e89",
+      "planRevisionId": "64aebcc3-60b9-4fd1-93a8-596e71dcf165",
+      "planNodeId": "node_b41a89ac6f6407ef2594fd72",
+      "objectiveLoopId": "3a86081c-0546-414d-b46f-362d0275e427",
+      "objectiveStepId": "9a8ba813-15a7-4a16-8d94-d47b7fe5d61d",
+      "objectiveRevision": 1,
+      "nodeAttempt": 1,
+      "agentProfileId": "90000000-0000-4000-8000-000000000049",
+      "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+      "capability": "query:open_findings",
+      "nodeKind": "query",
+      "state": "reassigned",
+      "attempt": 0,
+      "leaseOwner": null,
+      "leaseUntil": null,
+      "budgetSnapshot": {
+        "p6": {
+          "maxActions": 5,
+          "maxQueries": 12,
+          "maxReplans": 12,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 604800050,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 12
+        },
+        "usage": {
+          "actions": 0,
+          "queries": 0,
+          "replans": 0,
+          "knownTokens": null,
+          "wallClockMs": 0,
+          "knownCostUsd": null,
+          "plannerCalls": 0
+        },
+        "profile": {
+          "maxActions": 4,
+          "maxQueries": 10,
+          "maxReplans": 4,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 900000,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 6
+        }
+      },
+      "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+      "assignmentScore": {
+        "sampleSize": 2,
+        "currentLoad": 0,
+        "knownCostUsd": null,
+        "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
+        "exactCapabilityMatch": 1,
+        "verifiedCompletionRate": null,
+        "promotedRoutingPreference": 0
+      },
+      "previousAssignmentId": null,
+      "reassignmentReason": "OPERATOR_REQUESTED",
+      "domainActionId": null,
+      "startedAt": null,
+      "completedAt": "2026-09-28T00:24:59.836Z",
+      "failure": {
+        "code": "OPERATOR_REQUESTED",
+        "actorId": "dc5e9c60-7e75-4801-aba3-8ac0ae060075"
+      },
+      "createdAt": "2026-09-28T00:24:33.962Z",
+      "updatedAt": "2026-09-28T00:24:59.836Z"
+    },
+    "successorAssignment": {
+      "id": "5f0bcce9-7c5b-4131-a69d-66da3cac84da",
+      "tenantId": "00000000-0000-4000-8000-000000000001",
+      "workId": "bde9217a-5f50-4e72-b1c5-cfbb37833e89",
+      "planRevisionId": "64aebcc3-60b9-4fd1-93a8-596e71dcf165",
+      "planNodeId": "node_b41a89ac6f6407ef2594fd72",
+      "objectiveLoopId": "3a86081c-0546-414d-b46f-362d0275e427",
+      "objectiveStepId": "9a8ba813-15a7-4a16-8d94-d47b7fe5d61d",
+      "objectiveRevision": 1,
+      "nodeAttempt": 1,
+      "agentProfileId": "90000000-0000-4000-8000-000000000049",
+      "agentRevisionId": "90000000-0000-4000-8000-000000000050",
+      "capability": "query:open_findings",
+      "nodeKind": "query",
+      "state": "completed",
+      "attempt": 1,
+      "leaseOwner": null,
+      "leaseUntil": null,
+      "budgetSnapshot": {
+        "p6": {
+          "maxActions": 5,
+          "maxQueries": 12,
+          "maxReplans": 12,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 604800050,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 12
+        },
+        "usage": {
+          "actions": 0,
+          "queries": 2,
+          "replans": 0,
+          "knownTokens": null,
+          "wallClockMs": 0,
+          "knownCostUsd": null,
+          "plannerCalls": 0
+        },
+        "profile": {
+          "maxActions": 4,
+          "maxQueries": 10,
+          "maxReplans": 4,
+          "maxKnownTokens": null,
+          "maxWallClockMs": 900000,
+          "maxKnownCostUsd": null,
+          "maxPlannerCalls": 6
+        }
+      },
+      "assignmentReason": "Eligible exact capability query:open_findings; deterministic lexicographic rank selected 90000000-0000-4000-8000-000000000049.",
+      "assignmentScore": {
+        "sampleSize": 2,
+        "currentLoad": 1,
+        "knownCostUsd": null,
+        "stableTieBreak": "90000000-0000-4000-8000-000000000049",
+        "medianLatencyMs": null,
+        "historicalEvidence": "UNKNOWN",
+        "humanRejectionRate": null,
+        "qualityFailureRate": null,
+        "exactCapabilityMatch": 1,
+        "verifiedCompletionRate": null,
+        "promotedRoutingPreference": 0
+      },
+      "previousAssignmentId": "93302acc-2f28-4617-afff-b2e7996019da",
+      "reassignmentReason": "OPERATOR_REQUESTED",
+      "domainActionId": null,
+      "startedAt": "2026-09-28T00:25:03.456Z",
+      "completedAt": "2026-09-28T00:25:03.861Z",
+      "failure": null,
+      "createdAt": "2026-09-28T00:25:00.330Z",
+      "updatedAt": "2026-09-28T00:25:03.861Z"
+    },
+    "terminal": {
+      "work": "completed",
+      "objective": "completed",
+      "verifiedPlan": true
+    },
+    "liveScreenshotSha256": "90a056f3272f76db8c3456cfc15b8e53a0f3ee02a354fb6c703259171d9ca9a0"
+  },
+  "steps": [
+    "Authenticate owner and submit exact whole-Deal recheck",
+    "Observe a persisted active specialist assignment and briefly suspend the disposable worker",
+    "Inspect live assignment in Thread and capture screenshot",
+    "Use the human reassignment control against the exact assignment",
+    "Resume worker; verify immutable reassignment, successor assignment, terminal Plan proof and reload"
+  ],
+  "screenshotSha256": "3f536ca4e35612e712067a853a3eefd84297433f8f61b4c2c1352ae83c0a0c0a",
+  "reproduce": {
+    "command": "CENTROPY_DISPOSABLE_E2E=1 CENTROPY_LOCAL_WORKER_PID=<disposable-worker-pid> CENTROPY_RECOVERY_ADMIN_DATABASE_URL=postgres://<disposable-admin>@127.0.0.1:55441/finnor PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/centropy-live-workforce-reassign.spec.ts --project=desktop-chromium --workers=1",
+    "requiredEnvironment": [
+      "TEST_OWNER_EMAIL",
+      "TEST_OWNER_PASSWORD",
+      "disposable Atlas database and worker"
+    ]
+  },
+  "limitation": "Local disposable worker suspension exposes the real persisted active assignment long enough for browser verification; release-host timing and operator reassignment remain separate gates."
+}

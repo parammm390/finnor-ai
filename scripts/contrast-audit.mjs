@@ -44,10 +44,10 @@ function check(label, foreground, background) {
   checks.push({ label, ratio: Math.round(ratio * 100) / 100, minimum: 4.5, pass: ratio >= 4.5 })
 }
 
-const workstationPath = "src/components/centropy/product/workstation.css"
+const workstationPath = "src/components/centropy/shell/centropy.css"
 const workstation = read(workstationPath)
-const surfaces = ["pw-bg", "pw-panel", "pw-panel-2", "pw-panel-3"]
-const textColors = ["pw-text", "pw-muted", "pw-faint", "pw-cyan", "pw-green", "pw-amber", "pw-red"]
+const surfaces = ["ct-bg", "ct-thread", "ct-raised"]
+const textColors = ["ct-text", "ct-muted", "ct-faint", "ct-accent", "ct-amber", "ct-red"]
 const workstationColors = Object.fromEntries(
   [...surfaces, ...textColors].map((name) => [name, hexToken(workstation, name, workstationPath)]),
 )

@@ -212,6 +212,9 @@ function observe(node: PlanNode, steps: PlanProgressStep[], inspection: PlanProg
 }
 
 function resourceKeys(node: PlanNode): string[] {
+  // Every check evaluates and seals the same whole Objective. Serialize that
+  // terminal boundary; independent material nodes retain their own resources.
+  if (node.kind === "check") return ["objective:completion"];
   if (node.kind !== "action") return [];
   const keys = new Set<string>();
   for (const precondition of node.preconditions) {
@@ -362,8 +365,11 @@ export function resolvePlanFrontier(graph: PlanGraph, steps: PlanProgressStep[],
     if (cost !== null) cost -= nodeCost;
   }
   if (ready.length > 0) return { state: "ready", ready, deferred, observations };
-  if (candidates.length > 0 && deferred.length > 0) return { state: "recovery", ready: [], nodeId: deferred[0]!.nodeId, cause: "budget", recovery: "terminal_failure", reason: deferred[0]!.reason, observations };
   const waiting = observations.filter((item) => item.state === "waiting" || item.state === "claimed").map((item) => ({ nodeId: item.nodeId, reason: item.reason ?? "A durable attempt is in progress." }));
+  if (waiting.length > 0 && deferred.every((item) => item.reason === "bounded concurrency frontier is full" || item.reason === "resource conflict with an earlier deterministic frontier member")) {
+    return { state: "waiting", ready: [], waiting, observations };
+  }
+  if (candidates.length > 0 && deferred.length > 0) return { state: "recovery", ready: [], nodeId: deferred[0]!.nodeId, cause: "budget", recovery: "terminal_failure", reason: deferred[0]!.reason, observations };
   if (waiting.length > 0) return { state: "waiting", ready: [], waiting, observations };
   if (satisfied.size === graph.nodes.length) return { state: "exhausted", ready: [], reason: "The selected graph is exhausted without a verified CompletionProof transition.", observations };
   return { state: "recovery", ready: [], nodeId: null, cause: "observation", recovery: "replan", reason: "No node is causally ready under current durable observations.", observations };

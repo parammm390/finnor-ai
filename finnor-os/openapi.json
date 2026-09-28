@@ -15,6 +15,1224 @@
     }
   },
   "paths": {
+    "/api/outcome-packs/control": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "packId": {
+                    "type": "string",
+                    "enum": [
+                      "deal_to_verified_closing_readiness",
+                      "deal_request_resolution",
+                      "critical_deal_dependency_resolution",
+                      "general_operator_objective"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "packId",
+                  "enabled",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Owner recorded exact mission enablement; runtime authority remains enforced for every effect"
+          },
+          "403": {
+            "description": "Only a human owner can change mission enablement"
+          }
+        }
+      }
+    },
+    "/api/actions/human": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "threadId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "actionType": {
+                        "type": "string",
+                        "const": "waive_closing_condition"
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "dealId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "closingConditionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "expectedVersion": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 10000
+                          }
+                        },
+                        "required": [
+                          "dealId",
+                          "closingConditionId",
+                          "expectedVersion",
+                          "reason"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "actionType",
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "threadId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "actionType": {
+                        "type": "string",
+                        "const": "verify_closing_item"
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "dealId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "closingItemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "expectedVersion": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          },
+                          "verifierEmployeeId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "verificationSource": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 500
+                          },
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "evidenceSourceId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "evidenceVersionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "dealId",
+                          "closingItemId",
+                          "expectedVersion"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "actionType",
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Same exact intake replayed without a second action"
+          },
+          "201": {
+            "description": "Exact human-authored closing decision drafted in canonical Work and Thread, awaiting effect review"
+          },
+          "403": {
+            "description": "Canonical human identity or verifier identity rejected"
+          },
+          "409": {
+            "description": "Intake key belongs to a different decision"
+          },
+          "422": {
+            "description": "Canonical grounding or authority rejects the decision"
+          }
+        }
+      }
+    },
+    "/api/computer/runs/{id}/cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Durable cancellation requested for the exact computer run"
+          },
+          "403": {
+            "description": "Actor cannot cancel this run"
+          }
+        }
+      }
+    },
+    "/api/connections/{ref}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Canonical provider connection status"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection revoked by its owning security service"
+          }
+        }
+      }
+    },
+    "/api/connections/{ref}/verify": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Provider readback confirms a usable connection"
+          },
+          "409": {
+            "description": "Provider connection is not usable"
+          }
+        }
+      }
+    },
+    "/api/connections/google/start": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "authProfileRef": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "redirectUri": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "authProfileRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PKCE authorization URL and HTTP-only state cookie issued"
+          },
+          "409": {
+            "description": "Canonical auth profile or provider configuration is unavailable"
+          }
+        }
+      }
+    },
+    "/api/reconciliation/{id}/resolve": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "happened_as_intended",
+                      "definitely_did_not_happen",
+                      "happened_differently",
+                      "still_unknowable",
+                      "legally_compensatable"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "integrationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "controlKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "required": [
+                  "expectedVersion",
+                  "outcome",
+                  "evidence",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evidence-bearing resolution recorded by the canonical workflow owner"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/workflows/steps/{id}/compensate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "controlKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "required": [
+                  "expectedVersion",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Canonical compensation requested after legal-state and authority checks"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/private-equity/ic/cases/{id}/reviewed-deck-link": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedCaseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "documentVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "expectedCaseVersion",
+                  "documentId",
+                  "documentVersionId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact approved deck version linked and independently read back in its Deal-root IC case"
+          },
+          "400": {
+            "description": "Strict request schema rejected unknown or invalid input"
+          },
+          "403": {
+            "description": "Authenticated employee lacks the required Core Authority capability"
+          },
+          "409": {
+            "description": "Version, identity, or idempotency precondition conflict"
+          },
+          "422": {
+            "description": "Pinned IC policy or lifecycle prerequisite blocks the transition"
+          }
+        }
+      }
+    },
+    "/api/push-subscriptions": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2000
+                  },
+                  "keys": {
+                    "type": "object",
+                    "properties": {
+                      "p256dh": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "auth": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      }
+                    },
+                    "required": [
+                      "p256dh",
+                      "auth"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "endpoint",
+                  "keys"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Authenticated browser's actual Web Push subscription recorded"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "endpoint"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Own device subscription removed"
+          }
+        }
+      }
+    },
+    "/api/operating-profile": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own employee profile and canonical tenant operating profile with owner editability"
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "company": {
+                    "type": "object",
+                    "properties": {
+                      "industry": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "niche": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "primaryGeographies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 20
+                      },
+                      "foundedYear": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1800,
+                            "maximum": 2200
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "idealCustomerProfile": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "businessFacts": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "comparisonDefaults": {
+                        "type": "object",
+                        "properties": {
+                          "scaleMetric": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 100
+                          },
+                          "performanceMetric": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "industry",
+                      "niche",
+                      "description",
+                      "primaryGeographies",
+                      "foundedYear",
+                      "idealCustomerProfile",
+                      "businessFacts",
+                      "comparisonDefaults"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "employee": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "profileFacts": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "profileFacts"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Own employee or owner-authorized company profile saved"
+          },
+          "403": {
+            "description": "Company profile edit requires owner authority"
+          }
+        }
+      }
+    },
+    "/api/user-prefs": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated employee preferences"
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "homepage": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "bridge",
+                          "map",
+                          "my-day"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "density": {
+                    "type": "string",
+                    "enum": [
+                      "comfortable",
+                      "compact"
+                    ]
+                  },
+                  "pinnedPanels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "maxItems": 30
+                  },
+                  "accent": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "soundEnabled": {
+                    "type": "boolean"
+                  },
+                  "notificationPreferences": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
+                    "propertyNames": {
+                      "maxLength": 80
+                    }
+                  },
+                  "quietHoursStart": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quietHoursEnd": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Own validated preferences saved"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own preferences reset to canonical defaults"
+          }
+        }
+      }
+    },
+    "/api/outcome-packs/grants": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner-visible tenant autonomy grants"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "packId": {
+                    "type": "string",
+                    "enum": [
+                      "deal_to_verified_closing_readiness",
+                      "deal_request_resolution",
+                      "critical_deal_dependency_resolution",
+                      "general_operator_objective"
+                    ]
+                  },
+                  "packVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "scope": {
+                    "type": "object",
+                    "properties": {
+                      "effectClasses": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "internal_draft",
+                            "internal_write",
+                            "operational_change",
+                            "financial_write",
+                            "external_side_effect",
+                            "external_spend",
+                            "batch_external",
+                            "durable_workflow"
+                          ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 8
+                      },
+                      "resources": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 500
+                              },
+                              "maxItems": 100
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                      },
+                      "principal": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "providers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "provider": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "applicationAccountId": {
+                              "type": "string",
+                              "format": "uuid"
+                            }
+                          },
+                          "required": [
+                            "provider"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 50
+                      },
+                      "maxAmountUsd": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "maxRisk": {
+                        "type": "string",
+                        "enum": [
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      },
+                      "validFrom": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "policyVersion": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "authorityRevision": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                      },
+                      "certificationFingerprint": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "reviewAfter": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "effectClasses",
+                      "resources",
+                      "principal",
+                      "providers",
+                      "maxAmountUsd",
+                      "maxRisk",
+                      "validFrom",
+                      "expiresAt",
+                      "policyVersion",
+                      "authorityRevision",
+                      "certificationFingerprint",
+                      "reviewAfter"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "packId",
+                  "packVersion",
+                  "scope",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Human owner created the bounded autonomy grant"
+          }
+        }
+      }
+    },
+    "/api/outcome-packs/grants/{id}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Human owner revoked the exact autonomy grant"
+          }
+        }
+      }
+    },
     "/api/actions": {
       "post": {
         "security": [
@@ -352,9 +1570,35 @@
             "bearerAuth": []
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receiptId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "correctedFact": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "receiptId",
+                  "correctedFact"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
-            "description": "Correction recorded"
+            "description": "Receipt-linked human correction recorded"
           }
         }
       }
@@ -2703,6 +3947,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Authorized workflow pause"
@@ -2728,6 +3992,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Authorized workflow resume"
@@ -2753,6 +4037,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Authorized workflow cancellation"
@@ -2778,6 +4082,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Authorized workflow retry"
@@ -2803,6 +4127,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Authorized workflow escalation"
@@ -6682,6 +8026,10 @@
                     "type": "string",
                     "format": "uuid"
                   },
+                  "baseRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "workId": {
                     "type": "string",
                     "format": "uuid"
@@ -7509,6 +8857,9 @@
                     ],
                     "default": "console"
                   },
+                  "reviewBeforeExecution": {
+                    "type": "boolean"
+                  },
                   "sessionId": {
                     "type": "string"
                   },
@@ -7631,6 +8982,8 @@
                           "id": {
                             "type": "string",
                             "enum": [
+                              "centropy",
+                              "world",
                               "home",
                               "work",
                               "agents",
@@ -7639,7 +8992,7 @@
                           },
                           "route": {
                             "type": "string",
-                            "pattern": "^\\/jarvis",
+                            "pattern": "^\\/(?:centropy|jarvis)(?:\\/|$)",
                             "maxLength": 300
                           },
                           "spatialState": {
@@ -7910,6 +9263,8 @@
                           "id": {
                             "type": "string",
                             "enum": [
+                              "centropy",
+                              "world",
                               "home",
                               "work",
                               "agents",
@@ -7918,7 +9273,7 @@
                           },
                           "route": {
                             "type": "string",
-                            "pattern": "^\\/jarvis",
+                            "pattern": "^\\/(?:centropy|jarvis)(?:\\/|$)",
                             "maxLength": 300
                           },
                           "spatialState": {
@@ -8140,6 +9495,27 @@
                               "properties": {
                                 "kind": {
                                   "type": "string",
+                                  "const": "private_equity_ic_preparation"
+                                },
+                                "dealId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "requireScenario": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "dealId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
                                   "const": "matched_wait"
                                 },
                                 "minimumCount": {
@@ -8290,7 +9666,7 @@
                       "maxSteps": {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 50
+                        "maximum": 96
                       },
                       "maxActions": {
                         "type": "integer",
@@ -8530,6 +9906,27 @@
                                     "kind",
                                     "request",
                                     "assertion"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "const": "private_equity_ic_preparation"
+                                    },
+                                    "dealId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "requireScenario": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "dealId"
                                   ],
                                   "additionalProperties": false
                                 },
@@ -8787,6 +10184,10 @@
                     ],
                     "default": "console"
                   },
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "sessionId": {
                     "type": "string",
                     "maxLength": 500
@@ -8906,6 +10307,8 @@
                           "id": {
                             "type": "string",
                             "enum": [
+                              "centropy",
+                              "world",
                               "home",
                               "work",
                               "agents",
@@ -8914,7 +10317,7 @@
                           },
                           "route": {
                             "type": "string",
-                            "pattern": "^\\/jarvis",
+                            "pattern": "^\\/(?:centropy|jarvis)(?:\\/|$)",
                             "maxLength": 300
                           },
                           "spatialState": {
@@ -9021,7 +10424,7 @@
                       "maxSteps": {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 50
+                        "maximum": 96
                       },
                       "maxActions": {
                         "type": "integer",
@@ -10565,6 +11968,10 @@
                   "note": {
                     "type": "string",
                     "maxLength": 2000
+                  },
+                  "expectedEffectHash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
                   },
                   "typedConfirmation": {
                     "type": "boolean",

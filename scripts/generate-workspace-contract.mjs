@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRelative = "finnor-os/apps/api/lib/workspace-config.ts";
-const outputRelative = "src/components/centropy/lib/workspace-config.generated.ts";
+// Compatibility contract retained for release parity; the retired navigation
+// configuration is no longer part of the product's client bundle.
+const outputRelative = "scripts/generated/workspace-contract.ts";
 const source = await readFile(path.join(root, sourceRelative), "utf8");
 const hash = createHash("sha256").update(source).digest("hex");
 const output = [
@@ -28,6 +30,7 @@ if (process.argv.includes("--check")) {
     process.exitCode = 1;
   }
 } else {
+  await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, output, "utf8");
   process.stdout.write(`${outputRelative} <= ${sourceRelative} (${hash})\n`);
 }

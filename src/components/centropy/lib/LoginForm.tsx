@@ -57,9 +57,9 @@ export function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#04070f] px-4 text-[color:var(--j-text)]">
       <div className="w-full max-w-sm rounded-2xl border border-[color:var(--j-border)] bg-slate-950 p-6">
-        <div className="mb-1 flex items-center gap-2 j-fs-base font-black">
+        <h1 className="mb-1 flex items-center gap-2 j-fs-base font-black">
           <Lock className="h-4 w-4 text-[color:var(--j-cyan)]" /> Sign in to CENTROPY
-        </div>
+        </h1>
         <p className="mb-5 j-fs-sm text-[color:var(--j-text-dim)]">Real account, real data. The public page stays readable without signing in.</p>
         <form onSubmit={submit} className="space-y-3">
           <div>

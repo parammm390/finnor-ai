@@ -88,5 +88,23 @@ jobs:
       # entities and is outside this release gate; do not silently re-enable
       # that vertical while certifying the retirement boundary.
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+      # P7 typechecks the root Centropy surface; this backend job otherwise
+      # installs no root @types or Playwright declarations.
+      - name: Install root type dependencies for Phase 7
+        run: npm ci --no-audit --no-fund
+        working-directory: .
       - name: Phase 7 governed workforce and learning certification
-        run: npm run release:pe-p7-workforce-learning
+        run: |
+          set -euo pipefail
+          npm run release:pe-p7-workforce-learning | tee "$RUNNER_TEMP/p7-certification.log"
+          node - "$RUNNER_TEMP/p7-certification.log" <<'NODE'
+          const fs = require("node:fs");
+          const lines = fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/);
+          const records = lines.filter((line) => line.startsWith("P7_CERTIFICATION "));
+          if (lines.some((line) => line.startsWith("P7_CERTIFICATION_FAIL ")) || records.length !== 1) process.exit(1);
+          const result = JSON.parse(records[0].slice("P7_CERTIFICATION ".length));
+          if (result.status !== "PASS" || result.mandatoryCases !== 21 ||
+              result.passedCases !== 21 || result.failedCases !== 0 ||
+              result.skippedCases !== 0 || result.todoCases !== 0 ||
+              result.executableTests < 1) process.exit(1);
+          NODE

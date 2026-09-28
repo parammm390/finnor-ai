@@ -147,9 +147,9 @@ const WORLD_COLLECTIONS: Array<[PeEntityType, keyof PeWorldState]> = [
 ];
 
 const FACT_KEYS = [
-  "state", "status", "version", "revision", "graphVersion", "summary", "description", "requestText", "conditionText", "itemText", "codeName",
+  "state", "status", "version", "revision", "graphVersion", "summary", "description", "rationale", "question", "answer", "outcome", "decision", "initialInstruction", "requestText", "conditionText", "itemText", "codeName",
   "targetClosingAt", "actualCloseAt", "signedLoiAt", "kind", "role", "priority", "severity", "materiality",
-  "dueAt", "targetAt", "required", "requiredForClose", "late", "overdue", "validity", "resultHash",
+  "dueAt", "targetAt", "required", "requiredForClose", "late", "overdue", "validity", "resultHash", "scenarioId",
   "ownerPartyType", "ownerPartyId", "responsibleDealPartyId", "verifiedByEmployeeId",
   "semanticHash", "contentHash", "versionNumber", "sourceType", "sourceSystem", "observedAt", "retrievedAt",
   "computedAt", "finalizedAt", "completedAt", "runtimeStatus", "profileStatus", "currentLoad", "attempt",
@@ -203,6 +203,14 @@ function humanize(value: string): string {
 }
 
 function labelOf(type: CompanyBrainObjectRef["type"], row: Record<string, unknown>, id: string): string {
+  if (type === "pe_ic_dissent") {
+    const rationale = text(row.rationale);
+    if (rationale) return rationale.length > 180 ? `${rationale.slice(0, 177)}…` : rationale;
+  }
+  if (type === "work") {
+    const instruction = text(row.initialInstruction);
+    if (instruction) return instruction.length > 180 ? `${instruction.slice(0, 177)}…` : instruction;
+  }
   for (const key of ["name", "title", "question", "conditionText", "condition", "statement", "itemText", "item", "requestText", "description", "objective", "key", "assumptionKey", "decision", "actionType", "kind"]) {
     const value = text(row[key]);
     if (value) return value;
