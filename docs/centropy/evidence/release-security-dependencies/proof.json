@@ -1,0 +1,132 @@
+{
+  "schema": "centropy.release-security-dependency-proof/v1",
+  "status": "PASS_LOCAL",
+  "capturedAt": "2026-09-28T23:06:47.395Z",
+  "lockfileSha256": {
+    "package-lock.json": "feef0c2803f235ba20063da5ef4f630477f02b0a630c6a26bb97e6df8ee41bf7",
+    "finnor-os/package-lock.json": "9096252566eaa1749408337979f984600de63b53210aa12ede2922ca2263fe7a"
+  },
+  "observedVersions": {
+    "rootNodemailer": "10.0.11",
+    "backendNodemailer": "10.0.11",
+    "backendFastUri": "3.1.8"
+  },
+  "osv": {
+    "capturedAt": "2026-09-28T22:58:38.393Z",
+    "packages": 971,
+    "findings": []
+  },
+  "smtp": {
+    "schema": "centropy.smtp-dependency-upgrade-proof/v1",
+    "result": "PASS_LOCAL_SMTP",
+    "capturedAt": "2026-09-28T22:43:00.662Z",
+    "inputs": {
+      "package": "10.0.11",
+      "host": "127.0.0.1",
+      "recipient": "sarah@centropy-certification.invalid",
+      "realMailboxDelivery": false
+    },
+    "steps": [
+      "start loopback SMTP capture",
+      "send with backend Nodemailer transport",
+      "observe SMTP envelope, accepted response and MIME"
+    ],
+    "observed": {
+      "commands": [
+        "EHLO",
+        "MAIL FROM",
+        "RCPT TO",
+        "DATA"
+      ],
+      "accepted": [
+        "sarah@centropy-certification.invalid"
+      ],
+      "mimeSha256": "502a0b922dc04cba8f0d5cc719ad4c9161c670798fe3064297ddd58cd1ce0306",
+      "messageId": "<43546d99-f19a-0e80-0ee5-31782085dec9@centropy-certification.invalid>"
+    }
+  },
+  "completedCommands": [
+    "npm ci --no-audit --no-fund",
+    "npm ci --prefix finnor-os --no-audit --no-fund",
+    "npx tsc --noEmit -p tsconfig.json",
+    "npm --prefix finnor-os run typecheck",
+    "npm run build",
+    "npm --prefix finnor-os/apps/api run build",
+    "npm run lint",
+    "npm run test:unit",
+    "npm run release:preflight"
+  ],
+  "scope": [
+    "OSV queried all 971 distinct package versions across the three checked-in lockfiles",
+    "SMTP acceptance is observed only at loopback, not a real mailbox",
+    "GitHub exact-head verdict and production release remain unverified"
+  ],
+  "rerun": {
+    "osv": {
+      "url": "https://api.osv.dev/v1/querybatch",
+      "method": "POST",
+      "body": "{queries: [{package: {ecosystem: \"npm\", name}, version}]} for every distinct node_modules entry in the root, backend, and standalone canary lockfiles",
+      "require": "every result.vulns absent or empty"
+    },
+    "backend": "Fresh empty disposable PostgreSQL database; migrate, seed, install-vertical-fixture-seam, setup:langgraph; npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts; npm run release:pe-p7-workforce-learning"
+  },
+  "backend": {
+    "database": "fresh empty disposable PostgreSQL 18.4 database",
+    "testFilesPassed": 217,
+    "testFilesSkipped": 6,
+    "testsPassed": 1275,
+    "testsSkipped": 27,
+    "p7": {
+      "status": "PASS",
+      "mandatoryGroups": 21,
+      "mandatoryCases": 21,
+      "passedCases": 21,
+      "failedCases": 0,
+      "skippedCases": 0,
+      "todoCases": 0,
+      "executableTests": 138,
+      "gates": [
+        {
+          "id": "architecture",
+          "status": "PASS",
+          "durationMs": 18
+        },
+        {
+          "id": "typecheck-contracts",
+          "status": "PASS",
+          "durationMs": 30986
+        },
+        {
+          "id": "workforce-unit",
+          "status": "PASS",
+          "durationMs": 6776
+        },
+        {
+          "id": "runtime-concurrency",
+          "status": "PASS",
+          "durationMs": 7623
+        },
+        {
+          "id": "migrations",
+          "status": "PASS",
+          "durationMs": 9506
+        },
+        {
+          "id": "performance",
+          "status": "PASS",
+          "durationMs": 6940
+        },
+        {
+          "id": "regressions",
+          "status": "PASS",
+          "durationMs": 32305
+        }
+      ],
+      "migrationHead": "0149_parallel_objective_approval_guard.sql",
+      "databaseMode": "configured",
+      "externalProviderCertification": "not-required-for-deterministic-p7",
+      "durationMs": 95864
+    },
+    "logSha256": "d72f2ee5b73f0d51200711b2b2868f4a1fd2efd017da64f06e7bd671ccaf69e4"
+  }
+}
