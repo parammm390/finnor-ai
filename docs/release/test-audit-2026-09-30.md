@@ -55,6 +55,18 @@ Removed `planner-live-evals.yml` and `k6-nightly-lite.yml`, their stale generate
 
 These schedules provided no executable signal. **No equivalent live planner or staging HTTP capacity monitor is installed by this cleanup.** Historical capacity/release evidence is preserved. Tenant-isolation nightly and release/security workflows remain.
 
+## Security gate failure and dependency repairs
+
+The first PR security workflow failed its OSV reporter gate: it found **8 findings (4 High, 4 Medium) in 3 locked packages**. Comparing the scanner's versions with the pinned base showed all were already on `main`; the cleanup had not introduced them. The base also failed its OSV gate, so this branch updates the affected lock entries and existing backend pin instead of suppressing the scanner.
+
+| Lock entry on base | Advisories | Patched lock entry |
+| --- | --- | --- |
+| `finnor-os/package-lock.json`: `ip-address` 10.5.1 | [GHSA-h3mg-xc3c-68pw](https://osv.dev/vulnerability/GHSA-h3mg-xc3c-68pw), [GHSA-j6r3-76f7-8jcv](https://osv.dev/vulnerability/GHSA-j6r3-76f7-8jcv) | 10.7.1; existing `finnor-os/package.json` override also updated |
+| `package-lock.json`: `brace-expansion` 1.1.18 | [GHSA-6j4f-fj2g-mc7p](https://osv.dev/vulnerability/GHSA-6j4f-fj2g-mc7p), [GHSA-q2hr-2g5m-vwhr](https://osv.dev/vulnerability/GHSA-q2hr-2g5m-vwhr), [GHSA-qhr7-859c-m2p7](https://osv.dev/vulnerability/GHSA-qhr7-859c-m2p7) | 1.1.21 |
+| `package-lock.json`: `brace-expansion` 5.0.9 | Same three brace-expansion advisories | 5.0.12 |
+
+The new versions are the fixed versions reported by OSV. A scan of both updated lockfiles found no remaining affected versions for these packages. Backend typecheck and whitespace checks pass after the update. GitHub's pinned OSV scanner and clean-install CI must confirm the pushed locks; that scanner is unavailable locally.
+
 ## Identity test repair and controls
 
 Before repair, the Vapi test populated `tenants.ownerPhone`, while production resolves active callers from `users.phoneNumber`. Its negative assertion excluded an obsolete denial phrase and passed the current identity denial.
@@ -78,7 +90,7 @@ This proves owner identity reaches action validation and unknown callers are den
 | Backend typecheck / root lint | Passed |
 | Release truth / workspace consistency / P8 zero-resurrection | Passed |
 | PE domain boundary | PASS: 824 files, 32 actions, 14 queries, injected-regression negative control PASS |
-| Dependency locks / whitespace | No dependency-version changes; `git diff --check` passes |
+| Dependency locks / whitespace | Cleanup removed 19 unused transitive packages. The CI follow-up below patches three vulnerable packages; `git diff --check` passes |
 
 The first browser run had 13 passes / 5 failures because the isolated build lacked browser auth configuration. Rebuilding with explicit dummy local public Supabase values exercised signed-out behavior and passed all 18. No authenticated account/provider was used. Default Turbopack could not follow the shared dependency symlink outside the isolated checkout; the installed documented webpack option built successfully. Neither limitation was worked around by weakening assertions or changing application logic.
 
