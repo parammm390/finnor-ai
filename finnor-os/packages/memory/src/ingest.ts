@@ -1,8 +1,6 @@
-// §5.2 (CENTROPY 95% MAESTRO PACK): the post-step runtime hook auto-ingests every
-// completed workflow/receipt/report/transcript into semantic memory. This is the one
-// place callers (workflow-runtime's completeStep, voice-os's closeVoiceSession) reach
-// into — chunk, embed, and write, all best-effort so a memory-layer failure can never
-// break the real thing (a step completing, a call ending).
+// Completed workflow steps and materialized artifact versions reach this shared
+// memory boundary. Chunking, embedding, and writes remain best-effort so a
+// memory-layer failure cannot fail the underlying step or artifact materialization.
 
 import { writeSemantic } from "./semantic";
 import { chunkSource } from "./chunking";

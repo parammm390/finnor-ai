@@ -1,5 +1,4 @@
-// Voice-native confirmation layer: pure functions for parsing spoken decisions and
-// building the sentences Vapi speaks. Pure = unit-testable without any Vapi account.
+// Spoken decision parser used by orchestration learning. Ambiguous input never approves.
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -53,37 +52,4 @@ export function parseSpokenDecision(
   if (lastApprove > lastReject) return "approve";
   if (lastReject > lastApprove) return "reject";
   return "unclear";
-}
-
-const INTEGRATION_NAMES: Record<string, string> = {
-  vapi: "Vapi (your phone system)",
-  groq: "the AI planning service",
-  exa: "the web search service",
-  firecrawl: "the source retrieval service",
-  redis: "the session memory service",
-  email: "your email account",
-  gmail: "your Gmail identity",
-  resend: "the Finnor notification sender",
-};
-
-/**
- * Turn a typed integration failure into the exact sentence to speak to the owner —
- * names WHICH integration failed and asks for the fix (§ spoken failure diagnosis).
- */
-export function diagnoseFailure(error: string | undefined, actionType: string): string {
-  const readable = actionType.replaceAll("_", " ");
-  const match = error?.match(/\[(\w+)\]/);
-  const integration = match ? INTEGRATION_NAMES[match[1]!] ?? match[1]! : null;
-  if (error && /API_KEY is not set|credential|unauthorized|401|403/i.test(error) && integration) {
-    return `Heads up — I couldn't finish "${readable}" because the ${integration} key isn't working. Want to give me a working one and I'll retry?`;
-  }
-  if (integration) {
-    return `Heads up — I couldn't finish "${readable}" because ${integration} isn't responding. I've parked it in your review queue and won't retry until you say so.`;
-  }
-  return `Heads up — "${readable}" hit a problem: ${error ?? "unknown error"}. It's waiting in your review queue.`;
-}
-
-/** The sentence Vapi reads before capturing the spoken yes/no. */
-export function buildConfirmationScript(summary: string): string {
-  return `${summary} — Say yes to approve, or no to reject.`;
 }

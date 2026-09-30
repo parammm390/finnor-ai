@@ -18,7 +18,6 @@ import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { rollingZScores } from "./anomaly-detector";
 
 export * from "./anomaly-detector";
-export * from "./holt-winters";
 export * from "./failure-injection-calendar";
 export * from "./operational-queries";
 export * from "./workforce-status";

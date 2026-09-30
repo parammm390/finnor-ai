@@ -21,16 +21,12 @@
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
     "release:mutation-inventory": "node scripts/release/validate-production-mutation-inventory.mjs",
     "release:preflight": "npm run release:truth && npm run test:release",
-    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/release-evidence-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/supplier-canary-health.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
+    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/p8-water-retirement-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/supplier-canary-health.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
-    "@radix-ui/react-accordion": "^1.2.12",
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
     "@sentry/nextjs": "^10.67.0",
     "@supabase/supabase-js": "^2.45.1",
-    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.19",
     "geist": "^1.7.0",

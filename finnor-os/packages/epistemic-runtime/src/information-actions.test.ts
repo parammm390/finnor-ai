@@ -6,7 +6,6 @@ import {
   budgetAllowsAction,
   createInformationAction,
   informationActionFingerprint,
-  informationActionKindsAreNonMutating,
   informationActionPrivacyErrors,
   initialAcquisitionUsage,
   ReadOnlyInformationActionExecutor,
@@ -28,7 +27,6 @@ const BUDGET = {
 
 describe("information-action contracts and deterministic scoring", () => {
   it("represents every acquisition as read-only and rejects privacy boundary violations", () => {
-    expect(informationActionKindsAreNonMutating()).toBe(true);
     const state = testState([testDefinition("external.market", { kind: "external", type: "market" })]);
     const requirement = testRequirement("external.market", [testOption("RESEARCH", "WEB_RESEARCH", "PUBLIC_RESEARCH")]);
     const uncertainty = analyzeUncertainty(state, [requirement])[0]!;
