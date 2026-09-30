@@ -350,7 +350,6 @@ async function main(): Promise<void> {
       "tests/unit/openapi-operational-query-contract.test.ts",
       "tests/unit/objective-success-contract.test.ts",
       "tests/unit/instruction-cancellation-semantics.test.ts",
-      "tests/unit/voice-objective-control.test.ts",
     ])]),
     runGate("contracts", [
       command("action-manifest", "npm", ["run", "release:manifest"], 300_000),

@@ -10,7 +10,6 @@
     "@finnor/shared-types": "*",
     "@getzep/zep-cloud": "^3.28.0",
     "drizzle-orm": "^0.45.2",
-    "ioredis": "^5.4.1",
-    "pdf-parse": "^2.4.5"
+    "ioredis": "^5.4.1"
   }
 }

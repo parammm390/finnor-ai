@@ -41,7 +41,6 @@ export default defineConfig({
       "@finnor/tools/firecrawl": r("./packages/tools/src/firecrawl.ts"),
       "@finnor/tools": r("./packages/tools/src/index.ts"),
       "@finnor/orchestration": r("./packages/orchestration/src/index.ts"),
-      "@finnor/voice-os": r("./packages/voice-os/src/index.ts"),
       "@finnor/read-models": r("./packages/read-models/src/index.ts"),
       "@finnor/private-equity": r("./packages/private-equity/src/index.ts"),
       "@finnor/underwriting": r("./packages/underwriting/src/index.ts"),

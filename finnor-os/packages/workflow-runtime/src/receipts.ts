@@ -77,8 +77,7 @@ export async function openReceipt(params: OpenReceiptParams): Promise<{ receiptI
  *
  *  §5.3: optional `evidence` overwrites the receipt's generic open-time placeholder
  *  (`[{source:"workflow_step",...}]`, set by openReceiptForFirstClaim before the real
- *  work has happened) with the REAL citations the execution actually relied on — e.g.
- *  hybridRetrieve's structured-fact + semantic-hit sources for an answer action. Every
+ *  work has happened) with the REAL citations the execution actually relied on. Every
  *  AI answer's receipt carries real citations this way, not a placeholder pointer. */
 export async function finalizeReceiptTx(db: Db, tenantId: string, receiptId: string, result: FinalizeReceiptResult): Promise<void> {
   const [updated] = await db

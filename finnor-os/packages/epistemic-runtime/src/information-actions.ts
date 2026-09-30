@@ -434,8 +434,4 @@ export function consumeActionBudget(usage: AcquisitionUsage, action: Information
   };
 }
 
-export function informationActionKindsAreNonMutating(): boolean {
-  return (Object.keys(ACTION_HEURISTICS) as InformationActionKind[]).every((kind) => ACTION_HEURISTICS[kind] !== undefined);
-}
-
 export type { SourceAuthority };
