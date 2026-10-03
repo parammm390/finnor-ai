@@ -227,8 +227,8 @@ export async function readOwnerTransportEvent(identity:OwnerTransportScope,id:st
  * remain in the broker. Independently read the returned accepted event afterward. */
 export async function dispatchOwnerTransportRequest(identity:OwnerTransportScope,input:{request:Record<string,any>;authorization:Record<string,any>;delivery?:Record<string,any>},reconcile=false){
  if(identity.semanticOwner!=='S6')fail('DISPATCH_SEMANTIC_OWNER_REQUIRED');
- const route=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
- const answer=await request(route,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
+ const transport=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
+ const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
  if(!['VERIFIED','UNRESOLVED'].includes(answer.status)||!answer.receipt?.identity)fail('DISPATCH_RESPONSE_INVALID');
  const accepted=await readOwnerTransportEvent(identity,answer.receipt.identity),detail=accepted.event.detail;
  if(!same(accepted.receipt,answer.receipt)||accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||detail?.schema!=='finnor.s6.protected-execution.v1'||!same(detail.obligationRef,input.request.ir?.obligationRef)||!same(detail.requestRef,input.request.ref)||!same(detail.effectRef,input.request.ir?.effectRef))fail('DISPATCH_PROTECTED_EVENT_BINDING_INVALID');
