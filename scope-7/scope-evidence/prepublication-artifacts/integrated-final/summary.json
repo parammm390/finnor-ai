@@ -1,0 +1,58 @@
+{
+  "artifactSha256": "499be89eee0b5203c659d2b9bd6f15fb53ebd638a66898987ebdc3cb082f40ba",
+  "artifact": "results.json.gz",
+  "qualification": "REAL_OWNER_SQL_AND_PROTECTED_SEPARATE_PROCESS_WITH_DISPOSABLE_GENERATED_AUTHORITY; NO_FIELD_H2_OR_ADMISSION",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "protected-prospective-question-and-S2-owned-law",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "S2-independent-draws-concurrent-retry-and-no-rerandomization",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "signed-financial-joins-and-generated-programme-ITT-not-field-H2",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "authentic-but-unrelated-money-is-rejected-as-economic-support",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "company-portfolio-and-S8-readback-preserve-uncertainty-no-action-reward",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "atomic-owner-record-origin-rollback",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "S7-full-source-manifest-survives-event-bound",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "native-benchmark-keeps-required-unrun-and-H1-comparisons-inconclusive",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "late-economic-notice-cannot-be-ignored-by-fresh-assessment",
+      "status": "FAIL",
+      "failure": "AssertionError [ERR_ASSERTION]: {\"error\":\"ECONOMIC_SEMANTIC_BYTE_LIMIT\",\"code\":\"ECONOMIC_SEMANTIC_BYTE_LIMIT\"}\n\n413 !== 200\n"
+    },
+    {
+      "id": "late-invalidation-retained-and-propagated-to-S8",
+      "status": "FAIL",
+      "failure": "AssertionError [ERR_ASSERTION]: {\"error\":\"ECONOMIC_SEMANTIC_BYTE_LIMIT\",\"code\":\"ECONOMIC_SEMANTIC_BYTE_LIMIT\"}\n\n413 !== 200\n"
+    }
+  ]
+}

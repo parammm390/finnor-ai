@@ -1,0 +1,58 @@
+{
+  "auditedAt": "2026-10-03T23:22:39.137486+00:00",
+  "previousGoalTurn": "PROGRESS: owned implementation, repairs, final verification and handoff were completed",
+  "sourceRevalidation": "All exact source hashes still match final-source-manifest.json",
+  "requirements": [
+    {
+      "requirement": "Preregistered contrasts and immutable prospective law",
+      "classification": "EMPIRICALLY_VERIFIED",
+      "domain": "Generated native S2/S7 API and real disposable signed ledger; no commissioned PE cohort",
+      "evidence": "integrated-notices-qualified/results.json",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "Known-effect inference falsification",
+      "classification": "PROBABILISTICALLY_SUPPORTED",
+      "domain": "Fixed bounded independent-cluster generated subclass, finite preregistered looks, effects 0/+30/-30; weak power",
+      "evidence": "statistical-qualified/results.json",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "Independently collected mature outcomes/valuation bounds",
+      "classification": "BLOCKED_EXTERNAL",
+      "domain": "Required 36-month assignment-aligned field outcomes and 90-day closed loop",
+      "evidence": "No qualifying field source has been supplied or established; generated outputs explicitly H1",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "Complete actual attributable costs",
+      "classification": "UNKNOWN",
+      "domain": "All 13 cost categories including failures and development; local process metrics do not supply bills",
+      "evidence": "completion-closure.json actualCompleteCostsEstablished=false",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "Reconciled aggregate attributable field value",
+      "classification": "PARTIAL",
+      "domain": "Native source/valuation joins, overlap/notice protections and independent financial oracle tested; actual causal owner value unidentified",
+      "evidence": "integrated-notices-qualified/results.json and statistical-qualified/results.json",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "Independent protected production integration",
+      "classification": "BLOCKED_EXTERNAL",
+      "domain": "Changed S6 candidate requires fresh independent production admission",
+      "evidence": "scope-6/scope-evidence/completion-closure.json productionAdmissionEstablished=false",
+      "fullFieldRequirementProven": false
+    },
+    {
+      "requirement": "100x / named10x / capability-frontier claims",
+      "classification": "UNKNOWN",
+      "domain": "Complete matched independent current benchmarks and separate S8 capability evaluation",
+      "evidence": "Native benchmark tests retain INCONCLUSIVE/unqualified outcomes; no field comparison established",
+      "fullFieldRequirementProven": false
+    }
+  ],
+  "fullCompletionProven": false,
+  "nextSafeAction": "Read actual independent commissioned field/authority evidence when its existing location is supplied; do not fabricate field sources or initiate consequential experiments"
+}

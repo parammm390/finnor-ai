@@ -1,0 +1,48 @@
+{
+  "artifactSha256": "2bd5108f08ed2a17af1ba8815f786ba4a04a2fbf347dde2f45493b036a240acb",
+  "artifact": "results.json.gz",
+  "qualification": "REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "authenticated-native-register-and-sql-independent-readback",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "immutable-read-and-concurrent-idempotent-semantic-retry",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "unprotected-retrospective-owner-attribution-retains-all-unknowns",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "late-correction-keeps-original-and-knowledge-cut",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "commit-after-cut-cannot-be-backdated-into-economic-history",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "tenant-principal-role-and-HTTP-evidence-authority-attacks",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "same-tenant-principal-isolation-at-ordinary-SQL-boundary",
+      "status": "FAIL",
+      "failure": "AssertionError [ERR_ASSERTION]: Another principal could read private economic records through ordinary-role SQL\n\n4 !== 0\n"
+    },
+    {
+      "id": "post-assignment-question-cannot-be-called-prospective",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

@@ -31,7 +31,8 @@ const preparedTypes:Record<string,string[]>={
  S3:['HYPOTHESIS','IDENTIFICATION','FIT','MODEL_REVISION','SIMULATION','REFUTATION','VALIDITY_CHANGE','CORRECTION','HUMAN_OVERRIDE','REJECTION','COMPUTE'],
  S4:['POLICY_SEARCH','POLICY_REVISION','BRANCH_CHOICE','OBSERVATION','INVALIDATION','REJECTION','OVERRIDE','HANDOFF','COMPUTE'],
  S5:['REQUEST','CANDIDATE','REFUSAL','RESERVATION','INVALIDATION','REVISION','CONSUMPTION','RECONCILIATION','RELEASE','COST','OVERRIDE'],
- S6:['INTENT','ADMISSION_REFUSAL','ATTEMPT','ACKNOWLEDGMENT','OBSERVATION','VERIFICATION','RECONCILIATION','CANCELLATION','COST','CORRECTION']
+ S6:['INTENT','ADMISSION_REFUSAL','ATTEMPT','ACKNOWLEDGMENT','OBSERVATION','VERIFICATION','RECONCILIATION','CANCELLATION','COST','CORRECTION'],
+ S7:['PREREGISTRATION','ASSIGNMENT','EXPOSURE','MEASUREMENT','VALUATION','COST','ASSESSMENT','AGGREGATION','CORRECTION','INVALIDATION','COMPUTE']
 };
 interface State { receipt:Receipt }
 interface Configuration { policy:ObjectValue; release:ObjectValue; signerPath:string; protectedDirectory:string; contentDirectory:string; sealedEncryptionKeyPath?:string; dispatchConfigPath?:string }
@@ -251,14 +252,14 @@ export class ExperienceLedger {
  async append(owner:Owner,input:any){const request=object(input);exactKeys(request,['event','parents','references','sealed']);const event=object(request.event),sealed=request.sealed===true;if(request.sealed!==undefined&&typeof request.sealed!=='boolean')deny(400,'SEAL_INVALID');const rights=this.scope(owner,event,sealed);
   if(event.detail?.schema==='finnor.s6.protected-execution.v1'&&owner.protectedExecution!==true)deny(403,'PROTECTED_EXECUTION_APPEND_NOT_AUTHORIZED');
   return this.serialized(async()=>{await this.integrity();const identity=text(event.eventId);const existing=this.states.get(canonical(['EVENT',owner.tenantId,identity]));if(existing){if(hash(request)!==existing.receipt.requestDigest)deny(409,'EVENT_IDENTITY_IMMUTABLE');return {receipt:existing.receipt};}
-   const ownerNumber=/^S([1-8])$/.exec(owner.owner)?.[1];if(!ownerNumber||event.schema!==`finnor.s${ownerNumber}.experience.v1`||!preparedTypes[owner.owner]?.includes(event.type)||!['H0','H1'].includes(event.horizon)||(Object.hasOwn(event,'protectedReceipt')&&event.protectedReceipt!==null)||(Object.hasOwn(event,'appendAuthorityGranted')&&event.appendAuthorityGranted!==false))deny(400,'UNSUPPORTED_PREPARED_EVENT');text(event.type);text(event.uncertainty);text(event.episodeId);text(event.revisionRef);hex(event.contentDigest);instant(event.knowledgeAt);instant(event.validAt);
+   const ownerNumber=/^S([1-8])$/.exec(owner.owner)?.[1];if(!ownerNumber||event.schema!==`finnor.s${ownerNumber}.experience.v1`||!preparedTypes[owner.owner]?.includes(event.type)||!(owner.owner==='S7'?['H0','H1','H2']:['H0','H1']).includes(event.horizon)||(Object.hasOwn(event,'protectedReceipt')&&event.protectedReceipt!==null)||(Object.hasOwn(event,'appendAuthorityGranted')&&event.appendAuthorityGranted!==false))deny(400,'UNSUPPORTED_PREPARED_EVENT');text(event.type);text(event.uncertainty);text(event.episodeId);text(event.revisionRef);hex(event.contentDigest);instant(event.knowledgeAt);instant(event.validAt);
    const {eventId,...body}=event;if(identity!==`s${ownerNumber}-event:${hash(body)}`)deny(409,'EVENT_IDENTITY_PREIMAGE_INVALID');
    const refs=this.validateReferences(owner,list(request.references),rights,sealed);const local=new Map(refs.map(r=>[r.id,r]));
    const resolveRef=(id:string)=>{const localRef=local.get(text(id));if(localRef)return localRef;const accepted=this.refs.get(refKey(owner.tenantId,id));if(!accepted||accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(409,'UNCOMMITTED_OR_UNAUTHORIZED_REFERENCE');return accepted.reference;};
    const revision=resolveRef(event.revisionRef);
    // S3–S5 bind contentDigest to detail; revisionRef names a distinct subject.
    // A subject commitment cannot authenticate a malformed detail digest.
-   if(['S3','S4','S5'].includes(owner.owner)){
+   if(['S3','S4','S5','S7'].includes(owner.owner)){
     object(event.detail);if(hash(event.detail)!==event.contentDigest)deny(409,'EVENT_CONTENT_PREIMAGE_INVALID');
    }else if(event.detail!==undefined?hash(event.detail)!==event.contentDigest&&revision.contentDigest!==event.contentDigest:revision.contentDigest!==event.contentDigest)deny(409,'EVENT_CONTENT_PREIMAGE_INVALID');
    const parents=list(request.parents);const supplied=new Set<string>();for(const parent of parents){const p=object(parent);const accepted=this.states.get(canonical(['EVENT',owner.tenantId,p.eventId]));if(!accepted||hash(p)!==hash(accepted.receipt)||p.sealed&&!owner.sealedRead||p.rightsRefs.some((r:string)=>!owner.rightsRefs.includes(r)))deny(409,'PARENT_RECEIPT_INVALID');if(supplied.has(p.eventId))deny(409,'DUPLICATE_PARENT');supplied.add(p.eventId);}

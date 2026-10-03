@@ -1,0 +1,48 @@
+{
+  "artifactSha256": "90762d0ff3153eafd2a5930b4d65cfe4aa5a0187baca526c7cba0836c34761c3",
+  "artifact": "results.json.gz",
+  "qualification": "REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "authenticated-native-register-and-sql-independent-readback",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "immutable-read-and-concurrent-idempotent-semantic-retry",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "unprotected-retrospective-owner-attribution-retains-all-unknowns",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "late-correction-keeps-original-and-knowledge-cut",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "commit-after-cut-cannot-be-backdated-into-economic-history",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "tenant-principal-role-and-HTTP-evidence-authority-attacks",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "same-tenant-principal-isolation-at-ordinary-SQL-boundary",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "post-assignment-question-cannot-be-called-prospective",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

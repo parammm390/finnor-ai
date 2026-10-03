@@ -27,3 +27,7 @@ export * from "./enterprise-control";
 export * from "./enterprise-allocation";
 export * from './enterprise-obligations';
 export * from './obligation-contracts';
+
+export * from "./enterprise-economic-attribution";
+export * from "./enterprise-economic-assignments";
+export * from "./enterprise-economic-consumers";

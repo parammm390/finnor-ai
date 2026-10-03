@@ -1,0 +1,10 @@
+{
+  "sourcesUnchanged": true,
+  "qualification": "ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF",
+  "cases": [
+    {
+      "id": "preendpoint-source-cannot-become-field-H2-through-age-or-labels",
+      "status": "PASS"
+    }
+  ]
+}

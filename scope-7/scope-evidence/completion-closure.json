@@ -1,0 +1,31 @@
+{
+  "schema": "finnor.s7.publication-completion.v1",
+  "softwareImplementation": "IMPLEMENTED",
+  "ciPreflight": "PASS",
+  "fullFrozenGate": "PARTIAL",
+  "actualOwnerValue": "UNKNOWN",
+  "completeActualCosts": "UNKNOWN",
+  "economic100x": "UNESTABLISHED",
+  "museDots10x": "UNESTABLISHED",
+  "independentHumanReview": "NOT_CLAIMED",
+  "pendingFieldGates": [
+    "genuine prospective mature outcome cohort",
+    "complete actual costs and independent valuations",
+    "90-day field loop",
+    "independent S6 protected production admission",
+    "matched external benchmarks and separate capability qualification"
+  ],
+  "deployment": "NOT_PERFORMED",
+  "merge": "NOT_PERFORMED",
+  "baselineTests": {
+    "passed": 1308,
+    "failed": 0,
+    "existingSkipped": 27
+  },
+  "newE2EEntryPoints": {
+    "passed": 5,
+    "failed": 0,
+    "nativeCases": 40,
+    "monteCarloTrials": 12000
+  }
+}

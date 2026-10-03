@@ -8,6 +8,7 @@ export interface OwnerTransportScope { semanticOwner:string; tenantId:string; pr
 export interface OwnerOriginKey { id:string; publicKey:string; validAfter:string; validUntil:string; revoked:boolean }
 interface ReceiptPin { signerPublicKey:string; releaseId:string; verifierDigest:string; policyDigest:string }
 export interface OwnerTransportRoute extends OwnerTransportScope {
+ purpose?:'OWNER'|'CONSUMER'; protectionDomain?:'DISPOSABLE_TEST_AUTHORITY'|'REVIEWED_PROTECTED_DOMAIN';
  rightsRefs:string[]; originKeys:OwnerOriginKey[]; originSigner?:{keyId:string;path:string};
  tokenPath:string; tokenSha256:string; ledger:{endpoint:string;acceptedReceipts:ReceiptPin[]};
  requestTimeoutMs:number; leaseMs:number;
@@ -39,7 +40,7 @@ async function privateFile(path:string):Promise<Buffer>{
  finally{await fd.close();}
 }
 
-export async function ownerTransportRoute(identity:OwnerTransportScope):Promise<OwnerTransportRoute|null>{
+export async function ownerTransportRoute(identity:OwnerTransportScope,purpose:'OWNER'|'CONSUMER'='OWNER'):Promise<OwnerTransportRoute|null>{
  scope(identity);const path=process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG;if(!path)return null;
  const root=process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT;if(!root)fail('OWNER_TRANSPORT_ROOT_UNAVAILABLE');
  const config=object(JSON.parse((await privateFile(path)).toString()));keys(config,['policy','signature']);
@@ -51,8 +52,9 @@ export async function ownerTransportRoute(identity:OwnerTransportScope):Promise<
  if(after>now||until<=now||until<=after)fail('OWNER_TRANSPORT_CONFIGURATION_EXPIRED');
  const routes=list(policy.routes),seen=new Set<string>();
  for(const value of routes){
-  const route=object(value);keys(route,['semanticOwner','tenantId','principalId','rightsRefs','originKeys','tokenPath','tokenSha256','ledger','requestTimeoutMs','leaseMs'],['originSigner']);scope(route);
-  const key=canonical([route.semanticOwner,route.tenantId,route.principalId]);if(seen.has(key))fail('OWNER_TRANSPORT_AMBIGUOUS_IDENTITY');seen.add(key);
+  const route=object(value);keys(route,['semanticOwner','tenantId','principalId','rightsRefs','originKeys','tokenPath','tokenSha256','ledger','requestTimeoutMs','leaseMs'],['originSigner','purpose']);scope(route);
+  const routePurpose=route.purpose??'OWNER';if(!['OWNER','CONSUMER'].includes(routePurpose)||routePurpose==='CONSUMER'&&(!['S7','S8'].includes(route.semanticOwner)||route.originSigner))fail('OWNER_TRANSPORT_PURPOSE_INVALID');
+  const key=canonical([route.semanticOwner,route.tenantId,route.principalId,route.purpose??'OWNER']);if(seen.has(key))fail('OWNER_TRANSPORT_AMBIGUOUS_IDENTITY');seen.add(key);
   const rights=list(route.rightsRefs);rights.forEach(r=>text(r));if(new Set(rights).size!==rights.length)fail('OWNER_TRANSPORT_RIGHTS_AMBIGUOUS');
   const issuers=list(route.originKeys,8),issuerIds=new Set<string>();
   for(const raw of issuers){const issuer=object(raw);keys(issuer,['id','publicKey','validAfter','validUntil','revoked']);text(issuer.id,256);publicKey(issuer.publicKey);if(issuerIds.has(issuer.id)||typeof issuer.revoked!=='boolean'||time(issuer.validUntil)<=time(issuer.validAfter))fail('OWNER_TRANSPORT_ORIGIN_KEY_INVALID');issuerIds.add(issuer.id);}
@@ -63,7 +65,8 @@ export async function ownerTransportRoute(identity:OwnerTransportScope):Promise<
   for(const raw of list(route.ledger.acceptedReceipts,8)){const pin=object(raw);keys(pin,['signerPublicKey','releaseId','verifierDigest','policyDigest']);publicKey(pin.signerPublicKey);text(pin.releaseId);hex(pin.verifierDigest);hex(pin.policyDigest);}
   if(!Number.isInteger(route.requestTimeoutMs)||route.requestTimeoutMs<1000||route.requestTimeoutMs>10000||!Number.isInteger(route.leaseMs)||route.leaseMs<3000||route.leaseMs>60000||route.leaseMs<=route.requestTimeoutMs+500)fail('OWNER_TRANSPORT_BUDGET_INVALID');
  }
- return routes.find(route=>sameScope(route,identity))??null;
+ for(const route of routes){const siblings=routes.filter(other=>sameScope(other,route)&&(other.purpose??'OWNER')!==(route.purpose??'OWNER'));if(siblings.some(other=>other.tokenSha256===route.tokenSha256))fail('OWNER_TRANSPORT_CREDENTIAL_NOT_ATTENUATED');}
+ const route=routes.find(route=>sameScope(route,identity)&&(route.purpose??'OWNER')===purpose);return route?{...route,protectionDomain:policy.domain}:null;
 }
 
 export function verifyOwnerDeliveryOrigin(route:OwnerTransportRoute,envelope:OwnerDeliveryEnvelope,encodedSignature:string){
@@ -141,7 +144,7 @@ export function verifyOwnerTransportReceipt(route:OwnerTransportRoute,raw:unknow
 
 /** Read-only S6 evidence; signatures confer no causal/economic attribution. */
 export async function readOwnerTransportExecutionHandoff(identity:OwnerTransportScope,obligationId:string){
- const route=await ownerTransportRoute(identity);if(!route)fail('OWNER_TRANSPORT_CONFIGURATION_UNAVAILABLE');
+ const route=await ownerTransportRoute(identity,['S7','S8'].includes(identity.semanticOwner)?'CONSUMER':'OWNER');if(!route)fail('OWNER_TRANSPORT_CONFIGURATION_UNAVAILABLE');
  if(!['S6','S7','S8'].includes(identity.semanticOwner)||!/^durable-obligation:[a-f0-9]{64}$/.test(obligationId))fail('OWNER_HANDOFF_IDENTITY_INVALID');
  const answer=await request(route,'/execution-handoff/'+encodeURIComponent(obligationId)),handoff=object(answer.handoff),consumer=object(handoff.consumer),release=object(handoff.release);
  const pin=route.ledger.acceptedReceipts.find(p=>p.releaseId===release.releaseId&&p.verifierDigest===release.verifierDigest&&p.policyDigest===release.policyDigest)??fail('OWNER_HANDOFF_RELEASE_UNADMITTED');
@@ -150,7 +153,8 @@ export async function readOwnerTransportExecutionHandoff(identity:OwnerTransport
  const obligation=object(handoff.obligation),{ref,...preimage}=obligation;
  if(ref?.id!==obligationId||ref.owner!=='S6'||ref.contentDigest!==ownerTransportHash(preimage)||obligation.tenantId!==identity.tenantId||obligation.principalId!==identity.principalId||!route.rightsRefs.includes(obligation.rightsRef))fail('OWNER_HANDOFF_OBLIGATION_PREIMAGE_INVALID');
  verifyOwnerTransportReceipt(route,handoff.obligationReceipt,{kind:'REFERENCE',identity:obligationId,semanticOwner:'S6',principalId:identity.principalId});
- let prior=0;for(const row of list(handoff.history,512)){object(row);object(row.event);const receipt=verifyOwnerTransportReceipt(route,row.receipt,{kind:'EVENT',identity:row.event.eventId,semanticOwner:'S6',principalId:identity.principalId,event:row.event});if(receipt.protectedExecution!==true||receipt.sequence<=prior||!same(row.event.detail?.obligationRef,ref))fail('OWNER_HANDOFF_HISTORY_BINDING_INVALID');prior=receipt.sequence;}
+ if(!Array.isArray(handoff.history)||handoff.history.length>512)fail('OWNER_HANDOFF_HISTORY_INVALID');
+ let prior=0;for(const row of handoff.history){object(row);object(row.event);const receipt=verifyOwnerTransportReceipt(route,row.receipt,{kind:'EVENT',identity:row.event.eventId,semanticOwner:'S6',principalId:identity.principalId,event:row.event});if(receipt.protectedExecution!==true||receipt.sequence<=prior||!same(row.event.detail?.obligationRef,ref))fail('OWNER_HANDOFF_HISTORY_BINDING_INVALID');prior=receipt.sequence;}
  if(!same(handoff.attempts,handoff.history.filter((row:any)=>row.event.type==='ATTEMPT'))||!same(handoff.observations,handoff.history.filter((row:any)=>row.event.type==='OBSERVATION'))||!same(handoff.settlements,handoff.history.filter((row:any)=>row.event.type==='VERIFICATION')))fail('OWNER_HANDOFF_PROJECTION_INVALID');
  return answer;
 }
@@ -234,4 +238,18 @@ export async function dispatchOwnerTransportRequest(identity:OwnerTransportScope
  if(!same(accepted.receipt,answer.receipt)||accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||detail?.schema!=='finnor.s6.protected-execution.v1'||!same(detail.obligationRef,input.request.ir?.obligationRef)||!same(detail.requestRef,input.request.ref)||!same(detail.effectRef,input.request.ir?.effectRef))fail('DISPATCH_PROTECTED_EVENT_BINDING_INVALID');
  if(answer.status==='VERIFIED'&&(accepted.event.type!=='VERIFICATION'||detail.status!=='VERIFIED'||detail.memberCount!==input.request.ir?.members?.length))fail('DISPATCH_SETTLEMENT_NOT_ESTABLISHED');
  return {status:answer.status as 'VERIFIED'|'UNRESOLVED',receipt:accepted.receipt,...(answer.status==='VERIFIED'?{settlement:detail}: {responsibilityRetained:true,automaticMutationRetry:false}),semanticReplay:answer.semanticReplay===true,qualification:'PROTECTED_EXACT_EXECUTION_EVENT_CURRENT_ADMITTED_RELEASE_DOMAIN'};
+}
+
+/** An immutable foreign owner preimage, resolved through pinned S6 signatures.
+ * Authentication proves content/issuer only, never the truth of its claims. */
+export async function resolveEconomicOwnerReference(identity:OwnerTransportScope,expected:{owner:string;id:string;version:string;contentDigest:string},options:{rightsRef?:string;purpose?:'OWNER'|'CONSUMER';principalId?:string;allowedPrincipalIds?:string[]}={}){
+ if(!['S7','S8'].includes(identity.semanticOwner))fail('ECONOMIC_READER_SCOPE_INVALID');
+ const route=await ownerTransportRoute(identity,options.purpose??'CONSUMER')??fail('ECONOMIC_READER_ROUTE_UNAVAILABLE');
+ text(expected.id);hex(expected.contentDigest);
+ const answer=await request(route,'/references/'+encodeURIComponent(expected.id)),reference=object(answer.reference);
+ const receipt=verifyOwnerTransportReceipt(route,answer.receipt,{kind:answer.receipt.kind,identity:answer.receipt.identity,semanticOwner:expected.owner,...(!options.allowedPrincipalIds?{principalId:options.principalId??identity.principalId}:{})});
+ if(options.allowedPrincipalIds&&!options.allowedPrincipalIds.includes(receipt.principalId))fail('ECONOMIC_SOURCE_ISSUER_BINDING_INVALID');
+ const {content,...descriptor}=reference;
+ if(!same(descriptor,expected)||referencePreimageDigest(reference as any)!==expected.contentDigest||!receipt.references.some((r:any)=>same(r,descriptor))||options.rightsRef&&!receipt.rightsRefs.includes(options.rightsRef))fail('ECONOMIC_SOURCE_BINDING_INVALID');
+ return {reference,receipt,protectionDomain:route.protectionDomain,executionAuthorityGranted:false as const,qualification:'AUTHENTICATED_ISSUER_AND_IMMUTABLE_CONTENT_ONLY_NOT_CAUSAL_TRUTH'};
 }

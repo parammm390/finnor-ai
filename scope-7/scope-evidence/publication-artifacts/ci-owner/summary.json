@@ -1,0 +1,38 @@
+{
+  "sourcesUnchanged": true,
+  "qualification": "REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2",
+  "cases": [
+    {
+      "id": "authenticated-native-register-and-sql-independent-readback",
+      "status": "PASS"
+    },
+    {
+      "id": "immutable-read-and-concurrent-idempotent-semantic-retry",
+      "status": "PASS"
+    },
+    {
+      "id": "unprotected-retrospective-owner-attribution-retains-all-unknowns",
+      "status": "PASS"
+    },
+    {
+      "id": "late-correction-keeps-original-and-knowledge-cut",
+      "status": "PASS"
+    },
+    {
+      "id": "commit-after-cut-cannot-be-backdated-into-economic-history",
+      "status": "PASS"
+    },
+    {
+      "id": "tenant-principal-role-and-HTTP-evidence-authority-attacks",
+      "status": "PASS"
+    },
+    {
+      "id": "same-tenant-principal-isolation-at-ordinary-SQL-boundary",
+      "status": "PASS"
+    },
+    {
+      "id": "post-assignment-question-cannot-be-called-prospective",
+      "status": "PASS"
+    }
+  ]
+}

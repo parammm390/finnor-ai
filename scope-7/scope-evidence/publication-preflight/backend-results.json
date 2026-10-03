@@ -1,0 +1,44 @@
+[
+  {
+    "command": [
+      "npm",
+      "run",
+      "db:seed"
+    ],
+    "exitCode": 0
+  },
+  {
+    "command": [
+      "node",
+      "--import=tsx",
+      "scripts/install-vertical-fixture-seam.ts"
+    ],
+    "exitCode": 0
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "setup:langgraph"
+    ],
+    "exitCode": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/s6/run-native-tests.py",
+      "../scope-7/scope-evidence/publication-preflight/complete-backend",
+      "--exclude",
+      "tests/integration/phase6-conversation-context-kernel.test.ts"
+    ],
+    "exitCode": 0
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "release:pe-p7-workforce-learning"
+    ],
+    "exitCode": 0
+  }
+]

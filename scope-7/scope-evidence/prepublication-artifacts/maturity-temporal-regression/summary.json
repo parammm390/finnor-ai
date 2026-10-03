@@ -1,0 +1,13 @@
+{
+  "artifactSha256": "2f3abcb76e888a00997fb3a3863eeedc45c97c5736296f2664d49bb8c52ccfd5",
+  "artifact": "results.json.gz",
+  "qualification": "ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "preendpoint-source-cannot-become-field-H2-through-age-or-labels",
+      "status": "FAIL",
+      "failure": "AssertionError [ERR_ASSERTION]: An endpoint commitment made before the endpoint was promoted to H2\n\n'H2' !== 'H1'\n"
+    }
+  ]
+}

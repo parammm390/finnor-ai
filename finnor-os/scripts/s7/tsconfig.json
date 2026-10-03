@@ -1,0 +1,6 @@
+{
+ "extends":"../../tsconfig.base.json",
+ "compilerOptions":{"noEmit":true},
+ "include":["./*.mts","../../packages/private-equity/src/enterprise-economic*.ts","../../packages/epistemic-runtime/src/economic-attribution.ts","../../packages/governed-execution/src/*.ts"],
+ "exclude":["../../node_modules"]
+}
