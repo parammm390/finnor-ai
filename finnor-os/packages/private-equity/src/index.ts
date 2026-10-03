@@ -20,9 +20,10 @@ export * from "./company-brain-relationships";
 export * from "./company-brain";
 export * from "./digital-twin";
 export * from "./semantic-activity";
-
 export * from "./enterprise-beliefs";
-
 export * from "./enterprise-experiments";
-
 export * from "./enterprise-interventions";
+export * from "./enterprise-control";
+export * from "./enterprise-allocation";
+export * from './enterprise-obligations';
+export * from './obligation-contracts';

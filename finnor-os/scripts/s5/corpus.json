@@ -1,0 +1,28 @@
+{
+  "schema": "finnor.s5.preregistered-corpus.v1",
+  "qualification": "HYPOTHETICAL_H1_SUPPLIED_JOINT_MODEL_NOT_FIELD_EVIDENCE",
+  "normalization": "100",
+  "solverDeadlineMs": 30000,
+  "memoryLimitGiB": 16,
+  "cases": {
+    "coupled": {
+      "horizon": 3,
+      "limits": {"capital": "100", "capacity": "2", "leverage": "100"},
+      "covenantMaximum": "10",
+      "programmes": [
+        {"label": "A", "capital": 70, "capacity": 1, "leverage": 6, "values": ["25", "20"]},
+        {"label": "B", "capital": 40, "capacity": 1, "leverage": 4, "values": ["14", "8"]},
+        {"label": "C", "capital": 30, "capacity": 1, "leverage": 5, "values": ["6", "4"]},
+        {"label": "D", "capital": 60, "capacity": 2, "leverage": 0, "values": ["18", "14"]}
+      ],
+      "interaction": {"labels": ["B", "C"], "value": "20"},
+      "expected": {"selected": ["B", "C"], "robustValue": "32", "rankingValue": "20", "omittedCovenantCandidate": ["A", "C"], "omittedCovenantLoad": "11"}
+    },
+    "timing": {"horizon": 2, "cashAvailability": ["50", "90", "90"], "existingUse": ["20", "10", "0"], "programmeSpend": 60, "terminalValue": "100", "expectedImmediateBalance": "-30", "expectedDelayedBalance": "0"},
+    "optionality": {"horizon": 2, "cash": "100", "inquiry": 10, "P": {"HIGH": 70, "LOW": 50}, "Q": {"HIGH": 20, "LOW": 40}, "extraHIGH": 30, "expectedJointEnvelope": ["10", "90", "0"], "expectedWorstTotal": "100", "independentMaxTotal": "120", "allAlternativesTotal": "190"},
+    "concurrency": {"horizon": 3, "cash": "100", "demand": 60, "processes": 4, "distinctWinnersMaximum": 1, "childTimeoutMs": 120000},
+    "unknown": {"horizon": 3, "cash": "100", "demand": 60, "postConsumeStatus": "CONSUMPTION_PENDING", "externalExecutionClaimed": false, "protectedSettlement": "BLOCKED_EXTERNAL"},
+    "numerical": {"horizon": 3, "availability": "0.299999999999999999", "programmeDemand": 0.3, "safetyMargin": "0.000000000000000001", "expectedSelection": []},
+    "stress": {"firms": 16, "pools": 4, "horizon": 24, "commonPaths": 4, "poolCapacity": "3", "occupancyPeriods": 24, "deadlineMs": 30000, "memoryLimitGiB": 16, "exactOptimumClaimed": false}
+  }
+}

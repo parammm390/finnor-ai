@@ -47,6 +47,7 @@ export function createWorker(): JobQueue {
   // Protocol 2 uses a new physical type so a mixed-deploy protocol-1 worker cannot
   // claim an incompatible payload merely because its old SQL ignores version fields.
   queue.register("run_workflow_step_v2", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step_v2);
+  queue.register("run_workflow_step_v3", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step_v3);
   queue.register("critic_review", criticReview, PRODUCTION_JOB_CONTRACTS.critic_review);
   queue.register("learning_digest", learningDigest, PRODUCTION_JOB_CONTRACTS.learning_digest);
   queue.register("scan_approval_expiry", scanApprovalExpiry, PRODUCTION_JOB_CONTRACTS.scan_approval_expiry);

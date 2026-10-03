@@ -3,6 +3,8 @@
 // unchanged; only a persistent worker may cross the effect boundary.
 
 import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
 import { and, eq } from "drizzle-orm";
@@ -27,10 +29,12 @@ import {
   workflowStepClaims,
   workflowSteps,
 } from "@finnor/db";
-import { FinnorOrchestrator, authorizeActionExecutionTx, emitInstructionEvent, executeAuthorizedEffectStep } from "@finnor/orchestration";
+import { FinnorOrchestrator, authorizeActionExecutionTx, emitInstructionEvent, executeAuthorizedEffectStep, recordBusinessEffectOutcome } from "@finnor/orchestration";
+import type { BusinessEffectSet } from "@finnor/shared-types";
 import { migrate } from "../../packages/db/migrate";
 import { seed, SEED_OWNER_EMAIL, SEED_TENANT_ID } from "../../packages/db/seed";
 import { runWorkflowStep } from "../../apps/worker/src/handlers/run-workflow-step";
+import { observeExternalEffectHandler } from "../../apps/worker/src/handlers/observe-external-effect";
 import { JobQueue } from "../../apps/worker/src/queue";
 import { cancelRun, claimStep, recoverStaleSteps } from "@finnor/workflow-runtime";
 
@@ -490,5 +494,151 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     ]));
     expect(task).toMatchObject({ title: "Before durable approval", status: "open" });
     expect(storedStep).toMatchObject({ status: "pending", executionState: "authorized", attempts: 0 });
+  });
+
+  it.each(['predicate','target','hash'] as const)("refuses observer-supplied %s substitution under an approved effect identity", async (substitution) => {
+    const title = 'This exact authorized target must change';
+    const fixture = await draftUpdate(title);
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, 'approve', ownerId, {role:'owner'});
+    const [row] = await withTenant(SEED_TENANT_ID, db => db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).limit(1));
+    const supplied = structuredClone(row!.effect) as BusinessEffectSet;
+    if (substitution === 'predicate') supplied.expected.state = {title:'Before durable approval',status:'open'};
+    if (substitution === 'target') {
+      const decoyId = randomUUID();
+      await withTenant(SEED_TENANT_ID, db => db.insert(tasks).values({id:decoyId,tenantId:SEED_TENANT_ID,subjectType:'business',subjectId:SEED_TENANT_ID,title,status:'done',priority:'high'}));
+      for (const snapshot of supplied.before) if (snapshot.target.type === 'task') snapshot.target.id = decoyId;
+      for (const target of supplied.targets) if (target.type === 'task') target.id = decoyId;
+    }
+    if (substitution === 'hash') {
+      supplied.semanticHash = '0'.repeat(64);
+      await withTenant(SEED_TENANT_ID, db => db.update(tasks).set({title,status:'done',priority:'high'}).where(eq(tasks.id,fixture.taskId)));
+    }
+    let error: string | null = null, verification: unknown;
+    try { verification = await recordBusinessEffectOutcome(SEED_TENANT_ID, supplied, {status:'success',output:{taskId:fixture.taskId}}); } catch (e) { error=String(e); }
+    const observed = await withTenant(SEED_TENANT_ID, async db => ({
+      task:(await db.select().from(tasks).where(eq(tasks.id,fixture.taskId)))[0],
+      effect:(await db.select().from(businessEffects).where(eq(businessEffects.id,fixture.effectId)))[0],
+      receipts:await db.select().from(decisionReceipts).where(eq(decisionReceipts.domainActionId,fixture.action.id)),
+    }));
+    const evidenceDirectory=process.env.FINNOR_S6_NATIVE_EVIDENCE_DIR;
+    if(evidenceDirectory){await mkdir(evidenceDirectory,{recursive:true});await writeFile(join(evidenceDirectory,`observer-substitution-${substitution}.json`),JSON.stringify({schema:'finnor.s6.native-observer-challenge.v1',inputs:{tenantId:SEED_TENANT_ID,actionId:fixture.action.id,approvedEffect:row!.effect,supplied},fault:substitution,error,verification,observed,qualification:'Actual owner approval and PostgreSQL readback; no protected admission or live provider'},null,2)+'\n');}
+    expect({error, effectStatus:observed.effect!.status}).toMatchObject({error:expect.stringMatching(/frozen|persisted|authorized|bound/i), effectStatus:'authorized'});
+    if(substitution!=='hash')expect(observed.task).toMatchObject({title:'Before durable approval',status:'open'});
+  });
+
+  it("rejects executor self-verification when the exact authorized task readback disagrees", async () => {
+    const fixture = await draftUpdate("Independent observation must see this title");
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const [row] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).limit(1));
+    const verification = await recordBusinessEffectOutcome(SEED_TENANT_ID, row!.effect as BusinessEffectSet, {
+      status: "success", output: { verified: true, canonicalObserved: true, taskId: fixture.taskId },
+    });
+    const [task, effect] = await withTenant(SEED_TENANT_ID, async (db) => Promise.all([
+      db.select().from(tasks).where(eq(tasks.id, fixture.taskId)).then((rows) => rows[0]),
+      db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).then((rows) => rows[0]),
+    ]));
+    expect(task).toMatchObject({ title: "Before durable approval", status: "open" });
+    expect(verification.state).toBe("divergent");
+    expect(effect!.status).toBe("divergent");
+  });
+
+  it.each(["unrelated", "wrong_fields", "actual_worker"])("verifies create_task through native action-bound identity and fields (%s)", async mode => {
+    const subject = await draftUpdate("Subject task remains unchanged");
+    const orchestrator = new FinnorOrchestrator();
+    const title = "Exact created task title";
+    const drafted = await orchestrator.draftKnownAction("create_task", { subjectRef: { entityType: "task", entityId: subject.taskId }, title, priority: "high" }, SEED_TENANT_ID, { initiatedBy: ownerId, source: "s6_creation_readback" });
+    await orchestrator.decide(drafted.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const [effectRow] = await withTenant(SEED_TENANT_ID, db => db.select().from(businessEffects).where(eq(businessEffects.domainActionId, drafted.action.id)));
+    const { step } = await durableRows(drafted.action.id);
+    if (mode === "actual_worker") {
+      await runWorkflowStep({ tenantId: SEED_TENANT_ID, workflowStepId: step!.id });
+      const actual = await withTenant(SEED_TENANT_ID, db => db.select().from(tasks).where(eq(tasks.sourceDomainActionId, drafted.action.id)));
+      expect(actual).toHaveLength(1);
+      expect(actual[0]).toMatchObject({ title, priority: "high", subjectType: "task", subjectId: subject.taskId });
+      const [settled] = await withTenant(SEED_TENANT_ID, db => db.select().from(businessEffects).where(eq(businessEffects.id, effectRow!.id)));
+      expect(settled!.status).toBe("verified");
+    } else {
+      let outputTaskId: string = subject.taskId;
+      if (mode === "wrong_fields") {
+        const [wrong] = await withTenant(SEED_TENANT_ID, db => db.insert(tasks).values({ tenantId: SEED_TENANT_ID, subjectType: "task", subjectId: subject.taskId, title: "Different created task", priority: "normal", sourceDomainActionId: drafted.action.id }).returning());
+        outputTaskId = wrong!.id;
+      }
+      const verification = await recordBusinessEffectOutcome(SEED_TENANT_ID, effectRow!.effect as BusinessEffectSet, { status: "success", output: { taskRef: { taskId: outputTaskId } } });
+      expect(verification.state).toBe("divergent");
+      const [unchanged] = await withTenant(SEED_TENANT_ID, db => db.select().from(tasks).where(eq(tasks.id, subject.taskId)));
+      expect(unchanged!.title).toBe("Before durable approval");
+    }
+  });
+
+  it.each(["plain", "phantom_computer", "phantom_workflow"])("retains responsibility when recovered %s success lacks independent settlement", async (claim) => {
+    const fixture = await draftUpdate("A cached success must not invent this mutation");
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const { command, step } = await durableRows(fixture.action.id);
+    await withTenant(SEED_TENANT_ID, (db) => db.insert(integrationOperations).values({
+      tenantId: SEED_TENANT_ID, workflowStepId: step!.id, businessEffectId: fixture.effectId,
+      operationKey: `business-effect:${command!.authorizedEffectHash}`, capability: "action:update_task",
+      provider: "finnor_plugin_runtime", requestHash: command!.authorizedEffectHash!, status: "succeeded",
+      response: { status: "success", output: { taskId: fixture.taskId, ...(claim === "phantom_computer" ? { pendingComputerRun: true, computerRunId: randomUUID() } : claim === "phantom_workflow" ? { workflowRunId: randomUUID() } : {}) } },
+    }));
+    await runWorkflowStep({ tenantId: SEED_TENANT_ID, workflowStepId: step!.id });
+    const observed = await withTenant(SEED_TENANT_ID, async (db) => ({
+      task: (await db.select().from(tasks).where(eq(tasks.id, fixture.taskId)))[0],
+      action: (await db.select().from(domainActions).where(eq(domainActions.id, fixture.action.id)))[0],
+      effect: (await db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)))[0],
+      step: (await db.select().from(workflowSteps).where(eq(workflowSteps.id, step!.id)))[0],
+    }));
+    expect(observed.task).toMatchObject({ title: "Before durable approval", status: "open" });
+    expect(observed.effect!.status).toBe("divergent");
+    expect(observed.action!.status).toBe("needs_human_review");
+    expect(observed.step!.status).not.toBe("completed");
+    expect(observed.step!.executionState).not.toBe("verified");
+  });
+
+  it.each([false, true])("observes expired successful attempts without replaying execution (target applied=%s)", async (applied) => {
+    const title = "Qualified readback after the worker disappears";
+    const fixture = await draftUpdate(title);
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const { command, step } = await durableRows(fixture.action.id);
+    expect(await claimStep(SEED_TENANT_ID, step!.id)).toBeTruthy();
+    const [operation] = await withTenant(SEED_TENANT_ID, async (db) => {
+      if (applied) await db.update(tasks).set({ title, status: "done", priority: "high" }).where(eq(tasks.id, fixture.taskId));
+      await db.update(workflowSteps).set({ executionState: "commit_started", effectCommitAt: new Date(), leaseExpiresAt: new Date(Date.now() - 1_000) }).where(eq(workflowSteps.id, step!.id));
+      return db.insert(integrationOperations).values({
+        tenantId: SEED_TENANT_ID, workflowStepId: step!.id, businessEffectId: fixture.effectId,
+        operationKey: `business-effect:${command!.authorizedEffectHash}`, capability: "action:update_task",
+        provider: "finnor_plugin_runtime", requestHash: command!.authorizedEffectHash!, status: "succeeded",
+        response: { status: "success", output: { taskId: fixture.taskId } },
+      }).returning();
+    });
+    await recoverStaleSteps(SEED_TENANT_ID);
+    const parked = await durableRows(fixture.action.id);
+    expect(parked.step!.status).toBe("waiting_observation");
+    expect(parked.run!.status).toBe("running");
+    const observationJobs = await withTenant(SEED_TENANT_ID, db => db.select().from(jobs).where(eq(jobs.idempotencyKey, `observe-recovered-attempt:${operation!.id}:${step!.dispatchGeneration}`)));
+    expect(observationJobs).toHaveLength(1);
+    await observeExternalEffectHandler(observationJobs[0]!.payload as Record<string, unknown>);
+    await observeExternalEffectHandler(observationJobs[0]!.payload as Record<string, unknown>);
+    const observed = await withTenant(SEED_TENANT_ID, async db => ({
+      target: (await db.select().from(tasks).where(eq(tasks.id, fixture.taskId)))[0],
+      effect: (await db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)))[0],
+      action: (await db.select().from(domainActions).where(eq(domainActions.id, fixture.action.id)))[0],
+      operations: await db.select().from(integrationOperations).where(eq(integrationOperations.workflowStepId, step!.id)),
+    }));
+    const settled = await durableRows(fixture.action.id);
+    const evidenceDirectory = process.env.FINNOR_S6_NATIVE_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await writeFile(join(evidenceDirectory, `recovered-attempt-${applied ? "applied" : "unchanged"}.json`), JSON.stringify({
+        schema: "finnor.s6.native-recovery-readback.v1", qualification: "REAL_POSTGRESQL_WITH_DISPOSABLE_ATTEMPT_INPUT_NOT_LIVE_PROVIDER",
+        tenantId: SEED_TENANT_ID, principalId: ownerId,
+        inputs: { actionId: fixture.action.id, effectId: fixture.effectId, taskId: fixture.taskId, expectedTitle: title, operationId: operation!.id, applied },
+        injectedFault: "expired lease after successful attempt, before independent settlement", parked, observationJobs, observed, settled,
+      }, null, 2));
+    }
+    expect(observed.target!.title).toBe(applied ? title : "Before durable approval");
+    expect(observed.operations).toHaveLength(1);
+    expect(observed.effect!.status).toBe(applied ? "verified" : "divergent");
+    expect(observed.action!.status).toBe(applied ? "completed" : "needs_human_review");
+    expect(settled.step!.status).toBe(applied ? "completed" : "failed");
   });
 });

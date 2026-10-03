@@ -9,6 +9,7 @@ import {
 import { domainActions, reconcileWorkStatus, resolveTenantVertical, withTenant, workflowSteps } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import type { JobHandler } from "../queue";
+import {runGovernedObligationStep} from './run-governed-obligation';
 
 async function resumeBusinessControllers(
   tenantId: string,
@@ -55,7 +56,6 @@ export const runWorkflowStep: JobHandler = async (payload, jobContext) => {
     if (error instanceof Error && /^(Tenant not found|Tenant vertical identity is missing)$/.test(error.message)) return;
     throw error;
   }
-  await recoverStaleSteps(tenantId);
   const [candidate] = await withTenant(tenantId, (db) => db.select({
     stepType: workflowSteps.stepType,
     domainActionId: workflowSteps.domainActionId,
@@ -66,6 +66,10 @@ export const runWorkflowStep: JobHandler = async (payload, jobContext) => {
     eq(workflowSteps.id, stepId),
   )).limit(1));
   if (!candidate) return;
+  if(candidate.stepType==='execute_governed_obligation'){
+    await runGovernedObligationStep(tenantId,stepId,requestedGeneration,jobContext);return;
+  }
+  await recoverStaleSteps(tenantId);
   let eligibilityEvidence: Record<string, unknown> = {
     version: 1,
     checkedAt: new Date().toISOString(),

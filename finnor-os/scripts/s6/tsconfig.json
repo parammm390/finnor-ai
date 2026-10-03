@@ -1,0 +1,5 @@
+{
+ "extends":"../../tsconfig.base.json",
+ "compilerOptions":{"noEmit":true},
+ "include":["./*.mts","../../packages/governed-execution/src/**/*.ts","../../packages/governed-execution/src/**/*.mts"]
+}

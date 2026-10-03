@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
+import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
 import {
   withTenant,
@@ -15,12 +16,13 @@ import {
   integrationOperations,
   reconciliationCases,
   decisionReceipts,
+  jobs,
 } from "@finnor/db";
-import { and, eq } from "drizzle-orm";
-import { submitCommand, claimStep, completeStep, failStep, advanceWorkflow, recoverStaleSteps } from "@finnor/workflow-runtime";
+import { and, eq, sql } from "drizzle-orm";
+import { submitCommand, claimStep, completeStep, failStep, advanceWorkflow, recoverStaleSteps, redriveStepTx } from "@finnor/workflow-runtime";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const TENANT_ID = "00000000-0000-4000-8000-0000000000d1";
+const TENANT_ID = randomUUID();
 
 async function dbUp(): Promise<boolean> {
   const c = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -75,7 +77,7 @@ describe.skipIf(!available)("durable execution runtime", () => {
     expect(second.workflowRunId).toBe(first.workflowRunId);
     expect(second.stepIds).toEqual(first.stepIds);
 
-    const allCommands = await withTenant(TENANT_ID, (db) => db.select().from(commands).where(eq(commands.idempotencyKey, "idem-1")));
+    const allCommands = await withTenant(TENANT_ID, (db) => db.select().from(commands).where(and(eq(commands.tenantId, TENANT_ID), eq(commands.idempotencyKey, "idem-1"))));
     expect(allCommands).toHaveLength(1);
   });
 
@@ -114,6 +116,13 @@ describe.skipIf(!available)("durable execution runtime", () => {
       }),
     );
     await claimStep(TENANT_ID, submitted.stepIds[0]!);
+    await advanceWorkflow(TENANT_ID, submitted.workflowRunId);
+    const earlyJobs = await withTenant(TENANT_ID, db => db.select().from(jobs).where(sql`${jobs.payload}->>'workflowStepId'=${submitted.stepIds[1]!}`));
+    const earlyClaim = await claimStep(TENANT_ID, submitted.stepIds[1]!);
+    expect({ queuedSuccessors: earlyJobs.length, claimedSuccessor: earlyClaim?.id ?? null }).toEqual({ queuedSuccessors: 0, claimedSuccessor: null });
+    const prematureRedrive = await withTenant(TENANT_ID, db => redriveStepTx(db, TENANT_ID, submitted.stepIds[1]!));
+    const redriveJobs = await withTenant(TENANT_ID, db => db.select().from(jobs).where(sql`${jobs.payload}->>'workflowStepId'=${submitted.stepIds[1]!}`));
+    expect({ redrivenSuccessor: prematureRedrive?.id ?? null, queuedSuccessors: redriveJobs.length }).toEqual({ redrivenSuccessor: null, queuedSuccessors: 0 });
     await completeStep(TENANT_ID, submitted.stepIds[0]!, {});
     await advanceWorkflow(TENANT_ID, submitted.workflowRunId);
 
@@ -173,7 +182,7 @@ describe.skipIf(!available)("durable execution runtime", () => {
     expect(row!.status).toBe("pending");
   });
 
-  it("recoverStaleSteps: integration_operations row 'succeeded' — completes the step and resumes (exactly-once, resumed correctly)", async () => {
+  it("recoverStaleSteps: successful attempt awaits independent settlement without redelivery", async () => {
     const submitted = await withTenant(TENANT_ID, (db) =>
       submitCommand(db, {
         tenantId: TENANT_ID,
@@ -204,9 +213,13 @@ describe.skipIf(!available)("durable execution runtime", () => {
     expect(result.reconciled).toBe(0);
 
     const [row] = await withTenant(TENANT_ID, (db) => db.select().from(workflowSteps).where(eq(workflowSteps.id, stepId)));
-    expect(row!.status).toBe("completed");
+    expect(row!.status).toBe("waiting_observation");
     const [run] = await withTenant(TENANT_ID, (db) => db.select().from(workflowRuns).where(eq(workflowRuns.id, submitted.workflowRunId)));
-    expect(run!.status).toBe("completed");
+    expect(run!.status).toBe("running");
+    const [operation] = await withTenant(TENANT_ID, db => db.select().from(integrationOperations).where(eq(integrationOperations.workflowStepId, stepId)));
+    const observationJobs = await withTenant(TENANT_ID, db => db.select().from(jobs).where(eq(jobs.idempotencyKey, `observe-recovered-attempt:${operation!.id}:${row!.dispatchGeneration}`)));
+    expect(observationJobs).toHaveLength(1);
+    expect(observationJobs[0]!.payload).toMatchObject({ tenantId: TENANT_ID, integrationOperationId: operation!.id });
   });
 
   it("recoverStaleSteps: integration_operations row stuck 'running' — opens a reconciliation_case, never blindly retries", async () => {

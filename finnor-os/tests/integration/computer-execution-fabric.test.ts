@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import pg from "pg";
 import { createHash, randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { migrate } from "../../packages/db/migrate";
 import {
   ComputerBroker,
@@ -21,6 +24,10 @@ import { activitySnapshot } from "@finnor/read-models";
 import { closePool } from "@finnor/db";
 import { setTenantSecretReaderForTesting } from "@finnor/security";
 import { purgeTenantRetention } from "../../apps/worker/src/handlers/purge-retention";
+import { FinnorOrchestrator } from "@finnor/orchestration";
+import { runWorkflowStep } from "../../apps/worker/src/handlers/run-workflow-step";
+import { recoverStaleSteps } from "@finnor/workflow-runtime";
+import { observeExternalEffectHandler } from "../../apps/worker/src/handlers/observe-external-effect";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
@@ -71,6 +78,7 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     await admin.query(`INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required) VALUES ($1,$2,'*','*','allow','high',false)`, [tenantId, roleId]);
     await admin.query(`INSERT INTO finnor_os.application_accounts(id,tenant_id,account_key,application,provider,display_name,status,capabilities,metadata) VALUES ($1,$2,'supplier-west','supplier_portal','supplier_portal','Supplier West','active','["read","write"]',$3::jsonb)`, [accountId, tenantId, JSON.stringify({ homeUrl: "https://supplier.example/orders", allowedOrigins: ["https://supplier.example"], authOrigins: ["https://login.example"] })]);
     await admin.query(`INSERT INTO finnor_os.auth_profiles(id,tenant_id,auth_profile_ref,principal_type,principal_id,application_account_id,purpose,priority,credential_provider,credential_ref,status,capabilities,restrictions) VALUES ($1,$2,'supplier-west','employee',$3,$4,'computer_task',100,'aws-secrets-manager',$5,'active','["read","write"]','{}')`, [profileId, tenantId, actorId, accountId, `finnor/tenants/${tenantId}/steel/supplier-west`]);
+    await admin.query("INSERT INTO finnor_os.tenant_integrations(tenant_id,capability,binding,mode,application_account_id,auth_profile_id,health) VALUES ($1,'communications','supplier_portal','emulator',$2,$3,'ok')", [tenantId, accountId, profileId]);
     setTenantSecretReaderForTesting(async () => ({ steelProfileId: "credential-sensitive-steel-profile" }));
     process.env.DATABASE_URL = APP_URL;
     await closePool();
@@ -90,10 +98,10 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     return actionId;
   }
 
-  async function executingWriteAction(): Promise<string> {
+  async function executingWriteAction(changes: Record<string, string | number | boolean | null> = { deliveryNote: "Call warehouse before delivery" }): Promise<string> {
     const actionId = randomUUID();
     const effectId = randomUUID();
-    const payload = { application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: { kind: "supplier_order", identifier: "WS-48" }, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect: { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } } };
+    const payload = { application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: { kind: "supplier_order", identifier: "WS-48" }, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect: { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes } };
     await admin.query(`INSERT INTO finnor_os.domain_actions(id,tenant_id,action_type,payload,status,initiated_by,authority_context) VALUES ($1,$2,'computer_task',$3::jsonb,'executing',$4,'{"outcome":"allowed","resources":[]}')`, [actionId, tenantId, JSON.stringify(payload), actorId]);
     const effectHash = createHash("sha256").update(JSON.stringify(payload.authorizedEffect)).digest("hex");
     await admin.query(
@@ -113,6 +121,61 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     await admin.query(`INSERT INTO finnor_os.action_log(tenant_id,domain_action_id,step,input,output) VALUES ($1,$2,'confirmed','{}',$3::jsonb)`, [tenantId, actionId, JSON.stringify({ approved: true, businessEffectId: effectId, authorizedEffectHash: effectHash })]);
     return actionId;
   }
+
+  async function recordBrowserChallenge(id: string, evidence: Record<string, unknown>): Promise<void> {
+    const directory = process.env.FINNOR_S6_BROWSER_EVIDENCE_DIR;
+    if (!directory) return;
+    await mkdir(directory, { recursive: true });
+    const paths = ["packages/computer/src/runner.ts", "packages/computer/src/contracts.ts", "packages/computer/src/steel-provider.ts", "tests/integration/computer-execution-fabric.test.ts"];
+    const sourceDigests = await Promise.all(paths.map(async (path) => ({ path, sha256: createHash("sha256").update(await readFile(resolve(path))).digest("hex") })));
+    await writeFile(resolve(directory, `${id}.json`), JSON.stringify({
+      schema: "finnor.s6.browser-owner-challenge.v1", id, recordedAt: new Date().toISOString(),
+      qualification: "REAL_DATABASE_OWNER_BOUNDARY_WITH_GENERIC_PROVIDER_FIXTURE_NOT_LIVE_BROWSER_OR_CONFINEMENT",
+      versions: { node: process.version, provider: "generic fixture; no admission", protocol: 2 },
+      authority: { tenantId, actorId, applicationAccountId: accountId, authProfileId: profileId }, sourceDigests,
+      rerun: "FINNOR_S6_BROWSER_EVIDENCE_DIR=<absolute-directory> DATABASE_URL=<disposable-test-database> npx vitest run tests/integration/computer-execution-fabric.test.ts --testNamePattern 'S6 browser'",
+      ...evidence,
+    }, null, 2) + "\n");
+  }
+
+  it.each([
+    { id: "wrong-record", changes: { deliveryNote: "Call warehouse before delivery" }, intendedRecord: { identifier: "WS-48", deliveryNote: "Old target note" }, text: "Orders WS-48 and WS-99. WS-48 delivery note: Old target note. WS-99 delivery note: Call warehouse before delivery" },
+    { id: "null-clear", changes: { deliveryNote: null }, intendedRecord: { identifier: "WS-48", deliveryNote: "Old target note" }, text: "Order WS-48 delivery note: Old target note" },
+  ])("S6 browser rejects $id page evidence at the recovery settlement boundary", async ({ id, changes, intendedRecord, text }) => {
+    const actionId = await executingWriteAction(changes);
+    const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes };
+    const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
+    const operationKey = computerEffectOperationKey(authorizedEffect);
+    await claimExternalOperation(tenantId, actionId, operationKey, authorizedEffectHash(authorizedEffect));
+    await markExternalOperationUnknown(tenantId, actionId, operationKey, { preexistingPossibleDispatch: true });
+    await admin.query("UPDATE finnor_os.computer_runs SET status='reconciling',provider_session_ref='preexisting-s6-session',effect_status='unknown',effect_operation_key=$3 WHERE tenant_id=$1 AND id=$2", [tenantId, queued.run.id, operationKey]);
+    const provider = fakeProvider(text); const broker = new ComputerBroker(); broker.register(provider);
+    const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { return { kind: "complete", summary: "Unqualified page claim", result: { order: "WS-48" }, evidenceText: "WS-48" }; } } }).run(tenantId, queued.run.id);
+    const operations = (await admin.query("SELECT status,execution_state FROM finnor_os.external_operations WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, actionId])).rows;
+    const effects = (await admin.query("SELECT status,verification FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, actionId])).rows;
+    const reconciliation = (await admin.query("SELECT status,case_type FROM finnor_os.reconciliation_cases WHERE tenant_id=$1 AND business_effect_id=(SELECT business_effect_id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2)", [tenantId, actionId])).rows;
+    await recordBrowserChallenge(id, { inputs: { intendedRecord, authorizedEffect, observation: observation(text), actionId, runId: queued.run.id, operationKey }, injectedFault: "possible dispatch followed by unrelated or uncleared target observation", terminal, performed: provider.performed, operations, effects, reconciliation });
+    expect(intendedRecord.deliveryNote).not.toEqual(changes.deliveryNote);
+    expect(terminal).toMatchObject({ status: "blocked", code: "effect_outcome_unknown" });
+    expect(operations).toEqual([expect.objectContaining({ status: "unknown" })]);
+    expect(effects).toEqual([expect.objectContaining({ status: "reconciliation_required" })]);
+    expect(reconciliation).toEqual([expect.objectContaining({ status: "open", case_type: "unknown_delivery" })]);
+    expect(provider.performed).toEqual([]);
+  });
+
+  it("S6 browser refuses unadmitted WRITE before provisioning or relabeled act egress", async () => {
+    const actionId = await executingWriteAction();
+    const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
+    const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
+    const provider = fakeProvider(); let provisioned = 0;
+    const create = provider.createSession.bind(provider); provider.createSession = async input => { provisioned += 1; return create(input); };
+    const broker = new ComputerBroker(); broker.register(provider);
+    const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { return { kind: "act", summary: "Relabel unauthorized submit", primitive: { kind: "click", locator: { kind: "role", role: "button", name: "Submit wrong record" } } }; } } }).run(tenantId, queued.run.id);
+    await recordBrowserChallenge("unadmitted-write-act", { inputs: { authorizedEffect, actionId, runId: queued.run.id }, injectedFault: "untrusted planner labels consequential click as act", terminal, provisioned, performed: provider.performed });
+    expect(terminal).toMatchObject({ status: "blocked", code: "effect_transport_unadmitted" });
+    expect(provisioned).toBe(0);
+    expect(provider.performed).toEqual([]);
+  });
 
   it("runs an isolated read, verifies literal evidence, reconstructs live steps, and releases the session", async () => {
     const actionId = await executingAction();
@@ -160,7 +223,7 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     }
   });
 
-  it("executes an exact authorized write once, reconciles post-state, and never replays the terminal run", async () => {
+  it("refuses unadmitted generic WRITE and replays its refusal without egress", async () => {
     const actionId = await executingWriteAction();
     const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
     const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
@@ -177,37 +240,30 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
       .mockResolvedValueOnce({ kind: "effect", summary: "Submit exact approved delivery note", effect: authorizedEffect, primitive: { kind: "click", locator: { kind: "role", role: "button", name: "Save delivery note" } } })
       .mockResolvedValueOnce({ kind: "complete", summary: "Delivery note verified", result: { order: "WS-48", deliveryNote: "Call warehouse before delivery" }, evidenceText: "Delivery note: Call warehouse before delivery" });
     const runner = new ComputerRunner({ broker, decisionEngine: { decide } });
-    expect(await runner.run(tenantId, queued.run.id)).toMatchObject({ status: "succeeded" });
-    expect(provider.performed).toEqual(["navigate", "click"]);
-    expect((await admin.query(`SELECT status FROM finnor_os.external_operations WHERE tenant_id=$1 AND domain_action_id=$2`, [tenantId, actionId])).rows).toEqual([{ status: "succeeded" }]);
-    expect(await runner.run(tenantId, queued.run.id)).toMatchObject({ status: "succeeded" });
-    expect(provider.performed).toEqual(["navigate", "click"]);
+    expect(await runner.run(tenantId, queued.run.id)).toMatchObject({ status: "blocked", code: "effect_transport_unadmitted" });
+    expect(provider.performed).toEqual([]);
+    expect((await admin.query(`SELECT status FROM finnor_os.external_operations WHERE tenant_id=$1 AND domain_action_id=$2`, [tenantId, actionId])).rows).toEqual([]);
+    expect(await runner.run(tenantId, queued.run.id)).toMatchObject({ status: "blocked", code: "effect_transport_unadmitted" });
+    expect(provider.performed).toEqual([]);
   });
 
-  it("reconciles a crash after external mutation without dispatching the write twice", async () => {
+  it("retains possible WRITE responsibility when recovered observation fails", async () => {
     const actionId = await executingWriteAction();
     const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
-    const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId, purpose: "computer_task" });
-    let applied = false;
-    let writeDispatches = 0;
+    const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
+    const key = computerEffectOperationKey(authorizedEffect);
+    await claimExternalOperation(tenantId, actionId, key, authorizedEffectHash(authorizedEffect));
+    await markExternalOperationUnknown(tenantId, actionId, key, { possibleDispatch: true });
+    await admin.query("UPDATE finnor_os.computer_runs SET status='reconciling',provider_session_ref='lost-observation-session',effect_status='unknown',effect_operation_key=$3 WHERE tenant_id=$1 AND id=$2", [tenantId, queued.run.id, key]);
     const provider = fakeProvider();
-    provider.observe = async () => observation(applied ? "Order WS-48. Delivery note: Call warehouse before delivery" : "Order WS-48. Delivery note: none");
-    provider.perform = async (_session, primitive) => {
-      provider.performed.push(primitive.kind);
-      if (primitive.kind === "click") {
-        writeDispatches += 1;
-        applied = true;
-        throw new Error("simulated worker loss after the external server committed");
-      }
-      return { summary: primitive.kind, pageUrl: "https://supplier.example/orders/WS-48" };
-    };
+    provider.observe = async () => { throw Error("Recovered provider readback unavailable"); };
     const broker = new ComputerBroker(); broker.register(provider);
-    const decide = vi.fn()
-      .mockResolvedValueOnce({ kind: "effect", summary: "Submit exact approved delivery note", effect: authorizedEffect, primitive: { kind: "click", locator: { kind: "role", role: "button", name: "Save delivery note" } } })
-      .mockResolvedValueOnce({ kind: "complete", summary: "Delivery note reconciled", result: { order: "WS-48", deliveryNote: "Call warehouse before delivery" }, evidenceText: "Delivery note: Call warehouse before delivery" });
-    expect(await new ComputerRunner({ broker, decisionEngine: { decide } }).run(tenantId, queued.run.id)).toMatchObject({ status: "succeeded" });
-    expect(writeDispatches).toBe(1);
-    expect((await admin.query(`SELECT status FROM finnor_os.external_operations WHERE tenant_id=$1 AND domain_action_id=$2`, [tenantId, actionId])).rows).toEqual([{ status: "succeeded" }]);
+    const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { throw Error("No decision without recovered observation"); } } }).run(tenantId, queued.run.id);
+    expect(terminal.status).not.toBe("succeeded");
+    expect(provider.performed).toEqual([]);
+    expect(provider.released).toBe(true);
+    expect((await admin.query("SELECT status FROM finnor_os.external_operations WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, actionId])).rows).toEqual([{ status: "unknown" }]);
+    expect((await admin.query("SELECT status FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, actionId])).rows).toEqual([{ status: "reconciliation_required" }]);
   });
 
   it("reattaches after a worker restart and inspects possible write state before navigating", async () => {
@@ -221,20 +277,20 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     const provider = fakeProvider("Order WS-48. Delivery note: Call warehouse before delivery");
     const broker = new ComputerBroker(); broker.register(provider);
     const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { return { kind: "complete", summary: "Recovered delivery note verified", result: { order: "WS-48", deliveryNote: "Call warehouse before delivery" }, evidenceText: "Delivery note: Call warehouse before delivery" }; } } }).run(tenantId, queued.run.id);
-    expect(terminal).toMatchObject({ status: "succeeded" });
+    expect(terminal).toMatchObject({ status: "blocked", code: "effect_outcome_unknown" });
     expect(provider.performed).toEqual([]);
     expect(provider.released).toBe(true);
     expect((await getComputerRunBundle(tenantId, queued.run.id))?.steps.map((step) => step.operation)).toEqual(expect.arrayContaining(["recover_session", "inspect_recovered_state", "reconcile_effect"]));
   });
 
-  it("blocks a broader write before dispatch", async () => {
+  it("refuses a broader candidate on the unadmitted generic WRITE transport", async () => {
     const actionId = await executingWriteAction();
     const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
     const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
     const provider = fakeProvider(); const broker = new ComputerBroker(); broker.register(provider);
     const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { return { kind: "effect", summary: "Broader update", effect: { ...authorizedEffect, changes: { ...authorizedEffect.changes, expedite: true } }, primitive: { kind: "click", locator: { kind: "role", role: "button", name: "Save" } } }; } } }).run(tenantId, queued.run.id);
-    expect(terminal).toMatchObject({ status: "blocked", code: "effect_broader_than_authorized" });
-    expect(provider.performed).toEqual(["navigate"]);
+    expect(terminal).toMatchObject({ status: "blocked", code: "effect_transport_unadmitted" });
+    expect(provider.performed).toEqual([]);
   });
 
   it("honors durable cancellation and preserves prior history", async () => {
@@ -247,6 +303,100 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     expect(provider.released).toBe(false);
     expect((await getComputerRunBundle(tenantId, queued.run.id))?.steps.length).toBeGreaterThanOrEqual(2);
   });
+
+  it("preserves possible dispatch responsibility when cancellation arrives before recovery", async () => {
+    const actionId = await executingWriteAction();
+    const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
+    const queued = await queueComputerRun({ application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, { tenantId, actorId, domainActionId: actionId });
+    const operationKey = computerEffectOperationKey(authorizedEffect);
+    await claimExternalOperation(tenantId, actionId, operationKey, authorizedEffectHash(authorizedEffect));
+    await admin.query("UPDATE finnor_os.computer_runs SET status='running',effect_status='dispatching',effect_operation_key=$3 WHERE tenant_id=$1 AND id=$2", [tenantId, queued.run.id, operationKey]);
+    await requestComputerCancellation(tenantId, queued.run.id);
+    const provider = fakeProvider(); const broker = new ComputerBroker(); broker.register(provider);
+    const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { throw new Error("Cancelled run cannot dispatch again"); } } }).run(tenantId, queued.run.id);
+    const effect = (await admin.query("SELECT status,verification FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, actionId])).rows[0];
+    const action = (await admin.query("SELECT status FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2", [tenantId, actionId])).rows[0];
+    const unresolved = (await admin.query("SELECT status,case_type FROM finnor_os.reconciliation_cases WHERE tenant_id=$1 AND business_effect_id=(SELECT business_effect_id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2)", [tenantId, actionId])).rows;
+    await recordBrowserChallenge("cancel-during-dispatch", { inputs: { actionId, runId: queued.run.id, authorizedEffect, operationKey }, injectedFault: "persisted possible dispatch followed by cancellation before recovery", terminal, effect, action, unresolved, performed: provider.performed });
+    expect(terminal.status).toBe("cancelled");
+    expect(provider.performed).toEqual([]);
+    expect(effect).toMatchObject({ status: "reconciliation_required", verification: { state: "reconciliation_required" } });
+    expect(action.status).toBe("needs_human_review");
+    expect(unresolved).toEqual([expect.objectContaining({ status: "open", case_type: "unknown_delivery" })]);
+  });
+
+  it.each([[false,false],[true,false],[false,true],[true,true]] as const)("keeps native parent accountable through child terminal state (possible dispatch=%s, worker crash=%s)", async (possible, crash) => {
+    const orchestrator = new FinnorOrchestrator();
+    const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
+    const drafted = await orchestrator.draftKnownAction("computer_task", { application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, tenantId, { initiatedBy: actorId, source: "s6_child_lifecycle" });
+    await orchestrator.decide(drafted.action.id, tenantId, "approve", actorId, { role: "owner" });
+    const before = (await admin.query("SELECT * FROM finnor_os.workflow_steps WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, drafted.action.id])).rows[0];
+    expect(before).toBeTruthy();
+    let crashEvidence: Record<string, unknown> | null = null;
+    if (crash) {
+      const faultName = `s6_child_crash_${randomUUID().replaceAll('-', '')}`;
+      const applicationName = faultName;
+      const workerUrl = new URL(APP_URL); workerUrl.searchParams.set('application_name', applicationName);
+      await admin.query(`CREATE FUNCTION finnor_os.${faultName}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id='${before.id}'::uuid AND NEW.status='waiting_observation' THEN PERFORM pg_sleep(30); END IF; RETURN NEW; END $$`);
+      await admin.query(`CREATE TRIGGER ${faultName} BEFORE UPDATE ON finnor_os.workflow_steps FOR EACH ROW EXECUTE FUNCTION finnor_os.${faultName}()`);
+      const childWorker = spawn(process.execPath, ['--import=tsx', '--input-type=module', '--eval', `import {runWorkflowStep} from './apps/worker/src/handlers/run-workflow-step.ts';import {closePool} from './packages/db/index.ts';import {setTenantSecretReaderForTesting} from './packages/security/src/index.ts';setTenantSecretReaderForTesting(async()=>({steelProfileId:'credential-sensitive-steel-profile'}));try{await runWorkflowStep(${JSON.stringify({tenantId,workflowStepId:before.id})});}finally{await closePool();}`], { cwd: resolve('.'), env: {PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,DATABASE_URL:workerUrl.toString(),NODE_ENV:'test',FINNOR_TEST_MANAGED_EXTENSIONS:'omit',LOG_LEVEL:'silent'}, stdio: ['ignore','pipe','pipe'] });
+      let logs = ''; childWorker.stdout.on('data', chunk => logs += chunk.toString()); childWorker.stderr.on('data', chunk => logs += chunk.toString());
+      const exited = new Promise<{code:number|null;signal:NodeJS.Signals|null}>(done => childWorker.once('exit',(code,signal)=>done({code,signal})));
+      let stall: {pid:number} | undefined;
+      try {
+        const until = Date.now() + 20000;
+        while (Date.now() < until && childWorker.exitCode === null && childWorker.signalCode === null) {
+          stall = (await admin.query("SELECT pid FROM pg_stat_activity WHERE application_name=$1 AND wait_event='PgSleep'", [applicationName])).rows[0];
+          if (stall) break;
+          await new Promise(done => setTimeout(done,50));
+        }
+        if (!stall) {
+          await recordBrowserChallenge(`native-child-crash-setup-${possible ? 'possible' : 'refused'}`, {inputs:{tenantId,actionId:drafted.action.id,stepId:before.id},workerPid:childWorker.pid,workerExit:childWorker.exitCode,workerSignal:childWorker.signalCode,logs});
+          throw new Error(`Child crash window was not reached: ${logs}`);
+        }
+        const persisted = (await admin.query("SELECT s.status,s.evidence,o.id operation_id,o.status operation_status,o.response,c.id child_id FROM finnor_os.workflow_steps s JOIN finnor_os.integration_operations o ON o.tenant_id=s.tenant_id AND o.workflow_step_id=s.id JOIN finnor_os.computer_runs c ON c.tenant_id=s.tenant_id AND c.domain_action_id=s.domain_action_id WHERE s.tenant_id=$1 AND s.id=$2 AND o.provider='finnor_plugin_runtime'", [tenantId,before.id])).rows[0];
+        expect(persisted).toMatchObject({status:'leased',operation_status:'succeeded',response:{status:'success',output:{pendingComputerRun:true,computerRunId:expect.any(String)}}});
+        expect(persisted.response.output.computerRunId).toBe(persisted.child_id);
+        childWorker.kill('SIGKILL'); const exit = await exited; expect(exit.signal).toBe('SIGKILL');
+        await admin.query('SELECT pg_terminate_backend($1)',[stall!.pid]);
+        await admin.query(`DROP TRIGGER IF EXISTS ${faultName} ON finnor_os.workflow_steps`);
+        crashEvidence = {workerPid:childWorker.pid,signal:exit.signal,persisted,logs,qualification:'Separate actual handler process; existing test-mode preclaim seam; disposable database delay injection'};
+        await recordBrowserChallenge(`native-child-physical-crash-${possible ? 'possible' : 'refused'}`, {inputs:{actionId:drafted.action.id,parentStepId:before.id},crashEvidence});
+        await admin.query("UPDATE finnor_os.workflow_steps SET lease_expires_at=now()-interval '1 second' WHERE tenant_id=$1 AND id=$2",[tenantId,before.id]);
+        const recovered = await recoverStaleSteps(tenantId);
+        await observeExternalEffectHandler({tenantId,integrationOperationId:persisted.operation_id});
+        crashEvidence = {...crashEvidence,recovered};
+      } finally {
+        if (childWorker.exitCode === null && childWorker.signalCode === null) { childWorker.kill('SIGKILL'); await exited; }
+        if (stall) await admin.query('SELECT pg_terminate_backend($1)',[stall.pid]);
+        await admin.query(`DROP TRIGGER IF EXISTS ${faultName} ON finnor_os.workflow_steps`);
+        await admin.query(`DROP FUNCTION IF EXISTS finnor_os.${faultName}()`);
+      }
+    } else await runWorkflowStep({ tenantId, workflowStepId: before.id });
+    const child = (await admin.query("SELECT * FROM finnor_os.computer_runs WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, drafted.action.id])).rows[0];
+    expect(child).toBeTruthy();
+    const waiting = (await admin.query("SELECT status,evidence FROM finnor_os.workflow_steps WHERE tenant_id=$1 AND id=$2", [tenantId, before.id])).rows[0];
+    if (crash) await recordBrowserChallenge(`native-child-crash-window-${possible ? 'possible' : 'refused'}`, {inputs:{actionId:drafted.action.id,parentStepId:before.id,childRunId:child.id},crashEvidence,waiting});
+    expect(waiting).toMatchObject({ status: "waiting_observation", evidence: { delegatedRuntime: { kind: "computer", id: child.id } } });
+    if (possible) {
+      const operationKey = computerEffectOperationKey(authorizedEffect);
+      await claimExternalOperation(tenantId, drafted.action.id, operationKey, authorizedEffectHash(authorizedEffect));
+      await admin.query("UPDATE finnor_os.computer_runs SET status='running',effect_status='dispatching',effect_operation_key=$3 WHERE tenant_id=$1 AND id=$2", [tenantId, child.id, operationKey]);
+      await requestComputerCancellation(tenantId, child.id);
+    }
+    const provider = fakeProvider(); const broker = new ComputerBroker(); broker.register(provider);
+    const runner = new ComputerRunner({ broker, decisionEngine: { async decide() { throw new Error("Unadmitted/cancelled child cannot execute"); } } });
+    const terminal = await runner.run(tenantId, child.id);
+    await runner.run(tenantId, child.id);
+    expect(terminal.status).toBe(possible ? "cancelled" : "blocked");
+    const parent = (await admin.query("SELECT s.status,s.execution_state,r.status run_status FROM finnor_os.workflow_steps s JOIN finnor_os.workflow_runs r ON r.id=s.workflow_run_id WHERE s.tenant_id=$1 AND s.id=$2", [tenantId, before.id])).rows[0];
+    expect(parent).toMatchObject(possible ? { status: "waiting_observation", execution_state: "reconciling", run_status: "running" } : { status: "failed", run_status: "failed" });
+    const action = (await admin.query("SELECT status FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2", [tenantId, drafted.action.id])).rows[0];
+    const effects = (await admin.query("SELECT id,status,verification FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, drafted.action.id])).rows;
+    await recordBrowserChallenge(`native-child-${possible ? "possible" : "refused"}${crash ? '-crash' : ''}`, { inputs: { actionId: drafted.action.id, parentStepId: before.id, childRunId: child.id, authorizedEffect }, injectedFault: possible ? "possible dispatch cancelled before observation" : "generic transport unadmitted at real child owner", crashEvidence, waiting, terminal, parent, action, effects, performed: provider.performed });
+    expect(action.status).toBe("needs_human_review");
+    expect(provider.performed).toEqual([]);
+  }, 60000);
 
   it("stops an active run at the next boundary and releases its provider session", async () => {
     const actionId = await executingAction();

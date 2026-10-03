@@ -6,6 +6,8 @@ import {
   actionLog,
   businessEffects,
   commands,
+  computerRuns,
+  communicationDeliveries,
   domainActions,
   domainPolicyRevisions,
   integrationOperations,
@@ -26,6 +28,7 @@ import {
   ScopedToolRegistry,
   createDefaultRegistry,
   type ToolRegistry,
+  type ConsequentialDispatchRequest,
 } from "@finnor/tools";
 import {
   advanceWorkflow,
@@ -50,6 +53,8 @@ import { emitInstructionEvent } from "./instruction-trace";
 import { resumeObjectiveForAction } from "./objective-loop";
 import { demoteAutonomyForWorkRegression, evaluateEffectAutonomy } from "./autonomy";
 import { redactStructured, redactText } from "@finnor/security";
+import { resolveCommunicationTargets } from "../../domain-plugins/universal-actions/endpoint-resolver";
+import type { PartyRef } from "@finnor/shared-types";
 
 class DurableExecutionBlocked extends Error {
   constructor(readonly reason: string, readonly afterPossibleEffect = false) {
@@ -406,7 +411,7 @@ interface LoadedExecution {
   workflowStepClaimId: string | null;
 }
 
-async function loadExecution(tenantId: string, stepId: string): Promise<LoadedExecution> {
+async function loadExecution(tenantId: string, stepId: string, observation = false): Promise<LoadedExecution> {
   const [loaded] = await withTenant(tenantId, (db) => db.select({
     action: domainActions,
     effectRow: businessEffects,
@@ -431,12 +436,13 @@ async function loadExecution(tenantId: string, stepId: string): Promise<LoadedEx
       || effect.source.actionType !== loaded.action.actionType) {
     throw new DurableExecutionBlocked("The durable command does not authorize this exact Business Effect");
   }
-  const [physicalClaim] = loaded.step.claimToken
+  const [physicalClaim] = loaded.step.claimToken || observation
     ? await withTenant(tenantId, (db) => db.select({ id: workflowStepClaims.id }).from(workflowStepClaims).where(and(
         eq(workflowStepClaims.tenantId, tenantId),
         eq(workflowStepClaims.workflowStepId, loaded.step.id),
-        eq(workflowStepClaims.claimToken, loaded.step.claimToken!),
+        ...(loaded.step.claimToken ? [eq(workflowStepClaims.claimToken, loaded.step.claimToken)] : []),
         eq(workflowStepClaims.claimFence, loaded.step.claimFence),
+        eq(workflowStepClaims.dispatchGeneration, loaded.step.dispatchGeneration),
       )).limit(1))
     : [];
   if (loaded.step.protocolVersion >= 2 && !physicalClaim) {
@@ -635,17 +641,140 @@ async function blockBeforeEffect(loaded: LoadedExecution, reason: string, fence?
   await failStep(loaded.action.tenantId, loaded.step.id, reason, "conflict", fence);
 }
 
-function isDeferredToChildRuntime(effect: BusinessEffectSet, result: ExecutionResult): boolean {
-  return result.status === "success" && (
-    result.output.pendingComputerRun === true
-    || (effect.operation.class === "durable_workflow" && typeof result.output.workflowRunId === "string")
-  );
+async function boundDeferredChildRuntime(loaded:LoadedExecution,result:ExecutionResult):Promise<{kind:'computer'|'workflow';id:string}|null>{
+ if(result.status!=='success')return null;
+  if(loaded.action.initiatedBy&&loaded.effect.operation.name==='computer_task'&&result.output.pendingComputerRun===true&&typeof result.output.computerRunId==='string'){
+  const id=result.output.computerRunId;
+  const [child]=await withTenant(loaded.action.tenantId,db=>db.select({id:computerRuns.id}).from(computerRuns).where(and(eq(computerRuns.tenantId,loaded.action.tenantId),eq(computerRuns.id,id),eq(computerRuns.domainActionId,loaded.action.id),eq(computerRuns.businessEffectId,loaded.effect.id),eq(computerRuns.actorId,loaded.action.initiatedBy!))).limit(1));
+  return child?{kind:'computer',id:child.id}:null;
+ }
+ if(loaded.effect.operation.class==='durable_workflow'&&loaded.effect.expected.observation==='workflow_completion'&&typeof result.output.workflowRunId==='string'&&result.output.workflowRunId!==loaded.run.id){
+  const [child]=await withTenant(loaded.action.tenantId,db=>db.select({id:workflowRuns.id}).from(workflowRuns).innerJoin(commands,and(eq(commands.tenantId,loaded.action.tenantId),eq(commands.id,workflowRuns.commandId))).where(and(eq(workflowRuns.tenantId,loaded.action.tenantId),eq(workflowRuns.id,result.output.workflowRunId as string),eq(commands.businessEffectId,loaded.effect.id),eq(commands.authorizedEffectHash,loaded.effect.semanticHash))).limit(1));
+  return child?{kind:'workflow',id:child.id}:null;
+ }
+ return null;
+}
+
+/** Last enforceable boundary for the existing trusted plugin adapter. Provider
+ * acceptance after this check is not retroactively fenced by local revocation. */
+async function verifyConsequentialToolDispatch(loaded: LoadedExecution, fence: StepFence | undefined, request: ConsequentialDispatchRequest): Promise<void> {
+  const tenantId = loaded.action.tenantId;
+  if (request.runtime.tenantId !== tenantId || request.runtime.domainActionId !== loaded.action.id
+      || request.runtime.businessEffectId !== loaded.effect.id || request.runtime.businessEffectHash !== loaded.effect.semanticHash
+      || request.runtime.actorId !== loaded.action.initiatedBy) throw new DurableExecutionBlocked("Dispatch identity does not match the exact authorized effect");
+  const current = await loadExecution(tenantId, loaded.step.id);
+  if (current.step.status !== "leased" || current.step.executionState !== "commit_started"
+      || current.run.status !== "running" || current.command.status !== "running" || current.action.status !== "executing"
+      || !current.step.leaseExpiresAt || current.step.leaseExpiresAt.getTime() <= Date.now()
+      || current.effect.semanticHash !== loaded.effect.semanticHash
+      || (current.step.protocolVersion >= 2 && (!fence || current.step.claimToken !== fence.claimToken
+        || current.step.claimFence !== fence.claimFence || current.step.dispatchGeneration !== fence.dispatchGeneration))) {
+    throw new DurableExecutionBlocked("Dispatch lost its current lease, authority or generation fence");
+  }
+  const eligibility = await revalidateAuthorizedEffectEligibility(tenantId, loaded.action.id, loaded.effect.id);
+  if (!eligibility.allowed) throw new DurableExecutionBlocked(eligibility.reason);
+  if (!["send_message", "notify_group", "place_call"].includes(loaded.effect.operation.name)) {
+    throw new DurableExecutionBlocked("This effect has no independently bound tool dispatch adapter");
+  }
+  const channel = request.toolName === "send_email" ? "email" : request.toolName === "send_sms_to_number" ? "sms" : request.toolName === "vapi_place_call" ? "voice" : null;
+  if (!channel) throw new DurableExecutionBlocked("Unsupported consequential tool for this effect");
+  const values = loaded.effect.delta.values;
+  const approvedChannel = loaded.effect.operation.name === "place_call" ? "voice" : values.channel;
+  if (channel !== approvedChannel) throw new DurableExecutionBlocked("Provider channel changes the approved effect and requires renewed authority");
+  const recipient = (loaded.effect.operation.name === "notify_group" ? values.teamRef : values.recipient) as PartyRef;
+  if (!recipient?.partyId || !recipient.partyType) throw new DurableExecutionBlocked("Approved recipient binding is unavailable");
+  const targets = await resolveCommunicationTargets(tenantId, recipient, channel, loaded.action.initiatedBy ?? undefined);
+  const member = /^delivery:([a-f0-9-]{36})$/i.exec(request.runtime.semanticMemberKey ?? "");
+  const delivery = member ? await withTenant(tenantId, db => db.select().from(communicationDeliveries).where(and(
+    eq(communicationDeliveries.tenantId, tenantId), eq(communicationDeliveries.domainActionId, loaded.action.id), eq(communicationDeliveries.id, member[1]!),
+  )).limit(1).then(rows => rows[0])) : null;
+  const target = targets.find(t => t.recipient.partyType === delivery?.recipientType && t.recipient.partyId === delivery?.recipientId);
+  if (!delivery || delivery.channel !== channel || delivery.route !== "api" || !target) {
+    throw new DurableExecutionBlocked("Dispatch is not bound to one current canonical delivery member");
+  }
+  const body = String(loaded.effect.operation.name === "place_call" ? values.script ?? values.objective : values.body);
+  const expected: Record<string, unknown> = channel === "email" ? { tenantId, to: target.endpoint, subject: String(values.subject), body }
+    : channel === "sms" ? { tenantId, phoneNumber: target.endpoint, message: body }
+    : { tenantId, phoneNumber: target.endpoint, instructions: body, purpose: loaded.action.actionType };
+  if (stable(request.input) !== stable(expected)) throw new DurableExecutionBlocked("Concrete provider request differs from the independently resolved approved target and content");
+  const fixed = loaded.effect.bindings.find(b => b.selection === "fixed");
+  if (fixed?.communicationIdentityId && request.runtime.communicationIdentityId !== fixed.communicationIdentityId
+      || fixed?.authProfileRef && request.runtime.authProfileRef !== fixed.authProfileRef) {
+    throw new DurableExecutionBlocked("Concrete provider identity differs from the approved account binding");
+  }
 }
 
 export interface DurableExecutionDependencies {
   /** Deterministic test/failure-injection seam. Production workers omit this and use
    * the governed default registry; authorization scope is still applied below. */
   tools?: ToolRegistry;
+}
+
+/** Observe a recovered native attempt without re-entering a plugin or tool. Current
+ * execution authority can expire while responsibility survives: this path only
+ * reads the exact effect and records its settlement, never permits new egress. */
+export async function observeRecoveredAuthorizedAttempt(tenantId: string, operationId: string): Promise<void> {
+  const [operation] = await withTenant(tenantId, db => db.select().from(integrationOperations).where(and(
+    eq(integrationOperations.tenantId, tenantId), eq(integrationOperations.id, operationId),
+    eq(integrationOperations.provider, "finnor_plugin_runtime"), eq(integrationOperations.status, "succeeded"),
+  )).limit(1));
+  if (!operation?.workflowStepId || !operation.businessEffectId || operation.integrationId) return;
+  const loaded = await loadExecution(tenantId, operation.workflowStepId, true);
+  if (loaded.step.status !== "waiting_observation") return;
+  if (operation.businessEffectId !== loaded.effect.id || operation.requestHash !== loaded.effect.semanticHash
+      || operation.operationKey !== `business-effect:${loaded.effect.semanticHash}`) {
+    throw new DurableExecutionBlocked("Recovered attempt is not bound to this exact authorized effect");
+  }
+  const response = operation.response as Record<string, unknown> | null;
+  if (response?.status !== "success" || !response.output || typeof response.output !== "object" || Array.isArray(response.output)) {
+    throw new DurableExecutionBlocked("Recovered successful attempt lacks a bounded execution result");
+  }
+  const result: ExecutionResult = { status: "success", output: response.output as Record<string, unknown> };
+  const delegatedRuntime = await boundDeferredChildRuntime(loaded, result);
+  if (delegatedRuntime) {
+    // The child can commit before the original worker records its waiting edge.
+    // Recover that exact native edge without replaying the executor or its child.
+    const evidence = loaded.step.evidence as Record<string, unknown>;
+    const existing = evidence.delegatedRuntime as {kind?:unknown;id?:unknown} | undefined;
+    if (existing && (existing.kind !== delegatedRuntime.kind || existing.id !== delegatedRuntime.id
+        || evidence.businessEffectId !== loaded.effect.id || evidence.authorizedEffectHash !== loaded.effect.semanticHash)) {
+      throw new DurableExecutionBlocked("Recovered attempt conflicts with the persisted child binding");
+    }
+    if (!existing) await withTenant(tenantId, db => db.update(workflowSteps).set({
+      evidence: sql`${workflowSteps.evidence} || ${JSON.stringify({
+        delegatedRuntime, businessEffectId: loaded.effect.id, authorizedEffectHash: loaded.effect.semanticHash,
+        recoveredAttemptId: operationId, qualification: 'CHILD_QUEUED_PARENT_UNSETTLED',
+      })}::jsonb`,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.id, loaded.step.id),
+      eq(workflowSteps.domainActionId, loaded.action.id), eq(workflowSteps.businessEffectId, loaded.effect.id),
+      eq(workflowSteps.status, 'waiting_observation'), eq(workflowSteps.claimFence, loaded.step.claimFence),
+      eq(workflowSteps.dispatchGeneration, loaded.step.dispatchGeneration),
+      sql`(${workflowSteps.evidence}->'delegatedRuntime' IS NULL OR ${workflowSteps.evidence}->'delegatedRuntime'='null'::jsonb)`,
+    )));
+    return;
+  }
+  const verification = await recordBusinessEffectOutcome(tenantId, loaded.effect, result);
+  const fence = { kind: "observation" as const, dispatchGeneration: loaded.step.dispatchGeneration };
+  await withTenant(tenantId, async db => {
+    await db.update(domainActions).set({ status: verification.state === "verified" ? "completed" : "needs_human_review", executionStartedAt: null }).where(and(
+      eq(domainActions.tenantId, tenantId), eq(domainActions.id, loaded.action.id),
+      sql`${domainActions.status} IN ('executing','needs_human_review')`,
+    ));
+    await db.update(integrationOperations).set({ verificationStatus: verification.state === "verified" ? "verified" : verification.state === "divergent" ? "divergent" : "unknown", observation: verification, updatedAt: new Date() }).where(and(
+      eq(integrationOperations.tenantId, tenantId), eq(integrationOperations.id, operationId),
+    ));
+  });
+  if (verification.state === "verified") {
+    await completeStep(tenantId, loaded.step.id, { recoveredAttemptId: operationId, businessEffectId: loaded.effect.id, authorizedEffectHash: loaded.effect.semanticHash, verification }, fence);
+  } else {
+    await openReconciliationCase(tenantId, { caseType: "unknown_delivery", relatedStepId: loaded.step.id, businessEffectId: loaded.effect.id,
+      details: { recoveredAttemptId: operationId, verification, reason: "Successful attempt lacked independently verified settlement" } });
+    await failStep(tenantId, loaded.step.id, "Recovered attempt did not establish the authorized state; reconcile before retry", "unknown_outcome", fence, "failed_after_possible_effect");
+  }
+  await advanceWorkflow(tenantId, loaded.run.id);
+  if (loaded.action.workId) await reconcileWorkStatus(tenantId, loaded.action.workId);
 }
 
 /** Called only after workflow-runtime.claimStep has won the local lease. */
@@ -664,6 +793,7 @@ export async function executeAuthorizedEffectStep(
   }
 
   try {
+    await withTenant(tenantId,async db=>{await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,tenantId,{businessEffectId:loaded.effect.id,domainActionId:loaded.action.id},'DELEGATED_CHILD');},loaded.action.initiatedBy??undefined);
     const authority = await revalidateActionExecution(tenantId, loaded.action.id);
     if (authority.outcome !== "allowed") throw new DurableExecutionBlocked(`Authority invalidated before execution: ${authority.reasonCode}`);
     if (loaded.command.authorityRevision && authority.authorityRevision !== loaded.command.authorityRevision) {
@@ -756,6 +886,7 @@ export async function executeAuthorizedEffectStep(
         businessEffectId: loaded.effect.id,
         businessEffectHash: loaded.effect.semanticHash,
         ...(loaded.workflowStepClaimId ? { workflowStepClaimId: loaded.workflowStepClaimId } : {}),
+        beforeConsequentialDispatch: request => verifyConsequentialToolDispatch(loaded, fence, request),
       });
       try {
         result = await plugin.execute(draft, tools);
@@ -780,19 +911,10 @@ export async function executeAuthorizedEffectStep(
 
   await appendEpisode(tenantId, loaded.action.id, "worker_execute", { businessEffectId: loaded.effect.id, workflowStepId: stepId }, { status: result.status, output: result.output, error: result.error ?? null, errorKind: result.errorKind ?? null });
 
-  if (isDeferredToChildRuntime(loaded.effect, result)) {
-    await withTenant(tenantId, (db) => db.update(workflowSteps).set({ executionState: "awaiting_observation" }).where(and(
-      eq(workflowSteps.tenantId, tenantId),
-      eq(workflowSteps.id, stepId),
-      ...(fence ? [
-        eq(workflowSteps.claimToken, fence.claimToken),
-        eq(workflowSteps.claimFence, fence.claimFence),
-        eq(workflowSteps.dispatchGeneration, fence.dispatchGeneration),
-      ] : []),
-    )));
-    await completeStep(tenantId, stepId, { status: result.status, output: result.output, delegated: true }, fence);
-    await advanceWorkflow(tenantId, loaded.run.id);
-    if (loaded.action.workId) await reconcileWorkStatus(tenantId, loaded.action.workId);
+  const delegatedRuntime=await boundDeferredChildRuntime(loaded,result);
+  if(delegatedRuntime){
+    await awaitStepObservation(tenantId,stepId,{status:result.status,output:result.output,delegatedRuntime,businessEffectId:loaded.effect.id,authorizedEffectHash:loaded.effect.semanticHash,qualification:'CHILD_QUEUED_PARENT_UNSETTLED'},fence);
+    if(loaded.action.workId)await reconcileWorkStatus(tenantId,loaded.action.workId);
     return;
   }
 
@@ -806,7 +928,8 @@ export async function executeAuthorizedEffectStep(
   const awaitingExternalObservation = loaded.effect.operation.external
     && verification.state === "partially_verified"
     && !hasKnownMemberFailure;
-  let finalStatus: DomainAction["status"] = verification.state === "divergent" || verification.state === "reconciliation_required" || result.errorKind === "unknown_outcome" || hasKnownMemberFailure
+  const settlementMissing = result.status === "success" && verification.state !== "verified" && !awaitingExternalObservation;
+  let finalStatus: DomainAction["status"] = settlementMissing || verification.state === "divergent" || verification.state === "reconciliation_required" || result.errorKind === "unknown_outcome" || hasKnownMemberFailure
     ? "needs_human_review"
     : awaitingExternalObservation ? "executing"
       : result.status === "success" ? "completed"
@@ -815,7 +938,8 @@ export async function executeAuthorizedEffectStep(
     await db.update(workflowSteps).set({
       executionState: verification.state === "reconciliation_required" ? "reconciling"
         : awaitingExternalObservation ? "awaiting_observation"
-          : result.status === "success" ? "verified"
+          : verification.state === "verified" ? "verified"
+          : settlementMissing ? "failed_after_possible_effect"
           : result.errorKind === "unknown_outcome" ? "failed_after_possible_effect" : "failed_before_effect",
     }).where(and(
       eq(workflowSteps.tenantId, tenantId),
@@ -829,12 +953,18 @@ export async function executeAuthorizedEffectStep(
     await db.update(domainActions).set({ status: finalStatus, executionStartedAt: null })
       .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, loaded.action.id), eq(domainActions.status, "executing")));
   });
-  if (hasKnownMemberFailure) {
+  if (hasKnownMemberFailure || settlementMissing) {
+    if (settlementMissing) await openReconciliationCase(tenantId, {
+      caseType: "unknown_delivery", relatedStepId: stepId, businessEffectId: loaded.effect.id,
+      details: { reason: "Executor success did not satisfy independent settlement", verification, semanticHash: loaded.effect.semanticHash },
+    });
     await failStep(
       tenantId,
       stepId,
-      "One or more logical provider-operation members are known not to have produced the intended state; Scope-1 recovery must decide the next business action without replaying verified members",
-      "needs_human",
+      settlementMissing
+        ? "The executor reported success, but independent observation did not establish the authorized state; retain responsibility and reconcile before another consequential attempt"
+        : "One or more logical provider-operation members are known not to have produced the intended state; Scope-1 recovery must decide the next business action without replaying verified members",
+      settlementMissing ? "unknown_outcome" : "needs_human",
       fence,
       "failed_after_possible_effect",
     );

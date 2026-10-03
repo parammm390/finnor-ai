@@ -22,7 +22,19 @@ const nextConfig = {
   // transport starts a thread-stream worker for structured logs. Bundling either
   // rewrites its worker path into `.next/server/chunks/lib/worker.js`, which does not
   // exist at static-generation time. Keep the Node-only stacks external.
-  serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino"],
+  serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino", "tsx", "esbuild", "fs-ext"],
+  // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
+  // those same imports to original TS when bundling the ordinary API client.
+  experimental: { extensionAlias: { ".js": [".ts", ".tsx", ".js"] } },
+  webpack: (config) => {
+    // Native numerical workers read and hash their original files. Webpack's
+    // asset URL wrapper is not a Node file URL and cannot replace that binding.
+    config.module.parser = {
+      ...config.module.parser,
+      javascript: { ...config.module.parser?.javascript, url: false, worker: false },
+    };
+    return config;
+  },
   outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
 };
 export default nextConfig;

@@ -805,7 +805,8 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       evidenceVersionId: trueObservation.evidenceVersionId!,
     }, tenantA, { workId: satisfiedWork.workId, initiatedBy: actor });
     expect(satisfied.result.output.durableWorkerExecution).toBe(true);
-    expect(await driveDurableAction(tenantA, satisfied.action.id)).toMatchObject({ status: "success", output: { canonicalMutationOwner: "satisfyClosingCondition" } });
+    const satisfiedExecution = await driveDurableAction(tenantA, satisfied.action.id);
+    expect(satisfiedExecution, JSON.stringify(satisfiedExecution)).toMatchObject({ status: "success", output: { canonicalMutationOwner: "satisfyClosingCondition" } });
     expect((await loadDealExecutionGraph(ctxA, dealId)).closingConditions[0]).toMatchObject({ state: "satisfied", version: 3 });
 
     const staleCondition = await createClosingCondition(ctxA, {

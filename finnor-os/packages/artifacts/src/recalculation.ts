@@ -23,7 +23,7 @@ import {
 import type { ArtifactActor } from "./service";
 import { interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot } from "./service";
 import { recordArtifactMetric } from "./telemetry";
-import { artifactOperationRequestHash, microsoftGraphMutationAudit } from "./provider-operation";
+import { artifactOperationRequestHash, assertArtifactOperationDispatch, assertArtifactProviderIdentity, microsoftGraphMutationAudit } from "./provider-operation";
 
 export interface RecalculationRange {
   worksheetId: string;
@@ -164,6 +164,7 @@ async function recalculateArtifactWorkbookInternal(
   // operation from starting against a provider head that already diverged.
   if (!providerOperation) {
     const providerHead = await transports.file.metadata(prepared.binding);
+    assertArtifactProviderIdentity(providerHead, prepared.binding);
     ensure(providerHead.eTag === prepared.loaded.version.provider_etag, "PROVIDER_BASE_ETAG_MISMATCH");
   }
 
@@ -195,16 +196,19 @@ async function recalculateArtifactWorkbookInternal(
 
   let mutationAudit: ReturnType<typeof microsoftGraphMutationAudit> | null = null;
   let providerMutationEntered = false;
-  if (providerClaim) {
-    mutationAudit = microsoftGraphMutationAudit({
-      tenantId: actor.tenantId,
-      claim: providerClaim,
-      logicalRequestHash: providerRequestHash,
-    });
-    transports = await dependencies.transports(actor, mutationAudit);
-  }
-
   let sessionId: string | null = null;
+  let closeAttempted = false;
+  const assertDispatch = async (claim: ClaimedProviderOperation, invocationId?: string) => {
+    await assertArtifactOperationDispatch({
+      actor, documentId: input.documentId, capability: "artifact:recalculate", claim,
+      requestHash: providerRequestHash, invocationId,
+      validateOwner: async db => {
+        const current = await loadBinding(db, actor, input.documentId, input.versionId, true);
+        ensure(artifactOperationRequestHash(current) === artifactOperationRequestHash(prepared.binding),
+          "ARTIFACT_RECALCULATION_BINDING_CHANGED");
+      },
+    });
+  };
   const outputs: Array<{ worksheetId: string; address: string; value: Record<string, unknown> }> = [];
   let outputBytes = 0;
   const collectRanges = async (activeSessionId?: string) => {
@@ -226,11 +230,27 @@ async function recalculateArtifactWorkbookInternal(
 
   try {
     if (providerClaim) {
+      const activeClaim = providerClaim;
+      mutationAudit = microsoftGraphMutationAudit({
+        tenantId: actor.tenantId, claim: activeClaim, logicalRequestHash: providerRequestHash,
+        beforeConsequentialDispatch: invocationId => assertDispatch(activeClaim, invocationId),
+      });
+      // Credential/transport failure is inside the durable attempt's failure
+      // handler, so it cannot strand a claimed operation before any dispatch.
+      transports = await dependencies.transports(actor, mutationAudit);
       const providerHead = await transports.file.metadata(prepared.binding);
+      assertArtifactProviderIdentity(providerHead, prepared.binding);
       ensure(providerHead.eTag === prepared.loaded.version.provider_etag, "PROVIDER_BASE_ETAG_MISMATCH");
+      await assertDispatch(activeClaim);
       providerMutationEntered = true;
       sessionId = await transports.excel.createSession(prepared.binding.driveId, prepared.binding.itemId, true);
+      await assertDispatch(activeClaim);
       await transports.excel.calculate(prepared.binding.driveId, prepared.binding.itemId, sessionId, "FullRebuild");
+      await collectRanges(sessionId);
+      await assertDispatch(activeClaim);
+      closeAttempted = true;
+      await transports.excel.closeSession(prepared.binding.driveId, prepared.binding.itemId, sessionId);
+      sessionId = null;
       providerOperation = await recordOwnedExternalOperationResult(
         actor.tenantId,
         providerOperation.id,
@@ -239,7 +259,6 @@ async function recalculateArtifactWorkbookInternal(
         providerClaim.providerOperationAttemptId,
       );
       if (!providerOperation) throw new Error("Artifact recalculation provider acknowledgement was not persisted");
-      await collectRanges(sessionId);
     } else {
       // Duplicate delivery performs observation only. Range GETs do not create a
       // workbook session and therefore cannot repeat the consequential calculation.
@@ -260,10 +279,17 @@ async function recalculateArtifactWorkbookInternal(
     }
     throw error;
   } finally {
-    if (sessionId) await transports.excel.closeSession(prepared.binding.driveId, prepared.binding.itemId, sessionId).catch(() => undefined);
+    if (sessionId && providerClaim && !closeAttempted) {
+      // Cleanup is still a physical mutation. Do not amplify revoked authority
+      // or blindly retry a close whose delivery is already uncertain.
+      await assertDispatch(providerClaim)
+        .then(() => transports.excel.closeSession(prepared.binding.driveId, prepared.binding.itemId, sessionId!))
+        .catch(() => undefined);
+    }
   }
 
   const readback = await transports.file.download(prepared.binding);
+  assertArtifactProviderIdentity(readback.metadata, prepared.binding);
   const readbackIR = await interpret(readback.bytes, { fileName: readback.metadata.name });
   if (!readbackIsCalculationOnly(prepared.ir, readbackIR)) {
     await markOwnedExternalOperationDivergent(actor.tenantId, providerOperation.id, {

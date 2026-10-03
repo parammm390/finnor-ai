@@ -41,6 +41,8 @@ import {
 } from "@finnor/db";
 import { and, asc, desc, eq, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
+import { inputSnapshotHash } from "../../underwriting/src/snapshot";
+import { runResultHash } from "../../underwriting/src/result";
 import type {
   BusinessEffectBinding,
   BusinessEffectOperationClass,
@@ -1018,7 +1020,76 @@ export async function markBusinessEffectExecuting(tenantId: string, effect: Busi
 }
 
 function valuesMatch(expected: Record<string, unknown>, current: Record<string, unknown>): boolean {
-  return Object.entries(expected).every(([key, value]) => stable(current[key]) === stable(value));
+  return Object.entries(expected).every(([key, value]) => Object.hasOwn(current, key)
+    && current[key] !== undefined
+    && (value && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).length === 1 && (value as Record<string, unknown>).exists === true
+      ? current[key] !== null : stable(current[key]) === stable(value)));
+}
+
+/** Resolve created identity from the native owner or the preallocated intent.
+ * Executor-returned IDs are hints only and cannot select an unrelated record. */
+async function observeCreatedCanonicalEffect(tenantId: string, effect: BusinessEffectSet): Promise<Record<string, unknown> | null> {
+  const payload = effect.delta.values;
+  if (effect.operation.name === "create_underwriting_run") {
+    return withTenant(tenantId, async db => {
+      const rows = await db.execute<Record<string, any>>(sql`
+        SELECT r.*,s.definition AS scenario_definition
+        FROM finnor_os.underwriting_runs r LEFT JOIN finnor_os.underwriting_scenarios s
+          ON s.tenant_id=r.tenant_id AND s.id=r.scenario_id
+        WHERE r.tenant_id=${tenantId}::uuid AND r.idempotency_key=${effect.source.domainActionId} LIMIT 2
+      `);
+      if (rows.rows.length !== 1) return null;
+      const row = rows.rows[0]!;
+      const worldAt = row.world_at instanceof Date ? row.world_at
+        : typeof row.world_at === "string" ? new Date(row.world_at) : null;
+      if (!worldAt || !Number.isFinite(worldAt.valueOf())) return null;
+      const observedWorldAt = worldAt.toISOString();
+      if (row.work_id !== effect.source.workId || row.work_id !== payload.workId
+          || row.investment_case_id !== payload.investmentCaseId || row.model_version_id !== payload.modelVersionId
+          || observedWorldAt !== payload.worldAt || row.status !== "SUCCEEDED" || row.validity !== "VALID"
+          || row.input_hash !== row.input_snapshot?.semanticHash || row.input_hash !== inputSnapshotHash(row.input_snapshot)
+          || row.result_hash !== row.result?.resultSemanticHash || row.result_hash !== runResultHash(row.result)) return null;
+      const scenario = payload.scenario as Record<string, unknown> | undefined;
+      if (scenario ? !row.scenario_definition
+          || row.scenario_definition.name !== scenario.name
+          || stable(row.scenario_definition.overrides) !== stable(scenario.overrides)
+        : row.scenario_id !== (payload.scenarioId ?? null)) return null;
+      return { id: row.id, workId: row.work_id, investmentCaseId: row.investment_case_id,
+        modelVersionId: row.model_version_id, scenarioId: row.scenario_id, worldAt: observedWorldAt,
+        status: row.status, validity: row.validity, inputHash: row.input_hash, resultHash: row.result_hash };
+    });
+  }
+  if (effect.operation.name === "create_task") {
+    return withTenant(tenantId, async db => {
+      const rows = await db.select().from(tasks).where(and(eq(tasks.tenantId, tenantId), eq(tasks.sourceDomainActionId, effect.source.domainActionId))).limit(2);
+      if (rows.length !== 1) return null;
+      const row = rows[0]!;
+      const subject = payload.subjectRef as Record<string, unknown> | undefined;
+      const assignee = payload.assigneeRef as Record<string, unknown> | undefined;
+      const work = payload.workRef as Record<string, unknown> | undefined;
+      const expected = { subjectType: subject?.entityType, subjectId: subject?.entityId, title: payload.title,
+        priority: payload.priority ?? "normal", dueAt: payload.dueAt ?? null,
+        assignedPartyType: assignee?.partyType ?? null, assignedPartyId: assignee?.partyId ?? null, workId: work?.workId ?? null };
+      const observed = { id: row.id, subjectType: row.subjectType, subjectId: row.subjectId, title: row.title,
+        priority: row.priority, dueAt: iso(row.dueAt), assignedPartyType: row.assignedPartyType, assignedPartyId: row.assignedPartyId, workId: row.workId,
+        sourceDomainActionId: row.sourceDomainActionId };
+      return valuesMatch(expected, observed) ? observed : null;
+    });
+  }
+  // These PE owners allocate concrete IDs in the immutable approved payload.
+  // The expected predicate is existence at that identity, not inferred task success.
+  const fixed = collectEffectTargets(payload, effect.source.domainActionId)
+    .filter(target => isCreateResultTarget(effect.operation.name, payload, target));
+  if (fixed.length !== 1) return null;
+  return withTenant(tenantId, db => safeState(db, tenantId, fixed[0]!));
+}
+
+function assertFrozenObservationEffect(row: Pick<typeof businessEffects.$inferSelect, 'effect'|'semanticHash'|'scopeHash'|'domainActionId'> | undefined, effect: BusinessEffectSet): void {
+  if (!row || row.semanticHash !== effect.semanticHash || row.scopeHash !== effect.scopeHash
+      || row.domainActionId !== effect.source.domainActionId || hash(row.effect) !== hash(effect)) {
+    throw new BusinessEffectBoundaryError('material_effect_change', 'Observation must use the exact persisted authorized Business Effect');
+  }
 }
 
 export async function recordBusinessEffectOutcome(tenantId: string, effect: BusinessEffectSet, result: ExecutionResult): Promise<BusinessEffectVerification> {
@@ -1026,6 +1097,10 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
     withTenant(tenantId, (db) => db.select({
       status: businessEffects.status,
       verification: businessEffects.verification,
+      effect: businessEffects.effect,
+      semanticHash: businessEffects.semanticHash,
+      scopeHash: businessEffects.scopeHash,
+      domainActionId: businessEffects.domainActionId,
     }).from(businessEffects).where(and(
       eq(businessEffects.tenantId, tenantId),
       eq(businessEffects.id, effect.id),
@@ -1039,6 +1114,10 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
       eq(externalOperations.businessEffectId, effect.id),
     ))),
   ]);
+  assertFrozenObservationEffect(currentEffect, effect);
+  // Observe the owner-read preimage, so a caller cannot mutate its object while
+  // independent readback is in flight.
+  effect = currentEffect!.effect as BusinessEffectSet;
   if (currentEffect?.status === "verified" || currentEffect?.status === "compensated") {
     return currentEffect.verification as BusinessEffectVerification
       ?? {
@@ -1112,16 +1191,6 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
   } else if (result.status !== "success") {
     verification = { state: "unverified", basis: result.error ?? "The effect did not produce a successful observable result", checkedAt: new Date().toISOString(), observed: result.output };
     status = "failed";
-  } else if (result.output.verified === true && (!requiresExternalObservation || result.output.externalObserved === true)) {
-    verification = {
-      state: "verified",
-      basis: result.output.canonicalObserved === true
-        ? "Canonical business-operation outcome state was observed for the exact EffectSet"
-        : "Executor supplied bounded observable evidence",
-      checkedAt: new Date().toISOString(),
-      observed: result.output,
-    };
-    status = "verified";
   } else if (effect.operation.name === "send_message") {
     // Provider acceptance is transport evidence, not business-outcome evidence.  The
     // The Core communication runtime projects a successful send into canonical
@@ -1145,14 +1214,9 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
           ? "Canonical outbound intent is recorded, but final external delivery has not yet been observed"
           : "The provider accepted the delivery, but no canonical or external delivery state was observed", checkedAt: new Date().toISOString(), observed: result.output };
     status = observed && !requiresExternalObservation ? "verified" : "partially_verified";
-  } else if (effect.expected.state?.exists === true) {
-    const observedTargets = collectEffectTargets(result.output, effect.source.domainActionId).filter((target) => target.type !== "proposed_business_change");
-    let observed: Record<string, unknown> | null = null;
-    for (const target of observedTargets) {
-      observed = await withTenant(tenantId, (db) => safeState(db, tenantId, target));
-      if (observed) break;
-    }
-    verification = { state: observed ? "verified" : "divergent", basis: observed ? "The created canonical record exists and is tenant-scoped" : "Execution reported success but no created canonical record could be observed", checkedAt: new Date().toISOString(), ...(observed ? { observed } : {}) };
+  } else if (effect.operation.name === "create_underwriting_run" || effect.expected.state?.exists === true) {
+    const observed = await observeCreatedCanonicalEffect(tenantId, effect);
+    verification = { state: observed ? "verified" : "divergent", basis: observed ? "Native action-bound or preallocated canonical record satisfies the exact creation predicate" : "Execution reported success but the exact authorized creation predicate was not established", checkedAt: new Date().toISOString(), ...(observed ? { observed } : {}) };
     status = observed ? "verified" : "divergent";
   } else if (effect.expected.state && effect.expected.observation === "canonical_state") {
     // Effect target[0] is often the synthetic `proposed_business_change` resource.
@@ -1162,8 +1226,26 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
       ...effect.before.map((snapshot) => snapshot.target),
       ...effect.targets.filter((target) => target.type !== "proposed_business_change"),
     ];
+    const nativeTargets: Record<string, readonly [string, string]> = {
+      submit_deliverable: ["deliverableId", "pe_deliverable"],
+      begin_ic_preparation: ["icCaseId", "pe_ic_case"],
+      select_ic_underwriting_run: ["icCaseId", "pe_ic_case"],
+      attach_ic_question_evidence: ["questionId", "pe_ic_question"],
+      request_ic_memo_review: ["icCaseId", "pe_ic_case"],
+      satisfy_ic_condition: ["conditionId", "pe_ic_condition"],
+      resolve_finding: ["findingId", "pe_finding"],
+      resolve_deal_risk: ["dealRiskId", "pe_deal_risk"],
+      mark_dependency_resolved: ["dependencyId", "pe_dependency"],
+      satisfy_closing_condition: ["closingConditionId", "pe_closing_condition"],
+      waive_closing_condition: ["closingConditionId", "pe_closing_condition"],
+      verify_closing_item: ["closingItemId", "pe_closing_item"],
+      declare_deal_closed: ["dealId", "pe_deal"],
+    };
+    const binding = nativeTargets[effect.operation.name];
+    const exactCandidates = binding ? candidates.filter(target => target.type === binding[1]
+      && target.id === effect.delta.values[binding[0]]) : candidates;
     let current: Record<string, unknown> | null = null;
-    for (const target of candidates) {
+    for (const target of exactCandidates) {
       current = await withTenant(tenantId, (db) => safeState(db, tenantId, target));
       if (current) break;
     }
@@ -1178,6 +1260,9 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
     status = "unverified";
   }
   const persistedVerification = await withTenant(tenantId, async (db) => {
+    await db.execute(sql`SELECT id FROM ${businessEffects} WHERE ${businessEffects.tenantId}=${tenantId} AND ${businessEffects.id}=${effect.id}::uuid FOR UPDATE`);
+    const [locked] = await db.select({effect:businessEffects.effect,semanticHash:businessEffects.semanticHash,scopeHash:businessEffects.scopeHash,domainActionId:businessEffects.domainActionId}).from(businessEffects).where(and(eq(businessEffects.tenantId,tenantId),eq(businessEffects.id,effect.id))).limit(1);
+    assertFrozenObservationEffect(locked, effect);
     const [updated] = await db.update(businessEffects).set({ status, observedResult: result.output, verification, observedAt: new Date() }).where(and(
       eq(businessEffects.tenantId, tenantId),
       eq(businessEffects.id, effect.id),
@@ -1200,4 +1285,16 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
     return finalVerification;
   });
   return persistedVerification;
+}
+
+/** Evolvable producer of native intent from exact owner-resolved S4 meaning.
+ * No provider binding, verification witness, execution authority or admission is issued. */
+export function compileContingentInterventionIntent(input:{actionId:string;effectId:string;intervention:import('@finnor/shared-types').InterventionSpecification;preparationRef:import('@finnor/shared-types').ExperimentRef;consumptionRef:import('@finnor/shared-types').ExperimentRef;compiledAt:string}):BusinessEffectSet {
+ const actionType='execute_contingent_intervention';
+ const targets:BusinessEffectTarget[]=input.intervention.targets.map((r,index)=>({kind:'entity',type:r.entityType,id:r.entityId,sourcePath:`intervention.targets[${index}]`}));
+ const scope={actionType,operationClass:'operational_change',targets,bindings:[],delta:{operation:actionType,values:{intervention:input.intervention,preparationRef:input.preparationRef,consumptionRef:input.consumptionRef}},exposure:null};
+ const source={domainActionId:input.actionId,actionType,workId:null,objectiveStepId:null};
+ const expected={observation:'provider_delivery' as const,state:null};
+ return {id:input.effectId,schemaVersion:1,semanticHash:hash({source,...scope,expected}),scopeHash:hash(scope),source,mode:'consequential',operation:{name:actionType,class:'operational_change',external:true},targets,bindings:[],preconditions:[],before:[],delta:scope.delta,expected,exposure:null,
+ authority:{capability:`action:${actionType}`,risk:'high',policyId:null,policyVersion:null},approval:{required:true,typedConfirmation:true,summary:'Exact S4 intervention intent; provider method and independent admission required before dispatch'},reversibility:{classification:'unknown_provider_dependent',compensationCapability:null},uncertainty:{unknownOutcome:'reconcile_before_retry',stalePrecondition:'block_and_recompile'},provenance:{compiler:'finnor_effect_compiler',compilerVersion:1,compiledAt:input.compiledAt,replacementForEffectId:null,compensationForEffectId:null}};
 }
