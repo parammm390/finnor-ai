@@ -633,6 +633,7 @@ export interface ClosingReadinessResult extends OperationalQueryResultBase<"clos
 }
 
 export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world_state"> {
+  beliefView?: import("./enterprise-beliefs").BeliefView;
   root: PeWorldStateRequest["root"];
   stateAt: string;
   validAt: string;
