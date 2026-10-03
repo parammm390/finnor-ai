@@ -38,7 +38,7 @@ import { buildMemorySnapshot } from "@finnor/memory";
 import { loadOperatingDirectoryContext } from "@finnor/read-models";
 import { buildPlanningHealthContext } from "./planning-health";
 import { listAvailableIdentityAccess } from "@finnor/security";
-import { resolvePrivateEquityDealReference } from "@finnor/private-equity";
+import { resolvePrivateEquityDealReference, loadEnterpriseBeliefView } from "@finnor/private-equity";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -352,11 +352,15 @@ export async function assembleOperatingContext(
 
   const canonicalSummaries: OperatingContext["canonicalSummaries"] = [];
   let epistemicWarnings: NonNullable<OperatingContext["epistemicWarnings"]> = [];
+  const beliefViews: NonNullable<OperatingContext["beliefViews"]> = [];
   if (opts.includeCanonicalBusinessState) {
     try {
       if (vertical?.verticalKey === "private_equity") {
         const resolution = await resolvePrivateEquityDealReference(ctx.tenantId, opts.instruction, { workId: opts.workId, userId: ctx.userId });
         if (resolution.status !== "resolved") throw new Error(`PE Deal reference is ${resolution.status}`);
+        beliefViews.push(await loadEnterpriseBeliefView({ auth: ctx }, {
+          root: { entityType: "pe_deal", entityId: resolution.dealId }, maxClaims: 16,
+        }));
         const [dealContext, closingReadiness] = await Promise.all([
           executeTenantOperationalQuery(ctx.tenantId, { intent: "deal_context", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
           executeTenantOperationalQuery(ctx.tenantId, { intent: "closing_readiness", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
@@ -393,8 +397,8 @@ export async function assembleOperatingContext(
         });
         sources.push({ kind: "CANONICAL", source: "operational_query:work_list", asOf: current.asOf, role: "context_only" });
       }
-    } catch (error) {
-      errors.push(`canonical business state unavailable: ${error instanceof Error ? error.message : String(error)}`);
+    } catch {
+      errors.push("Permissioned canonical business state unavailable");
     }
   }
 
@@ -519,6 +523,7 @@ export async function assembleOperatingContext(
     universalActions,
     referencedEntities: [...refs.values()],
     ...(epistemicWarnings.length > 0 ? { epistemicWarnings } : {}),
+    ...(beliefViews.length > 0 ? { beliefViews } : {}),
     canonicalSummaries,
     memory: {
       conversation: memory.shortTerm,

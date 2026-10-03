@@ -15,6 +15,8 @@ import {
   companyBrainProvenance,
   listCompanyBrainRoots,
   loadCompanyBrainProjection,
+  loadEnterpriseBeliefView,
+  validateBeliefViewPin,
   parseCompanyBrainObjectRef,
   resolvePeOperatingContext,
   searchCompanyBrainProjection,
@@ -80,6 +82,20 @@ const RefSchema = z.discriminatedUnion("namespace", [PrivateEquityRefSchema, Cor
 
 const TemporalFields = { asOf: TimestampSchema.optional(), validAt: TimestampSchema.optional(), knowledgeAt: TimestampSchema.optional() };
 const RootedSchema = z.object({ root: RootSchema, ...TemporalFields }).strict();
+const DecisionSchema = z.object({
+  id: z.string().trim().min(1).max(256), version: z.string().trim().min(1).max(128),
+  evidenceUniverse: z.literal("registered_canonical_records"),
+  requirements: z.array(z.object({
+    id: z.string().trim().min(1).max(256), subject: z.object({ entityType: z.string().trim().min(1).max(128), entityId: UuidSchema }).strict(),
+    metricKey: z.string().trim().min(1).max(256), unit: z.string().trim().min(1).max(128), currencyCode: z.string().regex(/^[A-Z]{3}$/).nullable(),
+    periodStart: TimestampSchema, periodEnd: TimestampSchema, operator: z.enum(["gte", "lte", "eq"]),
+    threshold: z.string().regex(/^[+-]?\d+(?:\.\d+)?$/).max(128), maximumAgeMs: z.number().finite().nonnegative().optional(),
+  }).strict()).min(1).max(64),
+}).strict();
+const BeliefViewSchema = z.object({ root: RootSchema, validAt: TimestampSchema.optional(), knowledgeAt: TimestampSchema.optional(),
+  maxClaims: z.number().int().min(1).max(1000).optional(), decisionContext: DecisionSchema.optional() }).strict();
+const BeliefPinSchema = z.object({ tenantId: UuidSchema, principalId: UuidSchema, root: RootSchema, validAt: TimestampSchema, knowledgeAt: TimestampSchema,
+  dependencyDigest: z.string().regex(/^[a-f0-9]{64}$/), rightsRevision: z.number().int().positive().safe(), interpretationVersion: z.string().min(1).max(128) }).strict();
 const RootedRefSchema = z.object({ root: RootSchema, ref: RefSchema, ...TemporalFields }).strict();
 const SearchSchema = z.object({ query: z.string().trim().max(240).default(""), root: RootSchema.optional(), ...TemporalFields, limit: z.number().int().min(1).max(100).optional() }).strict();
 const TraverseSchema = z.object({
@@ -111,9 +127,31 @@ function requestError(error: unknown): Response {
 }
 
 async function json(req: Request): Promise<unknown> {
+  const limit = 64 * 1024;
   const length = Number(req.headers.get("content-length") ?? 0);
-  if (Number.isFinite(length) && length > 64 * 1024) throw new PeDomainError("PE_BRAIN_LIMIT", "Company Brain request exceeds 64 KiB");
-  return req.json().catch(() => { throw new PeDomainError("PE_BRAIN_INVALID", "Company Brain request body must be JSON"); });
+  if (Number.isFinite(length) && length > limit) {
+    await req.body?.cancel().catch(() => undefined);
+    throw new PeDomainError("PE_BRAIN_LIMIT", "Company Brain request exceeds 64 KiB");
+  }
+  if (!req.body) throw new PeDomainError("PE_BRAIN_INVALID", "Company Brain request body must be JSON");
+  const reader = req.body.getReader();
+  const bytes = new Uint8Array(limit);
+  let size = 0;
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      if (chunk.value.byteLength > limit - size) {
+        await reader.cancel().catch(() => undefined);
+        throw new PeDomainError("PE_BRAIN_LIMIT", "Company Brain request exceeds 64 KiB");
+      }
+      bytes.set(chunk.value, size); size += chunk.value.byteLength;
+    }
+    return JSON.parse(new TextDecoder().decode(bytes.subarray(0, size)));
+  } catch (error) {
+    if (error instanceof PeDomainError) throw error;
+    throw new PeDomainError("PE_BRAIN_INVALID", "Company Brain request body must be JSON");
+  } finally { reader.releaseLock(); }
 }
 
 function checkedRef(value: unknown): CompanyBrainObjectRef {
@@ -127,6 +165,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
     const [auth, body, route] = await Promise.all([requireContext(req), json(req), params]);
     const ctx: PeMutationContext = { auth };
     switch (route.operation) {
+      case "belief-view": {
+        const input = BeliefViewSchema.parse(body);
+        return response(await loadEnterpriseBeliefView(ctx, input));
+      }
+      case "belief-pin": {
+        return response(await validateBeliefViewPin(ctx, BeliefPinSchema.parse(body)));
+      }
       case "roots": {
         const input = SearchSchema.pick({ query: true, limit: true }).parse(body);
         return response({ results: await listCompanyBrainRoots(ctx, input) });
