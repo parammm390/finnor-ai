@@ -81,6 +81,7 @@ export const PRODUCTION_JOB_CONTRACTS = {
   process_instruction: tenantFixed("INTERACTIVE", "locally_idempotent", "An accepted user instruction has a near-term response dependency."),
   run_workflow_step: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Scope-2 workflow execution advances accepted Work."),
   run_workflow_step_v2: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Versioned Scope-2 workflow execution advances accepted Work.", { protocolVersions: [2] }),
+  run_workflow_step_v3: tenantFixed("INTERACTIVE", "durably_effect_guarded", "S6 delivers exact S4 obligations through protected dispatch and read-only recovery.", { protocolVersions: [3] }),
   critic_review: tenantFixed("BACKGROUND", "locally_idempotent", "The asynchronous second opinion does not gate durable action acceptance."),
   learning_digest: tenantFixed("BACKGROUND", "locally_idempotent", "Daily learning aggregation is scheduled and coalescible.", { obligationKind: "coalescible" }),
   scan_approval_expiry: tenantFixed("BACKGROUND", "locally_idempotent", "Scheduled approval hygiene has no active-session SLO.", { obligationKind: "coalescible" }),

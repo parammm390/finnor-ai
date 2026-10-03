@@ -133,8 +133,8 @@ describe("origin, effect, evidence, and redaction boundaries", () => {
     expect(readOnlyRequestWouldMutate("WRITE", "POST", "fetch", "https://diligence.example/records/DD-48", origins)).toBe(false);
   });
 
-  it("requires literal post-state evidence for a write", () => {
-    expect(observationVerifiesEffect({ url: "https://diligence.example/records/DD-48", title: "Diligence DD-48", text: "Note: Counsel review requested", elements: [], openPageUrls: [] }, effect)).toBe(true);
+  it("keeps page-wide literal write reports unverified", () => {
+    expect(observationVerifiesEffect({ url: "https://diligence.example/records/DD-48", title: "Diligence DD-48", text: "Note: Counsel review requested", elements: [], openPageUrls: [] }, effect)).toBe(false);
     expect(observationVerifiesEffect({ url: "https://diligence.example/records/DD-48", title: "Diligence DD-48", text: "Saved", elements: [], openPageUrls: [] }, effect)).toBe(false);
   });
 

@@ -3,10 +3,11 @@
 // owner rather than fabricating a competing ExecutionAttempt. PostgreSQL serializes
 // concurrent claims and every consequential physical request gets its own invocation.
 
-import { withTenant, externalOperations, providerOperationAttempts, providerInvocations, tenantIntegrations, authProfiles, jobs, reconciliationCases } from "@finnor/db";
+import { withTenant, externalOperations, providerOperationAttempts, providerInvocations, tenantIntegrations, authProfiles, jobs, reconciliationCases, type Db } from "@finnor/db";
 import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { redactStructured } from "@finnor/security";
 import { createHash, randomUUID } from "node:crypto";
+import { IntegrationError } from './errors';
 
 export type ExternalOperationRow = typeof externalOperations.$inferSelect;
 
@@ -61,6 +62,27 @@ export const ACCOUNT_BOUND_PROVIDERS = new Set([
   "ghl", "quickbooks", "stripe", "vapi", "docusign", "gmail", "resend", "meta_ads", "google_ads", "microsoft_graph",
 ]);
 
+/** Only a native whole-operation absence reconciliation clears earlier possible
+ * delivery for repetition. Keep those physical facts; the reconciliation ordinal
+ * is a barrier, not a rewrite of their outcomes. Caller holds the operation lock. */
+async function hasUnresolvedProviderDelivery(db: Db, tenantId: string, operationId: string): Promise<boolean> {
+  const result = await db.execute<{ possible: boolean }>(sql`SELECT EXISTS (
+    SELECT 1 FROM ${providerInvocations} i
+    JOIN ${providerOperationAttempts} a
+      ON a.tenant_id=i.tenant_id AND a.id=i.provider_operation_attempt_id
+    WHERE a.tenant_id=${tenantId}::uuid AND a.external_operation_id=${operationId}::uuid
+      AND i.request_may_have_left_at IS NOT NULL
+      AND i.outcome IN ('request_may_have_left','provider_acknowledged','unknown_outcome')
+      AND a.ordinal > coalesce((
+        SELECT max(r.ordinal) FROM ${providerOperationAttempts} r
+        WHERE r.tenant_id=${tenantId}::uuid AND r.external_operation_id=${operationId}::uuid
+          AND r.status='reconciled'
+          AND r.outcome_detail->>'reconciliationOutcome'='definitely_did_not_happen'
+      ),0)
+  ) AS possible`);
+  return result.rows[0]?.possible === true;
+}
+
 export async function claimOwnedExternalOperation(
   tenantId: string,
   owner: ExternalOperationOwner,
@@ -73,6 +95,7 @@ export async function claimOwnedExternalOperation(
 ): Promise<ClaimResult> {
   return withTenant(tenantId, async (db) => {
     const domainActionId = owner.type === "domain_action" ? owner.domainActionId : null;
+    await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,tenantId,{businessEffectId,domainActionId},'OFFICE_CONNECTOR');
     if (!owner.key.trim() || (owner.type === "domain_action" && owner.key !== owner.domainActionId)) {
       throw new Error("External operation owner identity is invalid");
     }
@@ -277,12 +300,13 @@ export async function claimOwnedExternalOperation(
         && Boolean(locked.providerIdempotencyKey)
         && locked.providerIdempotencyExpiresAt !== null
         && locked.providerIdempotencyExpiresAt.getTime() > Date.now();
+      const earlierDeliveryUnresolved = await hasUnresolvedProviderDelivery(db, tenantId, locked.id);
       const definitePreDispatch = locked.status === "failed" && locked.historyComplete
-        && lastInvocation?.outcome === "definite_pre_dispatch_failure";
+        && !earlierDeliveryUnresolved && lastInvocation?.outcome === "definite_pre_dispatch_failure";
       const definiteRejection = locked.status === "failed" && locked.historyComplete
-        && lastInvocation?.outcome === "definite_rejection";
+        && !earlierDeliveryUnresolved && lastInvocation?.outcome === "definite_rejection";
       const noPhysicalInvocation = locked.status === "failed" && locked.historyComplete
-        && !lastInvocation && lastAttempt?.status === "known_failed"
+        && !earlierDeliveryUnresolved && !lastInvocation && lastAttempt?.status === "known_failed"
         && Boolean(lastAttempt.outcomeDetail && typeof lastAttempt.outcomeDetail === "object"
           && (lastAttempt.outcomeDetail as Record<string, unknown>).noPhysicalInvocation === true);
       const verifiedAbsent = locked.executionState === "reconciled"
@@ -432,10 +456,28 @@ export async function prepareProviderInvocation(
         eq(providerOperationAttempts.id, context.providerOperationAttemptId),
       )).limit(1);
     if (!attempt) throw new Error("Provider invocation lacks a tenant-scoped operation attempt");
+    // One logical adapter attempt may need several sequential physical requests
+    // (upload session, chunks, or an explicitly permitted authentication retry).
+    // Serialize with recovery/retry at the logical owner before admitting the
+    // next request. A still-running or uncertain physical request cannot be
+    // bypassed by choosing another ordinal.
+    await db.execute(sql`SELECT id FROM ${externalOperations}
+      WHERE ${externalOperations.tenantId}=${context.tenantId}::uuid
+        AND ${externalOperations.id}=${attempt.externalOperationId}::uuid FOR UPDATE`);
     const [ownedAttempt] = await db.update(providerOperationAttempts).set({ status: "provider_in_flight" }).where(and(
       eq(providerOperationAttempts.tenantId, context.tenantId),
       eq(providerOperationAttempts.id, context.providerOperationAttemptId),
-      eq(providerOperationAttempts.status, "claimed"),
+      inArray(providerOperationAttempts.status, ["claimed", "provider_in_flight"]),
+      sql`NOT EXISTS (
+        SELECT 1 FROM ${providerInvocations} i
+        WHERE i.tenant_id=${context.tenantId}::uuid
+          AND i.provider_operation_attempt_id=${context.providerOperationAttemptId}::uuid
+          AND (i.finished_at IS NULL OR i.outcome NOT IN
+            ('provider_acknowledged','definite_rejection','definite_pre_dispatch_failure'))
+      )`,
+      sql`${ordinal}=(SELECT coalesce(max(i.ordinal),0)+1 FROM ${providerInvocations} i
+        WHERE i.tenant_id=${context.tenantId}::uuid
+          AND i.provider_operation_attempt_id=${context.providerOperationAttemptId}::uuid)`,
     )).returning({ id: providerOperationAttempts.id });
     if (!ownedAttempt) throw new Error("Provider-operation attempt lost its execution fence before invocation preparation");
     const [invocation] = await db.insert(providerInvocations).values({
@@ -458,7 +500,8 @@ export async function prepareProviderInvocation(
     }).where(and(
       eq(externalOperations.tenantId, context.tenantId),
       eq(externalOperations.id, attempt.externalOperationId),
-      eq(externalOperations.executionState, "claimed"),
+      eq(externalOperations.status, "running"),
+      inArray(externalOperations.executionState, ["claimed", "provider_in_flight"]),
     )).returning({ id: externalOperations.id });
     if (!ownedOperation) throw new Error("Logical provider operation lost its execution fence before invocation preparation");
     return invocation.id;
@@ -469,6 +512,17 @@ export async function prepareProviderInvocation(
  * conservative: a crash afterward is a tracked possible effect, never a silent one. */
 export async function markProviderRequestMayHaveLeft(tenantId: string, invocationId: string): Promise<void> {
   const marked = await withTenant(tenantId, async (db) => {
+    // Serialize with logical retry, failure and recovery. The database clock is
+    // checked in the marker update after any lock wait or asynchronous preflight;
+    // claim-time TTL evidence alone cannot admit a later retry dispatch.
+    const owner = await db.execute<{ provider: string | null;business_effect_id:string|null;domain_action_id:string|null }>(sql`
+      SELECT o.provider,o.business_effect_id,o.domain_action_id FROM ${externalOperations} o
+      JOIN ${providerOperationAttempts} a ON a.tenant_id=o.tenant_id AND a.external_operation_id=o.id
+      JOIN ${providerInvocations} i ON i.tenant_id=a.tenant_id AND i.provider_operation_attempt_id=a.id
+      WHERE o.tenant_id=${tenantId}::uuid AND i.id=${invocationId}::uuid
+      FOR UPDATE OF o
+    `);
+    if(owner.rows[0])await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,tenantId,{businessEffectId:owner.rows[0].business_effect_id,domainActionId:owner.rows[0].domain_action_id},'OFFICE_CONNECTOR');
     const [row] = await db.update(providerInvocations).set({
       outcome: "request_may_have_left",
       requestMayHaveLeftAt: new Date(),
@@ -478,14 +532,25 @@ export async function markProviderRequestMayHaveLeft(tenantId: string, invocatio
       eq(providerInvocations.outcome, "prepared"),
       sql`EXISTS (
         SELECT 1 FROM ${providerOperationAttempts} a
+         JOIN ${externalOperations} o ON o.tenant_id=a.tenant_id AND o.id=a.external_operation_id
          WHERE a.id=${providerInvocations.providerOperationAttemptId}
            AND a.tenant_id=${tenantId}::uuid
            AND a.status='provider_in_flight'
+           AND o.status='running' AND o.execution_state='provider_in_flight'
+           AND a.ordinal=(SELECT max(current.ordinal) FROM ${providerOperationAttempts} current
+             WHERE current.tenant_id=a.tenant_id AND current.external_operation_id=a.external_operation_id)
+           AND (a.authorization_basis<>'provider_idempotency'
+             OR o.retry_safety='repeatable' OR o.provider_idempotency_mode='inherently_idempotent'
+             OR (o.provider_idempotency_mode='provider_key' AND o.provider_idempotency_key IS NOT NULL
+               AND o.provider_idempotency_expires_at>clock_timestamp()))
       )`,
     )).returning({ id: providerInvocations.id });
-    return row ?? null;
+    if (!row) throw new IntegrationError(owner.rows[0]?.provider ?? 'provider',
+      'Provider invocation lost its native attempt fence or safe-repeat window before request egress',
+      false, 'conflict', 'definite_pre_dispatch');
+    return row;
   });
-  if (!marked) throw new Error("Provider invocation lost its durable attempt fence before request egress");
+  if (!marked) throw new Error("Provider invocation marker was not persisted");
 }
 
 export interface StaleProviderOperationRecovery {
@@ -539,15 +604,13 @@ export async function recoverStaleProviderOperations(
       result.inspected += 1;
       result.operationIds.push(candidate.id);
 
-      const failBeforeEgress = candidate.historyComplete
-        && Boolean(attempt)
-        && (!invocation || invocation.outcome === "prepared" || invocation.outcome === "definite_pre_dispatch_failure");
-      if (failBeforeEgress) {
-        const settledAt = new Date();
-        if (invocation) await db.update(providerInvocations).set({
+      const latestRequestNeverLeft = !invocation || invocation.outcome === "prepared" || invocation.outcome === "definite_pre_dispatch_failure";
+      // Settle a prepared physical tail even when earlier requests/attempts make
+      // the logical operation uncertain. Its no-egress evidence stays distinct.
+      if (latestRequestNeverLeft && invocation) await db.update(providerInvocations).set({
           outcome: "definite_pre_dispatch_failure",
           requestMayHaveLeftAt: null,
-          finishedAt: settledAt,
+          finishedAt: new Date(),
           failureKind: "worker_crash_before_provider_egress",
           receipt: { reason: "durable invocation remained prepared when its owner was lost" },
         }).where(and(
@@ -555,6 +618,10 @@ export async function recoverStaleProviderOperations(
           eq(providerInvocations.id, invocation.id),
           inArray(providerInvocations.outcome, ["prepared", "definite_pre_dispatch_failure"]),
         ));
+      const earlierDeliveryUnresolved = await hasUnresolvedProviderDelivery(db, tenantId, candidate.id);
+      const failBeforeEgress = candidate.historyComplete && Boolean(attempt) && latestRequestNeverLeft && !earlierDeliveryUnresolved;
+      if (failBeforeEgress) {
+        const settledAt = new Date();
         await db.update(providerOperationAttempts).set({
           status: "known_failed",
           finishedAt: settledAt,
@@ -583,11 +650,12 @@ export async function recoverStaleProviderOperations(
       }
 
       if (attempt && invocation?.outcome === "provider_acknowledged" && invocation.receipt
-          && typeof invocation.receipt === "object" && !Array.isArray(invocation.receipt)) {
+          && typeof invocation.receipt === "object" && !Array.isArray(invocation.receipt)
+          && (invocation.receipt as Record<string, unknown>).logicalOperationCompletion === true) {
         const acknowledgedAt = invocation.providerAcknowledgedAt ?? invocation.finishedAt ?? new Date();
         const requiresObservation = candidate.verificationMode === "readback"
           || candidate.verificationMode === "webhook_or_readback";
-        const receipt = invocation.receipt as Record<string, unknown>;
+        const { logicalOperationCompletion: _completion, ...receipt } = invocation.receipt as Record<string, unknown>;
         await db.update(providerOperationAttempts).set({
           status: requiresObservation ? "awaiting_observation" : "verified",
           finishedAt: requiresObservation ? null : acknowledgedAt,
@@ -718,6 +786,9 @@ export async function recordProviderInvocationAcknowledged(
   const receipt = durableProviderReceipt(output);
   const requestId = providerRequestId(output);
   if (requestId) receipt.providerRequestId = requestId;
+  // Native physical metadata is never added to the cached business result. The
+  // owner overrides any provider-supplied marker at this persistence boundary.
+  const physicalReceipt = { ...receipt, logicalOperationCompletion: options.advanceLogicalOperation !== false };
   await withTenant(context.tenantId, async (db) => {
     if (options.advanceLogicalOperation === false) {
       await db.update(providerInvocations).set({
@@ -725,7 +796,7 @@ export async function recordProviderInvocationAcknowledged(
         providerAcknowledgedAt: new Date(),
         finishedAt: new Date(),
         providerRequestId: requestId,
-        receipt,
+        receipt: physicalReceipt,
       }).where(and(
         eq(providerInvocations.tenantId, context.tenantId),
         eq(providerInvocations.id, invocationId),
@@ -754,7 +825,7 @@ export async function recordProviderInvocationAcknowledged(
       providerAcknowledgedAt: acknowledgedAt,
       finishedAt: acknowledgedAt,
       providerRequestId: requestId,
-      receipt,
+      receipt: physicalReceipt,
     }).where(and(
       eq(providerInvocations.tenantId, context.tenantId),
       eq(providerInvocations.id, invocationId),
@@ -840,14 +911,15 @@ export async function recordProviderInvocationFailure(
       ));
       return;
     }
-    const [attempt] = await db.update(providerOperationAttempts).set({
-      status: knownFailure ? "known_failed" : "unknown_outcome",
-      finishedAt: new Date(),
-      outcomeDetail: { failureKind: failure.kind, message: failure.message },
-    }).where(and(
-      eq(providerOperationAttempts.tenantId, context.tenantId),
-      eq(providerOperationAttempts.id, context.providerOperationAttemptId),
-    )).returning({ externalOperationId: providerOperationAttempts.externalOperationId });
+    const [owner] = await db.select({ externalOperationId: providerOperationAttempts.externalOperationId })
+      .from(providerOperationAttempts).where(and(
+        eq(providerOperationAttempts.tenantId, context.tenantId),
+        eq(providerOperationAttempts.id, context.providerOperationAttemptId),
+      )).limit(1);
+    if (!owner) throw new Error("Provider failure lacks its tenant-scoped operation attempt");
+    await db.execute(sql`SELECT id FROM ${externalOperations}
+      WHERE ${externalOperations.tenantId}=${context.tenantId}::uuid
+        AND ${externalOperations.id}=${owner.externalOperationId}::uuid FOR UPDATE`);
     await db.update(providerInvocations).set({
       outcome,
       ...(failure.definitePreDispatch ? { requestMayHaveLeftAt: null } : {}),
@@ -858,16 +930,33 @@ export async function recordProviderInvocationFailure(
       eq(providerInvocations.tenantId, context.tenantId),
       eq(providerInvocations.id, invocationId),
       eq(providerInvocations.providerOperationAttemptId, context.providerOperationAttemptId),
+      inArray(providerInvocations.outcome, ["prepared", "request_may_have_left", "unknown_outcome"]),
     ));
+    const possibleEarlierRequest = await hasUnresolvedProviderDelivery(db, context.tenantId, owner.externalOperationId);
+    // A later request's known refusal says nothing about an earlier accepted
+    // upload session/chunk. Preserve the physical refusal and the unresolved
+    // logical delivery as different facts.
+    const logicalKnownFailure = knownFailure && !possibleEarlierRequest;
+    const [attempt] = await db.update(providerOperationAttempts).set({
+      status: logicalKnownFailure ? "known_failed" : "unknown_outcome",
+      finishedAt: new Date(),
+      outcomeDetail: { failureKind: failure.kind, message: failure.message, physicalKnownFailure: knownFailure,
+        earlierRequestMayHaveLeft: possibleEarlierRequest },
+    }).where(and(
+      eq(providerOperationAttempts.tenantId, context.tenantId),
+      eq(providerOperationAttempts.id, context.providerOperationAttemptId),
+      inArray(providerOperationAttempts.status, ["claimed", "provider_in_flight", "provider_acknowledged"]),
+    )).returning({ externalOperationId: providerOperationAttempts.externalOperationId });
     if (attempt) await db.update(externalOperations).set({
-      status: knownFailure ? "failed" : "unknown",
-      executionState: knownFailure ? "known_failed" : "unknown_outcome",
-      verificationStatus: knownFailure ? "not_required" : "unknown",
+      status: logicalKnownFailure ? "failed" : "unknown",
+      executionState: logicalKnownFailure ? "known_failed" : "unknown_outcome",
+      verificationStatus: logicalKnownFailure ? "not_required" : "unknown",
       version: sql`${externalOperations.version} + 1`,
       updatedAt: new Date(),
     }).where(and(
       eq(externalOperations.tenantId, context.tenantId),
       eq(externalOperations.id, attempt.externalOperationId),
+      inArray(externalOperations.executionState, ["claimed", "provider_in_flight", "provider_acknowledged"]),
     ));
   });
 }
@@ -907,11 +996,24 @@ export async function recordOwnedExternalOperationResult(
 ): Promise<ExternalOperationRow | null> {
   const redacted = durableProviderReceipt(response);
   return withTenant(tenantId, async (db) => {
+    await db.execute(sql`SELECT id FROM ${externalOperations}
+      WHERE ${externalOperations.tenantId}=${tenantId}::uuid
+        AND ${externalOperations.id}=${externalOperationId}::uuid FOR UPDATE`);
     const [operation] = await db.select().from(externalOperations).where(and(
       eq(externalOperations.tenantId, tenantId),
       eq(externalOperations.id, externalOperationId),
     )).limit(1);
     if (!operation) return null;
+    if (providerOperationAttemptId) {
+      const [latest] = await db.select({ id: providerOperationAttempts.id }).from(providerOperationAttempts).where(and(
+        eq(providerOperationAttempts.tenantId, tenantId), eq(providerOperationAttempts.externalOperationId, externalOperationId),
+      )).orderBy(desc(providerOperationAttempts.ordinal)).limit(1);
+      if (latest?.id !== providerOperationAttemptId) return operation;
+    }
+    if (["verified", "reconciled", "compensated", "divergent", "awaiting_observation"].includes(operation.executionState)) return operation;
+    // A wrapper reports this invocation's refusal, not whole-operation absence.
+    // Compatibility bookkeeping must preserve the native history classification.
+    if (status === "failed" && await hasUnresolvedProviderDelivery(db, tenantId, externalOperationId)) status = "unknown";
     // The default acknowledgement hook persists the receipt, logical result and
     // readback job atomically. Its caller still invokes this function for API
     // compatibility; that second bookkeeping call must be a no-op, not a second

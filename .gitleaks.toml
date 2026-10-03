@@ -24,3 +24,12 @@ regexes = [
   '''(?:"?(?:templateKey|template_key)"?\s*[:=]\s*"centropy_ic_default_v1"|versionKey"?\s*:\s*"centropy-growth-bps-e2e-v2")''',
   '''(?:sourceKey|idempotencyKey)\s*:\s*"phase9-[a-z0-9-]+"''',
 ]
+
+# An authored S4 model identity is public fixture metadata, never a credential.
+# Match only this field/value on this exact source path; credential fields remain scanned.
+[[rules.allowlists]]
+description = "Exact authored S4 delayed-actor model identifier"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/s4/run-s4-e2e\.mts$''']
+regexTarget = "match"
+regexes = ['''modelKey\s*=\s*['"]s4-actual-delayed-actor['"]''']

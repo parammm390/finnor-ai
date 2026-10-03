@@ -13,6 +13,7 @@ import {
   tenantSettings,
   withTenant,
   workObjectiveSteps,
+  workflowSteps,
 } from "@finnor/db";
 import { resolveComputerAuthProfile, type ResolvedComputerAuthProfile } from "@finnor/security";
 import type {
@@ -24,7 +25,7 @@ import type {
   ComputerTaskInput,
 } from "@finnor/shared-types";
 import type { ToolRuntimeContext } from "@finnor/tools";
-import { finalizeLatestReceiptForAction } from "@finnor/workflow-runtime";
+import { advanceWorkflow, completeStep, failStep, finalizeLatestReceiptForAction } from "@finnor/workflow-runtime";
 import { and, asc, desc, eq, max, sql } from "drizzle-orm";
 import { deriveComputerOriginPolicy } from "./origins";
 import { assertNoComputerSecrets, redactComputerValue } from "./redaction";
@@ -177,6 +178,7 @@ export async function queueComputerRun(
     }
     return { action, settings, objectiveLoopId };
   }, actorId);
+  await withTenant(tenantId,async db=>{await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,tenantId,{businessEffectId:loaded.action?.businessEffectId,domainActionId},'BROWSER');},actorId);
   if (!loaded.action || loaded.action.actionType !== "computer_task" || loaded.action.status !== "executing") {
     throw new Error("Computer execution refused: the audited action is not executing");
   }
@@ -355,7 +357,8 @@ export async function beginComputerStep(params: {
   const detail = redactComputerValue(params.detail ?? {}) as Record<string, unknown>;
   assertNoComputerSecrets(detail);
   return withTenant(params.tenantId, async (db) => {
-    await db.execute(sql`SELECT id FROM ${computerRuns} WHERE ${computerRuns.tenantId}=${params.tenantId} AND ${computerRuns.id}=${params.runId} FOR UPDATE`);
+    const run=await db.execute<{business_effect_id:string|null;domain_action_id:string}>(sql`SELECT id,business_effect_id,domain_action_id FROM ${computerRuns} WHERE ${computerRuns.tenantId}=${params.tenantId} AND ${computerRuns.id}=${params.runId} FOR UPDATE`);
+    if(run.rows[0])await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,params.tenantId,{businessEffectId:run.rows[0].business_effect_id,domainActionId:run.rows[0].domain_action_id},'BROWSER');
     const [latest] = await db.select({ value: max(computerSteps.seq) }).from(computerSteps).where(and(eq(computerSteps.tenantId, params.tenantId), eq(computerSteps.runId, params.runId)));
     const [step] = await db.insert(computerSteps).values({
       tenantId: params.tenantId,
@@ -423,9 +426,49 @@ export async function computerCancellationRequested(tenantId: string, runId: str
   return Boolean(row?.cancellationRequestedAt);
 }
 
+/** Repeatable observation link after child finalization. Read native child/effect
+ * truth; executor output cannot choose a parent or supply settlement. A crash
+ * between terminal persistence and this link is repaired by terminal replay/scans. */
+async function settleComputerParents(tenantId: string, runId: string): Promise<void> {
+  const child = await getComputerRunInternal(tenantId, runId);
+  if (!child || !TERMINAL.includes(child.status as ComputerRunStatus) || !child.businessEffectId) return;
+  const [effect] = await withTenant(tenantId, db => db.select({ status: businessEffects.status, semanticHash: businessEffects.semanticHash, verification: businessEffects.verification }).from(businessEffects).where(and(
+    eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, child.businessEffectId!), eq(businessEffects.domainActionId, child.domainActionId),
+  )).limit(1));
+  if (!effect) return;
+  const parents = await withTenant(tenantId, db => db.select().from(workflowSteps).where(and(
+    eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.domainActionId, child.domainActionId),
+    eq(workflowSteps.businessEffectId, child.businessEffectId!), eq(workflowSteps.status, "waiting_observation"),
+  )).limit(64));
+  for (const parent of parents) {
+    const evidence = record(parent.evidence), delegated = record(evidence.delegatedRuntime);
+    if (delegated.kind !== "computer" || delegated.id !== child.id || evidence.businessEffectId !== child.businessEffectId
+        || evidence.authorizedEffectHash !== effect.semanticHash) continue;
+    const verification = record(effect.verification);
+    const fence = { kind: "observation" as const, dispatchGeneration: parent.dispatchGeneration };
+    const observed = { computerRunId: child.id, childTerminal: child.status, businessEffectId: child.businessEffectId, authorizedEffectHash: effect.semanticHash, verification };
+    if (child.status === "succeeded" && child.effectStatus === "succeeded" && effect.status === "verified" && verification.state === "verified") {
+      await completeStep(tenantId, parent.id, observed, fence);
+      await advanceWorkflow(tenantId, parent.workflowRunId);
+    } else if (["dispatching", "unknown"].includes(child.effectStatus) || effect.status === "reconciliation_required") {
+      await withTenant(tenantId, db => db.update(workflowSteps).set({ executionState: "reconciling", evidence: { ...evidence, childObservation: observed }, updatedAt: new Date() }).where(and(
+        eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.id, parent.id), eq(workflowSteps.status, "waiting_observation"),
+        eq(workflowSteps.dispatchGeneration, parent.dispatchGeneration),
+      )));
+    } else {
+      await failStep(tenantId, parent.id, `Required computer child ended ${child.status} without verified settlement`, "needs_human", fence, "failed_before_effect");
+      await withTenant(tenantId, db => db.update(domainActions).set({ status: "needs_human_review", executionStartedAt: null }).where(and(
+        eq(domainActions.tenantId, tenantId), eq(domainActions.id, child.domainActionId), sql`${domainActions.status} IN ('executing','failed','needs_human_review')`,
+      )));
+      await advanceWorkflow(tenantId, parent.workflowRunId);
+    }
+  }
+}
+
 export async function finalizeComputerRun(tenantId: string, runId: string, terminal: ComputerRunTerminal): Promise<void> {
   const current = await getComputerRunInternal(tenantId, runId);
-  if (!current || TERMINAL.includes(current.status as ComputerRunStatus)) return;
+  if (!current) return;
+  if (TERMINAL.includes(current.status as ComputerRunStatus)) { await settleComputerParents(tenantId, runId); return; }
   const safeResult = terminal.status === "succeeded" ? redactComputerValue(terminal.result) as Record<string, unknown> : null;
   if (safeResult) assertNoComputerSecrets(safeResult);
   const finalized = await withTenant(tenantId, async (db) => {
@@ -433,15 +476,17 @@ export async function finalizeComputerRun(tenantId: string, runId: string, termi
     await db.execute(sql`SELECT id FROM ${computerRuns} WHERE ${computerRuns.tenantId}=${tenantId} AND ${computerRuns.id}=${runId} FOR UPDATE`);
     const [locked] = await db.select().from(computerRuns).where(and(eq(computerRuns.tenantId, tenantId), eq(computerRuns.id, runId))).limit(1);
     if (!locked || TERMINAL.includes(locked.status as ComputerRunStatus)) return null;
+    const unknown = ["dispatching", "unknown"].includes(locked.effectStatus) || terminal.status === "timed_out";
     await db.update(computerRuns).set({
       status: terminal.status,
       result: safeResult,
       failureCode: terminal.status === "succeeded" ? null : terminal.code,
       blockReason: terminal.status === "succeeded" ? null : terminal.reason.slice(0, 2000),
       finishedAt: new Date(),
+      ...(unknown && locked.businessEffectId ? { effectStatus: "unknown" as const } : {}),
       updatedAt: new Date(),
     }).where(and(eq(computerRuns.tenantId, tenantId), eq(computerRuns.id, runId), sql`${computerRuns.status} NOT IN ('succeeded','blocked','failed','timed_out','cancelled')`));
-    const actionStatus = terminal.status === "succeeded" ? "completed" : terminal.status === "blocked" ? "needs_human_review" : "failed";
+    const actionStatus = unknown && locked.businessEffectId ? "needs_human_review" : terminal.status === "succeeded" ? "completed" : terminal.status === "blocked" ? "needs_human_review" : "failed";
     await db.update(domainActions).set({ status: actionStatus, executionStartedAt: null }).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, locked.domainActionId)));
     await db.insert(actionLog).values({
       tenantId,
@@ -474,7 +519,6 @@ export async function finalizeComputerRun(tenantId: string, runId: string, termi
     });
     if (locked.businessEffectId) {
       const [effectRow] = await db.select({ semanticHash: businessEffects.semanticHash }).from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, locked.businessEffectId))).limit(1);
-      const unknown = locked.effectStatus === "unknown" || terminal.status === "timed_out";
       const verified = terminal.status === "succeeded" && locked.effectStatus === "succeeded";
       const verification = {
         state: verified ? "verified" as const : unknown ? "reconciliation_required" as const : "unverified" as const,
@@ -487,11 +531,12 @@ export async function finalizeComputerRun(tenantId: string, runId: string, termi
         const [existingCase] = await db.select({ id: reconciliationCases.id }).from(reconciliationCases).where(and(eq(reconciliationCases.tenantId, tenantId), eq(reconciliationCases.businessEffectId, locked.businessEffectId), eq(reconciliationCases.status, "open"))).limit(1);
         if (!existingCase) await db.insert(reconciliationCases).values({ tenantId, businessEffectId: locked.businessEffectId, caseType: "unknown_delivery", details: { computerRunId: locked.id, domainActionId: locked.domainActionId, effectStatus: locked.effectStatus } });
       }
-      return { workId: locked.workId, domainActionId: locked.domainActionId, effectStatus: locked.effectStatus, businessEffectId: locked.businessEffectId, effectHash: effectRow?.semanticHash ?? null, verification };
+      return { workId: locked.workId, domainActionId: locked.domainActionId, effectStatus: unknown ? "unknown" : locked.effectStatus, businessEffectId: locked.businessEffectId, effectHash: effectRow?.semanticHash ?? null, verification };
     }
     return { workId: locked.workId, domainActionId: locked.domainActionId, effectStatus: locked.effectStatus, businessEffectId: null, effectHash: null, verification: null };
   }, current.actorId);
   if (finalized) {
+    await settleComputerParents(tenantId, runId);
     const evidence = [{ source: "computer_run", ref: runId, timestamp: new Date().toISOString() }];
     await finalizeLatestReceiptForAction(
       tenantId,
@@ -518,6 +563,14 @@ export async function countComputerArtifacts(tenantId: string, runId: string): P
 }
 
 export async function recoverComputerRunJobs(tenantId: string): Promise<{ queued: number; orphanSessions: Array<{ runId: string; sessionRef: string }> }> {
+  const terminalParents = await withTenant(tenantId, db => db.execute<{ id: string }>(sql`
+    SELECT DISTINCT c.id FROM ${computerRuns} c JOIN ${workflowSteps} s
+      ON s.tenant_id=c.tenant_id AND s.business_effect_id=c.business_effect_id AND s.domain_action_id=c.domain_action_id
+    WHERE c.tenant_id=${tenantId} AND c.status IN ('succeeded','blocked','failed','timed_out','cancelled')
+      AND s.status='waiting_observation' AND s.evidence->'delegatedRuntime'->>'kind'='computer'
+      AND s.evidence->'delegatedRuntime'->>'id'=c.id::text LIMIT 256
+  `));
+  for (const child of terminalParents.rows) await settleComputerParents(tenantId, child.id);
   const expired = await withTenant(tenantId, (db) => db.select({ id: computerRuns.id }).from(computerRuns).where(and(
     eq(computerRuns.tenantId, tenantId),
     sql`${computerRuns.status} NOT IN ('succeeded','blocked','failed','timed_out','cancelled')`,

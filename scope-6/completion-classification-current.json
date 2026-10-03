@@ -1,0 +1,119 @@
+{
+  "schema": "finnor.s6.frozen-completion-progress.v1",
+  "updatedAt": "2026-10-03T19:57:47.009862+00:00",
+  "frozenInventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+  "items": [
+    {
+      "id": "S6-01",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-02",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-03",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-04",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-05",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-06",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-07",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-08",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-09",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-10",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-11",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-11R",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-12",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-13",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-14",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-15",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-16",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-17",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-18",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-19",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-20",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-21",
+      "status": "PASS"
+    },
+    {
+      "id": "S6-22",
+      "status": "PASS"
+    },
+    {
+      "id": "X1",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X2",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X3",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X4",
+      "status": "BLOCKED_EXTERNAL"
+    }
+  ],
+  "remainingRepositoryTask": null,
+  "repositoryStatus": "CLOSED",
+  "fullExternalFrozenGatePassed": false,
+  "closureEvidence": "scope-evidence/completion-closure.json"
+}

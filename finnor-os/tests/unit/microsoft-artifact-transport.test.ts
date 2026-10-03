@@ -33,7 +33,7 @@ describe("P3 Microsoft artifact transports", () => {
       if (request.operation === "artifact_driveitem_versions") {
         return response({ value: [{ id: "v2", size: bytes.length }, { id: "v1", size: bytes.length }] });
       }
-      return response(rawMetadata({ size: bytes.length }));
+      return response(rawMetadata({ id: "item/1", size: bytes.length }));
     });
     const requestBytes = vi.fn(async (request: { operation: string }) => response(
       request.operation === "artifact_driveitem_version_download" ? Uint8Array.from([1, 2, 3]) : new Uint8Array(bytes),

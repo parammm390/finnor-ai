@@ -2723,6 +2723,38 @@
       "source": "finnor-os/apps/api/app/api/admin/migrate/route.ts"
     },
     {
+      "capabilityId": "http.post.allocations.$operation",
+      "family": "allocations",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "allocations/:operation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "allocations"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.artifact-templates",
       "family": "artifact",
       "owner": "@finnor/artifacts",
@@ -3880,6 +3912,38 @@
       "source": "finnor-os/apps/api/app/api/objectives/route.ts"
     },
     {
+      "capabilityId": "http.post.obligations.$operation",
+      "family": "obligations",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "obligations/:operation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "obligations"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.outcome-packs",
       "family": "outcome-pack",
       "owner": "@finnor/orchestration",
@@ -3974,6 +4038,36 @@
       "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/outcome-packs/grants/route.ts"
+    },
+    {
+      "capabilityId": "http.post.policies.$operation",
+      "family": "policies",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "policies/:operation",
+      "routeDepth": 2,
+      "classification": "ADMIN",
+      "kind": "mutation",
+      "userProduct": false,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": true,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [],
+      "invalidationTags": [
+        "policies"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
     },
     {
       "capabilityId": "http.post.policies.$tenantId.$actionType.simulate",

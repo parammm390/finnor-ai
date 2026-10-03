@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closePool, configureTenantVertical } from "@finnor/db";
+import { closePool, configureTenantVertical, receiveWork } from "@finnor/db";
 import { appendEvidenceVersion, createEvidenceSource } from "@finnor/memory";
 import {
   applyArtifactPatch,
@@ -13,6 +13,7 @@ import {
 } from "@finnor/artifacts";
 import {
   attachCanonicalEvidence,
+  attachWorkToDealGraph,
   compareUnderwritingModelVersions,
   compareUnderwritingRunToArtifact,
   compareUnderwritingRuns,
@@ -36,6 +37,7 @@ import {
   type ExplicitUnderwritingInput,
   type PeMutationContext,
 } from "@finnor/private-equity";
+import { FinnorOrchestrator } from "@finnor/orchestration";
 import {
   createStandardLboInputSnapshot,
   createStandardLboModel,
@@ -50,6 +52,7 @@ import {
   GOLDEN_UNDERWRITING_CASES,
   type GoldenLboCase,
 } from "../underwriting-corpus/golden-cases";
+import { driveDurableAction } from "./helpers/durable-action";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
@@ -379,9 +382,9 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       investmentCaseId: investmentCaseA,
       modelVersionId,
       scenarioId,
+      baseRunId: baseRun.id,
       worldAt: knownWorldAt,
       idempotencyKey: `p4-scenario-${randomUUID()}`,
-      explicitInputs,
     }) as PersistedRun;
 
     sensitivity = await createUnderwritingSensitivity(ctxA, {
@@ -654,6 +657,12 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       status: "KNOWN",
     });
     expect(baseRun.inputSnapshot.values["exit.multiple"]).toMatchObject({ value: "5", truthClass: "CANONICAL_ASSUMPTION" });
+    const pinnedReplay = await createUnderwritingRun(ctxA, {
+      investmentCaseId: investmentCaseA, modelVersionId, scenarioId, baseRunId: baseRun.id,
+      worldAt: knownWorldAt, idempotencyKey: `p4-pinned-replay-${randomUUID()}`,
+    }) as PersistedRun;
+    expect(pinnedReplay.inputSnapshot.semanticHash).toBe(scenarioRun.inputSnapshot.semanticHash);
+    expect(pinnedReplay.result.resultSemanticHash).toBe(scenarioRun.result.resultSemanticHash);
     const detail = await getUnderwritingSensitivity(ctxA, sensitivityId) as { cells: Array<Record<string, unknown>>; complete: boolean; cellCount: number };
     expect(sensitivity).toMatchObject({ status: "SUCCEEDED", replayed: false });
     expect(detail).toMatchObject({ complete: true, cellCount: 3 });
@@ -906,5 +915,62 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       anchorHash: "0".repeat(64),
       comparisonPolicy: { mode: "EXACT_DECIMAL" },
     })).rejects.toBeTruthy();
+  });
+
+  it("runs a governed Work-scoped downside Scenario through the durable action and verifies its receipt", async () => {
+    const roleId = randomUUID();
+    const policyId = randomUUID();
+    await admin.query("INSERT INTO finnor_os.employee_roles(id,tenant_id,key,name) VALUES($1,$2,$3,$4)",
+      [roleId, tenantA, `p4-underwriting-${randomUUID()}`, "P4 Underwriting Test Authority"]);
+    await admin.query("INSERT INTO finnor_os.employee_role_assignments(tenant_id,employee_id,role_id,resource_scope) VALUES($1,$2,$3,$4::jsonb)",
+      [tenantA, ownerA, roleId, JSON.stringify({ kind: "tenant" })]);
+    await admin.query(`INSERT INTO finnor_os.role_authority_grants
+      (tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required)
+      VALUES($1,$2,'*','*','allow','high',false)`, [tenantA, roleId]);
+    await admin.query(`INSERT INTO finnor_os.domain_policies
+      (id,tenant_id,action_type,policy,requires_confirmation,confirmation_template,version,effective_from)
+      VALUES($1,$2,'create_underwriting_run','{}'::jsonb,false,NULL,1,now())`, [policyId, tenantA]);
+    await admin.query(`INSERT INTO finnor_os.domain_policy_revisions
+      (id,tenant_id,policy_id,action_type,version,policy,requires_confirmation,confirmation_template,effective_from)
+      VALUES($1,$2,$3,'create_underwriting_run',1,'{}'::jsonb,false,NULL,now())`, [randomUUID(), tenantA, policyId]);
+
+    const work = await receiveWork({
+      tenantId: tenantA, userId: ownerA, channel: "console",
+      instruction: "Stress the exact exit multiple and record a new Underwriting Run.",
+      idempotencyKey: `p4-governed-run-${randomUUID()}`,
+    });
+    await attachWorkToDealGraph(ctxA, {
+      dealId: dealA, workId: work.workId,
+      entities: [{ entityType: "pe_deal", entityId: dealA, relationship: "about" }],
+    });
+    const orchestrator = new FinnorOrchestrator();
+    const drafted = await orchestrator.draftKnownAction("create_underwriting_run", {
+      dealId: dealA, investmentCaseId: investmentCaseA, modelVersionId, baseRunId: baseRun.id,
+      scenario: { name: "Governed exit multiple downside", overrides: [
+        { nodeId: "exit.multiple", value: "3.75", reason: "Test a lower exit multiple against the pinned base Run." },
+      ] },
+    }, tenantA, { workId: work.workId, initiatedBy: ownerA, source: "p4-governed-integration" });
+    expect(drafted.result).toMatchObject({ status: "success", output: { durableWorkerExecution: true, queued: true } });
+    const executed = await driveDurableAction(tenantA, drafted.action.id);
+    expect(executed, JSON.stringify(executed)).toMatchObject({ status: "success", output: {
+      canonicalMutationOwner: "createUnderwritingRun", canonicalObserved: true, verified: true,
+      workAttachment: "underwriting_run_work_id",
+    } });
+    const result = executed.output.canonicalState as Record<string, unknown>;
+    expect(result).toMatchObject({ workId: work.workId, investmentCaseId: investmentCaseA,
+      modelVersionId, status: "SUCCEEDED", validity: "VALID" });
+    expect(typeof result.scenarioId).toBe("string");
+    const readback = await getUnderwritingRun(ctxA, String(result.id));
+    expect(readback).toMatchObject({ workId: work.workId, scenarioId: result.scenarioId,
+      resultHash: result.resultHash });
+    const receipt = await admin.query<{ finalized: boolean; verified: boolean; failed: boolean }>(
+      `SELECT finalized_at IS NOT NULL finalized,
+              verification->>'state'='verified' verified,
+              failure IS NOT NULL failed
+         FROM finnor_os.decision_receipts
+        WHERE tenant_id=$1 AND domain_action_id=$2 ORDER BY created_at DESC LIMIT 1`,
+      [tenantA, drafted.action.id],
+    );
+    expect(receipt.rows[0]).toEqual({ finalized: true, verified: true, failed: false });
   });
 });

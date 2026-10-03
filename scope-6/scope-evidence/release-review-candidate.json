@@ -1,0 +1,439 @@
+{
+  "schema": "finnor.s6.release-review-candidate.v1",
+  "createdAt": "2026-10-03T19:27:16.771025+00:00",
+  "head": "bb324a4ff2292112e0f84d81e5c17818f627cf5f",
+  "frozenInventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+  "status": "UNSIGNED_NOT_DEPLOYED_NOT_ADMITTED",
+  "sourceDigests": {
+    "finnor-os/packages/governed-execution/src/ledger.ts": "28c199524740d227f2f5d4fd4e6ca8c9c93d529bff472f18826e83045e2a06ae",
+    "finnor-os/packages/governed-execution/src/ledger-server.mts": "4fe0d6e53ccce55867c834c316adb9b3042d2c660f69e6766e9af8f010c0530d",
+    "finnor-os/packages/governed-execution/src/protocol.ts": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+    "finnor-os/packages/governed-execution/src/request-verifier.ts": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+    "finnor-os/packages/governed-execution/src/adapter-contract.ts": "c233be2fd1f576fd55683ad257d6f1691ded8a432e0fec5fc8955d9892fff877",
+    "finnor-os/packages/governed-execution/src/dispatch-broker.ts": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f",
+    "finnor-os/packages/governed-execution/src/broker-io.ts": "910dcbe92f799c914abffd8b7e684f11d1585e54413f312e4d2e46d05637d36c",
+    "finnor-os/packages/private-equity/src/enterprise-obligations.ts": "a9b73f6e3ee16928ad994fed2ae935955c32f27b7af717a1c456e19c96a2ea6d",
+    "finnor-os/packages/private-equity/src/enterprise-allocation.ts": "3085d8370f3ec5b1c8d1cd4a2c38248109af1c43683123efa6951618374d7e22",
+    "finnor-os/packages/private-equity/src/enterprise-control.ts": "b9094dcbc02079811830c7dcea3b9a3fd7efc4ad80f53cb33d2ca4f4ef681f49",
+    "finnor-os/packages/private-equity/src/enterprise-beliefs.ts": "5f9a594dbbf376b22a4aab63c7cd5d38d7bd1b4a87da84f325e7b2ec58f11f60",
+    "finnor-os/packages/private-equity/src/allocation-store.ts": "571cdc2d4cf8b5ec2c570c5245851b6f1a8fe6b2f8a2a61c05fc6889c7e3fa8b",
+    "finnor-os/packages/private-equity/src/obligation-contracts.ts": "0ab6d79e726a39eac06bf68541ee84650b47e4e2d813e83bf38add0a690660b8",
+    "finnor-os/apps/api/app/api/obligations/[operation]/route.ts": "79adcfe62715fda3fb205afb930fc2f48289edb4c37c32b0a3d85764a4cecdd4",
+    "finnor-os/packages/orchestration/src/request-compiler.ts": "b77f7fa366747417e4dd80da4e8ab802ca8931e27f52d4a9f28c0b7222b4b82d",
+    "finnor-os/packages/orchestration/src/compiler.ts": "cb7b9fb01cbc929d71782933bb82c4424c6343549d6a6c30cff93c51c6319714"
+  },
+  "sourceSnapshotUnchanged": true,
+  "runtime": {
+    "node": "v22.22.3",
+    "nodeAbi": "127",
+    "platform": "darwin",
+    "arch": "arm64",
+    "execPath": "/Users/paramdave/.hermes/node/bin/node",
+    "uid": 501,
+    "gid": 20,
+    "binarySha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c"
+  },
+  "dependencies": {
+    "typescript": "5.9.3",
+    "tsx": "4.23.13",
+    "fs-ext": "2.1.1",
+    "nan": "2.29.0"
+  },
+  "packageLockSha256": "3e15a32cb2df1de647b7a0b5aca5a002f2008e01be62dfce33597a8708ef1a8d",
+  "compile": {
+    "command": [
+      "/Users/paramdave/.local/bin/node",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/node_modules/typescript/bin/tsc",
+      "--module",
+      "ESNext",
+      "--moduleResolution",
+      "Bundler",
+      "--target",
+      "ES2022",
+      "--types",
+      "node",
+      "--skipLibCheck",
+      "--strict",
+      "--rootDir",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src",
+      "--outDir",
+      "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/release-candidate/install/finnor-os/packages/governed-execution/src",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/ledger.ts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/ledger-server.mts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/protocol.ts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/adapter-contract.ts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+      "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/finnor-os/packages/governed-execution/src/broker-io.ts"
+    ],
+    "exitCode": 0,
+    "compilerSha256": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+    "compilerOutsideProtectedRuntime": true
+  },
+  "files": [
+    {
+      "path": "install/finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
+      "sha256": "79adcfe62715fda3fb205afb930fc2f48289edb4c37c32b0a3d85764a4cecdd4",
+      "bytes": 4623
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/.eslintrc",
+      "sha256": "cde3c5d202599a30f4fb8d813f4729c8bf519c3beb291693d375cedbd298a7ca",
+      "bytes": 1611
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/.github/workflows/node.js.yml",
+      "sha256": "535f76628ca3df5cae8a9b958c2a6d4cc3469a645d9360f087e7a8cfb472b631",
+      "bytes": 868
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/.travis.yml",
+      "sha256": "a8b2ac01c2673fb435f64313093a5fac7e81cc751897aa366c70fda18a04e35a",
+      "bytes": 404
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/LICENSE.txt",
+      "sha256": "cb5aedb296c5246d1f22e9099f925a65146f9f0d6b4eebba97fd27a6cdbbab2d",
+      "bytes": 1023
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/README.md",
+      "sha256": "833271a7c8fa3942411c9742e3006f7a5ff6f53b6ec05187b1b9384aaa7cac3c",
+      "bytes": 3242
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/appveyor.yml",
+      "sha256": "ecebdcfde4d0b75f9bf94496e7ebe8d7bd1060fb1d4e6787d02b7d604a016335",
+      "bytes": 242
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/binding.gyp",
+      "sha256": "22911df7163fea143f8f18454c189213ba4ce86a04501ad904e965c306ac300d",
+      "bytes": 219
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/Makefile",
+      "sha256": "90f35c9e7e3de9b2aac1fbf2e10acae2d12da4fe196320599ad18d01a1affa87",
+      "bytes": 13961
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/Release/.deps/Release/fs_ext.node.d",
+      "sha256": "384d4c5134b9f5b5874e2c3a6815512b90ba96ebddeaf282a5d750fa5a86b32e",
+      "bytes": 214
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/Release/.deps/Release/obj.target/fs_ext/fs-ext.o.d",
+      "sha256": "105c299d4bcf9f799e7fdac3b4f174af7f00db3fa798f1bba976d3974e41d63c",
+      "bytes": 14631
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+      "sha256": "546d5a515b20efa119f347558da08dc6be481f831fff49935da8f37d0e05024c",
+      "bytes": 60616
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/Release/obj.target/fs_ext/fs-ext.o",
+      "sha256": "6e1cffd6197f112f6c37c8471b8e11260abd74dbd9326955ff7a263891001a5b",
+      "bytes": 418128
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/binding.Makefile",
+      "sha256": "bdfa228249702788779700f667e269918ce4f94f5582fb6d5a4349037d835fd3",
+      "bytes": 114
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/config.gypi",
+      "sha256": "4eb637a578495231a6b19be123c3ca5b5965062ff3520c76bc3d9982ccf49e23",
+      "bytes": 19079
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/fs_ext.target.mk",
+      "sha256": "56c0417cc360b52c267a45f6bd20c9ecdc2c7e53bcdea1ceeee1fe726ed261b4",
+      "bytes": 5350
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/build/gyp-mac-tool",
+      "sha256": "b092a1f430c84aee1c12baf1167e2d7be303e6f3ca610e87bb6c66b93d140ea9",
+      "bytes": 30156
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/example.js",
+      "sha256": "8d1e535d6ddfc399b983ac2de02d8bbf621a50d85fdfaf80b4b99934521828b8",
+      "bytes": 1294
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/fs-ext.cc",
+      "sha256": "d6bc3ef4c9269d8702f4ac7e7a411ffe1a3ddf757c5df0cc54aeecadd20d124b",
+      "bytes": 17121
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/fs-ext.js",
+      "sha256": "04372a7399c9abb187abc43ccb29ccae1a0692b7177cfff226f45acbda59dda3",
+      "bytes": 3437
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/package.json",
+      "sha256": "adf78ce46360a6b78f89c7dfbd898cfcbb2524cbd36076df091a2f85249adc6a",
+      "bytes": 986
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/run_tests.js",
+      "sha256": "4721d269221f18803855331508ea0d554f7be177c88dbd0288617a9adf4a6574",
+      "bytes": 346
+    },
+    {
+      "path": "install/finnor-os/node_modules/fs-ext/wscript",
+      "sha256": "1abcfd6bdd0a5a2a241b8a7a32384e8598bf1113cbad25b3baebab7090fd7fef",
+      "bytes": 316
+    },
+    {
+      "path": "install/finnor-os/package.json",
+      "sha256": "665f73e307fa4d1bea4cce529c4166bfb96e438c309f193ae2a9f9bc0d8a0233",
+      "bytes": 124
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/adapter-contract.js",
+      "sha256": "818343e3e4d286ada5448796929f66bc130952c7422026f3ca5c34885640e436",
+      "bytes": 4350
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/adapter-contract.ts",
+      "sha256": "c233be2fd1f576fd55683ad257d6f1691ded8a432e0fec5fc8955d9892fff877",
+      "bytes": 4278
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/broker-io.js",
+      "sha256": "5f49981e943f004ddf9987bbffad60807e9e196662646647e9a2aaa5805cd454",
+      "bytes": 4843
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/broker-io.ts",
+      "sha256": "910dcbe92f799c914abffd8b7e684f11d1585e54413f312e4d2e46d05637d36c",
+      "bytes": 4250
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/dispatch-broker.js",
+      "sha256": "14a5a220bf9639d9d36c41573b8f39f00e9af1a22fb2bc52566fe24b08b3a9df",
+      "bytes": 33942
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+      "sha256": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f",
+      "bytes": 29139
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/ledger-server.mjs",
+      "sha256": "c48e0c46e94b724816ca3d931b5f9413a005de700f4ae8a87d254bedc2d9eecf",
+      "bytes": 4276
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/ledger-server.mts",
+      "sha256": "4fe0d6e53ccce55867c834c316adb9b3042d2c660f69e6766e9af8f010c0530d",
+      "bytes": 3466
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/ledger.js",
+      "sha256": "ad487fcc50526c727bb219b30ae2fd256ad85ad8b04a39238b04a40bd0ac7675",
+      "bytes": 52270
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "28c199524740d227f2f5d4fd4e6ca8c9c93d529bff472f18826e83045e2a06ae",
+      "bytes": 44961
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/protocol.js",
+      "sha256": "96bd7a928b429bdcbbafa7a64bb1d0bd8be2b808a5b4e7e59e58430d37553bda",
+      "bytes": 2019
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/protocol.ts",
+      "sha256": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+      "bytes": 1917
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/request-verifier.js",
+      "sha256": "8b9325db592d326798b91dfcc4f7e3a24c45081b7fbae4dae9461f24adb45733",
+      "bytes": 11031
+    },
+    {
+      "path": "install/finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "sha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+      "bytes": 10817
+    },
+    {
+      "path": "install/finnor-os/packages/orchestration/src/compiler.ts",
+      "sha256": "cb7b9fb01cbc929d71782933bb82c4424c6343549d6a6c30cff93c51c6319714",
+      "bytes": 82358
+    },
+    {
+      "path": "install/finnor-os/packages/orchestration/src/request-compiler.ts",
+      "sha256": "b77f7fa366747417e4dd80da4e8ab802ca8931e27f52d4a9f28c0b7222b4b82d",
+      "bytes": 4190
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/allocation-store.ts",
+      "sha256": "571cdc2d4cf8b5ec2c570c5245851b6f1a8fe6b2f8a2a61c05fc6889c7e3fa8b",
+      "bytes": 44533
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "sha256": "3085d8370f3ec5b1c8d1cd4a2c38248109af1c43683123efa6951618374d7e22",
+      "bytes": 31511
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "sha256": "5f9a594dbbf376b22a4aab63c7cd5d38d7bd1b4a87da84f325e7b2ec58f11f60",
+      "bytes": 14594
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "b9094dcbc02079811830c7dcea3b9a3fd7efc4ad80f53cb33d2ca4f4ef681f49",
+      "bytes": 31653
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "sha256": "a9b73f6e3ee16928ad994fed2ae935955c32f27b7af717a1c456e19c96a2ea6d",
+      "bytes": 33710
+    },
+    {
+      "path": "install/finnor-os/packages/private-equity/src/obligation-contracts.ts",
+      "sha256": "0ab6d79e726a39eac06bf68541ee84650b47e4e2d813e83bf38add0a690660b8",
+      "bytes": 3550
+    }
+  ],
+  "mechanisms": [
+    {
+      "name": "identity/authority verification",
+      "sources": [
+        "ledger.ts",
+        "dispatch-broker.ts",
+        "request-verifier.ts"
+      ],
+      "inventoryItems": [
+        "S6-03",
+        "S6-12"
+      ]
+    },
+    {
+      "name": "tenant/isolation enforcement",
+      "sources": [
+        "ledger.ts",
+        "dispatch-broker.ts",
+        "adapter-contract.ts"
+      ],
+      "inventoryItems": [
+        "S6-04",
+        "S6-05",
+        "S6-13"
+      ]
+    },
+    {
+      "name": "bounded IR/proof verification",
+      "sources": [
+        "protocol.ts",
+        "request-verifier.ts"
+      ],
+      "inventoryItems": [
+        "S6-02"
+      ]
+    },
+    {
+      "name": "credential/capability brokerage",
+      "sources": [
+        "dispatch-broker.ts",
+        "broker-io.ts"
+      ],
+      "inventoryItems": [
+        "S6-04",
+        "S6-05"
+      ]
+    },
+    {
+      "name": "consequential-egress enforcement",
+      "sources": [
+        "dispatch-broker.ts",
+        "broker-io.ts",
+        "adapter-contract.ts"
+      ],
+      "inventoryItems": [
+        "S6-05"
+      ]
+    },
+    {
+      "name": "ledger authorization/integrity/references/order/receipts",
+      "sources": [
+        "ledger.ts",
+        "protocol.ts"
+      ],
+      "inventoryItems": [
+        "S6-11R",
+        "S6-14",
+        "S6-15",
+        "S6-16",
+        "S6-17",
+        "S6-18"
+      ]
+    },
+    {
+      "name": "promotion/signature enforcement",
+      "sources": [
+        "ledger.ts",
+        "request-verifier.ts",
+        "dispatch-broker.ts"
+      ],
+      "inventoryItems": [
+        "S6-20",
+        "X1",
+        "X2"
+      ]
+    },
+    {
+      "name": "evaluator-secret protection",
+      "sources": [
+        "ledger.ts",
+        "ledger-server.mts"
+      ],
+      "inventoryItems": [
+        "S6-19",
+        "S6-20",
+        "X1",
+        "X2"
+      ]
+    }
+  ],
+  "outsideProtectedSemanticAuthority": [
+    "business planners",
+    "effect producer/compiler",
+    "causal/economic models",
+    "resource selection",
+    "ordinary database/storage engines",
+    "learning",
+    "projections/queries",
+    "browser/Office/generated-code executors"
+  ],
+  "admittedMethod": "CONDITIONAL_JSON_RECORD_V1",
+  "productionAdmission": {
+    "established": false,
+    "externalDependencies": [
+      "X1",
+      "X2",
+      "X3",
+      "X4"
+    ]
+  },
+  "privateKeysOrCredentialsIncluded": false,
+  "policyAndKeyBindings": {
+    "installedPolicy": null,
+    "ledgerPublicKey": null,
+    "humanReviewerPublicKey": null,
+    "independentS8PublicKey": null,
+    "businessOwnerPublicKey": null,
+    "nativeOwnerPublicKey": null,
+    "providerAccountOrCredential": null,
+    "witnessBinding": null,
+    "evaluatorAccess": null
+  },
+  "qualification": "Actual compiled source/native package candidate. Null production bindings are external evidence not supplied, never invented.",
+  "rerun": "python3 scope-6/prepare-release.py"
+}

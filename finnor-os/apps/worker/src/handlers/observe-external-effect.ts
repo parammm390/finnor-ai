@@ -9,7 +9,7 @@ import {
 } from "@finnor/db";
 import { materializeSourceRecord, observeExternalEffect } from "@finnor/data-platform";
 import { createSourceAdapterRegistry, IntegrationError } from "@finnor/tools";
-import { settleExternalEffectObservation } from "@finnor/orchestration";
+import { observeRecoveredAuthorizedAttempt, settleExternalEffectObservation } from "@finnor/orchestration";
 import type { BusinessEffectSet, ExternalEffectObservation } from "@finnor/shared-types";
 import { and, eq } from "drizzle-orm";
 import type { JobHandler } from "../queue";
@@ -75,6 +75,10 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
         eq(externalOperations.domainActionId, domainActionId!),
         eq(externalOperations.operationKey, externalOperationKey!),
       )).limit(1)))[0];
+  if (operation?.provider === "finnor_plugin_runtime" && integrationOperationId && !operation.integrationId) {
+    await observeRecoveredAuthorizedAttempt(tenantId, integrationOperationId);
+    return;
+  }
   if (!operation?.businessEffectId || !operation.integrationId || !operation.provider) return;
   if (operation.verificationStatus === "divergent" || operation.verificationStatus === "verified") return;
 

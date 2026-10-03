@@ -1,0 +1,710 @@
+{
+  "schema": "finnor.s4.frozen-corpus.v2",
+  "normalization": 100,
+  "regretUpperFloor": 0.05,
+  "numericTolerance": 1e-08,
+  "cases": [
+    {
+      "id": "complete-cost-inquiry",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "inspect",
+          "kind": "INQUIRE",
+          "cost": 2,
+          "delay": 1
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "raise": 5,
+              "cut": -5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "B",
+          "payoffs": [
+            {
+              "raise": -5,
+              "cut": 5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "inspect"
+    },
+    {
+      "id": "useless-signal",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "inspect",
+          "kind": "INQUIRE",
+          "cost": 2,
+          "delay": 1
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "same",
+          "payoffs": [
+            {
+              "raise": 5,
+              "cut": -5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "same",
+          "payoffs": [
+            {
+              "raise": -5,
+              "cut": 5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        }
+      ],
+      "forbiddenFirst": "inspect"
+    },
+    {
+      "id": "too-costly-information",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "inspect",
+          "kind": "INQUIRE",
+          "cost": 30,
+          "delay": 1
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "raise": 5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "B",
+          "payoffs": [
+            {
+              "raise": -5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        }
+      ],
+      "forbiddenFirst": "inspect"
+    },
+    {
+      "id": "delayed-information-misses-option",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "inspect",
+          "kind": "INQUIRE",
+          "cost": 2,
+          "delay": 2
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "raise": 5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "B",
+          "payoffs": [
+            {
+              "raise": -5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        }
+      ],
+      "forbiddenFirst": "inspect"
+    },
+    {
+      "id": "wait-for-option",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "exercise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 1
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "exercise": 2
+            },
+            {
+              "exercise": 20
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "wait"
+    },
+    {
+      "id": "stop-with-terminal-debt",
+      "horizon": 2,
+      "tailDebt": 7,
+      "actions": [
+        {
+          "id": "exercise",
+          "kind": "INTERVENE",
+          "cost": 2
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 1
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "exercise": -4
+            },
+            {
+              "exercise": -4
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "stop"
+    },
+    {
+      "id": "adaptive-reaction-reverses-myopic",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "aggressive",
+          "kind": "INTERVENE",
+          "cost": 1,
+          "tailLiability": 15
+        },
+        {
+          "id": "moderate",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "aggressive": 20,
+              "moderate": 9
+            },
+            {
+              "aggressive": 1,
+              "moderate": 3
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "moderate"
+    },
+    {
+      "id": "coupled-occupied-capacity",
+      "horizon": 2,
+      "capacity": 1,
+      "budget": 2,
+      "existingOccupancy": 0.4,
+      "actions": [
+        {
+          "id": "large",
+          "kind": "INTERVENE",
+          "cost": 1,
+          "occupancy": 0.7,
+          "occupationPeriods": 2
+        },
+        {
+          "id": "small",
+          "kind": "INTERVENE",
+          "cost": 1,
+          "occupancy": 0.5,
+          "occupationPeriods": 2
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "large": 20,
+              "small": 7
+            },
+            {
+              "large": 20,
+              "small": 4
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "small"
+    },
+    {
+      "id": "unsafe-do-nothing",
+      "horizon": 2,
+      "utilityFloor": 2,
+      "actions": [
+        {
+          "id": "exercise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "exercise": -3
+            },
+            {
+              "exercise": -3
+            }
+          ]
+        }
+      ],
+      "expectedStatus": "INFEASIBLE"
+    },
+    {
+      "id": "action-reveals-hidden-regime",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "probe",
+          "kind": "INTERVENE",
+          "cost": 1,
+          "reveals": true
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "probe": 2,
+              "raise": 3
+            },
+            {
+              "raise": 10,
+              "cut": -10
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "B",
+          "payoffs": [
+            {
+              "probe": 2,
+              "raise": -3
+            },
+            {
+              "raise": -10,
+              "cut": 10
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "probe"
+    },
+    {
+      "id": "fixed-correlated-paths",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "A",
+          "payoffs": [
+            {
+              "wait": 100,
+              "stop": 100
+            },
+            {
+              "wait": -100,
+              "stop": -100
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "signal": "B",
+          "payoffs": [
+            {
+              "wait": -100,
+              "stop": -100
+            },
+            {
+              "wait": 100,
+              "stop": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "noisy-support-not-prior",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "inspect",
+          "kind": "INQUIRE",
+          "cost": 2,
+          "delay": 1
+        },
+        {
+          "id": "raise",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "cut",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a1",
+          "signal": "A",
+          "payoffs": [
+            {
+              "raise": 5,
+              "cut": -5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "a2",
+          "signal": "B",
+          "payoffs": [
+            {
+              "raise": 5,
+              "cut": -5
+            },
+            {
+              "raise": 12,
+              "cut": -12
+            }
+          ]
+        },
+        {
+          "id": "b1",
+          "signal": "A",
+          "payoffs": [
+            {
+              "raise": -5,
+              "cut": 5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        },
+        {
+          "id": "b2",
+          "signal": "B",
+          "payoffs": [
+            {
+              "raise": -5,
+              "cut": 5
+            },
+            {
+              "raise": -12,
+              "cut": 12
+            }
+          ]
+        }
+      ],
+      "forbiddenFirst": "inspect"
+    },
+    {
+      "id": "adaptive-history-response",
+      "horizon": 2,
+      "actions": [
+        {
+          "id": "aggressive",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "moderate",
+          "kind": "INTERVENE",
+          "cost": 1
+        },
+        {
+          "id": "wait",
+          "kind": "WAIT",
+          "cost": 0
+        },
+        {
+          "id": "stop",
+          "kind": "STOP",
+          "cost": 0
+        }
+      ],
+      "worlds": [
+        {
+          "id": "a",
+          "signal": "private-A",
+          "payoffs": [
+            {
+              "aggressive": 20,
+              "moderate": 9
+            },
+            {
+              "aggressive": 1,
+              "moderate": 3
+            }
+          ],
+          "responses": [
+            {
+              "ifPreviousAction": "aggressive",
+              "lag": 1,
+              "cashCost": 15
+            }
+          ]
+        }
+      ],
+      "expectedFirst": "moderate"
+    }
+  ]
+}
