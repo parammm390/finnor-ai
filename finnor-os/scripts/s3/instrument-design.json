@@ -1,0 +1,280 @@
+{
+  "schema": "finnor.s2.design-request.v1",
+  "inquiryId": "registered-inquiry",
+  "episodeId": "s2-e2e",
+  "mandateRef": {
+    "owner": "SUPPLIED",
+    "id": "mandate",
+    "version": "supplied-1",
+    "contentDigest": "5ee4540cc3afd8379fecf275bd96306232e7d396cf90a4cd1909450b3b3a0543"
+  },
+  "decisionContext": {
+    "ref": {
+      "owner": "SUPPLIED",
+      "id": "decision",
+      "version": "supplied-1",
+      "contentDigest": "c03574b89a6597c55807ad98cbc0b530a9b1eeb039ff7e69e9926fa712fc3c4b"
+    },
+    "utilityRef": {
+      "owner": "SUPPLIED",
+      "id": "utility",
+      "version": "supplied-1",
+      "contentDigest": "8d1ac0e6f42371afcde13b8fcedb0cbf5b3f2506291b19e7b2ff18933f0e7b77"
+    },
+    "horizonEnd": "2026-10-01T16:15:00.559Z",
+    "lossUnit": "normalized-loss",
+    "actionIds": [
+      "a0",
+      "a1"
+    ],
+    "lossByHypothesis": [
+      [
+        "0",
+        "1"
+      ],
+      [
+        "1",
+        "0"
+      ]
+    ]
+  },
+  "hypotheses": [
+    {
+      "ref": {
+        "owner": "SUPPLIED",
+        "id": "h0",
+        "version": "supplied-1",
+        "contentDigest": "ace286b7b7fad48cacd08d5088e9049104210cf98c8d4c090068aa4ae632d6e2"
+      },
+      "prior": "0.5",
+      "meaning": "Synthetic H0"
+    },
+    {
+      "ref": {
+        "owner": "SUPPLIED",
+        "id": "h1",
+        "version": "supplied-1",
+        "contentDigest": "521be15a73dd2ed79a97faf7c665d1cda3da6367a15092a4bb2351980f0cac21"
+      },
+      "prior": "0.5",
+      "meaning": "Synthetic H1"
+    }
+  ],
+  "requiredClaimRefs": [],
+  "validUntil": "2026-10-01T16:15:00.559Z",
+  "maxBeliefAgeMs": 3600000,
+  "constraints": {
+    "maxSamples": 24,
+    "maxElapsedMs": 3600000,
+    "maxExposureUnits": "24",
+    "maxPrivacyUnits": "0",
+    "moneyLimit": {
+      "value": "0",
+      "unit": "USD"
+    },
+    "permittedPopulationRefs": [
+      {
+        "owner": "SUPPLIED",
+        "id": "population",
+        "version": "supplied-1",
+        "contentDigest": "9859c96612ecda92426ef7a2981ca7491ce7733862677e16a93388eacc7c06e4"
+      }
+    ],
+    "permittedInstrumentRefs": [
+      {
+        "owner": "SUPPLIED",
+        "id": "informative",
+        "version": "supplied-1",
+        "contentDigest": "cf5890c2db55c50a71b4d739175f69d5764bd2bbc8b5680046bcd49de758739f"
+      },
+      {
+        "owner": "SUPPLIED",
+        "id": "irrelevant",
+        "version": "supplied-1",
+        "contentDigest": "0baa219705bd31566b2bf01e3fb8925fe5465d64f0ba3e157050f2ae2c2c3715"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "informative",
+      "instrumentRef": {
+        "owner": "SUPPLIED",
+        "id": "informative",
+        "version": "supplied-1",
+        "contentDigest": "cf5890c2db55c50a71b4d739175f69d5764bd2bbc8b5680046bcd49de758739f"
+      },
+      "endpoint": {
+        "id": "binary-measurement",
+        "unit": "category",
+        "categories": [
+          "negative",
+          "positive"
+        ]
+      },
+      "populationRef": {
+        "owner": "SUPPLIED",
+        "id": "population",
+        "version": "supplied-1",
+        "contentDigest": "9859c96612ecda92426ef7a2981ca7491ce7733862677e16a93388eacc7c06e4"
+      },
+      "measurementUnit": "independent-item",
+      "assignment": {
+        "kind": "OBSERVATIONAL",
+        "unit": "independent-item",
+        "probability": "1"
+      },
+      "timing": {
+        "startAt": "2026-10-01T15:15:00.559Z",
+        "endAt": "2026-10-01T16:15:00.559Z",
+        "minimumIntervalMs": 0
+      },
+      "process": {
+        "methodRef": {
+          "owner": "SUPPLIED",
+          "id": "measurement-method",
+          "version": "supplied-1",
+          "contentDigest": "c8a617ea0e9aeff7a651207ca7a4cf0cde349fb7e68f4d8b3c04ff3282734bd7"
+        },
+        "instrumentError": "IN_LIKELIHOOD",
+        "missingness": "NONE",
+        "dependence": "CONDITIONAL_IID",
+        "interference": "NONE",
+        "reactivity": "NONE",
+        "nuisance": "FIXED_SUPPLIED"
+      },
+      "likelihood": {
+        "status": "SUPPLIED_CONDITIONAL",
+        "probabilities": [
+          [
+            "0.8",
+            "0.2"
+          ],
+          [
+            "0.2",
+            "0.8"
+          ]
+        ],
+        "calibrationRef": null,
+        "assumptions": [
+          "Synthetic supplied IID likelihood; no field calibration"
+        ]
+      },
+      "samples": 8,
+      "stopping": {
+        "method": "FIXED_SAMPLE",
+        "alpha": "0.05",
+        "beta": "0.05",
+        "minimumPower": "0"
+      },
+      "costEstimate": {
+        "money": {
+          "value": "0",
+          "unit": "USD"
+        },
+        "elapsedMs": 100,
+        "humanSeconds": 0,
+        "dataBytes": 1024,
+        "integrationUnits": 0,
+        "computeMs": null
+      },
+      "exposure": {
+        "unitsPerSample": "1",
+        "privacyUnitsPerSample": "0",
+        "riskAssumptions": [
+          "Local fixture only"
+        ]
+      }
+    },
+    {
+      "id": "irrelevant",
+      "instrumentRef": {
+        "owner": "SUPPLIED",
+        "id": "irrelevant",
+        "version": "supplied-1",
+        "contentDigest": "0baa219705bd31566b2bf01e3fb8925fe5465d64f0ba3e157050f2ae2c2c3715"
+      },
+      "endpoint": {
+        "id": "binary-measurement",
+        "unit": "category",
+        "categories": [
+          "negative",
+          "positive"
+        ]
+      },
+      "populationRef": {
+        "owner": "SUPPLIED",
+        "id": "population",
+        "version": "supplied-1",
+        "contentDigest": "9859c96612ecda92426ef7a2981ca7491ce7733862677e16a93388eacc7c06e4"
+      },
+      "measurementUnit": "independent-item",
+      "assignment": {
+        "kind": "OBSERVATIONAL",
+        "unit": "independent-item",
+        "probability": "1"
+      },
+      "timing": {
+        "startAt": "2026-10-01T15:15:00.559Z",
+        "endAt": "2026-10-01T16:15:00.559Z",
+        "minimumIntervalMs": 0
+      },
+      "process": {
+        "methodRef": {
+          "owner": "SUPPLIED",
+          "id": "measurement-method",
+          "version": "supplied-1",
+          "contentDigest": "c8a617ea0e9aeff7a651207ca7a4cf0cde349fb7e68f4d8b3c04ff3282734bd7"
+        },
+        "instrumentError": "IN_LIKELIHOOD",
+        "missingness": "NONE",
+        "dependence": "CONDITIONAL_IID",
+        "interference": "NONE",
+        "reactivity": "NONE",
+        "nuisance": "FIXED_SUPPLIED"
+      },
+      "likelihood": {
+        "status": "SUPPLIED_CONDITIONAL",
+        "probabilities": [
+          [
+            "0.5",
+            "0.5"
+          ],
+          [
+            "0.5",
+            "0.5"
+          ]
+        ],
+        "calibrationRef": null,
+        "assumptions": [
+          "Synthetic supplied IID likelihood; no field calibration"
+        ]
+      },
+      "samples": 8,
+      "stopping": {
+        "method": "FIXED_SAMPLE",
+        "alpha": "0.05",
+        "beta": "0.05",
+        "minimumPower": "0"
+      },
+      "costEstimate": {
+        "money": {
+          "value": "0",
+          "unit": "USD"
+        },
+        "elapsedMs": 100,
+        "humanSeconds": 0,
+        "dataBytes": 1024,
+        "integrationUnits": 0,
+        "computeMs": null
+      },
+      "exposure": {
+        "unitsPerSample": "1",
+        "privacyUnitsPerSample": "0",
+        "riskAssumptions": [
+          "Local fixture only"
+        ]
+      }
+    }
+  ]
+}
