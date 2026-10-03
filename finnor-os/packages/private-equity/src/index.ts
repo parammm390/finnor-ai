@@ -20,3 +20,5 @@ export * from "./company-brain-relationships";
 export * from "./company-brain";
 export * from "./digital-twin";
 export * from "./semantic-activity";
+
+export * from "./enterprise-beliefs";

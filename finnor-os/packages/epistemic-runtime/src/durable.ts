@@ -313,7 +313,7 @@ interface BindingRow {
 }
 
 async function boundEvidence(client: PoolClient, tenantId: string, graphId: string, propositionId: string,
-  knownAt: string, throughOrder: number): Promise<EvidenceRecord[]> {
+  knownAt: string, throughOrder: number, commitAttested = false): Promise<EvidenceRecord[]> {
   const bindings = await client.query<BindingRow>(`SELECT source_kind,source_type,source_id,value_path,selector,evidence_kind,max_age_ms
     FROM finnor_os.epistemic_source_bindings WHERE tenant_id=$1 AND graph_version_id=$2 AND proposition_id=$3
     ORDER BY source_kind,source_type,source_id,value_path`, [tenantId,graphId,propositionId]);
@@ -327,23 +327,29 @@ async function boundEvidence(client: PoolClient, tenantId: string, graphId: stri
       : "@finnor/evidence-corpus";
     if (!sourceOwner) throw new Error(`Canonical source type has no active owner: ${binding.source_type}`);
     const result = canonical
-      ? await client.query<{ id: string; snapshot: unknown; recorded_at: Date; observed_at: Date | null; previous_version_id: string | null }>(
-        `SELECT v.id,v.snapshot,v.recorded_at,v.observed_at,v.previous_version_id FROM finnor_os.canonical_entity_versions v
+      ? await client.query<{ id: string; snapshot: unknown; decimal_fields: Record<string,string> | null; recorded_at: Date; observed_at: Date | null; previous_version_id: string | null; committed_at: Date | null }>(
+        `SELECT v.id,v.snapshot,v.recorded_at,v.observed_at,v.previous_version_id,
+           CASE WHEN $8::boolean THEN pg_xact_commit_timestamp(v.xmin) END AS committed_at,
+           (SELECT jsonb_object_agg(key,value::text) FROM jsonb_each(v.snapshot) WHERE jsonb_typeof(value)='number' AND key NOT IN ('version','revision','entity_version')) AS decimal_fields
+         FROM finnor_os.canonical_entity_versions v
          WHERE v.tenant_id=$1 AND v.entity_type=$2 AND v.entity_id=$3 AND v.recorded_at<=$4
-           AND NOT EXISTS (SELECT 1 FROM finnor_os.epistemic_changes c WHERE c.tenant_id=$1 AND c.graph_version_id=$5
-             AND c.source_version_id=v.id AND c.ingestion_order>$6)
-         ORDER BY v.entity_version LIMIT $7`, [tenantId,binding.source_type,binding.source_id,knownAt,graphId,throughOrder,MAX_SOURCE_VERSIONS_PER_BINDING+1])
-      : await client.query<{ id: string; snapshot: unknown; retrieved_at: Date; as_of: Date; previous_version_id: string | null }>(
-        `SELECT id,snapshot,retrieved_at,as_of,lag(id) OVER (ORDER BY version_number) AS previous_version_id
+           AND CASE WHEN $8::boolean THEN pg_xact_commit_timestamp(v.xmin)<=$4 ELSE true END
+           AND ($8::boolean OR NOT EXISTS (SELECT 1 FROM finnor_os.epistemic_changes c WHERE c.tenant_id=$1 AND c.graph_version_id=$5
+             AND c.source_version_id=v.id AND c.ingestion_order>$6))
+         ORDER BY v.entity_version LIMIT $7`, [tenantId,binding.source_type,binding.source_id,knownAt,graphId,throughOrder,MAX_SOURCE_VERSIONS_PER_BINDING+1,commitAttested])
+      : await client.query<{ id: string; snapshot: unknown; retrieved_at: Date; created_at: Date; as_of: Date; previous_version_id: string | null; committed_at: Date | null }>(
+        `SELECT id,snapshot,retrieved_at,created_at,as_of,lag(id) OVER (ORDER BY version_number) AS previous_version_id,
+           CASE WHEN $7::boolean THEN pg_xact_commit_timestamp(v.xmin) END AS committed_at
          FROM finnor_os.evidence_source_versions v WHERE source_id=$1 AND v.tenant_id=$2 AND scope='tenant'
-           AND retrieved_at<=$3
-           AND NOT EXISTS (SELECT 1 FROM finnor_os.epistemic_changes c WHERE c.tenant_id=$2 AND c.graph_version_id=$4
-             AND c.source_version_id=v.id AND c.ingestion_order>$5)
+           AND retrieved_at<=$3 AND created_at<=$3
+           AND CASE WHEN $7::boolean THEN pg_xact_commit_timestamp(v.xmin)<=$3 ELSE true END
+           AND ($7::boolean OR NOT EXISTS (SELECT 1 FROM finnor_os.epistemic_changes c WHERE c.tenant_id=$2 AND c.graph_version_id=$4
+             AND c.source_version_id=v.id AND c.ingestion_order>$5))
          ORDER BY version_number LIMIT $6`,
-        [binding.source_id,tenantId,knownAt,graphId,throughOrder,MAX_SOURCE_VERSIONS_PER_BINDING+1]);
+        [binding.source_id,tenantId,knownAt,graphId,throughOrder,MAX_SOURCE_VERSIONS_PER_BINDING+1,commitAttested]);
     if (result.rows.length > MAX_SOURCE_VERSIONS_PER_BINDING) throw new Error("Bound evidence history exceeds limit; defer and compact through owner policy");
     for (const row of result.rows) {
-      const snapshot = row.snapshot as Record<string, unknown>;
+      const snapshot = { ...(row.snapshot as Record<string, unknown>), ...(canonical ? (row as { decimal_fields: Record<string,string> | null }).decimal_fields ?? {} : {}) };
       const extracted = selectBoundValue(snapshot,{ valuePath:binding.value_path,selector:binding.selector });
       if (!extracted.present) continue;
       const versionId = row.id;
@@ -351,7 +357,9 @@ async function boundEvidence(client: PoolClient, tenantId: string, graphId: stri
       const evidenceId = `${canonical ? "canonical" : "source"}:${versionId}:${propositionId}:${binding.value_path}:${selectorKey}`;
       const previous = row.previous_version_id
         ? `${canonical ? "canonical" : "source"}:${row.previous_version_id}:${propositionId}:${binding.value_path}:${selectorKey}` : undefined;
-      const recordedAt = canonical ? iso((row as { recorded_at: Date }).recorded_at) : iso((row as { retrieved_at: Date }).retrieved_at);
+      const recordedAt = canonical ? iso((row as { recorded_at: Date }).recorded_at)
+        : new Date(Math.max((row as { retrieved_at: Date }).retrieved_at.getTime(), (row as { created_at: Date }).created_at.getTime())).toISOString();
+      const visibleAt = row.committed_at ? new Date(Math.max(Date.parse(recordedAt), row.committed_at.getTime())).toISOString() : recordedAt;
       const observedAt = canonical ? iso((row as { observed_at: Date | null }).observed_at,recordedAt) : iso((row as { as_of: Date }).as_of);
       const sourceFact = binding.selector.op === "business_hash";
       const validAt = canonical
@@ -374,7 +382,7 @@ async function boundEvidence(client: PoolClient, tenantId: string, graphId: stri
           truthClass: canonical ? "CANONICAL" : binding.evidence_kind === "PROVIDER_OBSERVATION" ? "WORK" : "MEMORY",
           role: "answer_evidence",
         },
-        observedAt, validAt, ...(validTo ? { validTo } : {}), ingestedAt: recordedAt, value: extracted.value!,
+        observedAt, validAt, ...(validTo ? { validTo } : {}), ingestedAt: visibleAt, value: extracted.value!,
         confidence: canonical
           ? { level: "VERIFIED", basis: "DETERMINISTIC_SOURCE", heuristicVersion: EPISTEMIC_HEURISTIC_VERSION, reasonCodes: ["CANONICAL_TRUTH_SELECTED"] }
           : { level: "MEDIUM", basis: "SOURCE_ASSERTION", heuristicVersion: EPISTEMIC_HEURISTIC_VERSION, reasonCodes: ["SOURCE_VERSION_ASSERTION"] },
@@ -1135,28 +1143,10 @@ export async function revalidatePinnedEpistemicNode(input: {
   });
 }
 
-/** Explicit graph identity is mandatory in replay. The typed result makes a
- * pre-baseline request distinguishable from a genuine UNKNOWN proposition. */
-export async function replayDurableEpistemicGraph(input: {
+/** Recompute from source/definition rows inside the caller's one snapshot. */
+async function reconstructStoredGraph(client: PoolClient, input: {
   tenantId: string; graphVersionId: string; validAt: string; knownAt: string;
-}): Promise<{ status: "AVAILABLE"; state: EpistemicState; ruleVersion: string; heuristicVersion: string }
-  | { status: "UNAVAILABLE_BEFORE_BASELINE" | "UNAVAILABLE_AFTER_RETIREMENT" }> {
-  return withTenantTransaction(input.tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
-    const graph = await client.query<{ rule_version: string; heuristic_version: string;
-      before_baseline: boolean; after_retirement: boolean }>(
-      `SELECT rule_version,heuristic_version,
-         (baseline_at IS NULL OR baseline_at>$3::timestamptz) before_baseline,
-         (retired_at IS NOT NULL AND retired_at<$3::timestamptz) after_retirement
-       FROM finnor_os.epistemic_graph_versions WHERE tenant_id=$1 AND id=$2`,
-      [input.tenantId,input.graphVersionId,input.knownAt]);
-    if (!graph.rows[0]) throw new Error("Unknown or cross-tenant historical epistemic graph");
-    if (graph.rows[0].before_baseline) {
-      return { status: "UNAVAILABLE_BEFORE_BASELINE" };
-    }
-    if (graph.rows[0].after_retirement) {
-      return { status: "UNAVAILABLE_AFTER_RETIREMENT" };
-    }
-    if (graph.rows[0].heuristic_version !== EPISTEMIC_HEURISTIC_VERSION) throw new Error("Historical heuristic implementation unavailable");
+}, throughOrder: number, commitAttested: boolean): Promise<EpistemicState> {
     const definitions = await client.query<{ proposition_id: string; subject: PropositionDefinition["subject"];
       predicate: PropositionDefinition["predicate"] }>(
       `SELECT proposition_id,subject,predicate FROM finnor_os.epistemic_propositions
@@ -1171,26 +1161,75 @@ export async function replayDurableEpistemicGraph(input: {
     const definitionsForOracle: PropositionDefinition[] = definitions.rows.map((row) => ({
       id: row.proposition_id,subject: row.subject,predicate: row.predicate,dependencyRefs: byChild.get(row.proposition_id) ?? [],
     }));
-    const order = await client.query<{ order: string }>(
-      `SELECT coalesce(max(ingestion_order),0)::text AS "order" FROM finnor_os.epistemic_changes
-       WHERE tenant_id=$1 AND graph_version_id=$2 AND accepted_at<=$3`,
-      [input.tenantId,input.graphVersionId,input.knownAt]);
     const evidence: EvidenceRecord[] = [];
     for (const definition of definitionsForOracle) {
-      evidence.push(...await boundEvidence(client,input.tenantId,input.graphVersionId,definition.id,input.knownAt,Number(order.rows[0]?.order ?? 0)));
+      evidence.push(...await boundEvidence(client,input.tenantId,input.graphVersionId,definition.id,input.knownAt,throughOrder,commitAttested));
     }
     const initial = createEpistemicState({
       scope: { tenantId: input.tenantId,principalId: "system:causal-replay",decisionId: `graph:${input.graphVersionId}` },
       asOf: input.knownAt, propositions: definitionsForOracle,
     });
     const state = appendEvidenceAndRecompute(initial,evidence,input.knownAt,{ validAt: input.validAt,knownAt: input.knownAt });
+    return state;
+}
+
+/** Explicit graph identity is mandatory in replay. The typed result makes a
+ * pre-baseline request distinguishable from a genuine UNKNOWN proposition. */
+export async function replayDurableEpistemicGraph(input: {
+  tenantId: string; graphVersionId: string; validAt: string; knownAt: string;
+}): Promise<{ status: "AVAILABLE"; state: EpistemicState; ruleVersion: string; heuristicVersion: string }
+  | { status: "UNAVAILABLE_BEFORE_BASELINE" | "UNAVAILABLE_AFTER_RETIREMENT" | "UNAVAILABLE_COMMIT_VISIBILITY" }> {
+  if (!Number.isFinite(Date.parse(input.knownAt)) || !Number.isFinite(Date.parse(input.validAt))) throw new Error("Invalid historical epistemic query time");
+  return withTenantTransaction(input.tenantId, { readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
+    const visibility = (await client.query<{ tracked: boolean; future: boolean }>(
+      "SELECT current_setting('track_commit_timestamp')='on' AS tracked,$1::timestamptz>clock_timestamp() AS future", [input.knownAt])).rows[0]!;
+    if (visibility.future) throw new Error("Historical epistemic knowledge time cannot be in the future");
+    const graph = await client.query<{ rule_version: string; heuristic_version: string;
+      before_baseline: boolean; after_retirement: boolean }>(
+      `SELECT rule_version,heuristic_version,
+         (baseline_at IS NULL OR baseline_at>$3::timestamptz) before_baseline,
+         (retired_at IS NOT NULL AND retired_at<$3::timestamptz) after_retirement
+       FROM finnor_os.epistemic_graph_versions WHERE tenant_id=$1 AND id=$2`,
+      [input.tenantId,input.graphVersionId,input.knownAt]);
+    if (!graph.rows[0]) throw new Error("Unknown or cross-tenant historical epistemic graph");
+    if (graph.rows[0].before_baseline) {
+      return { status: "UNAVAILABLE_BEFORE_BASELINE" };
+    }
+    if (graph.rows[0].heuristic_version !== EPISTEMIC_HEURISTIC_VERSION) throw new Error("Historical heuristic implementation unavailable");
+    if (!visibility.tracked) return { status: "UNAVAILABLE_COMMIT_VISIBILITY" };
+    // Frozen definitions/bindings and source history must be visible at the cut.
+    // Missing retained commit attestation never becomes an absent source. Graph
+    // phase metadata is mutable only by its existing owner: a later phase change
+    // may conservatively make an older cut unavailable, never rewrite its facts.
+    const gap = (await client.query<{ missing: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM finnor_os.epistemic_graph_versions g WHERE g.tenant_id=$1 AND g.id=$2
+          AND (pg_xact_commit_timestamp(g.xmin) IS NULL OR pg_xact_commit_timestamp(g.xmin)>$3))
+        OR EXISTS (SELECT 1 FROM finnor_os.epistemic_propositions p WHERE p.tenant_id=$1 AND p.graph_version_id=$2
+          AND (pg_xact_commit_timestamp(p.xmin) IS NULL OR pg_xact_commit_timestamp(p.xmin)>$3))
+        OR EXISTS (SELECT 1 FROM finnor_os.epistemic_proposition_dependencies d WHERE d.tenant_id=$1 AND d.graph_version_id=$2
+          AND (pg_xact_commit_timestamp(d.xmin) IS NULL OR pg_xact_commit_timestamp(d.xmin)>$3))
+        OR EXISTS (SELECT 1 FROM finnor_os.epistemic_source_bindings b WHERE b.tenant_id=$1 AND b.graph_version_id=$2
+          AND (pg_xact_commit_timestamp(b.xmin) IS NULL OR pg_xact_commit_timestamp(b.xmin)>$3))
+        OR EXISTS (SELECT 1 FROM finnor_os.epistemic_source_bindings b JOIN finnor_os.canonical_entity_versions v
+          ON v.tenant_id=b.tenant_id AND v.entity_type=b.source_type AND v.entity_id=b.source_id
+          WHERE b.tenant_id=$1 AND b.graph_version_id=$2 AND b.source_kind='canonical_entity' AND v.recorded_at<=$3
+            AND pg_xact_commit_timestamp(v.xmin) IS NULL)
+        OR EXISTS (SELECT 1 FROM finnor_os.epistemic_source_bindings b JOIN finnor_os.evidence_source_versions v
+          ON v.tenant_id=b.tenant_id AND v.source_id=b.source_id
+          WHERE b.tenant_id=$1 AND b.graph_version_id=$2 AND b.source_kind='evidence_source' AND v.created_at<=$3 AND v.retrieved_at<=$3
+            AND pg_xact_commit_timestamp(v.xmin) IS NULL) AS missing`, [input.tenantId,input.graphVersionId,input.knownAt])).rows[0]?.missing;
+    if (gap) return { status: "UNAVAILABLE_COMMIT_VISIBILITY" };
+    if (graph.rows[0].after_retirement) return { status: "UNAVAILABLE_AFTER_RETIREMENT" };
+    // A replay uses immutable source commits, not mutable worker-row xmin/order.
+    const state = await reconstructStoredGraph(client,input,0,true);
     return { status: "AVAILABLE",state,ruleVersion: graph.rows[0].rule_version,
       heuristicVersion: graph.rows[0].heuristic_version };
   });
 }
 
-/** Full recomputation is the independent shadow gate. It compares all semantic
- * results and never accepts a partial sample as proof of activation readiness. */
+/** Full recomputation challenges incremental maintenance with the same EPR
+ * evaluator. It is not the independently implemented S1 business reference or a
+ * protected admission certificate. Every semantic result is compared. */
 export async function compareDurableShadowWithOracle(tenantId: string,
   options: { recordShadowCheckpoint?: boolean } = {}): Promise<{
   equivalent: boolean; checked: number; mismatches: string[]; graphVersionId: string;
@@ -1211,22 +1250,25 @@ export async function compareDurableShadowWithOracle(tenantId: string,
     const order = await client.query<{ order: string }>(
       `SELECT coalesce(max(ingestion_order),0)::text AS "order" FROM finnor_os.epistemic_changes
        WHERE tenant_id=$1 AND graph_version_id=$2`, [tenantId,control.graph_version_id]);
-    return { graphVersionId: control.graph_version_id,current: current.rows,at,
+    const graph = (await client.query<{ heuristic_version: string }>(
+      "SELECT heuristic_version FROM finnor_os.epistemic_graph_versions WHERE tenant_id=$1 AND id=$2", [tenantId,control.graph_version_id])).rows[0];
+    if (!graph || graph.heuristic_version !== EPISTEMIC_HEURISTIC_VERSION) throw new Error("Current heuristic implementation unavailable");
+    // Current comparison owns this actual repeatable-read snapshot. It needs no
+    // historical commit archive and never opens a second, differently visible cut.
+    const state = await reconstructStoredGraph(client,{ tenantId,graphVersionId:control.graph_version_id,validAt:at,knownAt:at },Number(order.rows[0]?.order ?? 0),false);
+    return { graphVersionId: control.graph_version_id,current: current.rows,at,state,
       changeOrder: order.rows[0]?.order ?? "0" };
   });
-  const replay = await replayDurableEpistemicGraph({ tenantId,graphVersionId:snapshot.graphVersionId,
-    validAt:snapshot.at,knownAt:snapshot.at });
-  if (replay.status !== "AVAILABLE") throw new Error("Shadow comparison lacks an honest baseline");
   const mismatches: string[] = [];
-  for (const proposition of replay.state.propositions) {
-    const conflicts = replay.state.conflicts.filter((entry) => entry.propositionId === proposition.id);
+  for (const proposition of snapshot.state.propositions) {
+    const conflicts = snapshot.state.conflicts.filter((entry) => entry.propositionId === proposition.id);
     const actual = hash({ proposition: propositionSemanticFingerprint(proposition),
       conflicts: conflicts.map((conflict) => ({ refs: conflict.evidenceRefs,
         resolution: conflict.resolution,winners: conflict.winningEvidenceRefs,reason: conflict.reasonCode })) });
     const stored = snapshot.current.find((row) => row.proposition_id === proposition.id)?.semantic_hash;
     if (stored !== actual) mismatches.push(proposition.id);
   }
-  if (snapshot.current.length !== replay.state.propositions.length) mismatches.push("GRAPH_CARDINALITY_MISMATCH");
+  if (snapshot.current.length !== snapshot.state.propositions.length) mismatches.push("GRAPH_CARDINALITY_MISMATCH");
   if (mismatches.length === 0 && options.recordShadowCheckpoint !== false) {
     await withTenantTransaction(tenantId, {}, async (_db, client) => {
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,5141))",[tenantId]);
@@ -1248,7 +1290,7 @@ export async function compareDurableShadowWithOracle(tenantId: string,
         WHERE tenant_id=$1`,[tenantId,snapshot.changeOrder]);
     });
   }
-  return { equivalent: mismatches.length===0,checked: replay.state.propositions.length,mismatches,graphVersionId:snapshot.graphVersionId };
+  return { equivalent: mismatches.length===0,checked: snapshot.state.propositions.length,mismatches,graphVersionId:snapshot.graphVersionId };
 }
 
 /** The kill switch is immediate and reversible. It never rewrites accepted

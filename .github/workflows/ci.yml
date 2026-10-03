@@ -65,6 +65,23 @@ jobs:
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm --prefix .. run workspace:check
       - run: npm ci
+      # Historical S1 proofs require actual database commit visibility. Configure
+      # only this disposable CI service before any migration/source fixture exists.
+      - name: Enable commit timestamps on disposable PostgreSQL
+        env:
+          POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: |
+          set -euo pipefail
+          docker exec "$POSTGRES_SERVICE_ID" psql -U finnor -d finnor -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET track_commit_timestamp = 'on'"
+          docker restart "$POSTGRES_SERVICE_ID"
+          for attempt in $(seq 1 30); do
+            if docker exec "$POSTGRES_SERVICE_ID" pg_isready -U finnor -d finnor; then
+              test "$(docker exec "$POSTGRES_SERVICE_ID" psql -U finnor -d finnor -Atc 'SHOW track_commit_timestamp')" = on
+              break
+            fi
+            test "$attempt" -lt 30
+            sleep 1
+          done
       # B7.T1: route guards are inventory, not tribal knowledge. Fail before tests
       # whenever a route is added or its visible guard pattern changes without the
       # generated review document being refreshed in the same change.

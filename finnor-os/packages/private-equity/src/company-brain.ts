@@ -6,6 +6,11 @@ import { peTransaction, shapePeRow, type SqlRow } from "./repository";
 import { listUnderwritingWorkspace } from "./underwriting-repository";
 import { loadPrivateEquityWorldState } from "./world-state";
 import {
+  authorizeBeliefResources,
+  authorizeBeliefCandidateCut,
+  authorizeBeliefSourceScopes,
+} from "./enterprise-beliefs";
+import {
   CORE_BRAIN_OBJECT_TYPES,
   EPISTEMIC_BRAIN_OBJECT_TYPES,
   PLANNING_BRAIN_OBJECT_TYPES,
@@ -1010,6 +1015,7 @@ export function projectCompanyBrain(
   const boundedEdges = eligibleEdges.slice(0, maxEdges);
   return {
     root: world.root,
+    ...(world.beliefView ? { beliefView: world.beliefView } : {}),
     asOf,
     nodes: boundedNodes,
     edges: boundedEdges,
@@ -1083,9 +1089,21 @@ export async function loadCompanyBrainSourceBundle(
     const icAsOf = input.knowledgeAt ?? input.asOf;
     ic = await settledMany("P5 IC", relevant.map((row) => getIcWorkspace(ctx, { icCaseId: String(row.id), ...(icAsOf ? { asOf: icAsOf } : {}) })), statuses);
   } catch (error) {
-    statuses.push({ owner: "P5 IC", status: "partial", reason: error instanceof Error ? error.message : "IC source unavailable" });
+    statuses.push({ owner: "P5 IC", status: "partial", reason: "IC source unavailable" });
   }
-  return { world, underwriting, ic, works, workforce, attention, sourceStatus: statuses };
+  const bundle = { world, underwriting, ic, works, workforce, attention, sourceStatus: statuses };
+  // The raw bundle also feeds semantic activity. Recheck current policy before
+  // returning it, rather than relying solely on the projection's later check.
+  const resourceProjection = projectCompanyBrain(bundle, { maxNodes: DEFAULT_MAX_NODES, maxEdges: DEFAULT_MAX_EDGES });
+  const current = await authorizeBeliefResources(ctx, [
+    { type: "tenant", id: ctx.auth.tenantId }, { type: input.root.entityType, id: input.root.entityId },
+    ...resourceProjection.nodes.map(node => ({ type: node.ref.type, id: node.ref.id })),
+    ...resourceProjection.nodes.flatMap(node => node.provenanceRefs.map(ref => ({ type: ref.table, id: ref.id }))),
+  ]);
+  await authorizeBeliefCandidateCut(ctx);
+  await authorizeBeliefSourceScopes(ctx, input.root, world.evidence.map(row => String(row.sourceId)));
+  if (current.revision !== world.beliefView?.rights.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  return bundle;
 }
 
 export async function loadCompanyBrainProjection(
@@ -1093,16 +1111,24 @@ export async function loadCompanyBrainProjection(
   input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string; maxNodes?: number; maxEdges?: number },
 ): Promise<CompanyBrainProjection> {
   const bundle = await loadCompanyBrainSourceBundle(ctx, input);
-  return projectCompanyBrain(bundle, { maxNodes: input.maxNodes, maxEdges: input.maxEdges });
+  const projection = projectCompanyBrain(bundle, { maxNodes: input.maxNodes, maxEdges: input.maxEdges });
+  const current = await authorizeBeliefResources(ctx, [
+    { type: "tenant", id: ctx.auth.tenantId }, { type: input.root.entityType, id: input.root.entityId },
+    ...projection.nodes.map(node => ({ type: node.ref.type, id: node.ref.id })),
+    ...projection.nodes.flatMap(node => node.provenanceRefs.map(ref => ({ type: ref.table, id: ref.id }))),
+  ]);
+  if (current.revision !== bundle.world.beliefView?.rights.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  return projection;
 }
 
 export async function listCompanyBrainRoots(
   ctx: PeMutationContext,
   input: { query?: string; limit?: number } = {},
 ): Promise<CompanyBrainSearchResult[]> {
+  const authorization = await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }]);
   const limit = Math.min(MAX_SEARCH_RESULTS, Math.max(1, Math.floor(input.limit ?? 50)));
   const query = input.query?.trim() ?? "";
-  return peTransaction(ctx, async (_db, client) => {
+  const rows = await peTransaction(ctx, async (_db, client) => {
     const result = await client.query<SqlRow>(
       `SELECT * FROM (
          SELECT 'pe_strategy'::text entity_type,id::text,name label,state,updated_at FROM finnor_os.pe_strategies WHERE tenant_id=$1
@@ -1124,13 +1150,36 @@ export async function listCompanyBrainRoots(
        ORDER BY roots.updated_at DESC,roots.entity_type,roots.id LIMIT $3`,
       [ctx.auth.tenantId, query, limit],
     );
-    return result.rows.map((raw) => {
-      const row = shapePeRow(raw);
-      const root = { entityType: String(row.entityType) as PeWorldRootRef["entityType"], entityId: String(row.id) };
-      const ref = worldRootObjectRef(root);
-      return { ref, label: String(row.label), state: text(row.state), rootRefs: [root], inspectionTarget: { kind: "pe_context", root, objectRef: ref } };
-    });
+    return result.rows;
   }, { readOnly: true });
+  // Release the data transaction before the authority owner uses the same pool.
+  // Hosted callers have a one-connection budget; nested transactions cannot run.
+  let permitted: SqlRow[];
+  try {
+    await authorizeBeliefResources(ctx, [
+      { type: "tenant", id: ctx.auth.tenantId },
+      ...rows.map(raw => ({ type: String(raw.entity_type), id: String(raw.id) })),
+    ]);
+    permitted = rows;
+  } catch (error) {
+    if (!(error instanceof PeDomainError) || error.code !== "PE_ENTITY_NOT_FOUND") throw error;
+    permitted = [];
+    for (const raw of rows) {
+      try { await authorizeBeliefResources(ctx, [{ type: String(raw.entity_type), id: String(raw.id) }, { type: "tenant", id: ctx.auth.tenantId }]); permitted.push(raw); }
+      catch (denied) { if (!(denied instanceof PeDomainError) || denied.code !== "PE_ENTITY_NOT_FOUND") throw denied; }
+    }
+  }
+  const current = await authorizeBeliefResources(ctx, [
+    { type: "tenant", id: ctx.auth.tenantId },
+    ...permitted.map(raw => ({ type: String(raw.entity_type), id: String(raw.id) })),
+  ]);
+  if (current.revision !== authorization.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  return permitted.map((raw) => {
+    const row = shapePeRow(raw);
+    const root = { entityType: String(row.entityType) as PeWorldRootRef["entityType"], entityId: String(row.id) };
+    const ref = worldRootObjectRef(root);
+    return { ref, label: String(row.label), state: text(row.state), rootRefs: [root], inspectionTarget: { kind: "pe_context" as const, root, objectRef: ref } };
+  });
 }
 
 export function searchCompanyBrainProjection(

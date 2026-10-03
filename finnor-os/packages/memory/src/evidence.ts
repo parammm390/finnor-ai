@@ -263,6 +263,16 @@ function storageSafeChunks(content: string): EvidenceChunkText[] {
   return stored;
 }
 
+async function existingEvidenceVersion(db: Db, sourceId: string, hash: string, snapshot: Record<string, unknown>): Promise<EvidenceVersionResult | null> {
+  const [existing] = await db.select({ id: evidenceSourceVersions.id, versionNumber: evidenceSourceVersions.versionNumber,
+    sameSnapshot: sql<boolean>`${evidenceSourceVersions.snapshot} = ${JSON.stringify(snapshot)}::jsonb` })
+    .from(evidenceSourceVersions).where(and(eq(evidenceSourceVersions.sourceId, sourceId), eq(evidenceSourceVersions.contentHash, hash))).limit(1);
+  if (!existing) return null;
+  if (!existing.sameSnapshot) throw new Error("Evidence content identity conflicts with its immutable semantic snapshot");
+  const [countRow] = await db.select({ count: sql<number>`count(*)::int` }).from(evidenceChunks).where(eq(evidenceChunks.versionId, existing.id));
+  return { sourceId, versionId: existing.id, versionNumber: existing.versionNumber, chunks: Number(countRow?.count ?? 0), contentHash: hash };
+}
+
 /** Append-only Core Evidence version inside an existing tenant transaction. Network
  * embedding is intentionally unavailable here; transaction callers must keep remote
  * work outside Postgres and may supply already-computed vectors if ever required. */
@@ -295,16 +305,8 @@ export async function appendEvidenceVersionTx(
   )).limit(1);
   if (!source) throw new Error("Evidence source is not visible in this tenant context");
   await db.execute(sql`SELECT id FROM ${evidenceSources} WHERE ${evidenceSources.id}=${sourceId} FOR UPDATE`);
-  const [existing] = await db.select({ id: evidenceSourceVersions.id, versionNumber: evidenceSourceVersions.versionNumber })
-    .from(evidenceSourceVersions).where(and(
-      eq(evidenceSourceVersions.sourceId, sourceId),
-      eq(evidenceSourceVersions.contentHash, hash),
-    )).limit(1);
-  if (existing) {
-    const [countRow] = await db.select({ count: sql<number>`count(*)::int` }).from(evidenceChunks)
-      .where(eq(evidenceChunks.versionId, existing.id));
-    return { sourceId, versionId: existing.id, versionNumber: existing.versionNumber, chunks: Number(countRow?.count ?? 0), contentHash: hash };
-  }
+  const existing = await existingEvidenceVersion(db, sourceId, hash, snapshot);
+  if (existing) return existing;
   const [previous] = await db.select({ versionNumber: max(evidenceSourceVersions.versionNumber) })
     .from(evidenceSourceVersions).where(eq(evidenceSourceVersions.sourceId, sourceId));
   const versionNumber = Number(previous?.versionNumber ?? 0) + 1;
@@ -318,6 +320,7 @@ export async function appendEvidenceVersionTx(
     snapshot,
     asOf: input.asOf ?? new Date(),
     retrievedAt: input.retrievedAt ?? new Date(),
+    createdAt: sql`clock_timestamp()`,
   }).returning({ id: evidenceSourceVersions.id });
   if (!version) throw new Error("Evidence version insert returned no row");
   await db.insert(evidenceChunks).values(chunks.map((chunk, index) => ({
@@ -355,6 +358,21 @@ export async function appendEvidenceVersion(
   }));
   if (chunks.length === 0) throw new Error("Evidence version produced no chunks");
 
+  const snapshot = structuredClone(input.snapshot ?? {});
+  const duplicate = await withTenant(tenantId, async db => {
+    const [source] = await db.select({ id: evidenceSources.id, scope: evidenceSources.scope, tenantId: evidenceSources.tenantId })
+      .from(evidenceSources).where(eq(evidenceSources.id, sourceId)).limit(1);
+    if (!source || source.scope !== "tenant" || source.tenantId !== tenantId) throw new Error("Evidence source is not visible in this tenant context");
+    return existingEvidenceVersion(db, sourceId, hash, snapshot);
+  });
+  if (duplicate) return duplicate;
+  // Remote work occurs after a permissioned preflight and outside every source
+  // transaction/lock. The final transaction independently rechecks identity.
+  const vectors = input.embeddingProvider
+    ? await embedManyCached(tenantId, chunks.map(chunk => chunk.content), input.embeddingProvider)
+    : input.embeddings ?? [];
+  if (vectors.length > 0 && vectors.length !== chunks.length) throw new Error("Evidence embeddings must match chunk count");
+
   return withTenant(tenantId, async (db) => {
     const [source] = await db.select().from(evidenceSources).where(eq(evidenceSources.id, sourceId)).limit(1);
     if (!source) throw new Error("Evidence source is not visible in this tenant context");
@@ -362,30 +380,11 @@ export async function appendEvidenceVersion(
       throw new Error("Public evidence ingestion requires a privileged cache-ingestion process");
     }
 
-    const [existing] = await db
-      .select({ id: evidenceSourceVersions.id, versionNumber: evidenceSourceVersions.versionNumber })
-      .from(evidenceSourceVersions)
-      .where(and(eq(evidenceSourceVersions.sourceId, sourceId), eq(evidenceSourceVersions.contentHash, hash)))
-      .limit(1);
-    if (existing) {
-      const [countRow] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(evidenceChunks)
-        .where(eq(evidenceChunks.versionId, existing.id));
-      return {
-        sourceId,
-        versionId: existing.id,
-        versionNumber: existing.versionNumber,
-        chunks: Number(countRow?.count ?? 0),
-        contentHash: hash,
-      };
-    }
+    // Serialize version identity allocation for duplicate/concurrent deliveries.
+    await db.execute(sql`SELECT id FROM ${evidenceSources} WHERE ${evidenceSources.id}=${sourceId} FOR UPDATE`);
 
-    let vectors = input.embeddings ?? [];
-    if (input.embeddingProvider) {
-      vectors = await embedManyCached(tenantId, chunks.map((chunk) => chunk.content), input.embeddingProvider);
-    }
-    if (vectors.length > 0 && vectors.length !== chunks.length) throw new Error("Evidence embeddings must match chunk count");
+    const existing = await existingEvidenceVersion(db, sourceId, hash, snapshot);
+    if (existing) return existing;
 
     const [previous] = await db
       .select({ versionNumber: max(evidenceSourceVersions.versionNumber) })
@@ -401,9 +400,10 @@ export async function appendEvidenceVersion(
         versionNumber,
         contentHash: hash,
         content,
-        snapshot: input.snapshot ?? {},
+        snapshot,
         asOf: input.asOf ?? new Date(),
         retrievedAt: input.retrievedAt ?? new Date(),
+        createdAt: sql`clock_timestamp()`,
       })
       .returning({ id: evidenceSourceVersions.id });
     if (!version) throw new Error("Evidence version insert returned no row");

@@ -1,3 +1,4 @@
+import type { BeliefView } from "@finnor/shared-types";
 import {
   PE_WORLD_ROOT_TYPES as SHARED_PE_WORLD_ROOT_TYPES,
   type CanonicalEntityRef,
@@ -240,6 +241,7 @@ export interface DealExecutionGraph {
 export type TemporalCompletenessStatus = "complete" | "partial" | "unavailable_before_baseline";
 
 export interface PeWorldState {
+  beliefView?: BeliefView;
   root: PeWorldRootRef;
   stateAt: string;
   /** Business-valid instant used for temporal relationship/fact filtering. */

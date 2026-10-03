@@ -12,3 +12,5 @@ export * from "./semantic-diff";
 export * from "./trace";
 export * from "./shadow";
 export * from "./durable";
+
+export * from "./belief-view";
