@@ -1,0 +1,61 @@
+{
+  "schema": "finnor.s6.repository-closure.v1",
+  "closedAt": "2026-10-03T19:57:47.009862+00:00",
+  "repositoryStatus": "CLOSED",
+  "repositoryItems": 23,
+  "repositoryItemsPass": 23,
+  "frozenInventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+  "originalPromptSha256": "10ce31af7b7d80a538178fbfe268de70d424a1a7f391ac49d488c2edc6f50cdf",
+  "headBeforePRPublication": "6ade745cfaca88bb199ed9cac2b37b86e6d5ef9a",
+  "sourceDigests": {
+    "finnor-os/packages/governed-execution/src/ledger.ts": "28c199524740d227f2f5d4fd4e6ca8c9c93d529bff472f18826e83045e2a06ae",
+    "finnor-os/packages/governed-execution/src/ledger-server.mts": "4fe0d6e53ccce55867c834c316adb9b3042d2c660f69e6766e9af8f010c0530d",
+    "finnor-os/packages/governed-execution/src/protocol.ts": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+    "finnor-os/packages/governed-execution/src/request-verifier.ts": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+    "finnor-os/packages/governed-execution/src/adapter-contract.ts": "c233be2fd1f576fd55683ad257d6f1691ded8a432e0fec5fc8955d9892fff877",
+    "finnor-os/packages/governed-execution/src/dispatch-broker.ts": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f",
+    "finnor-os/packages/governed-execution/src/broker-io.ts": "910dcbe92f799c914abffd8b7e684f11d1585e54413f312e4d2e46d05637d36c",
+    "finnor-os/packages/private-equity/src/enterprise-obligations.ts": "a9b73f6e3ee16928ad994fed2ae935955c32f27b7af717a1c456e19c96a2ea6d",
+    "finnor-os/packages/private-equity/src/enterprise-allocation.ts": "3085d8370f3ec5b1c8d1cd4a2c38248109af1c43683123efa6951618374d7e22",
+    "finnor-os/packages/private-equity/src/enterprise-control.ts": "b9094dcbc02079811830c7dcea3b9a3fd7efc4ad80f53cb33d2ca4f4ef681f49",
+    "finnor-os/packages/private-equity/src/enterprise-beliefs.ts": "5f9a594dbbf376b22a4aab63c7cd5d38d7bd1b4a87da84f325e7b2ec58f11f60",
+    "finnor-os/packages/private-equity/src/allocation-store.ts": "571cdc2d4cf8b5ec2c570c5245851b6f1a8fe6b2f8a2a61c05fc6889c7e3fa8b",
+    "finnor-os/packages/private-equity/src/obligation-contracts.ts": "0ab6d79e726a39eac06bf68541ee84650b47e4e2d813e83bf38add0a690660b8",
+    "finnor-os/apps/api/app/api/obligations/[operation]/route.ts": "79adcfe62715fda3fb205afb930fc2f48289edb4c37c32b0a3d85764a4cecdd4",
+    "finnor-os/packages/orchestration/src/request-compiler.ts": "b77f7fa366747417e4dd80da4e8ab802ca8931e27f52d4a9f28c0b7222b4b82d",
+    "finnor-os/packages/orchestration/src/compiler.ts": "cb7b9fb01cbc929d71782933bb82c4424c6343549d6a6c30cff93c51c6319714"
+  },
+  "fullExternalFrozenGatePassed": false,
+  "externalItems": [
+    {
+      "id": "X1",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X2",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X3",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X4",
+      "status": "BLOCKED_EXTERNAL"
+    }
+  ],
+  "declaredDomain": "Existing canonical FINNOR and preregistered CONDITIONAL_JSON_RECORD_V1 only",
+  "productionAdmissionEstablished": false,
+  "qualification": "Repository S6 closed on the audited six-PR stack; full external gate remains false",
+  "evidence": {
+    "currentPublicationAudit": "scope-evidence/publication-audit.json",
+    "recordedOriginalClosedCorpus": "Primary checkout retained final-source and final-corpus artifacts, not included as credential-bearing raw fixtures",
+    "reviewCandidate": "python3 scope-6/prepare-release.py",
+    "finalReview": "scope-evidence/publication-final-review.md"
+  },
+  "retainedFailures": true,
+  "newChallengeFamilies": false,
+  "expandedAdmissionDomain": false,
+  "sixScopePRPublication": "AUDITED_LOCAL_STACK_PENDING_REMOTE_PUBLICATION",
+  "publicationAudit": "scope-evidence/publication-audit.json"
+}

@@ -1,6 +1,6 @@
 {
   "schema": "finnor.s6.frozen-completion-progress.v1",
-  "updatedAt": "2026-10-03T16:26:22.420853+00:00",
+  "updatedAt": "2026-10-03T19:57:47.009862+00:00",
   "frozenInventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
   "items": [
     {
@@ -112,7 +112,7 @@
       "status": "BLOCKED_EXTERNAL"
     }
   ],
-  "remainingRepositoryTask": "S6-21 EXISTING_FINAL_CORPUS",
+  "remainingRepositoryTask": null,
   "repositoryStatus": "CLOSED",
   "fullExternalFrozenGatePassed": false,
   "closureEvidence": "scope-evidence/completion-closure.json"
