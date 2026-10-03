@@ -3719,6 +3719,38 @@
       "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts"
     },
     {
+      "capabilityId": "http.post.experiments.$operation",
+      "family": "experiments",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "experiments/:operation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "experiments"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/experiments/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.instructions.$id.cancel",
       "family": "instruction",
       "owner": "@finnor/db",
@@ -3782,6 +3814,38 @@
       "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/integrations/microsoft-graph/source-scopes/route.ts"
+    },
+    {
+      "capabilityId": "http.post.interventions.$operation",
+      "family": "interventions",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "interventions/:operation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "interventions"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts"
     },
     {
       "capabilityId": "http.post.objectives",
