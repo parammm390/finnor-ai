@@ -32,3 +32,11 @@ export * from "./intervention-backend";
 export * from "./contingent-control";
 
 export * from "./intervention-control";
+
+export * from "./allocation-contracts";
+
+export * from "./allocation-producer";
+
+export * from "./allocation-checker";
+
+export * from "./allocation-verifier";
