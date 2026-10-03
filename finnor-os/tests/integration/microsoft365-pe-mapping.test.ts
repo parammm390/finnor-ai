@@ -553,7 +553,7 @@ describe.skipIf(!available)("P2 Microsoft 365 PE evidence mapping", () => {
   });
 
   it("projects Microsoft evidence and coverage into state_at without hindsight or false absence", async () => {
-    const beforeConfiguration = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    const beforeConfiguration = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at FROM pg_sleep(0.003)")).rows[0]!.at;
     const inserted = await admin.query<{ configured_at: Date }>(
       `INSERT INTO finnor_os.integration_source_scopes(
         id,tenant_id,integration_id,provider,source_kind,provider_scope_type,provider_resource_id,
@@ -581,7 +581,7 @@ describe.skipIf(!available)("P2 Microsoft 365 PE evidence mapping", () => {
       reason: "Initial baseline is pending",
       baselineStartedAt: configuredAt,
     }));
-    const afterInitializing = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    const afterInitializing = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at FROM pg_sleep(0.003)")).rows[0]!.at;
 
     const beforeWorld = await loadPrivateEquityWorldState(ctxA, { entityType: "pe_strategy", entityId: strategyA }, beforeConfiguration);
     expect(beforeWorld.sourceCoverage.map((row) => row.sourceScopeId)).not.toContain(worldScope);
@@ -606,7 +606,7 @@ describe.skipIf(!available)("P2 Microsoft 365 PE evidence mapping", () => {
       retrievedAt: afterInitializing.toISOString(),
     });
     const receipt = await recordPrivateEquityProviderEvidenceObservation(ctxA, evidence);
-    const afterEvidence = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    const afterEvidence = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at FROM pg_sleep(0.003)")).rows[0]!.at;
     expect(receipt.rootResolution.root).toEqual({ entityType: "pe_strategy", entityId: strategyA });
 
     const beforeRetrieval = await loadPrivateEquityWorldState(ctxA, { entityType: "pe_strategy", entityId: strategyA }, afterInitializing);
@@ -622,7 +622,7 @@ describe.skipIf(!available)("P2 Microsoft 365 PE evidence mapping", () => {
       }),
     ]));
 
-    const completedAt = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    const completedAt = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at FROM pg_sleep(0.003)")).rows[0]!.at;
     await admin.query(
       `UPDATE finnor_os.integration_source_scopes
           SET freshness_state='fresh',last_successful_sync_at=$3,last_observed_at=$4,updated_at=$3
@@ -641,7 +641,7 @@ describe.skipIf(!available)("P2 Microsoft 365 PE evidence mapping", () => {
       earliestProviderAt: providerObservedAt,
       latestProviderAt: providerObservedAt,
     }));
-    const afterComplete = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    const afterComplete = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at FROM pg_sleep(0.003)")).rows[0]!.at;
     const completeWorld = await loadPrivateEquityWorldState(ctxA, { entityType: "pe_strategy", entityId: strategyA }, afterComplete);
     const completeScope = completeWorld.sourceCoverage.find((row) => row.sourceScopeId === worldScope)!;
     expect(completeScope).toMatchObject({
