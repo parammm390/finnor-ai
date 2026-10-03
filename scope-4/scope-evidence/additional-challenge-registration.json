@@ -1,0 +1,23 @@
+{
+  "schema": "finnor.s4.additional-challenge-registration.v1",
+  "registeredAt": "2026-10-01T19:55:41.903667+00:00",
+  "originalCorpusSha256": "51b7a323b025d1c25091dfe36159354dddb05ae8d4501ebd4df4be83f789c395",
+  "originalCellsRetained": true,
+  "newChallenges": [
+    "actual S2 owner instrument consumed without prior weighting",
+    "adaptive actor response depends on previous action, no fixed-tail substitute",
+    "later available signal changes continuation",
+    "elapsed replan preserves prefix costs and horizon",
+    "private counterparty state cannot become a temporal instrument",
+    "actual source revision/unknown durable-effect invalidation",
+    "crash/restart original exact sampled kernel readback",
+    "fixed-budget large search and full hard resource constraints"
+  ],
+  "scoringUnchanged": {
+    "normalization": 100,
+    "regretUpperFloor": 0.05,
+    "numericalTolerance": 1e-08
+  },
+  "failureModel": "scope-4/scope-evidence/failure-model.md",
+  "valueBar": "Every challenge exercises a previously specified distinct owner-boundary invariant, not export/hash shape or duplicate S1/S2/S3 proofs. No test-only production seam."
+}
