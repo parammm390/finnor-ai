@@ -364,7 +364,7 @@ describe.skipIf(!databaseAvailable)("P1 canonical PE world and temporal truth", 
       entity: { entityType: "pe_opportunity", entityId: opportunityId, relationship: "about" },
     });
 
-    const cutoff = new Date(Date.now() + 5_000);
+    let cutoff = new Date();
     const eligibleSnapshot = {
       schema: "finnor.pe.observation.v2",
       worldRoot: opportunityRoot,
@@ -401,6 +401,10 @@ describe.skipIf(!databaseAvailable)("P1 canonical PE world and temporal truth", 
       evidenceVersionId: evidenceHindsightVersion,
       relationship: "supports",
     });
+    // The source links have actually committed. Historical knowledge cannot be
+    // fabricated by requesting a future cut to include a completed fixture.
+    await admin.query("SELECT pg_sleep(0.01)");
+    cutoff = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
     const historical = await loadPrivateEquityWorldState(ctxA, opportunityRoot, cutoff);
     expect(historical.evidence.map((row) => row.versionId)).toContain(evidenceEligibleVersion);
     expect(historical.evidence.map((row) => row.versionId)).not.toContain(evidenceHindsightVersion);
@@ -888,10 +892,13 @@ describe.skipIf(!databaseAvailable)("P1 canonical PE world and temporal truth", 
        RETURNING recorded_at`,
       [tenantA, strategyId, strategySnapshot, "f".repeat(64)],
     )).rows[0]!.recorded_at;
+    await admin.query("SELECT pg_sleep(0.01)");
+    const corruptKnownAt = (await admin.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    expect(corruptKnownAt.getTime()).toBeGreaterThan(corruptRecordedAt.getTime());
     await expect(loadPrivateEquityWorldState(
       ctxA,
       { entityType: "pe_strategy", entityId: strategyId },
-      new Date(corruptRecordedAt.getTime() + 1),
+      corruptKnownAt,
     ))
       .rejects.toMatchObject({ code: "PE_HISTORY_HASH_MISMATCH" });
 

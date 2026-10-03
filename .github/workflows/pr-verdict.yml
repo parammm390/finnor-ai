@@ -2,7 +2,7 @@ name: universal-pr-verdict
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "codex/frozen-*"]
 
 permissions:
   actions: read
