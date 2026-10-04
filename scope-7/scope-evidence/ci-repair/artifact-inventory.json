@@ -1,0 +1,331 @@
+[
+  {
+    "path": "artifacts/final-gates__authz.log.gz",
+    "source": "final-gates/authz.log",
+    "originalSha256": "8a813e7a445b3ead3fc1cc65c2dada66ad7406e1f32e40705c551abbe60a99c9",
+    "representation": "original bytes",
+    "uncompressedSha256": "8a813e7a445b3ead3fc1cc65c2dada66ad7406e1f32e40705c551abbe60a99c9"
+  },
+  {
+    "path": "artifacts/final-gates__backend-types.log.gz",
+    "source": "final-gates/backend-types.log",
+    "originalSha256": "220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7",
+    "representation": "original bytes",
+    "uncompressedSha256": "220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7"
+  },
+  {
+    "path": "artifacts/final-gates__contrast.log.gz",
+    "source": "final-gates/contrast.log",
+    "originalSha256": "cfdeb2d27fed33787342b28f5fe173c839b59b5615d1eb472a10a838a8017130",
+    "representation": "original bytes",
+    "uncompressedSha256": "cfdeb2d27fed33787342b28f5fe173c839b59b5615d1eb472a10a838a8017130"
+  },
+  {
+    "path": "artifacts/final-gates__domain.log.gz",
+    "source": "final-gates/domain.log",
+    "originalSha256": "74ffc5fdff7a8285de65e7dd7e0c48b57f6be02950b99442e3743eaa8f534092",
+    "representation": "original bytes",
+    "uncompressedSha256": "74ffc5fdff7a8285de65e7dd7e0c48b57f6be02950b99442e3743eaa8f534092"
+  },
+  {
+    "path": "artifacts/final-gates__openapi.log.gz",
+    "source": "final-gates/openapi.log",
+    "originalSha256": "e663a9ea2240f53ac40c0293173002b46ef4dd6cd43a6ab59db95f8eacf28e75",
+    "representation": "original bytes",
+    "uncompressedSha256": "e663a9ea2240f53ac40c0293173002b46ef4dd6cd43a6ab59db95f8eacf28e75"
+  },
+  {
+    "path": "artifacts/final-gates__planner.log.gz",
+    "source": "final-gates/planner.log",
+    "originalSha256": "40399d596d9222861a5cb43077c185ce87aefdad5cc20eac37178a2a460a1c2e",
+    "representation": "original bytes",
+    "uncompressedSha256": "40399d596d9222861a5cb43077c185ce87aefdad5cc20eac37178a2a460a1c2e"
+  },
+  {
+    "path": "artifacts/final-gates__release-tests.log.gz",
+    "source": "final-gates/release-tests.log",
+    "originalSha256": "886dc8a8084466ade56480b5a1e8e398cfc2396e823c27667acb49f6dc133bee",
+    "representation": "original bytes",
+    "uncompressedSha256": "886dc8a8084466ade56480b5a1e8e398cfc2396e823c27667acb49f6dc133bee"
+  },
+  {
+    "path": "artifacts/final-gates__release-truth.log.gz",
+    "source": "final-gates/release-truth.log",
+    "originalSha256": "7cdcdb7149727e52e0f76cb4820d096194bf01bf5d0d1240affd63187439efac",
+    "representation": "original bytes",
+    "uncompressedSha256": "7cdcdb7149727e52e0f76cb4820d096194bf01bf5d0d1240affd63187439efac"
+  },
+  {
+    "path": "artifacts/final-gates__results.json.gz",
+    "source": "final-gates/results.json",
+    "originalSha256": "021071a9bfa42aee4dfe85f6b063efee72e43fe255ea35a4cc88f23559c33096",
+    "representation": "original bytes",
+    "uncompressedSha256": "021071a9bfa42aee4dfe85f6b063efee72e43fe255ea35a4cc88f23559c33096"
+  },
+  {
+    "path": "artifacts/final-gates__retirement.log.gz",
+    "source": "final-gates/retirement.log",
+    "originalSha256": "d8f050d9f6afe7f11a037799522f769acc33623a09e43aee1dfb1783a0802199",
+    "representation": "original bytes",
+    "uncompressedSha256": "d8f050d9f6afe7f11a037799522f769acc33623a09e43aee1dfb1783a0802199"
+  },
+  {
+    "path": "artifacts/final-gates__root-build.log.gz",
+    "source": "final-gates/root-build.log",
+    "originalSha256": "6e973202e08e6280c3716c175f591d3352801a8b75825d79ee977fa93d5a0fe2",
+    "representation": "original bytes",
+    "uncompressedSha256": "6e973202e08e6280c3716c175f591d3352801a8b75825d79ee977fa93d5a0fe2"
+  },
+  {
+    "path": "artifacts/final-gates__root-forms.log.gz",
+    "source": "final-gates/root-forms.log",
+    "originalSha256": "11f77f9ec5bc03a200db1555166bd49bf555aa5fab11384a70ffd4824052342f",
+    "representation": "original bytes",
+    "uncompressedSha256": "11f77f9ec5bc03a200db1555166bd49bf555aa5fab11384a70ffd4824052342f"
+  },
+  {
+    "path": "artifacts/final-gates__root-lint.log.gz",
+    "source": "final-gates/root-lint.log",
+    "originalSha256": "9ca966f444874e91d01a9d5d90866e0aaf0074e0fb3e6b4f1fc87bb9017bc56b",
+    "representation": "original bytes",
+    "uncompressedSha256": "9ca966f444874e91d01a9d5d90866e0aaf0074e0fb3e6b4f1fc87bb9017bc56b"
+  },
+  {
+    "path": "artifacts/final-gates__root-manifest.log.gz",
+    "source": "final-gates/root-manifest.log",
+    "originalSha256": "9445cdff38b72da97bc273ebdc9c46f1f8bbd6c68365b95c361c7f3be8622098",
+    "representation": "original bytes",
+    "uncompressedSha256": "9445cdff38b72da97bc273ebdc9c46f1f8bbd6c68365b95c361c7f3be8622098"
+  },
+  {
+    "path": "artifacts/final-gates__root-types.log.gz",
+    "source": "final-gates/root-types.log",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "representation": "original bytes",
+    "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "artifacts/final-gates__root-unit.log.gz",
+    "source": "final-gates/root-unit.log",
+    "originalSha256": "6a7e4667a0ea26464459e5a2cd507df5b04db821abd3525b3e5ab0717e14b87e",
+    "representation": "original bytes",
+    "uncompressedSha256": "6a7e4667a0ea26464459e5a2cd507df5b04db821abd3525b3e5ab0717e14b87e"
+  },
+  {
+    "path": "artifacts/final-gates__s7-types.log.gz",
+    "source": "final-gates/s7-types.log",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "representation": "original bytes",
+    "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "artifacts/final-gates__workspace.log.gz",
+    "source": "final-gates/workspace.log",
+    "originalSha256": "ebb076cc26ca30becc23c832cadbfa2c7a1b00b0644f85d57850c2432e713113",
+    "representation": "original bytes",
+    "uncompressedSha256": "ebb076cc26ca30becc23c832cadbfa2c7a1b00b0644f85d57850c2432e713113"
+  },
+  {
+    "path": "artifacts/final-backend__manifest.json.gz",
+    "source": "final-backend/manifest.json",
+    "originalSha256": "1c6d713a56c5ca6e7b41106096fe75416a2d5a404fbb14d41f59f1efdf4a1b99",
+    "representation": "lossless path/sha256 entry arrays",
+    "uncompressedSha256": "966d401440efa2e691bc605de0f931ba3a30455d0fca4922ed8f803baa55883b"
+  },
+  {
+    "path": "artifacts/final-backend__results.json.gz",
+    "source": "final-backend/results.json",
+    "originalSha256": "23a1dc8a3653c17d18e856558ba1ac734fce6316adccc75d6c28645d56388de5",
+    "representation": "original bytes",
+    "uncompressedSha256": "23a1dc8a3653c17d18e856558ba1ac734fce6316adccc75d6c28645d56388de5"
+  },
+  {
+    "path": "artifacts/final-backend__runner.log.gz",
+    "source": "final-backend/runner.log",
+    "originalSha256": "acee7b728e339d98d91200d124502e0c0a9d16cce66ac59439c5179ff7eafbd4",
+    "representation": "original bytes",
+    "uncompressedSha256": "acee7b728e339d98d91200d124502e0c0a9d16cce66ac59439c5179ff7eafbd4"
+  },
+  {
+    "path": "artifacts/final-browser-gates__lighthouse.log.gz",
+    "source": "final-browser-gates/lighthouse.log",
+    "originalSha256": "969551240d9217d350327afb5f413463b4478cd56267ec1c8599c87c56d0a446",
+    "representation": "original bytes",
+    "uncompressedSha256": "969551240d9217d350327afb5f413463b4478cd56267ec1c8599c87c56d0a446"
+  },
+  {
+    "path": "artifacts/final-browser-gates__public-product-browser.log.gz",
+    "source": "final-browser-gates/public-product-browser.log",
+    "originalSha256": "479abcbdd2d7fb9450671bbd93d9bd9621bad1a9b7b12cb21ea0596ba960dc62",
+    "representation": "original bytes",
+    "uncompressedSha256": "479abcbdd2d7fb9450671bbd93d9bd9621bad1a9b7b12cb21ea0596ba960dc62"
+  },
+  {
+    "path": "artifacts/final-browser-gates__results.json.gz",
+    "source": "final-browser-gates/results.json",
+    "originalSha256": "e6c544e09833ba09635a398f3be01c3dcfb8cf0440158cf66bd0c0b7f02c9d93",
+    "representation": "original bytes",
+    "uncompressedSha256": "e6c544e09833ba09635a398f3be01c3dcfb8cf0440158cf66bd0c0b7f02c9d93"
+  },
+  {
+    "path": "artifacts/orchestration-negative__intentional-failure.log.gz",
+    "source": "orchestration-negative/intentional-failure.log",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "representation": "original bytes",
+    "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "artifacts/orchestration-negative__later-success.log.gz",
+    "source": "orchestration-negative/later-success.log",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "representation": "original bytes",
+    "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "artifacts/orchestration-negative__results.json.gz",
+    "source": "orchestration-negative/results.json",
+    "originalSha256": "250d6809626e5ad4f1661e6c1c32034d2125c740f93a667f970edfe8e2beff05",
+    "representation": "original bytes",
+    "uncompressedSha256": "250d6809626e5ad4f1661e6c1c32034d2125c740f93a667f970edfe8e2beff05"
+  },
+  {
+    "path": "artifacts/native-repair__manifest.json.gz",
+    "source": "native-repair/manifest.json",
+    "originalSha256": "37ee05d5dccc6097e483c56d77f6f1185e161c66ec758d27c727af85af25e981",
+    "representation": "lossless path/sha256 entry arrays",
+    "uncompressedSha256": "bccb765274c025127a5b83f77716a2adc2240547cd890dda88b9be0ab5acd70a"
+  },
+  {
+    "path": "artifacts/native-repair__results.json.gz",
+    "source": "native-repair/results.json",
+    "originalSha256": "73afaaf7dd3c3c4d20ad9c3a8cb2e8aed1e6aa1a91fab55a3dade72af619f1f2",
+    "representation": "original bytes",
+    "uncompressedSha256": "73afaaf7dd3c3c4d20ad9c3a8cb2e8aed1e6aa1a91fab55a3dade72af619f1f2"
+  },
+  {
+    "path": "artifacts/native-repair__runner.log.gz",
+    "source": "native-repair/runner.log",
+    "originalSha256": "c9d556a7e2ca666e836b80b9a1d4ffa93fc9f90810a7ceb7c657888c2aaebb29",
+    "representation": "original bytes",
+    "uncompressedSha256": "c9d556a7e2ca666e836b80b9a1d4ffa93fc9f90810a7ceb7c657888c2aaebb29"
+  },
+  {
+    "path": "artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__partial-results.json.gz",
+    "source": "native-child-evidence/finnor-s7-ci-integrated-WftONV/partial-results.json",
+    "originalSha256": "6efb60fc43ea12a4d5c054262aa61775e95aed3cce33f61d29776a4ba00f5fa8",
+    "representation": "original bytes",
+    "uncompressedSha256": "6efb60fc43ea12a4d5c054262aa61775e95aed3cce33f61d29776a4ba00f5fa8"
+  },
+  {
+    "path": "artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__results.json.gz",
+    "source": "native-child-evidence/finnor-s7-ci-integrated-WftONV/results.json",
+    "originalSha256": "df77f8f068fc797585a16119fced2d86b53f8c6aabbec41cd6e8f01b914831ed",
+    "representation": "original bytes",
+    "uncompressedSha256": "df77f8f068fc797585a16119fced2d86b53f8c6aabbec41cd6e8f01b914831ed"
+  },
+  {
+    "path": "artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__runner.log.gz",
+    "source": "native-child-evidence/finnor-s7-ci-integrated-WftONV/runner.log",
+    "originalSha256": "87840043a6e7fb924c3fa616839dde9d0481705793d9b8f9803cbbfbbae872ca",
+    "representation": "original bytes",
+    "uncompressedSha256": "87840043a6e7fb924c3fa616839dde9d0481705793d9b8f9803cbbfbbae872ca"
+  },
+  {
+    "path": "artifacts/native-child-evidence__finnor-s7-ci-protected-S9DtPE__results.json.gz",
+    "source": "native-child-evidence/finnor-s7-ci-protected-S9DtPE/results.json",
+    "originalSha256": "e873f079d48ca5991f8b79bb2f675944b19efbd68a392ea3c7a5c1a297a0adfe",
+    "representation": "original bytes",
+    "uncompressedSha256": "e873f079d48ca5991f8b79bb2f675944b19efbd68a392ea3c7a5c1a297a0adfe"
+  },
+  {
+    "path": "artifacts/native-child-evidence__finnor-s7-ci-protected-S9DtPE__runner.log.gz",
+    "source": "native-child-evidence/finnor-s7-ci-protected-S9DtPE/runner.log",
+    "originalSha256": "92e7cdbbc35300aa056b2d9068d8c6b59d4ecf2ba919a3aa729cac886ba36e3c",
+    "representation": "original bytes",
+    "uncompressedSha256": "92e7cdbbc35300aa056b2d9068d8c6b59d4ecf2ba919a3aa729cac886ba36e3c"
+  },
+  {
+    "path": "artifacts/gates-clean-install__results.json.gz",
+    "source": "gates-clean-install/results.json",
+    "originalSha256": "ac718daf8f05a5c37bffbdeceb8b2bb5e58d1e03ddca648398393a815e6672c3",
+    "representation": "original bytes",
+    "uncompressedSha256": "ac718daf8f05a5c37bffbdeceb8b2bb5e58d1e03ddca648398393a815e6672c3"
+  },
+  {
+    "path": "artifacts/final-native__manifest.json.gz",
+    "source": "final-native/manifest.json",
+    "originalSha256": "9141c0294fc3b7da7d59f3e0f6992f49dcdb9847ba2f5ee4299ae8b3e322b717",
+    "representation": "lossless path/sha256 entry arrays",
+    "uncompressedSha256": "0111da1871a9b87423c7c0b61fd9a957363e06a3effad762e6cb709d59472e9f"
+  },
+  {
+    "path": "artifacts/final-native__results.json.gz",
+    "source": "final-native/results.json",
+    "originalSha256": "b4355b706c0edbd0d6fe8d49f6e53f9ac71fef10fcea529a43c22e3e28f2a534",
+    "representation": "original bytes",
+    "uncompressedSha256": "b4355b706c0edbd0d6fe8d49f6e53f9ac71fef10fcea529a43c22e3e28f2a534"
+  },
+  {
+    "path": "artifacts/final-native__runner.log.gz",
+    "source": "final-native/runner.log",
+    "originalSha256": "da2924e2588b2a9ec989c860a4ee6d75ff086a094f5b3b34399a89f95426440c",
+    "representation": "original bytes",
+    "uncompressedSha256": "da2924e2588b2a9ec989c860a4ee6d75ff086a094f5b3b34399a89f95426440c"
+  },
+  {
+    "path": "artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__partial-results.json.gz",
+    "source": "final-native-child-evidence/finnor-s7-ci-integrated-a1oO2U/partial-results.json",
+    "originalSha256": "dfeaedec64cc58deae5ff597ea958f7f04e3d0d0711ad7d18c6cb488dd0b2efa",
+    "representation": "original bytes",
+    "uncompressedSha256": "dfeaedec64cc58deae5ff597ea958f7f04e3d0d0711ad7d18c6cb488dd0b2efa"
+  },
+  {
+    "path": "artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__results.json.gz",
+    "source": "final-native-child-evidence/finnor-s7-ci-integrated-a1oO2U/results.json",
+    "originalSha256": "a2e8aa87a8fa387341c903307409b945f54e760b93de02be30ddab8ed0824726",
+    "representation": "original bytes",
+    "uncompressedSha256": "a2e8aa87a8fa387341c903307409b945f54e760b93de02be30ddab8ed0824726"
+  },
+  {
+    "path": "artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__runner.log.gz",
+    "source": "final-native-child-evidence/finnor-s7-ci-integrated-a1oO2U/runner.log",
+    "originalSha256": "583c5920dffafaff3b20ca7a7617415f463d0b7c2080df47d1e52bf44a56e267",
+    "representation": "original bytes",
+    "uncompressedSha256": "583c5920dffafaff3b20ca7a7617415f463d0b7c2080df47d1e52bf44a56e267"
+  },
+  {
+    "path": "artifacts/final-native-child-evidence__finnor-s7-ci-protected-Eebu1N__results.json.gz",
+    "source": "final-native-child-evidence/finnor-s7-ci-protected-Eebu1N/results.json",
+    "originalSha256": "6f5244f29bb71bd9c82b1a12ed2edc2cde9aa50eb6a99a1a3fe0603ea807fbf4",
+    "representation": "original bytes",
+    "uncompressedSha256": "6f5244f29bb71bd9c82b1a12ed2edc2cde9aa50eb6a99a1a3fe0603ea807fbf4"
+  },
+  {
+    "path": "artifacts/final-native-child-evidence__finnor-s7-ci-protected-Eebu1N__runner.log.gz",
+    "source": "final-native-child-evidence/finnor-s7-ci-protected-Eebu1N/runner.log",
+    "originalSha256": "96711f8097c648195bb915eacf0939c964efbc61d8e43f6688febc0ecd4a98bc",
+    "representation": "original bytes",
+    "uncompressedSha256": "96711f8097c648195bb915eacf0939c964efbc61d8e43f6688febc0ecd4a98bc"
+  },
+  {
+    "path": "artifacts/lighthouse-run-2.json.gz",
+    "source": "lighthouse-run-2.json",
+    "originalSha256": "db8b87f19241bf2c65c81cdb10b74f5c4fcd79245e16d92f86af2d93956cdacc",
+    "uncompressedSha256": "db8b87f19241bf2c65c81cdb10b74f5c4fcd79245e16d92f86af2d93956cdacc",
+    "representation": "original bytes"
+  },
+  {
+    "path": "artifacts/lighthouse-run-3.json.gz",
+    "source": "lighthouse-run-3.json",
+    "originalSha256": "233d891dfde0d3150c3e7d03f2285b131e512ac1b4d1bb291ad5a525a2dd4ee6",
+    "uncompressedSha256": "233d891dfde0d3150c3e7d03f2285b131e512ac1b4d1bb291ad5a525a2dd4ee6",
+    "representation": "original bytes"
+  },
+  {
+    "path": "artifacts/lighthouse-run-1.json.gz",
+    "source": "lighthouse-run-1.json",
+    "originalSha256": "75b41d95bbbd122902dc53efca85b6f0e5f50262dfaabd8af40c208670a31e90",
+    "uncompressedSha256": "75b41d95bbbd122902dc53efca85b6f0e5f50262dfaabd8af40c208670a31e90",
+    "representation": "original bytes"
+  }
+]

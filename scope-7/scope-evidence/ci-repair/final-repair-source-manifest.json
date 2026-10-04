@@ -1,0 +1,425 @@
+{
+  "qualification": "STAGED_REPAIR_BYTES_BEFORE_COMMIT; scan metadata and this manifest excluded from own digest",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "7e900909b3001c21a79efc9f9cac467a8089dad2958907044d361fc6a174f69c"
+    },
+    {
+      "path": "docs/release/generated/action-manifest.json",
+      "sha256": "f6911f56c69eb0ca8783313414355e673028d75de6ebb292de2a359b39bdf39e"
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "sha256": "14390e361c6e33e18eeb8da8a97c286b3c8c9993008816a5e1faec449502dcdd"
+    },
+    {
+      "path": "finnor-os/package-lock.json",
+      "sha256": "d75e49859d8193bdf03650fdf40761d72789d92cb16e1e6f3cf2d6641e71e808"
+    },
+    {
+      "path": "finnor-os/package.json",
+      "sha256": "3e3285af6b35f40f1391dcb92c853b150b3c06da3ceedddaceb32a2a800dce67"
+    },
+    {
+      "path": "finnor-os/tests/integration/economic-attribution-owner.e2e.test.ts",
+      "sha256": "67918febef495fc334115b7fd268812a281c280d1f602cce400db1e37f33cb72"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "2bd7a78a33c1a29875d148748223b0a42c8c010509b7a9964b8fbcd34a8c8699"
+    },
+    {
+      "path": "package.json",
+      "sha256": "2e48a1671d8c0af78bcb465d6bc773ae2b23b77aab6605d2f27d975991b64a83"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-6j4f-fj2g-mc7p.json",
+      "sha256": "563b85833a21110993d4666062b3ca07b6bc8d6a232ca879ae76cf1c65b72317"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-h3mg-xc3c-68pw.json",
+      "sha256": "1655a57f0774b83fb27338de2c74f57122478c03d207449f1d2e6e7e648b9d5b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-hxh3-vqpv-xpqv.json",
+      "sha256": "9843113f6de7050cb284e48c607b22e275a4c0df75956089d5228e34b1d67399"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-j6r3-76f7-8jcv.json",
+      "sha256": "23aab4f258a163f3e06e97947d3b40edd76009a4094aa8a0829dddb35654c593"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-q2hr-2g5m-vwhr.json",
+      "sha256": "6950a039aa232138ee53ac7178e091d734292efd53348b850eaa7fba2d530886"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-qhr7-859c-m2p7.json",
+      "sha256": "729765ac2adedf82c53a2c5aba92119a73f45c5179fc1ff39cc16989b8939791"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-vcvr-r3jv-pc5j.json",
+      "sha256": "2626c2b6cdc4eaa1f89e4217577af4a55816001b150f623e2834c34c886c48c6"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/GHSA-vfj7-8cjw-p6xm.json",
+      "sha256": "f35ef7313a8d11b6ec2ac5690db6a947583caf8c0b3057ec840ffad5c415d0f0"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/added-dependency-osv.json",
+      "sha256": "5733df407802733c638f0574041afabb815555fbf1e44440ff4b4f1cfabe4b24"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/adjacent-audit.json",
+      "sha256": "f9fea8f8ab190904985d0267a08cc7196cb06754a0a34e0e04b265fe35f6c80e"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifact-inventory.json",
+      "sha256": "ac036e105fd91a6480ba9d95ea43d00eb2d9e54852921e18925725d1723ca9d6"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/braces-upstream-tests.log.gz",
+      "sha256": "03a97be7b74101bce5686a56190d6bc83a70bcaadb5d94b8443981cdbdd74096"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/braces-upstream-tests.tar.gz",
+      "sha256": "aca9f1308bf86d4ff32d034ce35c97d8f963ab4a76e99d562e7239716ff451d2"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-backend__manifest.json.gz",
+      "sha256": "da7229b8a1fa9269e1ccb6353c9300b6675e9b2b10a7d9e7050ab93cf55cd41c"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-backend__results.json.gz",
+      "sha256": "86b4eac0ee74f85d92f66e58bcfa090c00484e60dedbc648aef4d4175da3ee65"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-backend__runner.log.gz",
+      "sha256": "22ce0bea73768e5dc81890882f5b4fca5327e25dcbb958f0e6a6dda38797e1a9"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-browser-gates__lighthouse.log.gz",
+      "sha256": "8ea051e35b1687d8285092ac40ddeef9b0d09ec26d614b9980bca2c2c2580b93"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-browser-gates__public-product-browser.log.gz",
+      "sha256": "1bdf9114be9a5b5a7b851ad65002266195356c315bed26f5150b32e2d434722f"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-browser-gates__results.json.gz",
+      "sha256": "8912c759445d66a90569579b9bf1c63fcc9ac56c77722ea43d168f6ae494f697"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__authz.log.gz",
+      "sha256": "6d68271ee610389deacd94139451014e3b6a25342a69ef577936e69f81161671"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__backend-types.log.gz",
+      "sha256": "de6e93453797477c8f5163cc6b112526ef7057d41290109acfd39a65272423e2"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__contrast.log.gz",
+      "sha256": "c758d019ae5d84a9e75f7fe66d0c5dad40c69497a5b38ccf5e6a23a69a565b1e"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__domain.log.gz",
+      "sha256": "227de18b0eb8a09693cfa5cb6a7ccfc5ab377f3fd8ca7cbd08622af335ca83bb"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__openapi.log.gz",
+      "sha256": "7b13a676793902567d0c599feb9172c57bbf8ead4b2ac53902d1efea2d5e59fd"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__planner.log.gz",
+      "sha256": "cc8efa37fce358c8904559aa967fb18dee08c16639c1ba22c961272cbb6df05a"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__release-tests.log.gz",
+      "sha256": "e6430c0e631bdd583c4835edc19c8ea2932abc701d71967b5b75181e18d03168"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__release-truth.log.gz",
+      "sha256": "f65286ec8bd76619d85ba753cbd6f91b55283acff1d7180287dcd15255db4df4"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__results.json.gz",
+      "sha256": "632039e1866fd0fd6e9dc0668f83764befaabf83d2ea5270b6c986037b03b8da"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__retirement.log.gz",
+      "sha256": "975096e95b15471fe8359e3cd51176fe9cf4e79410cd888b50aa52bbc555155b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-build.log.gz",
+      "sha256": "ea5eef9796693ce6bb34d72bb8344be15b3e855a562fea1d915b20e8bac2e072"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-forms.log.gz",
+      "sha256": "365e7db6048c65a585fc1dfa6c65ad2883e28c15482079651c91f0ea49e61655"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-lint.log.gz",
+      "sha256": "aab6bed6cd650be43dfe2140f42a37a892edd83257d4eafe8998651aa436b9f5"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-manifest.log.gz",
+      "sha256": "14bc387a8cce6b43e8f178808478b32e67af53a55de52b4fabc5c78fa4158c9d"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-types.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__root-unit.log.gz",
+      "sha256": "1c6442da945b2969fbfb1e1dfd3d132482ae8168038761a6825a6cdc3a84844b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__s7-types.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-gates__workspace.log.gz",
+      "sha256": "a6d98538c4eff3206c26bc679c11a8c4a2afa813b21e70a9d17a2c93621792f3"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__partial-results.json.gz",
+      "sha256": "dfe88c379a140307c37f224656535e2062e8c79985cb935058698aa4e0b7287b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__results.json.gz",
+      "sha256": "f0e2420d51b53dcc7604a75d8af4e157ca4e0bf33818db5c2ed692b0089ac57b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native-child-evidence__finnor-s7-ci-integrated-a1oO2U__runner.log.gz",
+      "sha256": "ec9824e4392d7b53565ac6bdc62ae8ae19fce75cfa95b1d19b72c679d9dc6727"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native-child-evidence__finnor-s7-ci-protected-Eebu1N__results.json.gz",
+      "sha256": "64aa8c8d3ea92ae67093f0d6b8b3d8728918d495ccd63b6863f2804b811b6af5"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native-child-evidence__finnor-s7-ci-protected-Eebu1N__runner.log.gz",
+      "sha256": "010dcb67a18c6a63bd061c161fc12bf087eab4ccbcfb7e973932fe02d76a447b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native__manifest.json.gz",
+      "sha256": "a0079017fcbbbd19c7801967202264a85b3520d475a570c3e9f6593f3bf28bcb"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native__results.json.gz",
+      "sha256": "e933447518786a2047fad8cfadaf83fb03333610281f432045b7c1c7907d380a"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-native__runner.log.gz",
+      "sha256": "4ce78a4898b612371abf255e09bd027e916c1e8dac8c373f451364e0b6650708"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/final-p7.log.gz",
+      "sha256": "063d92da55acf905a31d70463d9c42498946c53ce86cecf30078ce5875c8330b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/gates-clean-install__results.json.gz",
+      "sha256": "f9e4a4fab6b6b55f7559b735e04d966c645c92cd34d700f3fd3ed5a22a28f385"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/lighthouse-run-1.json.gz",
+      "sha256": "675e88f3b6fadf9557207bb2fbcdbc3e0b6f8abdc983a638bdfbf6539ba59dae"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/lighthouse-run-2.json.gz",
+      "sha256": "eece985c91e603f351c4ac45a1c00d9bb1454c91d50da4b4e4159b9998c38ca1"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/lighthouse-run-3.json.gz",
+      "sha256": "f966dc19fba2f207e97ab8d717d7674cc427406d674fed9c01339acd260200c1"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__partial-results.json.gz",
+      "sha256": "7ce02b8808fa328f5e017f03b520ca661267d7cb1b415ed4357aefee732b9d73"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__results.json.gz",
+      "sha256": "98641e9c2f722e501afb1dff004ed69c3389d59c5b0040bb77e521f140c9819a"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-child-evidence__finnor-s7-ci-integrated-WftONV__runner.log.gz",
+      "sha256": "210ec6730a1c09e7995113d6e93c9430feaf5247c69cf41ab8a622a945d69377"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-child-evidence__finnor-s7-ci-protected-S9DtPE__results.json.gz",
+      "sha256": "5af945de69924add0024c60f092b94d7085b5acef6d23b0fe1ea6752930e520b"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-child-evidence__finnor-s7-ci-protected-S9DtPE__runner.log.gz",
+      "sha256": "70057c1fb7a46db8ded008ad5aca25a91001b7f368a95a53e07b677f74af4339"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-repair__manifest.json.gz",
+      "sha256": "a322a6763df20e9680c86aa3fadbd796c415a4bd2c05f4a70499a27a357164f9"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-repair__results.json.gz",
+      "sha256": "e751c71dee45674e9a6503b4a6ffcbca398f3a7201e979884d8af3a3523cb9cf"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/native-repair__runner.log.gz",
+      "sha256": "ca2de39c294e0c24c2c9b9401a355d0c499cd864d3269636c378a9a9d79a31a0"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/orchestration-negative__intentional-failure.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/orchestration-negative__later-success.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/orchestration-negative__results.json.gz",
+      "sha256": "c82d116bcfc70157e1317fafad61514b8d5886c7af58de6d4cf1cf5d82014ea2"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/artifacts/remote-deployment-failure.log.gz",
+      "sha256": "47ca913842cbd29e627b80458771933617b0251d6cb0f0ea127751abb1f67414"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/backend-final-clean-install.log",
+      "sha256": "6cf5f85c34fb00b98d419608aaa03b4d518a80dbde4e35ef8a697fbdb5738f19"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/braces-source-and-test-provenance.json",
+      "sha256": "6852c6f0718f4b3de991fc6eaa7099e0e03896c4828e71897b3c09b106963fef"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/causal-method-unchanged.json",
+      "sha256": "ba742c01adcd2eee6bfc64eedc6eef10a9bcf9861e77a674b6b3afedcf7a0983"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/check-lockfile-osv.py",
+      "sha256": "6000cad9938b3e77f89f7ebfc2e0b7e503562c1e62f4ea3931c9b8f46eda8fd7"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/failure-model.md",
+      "sha256": "8ebdef81705ebb04a7f4cd84dfdbc91f2722ab36accf0df7c3a90f9e3b752a04"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/final-browser-plan.json",
+      "sha256": "57068ae7092b9c7436e091c8a714b064f077b09cc7025b642d37edbba4d8d3b0"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/final-lighthouse-headless.log",
+      "sha256": "5e51677aca777f53d909de97e10d570e8dadc8f9b30cda3a762326b4215d8e42"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/final-lockfile-osv.json",
+      "sha256": "327f3a29d9c134f952cffb48b802a8be0ab8c626a3c39770a74d244f149b9bd2"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/final-p7-exit.json",
+      "sha256": "9395d05024f20e05df45440b2ff38765ba77066aeec1ba4b6b3563a44a4e562e"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/final-p7-summary.json",
+      "sha256": "429ab5e8cf52af99a7ba2fe052f6ca630fcbcfa8dc8f82629bb411b3db66486c"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/full-lockfile-osv.json",
+      "sha256": "ce8a6a61e17f71a1d8d3125641bb7404a977c89918aa121d04008d3ad08d4c66"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/migration-drift-challenges.json",
+      "sha256": "2fbe3b2a889b97dacbe84d0c0f6b3f0769d89a6dacbb28e9d185b8279dae73ea"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/original-mislabeled-static-summary.json",
+      "sha256": "f771deccf97c24e9d4ea38efb18f306d1f70bdcd39a891e4fbedafe4cfd5643e"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/plan.json",
+      "sha256": "2e8a3efd5a97906406270f09596f8b8f24cc222421bc65955846f9e4e67e635d"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/remote-backend-failure.json",
+      "sha256": "aff76c9a4dfb5e6f915b60230653cc96e0437cf3e8b57f31c78c9a5aefb14da2"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/root-final-clean-install.log",
+      "sha256": "065ed18770a7b0aeadb4ee36bbdc5a61220c0c4476843474db0bd34432d98d23"
+    },
+    {
+      "path": "scope-7/scope-evidence/ci-repair/run-gates.py",
+      "sha256": "f98a799957a3ee7aa45a157f5d6c2fa9867cbd1eefa905bd5431748160f74af1"
+    },
+    {
+      "path": "scope-7/scope-evidence/completion-closure.json",
+      "sha256": "156a630bae69b069c4b8d2f1569148e3e471f2f123a81d6bcdb3be06d4e455bf"
+    },
+    {
+      "path": "scope-7/scope-evidence/publication-artifacts/static-gates/summary.json",
+      "sha256": "3a47f9e023d6a8dd5db510d7b0031f66bd87286f3d6fd3e7fcaac8be6e9118bf"
+    },
+    {
+      "path": "scope-7/scope-evidence/publication-audit.md",
+      "sha256": "6ea4d3e7daaafabd14508f7e4c04aa9f217afad2511edef92344e34d529d9fdf"
+    },
+    {
+      "path": "scope-7/scope-status.md",
+      "sha256": "6f83cad3e2d5e1989e8a963376e14994872bfcd4972deffc2d908a6c1bd679e1"
+    },
+    {
+      "path": "scripts/lighthouse-gate.mjs",
+      "sha256": "6d3c8e505238de68aff31d050fa5d2fcc930e0e9773e01227c7e8e1cd2464e2f"
+    },
+    {
+      "path": "scripts/release/validate-deployment-truth.mjs",
+      "sha256": "64a53b857fa1421439900b631550d4b46c8e683984d069a2b97a20844992af08"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "ef90ea0316ca64af0411a34e78d00df8a9ed91b8c8ad158b306475a200bd1cd9"
+    },
+    {
+      "path": "vendor/braces/FINNOR-PROVENANCE.md",
+      "sha256": "a7258c13021aa8cc63cb2df9974be65e8d0faa6a4359f048ad8ae3d53e6f3bb5"
+    },
+    {
+      "path": "vendor/braces/LICENSE",
+      "sha256": "35bdd8a44339719441900fb50fbefc5e2dca1ca662cbaed7a687de842c8b70f2"
+    },
+    {
+      "path": "vendor/braces/README.md",
+      "sha256": "a90ac0e4726bcb5fbf129b8af412e1d0d940eb4c562ebc6c8c91b4978e225a57"
+    },
+    {
+      "path": "vendor/braces/index.js",
+      "sha256": "332ea07c7b006361aad12aa994ca75dc1db8e8382b884909e2f38f10b85c88a4"
+    },
+    {
+      "path": "vendor/braces/lib/compile.js",
+      "sha256": "b651f7715e6db8942ce61d3394357b4d81c8ece88240aa31a458ea1165edd195"
+    },
+    {
+      "path": "vendor/braces/lib/constants.js",
+      "sha256": "f9fb688959232eee3e6ad7906a5b0e3234815db49ee857ef86983d65b917dc7c"
+    },
+    {
+      "path": "vendor/braces/lib/expand.js",
+      "sha256": "7ea3e14c2b2b256ef244fd3d83b8fcaa20aa2232b4e6d768c3bb6ab567f66cf5"
+    },
+    {
+      "path": "vendor/braces/lib/parse.js",
+      "sha256": "b1bf766fba6a62035f78ecbda8a5fd94e921aa1c1ec0cdf3f467e9c836abed55"
+    },
+    {
+      "path": "vendor/braces/lib/stringify.js",
+      "sha256": "49dc2d8bafa74f34715a18a845bcb82ce66caaf3bab4cf117998e06b1f9a50a9"
+    },
+    {
+      "path": "vendor/braces/lib/utils.js",
+      "sha256": "b5a7596aa67730412b3c029ef09e84e6b67b8e445cffd35d1d295549c89066c7"
+    },
+    {
+      "path": "vendor/braces/package.json",
+      "sha256": "11a894ab3f5609f77f3618281aeed3ac5272c8e882af7a4d9ac51f178a60b3ce"
+    }
+  ]
+}

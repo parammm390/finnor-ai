@@ -1,0 +1,204 @@
+{
+  "status": "PARTIAL",
+  "softwareCandidateQualification": "EMPIRICALLY_VERIFIED_IN_TESTED_NATIVE_GENERATED_DISPOSABLE_DOMAIN",
+  "statisticalQualification": "PROBABILISTICALLY_SUPPORTED_IN_REGISTERED_FIXED_BOUNDED_RANDOMIZATION_DOMAIN",
+  "fullCompletionGatePassed": false,
+  "goalMarkedComplete": false,
+  "version": "s7-bounded-owner-value-v1",
+  "nativeRecordVersion": "s7-economic-record-v2",
+  "sourceManifest": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/final-source-manifest.json",
+  "milestones": [
+    {
+      "id": "M1",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M2",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M3",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M4",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M5",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M6",
+      "status": "OWNED_IMPLEMENTATION_AND_FOCUSED_CHECKS_COMPLETE",
+      "qualification": "SOURCE_BOUNDED_SOFTWARE_ONLY"
+    },
+    {
+      "id": "M7",
+      "status": "FOCUSED_CHECKS_AND_SOLO_ADVERSARIAL_REVIEW_COMPLETE",
+      "independentHumanOrAgentReview": false
+    },
+    {
+      "id": "M8",
+      "status": "BLOCKED_EXTERNAL",
+      "gatePassed": false
+    }
+  ],
+  "verification": [
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/statistical-qualified/results.json",
+      "sha256": "315f23dd862fb81f1ee5e31412e140f3d587001a87db1351427f815b73df3c1b",
+      "bytes": 248780,
+      "classification": "PROBABILISTICALLY_SUPPORTED",
+      "cases": 17,
+      "pass": 17,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-statistical-e2e.mts",
+      "qualification": "GENERATED_KNOWN_EFFECT_DESIGN_CONDITIONAL_INFERENCE_ONLY"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/protected-qualified/results.json",
+      "sha256": "9f0933b26f645c63f259e5362eec1474a86a54aa0ef93ab0ad9f20ebb589ee53",
+      "bytes": 17122,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-protected-e2e.mts",
+      "qualification": "DISPOSABLE_TEST_AUTHORITY_SEPARATE_PROCESS_NO_H2_ECONOMIC_OR_PRODUCTION_ADMISSION"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/owner-notices-qualified/results.json",
+      "sha256": "90762d0ff3153eafd2a5930b4d65cfe4aa5a0187baca526c7cba0836c34761c3",
+      "bytes": 2453877,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 8,
+      "pass": 8,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-owner-e2e.mts",
+      "qualification": "REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/integrated-notices-qualified/results.json",
+      "sha256": "baa8f6acee9d1554dc4e241870103a3e73b7714c65823bc52c668950d5bb1bb6",
+      "bytes": 25120115,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 10,
+      "pass": 10,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-integrated-e2e.mts",
+      "qualification": "REAL_OWNER_SQL_AND_PROTECTED_SEPARATE_PROCESS_WITH_DISPOSABLE_GENERATED_AUTHORITY; NO_FIELD_H2_OR_ADMISSION"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/maturity-qualified/results.json",
+      "sha256": "c9991adb8ba1edf06dd4ab7ee6a143a1497338bfbbcc3a75033af283cd79980a",
+      "bytes": 291884,
+      "classification": "DETERMINISTICALLY_VERIFIED",
+      "cases": 1,
+      "pass": 1,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-maturity-e2e.mts",
+      "qualification": "ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF"
+    }
+  ],
+  "repositoryChecks": [
+    {
+      "command": "./node_modules/.bin/tsc --noEmit",
+      "artifact": "typecheck-final.log",
+      "exitCode": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "EMPIRICALLY_VERIFIED"
+    },
+    {
+      "command": "./node_modules/.bin/tsc -p scripts/s7/tsconfig.json",
+      "artifact": "harness-typecheck-final.log",
+      "exitCode": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "EMPIRICALLY_VERIFIED"
+    },
+    {
+      "command": "npm run authz:matrix:check",
+      "artifact": "authz-final-verified.log",
+      "exitCode": 0,
+      "sha256": "8a813e7a445b3ead3fc1cc65c2dada66ad7406e1f32e40705c551abbe60a99c9",
+      "classification": "EMPIRICALLY_VERIFIED"
+    },
+    {
+      "command": "npm run PE-DOMAIN-BOUNDARY",
+      "artifact": "pe-domain-final-verified.log",
+      "exitCode": 0,
+      "sha256": "3f4960280d607176cb9ba636e98a0d9556ddb79ad6ecbbc7ce3a06e518c64626",
+      "classification": "EMPIRICALLY_VERIFIED"
+    }
+  ],
+  "baselineGuards": [
+    {
+      "artifact": "upstream-arithmetic.log",
+      "testFiles": 3,
+      "tests": 37,
+      "classification": "EMPIRICALLY_VERIFIED"
+    },
+    {
+      "artifact": "upstream-consumers.log",
+      "testFiles": 4,
+      "tests": 19,
+      "classification": "EMPIRICALLY_VERIFIED"
+    }
+  ],
+  "externalDependencies": [
+    {
+      "id": "E1",
+      "classification": "BLOCKED_EXTERNAL",
+      "required": "Commissioned prospective field cohort, lawful sources, preassignment native source/design commitments and supported interference/consistency/bounded-wealth assumptions"
+    },
+    {
+      "id": "E2",
+      "classification": "BLOCKED_EXTERNAL",
+      "required": "Independent actual owner financial statements/valuation bounds and complete attributable costs, including adverse/failed/research/development cases"
+    },
+    {
+      "id": "E3",
+      "classification": "BLOCKED_EXTERNAL",
+      "required": "36-month actual assignment-aligned mature outcomes and at least 90 days of qualified closed-loop operation"
+    },
+    {
+      "id": "E4",
+      "classification": "BLOCKED_EXTERNAL",
+      "required": "Independent S6 production admission and real protected authority/provider conformance for the changed candidate source"
+    },
+    {
+      "id": "E5",
+      "classification": "BLOCKED_EXTERNAL",
+      "required": "Matched independently qualified current seven-arm benchmark plus separate S8 capability evaluation"
+    }
+  ],
+  "unidentifiedOwnerValue": true,
+  "actualCompleteCostsEstablished": false,
+  "economic100xEstablished": false,
+  "Muse10xEstablished": false,
+  "dots10xEstablished": false,
+  "capabilityDominanceEstablished": false,
+  "testAudit": {
+    "noNewUnitTests": true,
+    "meaningfulCoverageDeleted": false,
+    "preFixFailuresRetained": true,
+    "separateAgentsStoppedPerUser": true,
+    "actualReview": "Root solo source attacks; independent withheld numerical/financial oracles, ordinary/admin SQL readback and real separate signed ledger process; no independent human/agent approval"
+  },
+  "limitations": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/method-provenance.md"
+}

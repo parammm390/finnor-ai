@@ -395,3 +395,5 @@ export * from "./contingent-control";
 export * from "./allocation";
 
 export * from "./durable-obligations";
+
+export * from "./economic-attribution";

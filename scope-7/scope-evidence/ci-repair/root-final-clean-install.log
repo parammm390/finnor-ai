@@ -1,0 +1,47 @@
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: @napi-rs/wasm-runtime@1.2.0
+npm warn Found: @emnapi/core@1.11.1
+npm warn node_modules/@emnapi/core
+npm warn   @emnapi/core@"^1.4.3" from @napi-rs/wasm-runtime@0.2.12
+npm warn   node_modules/@napi-rs/wasm-runtime
+npm warn     @napi-rs/wasm-runtime@"^0.2.11" from @unrs/resolver-binding-wasm32-wasi@1.11.1
+npm warn     node_modules/@unrs/resolver-binding-wasm32-wasi
+npm warn   1 more (@rolldown/binding-wasm32-wasi)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @emnapi/core@"^2.0.0-alpha.3" from @napi-rs/wasm-runtime@1.2.0
+npm warn node_modules/@rolldown/binding-wasm32-wasi/node_modules/@napi-rs/wasm-runtime
+npm warn   @napi-rs/wasm-runtime@"^1.1.6" from @rolldown/binding-wasm32-wasi@1.1.5
+npm warn   node_modules/@rolldown/binding-wasm32-wasi
+npm warn
+npm warn Conflicting peer dependency: @emnapi/core@2.0.0-alpha.5
+npm warn node_modules/@emnapi/core
+npm warn   peer @emnapi/core@"^2.0.0-alpha.3" from @napi-rs/wasm-runtime@1.2.0
+npm warn   node_modules/@rolldown/binding-wasm32-wasi/node_modules/@napi-rs/wasm-runtime
+npm warn     @napi-rs/wasm-runtime@"^1.1.6" from @rolldown/binding-wasm32-wasi@1.1.5
+npm warn     node_modules/@rolldown/binding-wasm32-wasi
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: @napi-rs/wasm-runtime@1.2.0
+npm warn Found: @emnapi/runtime@1.11.1
+npm warn node_modules/@emnapi/runtime
+npm warn   @emnapi/runtime@"^1.4.3" from @napi-rs/wasm-runtime@0.2.12
+npm warn   node_modules/@napi-rs/wasm-runtime
+npm warn     @napi-rs/wasm-runtime@"^0.2.11" from @unrs/resolver-binding-wasm32-wasi@1.11.1
+npm warn     node_modules/@unrs/resolver-binding-wasm32-wasi
+npm warn   1 more (@rolldown/binding-wasm32-wasi)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @emnapi/runtime@"^2.0.0-alpha.3" from @napi-rs/wasm-runtime@1.2.0
+npm warn node_modules/@rolldown/binding-wasm32-wasi/node_modules/@napi-rs/wasm-runtime
+npm warn   @napi-rs/wasm-runtime@"^1.1.6" from @rolldown/binding-wasm32-wasi@1.1.5
+npm warn   node_modules/@rolldown/binding-wasm32-wasi
+npm warn
+npm warn Conflicting peer dependency: @emnapi/runtime@2.0.0-alpha.5
+npm warn node_modules/@emnapi/runtime
+npm warn   peer @emnapi/runtime@"^2.0.0-alpha.3" from @napi-rs/wasm-runtime@1.2.0
+npm warn   node_modules/@rolldown/binding-wasm32-wasi/node_modules/@napi-rs/wasm-runtime
+npm warn     @napi-rs/wasm-runtime@"^1.1.6" from @rolldown/binding-wasm32-wasi@1.1.5
+npm warn     node_modules/@rolldown/binding-wasm32-wasi
+npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 600 packages in 53s

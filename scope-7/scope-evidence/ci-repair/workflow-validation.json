@@ -1,0 +1,11 @@
+{
+  "previousHead": "13ce6b6cfce3e020a95c355bd3bdb8340ba92127",
+  "remoteFailureRun": 37166158452,
+  "failure": "runner.temp is unavailable in job-level env",
+  "negativeOldWorkflowExit": 1,
+  "correctedAllWorkflowsExit": 0,
+  "tool": "actionlint 1.7.11",
+  "shellcheck": "not installed; workflow expression/schema validation remains enabled",
+  "pyflakes": "not installed; workflow expression/schema validation remains enabled",
+  "fix": "move runner-temp proof environment to the npm-test step"
+}

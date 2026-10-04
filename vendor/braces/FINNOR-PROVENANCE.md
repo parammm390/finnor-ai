@@ -1,0 +1,5 @@
+# FINNOR local braces security fork
+
+MIT runtime copied byte-for-byte from FSDevelop/braces commit 28d440b5dd449dbf1fe6f3506cf94ecca4d02660, upstream PR https://github.com/micromatch/braces/pull/72. Archive SHA256: 746542c72b9108f70c19147b6afa2ae382469450d2590118d3dd5b97887cc53c. This is a local patched fork, named @finnor/braces with version 3.0.4-finnor.1, installed under the braces alias through the locked file dependency. It is not a published upstream fix. The original MIT license and author credits remain.
+
+The package caps parsing and recursive AST walking at depth 100, honors stricter finite maxDepth values, preserves stringify compatibility and rejects parent cycles. Upstream has no patched npm release for CVE-2026-93687. The existing upstream 904-test suite passed on Node 22.18.0; exact runtime pins and retained tests/logs are under scope-7/scope-evidence/ci-repair. No OSV exception or severity suppression is introduced. Replace this fork with a verified upstream release once available, after equivalent compatibility/security checks.

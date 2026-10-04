@@ -40,3 +40,5 @@ export * from "./allocation-producer";
 export * from "./allocation-checker";
 
 export * from "./allocation-verifier";
+
+export * from "./economic-attribution";

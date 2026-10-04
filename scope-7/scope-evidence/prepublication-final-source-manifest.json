@@ -1,0 +1,273 @@
+{
+  "createdAt": "2026-10-03T23:20:05.481891+00:00",
+  "head": "6ade745cfaca88bb199ed9cac2b37b86e6d5ef9a",
+  "branch": "codex/p3-epistemic-runtime",
+  "method": "s7-bounded-owner-value-v1",
+  "nativeRecord": "s7-economic-record-v2",
+  "versions": {
+    "typescript": "5.9.3",
+    "vitest": "4.1.11",
+    "zod": "3.25.76",
+    "pg": "8.23.0",
+    "next": "15.5.25",
+    "drizzle-orm": "0.45.2",
+    "fast-check": "4.9.0",
+    "embedded-postgres": "18.4.0-beta.17",
+    "tsx": "4.23.13",
+    "fs-ext": "2.1.1",
+    "node": "v22.18.0"
+  },
+  "sources": [
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "sha256": "a1b55c0305ac264be29d4a08bcedf7e213229b12fb0d3a9f5ed4ded04e1d4613",
+      "bytes": 7069
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/docs/authz-matrix.md",
+      "sha256": "eb9f39d383d02acb717092fec56cbc58530d1bf859cbba2706c4f0e2c6ffcdee",
+      "bytes": 10931
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+      "sha256": "546d5a515b20efa119f347558da08dc6be481f831fff49935da8f37d0e05024c",
+      "bytes": 60616
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/fs-ext/fs-ext.js",
+      "sha256": "04372a7399c9abb187abc43ccb29ccae1a0692b7177cfff226f45acbda59dda3",
+      "bytes": 3437
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/fs-ext/package.json",
+      "sha256": "adf78ce46360a6b78f89c7dfbd898cfcbb2524cbd36076df091a2f85249adc6a",
+      "bytes": 986
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/package-lock.json",
+      "sha256": "54d1f69642fa11a06ee9501ce31646d3c12173efea199154ee77860739653b68",
+      "bytes": 258196
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/package.json",
+      "sha256": "4c491c3ff5f59ba628d25144eef7ed7c04747f4209f826ed63e222c50c9d4a04",
+      "bytes": 5026
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/db/migration-head.ts",
+      "sha256": "6cf00632baaf5b2cdf236ccae86af2b9399d2356178b37997af9436ef11b31ff",
+      "bytes": 274
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/db/migrations/0154_economic_attribution.sql",
+      "sha256": "e38ac3db923a7a120d0163a57c6024fe361d97059b0c181e909620f39e0385f1",
+      "bytes": 4382
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/db/migrations-bundle.ts",
+      "sha256": "1ea3f42351ae5be15ff8f1d15fa6bbd66fd0efd2ca2c3795e7e3992807e9c3df",
+      "bytes": 1480232
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/epistemic-runtime/src/economic-attribution.ts",
+      "sha256": "2420a78eed9df7ab5356f7a6a6a25ff93a415435125bd0478dede1a2ac82d24b",
+      "bytes": 46312
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/epistemic-runtime/src/index.ts",
+      "sha256": "bdc968f4be5c6ab2e3a388610bfbc2bd299c8ef951afd927163687b966ebdca7",
+      "bytes": 877
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/adapter-contract.ts",
+      "sha256": "c233be2fd1f576fd55683ad257d6f1691ded8a432e0fec5fc8955d9892fff877",
+      "bytes": 4278
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/ledger-server.mts",
+      "sha256": "4fe0d6e53ccce55867c834c316adb9b3042d2c660f69e6766e9af8f010c0530d",
+      "bytes": 3466
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "73a544ed9f97109b936428d28da0865af50305deb40b7570018cff1800d469c4",
+      "bytes": 45151
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/owner-delivery-store.ts",
+      "sha256": "804c0017874e0d57de15557afc93b7c37118d5a080f26ff3e58f7dd11dd46649",
+      "bytes": 9557
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/owner-transport.ts",
+      "sha256": "236e8d86910e8b79e16a4aaf92438959ab8075536bb7f431f8c8c1bf5ca180ac",
+      "bytes": 27885
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/protocol.ts",
+      "sha256": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+      "bytes": 1917
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "sha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+      "bytes": 10817
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/economic-store.ts",
+      "sha256": "30c9863fe305daa3623e0056cfdfef48cb2d7057c90746a8d1d13027cbda85e5",
+      "bytes": 14182
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-economic-assignments.ts",
+      "sha256": "c28a0490db5eada69ecf5ea8c4f715bbeef32ed1d1f8dd18d19ac527262627a6",
+      "bytes": 13093
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "sha256": "25ecec3156542ccee9817784cfb2b6f07da317ea97e349073a534990086803d6",
+      "bytes": 34122
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-economic-consumers.ts",
+      "sha256": "4aab994241d1b4e9a21bc118ae3ef8d7569b81f89465bd44912da5231de99df4",
+      "bytes": 7466
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/index.ts",
+      "sha256": "20a8e90615582bac3eeff1367dd16c990e4f4ff4d6a9ef7f70f15ce6edf6159f",
+      "bytes": 1214
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/economic-attribution.ts",
+      "sha256": "0db198753dd84518af0e10e3c668fd3a954ea2696b577d45f88fe8473eb91670",
+      "bytes": 13712
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/index.ts",
+      "sha256": "2b79d340bbe87dbebe5ef06638bf7c50d5d63fdd27a1456a8683fbf63b873f50",
+      "bytes": 15789
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/economic-fixtures.mts",
+      "sha256": "d88428be794e3e29c5ee0ded5bfbcb50350eccf67f0e887cf5fe3d5089b719b9",
+      "bytes": 6176
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/ledger-fixture.mts",
+      "sha256": "a97c2f01008fb008b04548dce4f209cc98faba77967dfa491237ca8a915adb2f",
+      "bytes": 6725
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/run-integrated-e2e.mts",
+      "sha256": "3415d4b82281036deb7c7e95e9450245c1c864c38e028a8f1944dbae7bb38cde",
+      "bytes": 25310
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/run-maturity-e2e.mts",
+      "sha256": "b76f701a94c2f37d04aebd6a7283b75154cbeb3b39c48a3bebb53e827b63602c",
+      "bytes": 2122
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/run-owner-e2e.mts",
+      "sha256": "3c8dcb6e6f568ad9a7bc34ee6eb9e927609d5fbc9bdeea72ebc92991dabdd3e8",
+      "bytes": 11938
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/run-protected-e2e.mts",
+      "sha256": "4154da6cdcfc2996f2777c2b72dc5f03b52654cdbd0e8505a8bf634b25c943bf",
+      "bytes": 8853
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/run-statistical-e2e.mts",
+      "sha256": "279a0fcc0f97c23deaede2ba109518422092e0ccdb0ecda97d639e4b702fd484",
+      "bytes": 11059
+    },
+    {
+      "path": "/Users/paramdave/Desktop/FINNOR/finnor-os/scripts/s7/tsconfig.json",
+      "sha256": "410d41db636dc73848536eaa42c0848b2c7f5710d59ad66b9a72bd519620b219",
+      "bytes": 305
+    }
+  ],
+  "workingTree": "Uncommitted candidate; preexisting user changes preserved. No reset, staging, commit, deployment or production field experiment. Global Git status was unreliable; exact targeted preimages and start/current hashes are retained.",
+  "startManifest": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/start-manifest.json",
+  "frozenSpecificationSha256": "2288bb54a3f6a91ed2673c220e7d844842ace9de5f6ee1b6674e8a48980ff415",
+  "runs": [
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/statistical-qualified/results.json",
+      "sha256": "315f23dd862fb81f1ee5e31412e140f3d587001a87db1351427f815b73df3c1b",
+      "bytes": 248780,
+      "classification": "PROBABILISTICALLY_SUPPORTED",
+      "cases": 17,
+      "pass": 17,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-statistical-e2e.mts",
+      "qualification": "GENERATED_KNOWN_EFFECT_DESIGN_CONDITIONAL_INFERENCE_ONLY"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/protected-qualified/results.json",
+      "sha256": "9f0933b26f645c63f259e5362eec1474a86a54aa0ef93ab0ad9f20ebb589ee53",
+      "bytes": 17122,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-protected-e2e.mts",
+      "qualification": "DISPOSABLE_TEST_AUTHORITY_SEPARATE_PROCESS_NO_H2_ECONOMIC_OR_PRODUCTION_ADMISSION"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/owner-notices-qualified/results.json",
+      "sha256": "90762d0ff3153eafd2a5930b4d65cfe4aa5a0187baca526c7cba0836c34761c3",
+      "bytes": 2453877,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 8,
+      "pass": 8,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-owner-e2e.mts",
+      "qualification": "REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/integrated-notices-qualified/results.json",
+      "sha256": "baa8f6acee9d1554dc4e241870103a3e73b7714c65823bc52c668950d5bb1bb6",
+      "bytes": 25120115,
+      "classification": "EMPIRICALLY_VERIFIED",
+      "cases": 10,
+      "pass": 10,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-integrated-e2e.mts",
+      "qualification": "REAL_OWNER_SQL_AND_PROTECTED_SEPARATE_PROCESS_WITH_DISPOSABLE_GENERATED_AUTHORITY; NO_FIELD_H2_OR_ADMISSION"
+    },
+    {
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/maturity-qualified/results.json",
+      "sha256": "c9991adb8ba1edf06dd4ab7ee6a143a1497338bfbbcc3a75033af283cd79980a",
+      "bytes": 291884,
+      "classification": "DETERMINISTICALLY_VERIFIED",
+      "cases": 1,
+      "pass": 1,
+      "fail": 0,
+      "sourcesUnchanged": true,
+      "sourceMatchesCurrent": true,
+      "rerun": "FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-maturity-e2e.mts",
+      "qualification": "ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF"
+    }
+  ],
+  "newChallengeCasesPassed": 40,
+  "existingTestsPassed": 56,
+  "productionAdmissionEstablished": false,
+  "fullCompletionGatePassed": false,
+  "actualEconomicValue": "UNKNOWN",
+  "actualCompleteAttributableCosts": "UNKNOWN",
+  "economic100x": "INCONCLUSIVE",
+  "Muse10x": "INCONCLUSIVE",
+  "dots10x": "INCONCLUSIVE",
+  "capabilityDominance": "SEPARATE_UNMEASURED",
+  "independentHumanOrAgentFinalReview": false
+}

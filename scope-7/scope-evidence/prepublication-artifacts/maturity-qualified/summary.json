@@ -1,0 +1,13 @@
+{
+  "artifactSha256": "c9991adb8ba1edf06dd4ab7ee6a143a1497338bfbbcc3a75033af283cd79980a",
+  "artifact": "results.json.gz",
+  "qualification": "ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "preendpoint-source-cannot-become-field-H2-through-age-or-labels",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

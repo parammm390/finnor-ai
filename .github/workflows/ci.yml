@@ -105,6 +105,8 @@ jobs:
       # entities and is outside this release gate; do not silently re-enable
       # that vertical while certifying the retirement boundary.
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+        env:
+          FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
       # P7 typechecks the root Centropy surface; this backend job otherwise
       # installs no root @types or Playwright declarations.
       - name: Install root type dependencies for Phase 7
@@ -125,3 +127,15 @@ jobs:
               result.skippedCases !== 0 || result.todoCases !== 0 ||
               result.executableTests < 1) process.exit(1);
           NODE
+
+      - name: Retain S7 native owner proof diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: s7-native-owner-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/finnor-s7-evidence/**/results.json
+            ${{ runner.temp }}/finnor-s7-evidence/**/partial-results.json
+            ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,129 @@
+{
+  "createdAt": "2026-10-03T20:36:46.462055+00:00",
+  "root": "/Users/paramdave/Desktop/FINNOR",
+  "workspaceAlias": "/Users/paramdave/FINNOR",
+  "head": "6ade745cfaca88bb199ed9cac2b37b86e6d5ef9a",
+  "branch": "codex/p3-epistemic-runtime",
+  "historicalAudit": "ed32d200a9459269509f1e40d4e13a3e2a1a4d6a",
+  "missionSha256": "6e5d965df30cafcafc5c7fe435c96a5f6b05389f5c784fcecd61c186427f982d",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "8c15fcfa390820ac1581032f0407a5e0b06ab5a1073b5bad958de96f50b11f0b",
+      "bytes": 6985
+    },
+    {
+      "path": "finnor-os/package.json",
+      "sha256": "4c491c3ff5f59ba628d25144eef7ed7c04747f4209f826ed63e222c50c9d4a04",
+      "bytes": 5026
+    },
+    {
+      "path": "finnor-os/package-lock.json",
+      "sha256": "54d1f69642fa11a06ee9501ce31646d3c12173efea199154ee77860739653b68",
+      "bytes": 258196
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "sha256": "ab9d41ae693df65fd54d379307e1d3cf6edd509d95f25e50bf0f61facc83d30b",
+      "bytes": 15748
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
+      "sha256": "d8c758338341e0dc7ab43457b74aded04580f1f10d1355d7a8342f9e00b07d8c",
+      "bytes": 836
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "sha256": "5cd5df0d295f3b10552e13a6ffd23fb2a3cb9ce025b1ae06ff9810f923358cdb",
+      "bytes": 1062
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "sha256": "1102bf85d4ddde6dcfe7187d93432273d5cd62557e19b5236b9694e824267150",
+      "bytes": 277
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "28c199524740d227f2f5d4fd4e6ca8c9c93d529bff472f18826e83045e2a06ae",
+      "bytes": 44961
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/owner-transport.ts",
+      "sha256": "bf818ea3557bf141751b9f86794125c639a00888986df6ef988f134cd5275f4f",
+      "bytes": 25293
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/native-experience-transport.ts",
+      "sha256": "7ca59e3a7ce6734d8d0d020a56397b1efbfa0b4ef4aee8f0d2bd125d58a235be",
+      "bytes": 10373
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/experiments.ts",
+      "sha256": "308d6be50377fd9e88e1abbc21c1f080cfb4d6ca7df0aa3269d5d31e126f15f6",
+      "bytes": 12020
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/experiment-realization.ts",
+      "sha256": "e8560d51e06cb0f4c7f181766bc1fe8826d3baddee4dd0024924968ef4514959",
+      "bytes": 27999
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "sha256": "6a946794726ee1deb9777ebd35b411bcea8871187b11a535b47e3080fae77da8",
+      "bytes": 10155
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "sha256": "a9b73f6e3ee16928ad994fed2ae935955c32f27b7af717a1c456e19c96a2ea6d",
+      "bytes": 33710
+    }
+  ],
+  "frozenReferences": [
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/runtime-evidence.json",
+      "sha256": "2ed55d9a1d9909e7d1ef6349c3ed4d4ca40457485c3a83a4a92a43b36c632ebe"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture.md",
+      "sha256": "015ead05b0a12f6637e1fd9dbec50bc7db00ab2134d11ef9d110462dd93654fe"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture-lock.json",
+      "sha256": "2285a4fa5656528f5b996ab2481bbb7527af03cef8a5e77fe96f1769e64a8937"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/evidence.md",
+      "sha256": "d8933516a52552dbe8122dd9ba9775a2270e5702317dec219fde49c3bf754b90"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/frontier.md",
+      "sha256": "34e06bb648cd32a8a73d2d01576befa060bdff078ef8affaa619c9caa92d222a"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/audit.md",
+      "sha256": "ca857119b1ce0b9eadb1b44c4ef53a012d4e92d9a3450a9226187f01214db0ae"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/evidence-summary.json",
+      "sha256": "818618961e86d6ad283027813b6ab7fe33bf319fad21e82e9cf26e7085dcb946"
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture-locked-specification.md",
+      "sha256": "2288bb54a3f6a91ed2673c220e7d844842ace9de5f6ee1b6674e8a48980ff415"
+    }
+  ],
+  "workingStatus": "global git status pending (blocked I/O), no reset/staging/commit; targeted source preimages retained",
+  "versions": {
+    "node": "v22.22.3",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11",
+    "zod": "3.25.76",
+    "pg": "8.23.0",
+    "next": "15.5.25",
+    "drizzle-orm": "0.45.2",
+    "fast-check": "4.9.0",
+    "embedded-postgres": "18.4.0-beta.17"
+  },
+  "productionAdmissionEstablished": false,
+  "completionGatePassed": false
+}

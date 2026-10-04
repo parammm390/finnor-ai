@@ -1,0 +1,74 @@
+{
+  "sourcesUnchanged": true,
+  "qualification": "GENERATED_KNOWN_EFFECT_DESIGN_CONDITIONAL_INFERENCE_ONLY",
+  "cases": [
+    {
+      "id": "exact-256-assignments-effect-0",
+      "status": "PASS"
+    },
+    {
+      "id": "exact-256-assignments-effect-30",
+      "status": "PASS"
+    },
+    {
+      "id": "exact-256-assignments-effect--30",
+      "status": "PASS"
+    },
+    {
+      "id": "observational-confounding-never-becomes-positive-credit",
+      "status": "PASS"
+    },
+    {
+      "id": "informative-missingness-retains-adverse-cohort",
+      "status": "PASS"
+    },
+    {
+      "id": "financial-conservation-independent-statement-oracle",
+      "status": "PASS"
+    },
+    {
+      "id": "interacting-contingent-regime-is-not-additive-action-credit",
+      "status": "PASS"
+    },
+    {
+      "id": "unsupported-interference-and-horizon-forgery-cannot-earn-H2",
+      "status": "PASS"
+    },
+    {
+      "id": "registered-looks-wide-support-and-budget-refusals",
+      "status": "PASS"
+    },
+    {
+      "id": "self-value-missing-cost-and-duplicate-items-do-not-become-wealth",
+      "status": "PASS"
+    },
+    {
+      "id": "registered-medium-population-compute-domain",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-24-0",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-24-30",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-24--30",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-64-0",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-64-30",
+      "status": "PASS"
+    },
+    {
+      "id": "monte-carlo-64--30",
+      "status": "PASS"
+    }
+  ]
+}

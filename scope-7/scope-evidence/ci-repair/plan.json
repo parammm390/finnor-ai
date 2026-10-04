@@ -1,0 +1,157 @@
+[
+  {
+    "id": "release-truth",
+    "command": [
+      "npm",
+      "run",
+      "release:truth"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "release-tests",
+    "command": [
+      "npm",
+      "run",
+      "test:release"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "workspace",
+    "command": [
+      "npm",
+      "run",
+      "workspace:check"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "authz",
+    "command": [
+      "npm",
+      "run",
+      "authz:matrix:check"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "openapi",
+    "command": [
+      "npm",
+      "run",
+      "openapi"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "backend-types",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "s7-types",
+    "command": [
+      "npx",
+      "tsc",
+      "-p",
+      "scripts/s7/tsconfig.json"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "planner",
+    "command": [
+      "npm",
+      "run",
+      "test:planner-evals"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "domain",
+    "command": [
+      "npm",
+      "run",
+      "PE-DOMAIN-BOUNDARY"
+    ],
+    "cwd": "finnor-os"
+  },
+  {
+    "id": "root-lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "root-manifest",
+    "command": [
+      "npm",
+      "run",
+      "centropy:manifest:check"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "root-forms",
+    "command": [
+      "npm",
+      "run",
+      "centropy:forms:check"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "root-unit",
+    "command": [
+      "npm",
+      "run",
+      "test:unit"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "root-types",
+    "command": [
+      "npx",
+      "tsc",
+      "--noEmit",
+      "-p",
+      "tsconfig.json"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "retirement",
+    "command": [
+      "npm",
+      "run",
+      "release:p8-zero-resurrection"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "contrast",
+    "command": [
+      "node",
+      "scripts/contrast-audit.mjs"
+    ],
+    "cwd": "."
+  },
+  {
+    "id": "root-build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "cwd": "."
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "challenge": "stale",
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "exitCode": 1,
+      "rejection": "Deployment truth validation failed:\n- finnor-os/apps/supplier-canary/api/index.mjs migration head 0155_governed_resource_units.sql differs from repository head 0156_economic_attribution.sql\n",
+      "restoredSha256": "14390e361c6e33e18eeb8da8a97c286b3c8c9993008816a5e1faec449502dcdd"
+    },
+    {
+      "challenge": "missing-pin",
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "exitCode": 1,
+      "rejection": "Deployment truth validation failed:\n- finnor-os/apps/supplier-canary/api/index.mjs migration head <missing> differs from repository head 0156_economic_attribution.sql\n",
+      "restoredSha256": "14390e361c6e33e18eeb8da8a97c286b3c8c9993008816a5e1faec449502dcdd"
+    },
+    {
+      "challenge": "stale",
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "exitCode": 1,
+      "rejection": "Deployment truth validation failed:\n- finnor-os/packages/db/migration-head.ts migration head 0155_governed_resource_units.sql differs from repository head 0156_economic_attribution.sql\n",
+      "restoredSha256": "a3aa1869e4839405141694b1d73d15de77e274943bfd86285758c46290ca1ad8"
+    },
+    {
+      "challenge": "missing-pin",
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "exitCode": 1,
+      "rejection": "Deployment truth validation failed:\n- finnor-os/packages/db/migration-head.ts migration head <missing> differs from repository head 0156_economic_attribution.sql\n",
+      "restoredSha256": "a3aa1869e4839405141694b1d73d15de77e274943bfd86285758c46290ca1ad8"
+    },
+    {
+      "challenge": "repository advances without contract or runtime pins",
+      "exitCode": 1,
+      "rejection": "Deployment truth validation failed:\n- production contract migration head 0156_economic_attribution.sql differs from repository head 0157_unregistered_guard_challenge.sql\n- finnor-os/packages/db/migration-head.ts migration head 0156_economic_attribution.sql differs from repository head 0157_unregistered_guard_challenge.sql\n- finnor-os/apps/supplier-canary/api/index.mjs migration head 0156_economic_attribution.sql differs from repository head 0157_unregistered_guard_challenge.sql\n"
+    },
+    {
+      "challenge": "restored coherent release",
+      "exitCode": 0,
+      "observed": "{\n  \"ok\": true,\n  \"phase\": \"8\",\n  \"provider\": \"aws-ecs-fargate\",\n  \"contract\": \"infra/deployment/production.contract.json\"\n}\n"
+    }
+  ],
+  "qualification": "ACTUAL_RELEASE_VALIDATOR_COMMANDS; SOURCE_RESTORED_BYTE_FOR_BYTE",
+  "rerun": "For each named source replace 0156 with 0155 or CURRENT_MIGRATION_HEAD with UNRECOGNIZED_MIGRATION_PIN; run node scripts/release/validate-deployment-truth.mjs and require exit 1 naming that source; restore exact bytes. Add then remove a temporary 0157 SQL file and require exit 1. Coherent restored sources must exit 0."
+}

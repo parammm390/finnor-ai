@@ -1,0 +1,93 @@
+{
+  "artifactSha256": "315f23dd862fb81f1ee5e31412e140f3d587001a87db1351427f815b73df3c1b",
+  "artifact": "results.json.gz",
+  "qualification": "GENERATED_KNOWN_EFFECT_DESIGN_CONDITIONAL_INFERENCE_ONLY",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "exact-256-assignments-effect-0",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "exact-256-assignments-effect-30",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "exact-256-assignments-effect--30",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "observational-confounding-never-becomes-positive-credit",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "informative-missingness-retains-adverse-cohort",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "financial-conservation-independent-statement-oracle",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "interacting-contingent-regime-is-not-additive-action-credit",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "unsupported-interference-and-horizon-forgery-cannot-earn-H2",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "registered-looks-wide-support-and-budget-refusals",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "self-value-missing-cost-and-duplicate-items-do-not-become-wealth",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "registered-medium-population-compute-domain",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-24-0",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-24-30",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-24--30",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-64-0",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-64-30",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "monte-carlo-64--30",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

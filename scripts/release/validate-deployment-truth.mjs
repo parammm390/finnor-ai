@@ -52,6 +52,14 @@ const migrationPath = join(repoRoot, "finnor-os/packages/db/migrations", contrac
 required(existsSync(migrationPath), `required migration does not exist: ${relative(repoRoot, migrationPath)}`)
 const repositoryMigrationHead = readdirSync(join(repoRoot, "finnor-os/packages/db/migrations")).filter((name) => name.endsWith(".sql")).sort().at(-1)
 required(repositoryMigrationHead === contract.release.requiredMigrationHead, `production contract migration head ${contract.release.requiredMigrationHead} differs from repository head ${repositoryMigrationHead ?? "<missing>"}`)
+// The supplier canary is deployed as an isolated package. Validate its compiled
+// head as well as the backend head so advancing migrations cannot leave a
+// different release provenance at either runtime boundary.
+for (const path of ["finnor-os/packages/db/migration-head.ts", "finnor-os/apps/supplier-canary/api/index.mjs"]) {
+  const declared = /^\s*(?:export\s+)?const\s+CURRENT_MIGRATION_HEAD\s*=\s*["']([^"']+)["']/m.exec(read(path))?.[1]
+  required(declared === repositoryMigrationHead, `${path} migration head ${declared ?? "<missing>"} differs from repository head ${repositoryMigrationHead}`)
+}
+
 for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-compute-plane.mjs", "scripts/release/compute-plane-policy.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 required(!existsSync(join(repoRoot, "scripts/release/deploy-aws-worker.mjs")), "retired single-worker deployer still exists")
 
