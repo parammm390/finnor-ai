@@ -56,7 +56,6 @@ jobs:
       # CI uses vanilla PostgreSQL; the migration runner rejects this test seam
       # for the canonical production database.
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
-      FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -106,6 +105,8 @@ jobs:
       # entities and is outside this release gate; do not silently re-enable
       # that vertical while certifying the retirement boundary.
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+        env:
+          FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
       # P7 typechecks the root Centropy surface; this backend job otherwise
       # installs no root @types or Playwright declarations.
       - name: Install root type dependencies for Phase 7
