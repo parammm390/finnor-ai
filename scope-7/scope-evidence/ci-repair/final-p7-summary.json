@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "mandatoryGroups": 21,
+  "mandatoryCases": 21,
+  "passedCases": 21,
+  "failedCases": 0,
+  "skippedCases": 0,
+  "todoCases": 0,
+  "executableTests": 139,
+  "gates": [
+    {
+      "id": "architecture",
+      "status": "PASS",
+      "durationMs": 16
+    },
+    {
+      "id": "typecheck-contracts",
+      "status": "PASS",
+      "durationMs": 36087
+    },
+    {
+      "id": "workforce-unit",
+      "status": "PASS",
+      "durationMs": 7241
+    },
+    {
+      "id": "runtime-concurrency",
+      "status": "PASS",
+      "durationMs": 7627
+    },
+    {
+      "id": "migrations",
+      "status": "PASS",
+      "durationMs": 9539
+    },
+    {
+      "id": "performance",
+      "status": "PASS",
+      "durationMs": 7490
+    },
+    {
+      "id": "regressions",
+      "status": "PASS",
+      "durationMs": 36194
+    }
+  ],
+  "migrationHead": "0156_economic_attribution.sql",
+  "databaseMode": "configured",
+  "externalProviderCertification": "not-required-for-deterministic-p7",
+  "durationMs": 106071
+}

@@ -1,0 +1,23 @@
+{
+  "sampleCount": 3,
+  "performance": 1,
+  "accessibility": 1,
+  "cls": 0,
+  "samples": [
+    {
+      "performance": 1,
+      "accessibility": 1,
+      "cls": 0
+    },
+    {
+      "performance": 1,
+      "accessibility": 1,
+      "cls": 0
+    },
+    {
+      "performance": 1,
+      "accessibility": 1,
+      "cls": 0
+    }
+  ]
+}

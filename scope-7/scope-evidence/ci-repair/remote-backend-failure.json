@@ -1,0 +1,25 @@
+{
+  "job": 111321050214,
+  "head": "c574e16d7cf6e55d03a6f530fe6950bf71fe5a64",
+  "fullLog": "https://github.com/parammm390/finnor-ai/actions/runs/37163290043/job/111321050214",
+  "excerpt": [
+    "2026-10-03T23:57:04.3825298Z \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m",
+    "2026-10-03T23:57:04.3826369Z \u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m3 passed\u001b[39m\u001b[22m\u001b[90m (3)\u001b[39m",
+    "2026-10-04T00:13:27.8463924Z \u001b[22m\u001b[39m{\"family\":\"statistical\",\"evidence\":\"/tmp/finnor-s7-ci-statistical-kJ5Kri\",\"cases\":17,\"sourcesUnchanged\":true,\"artifactSha256\":\"1642150a00443e20e379888be053c97a52fb245b131cd1a4a35d77c7366cf11b\",\"qualification\":\"GENERATED_KNOWN_EFFECT_DESIGN_CONDITIONAL_INFERENCE_ONLY\"}",
+    "2026-10-04T00:13:39.8843351Z \u001b[22m\u001b[39m{\"family\":\"owner\",\"evidence\":\"/tmp/finnor-s7-ci-owner-z7DdWe\",\"cases\":8,\"sourcesUnchanged\":true,\"artifactSha256\":\"dc91464a36dd0c6b1356c3e09d99d79fcb0131782d218fad8577cad874876fb2\",\"qualification\":\"REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2\"}",
+    "2026-10-04T00:13:40.3283847Z \u001b[22m\u001b[39m{\"family\":\"maturity\",\"evidence\":\"/tmp/finnor-s7-ci-maturity-GD4e8k\",\"cases\":1,\"sourcesUnchanged\":true,\"artifactSha256\":\"7f1f86e8928db5dfb9a8673cfb8a785059d619675e29a08d770a17246a8523a5\",\"qualification\":\"ISOLATED_NEGATIVE_TEMPORAL_MATURITY_CHALLENGE_WITH_SYNTHETIC_RESOLVER_DESCRIPTORS; NOT_FIELD_PROOF\"}",
+    "2026-10-04T00:14:37.8913994Z \u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 2 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m",
+    "2026-10-04T00:14:37.8915616Z \u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/integration/economic-attribution-owner.e2e.test.ts\u001b[2m > \u001b[22mS7 native economic attribution proofs\u001b[2m > \u001b[22mintegrated owner proof",
+    "2026-10-04T00:14:37.8917706Z \u001b[31m\u001b[1mAssertionError\u001b[22m: Native proof failed; evidence: /tmp/finnor-s7-ci-integrated-8dMJnQ: expected 1 to be +0 // Object.is equality\u001b[39m",
+    "2026-10-04T00:14:37.8954618Z     \u001b[90m 37|\u001b[39m         expect(exitCode, `Native proof failed; evidence: ${evidence}`)…",
+    "2026-10-04T00:14:37.8963400Z \u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/integration/economic-attribution-owner.e2e.test.ts\u001b[2m > \u001b[22mS7 native economic attribution proofs\u001b[2m > \u001b[22mprotected owner proof",
+    "2026-10-04T00:14:37.8965779Z \u001b[31m\u001b[1mAssertionError\u001b[22m: Native proof failed; evidence: /tmp/finnor-s7-ci-protected-t2qEj4: expected 1 to be +0 // Object.is equality\u001b[39m",
+    "2026-10-04T00:14:37.8972027Z     \u001b[90m 37|\u001b[39m         expect(exitCode, `Native proof failed; evidence: ${evidence}`)…",
+    "2026-10-04T00:14:37.8984864Z \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m217 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m6 skipped\u001b[39m\u001b[90m (224)\u001b[39m",
+    "2026-10-04T00:14:37.8994477Z \u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m2 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m1311 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m27 skipped\u001b[39m\u001b[90m (1340)\u001b[39m",
+    "2026-10-04T00:14:37.9055546Z ##[error]AssertionError: Native proof failed; evidence: /tmp/finnor-s7-ci-integrated-8dMJnQ: expected 1 to be +0 // Object.is equality",
+    "2026-10-04T00:14:37.9067325Z ##[error]AssertionError: Native proof failed; evidence: /tmp/finnor-s7-ci-protected-t2qEj4: expected 1 to be +0 // Object.is equality"
+  ],
+  "diagnosticGap": "Original adapter omitted child logs; fresh local install reproduced missing fs-ext/package.json.",
+  "qualification": "ACTUAL_FAILED_LINUX_CI; FAILURE_REPRODUCED_LOCALLY"
+}

@@ -2,7 +2,7 @@
   "name": "finnor-os",
   "version": "0.1.0",
   "private": true,
-  "description": "Finnor AI Operating System — governed Private Equity execution and evidence platform",
+  "description": "Finnor AI Operating System \u2014 governed Private Equity execution and evidence platform",
   "engines": {
     "node": ">=22"
   },
@@ -73,6 +73,7 @@
     "@vapi-ai/web": "^2.6.1",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "fs-ext": "2.1.1",
     "groq-sdk": "^0.9.1",
     "ioredis": "^5.4.1",
     "next": "^15.5.21",
@@ -88,11 +89,13 @@
     "@swc/core": "1.10.18",
     "@hono/node-server": "2.0.11",
     "fast-uri": "3.1.8",
-    "hono": "4.13.5",
-    "ip-address": "10.5.1",
+    "hono": "4.13.7",
+    "ip-address": "10.7.1",
     "postcss": "8.5.23",
     "sharp": "0.35.4",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "brace-expansion@^1": "1.1.21",
+    "brace-expansion@^5": "5.0.12"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { openSync, closeSync } from 'node:fs';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,9 @@ import { describe, expect, it } from 'vitest';
 describe('S7 native economic attribution proofs', () => {
   for (const family of ['statistical', 'integrated', 'owner', 'protected', 'maturity']) {
     it(`${family} owner proof`, async () => {
-      const evidence = await mkdtemp(join(tmpdir(), `finnor-s7-ci-${family}-`));
+      const evidenceRoot = process.env.FINNOR_S7_CI_EVIDENCE_DIR ?? tmpdir();
+      await mkdir(evidenceRoot, { recursive: true });
+      const evidence = await mkdtemp(join(evidenceRoot, `finnor-s7-ci-${family}-`));
       const log = openSync(join(evidence, 'runner.log'), 'w');
       const child = spawn(process.execPath, ['--import=tsx', `scripts/s7/run-${family}-e2e.mts`], {
         cwd: process.cwd(), env: { ...process.env, FINNOR_S7_EVIDENCE_DIR: evidence },
@@ -43,6 +45,10 @@ describe('S7 native economic attribution proofs', () => {
         expect(report.sourcesUnchanged).toBe(true);
         console.log(JSON.stringify({ family, evidence, cases: cases.length, sourcesUnchanged: true,
           artifactSha256: createHash('sha256').update(bytes).digest('hex'), qualification: report.qualification }));
+      } catch (error) {
+        const diagnostics = await readFile(join(evidence, 'runner.log'), 'utf8').catch(() => 'Child log unavailable');
+        console.error(`Native ${family} failure; full evidence: ${evidence}\n${diagnostics.slice(-12_000)}`);
+        throw error;
       } finally {
         clearTimeout(timeout); if (escalation) clearTimeout(escalation);
         stop('SIGTERM');

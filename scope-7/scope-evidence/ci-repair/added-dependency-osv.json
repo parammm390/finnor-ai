@@ -1,0 +1,25 @@
+{
+  "queries": [
+    {
+      "package": {
+        "name": "fs-ext",
+        "ecosystem": "npm"
+      },
+      "version": "2.1.1"
+    },
+    {
+      "package": {
+        "name": "nan",
+        "ecosystem": "npm"
+      },
+      "version": "2.29.0"
+    }
+  ],
+  "observed": {
+    "results": [
+      {},
+      {}
+    ]
+  },
+  "qualification": "CURRENT_OSV_API_CHECK_OF_ADDED_EXACT_VERSIONS; FULL_LOCKFILE_CI_SCAN_SEPARATE"
+}

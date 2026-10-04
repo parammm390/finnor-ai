@@ -3751,6 +3751,38 @@
       "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts"
     },
     {
+      "capabilityId": "http.post.economic-outcomes.$operation",
+      "family": "economic-outcomes",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/:operation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "economic-outcomes"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.experiments.$operation",
       "family": "experiments",
       "owner": "@finnor/api",

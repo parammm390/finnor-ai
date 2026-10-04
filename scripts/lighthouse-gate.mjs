@@ -51,12 +51,11 @@ for (let attempt = 1; attempt <= MAX_ATTEMPTS && samples.length < MIN_SAMPLES; a
         // category and the 0.90 bar, but measure the runner's actual load.
         "--throttling-method=devtools",
         "--only-categories=performance,accessibility",
-        `--chrome-path=${chromePath}`,
         "--chrome-flags=--headless --no-sandbox --disable-dev-shm-usage",
         "--output=json",
         `--output-path=${outPath}`,
       ],
-      { stdio: ["ignore", "pipe", "pipe"] },
+      { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CHROME_PATH: chromePath } },
     )
   } catch (error) {
     console.error(`lighthouse attempt ${attempt} failed to launch: ${error.message}`)

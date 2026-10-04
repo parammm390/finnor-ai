@@ -1,7 +1,7 @@
 {
   "schema": "finnor.s7.publication-completion.v1",
   "softwareImplementation": "IMPLEMENTED",
-  "ciPreflight": "PASS",
+  "ciPreflight": "FINAL_LOCAL_STATIC_BACKEND_NATIVE_BROWSER_WORKFORCE_SECRET_SCAN_PASS",
   "fullFrozenGate": "PARTIAL",
   "actualOwnerValue": "UNKNOWN",
   "completeActualCosts": "UNKNOWN",
@@ -27,5 +27,24 @@
     "failed": 0,
     "nativeCases": 40,
     "monteCarloTrials": 12000
+  },
+  "remoteCi": "ORIGINAL_HEAD_FAILED; REPAIRED_HEAD_NOT_PUSHED",
+  "repairValidation": {
+    "staticCommandsPassed": 17,
+    "releaseTestsPassed": 33,
+    "backendPassed": 1308,
+    "backendExistingSkipped": 27,
+    "affectedNativeCasesPassed": 14,
+    "browserPassed": 72,
+    "lighthouseSamples": 3,
+    "lighthousePerformance": 1,
+    "lighthouseAccessibility": 1,
+    "lighthouseCls": 0,
+    "workforceMandatoryCases": 21,
+    "workforceExecutableTests": 139,
+    "registryVersionsScanned": 1005,
+    "registryAdvisories": 0,
+    "upstreamBracesExistingTestsPassed": 904,
+    "sourceFreeze": true
   }
 }
