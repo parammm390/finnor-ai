@@ -1,3 +1,4 @@
+import {assertEvidenceRunTransactionCurrent} from './evidence-execution/consumer';
 import { randomUUID } from "node:crypto";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntityTx, type Db } from "@finnor/db";
@@ -358,6 +359,7 @@ async function inspectUnderwritingBasisTx(
     [tenantId, investmentCaseId, runId],
   )).rows[0];
   if (!row) throw new PeDomainError("IC_RUN_NOT_FOUND", "Exact P4 UnderwritingRun was not found for the P1 InvestmentCase");
+  await assertEvidenceRunTransactionCurrent(client,tenantId,runId);
   const checks = Array.isArray(row.checks) ? row.checks.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
   if (!String(row.result_hash ?? "").match(/^sha256:[0-9a-f]{64}$/)
     || !String(row.model_semantic_hash ?? "").match(/^sha256:[0-9a-f]{64}$/)
@@ -2246,6 +2248,7 @@ export async function groundIcCaseOpening(ctx: PeMutationContext, input: {
         "SELECT status,validity FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND investment_case_id=$2 AND id=$3",
         [ctx.auth.tenantId, input.investmentCaseId, input.primaryUnderwritingRunId],
       )).rows[0];
+      await assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,input.primaryUnderwritingRunId);
       if (!run || run.status !== "SUCCEEDED" || !policy.allowedPrimaryRunValidities.includes(run.validity as never)) {
         throw new PeDomainError("IC_RUN_NOT_ELIGIBLE", "Opening primary UnderwritingRun is missing, failed, or disallowed by pinned policy");
       }
@@ -2283,6 +2286,7 @@ export async function groundIcUnderwritingRun(ctx: PeMutationContext, input: {
     if (!row || row.status !== "SUCCEEDED" || !policy.snapshot.allowedPrimaryRunValidities.includes(row.validity as never)) {
       throw new PeDomainError("IC_RUN_NOT_ELIGIBLE", "Exact P4 UnderwritingRun is missing, failed, or disallowed by the pinned policy");
     }
+    await assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,input.underwritingRunId);
     return shapePeRow(row);
   }, { readOnly: true });
 }
@@ -2293,6 +2297,7 @@ export async function groundIcSourceReference(ctx: PeMutationContext, input: {
 }): Promise<{ sourceKind: IcSourceKind; sourceId: string; canonical: Record<string, unknown> }> {
   assertPeUuid(input.icCaseId, "icCaseId");
   const columns = sourceColumns(input.source);
+  if(input.source.kind==='UNDERWRITING_RUN'){const runId=input.source.underwritingRunId;await peTransaction(ctx,async(_db,client)=>assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,runId));}
   return peTransaction(ctx, async (_db, client) => {
     const process = (await client.query<IcCaseRow>(
       "SELECT * FROM finnor_os.pe_ic_cases WHERE tenant_id=$1 AND id=$2",

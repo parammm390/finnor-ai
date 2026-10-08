@@ -12,6 +12,8 @@ import { validateBeliefViewPin } from './enterprise-beliefs';
 import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt } from './allocation-store';
 import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transport';
 import type { PeMutationContext } from './types';
+import {recheckAllocationCapability} from '../../capability-evolution/src/consumer';
+import type {CapabilityUseLease} from '../../capability-evolution/src/lifecycle';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -76,6 +78,8 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
   // S6 must recheck these once more at consequential egress; no authority grant.
   await readCurrentPolicies(ctx,policies.map(policy=>policy.ref));await currentPins(ctx,snapshot.resources);
   if(!await allocationSourcesCurrent(produced.compute.backend.sourceDigests))return failure('STALE_INPUT',['S5_LOADED_METHOD_CHANGED_BEFORE_COMMIT'],produced.compute);
+  const capability=produced.compute.usage.backend.capabilityLease as CapabilityUseLease|undefined;
+  if(capability&&capability.mode!=='SHADOW')try{await recheckAllocationCapability(problem,capability);}catch(error){return failure('STALE_INPUT',[error instanceof Error?error.message:'S8_CAPABILITY_RECHECK_FAILED'],produced.compute);}
   if(performance.now()>=deadlineAt)return failure('SEARCH_EXHAUSTED',['WHOLE_OWNER_DECISION_BUDGET_EXHAUSTED_BEFORE_COMMIT'],produced.compute);
   await persistAllocationProposal(ctx,problem,certificate);candidatePersisted=true;
   try{const reservation=await commitAllocationReservation(ctx,problem,certificate,input.idempotencyKey,requestDigest,async(resources,outstanding)=>verifyCanonicalAllocation(rebuilt(problem,resources,outstanding),checked.check.selectedPolicyIds),deadlineAt);
@@ -87,12 +91,29 @@ export async function readEnterpriseAllocation(ctx:PeMutationContext,value:unkno
   const ref=ExperimentRefSchema.parse(value),issued=await readStoredAllocation(ctx,ref);await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
   return immutableControl({...issued,consumptions:await readAllocationConsumptions(ctx,ref),executionAuthorityGranted:false,protectedReceipt:null});
 }
+/** Read S5's original qualified settlement and its independently protected S6
+ * counterpart. No current action lease, new settlement or release is granted. */
+export async function readEnterpriseAllocationSettlement(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;settlementEventId:string}){
+ const issued=await readEnterpriseAllocation(ctx,input.allocationRef),use=issued.consumptions.find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+ if(!issued.reservation||!use||use.status!=='RECONCILED'||!use.effectRef)throw denied();
+ const rows=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_SETTLEMENT' ORDER BY revision DESC LIMIT 2",[ctx.auth.tenantId,use.ref.id])).rows);
+ if(rows.length!==1)throw denied();
+ const proof=rows[0].body,event=await readOwnerTransportEvent({semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:actor(ctx)},input.settlementEventId),d=event.event.detail;
+ if(!sameAllocationRef(proof.costs,{status:'UNMETERED',externalCost:null,recoveryCost:null,humanCost:null,releaseSufficient:false})||proof.event?.eventId!==input.settlementEventId||!sameAllocationRef(proof.event,event.event)||!sameAllocationRef(proof.receipt,event.receipt)||proof.resourceEnvelopeRetained!==true
+  ||event.receipt.protectedExecution!==true||event.receipt.semanticOwner!=='S6'||event.event.type!=='VERIFICATION'||d?.status!=='VERIFIED'
+  ||!sameAllocationRef(d.allocationRef,input.allocationRef)||!sameAllocationRef(d.consumptionRef,use.ref)||!sameAllocationRef(d.reservationRef,issued.reservation.ref)
+  ||d.effectRef?.id!==use.effectRef.id||d.effectRef?.semanticHash!==use.effectRef.contentDigest||!sameAllocationRef(proof.obligationRef,d.obligationRef))throw denied();
+ return immutableControl({allocationRef:input.allocationRef,consumption:use,reservation:issued.reservation,obligationRef:proof.obligationRef,event:event.event,receipt:event.receipt,costs:proof.costs,
+  resourceEnvelopeRetained:true,releaseGranted:false,executionAuthorityGranted:false,qualification:'NATIVE_S5_SETTLEMENT_AND_MATCHED_PROTECTED_S6_READBACK_NO_COST_OR_RELEASE_AUTHORITY'});
+}
 async function validateAllocationState(ctx:PeMutationContext,value:unknown){
   const ref=ExperimentRefSchema.parse(value),issued=await readEnterpriseAllocation(ctx,ref),reasons:string[]=[];
   if(!issued.reservation||issued.reservation.status==='RELEASED')reasons.push('DURABLE_RESERVATION_REQUIRED');
   if(issued.reservation?.revocationReason)reasons.push(issued.reservation.revocationReason);
   if(Date.now()>=Date.parse(issued.certificate.validUntil))reasons.push('CERTIFICATE_EXPIRED_ACCOUNTABLE_EXPOSURE_RETAINED');
   if(!await allocationSourcesCurrent(issued.certificate.compute.backend.sourceDigests))reasons.push('S5_LOADED_METHOD_CHANGED');
+  const capability=issued.certificate.compute.usage.backend.capabilityLease as CapabilityUseLease|undefined;
+  if(capability&&capability.mode!=='SHADOW')try{await recheckAllocationCapability(issued.problem,capability);}catch{reasons.push('S8_CAPABILITY_REVOKED_OR_CHANGED_ACCOUNTABLE_EXPOSURE_RETAINED');}
   const current=await readAllocationSnapshot(ctx);if(!sameAllocationRef(current.resources,issued.problem.resources))reasons.push('RESOURCE_REVISION_OR_RIGHTS_CHANGED');
   for(const policy of issued.problem.policies)try{await readEnterpriseContingentPolicy(ctx,policy.ref);}catch{reasons.push('POLICY_MODEL_SOURCE_OR_RIGHTS_CHANGED');}
   try{await currentPins(ctx,current.resources);const other=current.outstanding.filter(o=>!sameAllocationRef(o.reservationRef,issued.reservation?.ref)),check=verifyCanonicalAllocation(rebuilt(issued.problem,current.resources,other,new Date().toISOString()),issued.certificate.check.selectedPolicyIds);

@@ -36,6 +36,7 @@ import {
 import { PeDomainError, type PeMutationContext } from "./types";
 import { assertPeText, assertPeUuid, peProvenance, peTransaction, type PeClient } from "./repository";
 import { recordUnderwritingMetric } from "./underwriting-telemetry";
+import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
 import {
   boundUnderwritingCells,
   observedUnderwritingCell,
@@ -94,6 +95,7 @@ export interface CreateUnderwritingRunInput {
   baseRunId?: string;
   workId?: string;
   explicitInputs?: Readonly<Record<string, ExplicitUnderwritingInput>>;
+  evidenceDerivationInputs?: Readonly<Record<string,EvidenceUnderwritingBinding>>;
 }
 
 function asIso(value: Date | string): string {
@@ -125,7 +127,7 @@ interface StoredRunIntegrity {
   result: UnderwritingRunResult;
 }
 
-function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrity): void {
+async function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrity,ctx:PeMutationContext,client:PeClient): Promise<void> {
   const inputHash = inputSnapshotHash(run.input_snapshot);
   const resultHash = runResultHash(run.result);
   if (run.input_snapshot.semanticHash !== run.input_hash || inputHash !== run.input_hash) {
@@ -136,6 +138,7 @@ function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrity): vo
     recordUnderwritingMetric({ tenantId, runId: run.id }, "underwriting_result_hash_mismatches", 1, "count");
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Stored Run result failed immutable semantic-hash verification", { runId: run.id });
   }
+  await assertEvidenceSnapshotCurrent(ctx,run.input_snapshot,client);
 }
 
 async function loadModelVersion(client: PeClient, tenantId: string, modelVersionId: string): Promise<{ row: ModelVersionRow; compiled: CompiledUnderwritingModel }> {
@@ -472,7 +475,7 @@ function explicitResolved(node: InputNode, input: ExplicitUnderwritingInput | un
   };
 }
 
-async function resolveInputSnapshot(client: PeClient, tenantId: string, row: ModelVersionRow, compiled: CompiledUnderwritingModel, worldAt: string, explicitInputs: Readonly<Record<string, ExplicitUnderwritingInput>>): Promise<Readonly<UnderwritingInputSnapshot>> {
+async function resolveInputSnapshot(client: PeClient, tenantId: string, row: ModelVersionRow, compiled: CompiledUnderwritingModel, worldAt: string, explicitInputs: Readonly<Record<string, ExplicitUnderwritingInput>>, derivedInputs:Readonly<Record<string,ResolvedInput>>={}): Promise<Readonly<UnderwritingInputSnapshot>> {
   const bindings = await client.query<InputBindingRow>(
     `SELECT input_node_id,source_kind,assumption_id::text,evidence_version_id::text,document_id::text,document_version_id::text,
             anchor_id,anchor_hash,value_path,value_selector,stale_after_days
@@ -484,7 +487,10 @@ async function resolveInputSnapshot(client: PeClient, tenantId: string, row: Mod
   for (const node of Object.values(compiled.nodeById)) {
     if (node.kind !== "input") continue;
     const binding = byNode.get(node.id);
-    if (!binding || binding.source_kind === "explicit" || binding.source_kind === "model_parameter") {
+    if(derivedInputs[node.id]){
+      if(explicitInputs[node.id]||binding&&!["explicit","model_parameter"].includes(binding.source_kind))fail("MODEL_SCHEMA_INVALID","Typed derivation cannot shadow an explicit or bound source",{nodeId:node.id});
+      resolved[node.id]=derivedInputs[node.id]!;
+    } else if (!binding || binding.source_kind === "explicit" || binding.source_kind === "model_parameter") {
       resolved[node.id] = explicitResolved(node, explicitInputs[node.id]);
     } else if (binding.source_kind === "p1_assumption") {
       resolved[node.id] = await resolveAssumption(client, tenantId, row.investment_case_id, worldAt, node, binding);
@@ -537,7 +543,7 @@ export async function createUnderwritingSensitivity(ctx: PeMutationContext, inpu
       result_hash: string; result: UnderwritingRunResult;
     }>("SELECT id::text,investment_case_id::text,model_version_id::text,input_hash,input_snapshot,result_hash,result FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, input.baseRunId])).rows[0];
     if (!run) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Base Underwriting Run was not found in the authenticated tenant");
-    assertStoredRunIntegrity(ctx.auth.tenantId, run);
+    await assertStoredRunIntegrity(ctx.auth.tenantId, run,ctx,client);
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, run.model_version_id);
     return { run, row, compiled };
   }, { readOnly: true });
@@ -637,6 +643,8 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   if (input.baseRunId) assertPeUuid(input.baseRunId, "baseRunId");
   if (input.baseRunId && input.explicitInputs) fail("MODEL_SCHEMA_INVALID", "A pinned base Run cannot be combined with newly resolved explicit inputs");
   const worldAt = normalizedWorldAt(input.worldAt);
+  if(input.baseRunId&&input.evidenceDerivationInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved derivations");
+  const derivedInputs=await resolveEvidenceUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.evidenceDerivationInputs??{});
   return peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
     if (row.investment_case_id !== input.investmentCaseId) fail("MODEL_VERSION_NOT_FOUND", "ModelVersion is not attached to the requested InvestmentCase");
@@ -651,12 +659,13 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
         [ctx.auth.tenantId, input.baseRunId],
       )).rows[0];
       if (!base) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Pinned base Underwriting Run was not found in the authenticated tenant");
-      assertStoredRunIntegrity(ctx.auth.tenantId, base);
+      await assertStoredRunIntegrity(ctx.auth.tenantId, base,ctx,client);
       if (base.investment_case_id !== input.investmentCaseId || base.model_version_id !== input.modelVersionId || base.scenario_id !== null || asIso(base.world_at) !== worldAt) {
         fail("SCENARIO_INVALID_TARGET", "Pinned base Run must be a canonical run at the exact InvestmentCase, ModelVersion, and worldAt");
       }
       return sealInputSnapshot(base.input_snapshot);
-    })() : await resolveInputSnapshot(client, ctx.auth.tenantId, row, compiled, worldAt, input.explicitInputs ?? {});
+    })() : await resolveInputSnapshot(client, ctx.auth.tenantId, row, compiled, worldAt, input.explicitInputs ?? {},derivedInputs);
+    await assertEvidenceSnapshotCurrent(ctx,baseSnapshot,client);
     const applied = applyScenario(compiled, baseSnapshot, scenario);
     return { row, compiled, baseSnapshot, effectiveSnapshot: applied.snapshot, scenario, scenarioSemanticHash: applied.scenarioSemanticHash };
   }, { readOnly: true });
@@ -679,6 +688,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, inp
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Prepared Run result does not match its exact engine/model/input identity");
   }
   return peTransaction(ctx, async (db, client) => {
+    await assertEvidenceSnapshotCurrent(ctx,input.prepared.effectiveSnapshot,client,true);
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 4260))", [`${ctx.auth.tenantId}:${input.idempotencyKey}`]);
     const existing = (await client.query<{ id: string; investment_case_id: string; model_version_id: string; world_at: Date; input_hash: string; result_hash: string; result: UnderwritingRunResult; input_snapshot: UnderwritingInputSnapshot }>(
       `SELECT id::text,investment_case_id::text,model_version_id::text,world_at,input_hash,result_hash,result,input_snapshot
@@ -686,7 +696,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, inp
       [ctx.auth.tenantId, input.idempotencyKey],
     )).rows[0];
     if (existing) {
-      assertStoredRunIntegrity(ctx.auth.tenantId, existing);
+      await assertStoredRunIntegrity(ctx.auth.tenantId, existing,ctx,client);
       const matches = existing.investment_case_id === input.prepared.row.investment_case_id
         && existing.model_version_id === input.prepared.row.id
         && asIso(existing.world_at) === input.prepared.effectiveSnapshot.worldAt
@@ -750,7 +760,7 @@ export async function getUnderwritingRun(ctx: PeMutationContext, runId: string):
   return peTransaction(ctx, async (_db, client) => {
     const row = (await client.query<StoredRunIntegrity & Record<string, unknown>>("SELECT * FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, runId])).rows[0];
     if (!row) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Underwriting Run was not found in the authenticated tenant");
-    assertStoredRunIntegrity(ctx.auth.tenantId, row);
+    await assertStoredRunIntegrity(ctx.auth.tenantId, row,ctx,client);
     return recordShape(row);
   }, { readOnly: true });
 }
@@ -772,7 +782,7 @@ export async function getUnderwritingSensitivity(ctx: PeMutationContext, sensiti
         ORDER BY cell.row_index,cell.column_index`,
       [ctx.auth.tenantId, sensitivityId],
     );
-    for (const cell of cells.rows) assertStoredRunIntegrity(ctx.auth.tenantId, cell);
+    for (const cell of cells.rows) await assertStoredRunIntegrity(ctx.auth.tenantId, cell,ctx,client);
     return { ...recordShape(sensitivity), cells: cells.rows.map(recordShape), complete: cells.rows.length === Number(sensitivity.cell_count) };
   }, { readOnly: true });
 }
@@ -830,7 +840,7 @@ export async function compareUnderwritingRuns(ctx: PeMutationContext, leftRunId:
     const left = rows.rows.find((row) => row.id === leftRunId);
     const right = rows.rows.find((row) => row.id === rightRunId);
     if (!left || !right) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "One or both Underwriting Runs were not found in the authenticated tenant");
-    for (const run of [left, right]) assertStoredRunIntegrity(ctx.auth.tenantId, run);
+    for (const run of [left, right]) await assertStoredRunIntegrity(ctx.auth.tenantId, run,ctx,client);
     const changedInputs: Record<string, { left: unknown; right: unknown }> = {};
     for (const nodeId of [...new Set([...Object.keys(left.input_snapshot.values), ...Object.keys(right.input_snapshot.values)])].sort()) {
       const before = left.input_snapshot.values[nodeId] ?? null;
@@ -883,7 +893,7 @@ export async function explainUnderwritingOutput(ctx: PeMutationContext, runId: s
       [ctx.auth.tenantId, runId],
     )).rows[0];
     if (!run) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Underwriting Run was not found in the authenticated tenant");
-    assertStoredRunIntegrity(ctx.auth.tenantId, run);
+    await assertStoredRunIntegrity(ctx.auth.tenantId, run,ctx,client);
     const { compiled } = await loadModelVersion(client, ctx.auth.tenantId, run.model_version_id);
     return explainOutput(compiled, run.input_snapshot, run.result, outputNodeId);
   }, { readOnly: true });
@@ -916,10 +926,12 @@ export async function listUnderwritingWorkspace(ctx: PeMutationContext, investme
     const sensitivities = await client.query("SELECT * FROM finnor_os.underwriting_sensitivities WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 100", [ctx.auth.tenantId, investmentCaseId]);
     const bindings = await client.query("SELECT * FROM finnor_os.underwriting_artifact_bindings WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const projections = await client.query("SELECT * FROM finnor_os.underwriting_artifact_projections WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
+    const visibleRuns:Record<string,unknown>[]=[],invalidatedRuns:Record<string,unknown>[]=[];
+    for(const row of runs.rows){try{await assertEvidenceSnapshotCurrent(ctx,row.input_snapshot as UnderwritingInputSnapshot,client);visibleRuns.push(recordShape(row));}catch{invalidatedRuns.push({id:row.id,modelVersionId:row.model_version_id,status:'INVALIDATED',validity:'INVALID',result:null,inputSnapshot:null,reason:'EVIDENCE_DERIVATION_NOT_CURRENT'});}}
     return {
       investmentCase: recordShape(investmentCase),
       models: models.rows.map(recordShape), modelVersions: versions.rows.map(recordShape), modelInputBindings: inputBindings.rows.map(recordShape), scenarios: scenarios.rows.map(recordShape),
-      runs: runs.rows.map(recordShape), sensitivities: sensitivities.rows.map(recordShape),
+      runs: visibleRuns,invalidatedRuns, sensitivities: sensitivities.rows.map(recordShape),
       artifactBindings: bindings.rows.map(recordShape), artifactProjections: projections.rows.map(recordShape),
       complete: true,
     };

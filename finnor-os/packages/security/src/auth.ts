@@ -12,7 +12,7 @@
 // what "Read: packages/security (JWT verify)" implied should already be true.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getPool } from "@finnor/db";
+import { getPool, queryWithExecutionDeadline, executionDeadlineMilliseconds } from "@finnor/db";
 import type { TenantContext, Role } from "@finnor/shared-types";
 
 export class AuthVerificationError extends Error {
@@ -35,7 +35,18 @@ function supabaseAuthClient(url: string, key: string): SupabaseClient {
   // multiplied one browser session into dozens of auth round trips.
   const config = `${url}\u0000${key}`;
   if (!authClient || authClientConfig !== config) {
-    authClient = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+    authClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global: { fetch: async (input, init) => {
+        // Resolve the active request deadline on each invocation. The cached
+        // client/JWKS must not cache one caller's deadline for another caller.
+        const milliseconds = executionDeadlineMilliseconds();
+        if (milliseconds === null) return fetch(input, init);
+        const parent = init?.signal ?? (input instanceof Request ? input.signal : null);
+        const timeout = AbortSignal.timeout(milliseconds);
+        return fetch(input, { ...init, signal: parent ? AbortSignal.any([parent, timeout]) : timeout });
+      } },
+    });
     authClientConfig = config;
   }
   return authClient;
@@ -65,7 +76,7 @@ export async function resolveTenantContextByEmail(email: string): Promise<Identi
   // production finnor_app role, direct users-table reads are therefore correctly
   // RLS-empty. The migration's narrowly granted SECURITY DEFINER function returns
   // only this already Supabase-verified email's mapping.
-  const { rows } = await getPool().query(
+  const { rows } = await queryWithExecutionDeadline(getPool(),
     `SELECT user_id AS id, tenant_id, user_role AS role, employee_status, authority_revision
      FROM finnor_os.resolve_authenticated_identity($1)`,
     [email],

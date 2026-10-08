@@ -3,7 +3,7 @@ import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { withTenantTransaction } from '@finnor/db';
-import type { ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
+import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
 import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
  ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
@@ -102,6 +102,19 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  return {...result,experience:events};
 }
 export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>{const policy=await readPolicy(ctx,value);await readable(ctx,policy);if(await current(ctx,policy))throw unavailable();await recoverPolicyExperience(ctx,policy);return immutableControl(policy);}
+/** Narrow current S4-owned reader. A caller cannot add terms to a P2 request
+ * or mistake supplied utility conversion for independently reconciled money. */
+export async function readEnterpriseDeliberationConversion(ctx:PeMutationContext,value:unknown){
+ const policy=await readEnterpriseContingentPolicy(ctx,value);return deriveEnterpriseDeliberationConversion(policy);
+}
+/** Pure conversion of the exact policy already checked by the current owner
+ * reader. This helper neither checks access nor supplies execution authority. */
+export function deriveEnterpriseDeliberationConversion(policy:ContingentPolicy){
+ const terms=policy.mandate.utility.deliberation;
+ if(!terms)return null;
+ const {schema,...conversion}=terms,body={policyRequest:policy.ref,mandateRef:policy.mandateRef,utilityRef:policy.mandate.utilityRef,horizon:policy.mandate.horizon,terms};
+ const contentDigest=epistemicHash(body);return {ref:{owner:'S4',id:'s4-deliberation-conversion:'+contentDigest,version:'s4-finite-deliberation-conversion-v1',contentDigest},...conversion};
+}
 export async function replayEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<{policyRef:ExperimentRef;programMatches:boolean;certificateMatches:boolean;status:string;protectedReceipt:null;qualification:string}>{
  const policy=await readEnterpriseContingentPolicy(ctx,value),model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
  const adapter=restoreInterventionControlAdapter(model,snapshot);
@@ -180,4 +193,14 @@ export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationC
  const preparation=await readArtifact(ctx,'handoff-preparations',ref.contentDigest);
  if(preparation.schema!=='finnor.s4.handoff-preparation.v1'||epistemicHash(preparation)!==ref.contentDigest||preparation.qualification!=='PREPARED_NOT_CONSUMED_NOT_PROTECTED'||preparation.handoff.executionAuthorityGranted!==false||preparation.handoff.protectedReceipt!==null||preparation.handoff.consumptionRef!==null)throw unavailable();
  await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);return immutableControl(preparation);
+}
+
+/** Exact frozen M1 retained-context adapter; current S4/S3 standing remains owner-checked. */
+export async function readEnterpriseControlDecisionContext(ctx:PeMutationContext,value:unknown):Promise<{policy:ContingentPolicy;model:InterventionModel;kernel:InterventionControlSnapshot}>{
+ const policy=await readPolicy(ctx,value);await readable(ctx,policy);
+ const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);
+ const snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
+ const adapter=restoreInterventionControlAdapter(model,snapshot);
+ if(epistemicHash(adapter.ref)!==epistemicHash(policy.bindings.dynamicsRef)||await current(ctx,policy))throw unavailable();
+ return immutableControl({policy,model,kernel:snapshot});
 }

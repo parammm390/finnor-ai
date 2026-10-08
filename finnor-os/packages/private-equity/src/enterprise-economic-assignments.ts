@@ -84,6 +84,25 @@ export async function registerEnterpriseEconomicAssignmentProtocol(ctx: PeMutati
     return save(ctx, { kind: 'PROTOCOL', key, digest, rightsRef: input.rightsRef, build: at => { if (Date.parse(at) >= Date.parse(p.assignmentNotBefore))
             fail('ASSIGNMENT_PROTOCOL_MUST_PRECEDE_ASSIGNMENT'); return { content: { ...p, probabilities, registeredAt: at, tenantId: ctx.auth.tenantId, principalId: economicActor(ctx), rightsRef: input.rightsRef } }; } });
 }
+/** Read the original native S2 record under the same tenant/member boundary.
+ * A protected commitment is checked separately by its attenuated consumer. */
+export async function readEnterpriseEconomicAssignmentRecord(ctx: PeMutationContext, value: unknown): Promise<Stored> {
+    const wanted = ref.parse(value);
+    if (wanted.owner !== 'S2' || wanted.version !== 's2-economic-assignment-v1')
+        fail('NATIVE_ECONOMIC_ASSIGNMENT_REFERENCE_REQUIRED');
+    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true }, async (_db, c) => {
+        await authorizeEconomicActor(ctx, c, false);
+        const row = (await c.query('SELECT * FROM finnor_os.s2_economic_assignment_records WHERE tenant_id=$1 AND principal_id=$2 AND record_id=$3', [ctx.auth.tenantId, economicActor(ctx), wanted.id])).rows[0];
+        if (!row)
+            throw new LedgerFault(404, 'ECONOMIC_ASSIGNMENT_CONTEXT_UNAVAILABLE');
+        const stored = row.body as Stored;
+        if (!same(stored.ref, wanted) || economicHash(stored.content) !== row.content_digest || wanted.contentDigest !== row.content_digest || stored.content.tenantId !== ctx.auth.tenantId || stored.content.principalId !== economicActor(ctx)
+            || stored.executionAuthorityGranted !== false || row.kind === 'PROTOCOL' && stored.content.schema !== 'finnor.s2.economic-assignment-protocol.v1'
+            || row.kind === 'ASSIGNMENT' && (stored.content.schema !== 'finnor.s2.economic-assignment-group.v1' || !same(stored.assignments, stored.content.assignments)))
+            throw new LedgerFault(503, 'ECONOMIC_ASSIGNMENT_STORAGE_PREIMAGE_INVALID');
+        return structuredClone(stored);
+    });
+}
 export async function assignEnterpriseEconomicProgramme(ctx: PeMutationContext, input: {
     estimandId: string;
     protocolId: string;
