@@ -63,6 +63,16 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
     const nodes = projection.nodes
     const companyEdge=projection.edges.find(edge=>edge.fromRef.id===projection.root.entityId&&["deal_company","opportunity_company"].includes(edge.relationship))
     const programRoot=companyEdge&&/^[0-9a-f-]{36}$/i.test(companyEdge.toRef.id)?{entityType:"external_organization",entityId:companyEdge.toRef.id}:projection.root
+    if(work&&programRoot.entityType==="external_organization"){
+      const ownerBasis={schemaVersion:1 as const,sourceKind:"company_brain" as const,
+        entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],
+        workRefs:[{workId:work.work.id,recordType:"work"}],truthState:"UNKNOWN" as const,
+        asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf}
+      blocks.push({...ownerBasis,id:"capital-program:"+programRoot.entityId,type:"capital_program",title:"Economic arrangements",
+        payload:{root:{entityType:"external_organization",entityId:programRoot.entityId},workId:work.work.id}})
+      blocks.push({...ownerBasis,id:"branch-fabric:"+programRoot.entityId,type:"branch_fabric",title:"Branch rehearsal",
+        payload:{rootId:programRoot.entityId,workId:work.work.id}})
+    }
     if(programRoot.entityType==="external_organization"){blocks.push({id:"interface-synthesis:"+programRoot.entityId,type:"interface_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Interface acquisition",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"interface_capability"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     if(programRoot.entityType==="external_organization"){blocks.push({id:"program-synthesis:"+programRoot.entityId,type:"program_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Analytical method",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"harness_program"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     if(programRoot.entityType==="external_organization"){blocks.push({id:"compute-search:"+programRoot.entityId,type:"compute_search",schemaVersion:1,sourceKind:"company_brain",title:"Allocated computation",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"compute_search"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}

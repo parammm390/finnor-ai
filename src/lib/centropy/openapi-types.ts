@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 83406e29126c996bd9d85045449687ebc35e485d87da448a85d1636c0562b06d.
+// Generated from finnor-os/openapi.json, SHA-256 6efff3b8571482a29335a8f2f43210cbeaefd5d84bae063493548ce93da17b1c.
 export interface paths {
     "/api/outcome-packs/control": {
         parameters: {
@@ -13990,6 +13990,3991 @@ export interface paths {
                 };
                 /** @description Current source, owner, module, grant, or supported-domain predicate unpassed */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-compile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.decision-slice-request.v1";
+                        /** Format: uuid */
+                        workId: string;
+                        source: {
+                            /** @constant */
+                            kind: "UNDERWRITING";
+                            /** Format: uuid */
+                            investmentCaseId: string;
+                            /** Format: uuid */
+                            modelVersionId: string;
+                            scenarioIds?: string[];
+                            /** Format: date-time */
+                            worldAt?: string;
+                            evidenceDerivationInputs?: {
+                                [key: string]: {
+                                    /** Format: uuid */
+                                    derivationId: string;
+                                    output: string;
+                                };
+                            };
+                        } | {
+                            /** @constant */
+                            kind: "POLICY";
+                            policyRefs: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            }[];
+                            incumbentRef?: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            } | null;
+                            allocationRef?: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            } | null;
+                            underwriting?: {
+                                /** Format: uuid */
+                                investmentCaseId: string;
+                                /** Format: uuid */
+                                modelVersionId: string;
+                                scenarioIds?: string[];
+                                /** Format: date-time */
+                                worldAt?: string;
+                                evidenceDerivationInputs?: {
+                                    [key: string]: {
+                                        /** Format: uuid */
+                                        derivationId: string;
+                                        output: string;
+                                    };
+                                };
+                            };
+                        } | {
+                            /** @constant */
+                            kind: "ALLOCATION";
+                            allocationRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        /** @enum {string} */
+                        purpose: "MODEL_EVIDENCE" | "ACQUISITION" | "FINANCING";
+                        financingChange?: boolean;
+                        /** Format: date-time */
+                        validAt?: string;
+                        /** Format: date-time */
+                        knowledgeAt?: string;
+                        resource: {
+                            deadlineMs: number;
+                            maxNodes: number;
+                            maxBytes: number;
+                            maxDemands: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-patch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        expectedContextRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        patch?: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-witness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        variableId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        /** @enum {string} */
+                        use: "DECISION" | "NUMERICAL_ONLY";
+                        decision?: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-recompile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/decision-slice-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-handles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: date-time */
+                        validAt?: string;
+                        /** Format: date-time */
+                        knowledgeAt?: string;
+                        inputs: {
+                            inputId: string;
+                            source: {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                /** @enum {string} */
+                                unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                                currencyCode: string | null;
+                                /** @enum {string} */
+                                frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                                /** @enum {string} */
+                                calendar: "OWNER_RECORDED" | "GREGORIAN";
+                                /** @enum {string} */
+                                consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                                instrument: string;
+                                /** @enum {string} */
+                                scale: "1" | "1000" | "1000000";
+                                /** @enum {string} */
+                                sign: "AS_RECORDED" | "NEGATE";
+                                /** @constant */
+                                kind: "metric";
+                                subject: {
+                                    /** @enum {string} */
+                                    entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                    /** Format: uuid */
+                                    entityId: string;
+                                };
+                                metricKey: string;
+                            } | {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                /** @enum {string} */
+                                unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                                currencyCode: string | null;
+                                /** @enum {string} */
+                                frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                                /** @enum {string} */
+                                calendar: "OWNER_RECORDED" | "GREGORIAN";
+                                /** @enum {string} */
+                                consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                                instrument: string;
+                                /** @enum {string} */
+                                scale: "1" | "1000" | "1000000";
+                                /** @enum {string} */
+                                sign: "AS_RECORDED" | "NEGATE";
+                                /** @constant */
+                                kind: "artifact";
+                                subject: {
+                                    /** @enum {string} */
+                                    entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                    /** Format: uuid */
+                                    entityId: string;
+                                };
+                                /** Format: uuid */
+                                documentId: string;
+                                /** Format: uuid */
+                                documentVersionId: string;
+                                metricKey: string;
+                                layout: {
+                                    /** @enum {string} */
+                                    format: "xlsx" | "pdf" | "image";
+                                    sheet?: string;
+                                    /** @default 1 */
+                                    headerRow?: number;
+                                    columns?: {
+                                        entityId: string;
+                                        metricKey: string;
+                                        value: string;
+                                        periodStart: string;
+                                        periodEnd: string;
+                                        currencyCode: string;
+                                        frequency: string;
+                                        unit: string;
+                                        calendar: string;
+                                        consolidation: string;
+                                        instrument: string;
+                                        scale: string;
+                                        sign: string;
+                                    };
+                                    /** @constant */
+                                    delimiter?: "|";
+                                };
+                            } | {
+                                /** @constant */
+                                kind: "derivation";
+                                /** Format: uuid */
+                                derivationId: string;
+                                output: string;
+                            } | {
+                                /** @constant */
+                                kind: "model";
+                                subject: {
+                                    /** @enum {string} */
+                                    entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                    /** Format: uuid */
+                                    entityId: string;
+                                };
+                                /** Format: uuid */
+                                modelVersionId: string;
+                                /** Format: uuid */
+                                runId: string;
+                                output: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.evidence-request.v1";
+                        question: string;
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId?: string;
+                        /** Format: date-time */
+                        validAt?: string;
+                        /** Format: date-time */
+                        knowledgeAt?: string;
+                        idempotencyKey: string;
+                        /** @enum {string} */
+                        mode: "ordinary_disposable" | "protected";
+                        inputs: {
+                            inputId: string;
+                            /** Format: uuid */
+                            handleId: string;
+                        }[];
+                        program: {
+                            /** @constant */
+                            schema: "finnor.derivation-ir.v1";
+                            nodes: ({
+                                id: string;
+                                /** @constant */
+                                op: "source";
+                                inputId: string;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "unique";
+                                input: string;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "reconcile";
+                                input: string;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "filter";
+                                input: string;
+                                /** @enum {string} */
+                                field: "entityId" | "entityType" | "metricKey" | "periodStart" | "periodEnd" | "frequency" | "unit" | "currencyCode" | "calendar" | "consolidation" | "instrument" | "value" | "recordId";
+                                /** @enum {string} */
+                                predicate: "eq" | "neq" | "lt" | "lte" | "gt" | "gte";
+                                value: string;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "project";
+                                input: string;
+                                fields: ("entityId" | "entityType" | "metricKey" | "periodStart" | "periodEnd" | "frequency" | "unit" | "currencyCode" | "calendar" | "consolidation" | "instrument" | "value" | "recordId")[];
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "join";
+                                left: string;
+                                right: string;
+                                on: ("entityId" | "entityType" | "metricKey" | "periodStart" | "periodEnd" | "frequency" | "unit" | "currencyCode" | "calendar" | "consolidation" | "instrument" | "value" | "recordId")[];
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "aggregate";
+                                input: string;
+                                /** @default [] */
+                                groupBy?: ("entityId" | "entityType" | "metricKey" | "periodStart" | "periodEnd" | "frequency" | "unit" | "currencyCode" | "calendar" | "consolidation" | "instrument" | "value" | "recordId")[];
+                                /** @enum {string} */
+                                method: "sum" | "count" | "min" | "max";
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "add";
+                                left: string;
+                                right: string;
+                                /** @default 18 */
+                                decimalPlaces?: number;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "subtract";
+                                left: string;
+                                right: string;
+                                /** @default 18 */
+                                decimalPlaces?: number;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "multiply";
+                                left: string;
+                                right: string;
+                                /** @default 18 */
+                                decimalPlaces?: number;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "ratio";
+                                left: string;
+                                right: string;
+                                /** @default 18 */
+                                decimalPlaces?: number;
+                            } | {
+                                id: string;
+                                /** @constant */
+                                op: "growth";
+                                left: string;
+                                right: string;
+                                /** @default 18 */
+                                decimalPlaces?: number;
+                            })[];
+                            outputs: string[];
+                        };
+                        acceptance: {
+                            /** @constant */
+                            selectedUniverse: "COMPLETE";
+                            /** @constant */
+                            absoluteTolerance: "0";
+                            materialOutputs: string[];
+                        };
+                        limits?: {
+                            /** @default 1000 */
+                            maxRows?: number;
+                            /** @default 8388608 */
+                            maxBytes?: number;
+                            /** @default 30000 */
+                            deadlineMs?: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-witness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        output: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/evidence-consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        investmentCaseId: string;
+                        /** Format: uuid */
+                        modelVersionId: string;
+                        /** Format: date-time */
+                        worldAt: string;
+                        idempotencyKey: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        bindings: {
+                            [key: string]: {
+                                /** Format: uuid */
+                                derivationId: string;
+                                output: string;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.capital-program-request.v2";
+                        /** Format: uuid */
+                        workId: string;
+                        idempotencyKey: string;
+                        incumbentPolicyRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        /** @enum {string} */
+                        purpose: "COMMERCIAL" | "ACQUISITION" | "FINANCING";
+                        permitted: {
+                            actionId: string;
+                            exposureId: string;
+                            unit: string;
+                            terms: string[];
+                            startPeriods: number[];
+                            structures: ("IMMEDIATE" | "STAGED" | "OBSERVABLE_STAGE" | "INQUIRY_OPTION" | "WAIT_STOP")[];
+                            stageFractions: string[];
+                            /** @constant */
+                            resourceRule: "SCALE_REGISTERED_ACTION_LINEAR";
+                            /** @enum {string} */
+                            agreement: "UNILATERAL_PROPOSAL" | "COUNTERPARTY_REQUIRED";
+                            milestone?: {
+                                instrumentId: string;
+                                tokens: string[];
+                            };
+                            inquiryActionId?: string;
+                        };
+                        financial?: {
+                            /** Format: uuid */
+                            investmentCaseId: string;
+                            /** Format: uuid */
+                            modelVersionId: string;
+                            nodeId: string;
+                            semantics: {
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                /** @enum {string} */
+                                unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                                currencyCode: string | null;
+                                /** @enum {string} */
+                                frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                                /** @enum {string} */
+                                calendar: "OWNER_RECORDED" | "GREGORIAN";
+                                /** @enum {string} */
+                                consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                                instrument: string;
+                                /** @enum {string} */
+                                scale: "1" | "1000" | "1000000";
+                                /** @enum {string} */
+                                sign: "AS_RECORDED" | "NEGATE";
+                            };
+                            evidenceDerivationInputs?: {
+                                [key: string]: {
+                                    /** Format: uuid */
+                                    derivationId: string;
+                                    output: string;
+                                };
+                            };
+                        };
+                        challengeEvidence?: {
+                            /** Format: uuid */
+                            searchId: string;
+                            resultRef: {
+                                /** @constant */
+                                owner: "M4";
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        }[];
+                        resource: {
+                            deadlineMs: number;
+                            maxAttempts: number;
+                            maxGenerated: number;
+                            maxExpansions: number;
+                            maxRefinementSteps: number;
+                            maxRefinementDepth: number;
+                            maxModuleBytes: number;
+                            maxResultBytes: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        limit?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        root: {
+                            entityType: string;
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-ports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-witness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        candidateDigest: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-module": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        moduleDigest: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-recompile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        idempotencyKey: string;
+                        replacement?: {
+                            /** @constant */
+                            schema: "finnor.capital-program-request.v2";
+                            /** Format: uuid */
+                            workId: string;
+                            idempotencyKey: string;
+                            incumbentPolicyRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            /** @enum {string} */
+                            purpose: "COMMERCIAL" | "ACQUISITION" | "FINANCING";
+                            permitted: {
+                                actionId: string;
+                                exposureId: string;
+                                unit: string;
+                                terms: string[];
+                                startPeriods: number[];
+                                structures: ("IMMEDIATE" | "STAGED" | "OBSERVABLE_STAGE" | "INQUIRY_OPTION" | "WAIT_STOP")[];
+                                stageFractions: string[];
+                                /** @constant */
+                                resourceRule: "SCALE_REGISTERED_ACTION_LINEAR";
+                                /** @enum {string} */
+                                agreement: "UNILATERAL_PROPOSAL" | "COUNTERPARTY_REQUIRED";
+                                milestone?: {
+                                    instrumentId: string;
+                                    tokens: string[];
+                                };
+                                inquiryActionId?: string;
+                            };
+                            financial?: {
+                                /** Format: uuid */
+                                investmentCaseId: string;
+                                /** Format: uuid */
+                                modelVersionId: string;
+                                nodeId: string;
+                                semantics: {
+                                    entityType: string;
+                                    /** Format: uuid */
+                                    entityId: string;
+                                    /** Format: date-time */
+                                    periodStart: string;
+                                    /** Format: date-time */
+                                    periodEnd: string;
+                                    /** @enum {string} */
+                                    unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                                    currencyCode: string | null;
+                                    /** @enum {string} */
+                                    frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                                    /** @enum {string} */
+                                    calendar: "OWNER_RECORDED" | "GREGORIAN";
+                                    /** @enum {string} */
+                                    consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                                    instrument: string;
+                                    /** @enum {string} */
+                                    scale: "1" | "1000" | "1000000";
+                                    /** @enum {string} */
+                                    sign: "AS_RECORDED" | "NEGATE";
+                                };
+                                evidenceDerivationInputs?: {
+                                    [key: string]: {
+                                        /** Format: uuid */
+                                        derivationId: string;
+                                        output: string;
+                                    };
+                                };
+                            };
+                            challengeEvidence?: {
+                                /** Format: uuid */
+                                searchId: string;
+                                resultRef: {
+                                    /** @constant */
+                                    owner: "M4";
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            }[];
+                            resource: {
+                                deadlineMs: number;
+                                maxAttempts: number;
+                                maxGenerated: number;
+                                maxExpansions: number;
+                                maxRefinementSteps: number;
+                                maxRefinementDepth: number;
+                                maxModuleBytes: number;
+                                maxResultBytes: number;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-select": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                        candidateDigest: string;
+                        idempotencyKey: string;
+                        /**
+                         * @default OWNER_HANDOFF
+                         * @enum {string}
+                         */
+                        intent?: "MODEL_BRANCH_REVIEW" | "OWNER_HANDOFF";
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/challenge-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.m4.challenge-request.v1";
+                        /** Format: uuid */
+                        workId: string;
+                        candidate: {
+                            /** @constant */
+                            owner: "M3";
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        idempotencyKey: string;
+                        limits: {
+                            deadlineMs: number;
+                            maxTargets: number;
+                            maxCells: number;
+                            maxTrials: number;
+                            maxReductions: number;
+                            maxWitnesses: number;
+                            maxBytes: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-diagnostic-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.m4.diagnostic-request.v1";
+                        /** Format: uuid */
+                        workId: string;
+                        sliceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        idempotencyKey: string;
+                        evaluations: ({
+                            /** @constant */
+                            kind: "MECHANICAL_BOUND";
+                            candidateId: string;
+                            nodeId: string;
+                            /** @enum {string} */
+                            relation: "LTE" | "GTE" | "EQ";
+                            value: string;
+                            unit: string;
+                            currency?: string | null;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "NATIVE_CHECK";
+                            candidateId: string;
+                            nodeId: string;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "SOURCE_LITERAL";
+                            entityType: string;
+                            entityId: string;
+                            field: string;
+                            expected: string | boolean | null;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            /** @enum {string} */
+                            interpretation: "EXACT_RECORDED_LITERAL" | "LEGAL_MEANING";
+                        } | {
+                            /** @constant */
+                            kind: "P4_TERM";
+                            /** Format: uuid */
+                            derivationId: string;
+                            output: string;
+                            expected: string;
+                            unit: string;
+                            entityType: string;
+                            /** Format: uuid */
+                            entityId: string;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "ALLOCATION_SELECTION";
+                            selectedPolicyIds: string[];
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "ALLOCATION_BOUND";
+                            bound: string;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "POLICY_BOUND";
+                            policyId: string;
+                            minimum: string;
+                            unit: string;
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        } | {
+                            /** @constant */
+                            kind: "EFFECT_FIXTURE";
+                            /** @enum {string} */
+                            fixture: "CORRECT" | "WRONG_TARGET" | "WRONG_AMOUNT" | "CLEAR" | "UNKNOWN";
+                            request: {
+                                /** @enum {string} */
+                                entityId: "C_01" | "C_010";
+                                /** @enum {string} */
+                                field: "credit_limit" | "note";
+                                /** @enum {string} */
+                                operation: "SET" | "CLEAR";
+                                value: string | null;
+                                /** @enum {string} */
+                                unit: "USD" | "TEXT";
+                                currency: "USD" | null;
+                                idempotencyKey: string;
+                            };
+                            /** @enum {string} */
+                            claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                        })[];
+                        domain: {
+                            parameters: {
+                                candidateId: string;
+                                nodeId: string;
+                                values: string[];
+                            }[];
+                            maxCombination: number;
+                        };
+                        limits: {
+                            deadlineMs: number;
+                            maxTargets: number;
+                            maxCells: number;
+                            maxTrials: number;
+                            maxReductions: number;
+                            maxWitnesses: number;
+                            maxBytes: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                        /**
+                         * @default CURRENT
+                         * @enum {string}
+                         */
+                        readMode?: "CURRENT" | "ISSUED_HISTORY";
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-currentness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                        /**
+                         * @default CURRENT
+                         * @enum {string}
+                         */
+                        readMode?: "CURRENT" | "ISSUED_HISTORY";
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                        /**
+                         * @default CURRENT
+                         * @enum {string}
+                         */
+                        readMode?: "CURRENT" | "ISSUED_HISTORY";
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-witness-replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                        witnessRef: {
+                            /** @constant */
+                            owner: "M4";
+                            id: string;
+                            /** @constant */
+                            version: "m4-bounded-original-input-v1";
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-repair-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                        replacement: {
+                            /** @constant */
+                            schema: "finnor.m4.diagnostic-request.v1";
+                            /** Format: uuid */
+                            workId: string;
+                            sliceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            idempotencyKey: string;
+                            evaluations: ({
+                                /** @constant */
+                                kind: "MECHANICAL_BOUND";
+                                candidateId: string;
+                                nodeId: string;
+                                /** @enum {string} */
+                                relation: "LTE" | "GTE" | "EQ";
+                                value: string;
+                                unit: string;
+                                currency?: string | null;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "NATIVE_CHECK";
+                                candidateId: string;
+                                nodeId: string;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "SOURCE_LITERAL";
+                                entityType: string;
+                                entityId: string;
+                                field: string;
+                                expected: string | boolean | null;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                                /** @enum {string} */
+                                interpretation: "EXACT_RECORDED_LITERAL" | "LEGAL_MEANING";
+                            } | {
+                                /** @constant */
+                                kind: "P4_TERM";
+                                /** Format: uuid */
+                                derivationId: string;
+                                output: string;
+                                expected: string;
+                                unit: string;
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "ALLOCATION_SELECTION";
+                                selectedPolicyIds: string[];
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "ALLOCATION_BOUND";
+                                bound: string;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "POLICY_BOUND";
+                                policyId: string;
+                                minimum: string;
+                                unit: string;
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            } | {
+                                /** @constant */
+                                kind: "EFFECT_FIXTURE";
+                                /** @enum {string} */
+                                fixture: "CORRECT" | "WRONG_TARGET" | "WRONG_AMOUNT" | "CLEAR" | "UNKNOWN";
+                                request: {
+                                    /** @enum {string} */
+                                    entityId: "C_01" | "C_010";
+                                    /** @enum {string} */
+                                    field: "credit_limit" | "note";
+                                    /** @enum {string} */
+                                    operation: "SET" | "CLEAR";
+                                    value: string | null;
+                                    /** @enum {string} */
+                                    unit: "USD" | "TEXT";
+                                    currency: "USD" | null;
+                                    idempotencyKey: string;
+                                };
+                                /** @enum {string} */
+                                claimKind: "UNIVERSAL_DETERMINISTIC" | "MODEL_WORST_CASE" | "EXACT_SOURCE" | "EXACT_EFFECT" | "PROBABILITY" | "EXPECTATION" | "CAUSAL" | "EX_ANTE_QUALITY" | "AGREEMENT";
+                            })[];
+                            domain: {
+                                parameters: {
+                                    candidateId: string;
+                                    nodeId: string;
+                                    values: string[];
+                                }[];
+                                maxCombination: number;
+                            };
+                            limits: {
+                                deadlineMs: number;
+                                maxTargets: number;
+                                maxCells: number;
+                                maxTrials: number;
+                                maxReductions: number;
+                                maxWitnesses: number;
+                                maxBytes: number;
+                            };
+                        } | {
+                            /** @constant */
+                            schema: "finnor.m4.challenge-request.v1";
+                            /** Format: uuid */
+                            workId: string;
+                            candidate: {
+                                /** @constant */
+                                owner: "M3";
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            idempotencyKey: string;
+                            limits: {
+                                deadlineMs: number;
+                                maxTargets: number;
+                                maxCells: number;
+                                maxTrials: number;
+                                maxReductions: number;
+                                maxWitnesses: number;
+                                maxBytes: number;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/counterexample-retention-purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded challenge or new economic repair request; no renewed parent resources or admission. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict challenge request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted search, owner result or custody reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited request resource or byte bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic owner reader unavailable. */
+                424: {
                     headers: {
                         [name: string]: unknown;
                     };

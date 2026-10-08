@@ -1,0 +1,264 @@
+diff --git a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+--- a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+@@ -34,6 +34,7 @@
+ import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
+ import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
+ import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
++import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
+ 
+ export const runtime = "nodejs";
+ 
+@@ -185,6 +186,7 @@
+     const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
+     const ctx: PeMutationContext = { auth };
+     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
++    if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
+     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
+     if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleDeliberationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -3,6 +3,7 @@
+ import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
+ import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+ import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
++import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
+ // Worker service (§16): one process, multiple job-type handlers registered by string key.
+ 
+ import "dotenv/config";
+@@ -47,6 +48,7 @@
+ 
+ export function createWorker(): JobQueue {
+   const queue = new JobQueue();
++  queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
+   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);
+   queue.register('run_interface_acquisition_v1',runInterfaceAcquisitionJob,PRODUCTION_JOB_CONTRACTS.run_interface_acquisition_v1);
+   queue.register('run_branch_fabric_v1',(payload,execution)=>handleBranch(payload,execution!),PRODUCTION_JOB_CONTRACTS.run_branch_fabric_v1);
+diff --git a/finnor-os/packages/db/compute-contract.ts b/finnor-os/packages/db/compute-contract.ts
+--- a/finnor-os/packages/db/compute-contract.ts
++++ b/finnor-os/packages/db/compute-contract.ts
+@@ -77,6 +77,7 @@
+ 
+ /** Exhaustive registry for every production handler registered by the worker. */
+ export const PRODUCTION_JOB_CONTRACTS = {
++  run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
+   run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
+   run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),
+   run_compute_search_unit_v1: { ...tenantFixed("INTERACTIVE", "reconcilable", "P2 original-episode compute; submitted unknown attempts reconcile before retry."), protocolVersions: [1, 2] },
+diff --git a/finnor-os/packages/private-equity/src/index.ts b/finnor-os/packages/private-equity/src/index.ts
+--- a/finnor-os/packages/private-equity/src/index.ts
++++ b/finnor-os/packages/private-equity/src/index.ts
+@@ -49,3 +49,7 @@
+ export {CONTINUATION_OPERATIONS,CONTINUATION_OPERATION_SCHEMAS,handleContinuationOperation,
+   submitContinuation as submitProgrammeContinuation,readContinuation as readProgrammeContinuation} from './live-recompilation/api';
+ export type {ContinuationPatch,ContinuationRef} from './live-recompilation/contracts';
++
++// Ordinary P6 consumer port. Admission remains S8-owned and unavailable here.
++export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInduction,handleProcedureOperation} from './procedure-induction/api';
++export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
+diff --git a/finnor-os/packages/private-equity/src/live-recompilation/api.ts b/finnor-os/packages/private-equity/src/live-recompilation/api.ts
+--- a/finnor-os/packages/private-equity/src/live-recompilation/api.ts
++++ b/finnor-os/packages/private-equity/src/live-recompilation/api.ts
+@@ -5,6 +5,7 @@
+ import { requestRow, assertProgramCurrent, episodeCosts, type ProgramRow } from '../program-synthesis/store';
+ import { authorize, codeIdentity, principal, revisions, sameRevisions, sha, stable, tx, unavailable, schemaIdentity } from '../evidence-execution/store';
+ import { randomUUID } from 'node:crypto';
++import {assertProcedureContinuationIntake} from '../procedure-induction/continuation';
+ import { receiveWork } from '@finnor/db';
+ import { P7_VERSION, SubmitSchema, ReadSchema, ProjectionSchema, affectedClosure, ref, type ContinuationPatch } from './contracts';
+ import { z } from 'zod';
+@@ -119,7 +120,7 @@
+       [q.tenant_id, q.principal_id, eventKey])).rows[0];
+     if (intent && (sha(intent.body) !== intent.digest || intent.digest !== sha(intentBody)))
+       throw Error('P7_INTAKE_INTENT_PREIMAGE_MISMATCH');
+-    try { await assertProgramCurrent(ctx, q, c, true); }
++    try { await assertProcedureContinuationIntake(ctx, q, c, true); }
+     catch (error) {
+       if (!intent || (error as Error).message !== 'EXACT_WORK_REVISION_CHANGED') throw error;
+       const canonical = (await c.query<{ id: string }>(`SELECT i.id FROM finnor_os.work_inputs i
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/api.ts b/finnor-os/packages/private-equity/src/program-synthesis/api.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/api.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/api.ts
+@@ -1,4 +1,5 @@
+ import {z} from 'zod';
++import {requireProcedureMode} from '../procedure-induction/admission';
+ import {receiveWork,attachWorkEntity,loadEmployeeConversationThread,appendEmployeeConversationMessage,updateEmployeeConversationThreadContext} from '@finnor/db';
+ import {getArtifactBytes} from '@finnor/artifacts';
+ import {loadEnterpriseBeliefView} from '../enterprise-beliefs';
+@@ -14,7 +15,7 @@
+ const idSchema=z.object({programId:z.string().uuid()}).strict();
+ 
+ export async function submitHarnessProgram(ctx:PeMutationContext,body:unknown){
+- const request=parseHarnessRequest(body);await authorize(ctx,request.root,request.workId?[{type:'work',id:request.workId}]:[]);validateAcceptance(request);
++ const request=parseHarnessRequest(body);if(request.procedure)requireProcedureMode(request.procedure);await authorize(ctx,request.root,request.workId?[{type:'work',id:request.workId}]:[]);validateAcceptance(request);
+  if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
+  if(request.limits?.requiredAggregateLimits&&Object.keys(request.limits.requiredAggregateLimits).length)throw Error('HARNESS_AGGREGATE_RESOURCE_BOUND_UNAVAILABLE');
+  const user=await tx(ctx,async c=>(await c.query('SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2',[ctx.auth.tenantId,principal(ctx)])).rows[0],true);if(user?.status!=='active'||user.role!=='owner')throw unavailable();
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/contracts.ts b/finnor-os/packages/private-equity/src/program-synthesis/contracts.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/contracts.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/contracts.ts
+@@ -1,4 +1,5 @@
+ import { z } from 'zod';
++import {ProcedureUseSchema} from '../procedure-induction/use-contracts';
+ import { EvidenceRootSchema, EvidenceSourceSchema, FinancialSemanticsSchema, type EvidenceDependency, type EvidenceWitness, type FinancialSemantics } from '@finnor/shared-types';
+ import type { GoalSpec, PlanGraph } from '@finnor/planning';
+ 
+@@ -32,6 +33,7 @@
+  sources:z.array(z.object({key,source:EvidenceSourceSchema}).strict()).min(1).max(16),
+  acceptance:z.object({requiredSourceKeys:z.array(key).min(1).max(16),targets:z.array(z.object({key,expression:ExpressionSchema,unit,currencyCode:z.string().regex(/^[A-Z]{3}$/).nullable()}).strict()).min(1).max(16),deliverable:z.object({kind:z.literal('analytical_draft'),title:z.string().min(1).max(300)}).strict()}).strict(),
+  operations:z.array(OwnerOperationSchema).max(12).optional(),ownerBindings:z.object({policyRef:ownerRef.optional(),allocationRef:ownerRef.optional(),decisionSliceRef:ownerRef.optional()}).strict().optional(),
++ procedure:ProcedureUseSchema.optional(),
+  computeSearch:z.literal('P2_REQUIRED').optional(),
+  proposalSource:z.enum(['REGISTERED_NATIVE','GOVERNED_MODEL']).default('REGISTERED_NATIVE'),
+  limits:z.object({maxSteps:z.number().int().min(8).max(4096).default(1024),maxDepth:z.number().int().min(1).max(12).default(12),maxAttempts:z.number().int().min(1).max(8).default(4),maxCandidates:z.number().int().min(2).max(8).default(8),deadlineMs:z.number().int().min(1000).max(3600000).default(300000),requiredAggregateLimits:z.record(z.number().positive()).optional()}).strict().optional(),
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/store.ts b/finnor-os/packages/private-equity/src/program-synthesis/store.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/store.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/store.ts
+@@ -1,4 +1,5 @@
+ import {resolveEconomicBindings} from './owners';
++import {assertProcedureProgrammeCurrent} from '../procedure-induction/programme';
+ import type {PoolClient} from 'pg';
+ import type {PeMutationContext} from '../types';
+ import {authorize,codeIdentity,currentDerivation,principal,sha,stable,tx,unavailable,schemaIdentity,assertDependencies} from '../evidence-execution/store';
+@@ -17,6 +18,7 @@
+   if(!plan||plan.work_input_id!==q.work_input_id||(!['active','completed'].includes(plan.status)&&!authenticStop))throw Error('CANONICAL_PLAN_REVISION_SUPERSEDED');
+  };
+  if(c)await read(c);else await tx(ctx,read,true);
++ await assertProcedureProgrammeCurrent(ctx,q,c,lock);
+  if(q.proposed.producer.codeDigest!==(await codeIdentity()).digest)throw Error('PROGRAM_RUNTIME_SOURCE_CHANGED');if(q.proposed.producer.schemaDigest!==await schemaIdentity(ctx))throw Error('PROGRAM_SCHEMA_CHANGED');
+ }
+ export async function trace(ctx:PeMutationContext,q:ProgramRow,kind:string,body:unknown,c?:PoolClient){const write=(client:PoolClient)=>client.query('INSERT INTO finnor_os.p1_events(tenant_id,principal_id,request_id,generation,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb)',[q.tenant_id,q.principal_id,q.id,q.generation,kind,stable(body)]);return c?write(c):tx(ctx,write);}
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/worker.ts b/finnor-os/packages/private-equity/src/program-synthesis/worker.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/worker.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/worker.ts
+@@ -1,6 +1,7 @@
+ 
+ import {advanceProgramSearch,invalidateUnstartedProgramSearch} from '../compute-search/controller';
+ import {executeHarnessCandidate} from './execution';
++import {tryProcedureCandidate} from '../procedure-induction/programme';
+ import {sha256 as planningHash} from '@finnor/planning';
+ import {randomUUID} from 'node:crypto';
+ import {groundedMemoBytes,ingestArtifact,getArtifactBytes} from '@finnor/artifacts';
+@@ -56,11 +57,16 @@
+   await durableNode(ctx,q,program.graph.find(n=>n.op==='derive')!.id,{derivationId:d.id,resultDigest:d.result!.digest,witnessIds:d.witnesses.map(w=>w.id),work:d.work});
+   let stepReservation=saved?program.graph.length+1:program.modules.reduce((n,m)=>n+m.bounds.steps,0)+program.graph.length+program.modules.length;let usedSteps=0;
+   const meter=()=>{if(++usedSteps>stepReservation||Date.now()>Date.parse(program.bounds.deadlineAt))throw Error('ORIGINAL_EPISODE_STEP_OR_DEADLINE_EXHAUSTED');};
+-  const adaptive=saved?null:await advanceProgramSearch(ctx,q,program,input,d);if(adaptive?.waiting)return;
++  const procedure=saved||!request.procedure?null:await tryProcedureCandidate(ctx,q,program,input,d,request.procedure);
++  const adaptive=saved||procedure?null:await advanceProgramSearch(ctx,q,program,input,d);if(adaptive?.waiting)return;
+   let selected:{moduleId:string;values:Record<string,HarnessValue>;checks:unknown[]};
+   if(saved){
+    if(saved.body.inputDigest!==sha(input)||saved.body.sourceResultDigest!==d.result!.digest||program.acceptanceDigest!==q.proposed.acceptanceDigest||program.producer.codeDigest!==q.proposed.producer.codeDigest||!program.modules.some(m=>m.id===saved.body.selectedModule&&sha(m.compiled)===m.compiledDigest))throw Error('CHECKED_CONTINUATION_SOURCE_OR_MODULE_MISMATCH');
+    selected={moduleId:saved.body.selectedModule,values:saved.body.values,checks:saved.body.checks};await assertDependencies(ctx,program.dependencies);await reserve(ctx,q,1,0);await trace(ctx,q,'CHECKED_CONTINUATION_REUSED',{nodeId:solveNode.id,checkpointDigest:saved.digest,moduleId:selected.moduleId,sourceResultDigest:d.result!.digest,actualNewS6Executions:0,reSynthesis:false});
++  }else if(procedure){
++   selected=procedure;program.independentChecks=selected.checks;
++   program.observableBranches=await tx(ctx,c=>observeAcceptedBranches(c,request.acceptance,input,d.witnesses.map(w=>w.id)),true);
++   await durableNode(ctx,q,solveNode.id,{selectedModule:selected.moduleId,values:selected.values,checks:selected.checks,inputDigest:sha(input),sourceResultDigest:d.result!.digest,programCheckpoint:program});
+   }else if(adaptive?.selected){
+    selected=adaptive.selected;program.modules=adaptive.modules;program.candidates=program.modules.map(m=>({id:'candidate:'+m.structureDigest,moduleId:m.id,structureDigest:m.structureDigest,status:m.id===selected.moduleId?'CHECKED':'PROPOSED',counterexamples:[]}));program.semanticBindings.push({owner:'P2',schema:adaptive.plan?.schema,searchId:adaptive.plan?.id,revision:adaptive.plan?.revision,selection:'AUTHENTIC_CURRENT_CHECKED_P2_READER',stop:adaptive.plan?.stop,authorityGranted:false});program.unavailableBindings=program.unavailableBindings.filter(v=>v!=='P2_COMPARE');
+    program.independentChecks=selected.checks;program.observableBranches=await tx(ctx,c=>observeAcceptedBranches(c,request.acceptance,input,d.witnesses.map(w=>w.id)),true);await reserve(ctx,q,program.graph.length+1,0);await durableNode(ctx,q,solveNode.id,{selectedModule:selected.moduleId,values:selected.values,checks:selected.checks,inputDigest:sha(input),sourceResultDigest:d.result!.digest,programCheckpoint:program});
+diff --git a/finnor-os/scripts/generate-openapi.ts b/finnor-os/scripts/generate-openapi.ts
+--- a/finnor-os/scripts/generate-openapi.ts
++++ b/finnor-os/scripts/generate-openapi.ts
+@@ -65,6 +65,7 @@
+ import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-synthesis/api";
+ import { M1_OPERATIONS } from "../packages/private-equity/src/decision-slice/handler";
+ import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-recompilation/api";
++import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
+ import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
+ import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
+ import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
+@@ -361,7 +362,7 @@
+   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
+   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
+   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
+-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...DELIBERATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
++  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
+   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
+   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
+@@ -665,6 +666,18 @@
+       "400": { description: "Bounded strict request rejected" },
+       "404": { description: "Indistinguishable absent or unauthorized private resource" },
+       "422": { description: "Current owner, grant, input, route or terminal predicate unpassed" },
++    },
++  } } });
++}
++
++for (const operation of PROCEDURE_OPERATIONS) {
++  Object.assign(paths, { ["/api/company-brain/" + operation]: { post: {
++    security: secured, requestBody: json(PROCEDURE_OPERATION_SCHEMAS[operation]), responses: {
++      "200": { description: "Authorized ordinary procedure preimage or lifecycle receipt; no admission" },
++      "202": { description: "Bounded ordinary induction accepted on original Work" },
++      "400": { description: "Strict bounded procedure schema rejected" },
++      "404": { description: "Absent or unauthorized principal-scoped procedure resource" },
++      "422": { description: "Rights, currentness, grant or unsupported protected-port predicate unpassed" },
+     },
+   } } });
+ }
+diff --git a/scripts/centropy/generate-capability-manifest.mjs b/scripts/centropy/generate-capability-manifest.mjs
+--- a/scripts/centropy/generate-capability-manifest.mjs
++++ b/scripts/centropy/generate-capability-manifest.mjs
+@@ -36,6 +36,7 @@
+   ["INTERFACE_OPERATIONS", "interface-synthesis/api.ts"],
+   ["M1_OPERATIONS", "decision-slice/handler.ts"],
+   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
++  ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
+   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+ ]
+ const companyBrainOperations = [...new Set([
+@@ -54,6 +55,7 @@
+   "interface-read", "interface-projection", "interface-catalogue", "interface-module", "interface-ports",
+   "decision-slice-read", "decision-slice-context", "decision-slice-witness", "decision-slice-changes", "decision-slice-view",
+   "continuation-read", "continuation-projection",
++  "procedure-experience", "procedure-induction-read", "procedure-read", "procedure-component", "procedure-projection", "procedure-admission-request", "procedure-interface", "procedure-costs",
+   "deliberation-read", "deliberation-projection", "deliberation-module-read", "deliberation-evidence-read",
+ ])
+ const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
+@@ -143,7 +145,7 @@
+   const read = method === "GET" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
+   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
+     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
+-  const control = controls.test(path) || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation)-(?:cancel|resume|reconcile)$/.test(path)
++  const control = controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation)-(?:cancel|resume|reconcile)$/.test(path)
+   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : read ? "READ" : control ? "CONTROL" : "MUTATION"
+   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
+   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
+diff --git a/src/components/centropy/canvas/ProgramSynthesisPanel.tsx b/src/components/centropy/canvas/ProgramSynthesisPanel.tsx
+--- a/src/components/centropy/canvas/ProgramSynthesisPanel.tsx
++++ b/src/components/centropy/canvas/ProgramSynthesisPanel.tsx
+@@ -6,6 +6,7 @@
+ import {useCentropyAuth as useJarvisAuth} from '@/components/centropy/lib/centropy-auth'
+ import {compileProgramTargets} from './program-grammar'
+ import {ContinuationPanel} from './ContinuationPanel'
++import {ProcedureInductionPanel} from './ProcedureInductionPanel'
+ 
+ type Root={entityType:string;entityId:string}
+ type Read={programId:string;workId:string;workRevision:string;status:string;reason?:string|null;canResume?:boolean;incurredCosts?:{attempts:number;steps:number;wallMs:number;usd:null};program:null|{id:string;work:{id:string;revision:string};acceptanceDigest:string;acceptance:{requiredSourceKeys:string[];targets:Array<{key:string;unit:string;currencyCode:string|null}>;deliverable:{title:string}};observableBranches?:unknown[];effectProposals?:unknown[];semanticBindings?:unknown[];graph:Array<{id:string;op:string;owner:string}>;modules:Array<{id:string;format:string;compiledDigest:string;bounds:{steps:number}}>;candidates:Array<{moduleId:string;status:string;counterexamples:unknown[]}>;costs:{usd:null;attempts:number;steps:number;wallMs:number};unavailableBindings:string[];result:null|{values:Record<string,{value:string;semantics:{unit:string;currencyCode:string|null};witnessIds:string[]}>;artifact:{documentId:string;versionId:string;sha256:string}}}}
+@@ -18,6 +19,9 @@
+  const generation=useRef(0),container=useRef<HTMLDivElement>(null)
+  const [reading,setReading]=useState<{identity:string;data:Read}|null>(null),[proof,setProof]=useState<{identity:string;data:unknown}|null>(null),[message,setMessage]=useState('Describe the outcome and the calculations that will establish it.'),[busy,setBusy]=useState(false)
+  const [instruction,setInstruction]=useState(''),[calculations,setCalculations]=useState(''),[periodStart,setStart]=useState('2025-01-01'),[periodEnd,setEnd]=useState('2025-12-31'),[currency,setCurrency]=useState('USD'),[frequency,setFrequency]=useState('annual'),[mode,setMode]=useState('protected'),[proposalSource,setProposalSource]=useState('REGISTERED_NATIVE')
++ const [procedure,setProcedure]=useState<{identity:string;id:string}|null>(null)
++ const chooseProcedure=useCallback((id:string|null)=>{setProcedure(id?{identity,id}:null);if(id)setMode('ordinary_disposable')},[identity])
++ const selectedProcedure=procedure?.identity===identity?procedure.id:null
+  const pinned=search.get('programId'),programId=pinned&&uuid.test(pinned)?pinned:null
+  const visible=reading?.identity===identity?reading.data:null,values=visible?.status==='TESTED'?visible.program?.result?.values:null
+  const clear=useCallback(()=>{setReading(null);setProof(null)},[])
+@@ -41,11 +45,13 @@
+  },[identity,programId,session,workId,refresh,clear,pin,root.entityType,root.entityId]) // URL state identifies a record; it never supplies private result bytes.
+  useEffect(()=>{if(!programId||!workId||!session||['INVALIDATED','CANCELLED'].includes(visible?.status??''))return;const timer=setInterval(()=>{if(document.visibilityState==='visible')void refresh(programId,generation.current)},2000);return()=>clearInterval(timer)},[programId,workId,session,visible?.status,refresh])
+  useEffect(()=>{const onVisibility=()=>{generation.current++;clear();setBusy(false);if(document.visibilityState==='visible'&&programId&&workId&&session)void refresh(programId,generation.current)};document.addEventListener('visibilitychange',onVisibility);window.addEventListener('focus',onVisibility);return()=>{document.removeEventListener('visibilitychange',onVisibility);window.removeEventListener('focus',onVisibility)}},[programId,workId,session,refresh,clear])
+- async function submit(event:React.FormEvent){event.preventDefault();const epoch=++generation.current,expected=identity;clear();setBusy(true);setMessage('Accepting observable criteria into native Work…');try{const parsed=compileProgramTargets(calculations,currency),validAt=new Date(new Date(`${periodEnd}T00:00:00.000Z`).getTime()+86400000).toISOString(),sourceScope={kind:'metric',subject:root,periodStart:`${periodStart}T00:00:00.000Z`,periodEnd:`${periodEnd}T00:00:00.000Z`,unit:'currency',currencyCode:currency,frequency,calendar:'OWNER_RECORDED',consolidation:'OWNER_SUBJECT_ONLY',instrument:'UNSPECIFIED',scale:'1',sign:'AS_RECORDED'};const accepted=await jarvisPost<{programId:string;workId:string}>('company-brain/program-submit',{schema:'finnor.harness-request.v1',instruction,root,threadId,...(workId?{workId}:{}),validAt,mode,proposalSource,idempotencyKey:crypto.randomUUID(),sources:parsed.metrics.map(key=>({key,source:{...sourceScope,metricKey:key}})),acceptance:{requiredSourceKeys:parsed.metrics,targets:parsed.targets,deliverable:{kind:'analytical_draft',title:'Analytical draft — '+instruction.slice(0,160)}}});if(epoch!==generation.current||identityRef.current!==expected)return;pin(accepted.programId);onSelectWork?.(accepted.workId);setMessage('Native Work accepted. Constructing and checking candidate methods…');}catch(error){if(epoch!==generation.current||identityRef.current!==expected)return;clear();setBusy(false);const details=error instanceof JarvisApiError?error.details as {predicate?:string}:null;setMessage(details?.predicate?.includes('PROTECTED')?'Protected funding and runtime admission are unavailable.':details?.predicate?.replaceAll('_',' ').toLowerCase()??(error instanceof Error?error.message:'Programme could not be accepted.'));}}
++ async function submit(event:React.FormEvent){event.preventDefault();const epoch=++generation.current,expected=identity;clear();setBusy(true);setMessage('Accepting observable criteria into native Work…');try{const parsed=compileProgramTargets(calculations,currency),validAt=new Date(new Date(`${periodEnd}T00:00:00.000Z`).getTime()+86400000).toISOString(),sourceScope={kind:'metric',subject:root,periodStart:`${periodStart}T00:00:00.000Z`,periodEnd:`${periodEnd}T00:00:00.000Z`,unit:'currency',currencyCode:currency,frequency,calendar:'OWNER_RECORDED',consolidation:'OWNER_SUBJECT_ONLY',instrument:'UNSPECIFIED',scale:'1',sign:'AS_RECORDED'};const accepted=await jarvisPost<{programId:string;workId:string}>('company-brain/program-submit',{schema:'finnor.harness-request.v1',instruction,root,threadId,...(workId?{workId}:{}),validAt,mode,proposalSource,...(selectedProcedure?{procedure:{capsuleId:selectedProcedure,mode}}:{}),idempotencyKey:crypto.randomUUID(),sources:parsed.metrics.map(key=>({key,source:{...sourceScope,metricKey:key}})),acceptance:{requiredSourceKeys:parsed.metrics,targets:parsed.targets,deliverable:{kind:'analytical_draft',title:'Analytical draft — '+instruction.slice(0,160)}}});if(epoch!==generation.current||identityRef.current!==expected)return;pin(accepted.programId);onSelectWork?.(accepted.workId);setMessage('Native Work accepted. Constructing and checking candidate methods…');}catch(error){if(epoch!==generation.current||identityRef.current!==expected)return;clear();setBusy(false);const details=error instanceof JarvisApiError?error.details as {predicate?:string}:null;setMessage(details?.predicate?.includes('PROTECTED')?'Protected funding and runtime admission are unavailable.':details?.predicate?.replaceAll('_',' ').toLowerCase()??(error instanceof Error?error.message:'Programme could not be accepted.'));}}
+  async function control(operation:'program-cancel'|'program-resume'){if(!programId)return;const epoch=++generation.current,expected=identity;clear();setBusy(true);try{await jarvisPost(`company-brain/${operation}`,{programId});if(epoch===generation.current&&identityRef.current===expected)await refresh(programId,epoch)}catch{if(epoch===generation.current){clear();setBusy(false);setMessage('The requested programme transition could not be confirmed.')}}}
+  async function inspect(){if(!programId)return;const epoch=generation.current,expected=identity;setProof(null);try{const data=await jarvisPost('company-brain/program-witness',{programId});if(epoch===generation.current&&identityRef.current===expected){setProof({identity:expected,data});requestAnimationFrame(()=>container.current?.querySelector<HTMLElement>('[data-program-proof]')?.focus())}}catch{clear();setMessage('The result is no longer current. Recheck the sources.')}}
+  async function download(){if(!programId)return;const epoch=generation.current,expected=identity;try{const file=await jarvisPost<{bytesBase64:string;fileName:string;mediaType:string;sha256:string}>('company-brain/program-artifact',{programId});if(epoch!==generation.current||identityRef.current!==expected)return;const bytes=Uint8Array.from(atob(file.bytesBase64),c=>c.charCodeAt(0));const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');if(digest!==file.sha256||epoch!==generation.current||identityRef.current!==expected)throw Error('Artifact changed.');const url=URL.createObjectURL(new Blob([bytes],{type:file.mediaType})),a=document.createElement('a');a.href=url;a.download=file.fileName;a.click();URL.revokeObjectURL(url);}catch{clear();setMessage('The current draft could not be verified for download.')}}
+  return <div ref={container} className="ct-evidence ct-program" data-program-work={workId??'new'}>
++ <ProcedureInductionPanel root={root} workId={workId} threadId={threadId} onSelect={chooseProcedure}/>
++ {selectedProcedure?<p data-selected-procedure={selectedProcedure}>Selected disposable procedure {selectedProcedure}. Currentness, applicability and the original grant are checked on execution. Protected use remains unavailable.</p>:null}
+  {workId?<ContinuationPanel root={root} workId={workId} priorProgramId={programId} onSelectProgram={pin}/>:null}
+  <form onSubmit={submit}><label>Desired analytical outcome<textarea value={instruction} onChange={e=>setInstruction(e.target.value)} required maxLength={4000}/></label><label>Observable calculations<textarea value={calculations} onChange={e=>setCalculations(e.target.value)} placeholder="netEquity = EV - debt - liability; leverage = debt / EBITDA" required maxLength={4000}/></label><p>Use exact recorded metric names, parentheses, min, max and if. For example: if(EBITDA &gt; USD(0), debt / EBITDA, 0). Include every material input needed for the outcome. Source scope and accepted criteria are frozen before candidate methods run.</p><div className="ct-evidence__fields"><label>Period start<input type="date" value={periodStart} onChange={e=>setStart(e.target.value)} required/></label><label>Period end<input type="date" value={periodEnd} onChange={e=>setEnd(e.target.value)} required/></label><label>Currency<input value={currency} onChange={e=>setCurrency(e.target.value.toUpperCase())} pattern="[A-Z]{3}" maxLength={3} required/></label><label>Frequency<select value={frequency} onChange={e=>setFrequency(e.target.value)}><option value="annual">Annual</option><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option></select></label><label>Execution scope<select value={mode} onChange={e=>setMode(e.target.value)}><option value="protected">Protected execution</option><option value="ordinary_disposable">Disposable local evaluation</option></select></label><label>Candidate construction<select value={proposalSource} onChange={e=>setProposalSource(e.target.value)}><option value="REGISTERED_NATIVE">Native bounded compiler</option><option value="GOVERNED_MODEL">Governed model with native fallback</option></select></label></div><button disabled={busy||!session} type="submit">Construct and check method</button></form><p role="status" aria-live="polite">{message}</p>{visible?<p>Native Work {visible.workId} · input {visible.workRevision} · {visible.status.toLowerCase()}</p>:null}{programId?<div className="ct-evidence__actions"><button type="button" disabled={!busy&&!['WAITING','PARTIAL','FAILED'].includes(visible?.status??'')} onClick={()=>void control('program-cancel')}>Cancel programme</button>{visible?.canResume?<button type="button" onClick={()=>void control('program-resume')}>Resume with original budget</button>:null}</div>:null}{values&&visible?.program?<><dl className="ct-evidence__values">{Object.entries(values).map(([key,value])=><div key={key}><dt>{key}</dt><dd><button type="button" onClick={()=>void inspect()} aria-label={`Inspect programme evidence for ${key}`}>{value.value}</button><span>{value.semantics.currencyCode??value.semantics.unit} · derived value</span></dd></div>)}</dl><button type="button" onClick={()=>void download()}>Download checked analytical draft</button></>:null}{visible?.program?<details><summary>Programme criteria and method</summary><p>Accepted deliverable: {visible.program.acceptance.deliverable.title}</p><p>Required sources: {visible.program.acceptance.requiredSourceKeys.join(', ')}</p><p>Observable criteria: {visible.program.acceptance.targets.map(t=>t.key+' ('+(t.currencyCode??t.unit)+')').join(', ')}</p>{visible.program.modules.map(m=><p key={m.id}>{m.format}: {m.bounds.steps} instructions · {visible.program?.candidates.find(c=>c.moduleId===m.id)?.status.toLowerCase()} · {m.compiledDigest}</p>)}<p>Episode: {visible.program.costs.steps} steps, {visible.program.costs.attempts} attempts. USD cost remains unknown. This analytical draft has no IC approval, effect authority, funding, or admission.</p><p>Outstanding qualifications: {visible.program.unavailableBindings.join(', ')}</p><pre>{JSON.stringify({branches:visible.program.observableBranches??[],proposedEffects:visible.program.effectProposals??[],ownerBindings:visible.program.semanticBindings??[]},null,2)}</pre></details>:visible?.incurredCosts?<p>Incurred episode: {visible.incurredCosts.steps} steps and {visible.incurredCosts.attempts} attempts. USD cost remains unknown.</p>:null}{proof?.identity===identity?<section tabIndex={-1} data-program-proof aria-label="Programme source witnesses"><h4>Source witnesses and independent checks</h4><pre>{JSON.stringify(proof.data,null,2)}</pre><button type="button" onClick={()=>setProof(null)}>Close programme witness</button></section>:null}</div>
+ }

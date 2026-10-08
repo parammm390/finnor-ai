@@ -27,6 +27,8 @@ const UnderwritingOutputSchema = z.object({ nodeId: z.string(), label: z.string(
 const UnderwritingCheckSchema = z.object({ nodeId: z.string(), code: z.string(), message: z.string(), severity: z.string() }).strict()
 
 export const CanvasBlockSchema = z.discriminatedUnion("type", [
+  BaseBlockSchema.extend({type:z.literal("capital_program"),payload:z.object({root:z.object({entityType:z.literal("external_organization"),entityId:z.string().uuid()}).strict(),workId:z.string().uuid()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("branch_fabric"),payload:z.object({rootId:z.string().uuid(),workId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("interface_synthesis"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("deliberation_policy"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("compute_search"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),

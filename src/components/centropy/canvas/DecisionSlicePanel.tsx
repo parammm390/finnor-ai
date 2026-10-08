@@ -8,6 +8,7 @@ import {
   type DecisionSliceView, type DecisionSliceRef, type DecisionContextView, type DecisionWitnessView,
 } from "./decision-slice-view"
 import "./decision-slice.css"
+import { CounterexamplePanel } from "./CounterexamplePanel"
 
 type RecordView = { scope: string; slice: DecisionSliceView; context: DecisionContextView }
 type P4Inputs = Record<string, { derivationId: string; output: string }>
@@ -219,6 +220,10 @@ export function DecisionSlicePanel({ workId, investmentCaseId, modelVersionId, s
       <details><summary>Retained agenda · revision {current.context.revision}</summary><ul>{current.context.agenda.map((value, index) => <li key={index}>{value}</li>)}</ul></details>
       <div className="ct-decision-slice__actions"><button type="button" disabled={busy} onClick={() => consume("DECISION")}>Check decision readiness</button><button type="button" disabled={busy || !writable} onClick={() => consume("NUMERICAL_ONLY")}>Run native numerical consumer</button></div>
       <small>Knowledge cut {current.slice.envelope.knowledgeAt} · valid until {current.slice.envelope.validUntil}</small>
+      {workId&&current.slice.envelope.work.id===workId?<CounterexamplePanel key={current.slice.ref.contentDigest}
+        workId={workId} sliceRef={current.slice.ref}
+        candidateId={witness?.variable.candidateId??current.slice.materialVariables.find(variable=>variable.candidateId)?.candidateId??null}
+        writable={writable&&!busy}/>:null}
     </> : null}
   </section>
 }
