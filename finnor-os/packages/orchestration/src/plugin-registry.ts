@@ -4,6 +4,7 @@
 import type { DomainEnginePlugin } from "@finnor/plugins-shared";
 import {
   OPERATIONAL_QUERY_INTENTS,
+  CORE_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_VERTICAL,
   assertExecutableVertical,
@@ -231,7 +232,7 @@ export function planningCapabilitiesForVertical(registry: PluginRegistry, vertic
     : [...SHARED_PLANNER_ACTIONS];
   const queryUniverse = verticalKey === PRIVATE_EQUITY_VERTICAL
     ? [...OPERATIONAL_QUERY_INTENTS]
-    : OPERATIONAL_QUERY_INTENTS.filter((intent) => !PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]));
+    : [...CORE_OPERATIONAL_QUERY_INTENTS];
   const actions = [...new Set([...actionUniverse, ...HUMAN_ONLY_PLANNING_CAPABILITIES])].map((capability) => {
     const isRegistered = registered.has(capability);
     return {
@@ -252,7 +253,7 @@ export function planningCapabilitiesForVertical(registry: PluginRegistry, vertic
   });
   return [
     ...actions,
-    ...queryUniverse.map((intent) => ({ capability: `query:${intent}`, kind: "query" as const, modelProposable: true, available: true, health: "available" as const, risk: "low" as const, irreversible: false, requiredReferences: PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]) ? ["dealId"] : [], effectClass: null, observationStrategy: "operational_query" as const, reversibility: "read_only" as const, supportedRecoveryModes: ["retry", "replan", "escalate"] as Array<"retry" | "replan" | "escalate">, externalSideEffect: false, authorityRequirement: "query" as const })),
+    ...queryUniverse.map((intent) => ({ capability: `query:${intent}`, kind: "query" as const, modelProposable: true, available: true, health: "available" as const, risk: "low" as const, irreversible: false, requiredReferences: intent==="harness_program_v1"?["workId","programId"]:PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]) ? ["dealId"] : [], effectClass: null, observationStrategy: "operational_query" as const, reversibility: "read_only" as const, supportedRecoveryModes: ["retry", "replan", "escalate"] as Array<"retry" | "replan" | "escalate">, externalSideEffect: false, authorityRequirement: "query" as const })),
     { capability: "wait:event", kind: "wait", modelProposable: true, available: true, health: "available", risk: "medium", irreversible: false, requiredReferences: ["correlation"], effectClass: null, observationStrategy: "integration_event", reversibility: "read_only", supportedRecoveryModes: ["replan", "recover", "escalate"], externalSideEffect: false, authorityRequirement: "policy" },
     { capability: "check:objective_success", kind: "check", modelProposable: true, available: true, health: "available", risk: "low", irreversible: false, requiredReferences: ["criterionId"], effectClass: null, observationStrategy: "objective_success", reversibility: "read_only", supportedRecoveryModes: ["replan", "escalate"], externalSideEffect: false, authorityRequirement: "query" },
   ];

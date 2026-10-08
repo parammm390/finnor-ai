@@ -18,7 +18,9 @@ const mandateSchema=z.object({schema:z.literal('finnor.economic-mandate.v1'),ref
  risk:z.object({kind:z.literal('HARD_WORST_PATH_UTILITY_FLOOR'),minimumUtility:number}).strict(),ambiguity:z.object({kind:z.enum(['ROBUST_FIXED_JOINT_SCENARIOS','UNRESOLVED']),authorizationRef:ExperimentRefSchema}).strict(),
  resources:z.object({dimensions:z.array(z.object({id:text,unit:text,capacity:nonnegative,totalLimit:nonnegative,resourceClass:z.enum(['CASH','BORROWING_HEADROOM','COMMITTED_CAPITAL','OPERATIONAL_CAPACITY','HUMAN_ATTENTION','COMPUTE','INQUIRY_EXPOSURE','COUNTERPARTY_EXPOSURE','OTHER_RESTRICTED']).optional()}).strict()).min(1).max(8),couplings:z.array(z.object({id:text,weights:amounts,maxPerPeriod:nonnegative}).strict()).max(16)}).strict(),
  search:z.object({maxExpansions:z.number().int().min(1).max(50000),deadlineMs:z.number().int().min(1).max(30000),maxWorlds:z.number().int().min(1).max(512),maxPolicyNodes:z.number().int().min(1).max(50000),maxHumanSeconds:nonnegative.max(900)}).strict(),scoring:z.object({normalization:z.number().finite().positive().max(1e9),maxRegret:nonnegative.max(1)}).strict(),authorization:z.object({basis:z.literal('AUTHENTICATED_OWNER_ASSERTION_UNADMITTED'),protectedReceipt:z.null()}).strict()}).strict();
-const actionSchema=z.object({id:text,kind:z.enum(['INQUIRE','INTERVENE','WAIT','STOP']),cost:nonnegative,costUnit:text,resources:amounts,occupancy:amounts,occupationPeriods:z.number().int().min(1).max(24),tailLiability:nonnegative,earliestPeriod:z.number().int().min(0).max(23),lastPeriod:z.number().int().min(0).max(23),atMostOnce:z.boolean(),exposures:z.record(text,z.array(number).min(1).max(24)),protocolRef:ExperimentRefSchema.nullable(),informationDelayPeriods:z.number().int().min(1).max(24),humanSeconds:nonnegative.max(900)}).strict();
+const precondition=z.object({afterActionIds:z.array(text).max(8),observations:z.array(
+ z.object({instrumentId:text,tokens:z.array(text).min(1).max(16)}).strict()).max(8)}).strict();
+const actionSchema=z.object({id:text,kind:z.enum(['INQUIRE','INTERVENE','WAIT','STOP']),cost:nonnegative,costUnit:text,resources:amounts,occupancy:amounts,occupationPeriods:z.number().int().min(1).max(24),tailLiability:nonnegative,earliestPeriod:z.number().int().min(0).max(23),lastPeriod:z.number().int().min(0).max(23),atMostOnce:z.boolean(),exposures:z.record(text,z.array(number).min(1).max(24)),protocolRef:ExperimentRefSchema.nullable(),informationDelayPeriods:z.number().int().min(1).max(24),humanSeconds:nonnegative.max(900),precondition:precondition.optional()}).strict();
 const continuation=z.object({elapsedPeriods:z.number().int().min(1).max(23),actionHistory:z.array(text).min(1).max(23),observations:z.array(z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict()).max(192),accruedUtility:z.object({value:number,unit:text,sourceRef:ExperimentRefSchema}).strict(),usedResources:amounts,humanSeconds:nonnegative.max(900),accountingRef:ExperimentRefSchema}).strict();
 const problemSchema=z.object({schema:z.literal('finnor.control-problem.v1'),id:text,episodeId:text,modelRef:ExperimentRefSchema,context:text,regime:text,baselineExposures:schedules,actions:z.array(actionSchema).min(1).max(8),observations:z.array(ControlObservationSchema).max(8),obligations:z.array(obligation).max(32),validUntil:time,continuation:continuation.optional()}).strict();
 const observation=z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict();
@@ -38,6 +40,29 @@ export function parseControlProblem(v:unknown):ControlProblem {
  const p=parse<ControlProblem>(problemSchema,v);
  if(new Set(p.actions.map(a=>a.id)).size!==p.actions.length||new Set(p.observations.map(a=>a.id)).size!==p.observations.length||new Set(p.obligations.map(a=>a.effectRef.id)).size!==p.obligations.length)throw new ControlContractError('INVALID_REQUEST','Duplicate action, instrument or effect obligation');
  if(p.actions.some(a=>a.earliestPeriod>a.lastPeriod||(!['WAIT','STOP'].includes(a.kind)&&!a.atMostOnce)||(['WAIT','STOP'].includes(a.kind)&&a.atMostOnce)||(a.kind==='INQUIRE')!==Boolean(a.protocolRef)||(a.kind==='INTERVENE')!==Boolean(Object.keys(a.exposures).length)))throw new ControlContractError('INVALID_REQUEST','Action meaning, commitment or inquiry binding is incomplete');
+ for(const action of p.actions)if(action.precondition){
+  const condition=action.precondition;
+  if(['WAIT','STOP'].includes(action.kind)||!condition.afterActionIds.length&&!condition.observations.length||
+   new Set(condition.afterActionIds).size!==condition.afterActionIds.length||
+   condition.afterActionIds.some(id=>id===action.id||!p.actions.some(a=>a.id===id&&a.atMostOnce))||
+   new Set(condition.observations.map(o=>o.instrumentId)).size!==condition.observations.length)
+   throw new ControlContractError('INVALID_REQUEST','Commitment preconditions require distinct actual prior commitments and lawful instruments');
+  for(const observation of condition.observations){
+   const temporal=p.observations.find(i=>i.id===observation.instrumentId),
+    inquiry=p.actions.find(a=>a.kind==='INQUIRE'&&a.protocolRef?.id===observation.instrumentId);
+   if(!temporal&&!inquiry||new Set(observation.tokens).size!==observation.tokens.length||
+    temporal&&observation.tokens.some(token=>!temporal.bins.some(bin=>bin.category===token)))
+    throw new ControlContractError('INVALID_REQUEST','Commitment condition cannot read a private world, forecast or undeclared token');
+  }
+ }
+ const visiting=new Set<string>(),visited=new Set<string>();
+ const visit=(id:string):void=>{
+  if(visiting.has(id))throw new ControlContractError('INVALID_REQUEST','Cyclic commitment prerequisites');
+  if(visited.has(id))return;visiting.add(id);
+  for(const prior of p.actions.find(a=>a.id===id)!.precondition?.afterActionIds??[])visit(prior);
+  visiting.delete(id);visited.add(id);
+ };
+ for(const action of p.actions)visit(action.id);
  return immutableControl(p);
 }
 export const parseControlDecision=(v:unknown)=>immutableControl(parse<ControlDecisionInput>(decisionSchema,v));

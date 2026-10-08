@@ -168,6 +168,45 @@ export async function withTenantTransaction<T>(
   options: TenantTransactionOptions,
   fn: (db: Db, client: pg.PoolClient) => Promise<T>,
 ): Promise<T> {
+  return withTenantClientTransaction(tenantId, options, (client) => fn(transactionDb(client), client));
+}
+
+/** Real transaction-local ORM on first use, including reflection and freeze.
+ * No scoped client, owner evidence or relational database instance is cached. */
+export function transactionDb(client: pg.PoolClient): Db {
+  const target = {} as Db;
+  let initialized = false;
+  const hydrate = () => {
+    if (!initialized) {
+      const db = drizzle(client, { schema });
+      Object.setPrototypeOf(target, Object.getPrototypeOf(db));
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(db));
+      initialized = true;
+    }
+    return target;
+  };
+  return new Proxy(target, {
+    get: (_target, key, receiver) => Reflect.get(hydrate(), key, receiver),
+    set: (_target, key, value, receiver) => Reflect.set(hydrate(), key, value, receiver),
+    has: (_target, key) => Reflect.has(hydrate(), key),
+    ownKeys: () => Reflect.ownKeys(hydrate()),
+    getOwnPropertyDescriptor: (_target, key) => Reflect.getOwnPropertyDescriptor(hydrate(), key),
+    defineProperty: (_target, key, descriptor) => Reflect.defineProperty(hydrate(), key, descriptor),
+    deleteProperty: (_target, key) => Reflect.deleteProperty(hydrate(), key),
+    getPrototypeOf: () => Reflect.getPrototypeOf(hydrate()),
+    setPrototypeOf: (_target, prototype) => Reflect.setPrototypeOf(hydrate(), prototype),
+    isExtensible: () => Reflect.isExtensible(hydrate()),
+    preventExtensions: () => Reflect.preventExtensions(hydrate()),
+  });
+}
+
+/** Same authenticated boundary for owners that need only the scoped SQL client.
+ * No relational schema is rebuilt when the caller does not use an ORM. */
+export async function withTenantClientTransaction<T>(
+  tenantId: string,
+  options: TenantTransactionOptions,
+  fn: (client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
   const client = await connectWithExecutionDeadline(getPool());
   const isolation = options.isolation ?? "read committed";
   const begin = `BEGIN ISOLATION LEVEL ${isolation.toUpperCase()}${options.readOnly ? " READ ONLY" : ""}`;
@@ -181,8 +220,7 @@ export async function withTenantTransaction<T>(
     if (context.rows[0]?.tenant_id !== tenantId) {
       throw new Error("Tenant RLS context was not established on the query connection");
     }
-    const db = drizzle(client, { schema });
-    const result = await fn(db, client);
+    const result = await fn(client);
     await client.query("COMMIT");
     return result;
   } catch (err) {

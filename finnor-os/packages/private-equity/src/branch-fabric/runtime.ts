@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { canonical, decode, CandidateSchema, fault, hash, LIMITS, type InputArtifact } from './contracts';
 import { runLinuxCell, linuxCapability } from './linux';
+import { branchRemainingMs } from './budget';
+import { createNativeDirectory, hasBranchResources, markNativeResource } from './resources';
 const exec = promisify(execFile);
 export interface ProcessReceipt {
   schema: 'finnor.branch-runtime-receipt.v1'; backend: string; profile: string;
@@ -21,12 +23,15 @@ export class InvocationFailure extends Error {
 }
 /** Trusted fixed source only. New process group; no inherited secrets/cookies/DB. */
 export async function fixedProcess(entry: 'native-worker.mts' | 'checker-worker.mts' | 'p4-worker.mts' | 'interface-worker.mts', input: unknown, signal: AbortSignal, wallMs: number = LIMITS.wallMs, stateRoot?: string, onStarted?: (pid: number) => Promise<void>) {
+  wallMs = Math.min(wallMs, branchRemainingMs());
   const encoded = canonical(input), started = performance.now(), before = process.resourceUsage(), began = new Date().toISOString();
   if (Buffer.byteLength(encoded) > 3 * LIMITS.bytes) fault('INVOCATION_INPUT_BOUND', 413);
-  const directory = stateRoot ?? await mkdtemp(join(tmpdir(), 'finnor-p3-runtime-'));
+  const resource = !stateRoot && hasBranchResources() ? await createNativeDirectory(entry === 'checker-worker.mts' ? 'CHECKER_STATE' : 'NATIVE_STATE') : null;
+  const directory = resource?.path ?? stateRoot ?? await mkdtemp(join(tmpdir(), 'finnor-p3-runtime-'));
   await mkdir(directory, { recursive: true, mode: 0o700 });
   return new Promise<{ value: any; receipt: ProcessReceipt }>((ok, no) => {
-    const child = spawn(process.execPath, ['--max-old-space-size=' + LIMITS.heapMiB, '--import=tsx', fileURLToPath(new URL('../../../../scripts/p3/' + entry, import.meta.url))], {
+    const child = spawn(process.execPath, ['--max-old-space-size=' + LIMITS.heapMiB, '--import=tsx', fileURLToPath(new URL('../../../../scripts/p3/' + entry, import.meta.url)),
+      ...(resource ? ['--p3-resource-id=' + resource.id] : [])], {
       detached: true, cwd: fileURLToPath(new URL('../../../../', import.meta.url)),
       env: { NODE_ENV: 'test', PATH: '/usr/bin:/bin', TMPDIR: directory, FINNOR_P3_STATE: directory, FINNOR_P3_PARENT_CHANNEL: '3' },
       stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
@@ -35,7 +40,14 @@ export async function fixedProcess(entry: 'native-worker.mts' | 'checker-worker.
     const stop = (reason: string) => { if (error) return; error = reason; if (child.pid) { try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); } } };
     const aborted = () => stop('CANCELLED_OR_FENCE_LOST');
     let startedObservation: Promise<void> = Promise.resolve();
-    child.once('spawn', () => { if (child.pid && onStarted) startedObservation = onStarted(child.pid).catch(() => stop('LAUNCH_OBSERVATION_FAILED')); });
+    child.once('spawn', () => {
+      startedObservation = (async () => {
+        if (!child.pid) return stop('SPAWN_FAILED');
+        if (resource) await markNativeResource(resource, 'STARTED', child.pid);
+        if (onStarted) await onStarted(child.pid);
+        if (!error) child.stdin!.end(encoded); // Durable PID observation precedes executable input.
+      })().catch(() => stop('LAUNCH_OBSERVATION_FAILED'));
+    });
     signal.addEventListener('abort', aborted, { once: true });
     if (signal.aborted) aborted();
     const timer = setTimeout(() => stop('WALL_DEADLINE'), wallMs);
@@ -67,11 +79,10 @@ export async function fixedProcess(entry: 'native-worker.mts' | 'checker-worker.
       const receipt: ProcessReceipt = { schema: 'finnor.branch-runtime-receipt.v1', backend: 'REGISTERED_NODE_PROCESS', profile: 'TRUSTED_NATIVE_H0', invocationDigest: hash(input), startedAt: began, finishedAt: new Date().toISOString(), pid: child.pid ?? null, processGroup: child.pid ?? null, observedStopped: stopped, elapsedMs: performance.now() - started, inputBytes: Buffer.byteLength(encoded), outputBytes: Buffer.byteLength(stdout), sampledTreePeakRssBytes: sampled ? peak : null, sampledTreeCpuMs: sampled ? cpuMs : null, meterStatus: sampled ? 'SAMPLED_CHILD_TREE_NOT_OS_QUOTA_OR_CONTAINER_PEAK' : 'METER_UNAVAILABLE', isolated: false, protectedEligible: false, parentCpuMicros: after.userCPUTime - before.userCPUTime + after.systemCPUTime - before.systemCPUTime, parentPeakRssBytes: after.maxRSS * 1024, reason: error };
       // Only this newly created, controller-owned staging root is removed.
       // Retained logical private state lives in immutable SQL checkpoint artefacts.
-      if (!stateRoot) await rm(directory, { recursive: true, force: true }).catch(() => { receipt.reason ??= 'CLEANUP_REQUIRED'; });
+      if (!stateRoot && !resource) await rm(directory, { recursive: true, force: true }).catch(() => { receipt.reason ??= 'CLEANUP_REQUIRED'; });
       if (error) { no(new InvocationFailure(receipt, error)); return; }
       try { ok({ value: JSON.parse(stdout), receipt }); } catch { no(new InvocationFailure(receipt, 'OUTPUT_SCHEMA_INVALID')); }
     });
-    child.stdin!.end(encoded);
   });
 }
 export async function executeCell(input: InputArtifact, signal: AbortSignal, onStarted?: (pid: number) => Promise<void>) {

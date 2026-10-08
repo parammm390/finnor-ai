@@ -1,10 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { loadEnterpriseBeliefView, validateBeliefViewPin } from '../enterprise-beliefs';
-import { prepareUnderwritingRun } from '../underwriting-repository';
-import { readEnterpriseAllocation, validateEnterpriseAllocation } from '../enterprise-allocation';
-import { resolveEnterpriseInterventionModelForControl } from '../enterprise-interventions';
-import { readEnterpriseDurableObligation } from '../enterprise-obligations';
-import { createInterventionControlAdapter } from '../../../epistemic-runtime/src/intervention-control';
 import { assertDisposableDatabaseTarget } from '../../../db/production-target-guard';
 import type { TenantContext } from '@finnor/shared-types';
 import { decode, fault, hash, PrepareSchema, type Prepare, type InputArtifact } from './contracts';
@@ -12,11 +6,12 @@ import { assertProgramme, programmeId, programmeRef } from './registry';
 import { actor, tx, workBasis, readArtifact } from './store';
 import { baselineState } from './fixture';
 import { assertUnderwritingCheckDomain } from './numerical-checks';
-import { acquireReviewedObservation } from './live-read';
 import { verifyCheckpoint } from './checkpoint';
 import { acquireProducerSource, currentProducerSource } from './ports';
+import { branchRemainingMs } from './budget';
 
 export async function prepareInput(ctx: TenantContext, value: unknown): Promise<InputArtifact> {
+  branchRemainingMs();
   const p = decode(PrepareSchema, value);
   if (p.profile === 'TRUSTED_NATIVE_H0') {
     if (process.env.NODE_ENV === 'production') fault('NON_ISOLATED_PRODUCTION_REFUSED', 403);
@@ -44,6 +39,8 @@ async function acquireSource(ctx: TenantContext, p: Prepare): Promise<{ payload:
   }
   if (source.kind === 's6_read') {
     if (p.kind !== 'live_read') fault('BRANCH_DOMAIN_MISMATCH', 400);
+    const { loadEnterpriseBeliefView } = await import('../enterprise-beliefs');
+    const { acquireReviewedObservation } = await import('./live-read');
     const belief = await loadEnterpriseBeliefView(owner, { root: p.root as any });
     const observation = await acquireReviewedObservation(ctx, source.obligationRef, p.root);
     return { ...observation, ownerBindings: { ...observation.ownerBindings, beliefPin: belief.pin, coverage: belief.coverage, rights: belief.rights } };
@@ -56,31 +53,37 @@ async function acquireSource(ctx: TenantContext, p: Prepare): Promise<{ payload:
     let state = baselineState();
     if (source.baseline) {
       const cp = await tx(ctx, c => readArtifact<any>(c, ctx, source.baseline!, 'CHECKPOINT'));
-      if (cp.tenantId !== ctx.tenantId || cp.principalId !== actor(ctx) || cp.kind !== 'application_fixture') fault('PERMITTED_BRANCH_UNAVAILABLE', 404);
+      if (cp.schema !== 'finnor.branch-checkpoint-sealed.v2' || cp.binding?.tenantId !== ctx.tenantId ||
+        cp.binding?.principalId !== actor(ctx) || cp.kind !== 'application_fixture') fault('PERMITTED_BRANCH_UNAVAILABLE', 404);
       const { head, inputFor } = await import('./store');
-      const prior = await tx(ctx, c => head(c, ctx, cp.branchId));
+      const prior = await tx(ctx, c => head(c, ctx, cp.binding.branchId));
       const priorInput = await inputFor(ctx, prior.input_id);
       if (priorInput.basis.workId !== p.workId || hash(priorInput.root) !== hash(p.root)) fault('CHECKPOINT_ROOT_OR_WORK_CHANGED');
       state = (await verifyCheckpoint(ctx, priorInput, source.baseline)).state as ReturnType<typeof baselineState>;
     }
     return { payload: { state, steps: source.steps }, ownerBindings: { stateDigest: hash(state), coverage: 'COMPLETE_PRIVATE_SYNTHETIC_FIXTURE', externalAuthority: null } };
   }
+  const { loadEnterpriseBeliefView } = await import('../enterprise-beliefs');
   const belief = await loadEnterpriseBeliefView(owner, { root: p.root as any });
   if (belief.coverage.canonicalStatus !== 'COMPLETE' || belief.coverage.truncated) fault('SOURCE_COVERAGE_PARTIAL', 409);
   if (source.kind === 'underwriting') {
+    const { prepareUnderwritingRun } = await import('../underwriting-repository');
     const run = await prepareUnderwritingRun(owner, source);
     assertUnderwritingCheckDomain(run.compiled.model);
     return { payload: { model: run.compiled.model, snapshot: run.baseSnapshot, ...(run.scenario ? { scenario: run.scenario } : {}) }, ownerBindings: { beliefPin: belief.pin, modelDigest: run.compiled.semanticHash, snapshotDigest: run.baseSnapshot.semanticHash, coverage: belief.coverage, rights: belief.rights } };
   }
   if (source.kind === 'allocation') {
+    const { readEnterpriseAllocation, validateEnterpriseAllocation } = await import('../enterprise-allocation');
     if ((await validateEnterpriseAllocation(owner, source.allocationRef)).status !== 'CURRENT') fault('S5_INPUT_NOT_CURRENT');
     const issued = await readEnterpriseAllocation(owner, source.allocationRef);
     return { payload: { problem: issued.problem }, ownerBindings: { beliefPin: belief.pin, allocationRef: source.allocationRef, coverage: belief.coverage, rights: belief.rights, funding: 'COMPUTATION_INPUT_NOT_BRANCH_FINANCIAL_GRANT' } };
   }
   if (source.kind === 's3') {
+    const { resolveEnterpriseInterventionModelForControl } = await import('../enterprise-interventions');
+    const { createInterventionControlAdapter } = await import('../../../epistemic-runtime/src/intervention-control');
     const model = await resolveEnterpriseInterventionModelForControl(owner, source.modelRef);
     const { context, regime, horizon, pathsPerMechanism, seed } = source;
-    const prepared = await createInterventionControlAdapter(model, { context, regime, horizon, pathsPerMechanism, seed }, 30000);
+    const prepared = await createInterventionControlAdapter(model, { context, regime, horizon, pathsPerMechanism, seed }, branchRemainingMs());
     if (!prepared.snapshot || !prepared.adapter) fault('S3_MODEL_DOMAIN_UNSUPPORTED', 424);
     if (Object.keys(source.exposures).sort().join() !== prepared.adapter.exposureIds.slice().sort().join() || Object.values(source.exposures).some(v => v.length !== horizon)) fault('S3_EXPOSURE_DOMAIN_MISMATCH', 400);
     return { payload: { model, snapshot: prepared.snapshot, exposures: source.exposures }, ownerBindings: { beliefPin: belief.pin, modelRef: model.ref, kernelRef: prepared.snapshot.ref, assumptions: model.request.mechanisms, compute: prepared.compute, coverage: belief.coverage, rights: belief.rights } };
@@ -94,14 +97,25 @@ export async function currentInput(ctx: TenantContext, input: InputArtifact) {
   if (b.dependencyDigest !== input.basis.dependencyDigest) fault('WORK_OR_RIGHTS_INVALIDATED');
   await assertProgramme(input);
   if (input.source.kind === 'p4' || input.source.kind === 'm1') await currentProducerSource(ctx, input);
-  if (input.ownerBindings.beliefPin && (await validateBeliefViewPin({ auth: ctx }, input.ownerBindings.beliefPin)).status !== 'CURRENT') fault('S1_SOURCE_RIGHTS_INVALIDATED');
-  if (input.source.kind === 's3') await resolveEnterpriseInterventionModelForControl({ auth: ctx }, input.source.modelRef);
-  if (input.source.kind === 'allocation' && (await validateEnterpriseAllocation({ auth: ctx }, input.source.allocationRef)).status !== 'CURRENT') fault('S5_SOURCE_INVALIDATED');
+  if (input.ownerBindings.beliefPin) {
+    const { validateBeliefViewPin } = await import('../enterprise-beliefs');
+    if ((await validateBeliefViewPin({ auth: ctx }, input.ownerBindings.beliefPin)).status !== 'CURRENT') fault('S1_SOURCE_RIGHTS_INVALIDATED');
+  }
+  if (input.source.kind === 's3') {
+    const { resolveEnterpriseInterventionModelForControl } = await import('../enterprise-interventions');
+    await resolveEnterpriseInterventionModelForControl({ auth: ctx }, input.source.modelRef);
+  }
+  if (input.source.kind === 'allocation') {
+    const { validateEnterpriseAllocation } = await import('../enterprise-allocation');
+    if ((await validateEnterpriseAllocation({ auth: ctx }, input.source.allocationRef)).status !== 'CURRENT') fault('S5_SOURCE_INVALIDATED');
+  }
   if (input.source.kind === 'underwriting') {
+    const { prepareUnderwritingRun } = await import('../underwriting-repository');
     const fresh = await prepareUnderwritingRun({ auth: ctx }, input.source);
     if (fresh.compiled.semanticHash !== input.ownerBindings.modelDigest || fresh.baseSnapshot.semanticHash !== input.ownerBindings.snapshotDigest) fault('UNDERWRITING_SOURCE_INVALIDATED');
   }
   if (input.source.kind === 's6_read') {
+    const { readEnterpriseDurableObligation } = await import('../enterprise-obligations');
     const obligation = await readEnterpriseDurableObligation({ auth: ctx }, input.source.obligationRef);
     // A current permission to historical history is not a new live observation.
     // Resume/replay does not invoke the reviewed read a second time.

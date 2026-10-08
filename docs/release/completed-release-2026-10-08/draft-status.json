@@ -1,0 +1,53 @@
+{
+  "schema": "finnor.completed-release.draft-status.v1",
+  "purpose": "Publish the completed-source integration for review before remaining release qualification",
+  "base": "main",
+  "baseSha": "ed32d200a9459269509f1e40d4e13a3e2a1a4d6a",
+  "included": [
+    "Existing S1-S7 draft stack and its already-proposed cleanup",
+    "Completed C/S8/P1/P2/P4/P5/P6/P7 source",
+    "Completed B/P3/M3/M4 source and additive shared-owner reconciliation",
+    "Six forward migrations 0165-0170, preserving 166 historical SQL bodies",
+    "Strict generated owner discovery, OpenAPI and client contracts",
+    "Ordinary Work-bound Canvas instruments and fail-closed owner ports"
+  ],
+  "excludedActiveWork": [
+    "M5 DecisionKernelCompiler",
+    "P8/M6 HarnessEvolution"
+  ],
+  "validation": {
+    "backendTypes": "PASS",
+    "frontendTypes": "PASS",
+    "nextRouteTypeGeneration": "PASS",
+    "existingKeeperAssertions": {"passed": 706, "failed": 0, "pending": 0},
+    "keeperResultSha256": "c171c524e5595b056e1b07acb44e328692feac8769063ee9774b4616a8f50d0c",
+    "canonicalMigrationChecksAtEarlierCut": {"passed": 9, "failed": 0},
+    "physicalAuthorityAndTransactionCorrespondence": {"passed": 3, "failed": 0},
+    "exactAuthenticP4Repair": "PASS",
+    "exactRepairReceipt": "owner-workflow-20261008T170245-0b980e64",
+    "numericalConsumeElapsedMs": 8197.420916999996,
+    "originalRequestDeadlineMs": 30000,
+    "fullCurrentM3": "RUNNING",
+    "currentMountedM3": "PENDING_AFTER_FULL_NATIVE_REPLAY",
+    "remainingP1P3P6AndGeneratorChecks": "PENDING",
+    "currentCutM4Replay": "PENDING"
+  },
+  "evidenceRetention": {
+    "historicalFailuresRetained": true,
+    "rawEvidencePublished": false,
+    "localLosslessArchiveSha256": "05e09517c40498d1c8bd868bed0084e434d937491095fdf5e9651443c945a0fb",
+    "archiveMemberVerification": "PASS_EXACT_PATH_KIND_SIZE_SHA256_OR_LINK_TARGET",
+    "credentialsOrRuntimeLinksPublished": false
+  },
+  "qualifications": [
+    "Installed third-party and scientific runtimes reuse exact local donor links, not a clean install or isolation proof",
+    "Prior mounted M4 pass used DOM activation; native pointer and keyboard qualification was blocked",
+    "Money remains unknown/unmetered, not zero",
+    "Local integration and engineering checks do not grant independent S6/S8 admission",
+    "Original GateP6 remains UNQUALIFIED",
+    "No independent custody, full-domain, economic-gain or 100-percent mission claim"
+  ],
+  "productionReady": false,
+  "productionDeployment": "NOT_PERFORMED",
+  "releasePolicy": "Canonical exact-SHA certification and production mutation gates remain mandatory"
+}

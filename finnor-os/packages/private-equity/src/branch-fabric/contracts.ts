@@ -53,13 +53,22 @@ export const RequestSchema = z.object({
   mode: z.enum(Modes), idempotencyKey: z.string().min(1).max(128), checkpointId: Id.optional(),
 }).strict();
 export const RefOperation = z.object({ branchId: Id }).strict();
-export const OperationSchemas = {
-  prepare: PrepareSchema, submit: RequestSchema, read: RefOperation,
-  list: z.object({ workId: Id, limit: z.number().int().min(1).max(50).default(20), after: Id.optional() }).strict(),
-  compare: z.object({ branchIds: z.array(Id).min(2).max(8) }).strict(),
-  checkpoint: RefOperation, resume: RefOperation.extend({ checkpointId: Id, idempotencyKey: Text }),
-  cancel: RefOperation, inspect: RefOperation, continue: RefOperation,
-};
+export const BranchOperations = {
+  prepare: {schema:PrepareSchema,classification:'MUTATION'},
+  submit: {schema:RequestSchema,classification:'MUTATION'},
+  read: {schema:RefOperation,classification:'READ'},
+  list: {schema:z.object({ workId: Id, limit: z.number().int().min(1).max(50).default(20), after: Id.optional() }).strict(),classification:'READ'},
+  compare: {schema:z.object({ branchIds: z.array(Id).min(2).max(8) }).strict(),classification:'READ'},
+  checkpoint: {schema:RefOperation,classification:'MUTATION'},
+  resume: {schema:RefOperation.extend({ checkpointId: Id, idempotencyKey: Text }),classification:'CONTROL'},
+  'checkpoint-revoke': {schema:RefOperation.extend({ checkpointId: Id }).strict(),classification:'CONTROL'},
+  'checkpoint-purge': {schema:RefOperation,classification:'CONTROL'},
+  cancel: {schema:RefOperation,classification:'CONTROL'},
+  inspect: {schema:RefOperation,classification:'READ'},
+  continue: {schema:RefOperation,classification:'READ'},
+} as const;
+export const OperationSchemas = Object.fromEntries(Object.entries(BranchOperations).map(([operation, definition]) =>
+  [operation, definition.schema])) as { [Operation in keyof typeof BranchOperations]: typeof BranchOperations[Operation]['schema'] };
 export type Prepare = z.infer<typeof PrepareSchema>;
 export type BranchRequest = z.infer<typeof RequestSchema>;
 export interface Scope { tenantId: string; principalId: string }

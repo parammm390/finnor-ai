@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, readFile, readdir, lstat, rm } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fault, hash, bytesHash, type InputArtifact } from './contracts';
+import { createNativeDirectory, hasBranchResources, type NativeResource } from './resources';
 const warm = new Map<string, { directory: string; identity: string; body: any; preparedAt: number; assigned: number }>();
 const owned = new Map<string, { identity: string; createdAt: number }>();
 const retentionMs = 5 * 60 * 1000;
@@ -10,6 +11,16 @@ const retentionMs = 5 * 60 * 1000;
 export async function cleanNativePreparation(input: InputArtifact, mode: string) {
   const publicBody = { schema: 'finnor.p3.clean-public-cell.v1', programme: input.programme, runtime: { node: process.version, binarySha256: bytesHash(await readFile(process.execPath)), platform: process.platform, architecture: process.arch }, privateStateIncluded: false, assignedIdentityIncluded: false };
   const key = hash(publicBody), began = performance.now();
+  if (hasBranchResources()) {
+    const resource = await createNativeDirectory('PUBLIC_PREPARATION');
+    await writeFile(join(resource.path!, 'manifest.json'), JSON.stringify(publicBody), { mode: 0o400, flag: 'wx' });
+    await verifyCleanCell(resource.path!, publicBody);
+    return { schema: 'finnor.p3.preparation-receipt.v1', preparationId: resource.id, preparationDigest: key, mode,
+      reused: false, assignment: 1, warmIdleMs: 0, elapsedMs: performance.now() - began, directory: resource.path!,
+      publicManifest: publicBody, cleanBeforeAssignment: true, retired: [], retentionMs: 0,
+      publicBytes: Buffer.byteLength(JSON.stringify(publicBody)),
+      qualification: 'DURABLE_PUBLIC_MANIFEST_PER_ATTEMPT_NOT_PROCESS_IMAGE_OR_COW_SPEEDUP', moneyUSD: null, resource };
+  }
   const retired = [];
   for (const [directory, cell] of owned) if (Date.now() - cell.createdAt > retentionMs) {
     try {
@@ -35,9 +46,10 @@ export async function cleanNativePreparation(input: InputArtifact, mode: string)
     }
   }
   cell.assigned++;
-  return { schema: 'finnor.p3.preparation-receipt.v1', preparationId: cell.identity, preparationDigest: key, mode, reused, assignment: cell.assigned, warmIdleMs: Date.now() - cell.preparedAt, elapsedMs: performance.now() - began, directory: cell.directory, publicManifest: publicBody, cleanBeforeAssignment: true, retired, retentionMs, publicBytes: Buffer.byteLength(JSON.stringify(publicBody)), qualification: 'PUBLIC_MODULE_MANIFEST_CACHE_NOT_PROCESS_IMAGE_OR_COW_SPEEDUP', moneyUSD: null };
+  return { schema: 'finnor.p3.preparation-receipt.v1', preparationId: cell.identity, preparationDigest: key, mode, reused, assignment: cell.assigned, warmIdleMs: Date.now() - cell.preparedAt, elapsedMs: performance.now() - began, directory: cell.directory, publicManifest: publicBody, cleanBeforeAssignment: true, retired, retentionMs, publicBytes: Buffer.byteLength(JSON.stringify(publicBody)), qualification: 'PUBLIC_MODULE_MANIFEST_CACHE_NOT_PROCESS_IMAGE_OR_COW_SPEEDUP', moneyUSD: null, resource: null };
 }
-export async function releaseNativePreparation(receipt: { preparationId: string; directory: string; mode: string }) {
+export async function releaseNativePreparation(receipt: { preparationId: string; directory: string; mode: string; resource?: NativeResource | null }) {
+  if (receipt.resource) return { preparationId: receipt.preparationId, cleanup: 'DURABLE_RESOURCE_RECONCILIATION_REQUIRED', retainedMs: null };
   const cell = owned.get(receipt.directory);
   if (!cell || cell.identity !== receipt.preparationId) return { preparationId: receipt.preparationId, cleanup: 'OWNERSHIP_UNCONFIRMED_RETAINED', retainedMs: null };
   if (receipt.mode === 'CLEAN_WARM_IMAGE') return { preparationId: cell.identity, cleanup: 'PUBLIC_MANIFEST_RETAINED_BOUNDED_TTL', retainedMs: Date.now() - cell.createdAt, retentionMs };

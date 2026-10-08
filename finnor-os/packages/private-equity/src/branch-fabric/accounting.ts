@@ -3,6 +3,7 @@ import type { TenantContext } from '@finnor/shared-types';
 import { randomUUID } from 'node:crypto';
 import { actor, artifact, tx, workBasis } from './store';
 import { fault, hash, LIMITS, WORK_LIMITS } from './contracts';
+import { afterBranchEpisode, branchRemainingMs } from './budget';
 
 /** P3 usage linkage, not a new economic ledger or an S5/S7 settlement. */
 export async function costOnce(c: PoolClient, ctx: TenantContext, workId: string, accountingId: string, body: Record<string, any>) {
@@ -53,6 +54,7 @@ export async function assertWorkBudget(c: PoolClient, ctx: TenantContext, workId
   return usage;
 }
 export async function beginControl(ctx: TenantContext, workId: string, phase: string, reservedWallMs: number, detail: Record<string, any> = {}) {
+  branchRemainingMs();
   const accountingId = detail.accountingId ?? `control:${phase}:${randomUUID()}`;
   await tx(ctx, async c => {
     await workBasis(c, ctx, workId);
@@ -62,7 +64,8 @@ export async function beginControl(ctx: TenantContext, workId: string, phase: st
   return { ctx, workId, accountingId, phase, began: performance.now(), before: process.resourceUsage() };
 }
 export async function finishControl(control: Awaited<ReturnType<typeof beginControl>>, detail: Record<string, any>) {
-  return recordControlCost(control.ctx, control.workId, control.accountingId, { ...detail, phase: control.phase, ...measuredInterval(control.began, control.before) });
+  const observed = measuredInterval(control.began, control.before);
+  return afterBranchEpisode(() => recordControlCost(control.ctx, control.workId, control.accountingId, { ...detail, phase: control.phase, ...observed }));
 }
 export function measuredInterval(start: number, before: NodeJS.ResourceUsage) {
   const after = process.resourceUsage();

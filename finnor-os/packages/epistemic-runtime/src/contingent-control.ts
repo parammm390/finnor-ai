@@ -25,9 +25,13 @@ const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);
 const pendingDelivery=(p:Path,period:number):Path=>({...p,observations:[...p.observations,...p.pending.filter(o=>o.availablePeriod===period)],pending:p.pending.filter(o=>o.availablePeriod>period)});
 
 export async function synthesizeContingentControl(input:{mandate:unknown;problem:unknown;dynamics:ControlDynamicsAdapter;instruments:ControlInstrumentSupport[];
- now?:string;beliefPins?:BeliefViewPin[];priorPolicyRef?:ExperimentRef|null;validUntilCap?:string;inputArtifactRef?:ExperimentRef|null;budgetStartedAt?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[]}> {
+ now?:string;beliefPins?:BeliefViewPin[];priorPolicyRef?:ExperimentRef|null;validUntilCap?:string;inputArtifactRef?:ExperimentRef|null;budgetStartedAt?:number;
+ remainingExpansions?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[]}> {
  const m=parseEconomicMandate(input.mandate),p=parseControlProblem(input.problem),d=input.dynamics,now=input.now??new Date().toISOString();
  const start=input.budgetStartedAt??performance.now(),cpu=process.cpuUsage(),rss=process.memoryUsage().rss,startedAt=new Date().toISOString();
+ const expansionLimit=input.remainingExpansions??m.search.maxExpansions;
+ if(!Number.isSafeInteger(expansionLimit)||expansionLimit<1||expansionLimit>m.search.maxExpansions)
+  throw new ControlContractError('INVALID_REQUEST','Remaining search grant may only attenuate the original mandate');
  let expansions=0,transitions=0,unsupportedSeen=false,uncertaintySeen=false,exhausted=false,policy:ContingentPolicy|null=null,status:PolicyResultState='POLICY_AVAILABLE',reasons:string[]=[];
  const sourceDigests=await loadedSources.catch(()=>[]);
  const compute:S4ComputeInvocation={schema:'finnor.model-compute-invocation.v1',semanticOwner:'S4',id:'',tenantId:m.tenantId,principalId:m.principalId,rightsRef:m.rightsRef,inputRef:`s4-input:${epistemicHash({mandate:m,problem:p,dynamicsRef:d.ref,instruments:input.instruments,now,priorPolicyRef:input.priorPolicyRef??null})}`,outputRefs:[],requestedRoute:'LOCAL_FIXED_SCENARIO_SEARCH',actualRoute:'LOCAL_FIXED_SCENARIO_SEARCH',fallbacks:[],backend:{name:'finnor-nonanticipative-scenario-search',version:'s4-finite-contingent-v1',sourceDigests,nodeVersion:process.version,deterministicReplayClaimed:false},attempts:[],usage:{elapsedMs:0,cpuUserMicros:0,cpuSystemMicros:0,rssBeforeBytes:rss,rssAfterBytes:rss,expansions:0,transitionEvaluations:0,accountingScope:'PROCESS_INTERVAL_INCLUSIVE_NOT_CONTAINER_PEAK'},cost:{money:null,pricebookRef:null,status:'LOCAL_COST_UNMETERED',externalCalls:0},upstreamComputeRefs:d.computeRefs??[],admission:{status:'BLOCKED_EXTERNAL',receipt:null}};
@@ -64,11 +68,14 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
      for(const id of d.exposureIds){if(!o.lockedExposureIds!.includes(id)){if(!same(p.baselineExposures[id],o.exposures![id]))throw new ControlContractError('INVALID_REQUEST','Pending obligation cannot overwrite an unlocked exposure channel');continue;}if(locks[id]&&!same(schedule[id],o.exposures![id]))throw new ControlContractError('INVALID_REQUEST','Conflicting outstanding exposure schedules');schedule[id]=[...o.exposures![id]!];locks[id]=Math.max(locks[id]??0,o.occupationUntilPeriod);}}
     return {world:structuredClone(world),utility:p.continuation?.accruedUtility.value??0,liability:m.utility.tail.terminalLiability+p.obligations.reduce((s,o)=>s+o.terminalLiability!,0),spent,occupancy,humanSeconds:p.continuation?.humanSeconds??0,schedule,locks,pending:[],observations:p.continuation?.observations.map(({instrumentId,token,availablePeriod})=>({instrumentId,token,availablePeriod}))??[]};});
    function resourceValid(path:Path):boolean {return m.resources.dimensions.every(r=>path.spent[r.id]!<=r.totalLimit&&path.occupancy[r.id]!.every(v=>v<=r.capacity))&&m.resources.couplings.every(c=>Array.from({length:h},(_,t)=>Object.entries(c.weights).reduce((s,[id,w])=>s+w*path.occupancy[id]![t]!,0)).every(v=>v<=c.maxPerPeriod));}
-   function eligible(action:ControlAction,period:number,history:string[],stopped:boolean):string|null {
+   function eligible(action:ControlAction,period:number,history:string[],stopped:boolean,observations:ControlObservation[]):string|null {
     if(stopped&&action.kind!=='STOP')return 'BUSINESS_STOP_PRESERVES_PENDING_EFFECTS';
     if(period<action.earliestPeriod||period>action.lastPeriod)return 'OPTION_NOT_YET_AVAILABLE_OR_EXPIRED';
     if(action.atMostOnce&&(history.includes(action.id)||p.obligations.some(o=>o.actionId===action.id)))return 'COMMITMENT_ALREADY_CHOSEN_OR_OUTSTANDING';
     if(action.kind==='INTERVENE'&&Object.values(action.exposures).some(x=>period+x.length>h))return 'INTERVENTION_DURATION_EXCEEDS_COMPLETE_HORIZON';
+    if(action.precondition?.afterActionIds.some(id=>!history.includes(id)))return 'PRIOR_COMMITMENT_NOT_IN_LAWFUL_HISTORY';
+    if(action.precondition?.observations.some(condition=>!observations.some(o=>o.instrumentId===condition.instrumentId&&
+     condition.tokens.includes(o.token)&&o.availablePeriod<=period)))return 'REQUIRED_OBSERVATION_NOT_AVAILABLE_OR_TOKEN_REFUSED';
     return null;
    }
    function advance(paths:Path[],action:ControlAction,t:number):Path[] {
@@ -114,8 +121,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    function search(paths:Path[],t:number,history:string[],stopped:boolean,onlyStop=false):Tree|null {
     tick();let incumbent:Tree|null=null;const alternatives:PolicyNode['alternatives']=[];
     for(const action of p.actions){if(onlyStop&&action.kind!=='STOP')continue;
-     const reason=eligible(action,t,history,stopped);if(reason){alternatives.push({actionId:action.id,status:'INFEASIBLE',valueBounds:null,reasons:[reason]});continue;}
-     if(!onlyStop&&++expansions>m.search.maxExpansions)throw new Exhausted('SEARCH_EXPANSION_BUDGET');
+     const reason=eligible(action,t,history,stopped,paths[0]!.observations);if(reason){alternatives.push({actionId:action.id,status:'INFEASIBLE',valueBounds:null,reasons:[reason]});continue;}
+     if(!onlyStop&&++expansions>expansionLimit)throw new Exhausted('SEARCH_EXPANSION_BUDGET');
      try{const candidate=finish(paths,action,t,history,stopped,onlyStop);alternatives.push({actionId:action.id,status:'POLICY_AVAILABLE',valueBounds:[candidate.value,candidate.value],reasons:[]});
       if(!incumbent||candidate.value>incumbent.value)incumbent=candidate;
       if(t===startPeriod&&(!best||candidate.value>best.value))best=candidate;
@@ -148,7 +155,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     if(complete)upper=best.value;
     const lower=best.value;
     const certificate:ContingentPolicy['certificate']={basis:'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64',ambiguity:'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES',valueBounds:[lower,lower],optimalBounds:[lower,Number.isFinite(upper)?Math.max(lower,upper):null],normalizedRegretBounds:[0,Number.isFinite(upper)?Math.max(0,upper-lower)/m.scoring.normalization:null],completeSearch:complete,finiteScenarioGapOnly:true,distributionAndIdentificationGap:'UNKNOWN',numericalTolerance:1e-8,feasibleIncumbentChecked:true,worlds:initial.length,riskSemantics:m.risk};
-    const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,m.search.maxExpansions),transitionEvaluations:transitions});
+    const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});
     compute.outputRefs=[`policy-program:${epistemicHash({nodes,certificate,demand:demandBody})}`];
     compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.id=`model-compute:${epistemicHash(compute)}`;
     const body:Omit<ContingentPolicy,'ref'>={schema:'finnor.contingent-policy.v1',semanticOwner:'S4',version:'s4-finite-contingent-v1',tenantId:m.tenantId,principalId:m.principalId,episodeId:m.episodeId,knowledgeAt:now,validUntil:new Date(Math.min(Date.parse(m.validUntil),Date.parse(p.validUntil),input.validUntilCap?Date.parse(input.validUntilCap):Infinity)).toISOString(),mandateRef:m.ref,mandate:m,problem:p,priorPolicyRef:input.priorPolicyRef??null,resultState:status,bindings:{modelRef:p.modelRef,dynamicsRef:d.ref,rightsRef:m.rightsRef,beliefPins:input.beliefPins??[],protocolRefs:input.instruments.map(i=>i.protocolRef),inputArtifactRef:input.inputArtifactRef??null,methodVersion:'s4-finite-contingent-v1',obligationsDigest:epistemicHash(p.obligations),allocationRefs:[]},rootNodeId:best.node.id,nodes,demand:{...demandBody,contentDigest:epistemicHash(demandBody)},certificate,compute:immutableControl(compute),limitations:[...d.limitations,'Robust finite scenario value is not an expected monetary value or realized value','Unsampled distribution, identification and temporal instrument calibration gaps UNKNOWN','Local FLOAT64 completeness is not a formal roundoff or field-optimality proof','Local costs unmetered; protected mandate/history/allocation/method/authority unavailable'],admission:CONTROL_ADMISSION};
@@ -156,7 +163,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    }
   }
  }catch(e){if(e instanceof ControlContractError)throw e;if(e instanceof Exhausted)fail('SEARCH_EXHAUSTED',e.message);else if(e instanceof Unsupported)fail('MODEL_UNSUPPORTED',e.message);else fail('NUMERICAL_FAILURE',e instanceof Error?e.message:'CONTROL_BACKEND_FAILURE');}
- if(!policy){const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,m.search.maxExpansions),transitionEvaluations:transitions});compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.id=`model-compute:${epistemicHash(compute)}`;}
+ if(!policy){const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.id=`model-compute:${epistemicHash(compute)}`;}
  const revisionRef=policy?.ref.id??compute.inputRef;
  const experience=[prepareS4Experience(m,policy?'POLICY_SEARCH':'REJECTION',revisionRef,{status,reasons,policyRef:policy?.ref??null,certificate:policy?.certificate??null,consideredChoices:policy?.nodes.map(n=>({nodeId:n.id,alternatives:n.alternatives}))??[],transitionEvaluations:transitions},input.priorPolicyRef?[input.priorPolicyRef.id]:[],now),prepareS4Experience(m,'COMPUTE',revisionRef,{compute},[],now)];
  if(input.priorPolicyRef)experience.push(prepareS4Experience(m,'POLICY_REVISION',revisionRef,{priorPolicyRef:input.priorPolicyRef,policyRef:policy?.ref??null,status},[input.priorPolicyRef.id],now));
@@ -171,7 +178,14 @@ export function decideContingentPolicy(policy:ContingentPolicy,value:unknown,all
  else if(allocation&&checkPolicyAllocation(policy,allocation,input.knowledgeAt).status==='BLOCKED_ALLOCATION'){status='BLOCKED_ALLOCATION';reasons.push('ALLOCATION_REVOKED_EXPIRED_OR_INCONSISTENT');}
  else if(!same(input.obligations,policy.problem.obligations)||!same(input.allocationRefs,[...policy.bindings.allocationRefs,...(allocation?[allocation.ref]:[])])){status='STALE_INPUT';reasons.push('OBLIGATION_OR_ALLOCATION_REVISION_REQUIRES_LINKED_REPLAN');}
  else if(policy.resultState!=='POLICY_AVAILABLE'){status=policy.resultState;reasons.push('POLICY_RESULT_UNRESOLVED_ACTIVATION_WITHHELD_CHECKED_INCUMBENT_RETAINED');}
- else{const observations=input.observations.map(({instrumentId,token,availablePeriod})=>({instrumentId,token,availablePeriod}));node=policy.nodes.find(n=>n.period===input.period&&same(n.actionHistory,input.actionHistory)&&same(n.observations,observations));if(!node){status='MODEL_UNSUPPORTED';reasons.push('UNREGISTERED_OBSERVATION_OR_ACTION_HISTORY_NO_SAFE_BRANCH');}}
+ else{const observations=input.observations.map(({instrumentId,token,availablePeriod})=>({instrumentId,token,availablePeriod}));node=policy.nodes.find(n=>n.period===input.period&&same(n.actionHistory,input.actionHistory)&&same(n.observations,observations));if(!node){status='MODEL_UNSUPPORTED';reasons.push('UNREGISTERED_OBSERVATION_OR_ACTION_HISTORY_NO_SAFE_BRANCH');}
+  else{const action=policy.problem.actions.find(a=>a.id===node!.actionId);
+   if(!action||action.precondition?.afterActionIds.some(id=>!input.actionHistory.includes(id))||
+    action.precondition?.observations.some(c=>!observations.some(o=>o.instrumentId===c.instrumentId&&c.tokens.includes(o.token)&&o.availablePeriod<=input.period))){
+    status='MODEL_UNSUPPORTED';reasons.push('COMMITMENT_PRECONDITION_NOT_IN_RECEIVED_LAWFUL_HISTORY');node=undefined;
+   }
+  }
+ }
  const contextDigest=epistemicHash({input,policyRef:policy.ref,bindings:policy.bindings,resolvedAllocationRef:allocation?.ref??null});const body={schema:'finnor.s4.branch-choice.v1' as const,policyRef:policy.ref,status,nodeId:node?.id??null,actionId:node?.actionId??null,contextDigest,reasons,executionAuthorityGranted:false as const};
  return immutableControl({...body,ref:{owner:'S4',id:`branch-choice:${epistemicHash(body)}`,version:policy.version,contentDigest:epistemicHash(body)}});
 }

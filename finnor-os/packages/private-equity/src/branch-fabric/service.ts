@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { TenantContext } from '@finnor/shared-types';
 import { decode, fault, hash, PrepareSchema, RequestSchema, type BranchRequest, type InputArtifact } from './contracts';
-import { actor, artifact, assertBasis, head, inputFor, readArtifact, tx, workBasis } from './store';
+import { actor, artifact, assertBasis, assertEpisodeTime, head, inputFor, readArtifact, tx, workBasis } from './store';
 import { prepareInput, currentInput } from './owners';
-import { verifyCheckpoint, createCheckpoint } from './checkpoint';
+import { verifyCheckpoint, createCheckpoint, revokeCheckpoint, purgeCheckpoints } from './checkpoint';
 import { capability } from './runtime';
 import { assertWorkBudget, beginControl, finishControl, workUsage } from './accounting';
 
@@ -28,7 +28,8 @@ export async function submit(ctx: TenantContext, value: unknown) {
   await currentInput(ctx, input);
   if (request.mode === 'VERIFIED_CHECKPOINT_RESTORE') {
     if (!request.checkpointId) fault('CHECKPOINT_REQUIRED', 400);
-    await verifyCheckpoint(ctx, input, request.checkpointId);
+    const cp = await verifyCheckpoint(ctx, input, request.checkpointId);
+    await tx(ctx, c => assertEpisodeTime(c, ctx, cp.branchId));
   } else if (request.checkpointId) fault('AMBIGUOUS_CHECKPOINT_MODE', 400);
   if (request.mode === 'PRIVATE_STATE_CLONE' && input.kind !== 'application_fixture') fault('PRIVATE_CLONE_DOMAIN_UNSUPPORTED', 400);
   const digest = hash(request);
@@ -44,7 +45,8 @@ export async function submit(ctx: TenantContext, value: unknown) {
       VALUES($1,$2,'run_branch_fabric_v1',$3::jsonb,$4,'batch',1,'pure',3)`, [jobId, ctx.tenantId, JSON.stringify({ tenantId: ctx.tenantId, principalId: actor(ctx), branchId }), `p3:${branchId}:1`]);
     await c.query('UPDATE finnor_os.p3_requests SET job_id=$2 WHERE id=$1', [branchId, jobId]);
     await artifact(c, ctx, request.workId, 'EVENT', { branchId, generation: 1, type: 'REQUEST_ACCEPTED_FOR_ASYNC_PREPARATION', requestDigest: digest, at: new Date().toISOString(), funding: null, admission: null, externalSettlement: 'NOT_APPLICABLE' });
-    return { branchId, status: 'PREPARING', semanticReplay: false, protectedEligible: false };
+    const episode = await assertEpisodeTime(c, ctx, branchId);
+    return { branchId, status: 'PREPARING', semanticReplay: false, episodeDeadlineAt: episode.deadlineAt, protectedEligible: false };
   });
 }
 export async function read(ctx: TenantContext, branchId: string) {
@@ -117,4 +119,4 @@ export async function continuation(ctx: TenantContext, branchId: string) {
   const branch = await read(ctx, branchId);
   return { schema: 'finnor.branch-continuation.v1', status: 'FRESH_S4_S5_S6_AUTHORITY_REQUIRED', branchId, resultRef: branch.resultRef, evidenceClass: branch.result?.evidenceClass ?? null, executionAuthorityGranted: false, reusableRequestTranscript: false, requiredOwners: ['S4', 'S5', 'S6'] };
 }
-export { createCheckpoint };
+export { createCheckpoint, revokeCheckpoint, purgeCheckpoints };

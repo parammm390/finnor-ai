@@ -42,5 +42,11 @@ export function controlInstrumentSupports(protocols:ExperimentProtocol[],model:I
   }
   result.push({protocolRef:action.protocolRef!,tokensByMechanism,qualification:'SUPPLIED_CONDITIONAL_UNCALIBRATED',delayPeriods:action.informationDelayPeriods,completeCost:action.cost,exposure});
  }
+ for(const action of problem.actions)for(const condition of action.precondition?.observations??[]){
+  if(problem.observations.some(i=>i.id===condition.instrumentId))continue;
+  const support=result.find(i=>i.protocolRef.id===condition.instrumentId);
+  if(!support||condition.tokens.some(token=>!Object.values(support.tokensByMechanism).some(tokens=>tokens.includes(token))))
+   throw new ControlContractError('INVALID_REQUEST','Commitment precondition is not a supported token of the actual S2 protocol');
+ }
  return result;
 }

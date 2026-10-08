@@ -36,6 +36,7 @@ export const COMPUTE_TELEMETRY_FRESHNESS_SECONDS = 150;
 export interface ProductionJobContract {
   protocolVersions: readonly number[];
   retrySafety: JobRetrySafety;
+  leaseRecovery?: "immediate_after_expiry";
   defaultClass: WorkloadClass;
   allowedClasses: readonly WorkloadClass[];
   classificationRule: JobClassificationRule;
@@ -49,10 +50,12 @@ const tenantFixed = (
   workloadClass: WorkloadClass,
   retrySafety: JobRetrySafety,
   rationale: string,
-  options: { protocolVersions?: readonly number[]; obligationKind?: JobObligationKind } = {},
+  options: { protocolVersions?: readonly number[]; obligationKind?: JobObligationKind;
+    leaseRecovery?: "immediate_after_expiry" } = {},
 ): ProductionJobContract => ({
   protocolVersions: options.protocolVersions ?? [1],
   retrySafety,
+  ...(options.leaseRecovery ? { leaseRecovery: options.leaseRecovery } : {}),
   defaultClass: workloadClass,
   allowedClasses: [workloadClass],
   classificationRule: "fixed",
@@ -77,6 +80,8 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
+  run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
   run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
   run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
   run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),

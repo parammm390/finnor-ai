@@ -36,14 +36,28 @@ export async function queryWithExecutionDeadline<T extends pg.QueryResultRow = a
     throw error;
   } finally { client.release(); }
 }
+/** A spent business clock cannot strand an exact owned capacity permit. This
+ * independent drain can only release fenced leases, never run caller SQL. */
+export async function releaseOwnedComputeLeases(
+  pool: pg.Pool, owned: string, reason: string,
+): Promise<void> {
+  await execution.run({ deadline: performance.now() + 1_000 }, async () => {
+    await queryWithExecutionDeadline(pool, `
+      UPDATE compute_resource_leases l
+         SET released_at=clock_timestamp(),release_reason=$2
+        FROM jsonb_to_recordset($1::jsonb) AS owned(resource_key text,token uuid,fence bigint,owner_id text)
+       WHERE l.resource_key=owned.resource_key AND l.lease_token=owned.token
+         AND l.fence=owned.fence AND l.owner_id=owned.owner_id AND l.released_at IS NULL`,
+    [owned, reason]);
+  });
+}
 /** Scope only trusted owner calls. A timed-out physical client is destroyed,
  * never returned to the pool with an unfinished query or transaction. */
 export async function connectWithExecutionDeadline(pool: pg.Pool): Promise<pg.PoolClient> {
   const milliseconds = remaining();
-  if (milliseconds === null) return pool.connect();
   const pending = pool.connect();
   let timer: ReturnType<typeof setTimeout> | undefined, expired = false;
-  const client = await Promise.race([
+  const client = milliseconds === null ? await pending : await Promise.race([
     pending.then(client => { if (expired) { client.release(true); throw new DatabaseExecutionDeadlineError(); } return client; }),
     new Promise<never>((_, reject) => { timer = setTimeout(() => { expired = true; reject(new DatabaseExecutionDeadlineError()); }, milliseconds); }),
   ]).finally(() => { if (timer) clearTimeout(timer); });
@@ -57,7 +71,7 @@ export async function connectWithExecutionDeadline(pool: pg.Pool): Promise<pg.Po
         try { client.release(destroy || discard); }
         finally { client.removeListener("error", onConnectionError); }
       };
-      if (property !== "query") { const value = Reflect.get(target, property); return typeof value === "function" ? value.bind(target) : value; }
+      if (property !== "query" || milliseconds === null) { const value = Reflect.get(target, property); return typeof value === "function" ? value.bind(target) : value; }
       return async (query: string | pg.QueryConfig, values?: unknown[]) => {
         if (connectionError) throw connectionError;
         const text = typeof query === "string" ? query : query.text;
@@ -74,6 +88,7 @@ export async function connectWithExecutionDeadline(pool: pg.Pool): Promise<pg.Po
           const boundedQuery: pg.QueryConfig & { query_timeout: number } = { ...(typeof query === "string" ? {} : query), text: boundedText,
             ...(values ? { values } : {}), query_timeout: left };
           const result = await original(boundedQuery);
+          if (connectionError) throw connectionError;
           if (/^\s*BEGIN\b/i.test(text)) transaction = true;
           if (/^\s*(COMMIT|ROLLBACK)\b/i.test(text)) transaction = false;
           return result;

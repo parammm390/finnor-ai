@@ -35,6 +35,11 @@ import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/
 import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
 import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
 import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
+import {handleCapitalProgramOperation,CAPITAL_PROGRAM_V2_OPERATIONS,capitalProgramResponseError} from '@finnor/private-equity/src/capital-program/v2-api';
+import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity/src/capital-program/v2-budget';
+import {M4_OPERATIONS,handleCounterexampleOperation} from '@finnor/private-equity/src/counterexample-search/handler';
+import {ChallengeError} from '@finnor/private-equity/src/counterexample-search/contracts';
+import {inChallengeEpisode,transportDeadline,readChallengeBody} from '@finnor/private-equity/src/counterexample-search/budget';
 
 export const runtime = "nodejs";
 
@@ -127,6 +132,7 @@ function response(value: unknown, status = 200): Response {
 }
 
 function requestError(error: unknown): Response {
+  if(error instanceof ChallengeError){const status=error.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT','CANCELLED','PENDING_M3_READER'].includes(error.code)?409:error.code==='LIMIT_EXCEEDED'?413:error.code==='INVALID_REQUEST'?400:error.code==='CONFIGURATION_REQUIRED'?503:422;return response({error:error.message,code:error.code},status);}
   if(error instanceof DeliberationDeadlineError)return response({code:'M2_LIMIT_EXCEEDED',predicate:error.message},413);
   if(error instanceof Error&&error.message==='M2_INVALID_TRANSPORT_DEADLINE')return response({code:'M2_SCHEMA_INVALID',predicate:error.message},400);
   if(error instanceof DecisionSliceError){const status=error.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT','CANCELLED'].includes(error.code)?409:error.code==='LIMIT_EXCEEDED'?413:error.code==='INVALID_REQUEST'?400:error.code==='CONFIGURATION_REQUIRED'?503:422;return response({error:error.message,code:error.code},status);}
@@ -175,6 +181,28 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(M4_OPERATIONS.has(route.operation)){
+      return await inChallengeEpisode(transportDeadline(req),async()=>{
+        const prepared=await Promise.allSettled([requireContext(req),readChallengeBody(req)]),
+          failed=prepared.find(result=>result.status==='rejected');
+        if(failed?.status==='rejected')throw failed.reason;
+        const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,
+          body=(prepared[1] as PromiseFulfilledResult<unknown>).value,
+          result=await handleCounterexampleOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      },req.signal);
+    }
+    if(CAPITAL_PROGRAM_V2_OPERATIONS.has(route.operation)){
+      try{return await inM3Episode(m3TransportDeadline(req),async()=>{
+        const prepared=await Promise.allSettled([requireContext(req),readM3Body(req)]),
+          failed=prepared.find(result=>result.status==='rejected');
+        if(failed?.status==='rejected')throw failed.reason;
+        const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,
+          body=(prepared[1] as PromiseFulfilledResult<unknown>).value,
+          result=await handleCapitalProgramOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      });}catch(error){const mapped=capitalProgramResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(M1_OPERATIONS.has(route.operation))return await inM1Episode(m1TransportDeadline(req),()=>dispatchPost(req,route));
     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
     return await dispatchPost(req,route);
