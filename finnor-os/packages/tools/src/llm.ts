@@ -275,7 +275,7 @@ class OpenAICompatibleProvider implements LLMProvider {
     const data = (await res.json()) as OpenAICompatibleResponse;
     this.lastUsage = {
       model,
-      returnedModel: typeof data.model === "string" ? data.model : null,
+      ...(typeof data.model === "string" ? { returnedModel: data.model } : {}),
       inputTokens: data.usage?.prompt_tokens ?? data.usage?.input_tokens ?? null,
       outputTokens: data.usage?.completion_tokens ?? data.usage?.output_tokens ?? null,
     };

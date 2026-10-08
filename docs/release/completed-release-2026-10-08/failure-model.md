@@ -64,3 +64,32 @@ failures; run affected real trajectories; review the complete staged diff; commi
 and produce complete draft PR descriptions; then perform the final combined
 release checks. Deployment is the last step, conditional on readiness, not a
 way to discover missing prerequisites.
+
+## First joined-source keeper replay, before repair
+
+`c-p6-keepers-01/results.json` retains 700 passing assertions, one failing
+assertion and failed collection at the existing worker-boundary suite.
+
+- The existing Mistral response omits its returned model. C adds an optional
+  `returnedModel: null` key to the legacy usage object, breaking its exact shape.
+  Omit only this absent optional key; a supplied returned model must remain
+  observable and missing identity must stay unknown. Do not change token counts,
+  caller deadlines, provider routing or the existing assertion.
+- Vitest's bare private-equity alias consumes the new deep worker imports and
+  appends them to `src/index.ts`. Add the actual candidate-owned source-directory
+  alias before the bare alias, like the existing DB subpath handling. Do not mock
+  the handlers, skip collection or modify the worker-boundary assertions.
+
+Re-run those unchanged suites first, then all existing keepers. The denominator
+must recover the missing assertions; 700 passes alone are not a green corpus.
+The first narrow replay passes all five routing assertions, then exposes the
+same bare-alias problem at `@finnor/db/compute-governor`. Register that real DB
+subpath too; the worker controls remain unchanged.
+
+The second narrow replay collects all ten assertions. Its only failing assertion
+is the existing Phase-5 registry snapshot (`16`) versus the actual `17` intents.
+Both current release verifiers already require 17, specifically the existing
+16 Core/PE intents plus `harness_program_v1`. Refresh only that old snapshot
+literal. Do not remove P1, add a mock or alter any retired-vertical, worker,
+source-mapper, authorization or scheduler assertion. No new unit test is added.
+The final native P1 query trajectory remains a separate required check.

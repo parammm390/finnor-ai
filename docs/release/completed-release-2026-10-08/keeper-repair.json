@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.completed-release.keeper-repair.v1",
+  "before": {
+    "passedAssertions": 700,
+    "failedAssertions": 1,
+    "missingWorkerAssertions": 5,
+    "overall": "FAIL"
+  },
+  "after": {
+    "passedAssertions": 706,
+    "failedAssertions": 0,
+    "pendingAssertions": 0,
+    "overall": "PASS"
+  },
+  "rawResultSha256": "0fff321feaf1890eeb7288d2dae9cd8afe4bf145bce9dc6a8e32f1ad29410791",
+  "repairs": [
+    "Omit absent optional returned model; missing identity remains unknown",
+    "Resolve actual candidate-owned private-equity and compute-governor deep paths",
+    "Refresh existing registry snapshot from 16 to 17, matching both current release verifiers"
+  ],
+  "newUnitTests": 0,
+  "changedTestAssertions": 1,
+  "backendTypes": "PASS",
+  "combinedNativeMountedQualification": false,
+  "productionReady": false
+}
