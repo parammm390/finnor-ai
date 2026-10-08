@@ -1,7 +1,7 @@
 // Postgres-backed job queue (§15–16): FOR UPDATE SKIP LOCKED polling, retry with
 // backoff, dead-letter after max attempts. Every handler idempotent.
 
-import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, type WorkloadClass } from "@finnor/db";
+import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, withTenantTransaction, type WorkloadClass } from "@finnor/db";
 import { Sentry, logWithTrace } from "@finnor/tools";
 import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
@@ -556,7 +556,24 @@ export class JobQueue {
       const safelyReplayable = job.retrySafety === "pure"
         || job.retrySafety === "locally_idempotent"
         || job.retrySafety === "durably_effect_guarded";
-      if (capacityDeferred && safelyReplayable) {
+      // P2 is reconcilable after submission, but a failed atomic admission has
+      // no intent, liability or external call for this delivery. Require the
+      // current durable unit and absence of its intent, rather than weakening
+      // the retry contract for other reconcilable handlers.
+      const p2Unsubmitted = capacityDeferred && job.type === "run_compute_search_unit_v1"
+        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && !!job.tenantId && typeof job.payload.principalId === "string"
+        && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
+          const proof = await c.query(`SELECT u.id FROM finnor_os.p2_units u
+            JOIN finnor_os.p2_requests s ON s.id=u.search_id AND s.tenant_id=u.tenant_id AND s.principal_id=u.principal_id
+            WHERE u.tenant_id=$1 AND u.principal_id=$2 AND u.id=$3 AND s.id=$4
+              AND s.generation=$5 AND u.generation=s.generation AND s.status='RUNNING' AND u.status='QUEUED'
+              AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_attempts a WHERE a.tenant_id=u.tenant_id
+                AND a.principal_id=u.principal_id AND a.delivery_id=$6)`,
+          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,job!.payload.generation,job!.deliveryAttemptId]);
+          return proof.rowCount === 1;
+        }).catch(() => false);
+      if (capacityDeferred && (safelyReplayable || p2Unsubmitted)) {
         // No provider request was made: capacity contention is not a business
         // failure or an exhausted retry.  Keep an audit row for the physical
         // delivery but restore the logical attempt and defer durably.

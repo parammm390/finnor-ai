@@ -1,0 +1,21 @@
+{
+  "schema": "finnor.completed-release.c-p6-integration.v1",
+  "sourceCommit": "e5133e551f1da2e7e52a9f7d29f309cbc65d9131",
+  "sourceOwnedTree": "7c87657ca769225655e4107c81fa2892ba7df6e8",
+  "sharedNativeSha256": "c8c9a5fda713aa31cb0c7fe635a7be7c4738e4394995623f52ba75a8cd1db9fb",
+  "sharedGeneratedSha256": "c1a79e46c4b392e61550aaf006cb7af0aeba44f60d8bb75d0e43c6cb4e794301",
+  "patchesApplyToExactPreimages": true,
+  "bothIntegratedTypes": "PASS",
+  "S8Core": "Complete source carried by C; two explicit source-closure/interface-port extensions preserved",
+  "S8ProtectedInstalled": false,
+  "P6NumberedMigrationAllocated": false,
+  "BJoined": false,
+  "BASE10": null,
+  "GateP6": "UNQUALIFIED",
+  "combinedNativeOrMountedRerun": "NOT_RUN_AFTER_THIS_INTEGRATION",
+  "productionReady": false,
+  "excludedActivePhases": [
+    "M5 DecisionKernelCompiler",
+    "P8/M6 HarnessEvolution"
+  ]
+}

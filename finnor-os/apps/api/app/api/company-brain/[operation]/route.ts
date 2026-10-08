@@ -17,6 +17,7 @@ import {
   loadCompanyBrainProjection,
   loadEnterpriseBeliefView,
   validateBeliefViewPin,
+  handleDecisionSliceOperation,DecisionSliceError,M1_OPERATIONS,inM1Episode,m1TransportDeadline,readM1BodyChunk,
   parseCompanyBrainObjectRef,
   resolvePeOperatingContext,
   searchCompanyBrainProjection,
@@ -26,6 +27,14 @@ import {
 } from "@finnor/private-equity";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../lib/auth";
+import {handleEvidenceOperation,EVIDENCE_OPERATIONS} from '@finnor/private-equity/src/evidence-execution/api';
+import {handleComputeSearchOperation,COMPUTE_SEARCH_OPERATIONS} from '@finnor/private-equity/src/compute-search/api';
+import {handleDeliberationOperation,DELIBERATION_OPERATIONS} from '@finnor/private-equity/src/deliberation/api';
+import {DeliberationDeadlineError,deliberationTransportDeadline,inDeliberationDeadline} from '@finnor/private-equity/src/deliberation/deadline';
+import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
+import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
+import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
+import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
 
 export const runtime = "nodejs";
 
@@ -118,6 +127,10 @@ function response(value: unknown, status = 200): Response {
 }
 
 function requestError(error: unknown): Response {
+  if(error instanceof DeliberationDeadlineError)return response({code:'M2_LIMIT_EXCEEDED',predicate:error.message},413);
+  if(error instanceof Error&&error.message==='M2_INVALID_TRANSPORT_DEADLINE')return response({code:'M2_SCHEMA_INVALID',predicate:error.message},400);
+  if(error instanceof DecisionSliceError){const status=error.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT','CANCELLED'].includes(error.code)?409:error.code==='LIMIT_EXCEEDED'?413:error.code==='INVALID_REQUEST'?400:error.code==='CONFIGURATION_REQUIRED'?503:422;return response({error:error.message,code:error.code},status);}
+
   if (error instanceof z.ZodError) return response({ error: "Invalid Company Brain request", code: "INVALID_REQUEST", issues: error.issues.slice(0, 20) }, 400);
   if (error instanceof PeDomainError) {
     const status = /NOT_FOUND/.test(error.code) ? 404 : /LIMIT/.test(error.code) ? 413 : /INVALID|UNSUPPORTED/.test(error.code) ? 400 : 422;
@@ -139,7 +152,7 @@ async function json(req: Request): Promise<unknown> {
   let size = 0;
   try {
     while (true) {
-      const chunk = await reader.read();
+      const chunk = await readM1BodyChunk(reader);
       if (chunk.done) break;
       if (chunk.value.byteLength > limit - size) {
         await reader.cancel().catch(() => undefined);
@@ -149,7 +162,7 @@ async function json(req: Request): Promise<unknown> {
     }
     return JSON.parse(new TextDecoder().decode(bytes.subarray(0, size)));
   } catch (error) {
-    if (error instanceof PeDomainError) throw error;
+    if (error instanceof PeDomainError || error instanceof DecisionSliceError) throw error;
     throw new PeDomainError("PE_BRAIN_INVALID", "Company Brain request body must be JSON");
   } finally { reader.releaseLock(); }
 }
@@ -161,9 +174,25 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
+  try {const route=await params;
+    if(M1_OPERATIONS.has(route.operation))return await inM1Episode(m1TransportDeadline(req),()=>dispatchPost(req,route));
+    if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
+    return await dispatchPost(req,route);
+  }catch(error){return requestError(error);}
+}
+async function dispatchPost(req:Request,route:{operation:string}):Promise<Response>{
   try {
-    const [auth, body, route] = await Promise.all([requireContext(req), json(req), params]);
+    const prepared=await Promise.allSettled([requireContext(req),json(req)]);const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
+    const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
     const ctx: PeMutationContext = { auth };
+    if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
+    if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
+    if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleDeliberationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((COMPUTE_SEARCH_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleComputeSearchOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((PROGRAM_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleProgramOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((EVIDENCE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleEvidenceOperation(ctx,route.operation,body);return response(result.body,result.status);}
     switch (route.operation) {
       case "belief-view": {
         const input = BeliefViewSchema.parse(body);
