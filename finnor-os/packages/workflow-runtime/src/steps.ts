@@ -550,8 +550,8 @@ export async function claimStep(
   return claimed;
 }
 
-/** §5.3: a plugin execution may report the real sources it relied on — hybridRetrieve's
- *  structured facts + semantic hits, for an answer action — under `output.citations`.
+/** §5.3: a plugin execution may report the real sources it relied on under
+ *  `output.citations`.
  *  Pulled out here so any completed step's real evidence (not just answer actions)
  *  overwrites the open-time placeholder when present. */
 function extractCitations(actualResult: Record<string, unknown>): ReceiptEvidence[] | undefined {

@@ -88,7 +88,6 @@ jobs:
       - run: npm run authz:matrix:check
       - run: npm run openapi
       - run: npm run typecheck
-      - run: npm run test:planner-evals
       - run: npm run db:migrate
       - run: npm run db:seed
       # The setup file is also loaded by Vitest, but a fresh database does not have

@@ -17,7 +17,6 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:live:steel": "vitest run tests/live/steel-provider.live.test.ts",
-    "test:planner-evals": "vitest run tests/planner-evals",
     "test:staging": "tsx scripts/guard-staging.ts",
     "dev:api": "npm run dev --workspace @finnor/api",
     "dev:console": "npm run dev --workspace @finnor/console",

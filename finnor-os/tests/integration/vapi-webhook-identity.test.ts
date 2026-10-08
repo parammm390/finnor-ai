@@ -1,17 +1,13 @@
-// Route-level proof for the zod call-object stripping fix (ground-truth §6): before
-// the fix, call.customer.number was silently stripped by VapiWebhookSchema on every
-// parse, so resolveVoiceIdentity() was never even called with a real number — every
-// caller on the owner line got the "can't verify this line" handoff regardless of who
-// was actually calling. This test seeds a real owner phone number, POSTs a realistic
-// tool-calls webhook body with call.customer.number matching it, and asserts the
-// response is NOT the handoff message — proving identity resolution now actually runs.
+// Route-level proof that Vapi's parsed call retains the dialed number and caller
+// number. The webhook maps the dialed number to one tenant and checks the caller
+// against an active owner before accepting a tool instruction.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { seed, SEED_TENANT_ID } from "../../packages/db/seed";
-import { closePool, getPool, withTenant, tenants } from "@finnor/db";
+import { seed, SEED_TENANT_ID, SEED_OWNER_EMAIL } from "../../packages/db/seed";
+import { closePool, getPool, withTenant, users } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { POST } from "../../apps/api/app/api/webhooks/vapi/route";
 
@@ -47,7 +43,7 @@ function toolCallsRequest(callId: string, customerNumber: string): Request {
   });
 }
 
-describe.skipIf(!available)("POST /api/webhooks/vapi — caller identity resolves post-fix", () => {
+describe.skipIf(!available)("POST /api/webhooks/vapi — active caller identity", () => {
   beforeAll(async () => {
     process.env.DATABASE_URL = DB_URL;
     process.env.VAPI_WEBHOOK_SECRET = "";
@@ -59,19 +55,20 @@ describe.skipIf(!available)("POST /api/webhooks/vapi — caller identity resolve
        ON CONFLICT (vapi_phone_number_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, phone_number = EXCLUDED.phone_number`,
       [SEED_TENANT_ID, DIALED_NUMBER, PHONE_NUMBER_ID],
     );
-    await withTenant(SEED_TENANT_ID, (db) => db.update(tenants).set({ ownerPhone: OWNER_PHONE }).where(eq(tenants.id, SEED_TENANT_ID)));
+    await withTenant(SEED_TENANT_ID, (db) => db.update(users).set({ phoneNumber: OWNER_PHONE }).where(eq(users.email, SEED_OWNER_EMAIL)));
   });
 
   afterAll(async () => {
+    await withTenant(SEED_TENANT_ID, (db) => db.update(users).set({ phoneNumber: null }).where(eq(users.email, SEED_OWNER_EMAIL)));
     await closePool();
   });
 
-  it("a caller matching tenants.ownerPhone is resolved as owner — no handoff message", async () => {
+  it("an active owner reaches exact-action validation without approving an unspecified action", async () => {
     const res = await POST(toolCallsRequest(`call-identity-test-${randomUUID()}`, OWNER_PHONE));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { results: Array<{ toolCallId: string; result: string }> };
     expect(body.results).toHaveLength(1);
-    expect(body.results[0]!.result).not.toMatch(/can't verify this line/);
+    expect(body.results[0]!.result).toBe("Name the exact action and say approve or reject.");
   });
 
   it("an unrecognized number still gets the handoff (identity resolution is real, not bypassed)", async () => {

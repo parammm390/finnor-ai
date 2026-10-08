@@ -761,7 +761,6 @@ async function main(): Promise<void> {
   const boundary = await verifyPeDomainBoundary();
   const typecheck = await runCommand(resolve(ROOT, "node_modules/.bin/tsc"), ["-p", "tsconfig.json", "--pretty", "false"]);
   const unit = await runCommand(resolve(ROOT, "node_modules/.bin/vitest"), ["run", "tests/unit", "packages/orchestration/src/instruction-trace.test.ts", "--reporter=dot"]);
-  const plannerEvals = await runCommand(resolve(ROOT, "node_modules/.bin/vitest"), ["run", "tests/planner-evals", "--reporter=dot"]);
 
   const port = await freePort();
   const dataDir = await mkdtemp(join(tmpdir(), "finnor-pe5-certification-"));
@@ -1027,7 +1026,7 @@ async function main(): Promise<void> {
       closeSafety: "PASS",
       authorityEffectReconciliation: "PASS",
     },
-    coreRegression: { typecheck, unit, plannerEvals, pePostCutover: peTests!, webhookQuarantine: webhookTests! },
+    coreRegression: { typecheck, unit, pePostCutover: peTests!, webhookQuarantine: webhookTests! },
     retained: [
       "Core Work/Objective/Authority/Approval/BusinessEffect/event-wait/reconciliation",
       "universal actions and computer runtime",

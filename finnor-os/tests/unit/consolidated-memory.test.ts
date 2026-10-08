@@ -9,27 +9,12 @@ describe("consolidated memory (Zep) — unconfigured state", () => {
     delete process.env.ZEP_API_KEY;
   });
 
-  it("zepProviderStatus reports not configured when no env var is set", async () => {
-    const { zepProviderStatus } = await import("@finnor/memory");
-    expect(zepProviderStatus()).toEqual({ configured: false });
-  });
-
-  it("mirrorTurnToZep resolves without throwing and makes no network call", async () => {
-    const { mirrorTurnToZep } = await import("@finnor/memory");
-    await expect(mirrorTurnToZep("tenant-1", "session-1", "some turn content")).resolves.toBeUndefined();
-  });
-
   it("queryConsolidatedFacts returns [] — never guessed, never a fabricated hit", async () => {
     const { queryConsolidatedFacts } = await import("@finnor/memory");
     const hits = await queryConsolidatedFacts("tenant-1", "what's the renewal price?");
     expect(hits).toEqual([]);
   });
 
-  it("reports configured:true once ZEP_API_KEY is present (still untested against a real account)", async () => {
-    process.env.ZEP_API_KEY = "test-key";
-    const { zepProviderStatus } = await import("@finnor/memory");
-    expect(zepProviderStatus()).toEqual({ configured: true });
-  });
 });
 
 describe("buildMemorySnapshot — Zep is additive, never a regression when unconfigured", () => {

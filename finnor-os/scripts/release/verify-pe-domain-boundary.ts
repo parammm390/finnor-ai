@@ -88,7 +88,6 @@ const COGNITION_PATHS = [
   "packages/orchestration/src/planner-memory.ts",
   "packages/epistemic-runtime/fixtures",
   "packages/epistemic-runtime/src",
-  "tests/planner-evals",
 ] as const;
 
 const RETIRED_COGNITION_PATTERN = /\b(?:water[ _-]?test|water[ -]treatment|water-treatment|household|technician|service_visit|maintenance_agreement|warehouse_stock|inventory_item|dealer[ _-]?zero|water dispatch|water reorder)\b/i;

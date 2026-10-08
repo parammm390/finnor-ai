@@ -56,9 +56,8 @@ describe("Phase 6 Zep human/thread mapping", () => {
     expect(facts[0]).toMatchObject({ chunk: "Sarah prefers the active sales sender", sourceKind: "zep_employee_fact", provenance: { employeeId, legacyGraphPolicy: "quarantined_no_query_no_copy" } });
   });
 
-  it("never queries or mirrors a legacy tenant/session graph", async () => {
-    const { mirrorTurnToZep, queryConsolidatedFacts } = await import("@finnor/memory");
-    await mirrorTurnToZep("tenant-legacy", "transport-session", "legacy content");
+  it("never queries a legacy tenant/session graph", async () => {
+    const { queryConsolidatedFacts } = await import("@finnor/memory");
     expect(await queryConsolidatedFacts("tenant-legacy", "legacy query")).toEqual([]);
     expect(zep.userAdd).not.toHaveBeenCalled();
     expect(zep.threadCreate).not.toHaveBeenCalled();

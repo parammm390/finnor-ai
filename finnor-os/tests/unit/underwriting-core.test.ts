@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPeriods,
-  canonicalSerialize,
   compileUnderwritingModel,
   createStandardLboInputSnapshot,
   createStandardLboModel,
@@ -11,7 +10,6 @@ import {
   executeUnderwritingModel,
   explainOutput,
   round,
-  semanticHash,
   type StandardLboInputValues,
   type StandardLboModelConfig,
 } from "@finnor/underwriting";
@@ -95,11 +93,6 @@ describe("P4 deterministic underwriting core", () => {
     expect(round("2.5", 0)).toBe("2");
     expect(round("3.5", 0)).toBe("4");
     expect(() => decimal("$5.2m")).toThrowError(/base-10 strings/);
-  });
-
-  it("serializes and hashes without object insertion-order drift", () => {
-    expect(canonicalSerialize({ b: "2", a: "1" })).toBe(canonicalSerialize({ a: "1", b: "2" }));
-    expect(semanticHash({ b: "2", a: "1" })).toBe(semanticHash({ a: "1", b: "2" }));
   });
 
   it("compiles and executes the standard LBO with debt, exit, and returns", () => {

@@ -17,7 +17,6 @@ export * from "./ingest";
 export * from "./corrections";
 export * from "./evidence";
 export * from "./evidence-recorder";
-export * from "./retrieval";
 
 export async function buildMemorySnapshot(opts: {
   tenantId: string;

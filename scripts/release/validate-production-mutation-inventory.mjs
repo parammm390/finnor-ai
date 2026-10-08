@@ -89,7 +89,7 @@ for (const [path] of workflowFiles) {
   requireInvariant(!/^\s*id-token:\s*write\s*$/m.test(source), `${path} independently holds AWS OIDC authority`)
   requireInvariant(!/(deploy-production\.mjs|deploy-aws-compute-plane\.mjs|migrate-production|configure-vercel-realtime\.mjs --apply|run-p8-production-water-retirement\.mjs)/.test(source), `${path} contains an unclassified production mutation path`)
 }
-for (const workflowName of ["production-release.yml", "marketing-ci.yml", "security.yml", "planner-live-evals.yml", "k6-nightly-lite.yml", "tenant-isolation-nightly.yml", "dealer-zero-replay.yml"]) {
+for (const workflowName of ["production-release.yml", "marketing-ci.yml", "security.yml", "tenant-isolation-nightly.yml", "dealer-zero-replay.yml"]) {
   for (const line of read(`.github/workflows/${workflowName}`).split("\n").filter((candidate) => candidate.includes("${{ secrets."))) {
     requireInvariant(/^\s{10,}[A-Z0-9_]+:\s*\$\{\{ secrets\./.test(line), `${workflowName} exposes a live secret above an exact step environment`)
   }
