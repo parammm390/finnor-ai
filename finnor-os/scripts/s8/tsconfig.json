@@ -1,0 +1,6 @@
+{
+ "extends":"../../tsconfig.base.json",
+ "compilerOptions":{"noEmit":true},
+ "include":["./*.mts","../../packages/capability-evolution/src/*.ts","../../packages/capability-evolution/src/*.mts"],
+ "exclude":["../../node_modules"]
+}

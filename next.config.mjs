@@ -1,6 +1,18 @@
 // Phase 1.4: security headers on the Centropy app + its API proxy. Deployment-hosted
 // Supabase and monitoring endpoints vary, so connect-src accepts HTTPS/WSS origins.
 // The page routes and higher-risk embedding directives remain first-party only.
+const DEVELOPMENT_AUTH_ORIGIN = (() => {
+  if (process.env.NODE_ENV !== "development") return ""
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "")
+    if (url.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(url.hostname) ||
+      !url.port || url.username || url.password || url.pathname !== "/" || url.search || url.hash) return ""
+    return ` ${url.origin}`
+  } catch {
+    return ""
+  }
+})()
+
 const CENTROPY_CSP = [
   "default-src 'self'",
   // Next's production runtime still needs inline bootstrap scripts. Development
@@ -9,7 +21,7 @@ const CENTROPY_CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https: wss:",
+  `connect-src 'self' https: wss:${DEVELOPMENT_AUTH_ORIGIN}`,
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "object-src 'none'",

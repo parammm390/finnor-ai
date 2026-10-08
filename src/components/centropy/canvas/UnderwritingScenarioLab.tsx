@@ -1,12 +1,14 @@
 "use client"
 
-import { useMemo, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { ArrowRight, GitBranch } from "lucide-react"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { UnderwritingLineage, UnderwritingRun, UnderwritingRunDiff, UnderwritingValue, UnderwritingWorkspace } from "@/components/centropy/product/contracts"
 import { editableCanvasScenarioInputs, formatUnderwritingDisplayValue, formatUnderwritingValue, matchingBaseRun, parseCanvasScenarioValue, underwritingPeriodLabel } from "@/components/centropy/product/scenario-branch-model"
 import { useProductRequest } from "@/components/centropy/product/useProductRequest"
 import { UnderwritingSensitivityLab } from "./UnderwritingSensitivityLab"
+import { DecisionSlicePanel } from "./DecisionSlicePanel"
+import { useCentropyAuth as useJarvisAuth } from "@/components/centropy/lib/centropy-auth"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const label = (value: string) => value.replace(/^output[._]/i, "").replace(/[._]/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
@@ -15,8 +17,11 @@ const dated = (value: string) => new Date(value).toLocaleString([], { dateStyle:
 type ScenarioChange = { nodeId: string; value: UnderwritingValue; baseValue: UnderwritingValue | null; unit: string }
 type ReviewedChange = { signature: string; baseId: string; changes: ScenarioChange[]; name: string; reason: string }
 
-export function UnderwritingScenarioLab({ workspace, writable, onRefresh }: { workspace: UnderwritingWorkspace; writable: boolean; onRefresh: () => void }) {
-  const [baseId, setBaseId] = useState("")
+export function UnderwritingScenarioLab({ workspace, writable, onRefresh, workId = null }: { workspace: UnderwritingWorkspace; writable: boolean; onRefresh: () => void; workId?: string | null }) {
+  const auth = useJarvisAuth()
+  const baseScope = `${auth.session?.user.id ?? "anonymous"}:${workId}:${workspace.investmentCase.id}`
+  const baseStorageKey = `finnor-scenario-base:${baseScope}`
+  const [baseSelection, setBaseSelection] = useState({ scope: "", id: "" })
   const [branchId, setBranchId] = useState("")
   const [nodeId, setNodeId] = useState("")
   const [raw, setRaw] = useState("")
@@ -32,6 +37,18 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh }: { wo
   const writeLock = useRef(false)
 
   const baseRuns = useMemo(() => workspace.runs.filter((run) => !run.scenarioId && !run.sensitivityCell).sort((left, right) => Date.parse(right.computedAt) - Date.parse(left.computedAt)), [workspace.runs])
+  const baseId = baseSelection.scope === baseScope ? baseSelection.id : ""
+  useEffect(() => {
+    const stored = sessionStorage.getItem(baseStorageKey)
+    const id = stored && UUID.test(stored) && baseRuns.some(run => run.id === stored) ? stored : ""
+    if (stored && !id) sessionStorage.removeItem(baseStorageKey)
+    setBaseSelection({ scope: baseScope, id })
+  }, [baseScope, baseStorageKey, baseRuns])
+  function selectBase(id: string) {
+    if (!baseRuns.some(run => run.id === id)) return
+    sessionStorage.setItem(baseStorageKey, id)
+    setBaseSelection({ scope: baseScope, id })
+  }
   const base = baseRuns.find((run) => run.id === baseId) ?? baseRuns[0] ?? null
   const editable = useMemo(() => editableCanvasScenarioInputs(base), [base])
   const activeInput = editable.find((input) => input.nodeId === nodeId) ?? editable[0] ?? null
@@ -56,7 +73,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh }: { wo
       return result
     },
   })
-  const diff = diffResource.data?.leftRunId === base?.id && diffResource.data.rightRunId === branch?.id ? diffResource.data : null
+  const diff = diffResource.data && base && branch && diffResource.data.leftRunId === base.id && diffResource.data.rightRunId === branch.id ? diffResource.data : null
   const lineageResource = useProductRequest({
     enabled: Boolean(branch && outputId && diff?.changedOutputs[outputId]), key: branch && outputId ? `${branch.id}:${outputId}` : "",
     load: async () => {
@@ -155,7 +172,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh }: { wo
   return <section className="ct-scenario-lab" aria-label="Underwriting scenario laboratory">
     <header><span className="ct-eyebrow"><GitBranch size={15} /> SCENARIO LABORATORY</span><h4>Change an assumption. Read the real model.</h4><p>Each branch keeps the base run intact. Outputs and lineage come from persisted underwriting runs.</p></header>
     {!base ? <p>No persisted base run is available for a scenario branch.</p> : <>
-      <div className="ct-scenario-lab__base"><label>Base run<select value={base.id} onChange={(event) => { setBaseId(event.target.value); setBranchId(""); setOutputId(null); setReviewed(null); setPendingScenarioId(null); setStaged([]); setRaw("") }}>{baseRuns.map((run) => <option key={run.id} value={run.id}>{dated(run.computedAt)} · {run.id.slice(0, 8)} · {run.validity}</option>)}</select></label><div><strong>{model?.name ?? "Underwriting model"}</strong><span>{modelVersion?.versionKey ?? "Version unavailable"} · world at {dated(base.worldAt)}</span></div></div>
+      <div className="ct-scenario-lab__base"><label>Base run<select value={base.id} onChange={(event) => { selectBase(event.target.value); setBranchId(""); setOutputId(null); setReviewed(null); setPendingScenarioId(null); setStaged([]); setRaw("") }}>{baseRuns.map((run) => <option key={run.id} value={run.id}>{dated(run.computedAt)} · {run.id.slice(0, 8)} · {run.validity}</option>)}</select></label><div><strong>{model?.name ?? "Underwriting model"}</strong><span>{modelVersion?.versionKey ?? "Version unavailable"} · world at {dated(base.worldAt)}</span></div></div>
       {!writable ? <p className="ct-scenario-lab__error">The underwriting source is not current. Refresh Canvas before recording or running a scenario.</p> : null}
       <div className="ct-scenario-lab__grid"><form onSubmit={review}><span className="ct-scenario-lab__step">01 / Set a branch</span>
         {editable.length ? <><label>Input<select value={activeInput?.nodeId ?? ""} onChange={(event) => { setNodeId(event.target.value); setRaw(""); setReviewed(null); setPendingScenarioId(null) }}>{editable.map((input) => <option key={input.nodeId} value={input.nodeId}>{label(input.nodeId)}</option>)}</select></label>
@@ -186,5 +203,6 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh }: { wo
       </div></div>
       <UnderwritingSensitivityLab key={base.id} workspace={workspace} base={base} writable={writable} onRefresh={onRefresh} />
     </>}
+    <DecisionSlicePanel workId={workId} investmentCaseId={workspace.investmentCase.id} modelVersionId={base?.modelVersionId ?? workspace.modelVersions[0]?.id ?? null} scenarioIds={branch?.scenarioId ? [branch.scenarioId] : []} writable={writable && baseSelection.scope === baseScope} onRefresh={onRefresh} />
   </section>
 }

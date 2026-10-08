@@ -152,6 +152,7 @@ export interface UnderwritingWorkspace {
   modelInputBindings: Array<{ modelVersionId: string; inputNodeId: string; sourceKind: string; assumptionId: string | null; evidenceVersionId: string | null; documentId: string | null; documentVersionId: string | null; anchorId: string | null; anchorHash: string | null; valuePath: string | null; valueSelector: string | null; staleAfterDays: number | null }>
   scenarios: Array<{ id: string; modelVersionId: string; parentScenarioId: string | null; name: string; semanticHash: string; definition: { overrides: Array<{ nodeId: string; value: UnderwritingValue; reason?: string }> }; createdAt: string }>
   runs: UnderwritingRun[]
+  invalidatedRuns?: Array<{ id: string; modelVersionId: string; status: "INVALIDATED"; validity: "INVALID"; result: null; inputSnapshot: null; reason: "EVIDENCE_DERIVATION_NOT_CURRENT" }>
   sensitivities: Array<{ id: string; modelVersionId: string; baseRunId: string; name: string; definitionHash: string; status: string; cellCount: number; createdAt: string }>
   artifactBindings: Array<{ id: string; modelVersionId: string; documentId: string; documentVersionId: string; direction: "input" | "output"; bindingMode: string; modelNodeId: string; anchorId: string; anchorHash: string; valueSelector: string | null; comparisonPolicy: Record<string, unknown> | null; bindingVersion: number; supersedesBindingId: string | null }>
   artifactProjections: Array<Record<string, unknown>>

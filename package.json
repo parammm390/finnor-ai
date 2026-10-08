@@ -11,6 +11,8 @@
     "workspace:check": "node scripts/generate-workspace-contract.mjs --check",
     "centropy:manifest": "node scripts/centropy/generate-capability-manifest.mjs",
     "centropy:manifest:check": "node scripts/centropy/generate-capability-manifest.mjs --check",
+    "centropy:client": "node scripts/centropy/generate-openapi-client.mjs",
+    "centropy:client:check": "node scripts/centropy/generate-openapi-client.mjs --check",
     "centropy:forms": "node scripts/centropy/generate-human-forms.mjs",
     "centropy:forms:check": "node scripts/centropy/generate-human-forms.mjs --check",
     "release:p8-zero-resurrection": "node scripts/release/verify-p8-zero-resurrection.mjs && npm run release:p8-runtime-contract --prefix finnor-os",
@@ -47,12 +49,13 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "autoprefixer": "^10.4.27",
+    "braces": "file:vendor/braces",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.8",
+    "openapi-typescript": "7.13.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "vitest": "^4.1.11",
-    "braces": "file:vendor/braces"
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "js-yaml": "4.3.2",

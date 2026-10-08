@@ -21,7 +21,43 @@ function block(source, start, end) {
 }
 
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
-const companyBrainOperations = [...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1])
+function registeredOperations(path, name) {
+  const source = readFileSync(join(project, path), "utf8")
+  const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
+  if (!match) throw new Error(`Cannot find operation registry ${name}`)
+  const operations = [...match[1].matchAll(/['"]([a-z][a-z0-9-]+)['"]/g)].map((entry) => entry[1])
+  if (!operations.length || new Set(operations).size !== operations.length) throw new Error(`Invalid operation registry ${name}`)
+  return operations
+}
+const delegatedRegistries = [
+  ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
+  ["PROGRAM_OPERATIONS", "program-synthesis/api.ts"],
+  ["COMPUTE_SEARCH_OPERATIONS", "compute-search/api.ts"],
+  ["INTERFACE_OPERATIONS", "interface-synthesis/api.ts"],
+  ["M1_OPERATIONS", "decision-slice/handler.ts"],
+  ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
+  ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
+  ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+]
+const companyBrainOperations = [...new Set([
+  ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
+  ...delegatedRegistries.flatMap(([name, file]) => {
+    if (!companyBrainSource.includes(name)) throw new Error(`Undelegated operation registry ${name}`)
+    return registeredOperations(`finnor-os/packages/private-equity/src/${file}`, name)
+  }),
+])]
+const companyBrainReads = new Set([
+  "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
+  "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
+  "evidence-handles", "evidence-read", "evidence-witness",
+  "program-read", "program-witness", "program-module", "program-projection", "program-artifact", "program-ports", "program-interface-module",
+  "compute-search-read", "compute-search-projection",
+  "interface-read", "interface-projection", "interface-catalogue", "interface-module", "interface-ports",
+  "decision-slice-read", "decision-slice-context", "decision-slice-witness", "decision-slice-changes", "decision-slice-view",
+  "continuation-read", "continuation-projection",
+  "procedure-experience", "procedure-induction-read", "procedure-read", "procedure-component", "procedure-projection", "procedure-admission-request", "procedure-interface", "procedure-costs",
+  "deliberation-read", "deliberation-projection", "deliberation-module-read", "deliberation-evidence-read",
+])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -106,10 +142,11 @@ function routeEntry(method, path, source) {
   const { family, owner, presentationTargets } = familyFor(path)
   const stream = path === "stream"
   // Digital Twin POST includes evidence-backed canonical mutations.
-  const read = method === "GET" || family === "company-brain" || ["query", "semantic-activity"].includes(family)
+  const read = method === "GET" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : read ? "READ" : controls.test(path) ? "CONTROL" : "MUTATION"
+  const control = controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation)-(?:cancel|resume|reconcile)$/.test(path)
+  const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : read ? "READ" : control ? "CONTROL" : "MUTATION"
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
   const userProduct = !adminOnly && !systemOnly
@@ -156,7 +193,8 @@ function registryEntries() {
   const universalActions = quoted(block(universal, "const ACTION_TYPES:", "];"))
   const querySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/operational-queries.ts"), "utf8")
   const queries = [...quoted(block(querySource, "export const CORE_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
+    ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
+    ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
   const registry = readFileSync(join(project, "finnor-os/packages/orchestration/src/plugin-registry.ts"), "utf8")
   const humanOnly = quoted(block(registry, "export const HUMAN_ONLY_PLANNING_CAPABILITIES = [", "] as const"))
   const humanOnlySet = new Set(humanOnly)

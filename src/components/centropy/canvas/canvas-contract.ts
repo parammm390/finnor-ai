@@ -27,6 +27,11 @@ const UnderwritingOutputSchema = z.object({ nodeId: z.string(), label: z.string(
 const UnderwritingCheckSchema = z.object({ nodeId: z.string(), code: z.string(), message: z.string(), severity: z.string() }).strict()
 
 export const CanvasBlockSchema = z.discriminatedUnion("type", [
+  BaseBlockSchema.extend({type:z.literal("interface_synthesis"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("deliberation_policy"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("compute_search"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("program_synthesis"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("evidence_execution"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable()}).strict()}).strict(),
   BaseBlockSchema.extend({ type: z.literal("work_execution"), payload: z.object({ objective: z.string(), status: z.string(), stages: z.array(StageSchema), finalOutcome: z.string().nullable(), failure: z.string().nullable() }).strict() }).strict(),
   BaseBlockSchema.extend({ type: z.literal("closing_readiness"), payload: z.object({ conditions: z.array(RowSchema), openRisks: z.number().int().nonnegative(), sourceCoverage: z.string() }).strict() }).strict(),
   BaseBlockSchema.extend({ type: z.literal("risk_register"), payload: z.object({ risks: z.array(RowSchema) }).strict() }).strict(),
