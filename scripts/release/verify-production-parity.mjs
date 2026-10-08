@@ -7,6 +7,7 @@ import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
 import { COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
+import { assertProductionDatabaseTarget } from "../../finnor-os/packages/db/production-database-admission.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -39,6 +40,7 @@ assertSupplierCanaryRelease("supplierCanaryApp", supplierCanaryApp, expected, co
 assertSupplierCanaryRelease("supplierCanaryAuth", supplierCanaryAuth, expected, contract.topology.supplierCanaryAuth, contract.release.requiredMigrationHead)
 
 const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
+assertProductionDatabaseTarget(databaseUrl, contract.topology.database, "owner")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
 const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })

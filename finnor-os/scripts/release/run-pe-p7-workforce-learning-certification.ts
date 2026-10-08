@@ -382,7 +382,7 @@ async function main(): Promise<void> {
       "tests/unit/phase7-learning.test.ts",
       "tests/unit/phase7-workforce-read-surface.test.ts",
       "tests/unit/phase6-attention.test.ts",
-      "tests/unit/openapi-operational-query-contract.test.ts",
+      "tests/integration/production-query-surface.test.ts",
     ])]));
 
     gates.set("runtime-concurrency", await runGate("runtime-concurrency", [vitest("runtime-concurrency", ["tests/integration/phase7-workforce-concurrency.test.ts"], 900_000)]));

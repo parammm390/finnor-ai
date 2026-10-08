@@ -53,6 +53,7 @@ jobs:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       REDIS_URL: redis://localhost:6379
       AUTH_DEV_BYPASS: "1"
+      FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-query-evidence
       # CI uses vanilla PostgreSQL; the migration runner rejects this test seam
       # for the canonical production database.
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
@@ -88,6 +89,10 @@ jobs:
       - run: npm run authz:matrix:check
       - run: npm run openapi
       - run: npm run typecheck
+      - name: Verify production manifest and public/native ownership boundary
+        run: |
+          npm run release:manifest
+          npm run release:pe-domain-boundary
       - run: npm run db:migrate
       - run: npm run db:seed
       # The setup file is also loaded by Vitest, but a fresh database does not have
@@ -136,5 +141,6 @@ jobs:
             ${{ runner.temp }}/finnor-s7-evidence/**/results.json
             ${{ runner.temp }}/finnor-s7-evidence/**/partial-results.json
             ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
+            ${{ runner.temp }}/finnor-production-query-evidence/*.json
           if-no-files-found: warn
           retention-days: 7

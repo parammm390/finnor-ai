@@ -70,3 +70,71 @@ export function assertComputeRolloutChangeSet(changes) {
     }
   }
 }
+
+// A provider no-change failure is a candidate, never sufficient release proof.
+// Keep this separate from the nonempty rollout and ingress/removal allowlists.
+export const COMPUTE_NO_CHANGE_REASON = "The submitted information didn't contain changes. Submit different information to create a change set."
+
+export function assertComputeNoopCandidate({ stage, currentStage, nextStage, changeSet }) {
+  if (stage !== "rollout" || currentStage !== "finalized" || nextStage !== "finalized"
+    || changeSet?.Status !== "FAILED" || changeSet.StatusReason !== COMPUTE_NO_CHANGE_REASON
+    || (changeSet.Changes !== undefined && (!Array.isArray(changeSet.Changes) || changeSet.Changes.length !== 0))) {
+    throw new Error("compute change set is not the exact finalized no-change candidate")
+  }
+}
+
+export function assertComputeNoopStack({ stack, expectedParameters, previousStackId, expectedTemplateSha256, deployedTemplateSha256 }) {
+  if (!stack?.StackId || stack.StackId !== previousStackId || stack.RoleARN
+    || !["CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"].includes(stack.StackStatus)) {
+    throw new Error("compute no-op requires the same independently stable stack")
+  }
+  const parameters = Object.fromEntries((stack.Parameters ?? []).map((entry) => [entry.ParameterKey, entry.ParameterValue]))
+  if (parameters.ComputePlaneStage !== "finalized"
+    || Object.entries(expectedParameters).some(([key, value]) => parameters[key] !== value)) {
+    throw new Error("compute no-op stack parameters differ from the exact release")
+  }
+  if (!/^[0-9a-f]{64}$/.test(expectedTemplateSha256 ?? "") || deployedTemplateSha256 !== expectedTemplateSha256) {
+    throw new Error("compute no-op deployed template differs from the requested template")
+  }
+}
+
+export function assertComputeNoopFleet({ profiles, services, tasksByClass, taskDefinitions, heartbeats, expected, imageDigest, imageUri, migrationHead, coreCertificationId, worker, targetGroup, targetHealth }) {
+  assertComputeFleetConverged({ profiles, services, tasksByClass, heartbeats, expected, imageDigest, migrationHead })
+  const definitions = []
+  for (const workloadClass of COMPUTE_CLASSES) {
+    const profile = profiles[workloadClass]
+    const service = services[workloadClass]
+    const definition = taskDefinitions[workloadClass]
+    const container = definition?.containerDefinitions?.find((entry) => entry.name === profile.containerName)
+    const environment = Object.fromEntries((container?.environment ?? []).map((entry) => [entry.name, entry.value]))
+    const metadata = {
+      FINNOR_COMMIT_SHA: expected.commitSha, FINNOR_BUILD_ID: expected.buildId,
+      FINNOR_VERSION: expected.version, FINNOR_ENVIRONMENT: expected.environment,
+      FINNOR_RELEASE_SOURCE: expected.source, FINNOR_CORE_CERTIFICATION_ID: coreCertificationId,
+      FINNOR_WORKLOAD_CLASS: workloadClass,
+    }
+    if (!definition?.taskDefinitionArn || definition.taskDefinitionArn !== service.taskDefinition
+      || service.taskDefinition !== service.deployments?.find((deployment) => deployment.status === "PRIMARY")?.taskDefinition
+      || definition.family !== profile.taskFamily
+      || definition.executionRoleArn !== `arn:aws:iam::${worker.accountId}:role/${worker.executionRoleName}`
+      || definition.taskRoleArn !== `arn:aws:iam::${worker.accountId}:role/${profile.taskRoleName}`
+      || container?.image !== imageUri
+      || Object.entries(metadata).some(([name, value]) => environment[name] !== value)) {
+      throw new Error(`${workloadClass}: compute no-op task definition is not the exact release`)
+    }
+    definitions.push(definition.taskDefinitionArn)
+  }
+  if (new Set(definitions).size !== COMPUTE_CLASSES.length) throw new Error("compute no-op class task definitions are not distinct")
+  const ips = (tasksByClass.REALTIME ?? []).flatMap((task) =>
+    (task.attachments ?? []).flatMap((attachment) =>
+      (attachment.details ?? []).filter((detail) => detail.name === "privateIPv4Address").map((detail) => detail.value)))
+  if (ips.length !== tasksByClass.REALTIME.length || new Set(ips).size !== ips.length || ips.some((ip) => typeof ip !== "string" || !/^\d+\.\d+\.\d+\.\d+$/.test(ip))
+    || targetGroup?.TargetType !== "ip" || targetGroup.VpcId !== worker.vpcId
+    || targetGroup.Port !== worker.containerPort || targetGroup.HealthCheckPath !== "/healthz" || targetGroup.HealthCheckProtocol !== "HTTP"
+    || !Array.isArray(targetHealth) || targetHealth.length !== ips.length
+    || new Set(targetHealth.map((entry) => entry.Target?.Id)).size !== ips.length
+    || targetHealth.some((entry) => !ips.includes(entry.Target?.Id) || entry.Target?.Port !== worker.containerPort || entry.TargetHealth?.State !== "healthy")) {
+    throw new Error("compute no-op REALTIME ALB targets do not map exactly to the healthy current tasks")
+  }
+  return definitions
+}

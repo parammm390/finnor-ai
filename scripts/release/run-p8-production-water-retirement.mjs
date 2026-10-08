@@ -20,6 +20,7 @@ import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
+import { assertProductionDatabaseTarget } from "../../finnor-os/packages/db/production-database-admission.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const databaseEnvIndex = process.argv.indexOf("--database-env")
@@ -69,6 +70,7 @@ async function inspectReleaseSurfaces() {
 }
 
 const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
+assertProductionDatabaseTarget(databaseUrl, contract.topology.database, "owner")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
 const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })

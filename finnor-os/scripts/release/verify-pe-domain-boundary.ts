@@ -3,12 +3,15 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CANONICAL_ENTITY_TYPES,
+  CORE_OPERATIONAL_QUERY_INTENTS,
   EXECUTABLE_VERTICALS,
   OPERATIONAL_QUERY_INTENTS,
   PARTY_TYPES,
   PHASE5_DISPOSITION_COUNTS,
   PHASE5_DISPOSITION_LEDGER,
   PHASE5_DISPOSITION_LEDGER_VERSION,
+  PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  PROGRAM_OPERATIONAL_QUERY_INTENTS,
   RETIRED_WATER_ACTION_TYPES,
   RETIRED_WATER_CANONICAL_ENTITY_TYPES,
   RETIRED_WATER_IMPLEMENTATION_PATHS,
@@ -185,6 +188,49 @@ function equalSets(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && [...left].sort().every((value, index) => value === [...right].sort()[index]);
 }
 
+const PUBLIC_QUERY_INTENTS = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS];
+
+export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
+  const errors: string[] = [];
+  const record = (value: unknown): Record<string, unknown> =>
+    value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  const document = record(openApi);
+  const query = record(record(document.paths)["/api/queries"]);
+  const content = record(record(record(query.post).requestBody).content);
+  const schema = record(content["application/json"]).schema;
+  const exposed = new Set<string>();
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(visit); return; }
+    const node = record(value);
+    const intent = record(record(node.properties).intent);
+    if (typeof intent.const === "string") exposed.add(intent.const);
+    if (Array.isArray(intent.enum)) for (const member of intent.enum) if (typeof member === "string") exposed.add(member);
+    Object.values(node).forEach((child) => { if (child && typeof child === "object") visit(child); });
+  };
+  visit(schema);
+  if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1"])) {
+    errors.push("native-only query catalogue must retain the exact P1 reader");
+  }
+  if (!equalSets(OPERATIONAL_QUERY_INTENTS, [...PUBLIC_QUERY_INTENTS, ...PROGRAM_OPERATIONAL_QUERY_INTENTS])) {
+    errors.push("active query catalogue has an unclassified public/native intent");
+  }
+  for (const intent of PUBLIC_QUERY_INTENTS) {
+    if (!exposed.has(intent)) errors.push(`OpenAPI is missing public query intent ${intent}`);
+  }
+  for (const intent of PROGRAM_OPERATIONAL_QUERY_INTENTS) {
+    // P1 requires the original authenticated Work/Input. The flat public query
+    // route creates a new input and must not advertise this internal read.
+    if (exposed.has(intent)) errors.push(`OpenAPI exposes native-only query intent ${intent}`);
+  }
+  for (const intent of exposed) {
+    if (!(PUBLIC_QUERY_INTENTS as readonly string[]).includes(intent)
+        && !(PROGRAM_OPERATIONAL_QUERY_INTENTS as readonly string[]).includes(intent)) {
+      errors.push(`OpenAPI exposes unregistered public query intent ${intent}`);
+    }
+  }
+  return errors;
+}
+
 async function verifyPackageEntrypoints(errors: string[]): Promise<void> {
   const pkg = JSON.parse(await readFile(resolve(ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> };
   for (const [name, command] of Object.entries(pkg.scripts ?? {})) {
@@ -233,7 +279,7 @@ async function verifyPackageDependencyBoundary(errors: string[]): Promise<void> 
   }
 }
 
-export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; negativeControl: true }> {
+export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; negativeControl: true; actions: number; publicQueries: number; nativeQueries: number }> {
   const errors: string[] = [];
 
   for (const path of RETIRED_WATER_IMPLEMENTATION_PATHS) if (await containsFile(path)) errors.push(`retired path exists: ${path}`);
@@ -327,9 +373,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   await verifyPackageDependencyBoundary(errors);
 
   const openApiRaw = await readFile(resolve(ROOT, "openapi.json"), "utf8");
-  for (const intent of OPERATIONAL_QUERY_INTENTS) {
-    if (!openApiRaw.includes(`\"const\": \"${intent}\"`)) errors.push(`OpenAPI is missing active query intent ${intent}`);
-  }
+  errors.push(...verifyQuerySurfaceCoverage(JSON.parse(openApiRaw)));
   for (const intent of RETIRED_WATER_QUERY_INTENTS) {
     if (openApiRaw.includes(`\"const\": \"${intent}\"`)) errors.push(`OpenAPI exposes retired query intent ${intent}`);
   }
@@ -340,11 +384,12 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   }
 
   if (errors.length) throw new Error(`PE-DOMAIN-BOUNDARY FAIL\n${errors.map((error) => `- ${error}`).join("\n")}`);
-  return { scannedFiles: files.length, negativeControl: true };
+  return { scannedFiles: files.length, negativeControl: true, actions: discovered.length,
+    publicQueries: PUBLIC_QUERY_INTENTS.length, nativeQueries: PROGRAM_OPERATIONAL_QUERY_INTENTS.length };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   void verifyPeDomainBoundary()
-    .then((result) => console.log(`PE-DOMAIN-BOUNDARY PASS files=${result.scannedFiles} actions=32 queries=14 negative_injection=PASS`))
+    .then((result) => console.log(`PE-DOMAIN-BOUNDARY PASS files=${result.scannedFiles} actions=${result.actions} public_queries=${result.publicQueries} native_queries=${result.nativeQueries} negative_injection=PASS`))
     .catch((error) => { console.error(error instanceof Error ? error.message : error); process.exit(1); });
 }

@@ -4,11 +4,12 @@ import { existsSync, readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { assertComputeFleetConverged, assertComputeRolloutChangeSet, assertComputeStageTransition, COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
+import { assertComputeFleetConverged, assertComputeNoopCandidate, assertComputeNoopFleet, assertComputeNoopStack, assertComputeRolloutChangeSet, assertComputeStageTransition, COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
 import { assertCanonicalRelease, assertFreshAwsPreflight, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
+import { assertProductionDatabaseTarget } from "../../finnor-os/packages/db/production-database-admission.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -57,12 +58,8 @@ if (coreCertificationId.length > 128) throw new Error("core certification identi
 
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
-const databaseUrl = readProtectedEnvValue(args["database-env"], "MIGRATIONS_DATABASE_URL", { fallbackKey: "DATABASE_URL" })
-const parsedDatabase = new URL(databaseUrl)
-if (parsedDatabase.hostname !== contract.topology.database.host) throw new Error("production database host differs from the contract")
-if (!parsedDatabase.username.endsWith(`.${new URL(contract.topology.database.supabaseUrl).hostname.split(".")[0]}`)) {
-  throw new Error("database project reference differs from the canonical Supabase auth project")
-}
+const databaseUrl = readProtectedEnvValue(args["database-env"], "MIGRATIONS_DATABASE_URL")
+assertProductionDatabaseTarget(databaseUrl, contract.topology.database, "owner")
 const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })
 await client.connect()
 try {
@@ -72,14 +69,19 @@ try {
   const databaseStage = cutover.rows[0]
   if (!databaseStage) throw new Error("compute cutover singleton is missing")
 
-  async function observeFleet() {
+  async function observeFleet({ proveTaskDefinitions = false } = {}) {
     const names = COMPUTE_CLASSES.map((workloadClass) => profiles[workloadClass].serviceName)
     const found = aws("ecs", ["describe-services", "--cluster", worker.clusterName, "--services", ...names]).services ?? []
     const services = Object.fromEntries(COMPUTE_CLASSES.map((workloadClass) => [workloadClass, found.find((service) => service.serviceName === profiles[workloadClass].serviceName)]))
     const tasksByClass = {}
+    const taskDefinitions = {}
     for (const workloadClass of COMPUTE_CLASSES) {
       const arns = aws("ecs", ["list-tasks", "--cluster", worker.clusterName, "--service-name", profiles[workloadClass].serviceName, "--desired-status", "RUNNING"]).taskArns ?? []
       tasksByClass[workloadClass] = arns.length ? aws("ecs", ["describe-tasks", "--cluster", worker.clusterName, "--tasks", ...arns]).tasks ?? [] : []
+      if (proveTaskDefinitions) {
+        if (!services[workloadClass]?.taskDefinition) throw new Error(`${workloadClass}: no current task definition for compute no-op`)
+        taskDefinitions[workloadClass] = aws("ecs", ["describe-task-definition", "--task-definition", services[workloadClass].taskDefinition]).taskDefinition
+      }
     }
     const beats = await client.query(`
       SELECT service,instance_id AS "instanceId",release_sha AS "releaseSha",build_id AS "buildId",
@@ -96,7 +98,14 @@ try {
     if (targets.length !== 1) throw new Error("REALTIME target group is missing")
     const health = aws("elbv2", ["describe-target-health", "--target-group-arn", targets[0].TargetGroupArn]).TargetHealthDescriptions ?? []
     if (health.length < profiles.REALTIME.minTasks || health.some((target) => target.TargetHealth?.State !== "healthy")) throw new Error("REALTIME ALB targets are not all healthy")
-    return { serviceNames: names, taskCounts: Object.fromEntries(COMPUTE_CLASSES.map((workloadClass) => [workloadClass, tasksByClass[workloadClass].length])), targetCount: health.length }
+    const taskDefinitionArns = proveTaskDefinitions ? assertComputeNoopFleet({
+      profiles, services, tasksByClass, taskDefinitions, heartbeats: beats.rows, expected,
+      imageDigest, imageUri, migrationHead: contract.release.requiredMigrationHead, coreCertificationId,
+      worker, targetGroup: targets[0], targetHealth: health,
+    }) : undefined
+    return { serviceNames: names, taskCounts: Object.fromEntries(COMPUTE_CLASSES.map((workloadClass) => [workloadClass, tasksByClass[workloadClass].length])), targetCount: health.length, ...(taskDefinitionArns ? {
+      taskDefinitionArns, heartbeatsFreshThroughMs: Math.min(...beats.rows.map((beat) => Date.parse(beat.lastBeatAt))) + 45_000,
+    } : {}) }
   }
 
   async function waitForFleet() {
@@ -128,6 +137,42 @@ try {
       if (changeSet.Status === "CREATE_COMPLETE" || changeSet.Status === "FAILED") break
       await pause(3_000)
     }
+    if (changeSet?.Status === "FAILED") {
+      assertComputeNoopCandidate({ stage, currentStage, nextStage, changeSet })
+      await authorizeProductionMutation("aws-compute-stack-deploy")
+      const expectedParameters = { ...stackParameters, ...overrides }
+      const templateSha256 = createHash("sha256").update(template).digest("hex")
+      const deployed = aws("cloudformation", ["get-template", "--stack-name", worker.stackName, "--template-stage", "Original"]).TemplateBody
+      if (typeof deployed !== "string") throw new Error("compute no-op requires the original deployed template bytes")
+      const deployedTemplateSha256 = createHash("sha256").update(deployed).digest("hex")
+      const freshStack = aws("cloudformation", ["describe-stacks", "--stack-name", worker.stackName]).Stacks?.[0]
+      assertComputeNoopStack({ stack: freshStack, expectedParameters, previousStackId: stack.StackId, expectedTemplateSha256: templateSha256, deployedTemplateSha256 })
+      const freshImage = aws("ecr", ["describe-images", "--repository-name", worker.ecrRepository, "--image-ids", `imageTag=${expected.commitSha}`]).imageDetails?.[0]
+      if (freshImage?.imageDigest !== imageDigest) throw new Error("compute no-op ECR release identity changed")
+      const migration = await client.query("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1")
+      const fence = (await client.query("SELECT state,accepted_job_epoch,minimum_claim_epoch,enforce_known_job_types,legacy_tenant_writes_allowed FROM finnor_os.compute_plane_cutover WHERE singleton=true")).rows[0]
+      if (migration.rows[0]?.name !== contract.release.requiredMigrationHead || fence?.state !== "authoritative"
+        || Number(fence.accepted_job_epoch) !== 3 || Number(fence.minimum_claim_epoch) !== 3
+        || fence.enforce_known_job_types !== true || fence.legacy_tenant_writes_allowed !== false) {
+        throw new Error("compute no-op requires exact migration and finalized epoch-3 database fences")
+      }
+      // This is a reproof, not a rollout wait that can hide an incompatible fleet.
+      const fleet = await observeFleet({ proveTaskDefinitions: true })
+      const finalStack = aws("cloudformation", ["describe-stacks", "--stack-name", worker.stackName]).Stacks?.[0]
+      assertComputeNoopStack({ stack: finalStack, expectedParameters, previousStackId: stack.StackId, expectedTemplateSha256: templateSha256, deployedTemplateSha256 })
+      if (String(finalStack.LastUpdatedTime ?? "") !== String(freshStack.LastUpdatedTime ?? "")) throw new Error("compute no-op stack changed during reproof")
+      if (!Number.isFinite(fleet.heartbeatsFreshThroughMs) || Date.now() > fleet.heartbeatsFreshThroughMs) {
+        throw new Error("compute no-op heartbeat proof expired during stack reproof")
+      }
+      return { changesetName, verifiedNoop: {
+        schema: "finnor.compute-verified-noop.v1", status: "VERIFIED_NOOP",
+        checkedAt: new Date().toISOString(), stackName: worker.stackName, stackId: finalStack.StackId,
+        commitSha: expected.commitSha, imageDigest, templateSha256, contractSha256: contractHash,
+        migrationHead: contract.release.requiredMigrationHead,
+        parametersSha256: createHash("sha256").update(JSON.stringify(Object.entries(expectedParameters).sort())).digest("hex"),
+        taskDefinitionArns: fleet.taskDefinitionArns, fleet,
+      } }
+    }
     if (changeSet?.Status !== "CREATE_COMPLETE") throw new Error(`compute change set failed: ${changeSet?.StatusReason ?? "timed out"}`)
     if (stage === "rollout" || (stage === "routing" && nextStage === "preparing")) assertComputeRolloutChangeSet(changeSet.Changes)
     else assertComputeStageTransition({ from: currentStage, to: nextStage, changes: changeSet.Changes })
@@ -136,6 +181,7 @@ try {
   }
 
   async function executeStackChange(prepared) {
+    if (prepared.verifiedNoop) throw new Error("verified compute no-op must never be executed")
     aws("cloudformation", ["execute-change-set", "--stack-name", worker.stackName, "--change-set-name", prepared.changesetName])
     const updateDeadline = Date.now() + 20 * 60_000
     while (Date.now() < updateDeadline) {
@@ -232,9 +278,13 @@ try {
     if (databaseStage.state !== "authoritative" || currentStage !== "finalized") throw new Error("four-class rollout requires finalized authority")
     await authorizeProductionMutation("aws-compute-stack-deploy")
     const prepared = await prepareStackChange("finalized", stackParameters.LegacyWorkerTaskDefinitionArn ?? "")
-    await executeStackChange(prepared)
-    const fleet = await waitForFleet()
-    console.log(JSON.stringify({ ok: true, stage: "rollout", release: expected.commitSha, imageDigest, fleet }))
+    if (prepared.verifiedNoop) {
+      console.log(JSON.stringify({ ok: true, stage: "rollout", release: expected.commitSha, imageDigest, fleet: prepared.verifiedNoop.fleet, verifiedNoop: prepared.verifiedNoop }))
+    } else {
+      await executeStackChange(prepared)
+      const fleet = await waitForFleet()
+      console.log(JSON.stringify({ ok: true, stage: "rollout", release: expected.commitSha, imageDigest, fleet }))
+    }
   }
 } finally {
   await client.end()

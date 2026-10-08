@@ -1,7 +1,7 @@
 # CI for the root web application. These product-quality gates need an actual CI
-# job, not just a clean local run. Scoped to paths OUTSIDE
-# finnor-os/ (that repo has its own workflow, ci.yml) so the two don't trigger on
-# each other's changes.
+# job, not just a clean local run. Both the required PR verdict and canonical
+# production release call this workflow. Do not start an identical standalone
+# root job on the same main push.
 name: marketing-ci
 on:
   workflow_call:
@@ -10,9 +10,6 @@ on:
         required: false
       TEST_OWNER_PASSWORD:
         required: false
-  push:
-    branches: [main]
-    paths-ignore: ["finnor-os/**"]
 permissions:
   contents: read
 concurrency:

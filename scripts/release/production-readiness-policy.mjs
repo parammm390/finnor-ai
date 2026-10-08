@@ -7,7 +7,7 @@ export function evaluateProductionReadiness({ responseOk, status, body, expected
     http: responseOk === true,
     ready: body?.ok === true,
     finalPeGateRequired: authority?.finalPeGateRequired === true,
-    authorityStatus: authority?.status === "active",
+    authorityState: authority?.state === "water_retired",
     activeProductVertical: authority?.activeProductVertical === "private_equity",
     authorityCheck: body?.checks?.productAuthority?.ok === true,
     runtimeEpoch: body?.checks?.runtimeEpoch?.ok === true,
@@ -20,7 +20,7 @@ export function evaluateProductionReadiness({ responseOk, status, body, expected
   const ok = Object.values(checks).every(Boolean)
   const stableChecks = [
     checks.finalPeGateRequired,
-    checks.authorityStatus,
+    checks.authorityState,
     checks.activeProductVertical,
     checks.authorityCheck,
     checks.runtimeEpoch,

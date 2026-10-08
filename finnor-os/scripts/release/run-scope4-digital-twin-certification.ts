@@ -22,8 +22,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "../..");
 const WORKSPACE = resolve(REPO, "..");
 const MIGRATIONS = resolve(REPO, "packages/db/migrations");
-const REPORT_JSON = resolve(REPO, "docs/release/phase4-company-brain-certification.json");
-const REPORT_MD = resolve(REPO, "docs/release/phase4-company-brain-certification.md");
+const REPORT_DIR = process.env.FINNOR_CERTIFICATION_OUTPUT_DIR
+  ? resolve(process.env.FINNOR_CERTIFICATION_OUTPUT_DIR)
+  : resolve(REPO, "docs/release");
+const REPORT_JSON = resolve(REPORT_DIR, "phase4-company-brain-certification.json");
+const REPORT_MD = resolve(REPORT_DIR, "phase4-company-brain-certification.md");
 const SCOPE4_TABLES = [
   "pe_funds", "pe_vehicles", "pe_fund_vehicle_links", "pe_strategy_mandates", "pe_portfolio_holdings",
   "pe_company_hierarchy_relationships", "pe_company_party_roles", "pe_securities", "pe_debt_facilities",
@@ -245,7 +248,17 @@ async function benchmark(url: string): Promise<{ corpus: Record<string, number>;
     metrics.push(await measured("Company projection", 3_500, async () => { companyProjection = await loadCompanyBrainProjection(ctx, { root: { entityType: "external_organization", entityId: root }, validAt: currentValidAt }); }));
     metrics.push(await measured("Fund/portfolio projection", 4_000, () => loadCompanyBrainProjection(ctx, { root: { entityType: "pe_fund", entityId: fund }, validAt: currentValidAt })));
     metrics.push(await measured("bounded traversal", 100, async () => { traverseCompanyBrain(companyProjection, { namespace: "core", owner: "@finnor/db", type: "external_organization", id: root }, { depth: 3, limit: 100 }); }));
-    metrics.push(await measured("historical/as-of projection", 4_000, () => loadCompanyBrainProjection(ctx, { root: { entityType: "external_organization", entityId: root }, validAt: "2025-03-31T23:59:59.000Z", knowledgeAt: new Date().toISOString() })));
+    metrics.push(await measured("historical/as-of projection", 4_000, async () => {
+      const knowledgeAt = (await admin.query<{ at: string }>(
+        `SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS at`,
+      )).rows[0]!.at;
+      const historical = await loadCompanyBrainProjection(ctx, {
+        root: { entityType: "external_organization", entityId: root },
+        validAt: "2025-03-31T23:59:59.000Z", knowledgeAt,
+      });
+      assert(historical.nodes.some((node) => node.type === "pe_metric_observation"),
+        "historical benchmark did not reconstruct the observed metric fixture");
+    }));
     metrics.push(await measured("ownership closed-world as-of", 1_000, () => closedWorldClaimPermitted(ctx, { subjectType: "external_organization", subjectId: root, proposition: "ownership_total", validAt: new Date(currentValidAt) })));
     assert(companyProjection.capitalStructures.some((row) => row.companyId === root && row.observedEconomicPercentageTotal === "0.6"), "benchmark Company projection did not include complete observed capital structure");
     assert(companyProjection.nodes.some((node) => node.type === "pe_metric_observation"), "benchmark Company projection did not include metric history");
@@ -261,7 +274,12 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const directory = await mkdtemp(join(tmpdir(), "finnor-scope4-certification-"));
   const port = await freePort();
-  const postgres = new EmbeddedPostgres({ databaseDir: directory, user: "finnor", password: "finnor", port, persistent: false, onLog: () => undefined });
+  const postgres = new EmbeddedPostgres({
+    databaseDir: directory, user: "finnor", password: "finnor", port, persistent: false,
+    // Historical reads require attested commits from the very first migration.
+    postgresFlags: ["-c", "track_commit_timestamp=on"],
+    onLog: () => undefined,
+  });
   const databaseNames = { fresh: "scope4_fresh", upgrade: "scope4_upgrade" };
   const url = (name: string) => `postgres://finnor:finnor@127.0.0.1:${port}/${name}`;
   const gates: Gate[] = [];
@@ -270,10 +288,19 @@ async function main(): Promise<void> {
   try {
     await postgres.initialise(); await postgres.start();
     await postgres.createDatabase(databaseNames.fresh); await postgres.createDatabase(databaseNames.upgrade);
+    const prerequisite = new pg.Client({ connectionString: url(databaseNames.fresh) });
+    await prerequisite.connect();
+    try {
+      const tracked = (await prerequisite.query<{ track_commit_timestamp: string }>(
+        "SHOW track_commit_timestamp",
+      )).rows[0]?.track_commit_timestamp;
+      assert(tracked === "on", "Scope 4 embedded PostgreSQL requires commit tracking before migrations");
+      console.log(`SCOPE4_EMBEDDED_PREREQUISITES ${JSON.stringify({ trackCommitTimestamp: true, verifiedBeforeMigrations: true })}`);
+    } finally { await prerequisite.end(); }
     const files = await migrationFiles();
     const freshApplied = await migrate(url(databaseNames.fresh), files);
     const fresh = await inspectFresh(url(databaseNames.fresh));
-    gates.push({ id: "fresh-database", status: "PASS_INTEGRATION", evidence: `${freshApplied.length} forward migrations; head 0139; 18 forced-RLS history owners` });
+    gates.push({ id: "fresh-database", status: "PASS_INTEGRATION", evidence: `${freshApplied.length} forward migrations; head ${CURRENT_MIGRATION_HEAD}; 18 forced-RLS history owners; commit tracking verified before migrations` });
     const upgrade = await populatedUpgrade(url(databaseNames.upgrade), files);
     gates.push({ id: "populated-upgrade", status: "PASS_INTEGRATION", evidence: "0138 populated Core identities and PE Strategy preserved byte-for-byte; zero fabricated Scope 4 rows; honest baselines" });
 
@@ -312,8 +339,11 @@ async function main(): Promise<void> {
     for (const testFile of databaseRegressionFiles) {
       await command(`database:${testFile.split("/").at(-1)}`, "npx", ["vitest", "run", testFile, "--no-file-parallelism", "--maxWorkers=1"], REPO, testEnv, 600_000);
     }
-    await command("scope3-focused-disposable", "npm", ["run", "release:scope3:focused"], REPO, {}, 900_000);
-    gates.push({ id: "database-regressions", status: "PASS_INTEGRATION", evidence: "Scope 4 adversarial; existing PE close/world/Underwriting/IC; Source Truth, Work/Planning, and Scope 1-2 database suites; focused 44-test Scope 3 disposable suite" });
+    const focusedOutput = await command("scope3-focused-disposable", "npm", ["run", "release:scope3:focused"], REPO, {}, 900_000);
+    const focusedResult = focusedOutput.match(/SCOPE3_FOCUSED_PASS (\d+)\/(\d+) tests;/);
+    assert(focusedResult && Number(focusedResult[1]) > 0 && focusedResult[1] === focusedResult[2],
+      "focused Scope 3 omitted its complete measured passing test count");
+    gates.push({ id: "database-regressions", status: "PASS_INTEGRATION", evidence: `Scope 4 adversarial; existing PE close/world/Underwriting/IC; Source Truth, Work/Planning, and Scope 1-2 database suites; focused ${focusedResult[1]}/${focusedResult[2]}-test Scope 3 disposable suite` });
 
     await command("phase15a-release-policy", "npm", ["run", "test:release"], WORKSPACE, {}, 900_000);
     gates.push({ id: "phase15a", status: "PASS_LOCAL", evidence: "production target, protected environment, PR verdict, mutation inventory, and release policy suite" });
@@ -328,6 +358,7 @@ async function main(): Promise<void> {
       startedAt,
       completedAt: new Date().toISOString(),
       migrationHead: CURRENT_MIGRATION_HEAD,
+      embeddedPostgres: { trackCommitTimestamp: true, verifiedBeforeMigrations: true },
       evidenceLevels: { local: "PASS_LOCAL", database: "PASS_INTEGRATION", liveProviders: "BLOCKED_EXTERNAL" },
       freshDatabase: fresh,
       populatedUpgrade: upgrade,
@@ -340,12 +371,13 @@ async function main(): Promise<void> {
     await writeFile(REPORT_JSON, `${JSON.stringify(report, null, 2)}\n`);
     const metricRows = performanceEvidence.metrics.map((metric) => `| ${metric.operation} | ${metric.samples} | ${metric.p50Ms} | ${metric.p95Ms} | ${metric.maxMs} | ${metric.thresholdMs} |`).join("\n");
     const gateRows = gates.map((gate) => `| ${gate.id} | ${gate.status} | ${gate.evidence.replaceAll("|", "\\|")} |`).join("\n");
-    await writeFile(REPORT_MD, `# Phase 4 Company Brain certification\n\nStatus: **PASS_INTEGRATION**\n\nLive provider evidence: **BLOCKED_EXTERNAL**\n\n## Gates\n\n| Gate | Status | Evidence |\n| --- | --- | --- |\n${gateRows}\n\n## Benchmark corpus\n\n\`\`\`json\n${JSON.stringify(performanceEvidence.corpus, null, 2)}\n\`\`\`\n\n## Measured Postgres operations\n\n| Operation | Samples | p50 ms | p95 ms | max ms | p95 guardrail ms |\n| --- | ---: | ---: | ---: | ---: | ---: |\n${metricRows}\n\nPostgreSQL met all measured guardrails. The evidence does not justify a graph database, bakeoff, or dual-write.\n\n## Migration\n\nFresh database: **PASS_INTEGRATION**. Populated 0138 to 0139 upgrade: **PASS_INTEGRATION**. Existing Company, Person, and Strategy identities were preserved; no Phase 4 business row or pre-baseline history was fabricated.\n`);
+    await writeFile(REPORT_MD, `# Phase 4 Company Brain certification\n\nStatus: **PASS_INTEGRATION**\n\nLive provider evidence: **BLOCKED_EXTERNAL**\n\n## Gates\n\n| Gate | Status | Evidence |\n| --- | --- | --- |\n${gateRows}\n\n## Benchmark corpus\n\n\`\`\`json\n${JSON.stringify(performanceEvidence.corpus, null, 2)}\n\`\`\`\n\n## Measured Postgres operations\n\n| Operation | Samples | p50 ms | p95 ms | max ms | p95 guardrail ms |\n| --- | ---: | ---: | ---: | ---: | ---: |\n${metricRows}\n\nPostgreSQL met all measured guardrails. The evidence does not justify a graph database, bakeoff, or dual-write.\n\n## Migration\n\nFresh database: **PASS_INTEGRATION**. Populated 0138 to ${CURRENT_MIGRATION_HEAD} upgrade: **PASS_INTEGRATION**. Existing Company, Person, and Strategy identities were preserved; no Phase 4 business row or pre-baseline history was fabricated.\n`);
     console.log(`\nSCOPE4_CERTIFICATION ${JSON.stringify({ status: report.status, gates: gates.length, report: REPORT_JSON })}`);
   } finally {
     await closePool().catch(() => undefined);
     await postgres.stop().catch(() => undefined);
     await rm(directory, { recursive: true, force: true });
+    console.log(`SCOPE4_EMBEDDED_CLEANUP ${JSON.stringify({ directory, removed: true })}`);
   }
 }
 

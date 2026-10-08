@@ -16,6 +16,7 @@ import {
   createDefaultPluginRegistry,
   plannerActionTypesForVertical,
 } from "../../packages/orchestration/src/plugin-registry";
+import { vercelProtectionHeaders } from "../../../scripts/release/vercel-protection.mjs";
 
 const osRoot = resolve(import.meta.dirname, "../..");
 const repoRoot = resolve(osRoot, "..");
@@ -107,7 +108,7 @@ async function main(): Promise<void> {
     if (!baseUrl) failures.push("--readiness-url requires a URL");
     else {
       const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/ready`, {
-        headers: { accept: "application/json", "cache-control": "no-cache" },
+        headers: vercelProtectionHeaders("api"),
         signal: AbortSignal.timeout(20_000),
       });
       const body = await response.json().catch(() => null) as {

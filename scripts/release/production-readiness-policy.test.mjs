@@ -9,12 +9,12 @@ function readiness({ mixed = false } = {}) {
   return {
     ok: !mixed,
     checks: {
-      migrations: { ok: true, detail: "0131_private_equity_release_baseline.sql" },
+      migrations: { ok: true, detail: "0170_p6_procedure_induction.sql" },
       workerFleet: { ok: true, detail: { compatibleWorkers: 1, freshRuntimes: mixed ? 7 : 4 } },
       productAuthority: {
         ok: true,
         detail: {
-          status: "active",
+          state: "water_retired",
           activeProductVertical: "private_equity",
           epoch: 6,
           minimumCutoverProtocol: 5,
