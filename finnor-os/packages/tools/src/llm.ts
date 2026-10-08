@@ -9,6 +9,7 @@
 // moment a plugin needed an LLM call (the ops-overview grounded-QA action does).
 
 import Groq from "groq-sdk";
+import { randomUUID } from "node:crypto";
 import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets, withGovernedModelInvocation, ComputeCapacityUnavailableError } from "@finnor/db";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { initObservability, Sentry } from "./observability";
@@ -34,9 +35,13 @@ export interface LLMCallOptions {
   /** Legacy alias for deadlineMs. */
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** Explicit bounded output allowance; defaults retain each native adapter profile. */
+  maxOutputTokens?: number;
 }
 export interface LLMUsage {
   model: string;
+  /** Exact model identifier returned by the adapter response, when supplied. */
+  returnedModel?: string | null;
   inputTokens: number | null;
   outputTokens: number | null;
 }
@@ -45,6 +50,8 @@ export interface LLMProvider {
   /** Usage belongs to the immediately preceding complete() call. Providers that do
    * not return it leave it undefined rather than estimating it. */
   lastUsage?: LLMUsage;
+  /** Observable physical adapter attempts; unavailable detail stays unknown. */
+  lastAttempts?: Array<Record<string, unknown>>;
   /** The concrete provider used by the immediately preceding call. Composite
    * providers expose this so ledgers and observability do not record "composite". */
   selectedProviderName?: string;
@@ -76,6 +83,7 @@ const DEFAULT_DEADLINE_MS: Record<LLMChannel, number> = {
 };
 
 function normalizeCallOptions(opts: LLMCallOptions): LLMCallOptions {
+  if (opts.maxOutputTokens !== undefined && (!Number.isInteger(opts.maxOutputTokens) || opts.maxOutputTokens < 1 || opts.maxOutputTokens > 4096)) throw new Error("LLM_OUTPUT_TOKEN_BOUND");
   if (Number.isFinite(opts.deadlineAt)) return opts;
   const relative = opts.deadlineMs ?? opts.timeoutMs ?? DEFAULT_DEADLINE_MS[opts.channel ?? "text"];
   return { ...opts, deadlineAt: Date.now() + Math.max(0, relative) };
@@ -210,6 +218,7 @@ async function recordCall(provider: LLMProvider, opts: LLMCallOptions, status: "
 }
 
 interface OpenAICompatibleResponse {
+  model?: string;
   choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
   usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number };
 }
@@ -250,7 +259,7 @@ class OpenAICompatibleProvider implements LLMProvider {
             { role: "user", content: opts.user },
           ],
           temperature: 0.1,
-          max_tokens: 700,
+          max_tokens: opts.maxOutputTokens ?? 700,
           // Preserve the existing contract: callers validate/parse the returned JSON;
           // the adapter only asks the provider for an object-shaped response.
           ...(opts.json ? { response_format: { type: "json_object" } } : {}),
@@ -266,6 +275,7 @@ class OpenAICompatibleProvider implements LLMProvider {
     const data = (await res.json()) as OpenAICompatibleResponse;
     this.lastUsage = {
       model,
+      returnedModel: typeof data.model === "string" ? data.model : null,
       inputTokens: data.usage?.prompt_tokens ?? data.usage?.input_tokens ?? null,
       outputTokens: data.usage?.completion_tokens ?? data.usage?.output_tokens ?? null,
     };
@@ -319,7 +329,7 @@ export class BedrockAnthropicProvider implements LLMProvider {
         headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           anthropic_version: "bedrock-2023-05-31",
-          max_tokens: 700,
+          max_tokens: opts.maxOutputTokens ?? 700,
           temperature: 0.1,
           system: opts.system,
           messages: [{ role: "user", content: opts.user }],
@@ -373,7 +383,7 @@ export class BedrockConverseProvider implements LLMProvider {
           messages: [
             { role: "user", content: [{ text: opts.user }] },
           ],
-          inferenceConfig: { maxTokens: planningCall ? 1400 : 700, temperature: 0.1 },
+          inferenceConfig: { maxTokens: opts.maxOutputTokens ?? (planningCall ? 1400 : 700), temperature: 0.1 },
         }),
       },
       opts,
@@ -411,11 +421,13 @@ export class CompositeProvider implements LLMProvider {
   constructor(private providers: LLMProvider[]) {}
 
   lastUsage?: LLMUsage;
+  lastAttempts: Array<Record<string, unknown>> = [];
   selectedProviderName?: string;
   async complete(opts: LLMCallOptions): Promise<string> {
     const sharedOpts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
     this.selectedProviderName = undefined;
+    this.lastAttempts = [];
     const ordered = orderProvidersByHealth(this.providers, sharedOpts.channel);
     if (ordered.some((p, i) => p !== this.providers[i])) {
       initObservability();
@@ -430,13 +442,16 @@ export class CompositeProvider implements LLMProvider {
       const start = Date.now();
       try {
         const text = await p.complete(sharedOpts);
+        this.selectedProviderName = p.selectedProviderName ?? p.name;
         this.lastUsage = p.lastUsage;
+        this.lastAttempts.push(...(p.lastAttempts?.length ? p.lastAttempts : [{ invocationId: randomUUID(), provider: selectedName, status: "COMPLETED", usage: p.lastUsage ?? null, scope: "ADAPTER_CALL_PHYSICAL_DELIVERY_UNKNOWN", costUSD: null }]));
         // Record health at the concrete provider boundary. Nested composites already
         // record their own attempts, and the outer observability wrapper skips the
         // synthetic "composite" sample via recordsHealthInternally.
         if (!p.recordsHealthInternally) recordOutcome(selectedName, true, Date.now() - start);
         return text;
       } catch (err) {
+        this.lastAttempts.push(...(p.lastAttempts?.length ? p.lastAttempts : [{ invocationId: randomUUID(), provider: selectedName, status: "FAILED", predicate: (err as Error).name, elapsedMs: Date.now() - start, deadlineAt: sharedOpts.deadlineAt, scope: "ADAPTER_CALL_PHYSICAL_DELIVERY_UNKNOWN", costUSD: null }]));
         if (!(err instanceof ComputeCapacityUnavailableError) && !p.recordsHealthInternally) recordOutcome(selectedName, false, Date.now() - start);
         lastError = err as Error;
         if (err instanceof ComputeCapacityUnavailableError && err.resourceKey === "model:global") throw err;
@@ -454,6 +469,7 @@ export class GroqProvider implements LLMProvider {
   private client: Groq;
   private models: string[];
   lastUsage?: LLMUsage;
+  lastAttempts: Array<Record<string, unknown>> = [];
 
   constructor(apiKey = process.env.GROQ_API_KEY, model = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile") {
     if (!apiKey) throw new Error("GROQ_API_KEY is not set");
@@ -473,12 +489,17 @@ export class GroqProvider implements LLMProvider {
   async complete(opts: LLMCallOptions): Promise<string> {
     const sharedOpts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
+    this.lastAttempts = [];
     let lastError: Error | null = null;
     for (const model of this.models) {
       const timeout = remainingMs(sharedOpts, 8_000);
       if (timeout <= 0) throw new LLMDeadlineExceededError(sharedOpts.deadlineAt ?? Date.now());
+      const invocationId = randomUUID(), begun = Date.now();
+      let invoked = false;
       try {
-        const res = await withGovernedModelInvocation({ provider: "groq", model, tenantId: sharedOpts.tenantId, channel: sharedOpts.channel }, () => this.client.chat.completions.create(
+        const res = await withGovernedModelInvocation({ provider: this.name, model, tenantId: sharedOpts.tenantId, channel: sharedOpts.channel, ownerId: invocationId }, () => {
+          invoked = true;
+          return this.client.chat.completions.create(
           {
             model,
             messages: [
@@ -486,14 +507,19 @@ export class GroqProvider implements LLMProvider {
               { role: "user", content: sharedOpts.user },
             ],
             temperature: 0.1,
-            max_tokens: 700,
+            max_tokens: sharedOpts.maxOutputTokens ?? 700,
             ...(sharedOpts.json ? { response_format: { type: "json_object" as const } } : {}),
           },
           { signal: sharedOpts.signal, timeout },
-        ));
-        this.lastUsage = { model, inputTokens: res.usage?.prompt_tokens ?? null, outputTokens: res.usage?.completion_tokens ?? null };
+          );
+        });
+        this.lastUsage = { model, returnedModel: res.model ?? null, inputTokens: res.usage?.prompt_tokens ?? null, outputTokens: res.usage?.completion_tokens ?? null };
+        this.lastAttempts.push({ invocationId, provider: this.name, requestedModel: model, returnedModel: res.model ?? null, status: "COMPLETED", invoked, usage: this.lastUsage, elapsedMs: Date.now() - begun, deadlineAt: sharedOpts.deadlineAt, outputTokenBound: sharedOpts.maxOutputTokens ?? 700, costUSD: null });
         return res.choices[0]?.message?.content ?? "";
       } catch (err) {
+        const credential = process.env.GROQ_API_KEY;
+        const detail = credential ? String((err as Error).message).split(credential).join("[REDACTED_CREDENTIAL]") : String((err as Error).message);
+        this.lastAttempts.push({ invocationId, provider: this.name, requestedModel: model, returnedModel: null, status: "FAILED", invoked, statusCode: (err as { status?: number }).status ?? null, predicate: (err as Error).name, detail: detail.slice(0, 500), elapsedMs: Date.now() - begun, deadlineAt: sharedOpts.deadlineAt, outputTokenBound: sharedOpts.maxOutputTokens ?? 700, costUSD: null });
         lastError = err as Error;
         if (err instanceof ComputeCapacityUnavailableError) throw err;
         if (isAbortLike(err)) throw err;
@@ -590,6 +616,7 @@ function withObservability(provider: LLMProvider): LLMProvider {
   return {
     name: provider.name,
     get lastUsage() { return provider.lastUsage; },
+    get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },
     // This wrapper owns the health sample for ordinary providers. Composite
     // providers also report their concrete attempts internally, so an outer
@@ -733,6 +760,7 @@ export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider
   const boundProvider: LLMProvider = {
     name: provider.name,
     get lastUsage() { return provider.lastUsage; },
+    get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },
     get recordsHealthInternally() { return provider.recordsHealthInternally; },
     complete(opts) {

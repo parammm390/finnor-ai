@@ -29,9 +29,14 @@ export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
   "closing_readiness",
 ] as const;
 
+/** P1 implements this read through the existing tenant query dispatcher. */
+export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1"] as const;
+export interface HarnessProgramQueryRequest { intent: "harness_program_v1"; programId: string; workId: string }
+
 export const OPERATIONAL_QUERY_INTENTS = [
   ...CORE_OPERATIONAL_QUERY_INTENTS,
   ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  ...PROGRAM_OPERATIONAL_QUERY_INTENTS,
 ] as const;
 
 export type CoreOperationalQueryIntent = (typeof CORE_OPERATIONAL_QUERY_INTENTS)[number];
@@ -164,6 +169,7 @@ export type CoreOperationalQueryRequest =
   | TeamRosterRequest;
 
 export type CanonicalOperationalQueryRequest =
+  | HarnessProgramQueryRequest
   | CoreOperationalQueryRequest
   | PeWorldStateRequest
   | DealContextRequest
@@ -740,7 +746,10 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
   provenance: Record<string, unknown>[];
 }
 
+export interface HarnessProgramQueryResult extends OperationalQueryResultBase<"harness_program_v1"> {}
+
 export type OperationalQueryResult =
+  | HarnessProgramQueryResult
   | WorkListResult
   | AttentionQueueResult
   | AgentActivityResult
@@ -761,7 +770,8 @@ export type OperationalQueryResult =
 export type OperationalQueryResultEnvelope = OperationalQueryResult;
 
 export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
-  R extends WorkListRequest ? WorkListResult
+  R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
+    : R extends WorkListRequest ? WorkListResult
     : R extends AttentionQueueRequest ? AttentionQueueResult
       : R extends AgentActivityRequest ? AgentActivityResult
       : R extends WorkforceStatusRequest ? WorkforceStatusResult

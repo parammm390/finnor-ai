@@ -11,7 +11,12 @@ export interface EconomicMandate {
   utility: { unit: string; accountingConventionRef: ExperimentRef;
     periodTerms: Array<{ variableId: string; unit: string; coefficient: number }>;
     discountFactors: number[]; terminalTerms: Array<{ variableId: string; unit: string; coefficient: number }>;
-    tail: { status: 'SUPPLIED_COMPLETE_FINITE_HORIZON'; terminalLiability: number; ref: ExperimentRef } };
+    tail: { status: 'SUPPLIED_COMPLETE_FINITE_HORIZON'; terminalLiability: number; ref: ExperimentRef };
+    /** Authenticated owner supplied finite utility, never a provider price. */
+    deliberation?: { schema: 'finnor.s4.finite-deliberation-terms.v1'; scope: 'PUBLIC_FINITE_ACCEPTED_OUTPUT_MECHANICS';
+      lossWithoutQualifiedResult: number; lossWithQualifiedResult: number; nativeAttemptCost: number;
+      controllerMsCost: number; delayMsCost: number; unit: string;
+      qualification: 'SUPPLIED_MODEL_RELATIVE_UTILITY_NOT_BILLING_OR_FIELD_WEALTH' } };
   risk: { kind: 'HARD_WORST_PATH_UTILITY_FLOOR'; minimumUtility: number };
   ambiguity: { kind: 'ROBUST_FIXED_JOINT_SCENARIOS' | 'UNRESOLVED'; authorizationRef: ExperimentRef };
   resources: { dimensions: Array<{ id: string; unit: string; capacity: number; totalLimit: number; resourceClass?: import('./allocation').AllocationResourceClass }>;

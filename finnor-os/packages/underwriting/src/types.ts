@@ -53,7 +53,7 @@ export type SeriesValue = Readonly<Record<string, ScalarValue>>;
 export type ModelValue = ScalarValue | SeriesValue;
 
 export interface InputProvenanceRef {
-  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor";
+  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation";
   id: string;
   versionId?: string;
   anchorId?: string;
@@ -112,6 +112,8 @@ export interface NodeBase {
 export interface InputNode extends NodeBase {
   kind: "input";
   required: boolean;
+  /** Exact immutable policy required for the typed P4 evidence consumer. */
+  evidenceSemantics?: import('@finnor/shared-types').FinancialSemantics;
   source?: InputSourceBinding;
   /** Exact ModelVersion policy. STALE remains fail-closed unless this is true. */
   allowStale?: boolean;
