@@ -19,6 +19,7 @@ export default defineConfig({
   css: { postcss: { plugins: [] } },
   resolve: {
     alias: {
+      "@finnor/shared-types/src": r("./packages/shared-types/src"),
       "@finnor/shared-types": r("./packages/shared-types/src/index.ts"),
       "@finnor/policy-schema": r("./packages/policy-schema/src/index.ts"),
       // Deep subpath imports (apps/api's admin/migrate route uses these two) — must
@@ -28,6 +29,7 @@ export default defineConfig({
       "@finnor/db/migrate": r("./packages/db/migrate.ts"),
       "@finnor/db/seed": r("./packages/db/seed.ts"),
       "@finnor/db/migrations-bundle": r("./packages/db/migrations-bundle.ts"),
+      "@finnor/db/compute-governor": r("./packages/db/compute-governor.ts"),
       "@finnor/db": r("./packages/db/index.ts"),
       "@finnor/authority": r("./packages/authority/src/index.ts"),
       "@finnor/computer": r("./packages/computer/src/index.ts"),
@@ -41,8 +43,8 @@ export default defineConfig({
       "@finnor/tools/firecrawl": r("./packages/tools/src/firecrawl.ts"),
       "@finnor/tools": r("./packages/tools/src/index.ts"),
       "@finnor/orchestration": r("./packages/orchestration/src/index.ts"),
-      "@finnor/voice-os": r("./packages/voice-os/src/index.ts"),
       "@finnor/read-models": r("./packages/read-models/src/index.ts"),
+      "@finnor/private-equity/src": r("./packages/private-equity/src"),
       "@finnor/private-equity": r("./packages/private-equity/src/index.ts"),
       "@finnor/underwriting": r("./packages/underwriting/src/index.ts"),
       "@finnor/provider-microsoft365": r("./packages/provider-microsoft365/src/index.ts"),

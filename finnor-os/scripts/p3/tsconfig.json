@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {"noEmit": true, "incremental": false},
+  "include": ["*.mts", "../../packages/private-equity/src/branch-fabric/**/*.ts", "../../packages/private-equity/src/branch-fabric/**/*.d.ts"]
+}

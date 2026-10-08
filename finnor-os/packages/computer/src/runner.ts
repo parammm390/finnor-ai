@@ -1,15 +1,5 @@
 import { revalidateActionExecution } from "@finnor/authority";
 import { markBrowserConnectionReauthRequired } from "@finnor/security";
-import {
-  awaitExternalOperationResolution,
-  claimExternalOperation,
-  markExternalOperationUnknown,
-  markProviderRequestMayHaveLeft,
-  prepareProviderInvocation,
-  recordProviderInvocationAcknowledged,
-  recordProviderInvocationFailure,
-  reconcileExternalOperation,
-} from "@finnor/tools";
 import type { ComputerAuthorizedEffect, ComputerRunStatus } from "@finnor/shared-types";
 import type {
   ComputerDecisionEngine,
@@ -22,7 +12,7 @@ import type {
 } from "./contracts";
 import { ComputerProviderError } from "./contracts";
 import { ComputerBroker } from "./broker";
-import { authorizedEffectHash, computerEffectOperationKey, effectsExactlyEqual } from "./effects";
+import { authorizedEffectHash } from "./effects";
 import { deriveComputerOriginPolicy } from "./origins";
 import {
   beginComputerStep,
@@ -63,15 +53,7 @@ function normalizedText(value: unknown): string {
   return String(value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
-/** Conservative, deterministic post-state proof. The target and every authorized
- * scalar value must be literally observable after the effect. The micro-planner's
- * assertion alone is never accepted as proof. */
-export function observationVerifiesEffect(observation: StructuredPageObservation, effect: ComputerAuthorizedEffect): boolean {
-  const haystack = normalizedText(`${observation.title}\n${observation.text}`);
-  if (!haystack.includes(normalizedText(effect.target.identifier))) return false;
-  return Object.values(effect.changes).every((value) => value === null || haystack.includes(normalizedText(value)));
-}
-
+/** Literal page evidence qualifies a bounded read report, never a mutation. */
 function reportedScalarValues(value: unknown, depth = 0): string[] {
   if (depth > 6 || value === null || value === undefined) return [];
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return [normalizedText(value)];
@@ -164,15 +146,28 @@ export class ComputerRunner {
     let run = await getComputerRunInternal(tenantId, runId);
     if (!run) return { status: "failed", code: "run_not_found", reason: "Computer run was not found" };
     if (TERMINAL.includes(run.status as ComputerRunStatus)) {
-      return run.status === "succeeded"
+      const terminal: ComputerRunTerminal = run.status === "succeeded"
         ? { status: "succeeded", result: (run.result ?? {}) as Record<string, unknown> }
         : { status: run.status as Exclude<ComputerRunTerminal["status"], "succeeded">, code: run.failureCode ?? "terminal", reason: run.blockReason ?? "Computer run already ended" };
+      await finalizeComputerRun(tenantId, runId, terminal);
+      return terminal;
     }
     if (await computerCancellationRequested(tenantId, runId)) {
       const cancelled: ComputerRunTerminal = { status: "cancelled", code: "cancelled", reason: "Computer run was cancelled before provider provisioning" };
       await terminalStep(run, "cancelled", "cancel", "Stopped at the durable cancellation boundary", {});
       await finalizeComputerRun(tenantId, runId, cancelled);
       return cancelled;
+    }
+
+    // The generic browser adapter cannot bind every application request to an
+    // authorized account/record/payload, or independently observe exact fields.
+    // Refuse new WRITE transport before provisioning or navigation. Previously
+    // possible writes still enter recovery below and retain their responsibility.
+    if (run.mode === "WRITE" && !["dispatching", "unknown"].includes(run.effectStatus)) {
+      const blocked: ComputerRunTerminal = { status: "blocked", code: "effect_transport_unadmitted", reason: "This browser transport has no admitted effect-bound egress and target-field observation contract" };
+      await terminalStep(run, "blocked", "admit_transport", blocked.reason, { protectedAdmission: false });
+      await finalizeComputerRun(tenantId, runId, blocked);
+      return blocked;
     }
 
     const limits = run.limits as unknown as { maxSteps: number; timeoutMs: number; maxProviderCredits: number; maxArtifacts: number; maxOutputBytes: number };
@@ -270,16 +265,11 @@ export class ComputerRunner {
           run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown" });
           const reconcileStep = await beginComputerStep({ tenantId, runId, phase: "reconciling", operation: "reconcile_effect", summary: "Checking external state before any write retry", effectCandidateHash: authorizedEffectHash(authorizedEffect) });
           observation = await provider.observe(session, origins);
-          if (observationVerifiesEffect(observation, authorizedEffect)) {
-            const operationKey = run.effectOperationKey ?? computerEffectOperationKey(authorizedEffect);
-            await reconcileExternalOperation(tenantId, run.domainActionId, operationKey, "succeeded", { verified: true, pageUrl: observation.url });
-            run = await transitionComputerRun(tenantId, runId, "running", { effectStatus: "succeeded", effectOperationKey: operationKey });
-            await finishComputerStep(tenantId, reconcileStep.id, "succeeded", { verified: true }, observation.url);
-          } else {
-            await finishComputerStep(tenantId, reconcileStep.id, "blocked", { verified: false }, observation.url);
-            terminal = { status: "blocked", code: "effect_outcome_unknown", reason: "The possible external write could not be reconciled safely; manual review is required before retry" };
-            break;
-          }
+          // Generic page text, including explicit-looking nulls, is observation
+          // evidence only. It never settles a possibly delivered business effect.
+          await finishComputerStep(tenantId, reconcileStep.id, "blocked", { verified: false, observationQualification: "GENERIC_PAGE_NO_TARGET_FIELD_CONTRACT" }, observation.url);
+          terminal = { status: "blocked", code: "effect_outcome_unknown", reason: "The possible external write lacks qualified target-field readback; responsibility is retained for reconciliation" };
+          break;
         }
 
         const decision = await this.options.decisionEngine.decide({
@@ -305,7 +295,7 @@ export class ComputerRunner {
 
         if (decision.kind === "complete") {
           const verified = run.mode === "WRITE"
-            ? run.effectStatus === "succeeded" && Boolean(run.authorizedEffect) && observationVerifiesEffect(observation, run.authorizedEffect as ComputerAuthorizedEffect) && observationSupportsReportedResult(observation, decision.result)
+            ? false
             : observationSupportsReadResult(observation, run.target && typeof run.target === "object" ? String((run.target as { identifier?: unknown }).identifier ?? "") : "", decision.evidenceText, decision.result);
           if (!verified) {
             terminal = { status: "blocked", code: "result_not_observed", reason: "The claimed business result was not present in the observed application state" };
@@ -343,96 +333,6 @@ export class ComputerRunner {
           terminal = { status: "blocked", code: "read_only_mutation", reason: "A READ_ONLY computer task reached a consequential mutation boundary" };
           await terminalStep(run, "blocked", "intercept_effect", "Blocked a mutation in READ_ONLY mode", { primitive: operation });
           break;
-        }
-        if (isEffect) {
-          const authorized = run.authorizedEffect as ComputerAuthorizedEffect | null;
-          if (!authorized || !effectsExactlyEqual(decision.effect, authorized)) {
-            terminal = { status: "blocked", code: "effect_broader_than_authorized", reason: "The candidate external effect differs from the exact approved effect" };
-            await terminalStep(run, "blocked", "intercept_effect", "Blocked an effect outside the approved contract", { candidateHash: authorizedEffectHash(decision.effect) });
-            break;
-          }
-          const authorityDecisionId = await verifyCurrentAuthority(run);
-          await verifyCurrentProfile(run);
-          const operationKey = computerEffectOperationKey(authorized);
-          const effectHash = authorizedEffectHash(authorized);
-          const claim = await claimExternalOperation(
-            tenantId,
-            run.domainActionId,
-            operationKey,
-            effectHash,
-            `computer:${run.provider}`,
-            run.businessEffectId ?? undefined,
-            run.authProfileRef,
-            {
-              protocolVersion: 2,
-              targetKey: `${run.application}:${authorized.target.kind}:${authorized.target.identifier}`,
-              retrySafety: "readback_required",
-              idempotency: { mode: "readback", scope: "tenant/application-account/effect" },
-              verification: "readback",
-            },
-          );
-          if (!claim.claimed) {
-            const settled = await awaitExternalOperationResolution(tenantId, run.domainActionId, operationKey, claim.existing);
-            if (settled.status === "succeeded") {
-              run = await transitionComputerRun(tenantId, runId, "running", { effectStatus: "succeeded", effectOperationKey: operationKey });
-              observation = await provider.observe(session, origins);
-              continue;
-            }
-            run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown", effectOperationKey: operationKey });
-            observation = await provider.observe(session, origins);
-            continue;
-          }
-          run = await transitionComputerRun(tenantId, runId, "running", { effectStatus: "dispatching", effectOperationKey: operationKey });
-          const effectStep = await beginComputerStep({ tenantId, runId, phase: "running", operation, summary: decision.summary, pageUrl: observation.url, effectCandidateHash: effectHash, authorityDecisionId });
-          const invocationContext = {
-            tenantId,
-            providerOperationAttemptId: claim.providerOperationAttemptId,
-            provider: `computer:${run.provider}`,
-            requestHash: effectHash,
-            transportLayer: "provider_adapter" as const,
-          };
-          const invocationId = await prepareProviderInvocation(invocationContext, 1);
-          // Playwright/Steel cannot expose the target application's exact network
-          // write boundary. Mark conservatively before the UI primitive: a crash
-          // can never hide a possible external effect.
-          await markProviderRequestMayHaveLeft(tenantId, invocationId);
-          try {
-            const output = await provider.perform(session, decision.primitive, origins);
-            await storePrimitiveArtifacts(run, effectStep.id, output);
-            await recordProviderInvocationAcknowledged(invocationContext, invocationId, {
-              pageUrl: output.pageUrl ?? observation.url,
-              adapter: run.provider,
-            }, { advanceLogicalOperation: false });
-            // Dispatch success is not business success. Mark unknown until post-state
-            // observation proves the exact authorized change.
-            await markExternalOperationUnknown(
-              tenantId,
-              run.domainActionId,
-              operationKey,
-              { dispatched: true, pageUrl: output.pageUrl ?? observation.url },
-              claim.providerOperationAttemptId,
-            );
-            run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown", effectOperationKey: operationKey });
-            await finishComputerStep(tenantId, effectStep.id, "succeeded", { dispatched: true, awaitingPostStateVerification: true }, output.pageUrl);
-            observation = await provider.observe(session, origins);
-          } catch (error) {
-            await recordProviderInvocationFailure(invocationContext, invocationId, {
-              kind: "unknown_outcome",
-              message: error instanceof Error ? error.message : "Computer provider primitive failed after dispatch began",
-              definitePreDispatch: false,
-            });
-            await markExternalOperationUnknown(
-              tenantId,
-              run.domainActionId,
-              operationKey,
-              { dispatchStarted: true },
-              claim.providerOperationAttemptId,
-            );
-            run = await transitionComputerRun(tenantId, runId, "reconciling", { effectStatus: "unknown", effectOperationKey: operationKey });
-            await finishComputerStep(tenantId, effectStep.id, "failed", { outcomeUnknown: true });
-            observation = await provider.observe(session, origins).catch(() => observation);
-          }
-          continue;
         }
 
         const step = await beginComputerStep({ tenantId, runId, phase: "running", operation, summary: decision.summary, pageUrl: observation.url });
@@ -488,3 +388,6 @@ export class ComputerRunner {
     return terminal;
   }
 }
+
+/** Kept for callers that require the legacy symbol; page text cannot settle an effect. */
+export function observationVerifiesEffect(_observation: unknown, _effect: unknown): boolean { return false; }

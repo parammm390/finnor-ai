@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { evaluateAuthority } from "@finnor/authority";
-import { attachWorkEntityTx, withTenantTransaction, type Db } from "@finnor/db";
+import { attachWorkEntityTx, withTenantClientTransaction, transactionDb, type Db } from "@finnor/db";
 import { resolveParty } from "@finnor/read-models";
 import type { PartyRef } from "@finnor/shared-types";
 import { assertTransition, isMilestoneLate, isRequestOverdue } from "./state-machines";
@@ -98,20 +98,38 @@ function pgCode(error: unknown): string | undefined {
   return "cause" in error ? pgCode((error as { cause?: unknown }).cause) : undefined;
 }
 
+type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" };
+
 export async function peTransaction<T>(
   ctx: PeMutationContext,
   fn: (db: Db, client: Client) => Promise<T>,
-  options: { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" } = {},
+  options: PeTransactionOptions = {},
+): Promise<T> {
+  return scopedPeTransaction(ctx, (client) => fn(transactionDb(client), client), options);
+}
+
+export async function peClientTransaction<T>(
+  ctx: PeMutationContext,
+  fn: (client: Client) => Promise<T>,
+  options: PeTransactionOptions = {},
+): Promise<T> {
+  return scopedPeTransaction(ctx, fn, options);
+}
+
+async function scopedPeTransaction<T>(
+  ctx: PeMutationContext,
+  fn: (client: Client) => Promise<T>,
+  options: PeTransactionOptions,
 ): Promise<T> {
   const source = peProvenance(ctx);
   const maxAttempts = options.readOnly ? 1 : 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      return await withTenantTransaction(ctx.auth.tenantId, {
+      return await withTenantClientTransaction(ctx.auth.tenantId, {
         userId: ctx.auth.userId,
         isolation: options.isolation ?? (options.readOnly ? "repeatable read" : "serializable"),
         readOnly: options.readOnly,
-      }, async (db, client) => {
+      }, async (client) => {
         await client.query("SELECT set_config('app.pe_actor', $1, true), set_config('app.pe_source', $2, true)", [
           source.createdBy,
           source.sourceSystem,
@@ -127,7 +145,7 @@ export async function peTransaction<T>(
             { activeVertical: active.rows[0]?.vertical_key ?? null },
           );
         }
-        return fn(db, client);
+        return fn(client);
       });
     } catch (error) {
       if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) continue;

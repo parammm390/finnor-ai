@@ -1,3 +1,4 @@
+import {assertEvidenceRunTransactionCurrent} from './evidence-execution/consumer';
 import { randomUUID } from "node:crypto";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntityTx, type Db } from "@finnor/db";
@@ -358,6 +359,7 @@ async function inspectUnderwritingBasisTx(
     [tenantId, investmentCaseId, runId],
   )).rows[0];
   if (!row) throw new PeDomainError("IC_RUN_NOT_FOUND", "Exact P4 UnderwritingRun was not found for the P1 InvestmentCase");
+  await assertEvidenceRunTransactionCurrent(client,tenantId,runId);
   const checks = Array.isArray(row.checks) ? row.checks.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
   if (!String(row.result_hash ?? "").match(/^sha256:[0-9a-f]{64}$/)
     || !String(row.model_semantic_hash ?? "").match(/^sha256:[0-9a-f]{64}$/)
@@ -2246,6 +2248,7 @@ export async function groundIcCaseOpening(ctx: PeMutationContext, input: {
         "SELECT status,validity FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND investment_case_id=$2 AND id=$3",
         [ctx.auth.tenantId, input.investmentCaseId, input.primaryUnderwritingRunId],
       )).rows[0];
+      await assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,input.primaryUnderwritingRunId);
       if (!run || run.status !== "SUCCEEDED" || !policy.allowedPrimaryRunValidities.includes(run.validity as never)) {
         throw new PeDomainError("IC_RUN_NOT_ELIGIBLE", "Opening primary UnderwritingRun is missing, failed, or disallowed by pinned policy");
       }
@@ -2283,6 +2286,7 @@ export async function groundIcUnderwritingRun(ctx: PeMutationContext, input: {
     if (!row || row.status !== "SUCCEEDED" || !policy.snapshot.allowedPrimaryRunValidities.includes(row.validity as never)) {
       throw new PeDomainError("IC_RUN_NOT_ELIGIBLE", "Exact P4 UnderwritingRun is missing, failed, or disallowed by the pinned policy");
     }
+    await assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,input.underwritingRunId);
     return shapePeRow(row);
   }, { readOnly: true });
 }
@@ -2293,6 +2297,7 @@ export async function groundIcSourceReference(ctx: PeMutationContext, input: {
 }): Promise<{ sourceKind: IcSourceKind; sourceId: string; canonical: Record<string, unknown> }> {
   assertPeUuid(input.icCaseId, "icCaseId");
   const columns = sourceColumns(input.source);
+  if(input.source.kind==='UNDERWRITING_RUN'){const runId=input.source.underwritingRunId;await peTransaction(ctx,async(_db,client)=>assertEvidenceRunTransactionCurrent(client,ctx.auth.tenantId,runId));}
   return peTransaction(ctx, async (_db, client) => {
     const process = (await client.query<IcCaseRow>(
       "SELECT * FROM finnor_os.pe_ic_cases WHERE tenant_id=$1 AND id=$2",
@@ -2417,14 +2422,19 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
     // timestamp captured before opening the transaction can omit a just-committed
     // canonical version when the application and database clocks differ by even
     // a few milliseconds.
-    const at = requestedAt ?? (await client.query<{ at: Date }>("SELECT clock_timestamp() at")).rows[0]!.at;
+    // Keep PostgreSQL microseconds for SQL cutoffs and round-trippable asOf.
+    // node-pg's Date parser truncates them and can hide a committed new version.
+    const queryAt = requestedAt ? input.asOf! : (await client.query<{ at: string }>(
+      `SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') at`,
+    )).rows[0]!.at;
+    const at = requestedAt ?? new Date(queryAt);
     const caseHistory = (await client.query<IcHistoryRow>(
       `SELECT entity_type,entity_id::text,snapshot,
               snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') hash_valid
          FROM finnor_os.canonical_entity_versions
         WHERE tenant_id=$1 AND entity_type='pe_ic_case' AND entity_id=$2 AND recorded_at<=$3
         ORDER BY recorded_at DESC,entity_version DESC LIMIT 1`,
-      [ctx.auth.tenantId, input.icCaseId, at],
+      [ctx.auth.tenantId, input.icCaseId, queryAt],
     )).rows[0];
     if (!caseHistory) throw new PeDomainError("IC_CASE_NOT_FOUND", "ICCase did not exist at the requested asOf time");
     if (!caseHistory.hash_valid) throw new PeDomainError("IC_HISTORY_HASH_MISMATCH", "ICCase temporal snapshot hash verification failed");
@@ -2436,7 +2446,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
          FROM finnor_os.canonical_entity_versions
         WHERE tenant_id=$1 AND entity_type='pe_investment_case' AND entity_id=$2 AND recorded_at<=$3
         ORDER BY recorded_at DESC,entity_version DESC LIMIT 1`,
-      [ctx.auth.tenantId, String(process.investmentCaseId), at],
+      [ctx.auth.tenantId, String(process.investmentCaseId), queryAt],
     )).rows[0];
     if (!investmentHistory || !investmentHistory.hash_valid) {
       throw new PeDomainError("IC_HISTORY_HASH_MISMATCH", "Pinned P1 InvestmentCase temporal truth is missing or failed hash verification");
@@ -2452,7 +2462,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
           AND entity_type=ANY($3::text[]) AND snapshot->>'ic_case_id'=$4
         ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC
         LIMIT 1001`,
-      [ctx.auth.tenantId, at, [
+      [ctx.auth.tenantId, queryAt, [
         "pe_ic_memo", "pe_ic_question", "pe_ic_recommendation", "pe_ic_vote",
         "pe_ic_dissent", "pe_ic_condition", "pe_ic_decision_proposal",
       ], input.icCaseId],
@@ -2465,18 +2475,18 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
     const configRaw = (await client.query<SqlRow>(
       `SELECT * FROM finnor_os.pe_ic_committee_config_versions
         WHERE tenant_id=$1 AND id=$2 AND created_at<=$3`,
-      [ctx.auth.tenantId, configId, at],
+      [ctx.auth.tenantId, configId, queryAt],
     )).rows[0];
     if (!configRaw) throw new PeDomainError("IC_BLOCKED_CONFIG", "Pinned committee configuration did not exist at the requested asOf time");
     const memberRaw = (await client.query<SqlRow>(
       `SELECT * FROM finnor_os.pe_ic_committee_membership_versions
         WHERE tenant_id=$1 AND committee_config_version_id=$2 AND created_at<=$3 ORDER BY employee_id`,
-      [ctx.auth.tenantId, configId, at],
+      [ctx.auth.tenantId, configId, queryAt],
     )).rows;
     const sourceRaw = (await client.query<SqlRow>(
       `SELECT * FROM finnor_os.pe_ic_source_links
         WHERE tenant_id=$1 AND ic_case_id=$2 AND created_at<=$3 ORDER BY created_at,id LIMIT 1001`,
-      [ctx.auth.tenantId, input.icCaseId, at],
+      [ctx.auth.tenantId, input.icCaseId, queryAt],
     )).rows;
     if (sourceRaw.length > 1_000) throw new PeDomainError("IC_READ_LIMIT", "IC workspace exceeds the bounded 1,000 source-link read limit");
     const sourceRows = sourceRaw.map(shapePeRow);
@@ -2521,7 +2531,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
               ORDER BY created_at DESC,parser_schema DESC LIMIT 1
            ) ir ON true
           WHERE version.tenant_id=$1 AND version.document_id=$2 AND version.id=$3 AND version.created_at<=$4`,
-        [ctx.auth.tenantId, String(selection.documentId), String(selection.documentVersionId), at],
+        [ctx.auth.tenantId, String(selection.documentId), String(selection.documentVersionId), queryAt],
       )).rows[0];
       if (!row) throw new PeDomainError("IC_CORRUPT_TRUTH", "Pinned P3 DocumentVersion is unavailable at the requested asOf time");
       return shapePeRow(row);
@@ -2590,7 +2600,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
            FROM finnor_os.canonical_entity_versions
           WHERE tenant_id=$1 AND entity_type='pe_decision' AND entity_id=$2 AND recorded_at<=$3
           ORDER BY recorded_at DESC,entity_version DESC LIMIT 1`,
-        [ctx.auth.tenantId, finalDecisionId, at],
+        [ctx.auth.tenantId, finalDecisionId, queryAt],
       )).rows[0];
       if (history) {
         if (!history.hash_valid) throw new PeDomainError("IC_HISTORY_HASH_MISMATCH", "P1 Decision temporal snapshot hash verification failed");
@@ -2603,7 +2613,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
          JOIN finnor_os.authority_decisions authority ON authority.tenant_id=relation.tenant_id AND authority.id=relation.authority_decision_id
          JOIN finnor_os.decision_receipts receipt ON receipt.tenant_id=relation.tenant_id AND receipt.id=relation.decision_receipt_id
         WHERE relation.tenant_id=$1 AND relation.ic_case_id=$2 AND relation.finalized_at<=$3`,
-      [ctx.auth.tenantId, input.icCaseId, at],
+      [ctx.auth.tenantId, input.icCaseId, queryAt],
     )).rows[0];
     const decisionProof = proofRaw ? {
       ...shapePeRow(proofRaw),
@@ -2675,7 +2685,7 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
       },
       controls,
       controlBlockers,
-      asOf: at.toISOString(),
+      asOf: queryAt,
     };
   }, { readOnly: true });
 }

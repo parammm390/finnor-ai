@@ -37,7 +37,7 @@ import type { ArtifactActor } from "./service";
 import { ingestArtifact, interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot, MEDIA } from "./service";
 import { classifyReadback } from "./publication";
 import { recordArtifactMetric } from "./telemetry";
-import { artifactOperationRequestHash, microsoftGraphMutationAudit } from "./provider-operation";
+import { artifactOperationRequestHash, assertArtifactOperationDispatch, microsoftGraphMutationAudit } from "./provider-operation";
 
 export type CreatableArtifactKind = "xlsx" | "docx" | "pptx";
 
@@ -290,6 +290,42 @@ async function claimProviderCreationOperation(
       },
     },
   );
+}
+
+async function assertProviderCreationDispatch(
+  actor: ArtifactActor,
+  prepared: PreparedProviderCreation,
+  claim: ClaimedProviderOperation,
+  invocationId?: string,
+): Promise<void> {
+  ensure(createHash("sha256").update(prepared.local.bytes).digest("hex") === prepared.local.version.byte_sha256,
+    "ARTIFACT_PROVIDER_CREATE_BYTES_CHANGED");
+  await assertArtifactOperationDispatch({
+    actor, documentId: prepared.input.documentId, capability: "artifact:publish", claim,
+    requestHash: providerCreationRequestHash(prepared), invocationId,
+    validateOwner: async db => {
+      const input = prepared.input;
+      const owned = await db.execute(sql`
+        SELECT p.id FROM finnor_os.artifact_provider_creations p
+        JOIN finnor_os.integration_source_scopes s ON s.tenant_id=p.tenant_id
+          AND s.id=p.source_scope_id AND s.integration_id=p.integration_id
+        JOIN finnor_os.tenant_integrations i ON i.tenant_id=p.tenant_id AND i.id=p.integration_id
+        WHERE p.tenant_id=${actor.tenantId}::uuid AND p.id=${prepared.id}::uuid
+          AND p.actor_id=${actor.userId}::uuid AND p.document_id=${input.documentId}::uuid
+          AND p.local_version_id=${input.localVersionId}::uuid AND p.integration_id=${input.integrationId}::uuid
+          AND p.source_scope_id=${input.sourceScopeId}::uuid AND p.drive_id=${input.driveId}
+          AND p.parent_item_id=${input.parentItemId} AND p.file_name=${input.name} AND p.write_mode=${input.mode}
+          AND p.conflict_behavior='fail' AND p.expected_semantic_hash=${prepared.local.ir.semanticHash}
+          AND p.status IN ('writing','unknown_delivery')
+          AND s.enabled AND s.permission_verified_at IS NOT NULL AND s.source_kind='sharepoint_drive'
+          AND s.required_permissions <@ s.effective_permissions
+          AND s.configuration->>'driveId'=${input.driveId}
+          AND (coalesce(s.configuration->>'rootItemId','')='' OR s.configuration->>'rootItemId'=${input.parentItemId})
+          AND i.binding='microsoft_graph' AND i.mode='real' AND i.health<>'down'
+      `);
+      ensure(owned.rows.length === 1, "ARTIFACT_PROVIDER_CREATE_CURRENT_SCOPE_DENIED");
+    },
+  });
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -580,6 +616,7 @@ export async function publishNewArtifactToMicrosoft(
           tenantId: actor.tenantId,
           claim,
           logicalRequestHash: providerRequestHash,
+          beforeConsequentialDispatch: invocationId => assertProviderCreationDispatch(actor, prepared, claim, invocationId),
         });
         transport = await dependencies.transport({
           actor,
@@ -592,6 +629,8 @@ export async function publishNewArtifactToMicrosoft(
 
     if (shouldCreate) {
       try {
+        if (!providerClaim) throw new Error("Artifact creation provider claim was lost");
+        await assertProviderCreationDispatch(actor, prepared, providerClaim);
         providerMutationEntered = true;
         acknowledged = await transport.createFile({
           driveId: input.driveId,
@@ -748,6 +787,19 @@ export async function publishNewArtifactToMicrosoft(
         { failure: safeCreationFailure(error), definitePreDispatch: !providerMutationEntered },
         providerClaim.providerOperationAttemptId,
       ).catch(() => undefined);
+    }
+    if (providerOperation) {
+      const durable = await readOwnedExternalOperation(actor.tenantId, owner, providerCreationOperationKey(prepared.id))
+        .catch(() => null);
+      if (!durable || durable.status === "unknown"
+          || ["provider_in_flight", "provider_acknowledged", "awaiting_observation"].includes(durable.executionState)) {
+        if (effectiveStatus !== "prepared") {
+          await withTenant(actor.tenantId, db => updateProviderCreation(db, actor, prepared.id, {
+            status: "unknown_delivery", failure: safeCreationFailure(error),
+          })).catch(() => undefined);
+          return (await readArtifactProviderCreation(actor, input.documentId, prepared.id))!;
+        }
+      }
     }
     if (effectiveStatus !== "prepared") {
       const status = error instanceof MicrosoftGraphError && error.retryable ? "unknown_delivery" : "verification_failed";

@@ -1,0 +1,54 @@
+import {z} from 'zod';
+import {receiveWork,attachWorkEntity} from '@finnor/db';
+import {EvidenceHandlesRequestSchema,EvidenceRequestSchema,EvidenceRootSchema} from '@finnor/shared-types';
+import {loadEnterpriseBeliefView} from '../enterprise-beliefs';
+import type {PeMutationContext,PeWorldRootRef} from '../types';
+import {parseRequest} from './contracts';
+import {createHandle,loadHandle} from './sources';
+import {assertDependencies,authorize,codeIdentity,currentDerivation,event,newId,principal,query,schemaIdentity,sha,stable,storedDerivation,tx,unavailable} from './store';
+import {consumeEvidenceUnderwriting,EvidenceConsumeRequestSchema} from './consumer';
+export const EVIDENCE_OPERATIONS = ['evidence-handles','evidence-submit','evidence-read','evidence-witness','evidence-replay','evidence-cancel','evidence-consume'] as const;
+const querySchema=z.object({queryId:z.string().uuid()}).strict();
+export const EvidenceOperationSchemas={
+ 'evidence-handles':EvidenceHandlesRequestSchema,'evidence-submit':EvidenceRequestSchema,'evidence-read':querySchema,
+ 'evidence-witness':querySchema.extend({output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict(),
+ 'evidence-replay':querySchema.extend({idempotencyKey:z.string().min(1).max(200)}).strict(),'evidence-cancel':querySchema,
+ 'evidence-consume':EvidenceConsumeRequestSchema,
+} as const;
+const safePredicate=(error:unknown)=>String((error as Error).message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'UNSUPPORTED_EVIDENCE_REQUEST';
+export async function submitEvidence(ctx:PeMutationContext,body:unknown){const request=parseRequest(body);await authorize(ctx,request.root as PeWorldRootRef,request.workId?[{type:'work',id:request.workId}]:[]);
+ if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_BINDINGS_UNAVAILABLE');
+ const handles=await Promise.all(request.inputs.map(i=>loadHandle(ctx,i.handleId,request.root as PeWorldRootRef)));if(handles.some((h,i)=>h.inputId!==request.inputs[i]!.inputId))throw Error('HANDLE_INPUT_ID_MISMATCH');
+ const digest=sha(request),prior=await tx(ctx,async c=>(await c.query<{id:string;request_digest:string;work_id:string;status:string}>('SELECT id,request_digest,work_id,status FROM finnor_os.p4_queries WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,principal(ctx),request.idempotencyKey])).rows[0],true);
+ if(prior){if(prior.request_digest!==digest)throw Error('IDEMPOTENCY_REQUEST_CONFLICT');return {queryId:prior.id,workId:prior.work_id,status:prior.status,replayed:true};}
+ const intake=await receiveWork({tenantId:ctx.auth.tenantId,userId:principal(ctx),workId:request.workId,instruction:request.question,channel:'console',idempotencyKey:'p4:'+principal(ctx)+':'+request.idempotencyKey,activeContext:{entityType:request.root.entityType,entityId:request.root.entityId},authorityContext:{principalId:principal(ctx),producer:'P4_ORDINARY_NO_EXECUTION_GRANT'}});
+ await attachWorkEntity(ctx.auth.tenantId,intake.workId,{...request.root,source:'P4:accepted-evidence-question'});
+ return tx(ctx,async c=>{await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 4404))',[ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);const existing=(await c.query('SELECT id,work_id,request_digest,status FROM finnor_os.p4_queries WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,principal(ctx),request.idempotencyKey])).rows[0];if(existing){if(existing.request_digest!==digest)throw Error('IDEMPOTENCY_REQUEST_CONFLICT');return {queryId:existing.id,workId:existing.work_id,status:existing.status,replayed:true};}
+  const workInput=(await c.query<{body:unknown}>('SELECT to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 AND id=$3',[ctx.auth.tenantId,intake.workId,intake.workInputId])).rows[0];if(!workInput)throw unavailable();const id=newId();
+  await c.query('INSERT INTO finnor_os.p4_queries(id,tenant_id,principal_id,root,work_id,work_input_id,work_input_digest,idempotency_key,request_digest,request) VALUES($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10::jsonb)',[id,ctx.auth.tenantId,principal(ctx),stable(request.root),intake.workId,intake.workInputId,sha(workInput.body),request.idempotencyKey,digest,stable(request)]);
+  await c.query('INSERT INTO finnor_os.p4_plans(tenant_id,principal_id,query_id,generation,body,digest) VALUES($1,$2,$3,1,$4::jsonb,$5)',[ctx.auth.tenantId,principal(ctx),id,stable(request),digest]);
+  await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority,protocol_version,retry_safety) VALUES($1,'run_evidence_derivation_v1',$2::jsonb,$3,'interactive',0,1,'locally_idempotent') ON CONFLICT(idempotency_key) DO NOTHING",[ctx.auth.tenantId,stable({tenantId:ctx.auth.tenantId,principalId:principal(ctx),queryId:id,generation:1}),'p4:'+id+':1']);
+  return {queryId:id,workId:intake.workId,workRevision:intake.workInputId,status:'QUEUED',replayed:false};
+ });
+}
+export async function readEvidence(ctx:PeMutationContext,id:string){const q=await query(ctx,id);await authorize(ctx,q.root,[{type:'work',id:q.work_id}]);
+ if(['INVALIDATED','CANCELLED'].includes(q.status))return {queryId:q.id,workId:q.work_id,status:q.status,reason:'SOURCE_RIGHTS_MEMBERSHIP_RUNTIME_OR_WORK_CHANGED',derivation:null};
+ if(!q.derivation_id)return {queryId:q.id,workId:q.work_id,status:q.status,derivation:null};
+ const d=await storedDerivation(ctx,q.derivation_id);
+ try{await assertDependencies(ctx,d.invalidationKeys);if(d.code.digest!==(await codeIdentity()).digest)throw Error('DERIVATION_RUNTIME_CHANGED');if(d.code.schemaDigest!==await schemaIdentity(ctx))throw Error('DERIVATION_SCHEMA_CHANGED');if(q.status==='TESTED')await currentDerivation(ctx,d.id);}
+ catch(error){if(error instanceof Error&&error.message==='Evidence resource is unavailable in the authenticated scope')throw unavailable();await tx(ctx,async c=>{await c.query("UPDATE finnor_os.p4_queries SET status='INVALIDATED',updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND status IN('TESTED','PARTIAL','FAILED')",[ctx.auth.tenantId,principal(ctx),id]);await event(ctx,id,newId(),'INVALIDATED',{predicate:safePredicate(error),priorDerivationId:d.id},c);});return {queryId:q.id,workId:q.work_id,status:'INVALIDATED',derivation:null,reason:safePredicate(error)};}
+ for(const h of d.sourceHandles)if(h.source.kind!=='derivation')await authorize(ctx,h.source.subject as PeWorldRootRef,h.source.kind==='artifact'?[{type:'document',id:h.source.documentId}]:[]);
+ await authorize(ctx,q.root);return {queryId:q.id,workId:q.work_id,status:q.status,derivation:d};
+}
+export async function handleEvidenceOperation(ctx:PeMutationContext,operation:string,body:unknown):Promise<{status:number;body:unknown}>{
+ try{
+  if(operation==='evidence-handles'){const outer=z.object({root:EvidenceRootSchema}).passthrough().parse(body);try{await authorize(ctx,outer.root as PeWorldRootRef);await loadEnterpriseBeliefView(ctx,{root:outer.root as PeWorldRootRef,maxClaims:1000});}catch{throw unavailable();}const input=EvidenceHandlesRequestSchema.parse(body);const handles=[];for(const i of input.inputs)handles.push(await createHandle(ctx,input.root as PeWorldRootRef,i.inputId,i.source,{validAt:input.validAt,knowledgeAt:input.knowledgeAt}));await authorize(ctx,input.root as PeWorldRootRef);return {status:200,body:{handles}};}
+  if(operation==='evidence-submit')return {status:202,body:await submitEvidence(ctx,body)};
+  if(operation==='evidence-read')return {status:200,body:await readEvidence(ctx,querySchema.parse(body).queryId)};
+  if(operation==='evidence-witness'){const input=querySchema.extend({output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict().parse(body);const current=await readEvidence(ctx,input.queryId);if(current.status!=='TESTED'||!current.derivation?.result)throw Error('WITNESS_CURRENT_COMPLETE_RESULT_REQUIRED');const d=current.derivation,output=d.result!.outputs[input.output];if(!output)throw Error('OUTPUT_UNAVAILABLE');return {status:200,body:{queryId:input.queryId,derivationId:d.id,output,inputRefs:d.sourceHandles.map(h=>({id:h.id,source:h.source,digest:h.digest})),witnesses:d.witnesses.filter(w=>output.witnessIds.includes(w.id)),program:d.queryProgram,checks:d.independentChecks.filter(c=>c.witnessIds.some(id=>output.witnessIds.includes(id))),coverage:d.coverage}};}
+  if(operation==='evidence-replay'){const input=querySchema.extend({idempotencyKey:z.string().min(1).max(200)}).strict().parse(body);const q=await query(ctx,input.queryId);await authorize(ctx,q.root,[{type:'work',id:q.work_id}]);const rebound=[];for(const i of q.request.inputs){const original=await tx(ctx,async c=>(await c.query<{body:import('@finnor/shared-types').EvidenceHandle}>('SELECT body FROM finnor_os.p4_handles WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[ctx.auth.tenantId,principal(ctx),i.handleId])).rows[0]?.body,true);if(!original)throw unavailable();rebound.push(await createHandle(ctx,q.root,i.inputId,original.source,{validAt:q.request.validAt,knowledgeAt:q.request.knowledgeAt}));}return {status:202,body:await submitEvidence(ctx,{...q.request,idempotencyKey:input.idempotencyKey,workId:q.work_id,inputs:rebound.map(h=>({inputId:h.inputId,handleId:h.id}))})};}
+  if(operation==='evidence-cancel'){const input=querySchema.parse(body),q=await query(ctx,input.queryId);await authorize(ctx,q.root,[{type:'work',id:q.work_id}]);const current=await tx(ctx,async c=>{const locked=await query(ctx,q.id,true,c);if(!['QUEUED','RUNNING'].includes(locked.status))return locked;await c.query("UPDATE finnor_os.p4_queries SET status='CANCELLED',generation=generation+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",[ctx.auth.tenantId,principal(ctx),q.id]);await event(ctx,q.id,newId(),'CANCELLED',{requestedBy:principal(ctx),priorGeneration:locked.generation},c);return {status:'CANCELLED'};});return {status:200,body:{queryId:q.id,status:current.status}};}
+  if(operation==='evidence-consume')return {status:200,body:await consumeEvidenceUnderwriting(ctx,body)};
+  return {status:404,body:{error:'Evidence operation unavailable',code:'NOT_FOUND'}};
+ }catch(error){if(error instanceof Error&&'code' in error&&(error as any).code==='PE_ENTITY_NOT_FOUND')return {status:404,body:{error:'Evidence resource is unavailable in the authenticated scope',code:'PE_ENTITY_NOT_FOUND'}};if(error instanceof z.ZodError)return {status:400,body:{error:'Bounded typed evidence request required',code:'EVIDENCE_SCHEMA_INVALID',predicate:'UNSUPPORTED_OPERATOR_OR_REQUEST_FIELD'}};return {status:422,body:{error:'Evidence request could not satisfy its predicate',code:'EVIDENCE_PREDICATE_UNPASSED',predicate:safePredicate(error)}};}
+}

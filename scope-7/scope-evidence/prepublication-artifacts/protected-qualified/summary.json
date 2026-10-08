@@ -1,0 +1,28 @@
+{
+  "artifactSha256": "9f0933b26f645c63f259e5362eec1474a86a54aa0ef93ab0ad9f20ebb589ee53",
+  "artifact": "results.json.gz",
+  "qualification": "DISPOSABLE_TEST_AUTHORITY_SEPARATE_PROCESS_NO_H2_ECONOMIC_OR_PRODUCTION_ADMISSION",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "s7-h2-exact-immutable-commitment",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "foreign-owner-h2-cannot-borrow-s7-permission",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "s7-detail-cannot-borrow-other-subject-digest",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "restart-exact-history-and-tenant-refusal",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

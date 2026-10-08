@@ -1,0 +1,11 @@
+.ct-counterexample { border: 1px solid var(--ct-border, #444); border-radius: 8px; padding: 16px; margin-top: 20px; }
+.ct-counterexample h4, .ct-counterexample h5 { margin: 8px 0; }
+.ct-counterexample p { margin: 8px 0; line-height: 1.5; }
+.ct-counterexample label { display: grid; gap: 6px; margin: 12px 0; }
+.ct-counterexample textarea { width: 100%; font: 12px/1.5 ui-monospace, monospace; padding: 8px; }
+.ct-counterexample pre { font-size: 12px; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ct-counterexample__actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.ct-counterexample article { border-top: 1px solid var(--ct-border, #444); padding-top: 12px; margin-top: 16px; }
+.ct-counterexample dd { margin-left: 16px; }
+.ct-counterexample [role="alert"] { color: inherit; border-left-color: var(--ct-danger, #c95353); }
+.ct-counterexample button:disabled { opacity: .5; }

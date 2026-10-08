@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.p6.generated-shared-proposal.v1",
+  "base": "a72b4f402cfa1bbf51e518891db2d893b9a71aca",
+  "files": [
+    {
+      "path": "finnor-os/openapi.json",
+      "preimage": "129c9ea8e0b0b59d7f2190f2988333989b77e7a63c21dc2dae3f5ebd41ec9ab9",
+      "proposed": "83406e29126c996bd9d85045449687ebc35e485d87da448a85d1636c0562b06d"
+    },
+    {
+      "path": "src/lib/centropy/openapi-types.ts",
+      "preimage": "809541dd3e98a6292b27e50a6dbf5d87b9bd0c541b7246329337abbe304bf94d",
+      "proposed": "b87ddb6dd76b8cf66c41b13ae660b6c412d171a4c57a211efaacbfdd10c32133"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "preimage": "4e0fcdf69f41360b5b57b683a2cf77f51d5e78acc0a13022029894ea28888a4b",
+      "proposed": "1bdd59128f18bde7b737a3b19fa94e256877ab6ce1a221e5087292dca59deb8c"
+    }
+  ],
+  "patchDigest": "c1a79e46c4b392e61550aaf006cb7af0aeba44f60d8bb75d0e43c6cb4e794301",
+  "status": "PROPOSED_NOT_SERIAL_OWNER_ADOPTED",
+  "order": "AFTER_SHARED_NATIVE_PROPOSAL",
+  "legacyIgnoredJarvisAliasGenerated": false,
+  "oldAllocationBehaviourModified": false
+}

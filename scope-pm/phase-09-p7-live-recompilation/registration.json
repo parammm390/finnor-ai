@@ -1,0 +1,214 @@
+{
+  "schema": "finnor.p7.failure-registration.v1",
+  "originalSha256": "e18bfac389d7a61fed1f1484e0bde9bf9440e5674f4838b6c18bbe288cfb2fe4",
+  "families": [
+    {
+      "id": "P7-01",
+      "originalPredicate": "Forged/unbound owner event: native owner lookup refuses; no jobs/current head.",
+      "sourceLine": 138,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-02",
+      "originalPredicate": "Other tenant/principal/Work causal ref: rights refusal with no graph disclosure.",
+      "sourceLine": 139,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-03",
+      "originalPredicate": "Duplicate event/delivery: same continuation identity, no extra grant/effect.",
+      "sourceLine": 140,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-04",
+      "originalPredicate": "Late valid-date correction: prior known-at history remains exact; current closure revised.",
+      "sourceLine": 141,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-05",
+      "originalPredicate": "Out-of-order causal parents: no regressed vector or early dependent publication.",
+      "sourceLine": 142,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-06",
+      "originalPredicate": "Shared source fan-out: every relying model/material/proposal invalidated.",
+      "sourceLine": 143,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-07",
+      "originalPredicate": "Negative/coverage dependency corrected: absence-based claim cannot remain current.",
+      "sourceLine": 144,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-08",
+      "originalPredicate": "Unrelated source change: genuinely independent kept outputs stay valid with evidence.",
+      "sourceLine": 145,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-09",
+      "originalPredicate": "Cycle/large graph/budget: bounded closure or precise pending gap, no hidden truncation.",
+      "sourceLine": 146,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-10",
+      "originalPredicate": "Old worker after accepted revision: real claim/publication fence rejects.",
+      "sourceLine": 147,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-11",
+      "originalPredicate": "Changed maximum leverage: model, IC deck and lender request all lose old current approval.",
+      "sourceLine": 148,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-12",
+      "originalPredicate": "Changed debt/fee/date/currency term: revised native derivation and exact support.",
+      "sourceLine": 149,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-13",
+      "originalPredicate": "S2 delayed/new observation: correct evidence cut, lawful policy update.",
+      "sourceLine": 150,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-14",
+      "originalPredicate": "S3 regime/transport change: unsupported old coefficient/domain cannot be reused.",
+      "sourceLine": 151,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-15",
+      "originalPredicate": "S4 utility/authority change: authentic revised owner decision, not caller-adjusted mandate.",
+      "sourceLine": 152,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-16",
+      "originalPredicate": "S5 competing capital reservation: single canonical clearing, no double allocation.",
+      "sourceLine": 153,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-17",
+      "originalPredicate": "Shared staffing/compute capacity: actual grant admission and bounded fallbacks.",
+      "sourceLine": 154,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-18",
+      "originalPredicate": "Rights revoked mid-compute: no forbidden new reads/current derivatives/publication.",
+      "sourceLine": 155,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-19",
+      "originalPredicate": "Rights revoked after preparation: commit/serve recheck refuses.",
+      "sourceLine": 156,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-20",
+      "originalPredicate": "Missing producer/partial computation: exact pending closure, independently valid frontier retained.",
+      "sourceLine": 157,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-21",
+      "originalPredicate": "M2 pending then exact committed join: explicit refusal/domain and genuine queued continuation.",
+      "sourceLine": 158,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-22",
+      "originalPredicate": "M3 issued reader changed/stale: immutable historical program, no current cast or renewed grant.",
+      "sourceLine": 159,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-23",
+      "originalPredicate": "M4 diagnostic versus genuine challenge: cannot confuse output or overwrite original gate.",
+      "sourceLine": 160,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-24",
+      "originalPredicate": "Interface schema/unit/target drift: dependent proposal quarantined, real compatible binding required.",
+      "sourceLine": 161,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-25",
+      "originalPredicate": "Approval reused for changed price/record/exposure: S6 exact request refusal.",
+      "sourceLine": 162,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-26",
+      "originalPredicate": "Mutation submitted then response lost: UNKNOWN retained, no duplicate dispatch.",
+      "sourceLine": 163,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-27",
+      "originalPredicate": "Delayed old acknowledgement: only original effect settles; new intent remains unapproved.",
+      "sourceLine": 164,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-28",
+      "originalPredicate": "Cancellation before/after possible egress: distinguish unsubmitted cancellation and retained liability.",
+      "sourceLine": 165,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-29",
+      "originalPredicate": "Crash after event/invalidation before recompilation: cold durable resume with original grant.",
+      "sourceLine": 166,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-30",
+      "originalPredicate": "Crash before/after manifest/outbox commit: exact adoption/dedup, no lost current notification.",
+      "sourceLine": 167,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-31",
+      "originalPredicate": "Concurrent edits and reload: independently inspect one coherent vector in API/material/UI.",
+      "sourceLine": 168,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-32",
+      "originalPredicate": "Corrupt ciphertext/hash/schema/source cut: refuse current use, retain history/responsibility.",
+      "sourceLine": 169,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-33",
+      "originalPredicate": "Timeout/storage/release failure: no late publication, complete original cost/cleanup gaps.",
+      "sourceLine": 170,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P7-34",
+      "originalPredicate": "Cross-firm sharing/comparison/economic labels: no authority pooling or H0\u2192H2 promotion.",
+      "sourceLine": 171,
+      "status": "NOT_RUN"
+    }
+  ],
+  "gate": "UNQUALIFIED",
+  "selectedNativeDomain": "SOURCE_BOUND_ANALYTICAL_P1_P4_NO_EFFECT_DISPATCH",
+  "independence": "PUBLIC_DEVELOPMENT_NOT_SEALED",
+  "usd": null
+}

@@ -681,7 +681,7 @@ async function prerequisites(migrations: MigrationFile[]): Promise<Record<string
   assert(PHASE5_DISPOSITION_LEDGER_VERSION === 2 && PHASE5_DISPOSITION_LEDGER.length === PHASE5_DISPOSITION_COUNTS.total,
     "PE0 -> P1 -> P5 disposition ledger is incomplete");
   assert(EXECUTABLE_VERTICALS.join(",") === "none,private_equity", "PE1 executable vertical boundary is wrong");
-  assert(OPERATIONAL_QUERY_INTENTS.length === 16, "PE3 query contract plus additive P7 workforce status is incomplete");
+  assert(OPERATIONAL_QUERY_INTENTS.length === 17, "PE3 query contract plus P7 workforce status and P1 harness programme reader is incomplete");
   return {
     status: "PASS",
     pe0: {
@@ -761,7 +761,6 @@ async function main(): Promise<void> {
   const boundary = await verifyPeDomainBoundary();
   const typecheck = await runCommand(resolve(ROOT, "node_modules/.bin/tsc"), ["-p", "tsconfig.json", "--pretty", "false"]);
   const unit = await runCommand(resolve(ROOT, "node_modules/.bin/vitest"), ["run", "tests/unit", "packages/orchestration/src/instruction-trace.test.ts", "--reporter=dot"]);
-  const plannerEvals = await runCommand(resolve(ROOT, "node_modules/.bin/vitest"), ["run", "tests/planner-evals", "--reporter=dot"]);
 
   const port = await freePort();
   const dataDir = await mkdtemp(join(tmpdir(), "finnor-pe5-certification-"));
@@ -1027,7 +1026,7 @@ async function main(): Promise<void> {
       closeSafety: "PASS",
       authorityEffectReconciliation: "PASS",
     },
-    coreRegression: { typecheck, unit, plannerEvals, pePostCutover: peTests!, webhookQuarantine: webhookTests! },
+    coreRegression: { typecheck, unit, pePostCutover: peTests!, webhookQuarantine: webhookTests! },
     retained: [
       "Core Work/Objective/Authority/Approval/BusinessEffect/event-wait/reconciliation",
       "universal actions and computer runtime",

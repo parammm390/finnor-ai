@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { evaluateAuthority } from "@finnor/authority";
 import { enqueueJob, withTenant, type Db } from "@finnor/db";
 import {
@@ -34,7 +35,7 @@ import {
 import type { ArtifactActor } from "./service";
 import { interpret, loadArtifactIRSnapshot, saveArtifactIRSnapshot } from "./service";
 import { recordArtifactMetric } from "./telemetry";
-import { artifactOperationRequestHash, microsoftGraphMutationAudit } from "./provider-operation";
+import { artifactOperationRequestHash, assertArtifactProviderIdentity, microsoftGraphMutationAudit } from "./provider-operation";
 
 export type ArtifactWriteMode = "APP_ONLY_FILE_REPLACE" | "DELEGATED_FILE_REPLACE";
 export type ArtifactPublicationStatus =
@@ -141,6 +142,71 @@ async function claimPublicationProviderOperation(
       },
     },
   );
+}
+
+async function assertPublicationDispatchAuthority(
+  actor: ArtifactActor,
+  prepared: PreparedPublication,
+  claim: ClaimedProviderOperation,
+  requestHash: string,
+  mode: ArtifactWriteMode,
+  invocationId?: string,
+): Promise<void> {
+  // Transport/credential resolution and earlier permission checks can yield.
+  // Repeat the actual canonical authority decision at the request boundary.
+  const decision = await evaluateAuthority(actor, {
+    operation: "execution",
+    capability: "artifact:publish",
+    resource: { type: "document", id: prepared.local.version.document_id },
+    risk: "medium",
+  });
+  ensure(decision.outcome === "allowed", decision.outcome === "approval_required"
+    ? "ARTIFACT_PUBLISH_APPROVAL_REQUIRED" : "ARTIFACT_PUBLISH_DENIED");
+  ensure(createHash("sha256").update(prepared.local.bytes).digest("hex") === prepared.local.version.byte_sha256,
+    "ARTIFACT_PUBLICATION_BYTES_CHANGED");
+
+  await withTenant(actor.tenantId, async (db) => {
+    const owned = await db.execute(sql`
+      SELECT p.id FROM finnor_os.artifact_publications p
+      JOIN finnor_os.external_operations o
+        ON o.tenant_id=p.tenant_id AND o.owner_type='artifact_operation' AND o.owner_key=p.id::text
+      JOIN finnor_os.provider_operation_attempts a
+        ON a.tenant_id=o.tenant_id AND a.external_operation_id=o.id
+      WHERE p.tenant_id=${actor.tenantId}::uuid AND p.id=${prepared.id}::uuid
+        AND p.actor_id=${actor.userId}::uuid
+        AND p.document_id=${prepared.local.version.document_id}::uuid
+        AND p.local_version_id=${prepared.local.version.id}::uuid
+        AND p.base_version_id=${prepared.base.version.id}::uuid
+        AND p.integration_id=${prepared.binding.integrationId}::uuid
+        AND p.external_ref_id=${prepared.binding.externalRefId}::uuid
+        AND p.base_etag=${prepared.binding.providerETag}
+        AND p.write_mode=${mode}
+        AND p.provider_binding_key=${`${prepared.binding.driveId}/${prepared.binding.itemId}`}
+        AND p.expected_semantic_hash=${prepared.local.ir.semanticHash}
+        AND p.status IN ('writing','unknown_delivery')
+        AND o.id=${claim.operation.id}::uuid AND o.operation_key=${publicationOperationKey(prepared.id)}
+        AND o.request_hash=${requestHash} AND o.provider='microsoft_graph'
+        AND o.integration_id=p.integration_id AND o.target_key=p.provider_binding_key
+        AND o.status='running' AND o.execution_state IN ('claimed','provider_in_flight')
+        AND a.id=${claim.providerOperationAttemptId}::uuid AND a.claim_token=${claim.providerOperationClaimToken}::uuid
+        AND a.status IN ('claimed','provider_in_flight')
+    `);
+    ensure(owned.rows.length === 1, "ARTIFACT_PUBLICATION_DISPATCH_FENCE_LOST");
+    const current = await loadPublicationBinding(db, actor, prepared.local.version.document_id,
+      prepared.base.version.id, prepared.binding.externalRefId);
+    ensure(artifactOperationRequestHash(current) === artifactOperationRequestHash(prepared.binding),
+      "ARTIFACT_PUBLICATION_BINDING_CHANGED");
+    await recordBusinessEvent(db, {
+      tenantId: actor.tenantId,
+      entityType: "document",
+      entityId: prepared.local.version.document_id,
+      eventType: "artifact_publish_dispatch_authorized",
+      payload: { publicationId: prepared.id, authorityDecisionId: decision.id, providerOperationId: claim.operation.id,
+        providerOperationAttemptId: claim.providerOperationAttemptId, requestHash,
+        ...(invocationId ? { providerInvocationId: invocationId } : {}), boundary: invocationId ? "physical_request" : "adapter_entry" },
+      source: "artifact_publication",
+    });
+  });
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -417,6 +483,7 @@ async function captureRemoteConflict(
   knownRemote?: Awaited<ReturnType<ArtifactFileTransport["download"]>>,
 ): Promise<ReturnType<typeof publicationRow>> {
   const remote = knownRemote ?? await transport.download(prepared.binding);
+  assertArtifactProviderIdentity(remote.metadata, prepared.binding);
   const remoteIR = await interpret(remote.bytes, { fileName: remote.metadata.name });
   const report = threeWayArtifactDiff(prepared.base.ir, prepared.local.ir, remoteIR);
   await withTenant(actor.tenantId, async (db) => {
@@ -495,12 +562,14 @@ export async function publishArtifact(
 
     if (effectiveStatus === "prepared") {
       const metadata = await transport.metadata(prepared.binding);
+      assertArtifactProviderIdentity(metadata, prepared.binding);
       if (metadata.eTag !== prepared.binding.providerETag) return captureRemoteConflict(actor, prepared, transport);
       await withTenant(actor.tenantId, (db) => updatePublication(db, actor, prepared.id, { status: "writing" }));
       effectiveStatus = "writing";
       shouldWrite = true;
     } else if (effectiveStatus === "writing" || (effectiveStatus === "unknown_delivery" && typeof ack.eTag !== "string")) {
       const remote = await transport.download(prepared.binding);
+      assertArtifactProviderIdentity(remote.metadata, prepared.binding);
       const remoteIR = await interpret(remote.bytes, { fileName: remote.metadata.name });
       const recovered = classifyReadback(prepared.local.ir, remoteIR);
       if (recovered.status !== "verification_failed") {
@@ -530,6 +599,7 @@ export async function publishArtifact(
         // incomplete. Exact readback may finish bookkeeping; unchanged state is
         // still uncertainty, not permission to replay.
         const remote = readback ?? await transport.download(prepared.binding);
+        assertArtifactProviderIdentity(remote.metadata, prepared.binding);
         const remoteIR = await interpret(remote.bytes, { fileName: remote.metadata.name });
         const recovered = classifyReadback(prepared.local.ir, remoteIR);
         if (recovered.status !== "verification_failed") {
@@ -566,6 +636,8 @@ export async function publishArtifact(
           tenantId: actor.tenantId,
           claim,
           logicalRequestHash: providerRequestHash,
+          beforeConsequentialDispatch: invocationId => assertPublicationDispatchAuthority(
+            actor, prepared, claim, providerRequestHash, input.mode, invocationId),
         });
         transport = await dependencies.transport({
           actor,
@@ -579,6 +651,8 @@ export async function publishArtifact(
     if (shouldWrite) {
       let acknowledged: MicrosoftDriveItemMetadata;
       try {
+        if (!providerClaim) throw new Error("Artifact publication provider claim was lost");
+        await assertPublicationDispatchAuthority(actor, prepared, providerClaim, providerRequestHash, input.mode);
         providerMutationEntered = true;
         acknowledged = await transport.replaceConditional({
           driveId: prepared.binding.driveId,
@@ -586,6 +660,7 @@ export async function publishArtifact(
           bytes: prepared.local.bytes,
           expectedETag: prepared.binding.providerETag,
         });
+        assertArtifactProviderIdentity(acknowledged, prepared.binding);
       } catch (error) {
         if (error instanceof MicrosoftGraphError && error.kind === "conflict") return captureRemoteConflict(actor, prepared, transport);
         throw error;
@@ -626,6 +701,7 @@ export async function publishArtifact(
     }
 
     if (!readback) readback = await transport.download(prepared.binding);
+    assertArtifactProviderIdentity(readback.metadata, prepared.binding);
     const readbackIR = await interpret(readback.bytes, { fileName: readback.metadata.name });
     const verification = classifyReadback(prepared.local.ir, readbackIR);
     if (providerOperation) {
@@ -719,6 +795,22 @@ export async function publishArtifact(
         { failure: safeFailure(error), definitePreDispatch: !providerMutationEntered },
         providerClaim.providerOperationAttemptId,
       ).catch(() => undefined);
+    }
+    if (providerOperation) {
+      const durable = await readOwnedExternalOperation(actor.tenantId, owner, publicationOperationKey(prepared.id))
+        .catch(() => null);
+      // Native physical evidence survives an adapter, authorization, response
+      // parsing, or audit failure. A terminal publication failure must never
+      // strand a request that was already allowed to leave.
+      if (!durable || durable.status === "unknown"
+          || ["provider_in_flight", "provider_acknowledged", "awaiting_observation"].includes(durable.executionState)) {
+        if (effectiveStatus !== "prepared") {
+          await withTenant(actor.tenantId, (db) => updatePublication(db, actor, prepared.id, {
+            status: "unknown_delivery", failure: safeFailure(error),
+          })).catch(() => undefined);
+          return (await readArtifactPublication(actor, input.documentId, prepared.id))!;
+        }
+      }
     }
     if (error instanceof MicrosoftGraphError && error.retryable && effectiveStatus !== "prepared") {
       await withTenant(actor.tenantId, (db) => updatePublication(db, actor, prepared.id, {

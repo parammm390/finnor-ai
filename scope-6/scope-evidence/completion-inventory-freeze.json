@@ -1,0 +1,177 @@
+{
+  "schema": "finnor.s6.frozen-completion-inventory.v1",
+  "frozenAt": "2026-10-03T00:53:16.783120+00:00",
+  "promptPath": "/Users/paramdave/.codex/attachments/7d187f37-3330-42b7-b63e-bbc0f7f105ba/pasted-text-1.txt",
+  "promptSha256": "10ce31af7b7d80a538178fbfe268de70d424a1a7f391ac49d488c2edc6f50cdf",
+  "inventoryPath": "/Users/paramdave/Desktop/FINNOR/scope-6/completion-inventory.md",
+  "inventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+  "head": "6ade745cfaca88bb199ed9cac2b37b86e6d5ef9a",
+  "items": [
+    {
+      "id": "S6-01",
+      "requirement": "\u00a71 DurableObligation / canonical responsibility",
+      "initialStatus": "PASS",
+      "definition": "Native preparation/read/validation binds actual S1/S3/S4/S5 owners, one effect and one consumption. Exact tenant/principal, mandate, policy/branch, target, operation/dose/unit, refinements, source/preconditions, deadline, method and settlement survive concurrent delivery. Evidence E1. No remaining task."
+    },
+    {
+      "id": "S6-02",
+      "requirement": "\u00a72 Effect-preserving compilation",
+      "initialStatus": "PASS",
+      "definition": "Ordinary compiler \u2192 bounded typed IR \u2192 separate protected verifier checks exact original obligation, target/account/unit/body/version and independently signed method binding; substitutions are refused. Conditional JSON class only. E1/E2. No remaining task."
+    },
+    {
+      "id": "S6-03",
+      "requirement": "\u00a73 Final-boundary authority",
+      "initialStatus": "PASS",
+      "definition": "Signed nonce assessment of native identity/rights/mandate/policy/allocation/source/admission/expiry and live job/step fences is durably protected immediately before possible PATCH; its validity bounds the wire deadline. The remote acceptance race remains explicit. E1. No remaining task."
+    },
+    {
+      "id": "S6-04",
+      "requirement": "\u00a74 Capability/credential confinement and child attenuation",
+      "initialStatus": "BROKEN",
+      "definition": "The candidate broker confines credentials and the actual Seatbelt worker denies network/private files/process creation, but a coherent obligation-bound delegation contract does not yet conserve parent rights, targets and budget. **Task:** bind existing child/delegated work to authenticated parent authority, exact permitted target/refinements and remaining S5 envelope; persist its responsibility; refuse unsupported delegation and prevent parent completion until required children settle. Reuse the existing child/workflow paths; no new subagent or executor domain. Aggregate resource enforcement is S6-13."
+    },
+    {
+      "id": "S6-05",
+      "requirement": "\u00a75 Consequential and sensitive-data egress",
+      "initialStatus": "BROKEN",
+      "definition": "Fixed-route protected conditional JSON dispatch is qualified; ordinary provider/DB/artifact/browser/delegated paths are not all governed by that protected contract. **Task:** enforce a versioned admission/refusal matrix at the existing entry and physical-effect boundaries for network/provider, DB, filesystem/artifact, browser and delegated work. Require exact obligation-bound authority on admitted paths; block raw/redirect/alternate/credential/child escapes and refuse protected admission where confinement is unsupported. Do not claim existing trusted adapters are independently protected or admit new methods/providers."
+    },
+    {
+      "id": "S6-06",
+      "requirement": "\u00a76 Replaceable executor contract / ModelComputeFabric provenance",
+      "initialStatus": "MISSING",
+      "definition": "Native governed scheduling exists; a complete common adapter contract and truthful compute provenance integration do not. **Task:** attach one versioned identity/authority/observation/retry/cancellation/recovery/resource contract to the existing adapters, connect execution inputs/outputs/attempts/runtime/route/resources/cost-or-gap to ModelComputeFabric provenance, and enforce that only already declared conforming classes can execute as protected obligations. Record unsupported classes explicitly; configuration cannot supply identity or deterministic replay."
+    },
+    {
+      "id": "S6-07",
+      "requirement": "\u00a77 Attempts/fences and partial member recovery",
+      "initialStatus": "BROKEN",
+      "definition": "Pre-egress intent/attempt, stale-claim fencing and single-member crash recovery pass. The broker's `attempts.length === 0` guard strands never-attempted members after partial delivery. **Task:** persist and recover progress per original member, resume only never-attempted members under fresh exact authority/admission/time/fences, never replay a possibly attempted member, and require all original members for parent settlement. Conserve the existing attempt/read bounds and cancellation semantics."
+    },
+    {
+      "id": "S6-08",
+      "requirement": "\u00a78 Unknown outcomes / retry",
+      "initialStatus": "PASS",
+      "definition": "Possible delivery survives loss of claims, cancellation and crash; conditional JSON recovery performs GET only. Existing provider operation history and physical protection-window checks preserve ambiguous prior attempts. E1/E6. No automatic exactly-once or delayed-provider guarantee is claimed. No remaining task."
+    },
+    {
+      "id": "S6-09",
+      "requirement": "\u00a79 Independent target-bound verification",
+      "initialStatus": "PASS",
+      "definition": "Exact account/record/field/value/null/version/operation readback gates protected settlement; wrong-record/null/empty/unsupported evidence cannot complete. Existing browser and artifact owning-boundary fixes preserve target identity. E1/E6. Partial-member liveness repair belongs to S6-07. No remaining task."
+    },
+    {
+      "id": "S6-10",
+      "requirement": "\u00a710 Reconciliation/cancellation/S5 responsibility",
+      "initialStatus": "PASS",
+      "definition": "Genuine allocation-bound protected intent/attempt/observation evidence drives native S5 UNKNOWN/RECONCILED state; possible effects and full liabilities remain, costs are explicitly UNMETERED, release is false, and retries deduplicate. Cancellation does not erase exposure. Compensation requires a separately authorized linked effect. E1/E3. No remaining task."
+    },
+    {
+      "id": "S6-11",
+      "requirement": "\u00a711 Protected ExperienceLedger transport \u2014 append core",
+      "initialStatus": "PASS",
+      "definition": "Authenticated semantic-owner append, immutable identities/content/preimages/references, typed parents/order, concurrent retries, separate receipts, exact release/verifier/checkpoint binding, sealed access/encryption, tamper/truncate/SIGKILL recovery and actual writer exclusion are qualified locally. E2/E3/E4. Native producer wiring is S6-14\u201317; whole-state rollback is S6-11R. No remaining task."
+    },
+    {
+      "id": "S6-11R",
+      "requirement": "\u00a711 Rollback/inconsistent-history detection",
+      "initialStatus": "MISSING",
+      "definition": "Local signed journal/head cannot detect rollback of both protected state and journal; `health` explicitly reports a required external witness. **Task:** implement the pinned independent monotonic commitment/witness interface and verify history against it before dependent append/read/egress; enforce fail-closed outage/conflict handling with retained responsibility and recoverable receipts. Use existing ledger-integrity/crash challenges. Actual independently protected witness deployment is X1."
+    },
+    {
+      "id": "S6-12",
+      "requirement": "\u00a712 Recovery/version/operator takeover",
+      "initialStatus": "MISSING",
+      "definition": "Protocol-3 queue/step/SIGKILL/scheduler recovery passes, but complete version handoff and bounded operator takeover of protected obligations are absent. **Task:** integrate exact immutable request/attempt/receipt compatibility across existing deployment/executor versions, authenticated operator takeover and existing child/scheduler recovery. Incompatible versions must refuse effect execution while retaining authenticated history and responsibility; takeover must not reset attempts, fences, budgets or unresolved members."
+    },
+    {
+      "id": "S6-13",
+      "requirement": "\u00a712 Bounded execution/recovery/human budgets",
+      "initialStatus": "MISSING",
+      "definition": "Durable 64-read recovery bound passes; S5 envelopes remain held. Hard aggregate executor quotas and S5 execution/recovery/human charging are incomplete. **Task:** reserve/check/conserve the existing S5 resource units before execution, recovery and authenticated human intervention; retain unknown cost/liability explicitly. Enforce the declared worker CPU/memory/process-thread/disk/wall/output limits with available substrate controls, and refuse admission when a required bound cannot be enforced. Record actual usage or an explicit metering gap; do not invent billing or build a hypervisor. Production substrate qualification is X1."
+    },
+    {
+      "id": "S6-14",
+      "requirement": "\u00a711\u201312 Actual S1 integration",
+      "initialStatus": "MISSING",
+      "definition": "S1 canonical belief joins work; original prepared S1 events are not durably issued through the owner outbox. **Task:** connect actual S1 belief/invalidation producers to authenticated immutable origins, original canonical reference preimages and durable protected delivery/readback, preserving original uncertainty/false admission/receipt fields and history."
+    },
+    {
+      "id": "S6-15",
+      "requirement": "\u00a711\u201312 Actual S2 integration",
+      "initialStatus": "MISSING",
+      "definition": "Typed consumer envelope readback passes; synthetic metadata is not a native design integration. **Task:** wire actual S2 design/invalidation/realized producers and genuine owner-issued references/parent handoffs into that durable authenticated transport; preserve protocol digest semantics and scientific qualification. Resolve legitimate cross-episode prepared-parent transport without weakening causal parent authorization."
+    },
+    {
+      "id": "S6-16",
+      "requirement": "\u00a711\u201312 Actual S3 integration",
+      "initialStatus": "MISSING",
+      "definition": "S3 prepared events currently remain immutable ordinary files. **Task:** add authenticated durable origin/delivery for actual S3 model, validity, prediction/realization and rejection records and their original references/parents, without changing S3 identification/admission ownership or manufacturing stronger evidence."
+    },
+    {
+      "id": "S6-17",
+      "requirement": "\u00a711\u201312 Actual S4 integration",
+      "initialStatus": "MISSING",
+      "definition": "S4 canonical timing/handoff is integrated; prepared event files lack protected owner delivery. **Task:** wire actual S4 policy/revision/invalidation/observation/override/choice/handoff/rejection records and exact original references/parents into durable authenticated transport. Preserve S4 timing and S5 release ownership; an override cannot self-grant authority."
+    },
+    {
+      "id": "S6-18",
+      "requirement": "\u00a711\u201312 Actual S5 integration",
+      "initialStatus": "PASS",
+      "definition": "Actual S5 resources/problems/certificates/reservations/consumptions plus revision/invalidation events receive separate immutable signed origins and durable transport; settlement authenticates protected S6 causal history and retains liabilities. E1/E3. Missing foreign preimages refuse append rather than invent references. No remaining implementation task; final dependency replay is S6-21."
+    },
+    {
+      "id": "S6-19",
+      "requirement": "\u00a712 S7/S8 consumer handoff (S6-owned portion)",
+      "initialStatus": "MISSING",
+      "definition": "Typed protected readback exists, but the exact S6-owned downstream handoff is incomplete. **Task:** expose/version the authenticated attempts, exposure, observations, settlement, costs/gaps, immutable references and exact admission/release/evaluator-access evidence for downstream semantic consumers, with attenuated read authority and H0/H1/H2 qualifications. Connect available actual consumers without relabeling legacy learning as frozen S7/S8; absent semantic owners are X4."
+    },
+    {
+      "id": "S6-20",
+      "requirement": "Minimal Ring-0 / reviewed release / inherited trust",
+      "initialStatus": "MISSING",
+      "definition": "Separate candidate verifier/broker/ledger and exact signed version checks exist; the full independently reviewable release package does not. **Task:** assemble the exact source/runtime/native dependency/policy/key/substrate/evaluator/witness/admission manifests, installation and compatibility/refusal procedures, and evidence for the eight minimal mechanisms below. Keep planners/compiler/models/economics/storage engines/projections/queries/learning/ordinary executors outside protected semantic authority. No self-issued production promotion or trust-rule release. Actual independent authority is X2."
+    },
+    {
+      "id": "S6-21",
+      "requirement": "Completion-gate evidence and final existing corpus",
+      "initialStatus": "MISSING",
+      "definition": "Individual current owner suites pass; the complete corpus/checks/final review is not current on one final source. **Task:** after all other repository items pass, run the frozen existing corpus below, reconcile retained failures and exact source/runtime/baseline/fault/readback/receipt/model/resource evidence, complete solo falsification review, repair only defects of these frozen items, and record repository closure. No new challenge families, weakened oracle, expanded domain or economic multiplier claim."
+    },
+    {
+      "id": "S6-22",
+      "requirement": "Architecture / economic evidence boundaries",
+      "initialStatus": "PASS",
+      "definition": "Eight scopes, five contracts, H0/H1/H2, S1\u2013S5 semantic ownership and S7 attribution remain explicit. Operational improvements do not certify 100\u00d7, Muse/dots 10\u00d7 or frontier dominance. Unmeasured comparators remain unmeasured. No remaining task."
+    },
+    {
+      "id": "X1",
+      "requirement": "Independent production isolation / monotonic witness / protected custody",
+      "initialStatus": "BLOCKED_EXTERNAL",
+      "definition": "Actual protected OS/service identity/key custody and nonrollbackable witness deployment are not supplied by local same-UID tests. S6-owned integration and reviewable artifacts must first be completed under S6-04/05/11R/13/20; this row does not excuse them."
+    },
+    {
+      "id": "X2",
+      "requirement": "Independent S8 admission and human-controlled protected release",
+      "initialStatus": "BLOCKED_EXTERNAL",
+      "definition": "Production promotion and protected semantic release require actual independent admission/reviewer authority. Disposable test signers are not that authority. Prepare everything under S6-20 before any release approval request."
+    },
+    {
+      "id": "X3",
+      "requirement": "Live provider/staging conformance evidence",
+      "initialStatus": "BLOCKED_EXTERNAL",
+      "definition": "Available recorded provider execution is local TLS/contract-fixture evidence. The actual authorized live/staging provider contract, access and independent target readback are required for corresponding external claims. Do not reinterpret local transcripts as live evidence."
+    },
+    {
+      "id": "X4",
+      "requirement": "Actual frozen S7/S8 semantic owners",
+      "initialStatus": "BLOCKED_EXTERNAL",
+      "definition": "Their causal attribution/capability evolution implementations are owned by subsequent frozen scopes and are absent here. Complete the S6-owned typed/authorized handoff under S6-19; do not implement or rename those scopes within S6."
+    }
+  ],
+  "newWorkItemsPermitted": false,
+  "newChallengeFamiliesPermitted": false,
+  "domainExpansionPermitted": false,
+  "closureRule": "All repository-controlled items PASS, then existing final corpus PASS. Report repository S6 closure separately from externally blocked full production gate; publish coherent Scopes 1\u20136 PRs only afterwards."
+}

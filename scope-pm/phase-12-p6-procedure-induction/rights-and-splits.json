@@ -1,0 +1,56 @@
+{
+  "schema": "finnor.p6.rights-and-splits.v1",
+  "base": "a72b4f402cfa1bbf51e518891db2d893b9a71aca",
+  "sourcePolicy": {
+    "ordinary": "Authenticated native P1 original episodes, P4 derivations and P5 interface histories in a caller-declared, fully enumerated Work universe. Synthetic disposable data only in this session.",
+    "protected": "Only authenticated complete owner preimages through the reviewed S6/S8 consumer port. Current cut has no complete protected analytical-episode port; do not relabel ordinary history.",
+    "sharing": "PRINCIPAL_ONLY_CURRENT_S1_AUTHORIZATION",
+    "trainingConsent": "No external customer/user data ingested, uploaded or used for model training.",
+    "selection": "Retain every request, status, failed/declined/incomplete/unknown attempt and correction within selected original episodes.",
+    "knowledge": "Explicit cut; visible immutable records separated from later knowledge/adverse notices. Future outputs never select an abstraction.",
+    "secrets": "No credentials, tokens, production connections or sealed evaluation content in capsule bytes, logs or commits."
+  },
+  "splits": [
+    {
+      "name": "public-development-induction",
+      "domain": "Exact bounded financial arithmetic from actual native P1/P4 synthetic episodes on distinct companies",
+      "canInfluenceInduction": true,
+      "independentlyControlled": false
+    },
+    {
+      "name": "public-held-apart-transfer",
+      "domain": "Different synthetic companies, period clocks, source aliases/layouts and larger P1 expression compositions",
+      "canInfluenceInduction": false,
+      "independentlyControlled": false,
+      "qualification": "PUBLIC_DEVELOPMENT_NOT_SEALED_GATE_P6"
+    },
+    {
+      "name": "independent-gate-p6",
+      "status": "UNRUN",
+      "required": "Independent rights/custody/split authority, frozen completed baseline with its own learning/skills, preregistered clustered cold/warm acceptance and total costs over real reuse horizon"
+    }
+  ],
+  "floors": {
+    "correctness": 0.95,
+    "referenceShortfallMaximum": 0.05,
+    "coverageErrorMaximum": 0.02,
+    "mean90PercentWidthMaximumFixedRange": 0.5,
+    "observedProtectedViolationsMaximum": 0,
+    "humanSecondsPerEpisode": 900,
+    "dollarsPerEpisode": 100,
+    "memoryGiB": 16,
+    "responseSeconds": 30,
+    "episodeSeconds": 3600,
+    "preparationHumanHours": 80,
+    "preparationDollars": 10000,
+    "capitalAndResourceNormalizedCap": 1
+  },
+  "gainThreshold": null,
+  "reuseHorizon": {
+    "realHorizon": null,
+    "status": "UNQUALIFIED",
+    "publicDiagnosticInvocationCountsAreNotIndependentSamples": true
+  },
+  "dollars": null,
+  "economicClaim": "NONE_H0_H1_DO_NOT_ESTABLISH_H2"
+}

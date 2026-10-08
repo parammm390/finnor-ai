@@ -1,8 +1,9 @@
 // Postgres-backed job queue (§15–16): FOR UPDATE SKIP LOCKED polling, retry with
 // backoff, dead-letter after max attempts. Every handler idempotent.
 
-import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, type WorkloadClass } from "@finnor/db";
-import { Sentry, logWithTrace } from "@finnor/tools";
+import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, withTenantTransaction, type WorkloadClass } from "@finnor/db";
+import { Sentry } from "../../../packages/tools/src/observability";
+import { logWithTrace } from "../../../packages/tools/src/logger";
 import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
 import type { PoolClient } from "pg";
@@ -30,6 +31,8 @@ export interface JobHandlerContract {
    * gets a new versioned job type so old binaries cannot claim it either. */
   protocolVersions: readonly number[];
   retrySafety: JobRetrySafety;
+  /** Only exact registered nonconsequential handlers may opt in. */
+  leaseRecovery?: "immediate_after_expiry";
   /** Production handlers declare their exact class capability in the canonical
    * compute registry. Test-only handlers may omit this. */
   allowedClasses?: readonly WorkloadClass[];
@@ -167,6 +170,9 @@ export class JobQueue {
         || contract.protocolVersions.some((version) => !Number.isSafeInteger(version) || version < 1 || version > 1_000)) {
       throw new Error(`Job handler ${type} has an invalid protocol compatibility declaration`);
     }
+    if (contract.leaseRecovery !== undefined && (
+      contract.leaseRecovery !== "immediate_after_expiry" || contract.retrySafety !== "locally_idempotent"
+    )) throw new Error("Immediate expired-lease recovery requires a locally idempotent handler");
     if (this.workloadClass && contract.allowedClasses && !contract.allowedClasses.includes(this.workloadClass)) return;
     this.handlers.set(type, {
       handler,
@@ -276,6 +282,11 @@ export class JobQueue {
             AND a.finished_at IS NULL`,
         [ids, RETIRED_WATER_JOB_TYPES],
       );
+      const immediateRecovery = [...this.handlers.entries()].flatMap(([type, registration]) =>
+        registration.contract.leaseRecovery === "immediate_after_expiry"
+          && registration.contract.retrySafety === "locally_idempotent"
+          ? registration.contract.protocolVersions.map(protocolVersion => ({ type, protocolVersion })) : [],
+      );
       const recovered = await client.query(
         `UPDATE jobs
             SET status=CASE
@@ -290,11 +301,15 @@ export class JobQueue {
                     'Worker lease expired after a potentially consequential handler; automatic replay is prohibited'
                   ELSE 'Worker lease expired before the job completed' END,
                 run_at=CASE WHEN attempts>=max_attempts THEN run_at
+                  WHEN retry_safety='locally_idempotent' AND EXISTS (
+                    SELECT 1 FROM jsonb_to_recordset($3::jsonb) AS compatible(type text,"protocolVersion" integer)
+                     WHERE compatible.type=jobs.type AND compatible."protocolVersion"=jobs.protocol_version
+                  ) THEN now()
                   ELSE now()+(LEAST(300,30*power(2,GREATEST(attempts,1))) || ' seconds')::interval END,
                 started_at=NULL,lease_owner=NULL,lease_expires_at=NULL,
                 lease_heartbeat_at=NULL,claim_token=NULL
           WHERE id=ANY($1::uuid[]) AND status='running'`,
-        [ids, RETIRED_WATER_JOB_TYPES],
+        [ids, RETIRED_WATER_JOB_TYPES, JSON.stringify(immediateRecovery)],
       );
       await client.query("COMMIT");
       return recovered.rowCount ?? 0;
@@ -556,7 +571,24 @@ export class JobQueue {
       const safelyReplayable = job.retrySafety === "pure"
         || job.retrySafety === "locally_idempotent"
         || job.retrySafety === "durably_effect_guarded";
-      if (capacityDeferred && safelyReplayable) {
+      // P2 is reconcilable after submission, but a failed atomic admission has
+      // no intent, liability or external call for this delivery. Require the
+      // current durable unit and absence of its intent, rather than weakening
+      // the retry contract for other reconcilable handlers.
+      const p2Unsubmitted = capacityDeferred && job.type === "run_compute_search_unit_v1"
+        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && !!job.tenantId && typeof job.payload.principalId === "string"
+        && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
+          const proof = await c.query(`SELECT u.id FROM finnor_os.p2_units u
+            JOIN finnor_os.p2_requests s ON s.id=u.search_id AND s.tenant_id=u.tenant_id AND s.principal_id=u.principal_id
+            WHERE u.tenant_id=$1 AND u.principal_id=$2 AND u.id=$3 AND s.id=$4
+              AND s.generation=$5 AND u.generation=s.generation AND s.status='RUNNING' AND u.status='QUEUED'
+              AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_attempts a WHERE a.tenant_id=u.tenant_id
+                AND a.principal_id=u.principal_id AND a.delivery_id=$6)`,
+          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,job!.payload.generation,job!.deliveryAttemptId]);
+          return proof.rowCount === 1;
+        }).catch(() => false);
+      if (capacityDeferred && (safelyReplayable || p2Unsubmitted)) {
         // No provider request was made: capacity contention is not a business
         // failure or an exhausted retry.  Keep an audit row for the physical
         // delivery but restore the logical attempt and defer durably.

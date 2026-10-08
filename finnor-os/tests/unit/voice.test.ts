@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSpokenDecision, diagnoseFailure, buildConfirmationScript } from "../../packages/orchestration/src/voice";
+import { parseSpokenDecision } from "../../packages/orchestration/src/voice";
 
 describe("parseSpokenDecision (voice confirmation parse path)", () => {
   it("clear approvals", () => {
@@ -78,29 +78,5 @@ describe("parseSpokenDecision — per-tenant extra phrases (Phase 14 config seam
     // nor "totally" is a built-in trigger, isolating the extra phrase's own effect.
     expect(parseSpokenDecision("totally ship it)")).toBe("unclear");
     expect(parseSpokenDecision("totally ship it)", { approve: ["ship it)"] })).toBe("approve");
-  });
-});
-
-describe("diagnoseFailure (spoken failure diagnosis)", () => {
-  it("names the failing integration and asks for the fix on credential errors", () => {
-    const s = diagnoseFailure("Could not reach voice transport: [vapi] VAPI_API_KEY is not set", "place_call");
-    expect(s).toContain("Vapi");
-    expect(s.toLowerCase()).toContain("key");
-    expect(s).toContain("place call");
-  });
-  it("names the integration on outage errors without asking for a key", () => {
-    const s = diagnoseFailure("[resend] timed out after 15000ms", "send_message");
-    expect(s).toContain("notification sender");
-    expect(s.toLowerCase()).toContain("review queue");
-  });
-  it("degrades gracefully with no integration tag", () => {
-    const s = diagnoseFailure(undefined, "record_finding");
-    expect(s).toContain("record finding");
-  });
-});
-
-describe("buildConfirmationScript", () => {
-  it("appends the yes/no ask", () => {
-    expect(buildConfirmationScript("Send 3 proposals.")).toMatch(/yes to approve.*no to reject/i);
   });
 });

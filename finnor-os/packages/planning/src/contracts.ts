@@ -223,6 +223,7 @@ export interface CandidateActionNode extends CandidateNodeBase {
 export interface CandidateWaitNode extends CandidateNodeBase {
   kind: "wait";
   waitFor: Record<string, unknown>;
+  earliestAt?: string;
   deadlineAt?: string;
 }
 export interface CandidateCheckNode extends CandidateNodeBase {
@@ -302,7 +303,7 @@ export interface PlanActionNode extends PlanNodeBase {
   risk: "low" | "medium" | "high";
   irreversible: boolean;
 }
-export interface PlanWaitNode extends PlanNodeBase { kind: "wait"; waitFor: Record<string, unknown>; deadlineAt?: string }
+export interface PlanWaitNode extends PlanNodeBase { kind: "wait"; waitFor: Record<string, unknown>; earliestAt?: string; deadlineAt?: string }
 export interface PlanCheckNode extends PlanNodeBase { kind: "check"; criterionId: string; assertion: Record<string, unknown> }
 export type PlanNode = PlanQueryNode | PlanActionNode | PlanWaitNode | PlanCheckNode;
 
@@ -415,7 +416,7 @@ export const CandidatePlanSchema = z.object({
   nodes: z.array(z.discriminatedUnion("kind", [
     z.object({ ...Common, kind: z.literal("query"), request: z.record(z.unknown()) }).strict(),
     z.object({ ...Common, kind: z.literal("action"), actionType: z.string().min(1).max(200), payload: z.record(z.unknown()) }).strict(),
-    z.object({ ...Common, kind: z.literal("wait"), waitFor: z.record(z.unknown()), deadlineAt: z.string().datetime().optional() }).strict(),
+    z.object({ ...Common, kind: z.literal("wait"), waitFor: z.record(z.unknown()), earliestAt: z.string().datetime().optional(), deadlineAt: z.string().datetime().optional() }).strict(),
     z.object({ ...Common, kind: z.literal("check"), criterionId: z.string().min(1).max(100), observation: z.record(z.unknown()).optional() }).strict(),
   ])).min(1).max(40),
   rationale: z.string().min(1).max(8_000).optional(),

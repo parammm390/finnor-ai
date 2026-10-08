@@ -1,0 +1,15 @@
+{
+  "knownFailures": {
+    "canaryMigrationHead": "REPAIRED; six validator challenges retained",
+    "missingNativeRuntimeDependency": "REPAIRED; pinned fs-ext 2.1.1; actual clean-install native proofs passed",
+    "staleCapabilityInventory": "REGENERATED",
+    "maskedPreflightFailures": "REPAIRED; aggregate exits verified with earlier failure and later success",
+    "missingChildDiagnostics": "REPAIRED; stderr and artifact retention added",
+    "wrongPerformanceBrowser": "REPAIRED; documented CHROME_PATH passed to Lighthouse 11",
+    "inheritedDependencyAdvisories": "PATCHED; 1005 exact registry versions have no OSV findings; local source fork separately proven"
+  },
+  "newUnitTestsWritten": false,
+  "coverageRemoved": false,
+  "upstreamExistingBracesTestsPassed": 904,
+  "qualification": "FINAL_LOCAL_REPAIR_GATES_PASS; REMOTE_CI_PENDING"
+}

@@ -1,3 +1,4 @@
+import {assertEvidenceRunTransactionCurrent} from './evidence-execution/consumer';
 import { randomUUID } from "node:crypto";
 import {
   ArtifactError,
@@ -144,6 +145,7 @@ async function loadRunAndBindings(client: PeClient, tenantId: string, runId: str
     recordUnderwritingMetric({ tenantId, runId }, "underwriting_result_hash_mismatches", 1, "count");
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Artifact operation refused a Run with a corrupted result hash", { runId });
   }
+  await assertEvidenceRunTransactionCurrent(client,tenantId,runId);
   const bindings = await client.query<BindingRow>(
     `SELECT id::text,investment_case_id::text,model_version_id::text,document_id::text,document_version_id::text,direction,
             binding_mode,model_node_id,anchor_id,anchor_hash,value_selector,comparison_policy,binding_version
@@ -209,6 +211,8 @@ export async function projectUnderwritingOutputs(ctx: PeMutationContext, input: 
   assertPeUuid(input.documentId, "documentId");
   assertPeUuid(input.baseVersionId, "baseVersionId");
   assertPeText(input.idempotencyKey, "projection idempotencyKey");
+  const p4Basis = await peTransaction(ctx, async (_db, client) => assertEvidenceRunTransactionCurrent(client, ctx.auth.tenantId, input.runId), { readOnly: true });
+  if (p4Basis) fail("ARTIFACT_VALUE_UNSUPPORTED", "P4 derived inputs require governed artifact continuation authority before an artifact write");
   const existing = await peTransaction(ctx, async (_db, client) => (await client.query(
     "SELECT * FROM finnor_os.underwriting_artifact_projections WHERE tenant_id=$1 AND idempotency_key=$2",
     [ctx.auth.tenantId, input.idempotencyKey],

@@ -1,0 +1,76 @@
+{
+  "schema": "finnor.p6.shared-native-proposal.v1",
+  "base": "a72b4f402cfa1bbf51e518891db2d893b9a71aca",
+  "tree": "ca56b7b91d5a449bbe3a3dd7317c73da712fd5a3",
+  "patchDigest": "c8c9a5fda713aa31cb0c7fe635a7be7c4738e4394995623f52ba75a8cd1db9fb",
+  "files": [
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "preimage": "75a9f859f56b03f8a13aaa0172c572c9bb6f86ab33211ae2cfd8be70e374eaf9",
+      "proposed": "56d8c17c6ee19532925f5d65090732e31ce32ad5880c1dcc041da5a23d34b1a5"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "preimage": "48c4201b61d506292b0db436d9282193de02f381c906ba7470b61b274ad5ec81",
+      "proposed": "fc39e49925a1125c0f7f8ac83065719344dde7d7347433dd1af314bb411b9788"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "preimage": "4913085b9c56c3db992aeebf0fc0582e194b6b743d8fb96e1495f023e0a57f5f",
+      "proposed": "2ab95a6beb6059f18ca0b3015fb95aaa60045ac63986e4a95a0e906eafdff18e"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "preimage": "6dffcb2debd08405bd04b9ee8e8e6a6480517de8b9131090b01027877941862f",
+      "proposed": "61ace113aaae5b89069afed3ce07b8e934eaa7b04639ac51ef2a9dc70d65cda7"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "preimage": "6c7aac46b8fc5831cec9b2f4ff155ea348f6f8222de32974213c28d9f1f04feb",
+      "proposed": "dc2b3142f64524fcd435428e3618b8e42d414c845c6e1060d05bd94a24374c42"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/api.ts",
+      "preimage": "aafbad6e25e4085c648e4b74891fd7d3b5e62fa91648eb79bf8e81ab0bc35e5b",
+      "proposed": "41db6af1f78fad056104860c657b17138d65eea8060351d698d7cbf5178c33f1"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+      "preimage": "b5e372449a42c2e5a792adf786246051e361cc08e61a0e840a5d46f44af30a31",
+      "proposed": "996a93a0aa8e74bd99222e45d5f0bc14f3148928fb62af4ac00c821d3df81eec"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+      "preimage": "24d9928c90df1bd2a280c31783fcc94f60ede700243c8ea64ce901c4c2c56b80",
+      "proposed": "9f0f6e5ab9fd48c6cb0ee1d208745a40526df6f9173efe7b616b4f700aa87086"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/worker.ts",
+      "preimage": "b6b520421c29ae79db2bf4a69ac6703fde2d3877140ca07c602628ad28b0bd4c",
+      "proposed": "5076625dd374e0e8286dedeb841db84fad3a915649d089616d6b09d6b8f122e9"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "preimage": "16623b0b3c2196177290a0d2358c41a9448bb05236ea781e204adab67d65e1a0",
+      "proposed": "d1fdda26b5df8cf2c9f0f57813204df4037e21bbdd213f0436f4168c86cc9abb"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "preimage": "d143b5f207eeabfeb6018e42f69c131f918cb52ac80fc1e7ce8f8e7d77eecae0",
+      "proposed": "c15b16be5a443ea186b086f1af6853966304fbe067103e0eac2e746ce9a32e6f"
+    },
+    {
+      "path": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
+      "preimage": "5dfbf3294e86bb81572ef4f7af87b3918baaa32af4a6ec4c104dca3809c91ea7",
+      "proposed": "b8092e57d90b1e34c959a945691c04e4b516507f9a0143112e03810cc507d0bc"
+    }
+  ],
+  "status": "PROPOSED_NOT_SERIAL_OWNER_ADOPTED",
+  "publishedMigrationsChanged": false,
+  "order": [
+    "owned-p6-source",
+    "serial-unumbered-sql-allocation",
+    "shared-native.exact-c.patch",
+    "owner-reviewed-s8-port-and-release"
+  ]
+}

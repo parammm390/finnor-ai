@@ -1,0 +1,109 @@
+{
+  "schema": "finnor.p6.independent-evaluation-request.v1",
+  "status": "REQUEST_NOT_REGISTERED_OR_SIGNED",
+  "currentGate": "UNQUALIFIED",
+  "payloadInterfaceRequested": "s8-procedure-capsule-v1",
+  "frozenSource": {
+    "restrictedBaseCommit": "a72b4f402cfa1bbf51e518891db2d893b9a71aca",
+    "restrictedBaseTree": "ca56b7b91d5a449bbe3a3dd7317c73da712fd5a3",
+    "BASE10": null,
+    "finalOwnedCut": "RESOLVE_FROM_DELIVERY_MANIFEST",
+    "capsuleAndModulePins": "RESOLVE_FROM_FINAL_NATIVE_FREEZE_AND_IMMUTABLE_CAPSULE_RECORD"
+  },
+  "custody": {
+    "evaluatorId": null,
+    "signedProtocolRef": null,
+    "caseCommitments": null,
+    "trainingCutoff": "FREEZE_FROM_PERMISSIONED_OWNER_EPISODES_BEFORE_HIDDEN_CASE_RELEASE",
+    "sourceEpisodeClass": "CURRENT_PUBLIC_SYNTHETIC_NATIVE_HISTORY_NOT_PROTECTED_ANALYTICAL_LEDGER",
+    "permittedRights": "MATCHED_CURRENT_S1_RIGHTS_NO_EXTERNAL_CUSTOMER_DATA_INGESTED",
+    "hiddenScoringAssets": null,
+    "feedback": "FINAL_AGGREGATE_ONLY_NO_HELD_OUT_OUTPUTS_FOR_ABSTRACTION_SELECTION"
+  },
+  "comparators": [
+    {
+      "id": "qualified-completed-baseline",
+      "required": true,
+      "status": "NOT_SUPPLIED",
+      "equipping": "OWN_COMPLETED_LEARNING_PROCEDURES_SKILLS_MEMORY_AND_NATIVE_TOOLS",
+      "admittedHandoffRef": null
+    },
+    {
+      "id": "strongest-applicable-equipped-frontier-specialist",
+      "required": true,
+      "status": "NOT_AUTHORIZED_OR_PINNED",
+      "providerRouteAndToolPins": null
+    },
+    {
+      "id": "exact-C-native-P1-P4",
+      "status": "PUBLIC_DIAGNOSTIC_ONLY",
+      "runner": "finnor-os/scripts/p6/run-local.mjs transfer",
+      "qualification": "NOT_A_QUALIFIED_COMPLETED_BASELINE_OR_FRONTIER_COMPARISON"
+    }
+  ],
+  "splitPlan": {
+    "training": "COMPLETE_AUTHORIZED_ORIGINAL_EPISODES_WITH_ADVERSE_UNKNOWN_CORRECTED_AND_DECLINED_PATHS",
+    "hidden": [
+      "UNSEEN_COMPANIES_AND_CHRONOLOGICAL_PERIODS",
+      "UNSEEN_SOURCE_LAYOUTS_SCHEMA_ALIASES_AND_MISSING_COLLIDING_FIELDS",
+      "UNSEEN_LARGER_P1_P4_P5_COMPOSITIONS",
+      "RATE_DATE_FEE_CALENDAR_INSTRUMENT_ACCOUNTING_REGIME_MISMATCHES",
+      "COLD_INDUCTION_AND_WARM_CURRENTNESS_LOOKUP_PLUS_ACTUAL_EXECUTABLE_INVOCATION"
+    ],
+    "dependentClusters": "OWNER_DECLARES_COMPANY_SCHEMA_EPISODE_AND_SHARED_SOURCE_DEPENDENCE_BEFORE_SCORING",
+    "sampleSize": null,
+    "power": null,
+    "confidence": 0.95,
+    "multiplicity": "PREREGISTER_SIMULTANEOUS_INNER_OUTER_ENDPOINTS_AND_ALL_PRIOR_DOMAINS",
+    "stopping": "OWNER_REGISTERS_FIXED_WAVES_AND_FAILURE_DENOMINATOR_BEFORE_SCORING",
+    "gainThreshold": null,
+    "noInventedMinimum": true
+  },
+  "acceptance": {
+    "floors": {
+      "correctnessMinimum": 0.95,
+      "referenceQualifiedShortfallMaximum": 0.05,
+      "coverageErrorMaximumAt50_80_90_95": 0.02,
+      "mean90WidthMaximumFixedRange": 0.5,
+      "authorityTenantAuditFalseVerificationViolationsMaximum": 0
+    },
+    "includeAll": [
+      "INDUCTION_AND_BUILD",
+      "ALL_REJECTED_ABSTRACTIONS",
+      "FAILED_DECLINED_INCOMPLETE_UNKNOWN_TIMEOUT_PATHS",
+      "SOURCE_READS_LOOKUPS_ACTUAL_EXECUTION_AND_FRESH_FALLBACK",
+      "INDEPENDENT_TESTING_HUMAN_CORRECTIONS_RECOVERY_AND_INTEGRATION",
+      "MAINTENANCE_ROLLBACK_AND_REAL_REUSE_HORIZON"
+    ],
+    "fullAcceptedOutputCorrectnessRequired": true,
+    "cachedIdenticalAnswersAreNotTransfer": true,
+    "unknownCostsAreNotZero": true
+  },
+  "resources": {
+    "normalizedCapitalAndResourceCap": 1,
+    "humanSecondsPerEpisode": 900,
+    "computeDataIntegrationDollarsPerEpisode": 100,
+    "memoryGiB": 16,
+    "responseSeconds": 30,
+    "episodeSeconds": 3600,
+    "preparationHumanHours": 80,
+    "preparationDollars": 10000,
+    "matching": "SAME_INFORMATION_RIGHTS_BUDGETS_MODEL_NATIVE_FACILITIES_AND_HUMAN_ASSISTANCE"
+  },
+  "costAccounting": {
+    "realReuseHorizon": null,
+    "completeBillingRefs": null,
+    "preparationHumanTime": null,
+    "maintenanceRecoveryCosts": null,
+    "localDiagnosticInvocationCountsAreNotIndependentSamples": true
+  },
+  "programmeBoundary": {
+    "reach90Days": {"companiesDeals": 100, "systemTypes": 10, "concurrentMissions": 1000, "interactingOpportunities": 10000},
+    "primaryH2Months": 36,
+    "ownerValueCostsLiabilities": "COMPLETE_S7_ACCOUNTING_REQUIRED",
+    "economic100x": "NO_CLAIM_ATTRIBUTABLE_NET_VALUE_POSITIVE_MATERIAL_DENOMINATOR_AND_SIMULTANEOUS_BOUNDS_REQUIRED",
+    "namedMatchedEconomicComparisons": ["STRONGEST_APPLICABLE", "MUSE", "DOTS"],
+    "H0_H1CannotCertifyH2": true
+  },
+  "authority": {"signature": null, "admission": null, "evaluatorAuthorityGranted": false, "economicCreditGranted": false}
+}

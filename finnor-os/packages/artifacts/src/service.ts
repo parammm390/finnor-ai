@@ -261,6 +261,17 @@ export async function getArtifact(ctx: ArtifactActor, documentId: string, versio
   });
 }
 
+/** Exact native byte reader. Callers retain their current owner authorization.
+ * Keep bytes separate from metadata responses and immutable semantic snapshots. */
+export async function getArtifactBytes(ctx: ArtifactActor, documentId: string, versionId: string) {
+  const artifact = await getArtifact(ctx, documentId, versionId);
+  return withTenant(ctx.tenantId, async (db) => {
+    const loaded = await loadDocumentVersion(db, ctx.tenantId, documentId, versionId);
+    ensure(loaded, "DOCUMENT_VERSION_NOT_FOUND");
+    return { ...artifact, bytes: loaded.bytes };
+  });
+}
+
 export async function queryArtifactIR(ctx: ArtifactActor, documentId: string, versionId: string, input: {
   ids?: string[];
   kinds?: string[];

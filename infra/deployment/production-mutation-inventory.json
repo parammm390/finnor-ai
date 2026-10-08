@@ -166,8 +166,6 @@
         "scripts/release/verify-production-readiness.mjs",
         "scripts/release/production-readiness-policy.mjs",
         "scripts/release/production-readiness-policy.test.mjs",
-        "scripts/release/release-evidence-policy.mjs",
-        "scripts/release/release-evidence-policy.test.mjs",
         "scripts/release/verify-supplier-canary-release.mjs",
         "scripts/release/verify-p8-zero-resurrection.mjs",
         "scripts/release/verify-release.mjs",
@@ -222,8 +220,6 @@
         ".github/workflows/security.yml",
         ".github/workflows/pr-verdict.yml",
         ".github/workflows/dealer-zero-replay.yml",
-        ".github/workflows/k6-nightly-lite.yml",
-        ".github/workflows/planner-live-evals.yml",
         ".github/workflows/tenant-isolation-nightly.yml"
       ],
       "classification": "READ_ONLY",

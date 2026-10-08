@@ -1,0 +1,289 @@
+{
+  "schema": "finnor.m2.registration.v1",
+  "governingMission": "/Users/paramdave/.codex/visualizations/2026/10/04/01a10828-82e3-7572-8d13-530b28a346bf/finnor-pm-control/prompts/phase-08-m2-deliberation-controller-codex.md",
+  "missionSHA256": "721f1a8fd329d721f635571a653595c00089dc061d58acaccc7d2addfc3eb1ec",
+  "baseCommit": "94423a17ac24992f4edaf12b0ab99d6731a80a7e",
+  "baseTree": "935d784533ff1706f3cb8bdab1e7f82e923b6cd4",
+  "checkout": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/FINNOR",
+  "branch": "codex/pm-m2-deliberation-controller",
+  "scheduler": "EXISTING_P2_ONLY",
+  "migrationReservation": "0162_m2_deliberation_policy.sql; observed M3=0158/M4=0160/P2=0161; root is sole writer",
+  "originalAlgorithmSteps": 7,
+  "originalFields": [
+    "policyRequest",
+    "computeGrant",
+    "frontier",
+    "metacontroller",
+    "nextWork",
+    "marginalValueEvidence",
+    "incumbent",
+    "stop",
+    "outstandingCosts"
+  ],
+  "familyCount": 34,
+  "families": [
+    {
+      "id": "F01",
+      "originalTitle": "Exact P2/P1 join.",
+      "originalContract": "Real delivered candidate/check/owner/Work flows into executed M2-selected P2 units and current policy; old snapshot/ref-shaped/foreign programme refuses. Existing P1 numerical/artifact acceptance is unchanged and can independently reject M2 favorite.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F02",
+      "originalTitle": "Owner meaning and conversion.",
+      "originalContract": "Actual utility/resource/currency/horizon/accounting inputs determine gain/cost/delay semantics; missing or mismatched conversion remains unknown/request/refusal. Caller default dollar rate/native attempt/tokens cannot mint economic meaning. Ordinary finite owner fixtures have explicit model-relative qualification.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F03",
+      "originalTitle": "Executable module identity.",
+      "originalContract": "Content-addressed metacontroller actually runs exact bounded bytes/config/interface/domain; changed code/feature schema under same ref fails. Module has no credential/direct effect/promotion channel; requested arbitrary runtime refuses.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F04",
+      "originalTitle": "Authentic labels and leakage.",
+      "originalContract": "Independent permitted before/after loss labels versus confidence/completion lookalikes; duplicate identity, overlap company/time/source/ancestry, future information or sealed-case access refuse. Negative controls demonstrate leakage rejection without excluding genuine difficult outcomes.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F05",
+      "originalTitle": "Completion versus gain.",
+      "originalContract": "High-completion irrelevant work versus lower-completion material source/check work; expected gain/completion/acceptance separated. A reliable redundant proof does not automatically receive highest expected decision value.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F06",
+      "originalTitle": "Fifty expensive wording calls.",
+      "originalContract": "Actual repeated same-premise outputs cannot change supported value/feasibility; cheap missing-clause inspection remains available and receives lawful effort. Execute source read and independent feasible-action change, not a hardcoded \u201cclause is good\u201d score or mocked final value.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F07",
+      "originalTitle": "Two agreeing unverified cells.",
+      "originalContract": "Both outputs share unsupported spreadsheet cell; agreement does not justify certified stop/incumbent. Supported correction/independent mechanics can change result; shared premise stays material until genuinely resolved.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F08",
+      "originalTitle": "Original resource parent.",
+      "originalContract": "Policies/children/refinement/retry/fallback/resume cannot renew P1/S5 episode/candidate/unit/native/time limits. Mutated same idempotency key conflicts; duplicate selection produces no fresh liability or budget.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F09",
+      "originalTitle": "Easy solved decision.",
+      "originalContract": "Qualified incumbent and supported nonpositive remaining value yields bounded cheap stop; heuristic fallback is labeled if full bound absent. Full cost includes M2 overhead and independent verification; extra agents/prose are not gain.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F10",
+      "originalTitle": "Hard useful deep computation.",
+      "originalContract": "Actual difficult supported native/refinement/check chain receives useful depth and changes independent decision/accepted output under matched limits. No fake model or oracle leak may count as equipped inference.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F11",
+      "originalTitle": "Useful parallel versus redundant batch.",
+      "originalContract": "Independent useful tasks overlap through actual P2 queue; correlated/redundant batch does not sum individual gain. Sequential dependency/overhead case suppresses parallelism; measure actual timestamps/results/costs.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F12",
+      "originalTitle": "Complementary nonmyopic work.",
+      "originalContract": "Two-step source/solve or verification chain with weak first-step myopic gain but useful joint gain is retained when supported. If controller approximates myopically, explicit domain/heuristic/coverage limit replaces global optimal stop.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F13",
+      "originalTitle": "Delay and deadline reversal.",
+      "originalContract": "S4-defined delay convention can reverse ranking; late result may be uneconomic/unusable. Milliseconds aren't utility without mapping; grant/deadline preempts future value and preserves incumbent/residual work.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F14",
+      "originalTitle": "Complete marginal/sunk/outstanding costs.",
+      "originalContract": "Avoid subtracting same sunk P1/P4 charge twice or claiming cancellation refund. Failed/truncated/unmetered/native/model/data/idle/preparation/human overhead included; unknown usage/USD not0, invoices/corrections append.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F15",
+      "originalTitle": "Uncertainty and unsupported strata.",
+      "originalContract": "Sparse/OOD calibration, interval missingness, regime/model/module shift, selection/censoring and drift force declared fallback/refusal. Hold target calibration/domain independently; completion interval not economic bound.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F16",
+      "originalTitle": "Diversity and reopened dominance.",
+      "originalContract": "Equivalent representations merge without erasing cost/ancestry; economic mechanisms/terms remain distinct. Corrected source/model/constraint invalidates dominance and restores candidate within original grant.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F17",
+      "originalTitle": "Qualified incumbent coverage.",
+      "originalContract": "Independent check failure removes ineligible choice; valid alternate survives. All-unqualified frontier yields null/exact predicates; reject-everything isn't accepted-output/cost gain. Preserve original acceptance and coverage denominator.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F18",
+      "originalTitle": "Supported stop versus heuristic.",
+      "originalContract": "Exact finite net upper bound across available supported work permits qualified stop; unknown domains/chain/cost/calibration imply heuristic/residual. Agreement/timer/no-witness cannot be safety/optimality certificate.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F19",
+      "originalTitle": "S4 business selection separation.",
+      "originalContract": "Actual inquiry/action/wait/stop proposal goes back to S4/S2/S5/S6; M2 computational stop cannot make final business choice, cash movement, customer reply or experimental observation.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F20",
+      "originalTitle": "Two-worker admission.",
+      "originalContract": "Concurrent policies/units contend atomically on original grant/endpoint/claim; failed pre-admission has no physical call/debit. Preserve foreground/per-tenant fairness and trusted classification; no user payload promotion.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F21",
+      "originalTitle": "Provider identity/truncation/usage.",
+      "originalContract": "Bounded local HTTP throttle/response/schema/returned model/usage cases retain failure digests and charge; invalid/truncated result not incumbent. Actual paid provider stays separate unmeasured unless genuinely authorized/admitted.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F22",
+      "originalTitle": "Revocation during computation.",
+      "originalContract": "Rights/grant/resource/route/code/module/estimator changes before admission or publication fence current result. Costs remain; no fallback to unauthorized route/credential or refreshed optimistic quota.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F23",
+      "originalTitle": "Whole owner IO deadline.",
+      "originalContract": "Repeat real blocked M1 SQL350ms case with unchanged less-than1250ms assertion; source/pool/acquire work cannot outlive whole envelope. Retain failure evidence/qualified incumbent and exact underlying cancellation or expiry semantics.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F24",
+      "originalTitle": "Release deadline and successor fence.",
+      "originalContract": "Repeat original1500ms release case with unchanged less-than2250ms assertion; blocked cleanup returns truthful retained expiry/liability. Stale holder cannot renew/release successor or publish late result. Pure Promise timeout is not actual cancellation proof.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F25",
+      "originalTitle": "Crash at durable cuts.",
+      "originalContract": "Process kill before/after reservation/INTENT/SUBMITTED/receipt/policy publication; cold replay preserves exact attempt/outstanding debit and no unsafe unknown resubmission. Physical versus logical retry identities remain distinct.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F26",
+      "originalTitle": "Cancellation and reconciliation.",
+      "originalContract": "Every submitted/unknown unit has continue/cancel/reconcile responsibility; cancelled/late current policy can't resurrect. Historical cost-only updates don't expose revoked private contents or delete external S6 obligations.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F27",
+      "originalTitle": "Policy/plan coherent publication.",
+      "originalContract": "Race P2 revision/current Work/source/owner and M2 module/estimator between proposal and apply/read; refuse stale tuple, preserve immutable body/monotone head and replan supported affected region. No disabled P4 broad fingerprint guard.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F28",
+      "originalTitle": "Bounded decode/metacontrol overhead.",
+      "originalContract": "Oversized/cyclic frontier/work/feature/module/label/trace buffers refuse before expansion; fitting/prediction/refit/replan bounded. Physical aggregate OS limits are qualified separately from logical counters/RSS samples.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F29",
+      "originalTitle": "Tenant/principal/module/evidence isolation.",
+      "originalContract": "Foreign root/Work/grant/label/report/module/current refs deny without existence/values. Tampered digest/path/symlink/FIFO/partial artifact/policy read fails; redacted exports don't replace authoritative bytes.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F30",
+      "originalTitle": "Genuine source-object inspection.",
+      "originalContract": "Cheap query reads actual permitted source/current operative term with exact entity/period/unit/right; stale/irrelevant source doesn't change admissibility. Associated-deal canonical coverage refusal remains unless narrowly genuine owner fix independently qualifies it.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F31",
+      "originalTitle": "Factory/M4/kernel pending joins.",
+      "originalContract": "Independent P1-native M2 runs with unavailable peers; missing actual CapitalProgram/ChallengeResult/kernel remains exact pending, not mocked safe/refined candidate. Later committed joins requalify their domains/shared closure.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F32",
+      "originalTitle": "Strong fixed/equipped comparison.",
+      "originalContract": "Independent tuned fixed-deep/fixed-wide/equipped controllers have same models/tools/info/total resources; all failures/abstentions/coverage included. No deprived baseline/larger spend/selected favorable point or aggregate borrowed speedup.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F33",
+      "originalTitle": "Actual Canvas and browser closure.",
+      "originalContract": "Current policy/next work/value unit/support/incumbent/outstanding shown on real Work; installed agent-browser path verified and actual keyboard/mobile/reload/source correction/revocation/cross-thread delayed response trajectory observed. ENOENT is not PASS or economic blocker.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    },
+    {
+      "id": "F34",
+      "originalTitle": "Final source/reconstruction and original gates.",
+      "originalContract": "Actual generated registry/queue/schema/migration/type/client/authz parity and affected P4/P1/P2/M1 checks bind final bytes. Every replay reference/printed claim verified; local evidence never upgrades GateP2/GateM2/protected/equipped/dollars/H2.",
+      "initialStatus": "NOT_EXECUTED",
+      "evidence": []
+    }
+  ],
+  "gates": {
+    "ordinary": "UNIMPLEMENTED",
+    "GateM2": "UNPASSED",
+    "GateP2": "UNPASSED",
+    "equippedComparison": "UNMEASURED",
+    "protected": "UNPASSED",
+    "dollars": "UNKNOWN_UNRECONCILED",
+    "ownerRiskAndGlobalFloors": "UNESTABLISHED",
+    "reach": "UNESTABLISHED",
+    "H2Wealth100x": "UNESTABLISHED",
+    "deployment": "NOT_REQUESTED"
+  },
+  "independentEvaluator": null,
+  "paidEndpointAuthorization": null,
+  "sourceLoading": {
+    "missionAndAttachmentFullRead": true,
+    "PAndMSourcesFullRead": true,
+    "P2DeliveryVerifier": {
+      "assets": 96,
+      "rawEvidenceMembers": 2756,
+      "result": "PASS"
+    },
+    "reconstructionReceipt": "external FINNOR-p2-receipt.json"
+  },
+  "initialRuntimeFailure": "npm ci ENOSPC; raw task logs preserved; no failed install counts as qualification"
+}

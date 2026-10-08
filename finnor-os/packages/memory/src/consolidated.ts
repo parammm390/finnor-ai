@@ -15,10 +15,6 @@ function zepConfigured(): boolean {
   return Boolean(process.env.ZEP_API_KEY);
 }
 
-export function zepProviderStatus(): { configured: boolean } {
-  return { configured: zepConfigured() };
-}
-
 export async function testZepProviderConnection(): Promise<{ configured: boolean; healthy: boolean | null; reason: string | null }> {
   if (!zepConfigured()) return { configured: false, healthy: null, reason: "ZEP_API_KEY is not configured" };
   try {
@@ -132,9 +128,4 @@ export async function queryConsolidatedFacts(
   } catch {
     return [];
   }
-}
-
-/** @deprecated Pre-Phase-6 tenant/session mirroring is permanently disabled. */
-export async function mirrorTurnToZep(_tenantId: string, _sessionId: string, _content: string): Promise<void> {
-  return undefined;
 }

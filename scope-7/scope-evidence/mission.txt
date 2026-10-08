@@ -1,0 +1,222 @@
+/goal Implement S7 — Economic attribution, centered on OutcomeEstimand, from the actual current FINNOR implementation to its frozen completion gate.
+This is an implementation mission, not an architecture exercise.
+The system ambition is 100× attributable net owner value against the strongest qualified baseline, 10× against Muse and 10× against dots under the same economic protocol, and separately demonstrated capability-frontier dominance. S7 must make the economic claim measurable and difficult to game.
+Build the capability to determine which intervention programmes caused owner value, how much is supported, under which assumptions, after which costs, and what remains unidentified. That evidence must support better future decisions and independently evaluated capability improvements. Task completion, rising EBITDA, accurate forecasts and attractive modeled returns cannot substitute for attributable net owner value.
+Authority
+Use, in priority order:
+1. Actual current repository/runtime behavior.
+2. Applicable AGENTS.md.
+3. Frozen architecture and cross-cutting contracts.
+4. The S7 specification below.
+5. Existing tests/evidence.
+Runtime establishes what exists. The frozen specification establishes required ownership and completion. Do not infer causal attribution from an “outcome,” “learning,” “valuation” or “attribution” name. Trace actual inputs, assignment, exposure, measurement, calculations, persistence and consumers.
+The eight-scope architecture is frozen. Do not redesign, rename, merge, split or add scopes. Do not move fundamental ownership.
+Required FINNOR references
+Repository: /Users/paramdave/Desktop/FINNOR.
+Read:
+- [AGENTS.md](/Users/paramdave/Desktop/FINNOR/AGENTS.md) and applicable scoped instructions.
+- [Final locked specification](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture-locked-specification.md) and [lock manifest](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture-lock.json). These govern the exact scope, five contracts, minimal Ring-0, owner-value accounting, uncertainty, evidence horizons and separate benchmarks.
+- [Audit](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/audit.md), [frontier research](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/frontier.md), and [architecture derivation](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/architecture.md): historical evidence, not permission to redesign.
+- [Runtime evidence](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/runtime-evidence.json), [evidence summary](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/evidence-summary.json), and [repeatable audit procedure](/Users/paramdave/.codex/visualizations/2026/09/30/01a0f329-1a8a-7ee1-981d-f802facfcee8/finnor-research/evidence.md). Respect recorded fixture, provider, financial-model and runtime limits.
+- S1's [status](/Users/paramdave/Desktop/FINNOR/scope-status.md) and [completion audit](/Users/paramdave/Desktop/FINNOR/scope-evidence/completion-audit.md).
+- S2's [status](/Users/paramdave/Desktop/FINNOR/scope-2/scope-status.md) and [downstream contracts](/Users/paramdave/Desktop/FINNOR/scope-2/scope-evidence/downstream-dependencies.md).
+- S3's [status](/Users/paramdave/Desktop/FINNOR/scope-3/scope-status.md) and [downstream contracts](/Users/paramdave/Desktop/FINNOR/scope-3/scope-evidence/downstream-dependencies.md).
+- S4's [status](/Users/paramdave/Desktop/FINNOR/scope-4/scope-status.md) and [downstream contracts](/Users/paramdave/Desktop/FINNOR/scope-4/scope-evidence/downstream-dependencies.md).
+- S5's [status](/Users/paramdave/Desktop/FINNOR/scope-5/scope-status.md), [claim boundaries](/Users/paramdave/Desktop/FINNOR/scope-5/scope-evidence/claim-boundaries.md), and [S6 dependency](/Users/paramdave/Desktop/FINNOR/scope-5/scope-evidence/s6-boundary-dependency.md).
+- S6's [plan](/Users/paramdave/Desktop/FINNOR/scope-6/scope-plan.md), [status](/Users/paramdave/Desktop/FINNOR/scope-6/scope-status.md), and actual current evidence under /Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/. Reconcile source, status and run artifacts. Do not assume production admission, protected receipts, qualified exposure or full completion merely because S6 precedes S7.
+The historical audited main is ed32d200a9459269509f1e40d4e13a3e2a1a4d6a. Record the actual current commit, working changes, source digests and dependency versions. Preserve user work; do not reset to the historical commit. Older numbered scope tests may describe a different decomposition.
+Current source leads:
+- [Experiment contracts](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/experiments.ts), [experiment realization](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/epistemic-runtime/src/experiment-realization.ts), and [enterprise experiment owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-experiments.ts).
+- [Intervention contracts](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/interventions.ts), [intervention inference](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/epistemic-runtime/src/interventions.ts), and [enterprise intervention owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-interventions.ts). Assumption-conditional simulations and bootstrap scenarios are not independent realized credit.
+- [Policy owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-control.ts), [allocation owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-allocation.ts), [obligation owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/enterprise-obligations.ts), and [obligation contracts](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/durable-obligations.ts).
+- [BusinessEffect contracts](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/business-effects.ts), actual execution/observation/reconciliation callers, and supported cost/usage records.
+- [Underwriting engine](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/underwriting/src/standard-lbo.ts), [sponsor-return calculations](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/underwriting/src/returns.ts), [underwriting artifact owner](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/underwriting-artifacts.ts), and [artifact-value readback](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/private-equity/src/underwriting-artifact-values.ts). Qualified arithmetic and workbook reconciliation do not establish causal or independently valued H2 outcomes.
+- [Outcome-pack contracts](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/shared-types/src/outcome-packs.ts), [outcome-pack implementation](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/orchestration/src/outcome-packs.ts), [autonomy readiness](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/orchestration/src/autonomy.ts), and [actual outcome-pack API](/Users/paramdave/Desktop/FINNOR/finnor-os/apps/api/app/api/outcome-packs/route.ts).
+- [Workforce learning classifications](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/workforce/src/learning.ts) and [learning proposals](/Users/paramdave/Desktop/FINNOR/finnor-os/packages/orchestration/src/workforce-learning.ts). Operational failure classification and routing metrics must retain their existing meaning.
+The inspected outcome-pack path measures operational resolution, effect verification and autonomy readiness. Preserve those contracts. Do not relabel them as economic attribution or import their operational exclusions into the economic intention-to-treat population.
+References, inspirations and reusable machinery
+Read only material relevant to identified S7 decisions, including assumptions, supported estimands and failure boundaries. These references are candidates and foundations, not a mandatory stack or evidence that FINNOR already has their capabilities.
+- Well-defined causal programmes and longitudinal inference: Hernán and Robins, Causal Inference: What If. Study target-trial specification, aligned eligibility/assignment/time zero, consistency, exchangeability, positivity, time-varying treatment and selection. Translate the mathematics to the actual economic programme; do not copy clinical assumptions into PE.
+- Identification before estimation: DoWhy's causal-effect workflow. Candidate machinery for explicit identification, compatible estimation and refutation. Passing refuters does not prove the causal graph or remove unmeasured confounding.
+- Nuisance estimation and honest inference: DoubleML's user guide, cross-fitting, and sensitivity analysis. Evaluate supported orthogonal scores, dependence handling and assumptions. Cross-fitting is not randomization, and robustness to nuisance error is not robustness to arbitrary confounding.
+- Heterogeneity and supported treatment regimes: EconML. Evaluate relevant estimators and their actual inference domains. Heterogeneous estimates, feature importance and policy interpreters cannot automatically certify realized causal credit or individual-action contributions.
+- Interference across firms and shared counterparties: Aronow and Samii, Estimating Average Causal Effects Under General Interference. Connect assignment design, exposure mapping and estimands. Its known interference assumptions matter; shared vendors, capital and strategic responses do not become independent observations.
+- Staggered implementation: Callaway and Sant'Anna, Difference-in-Differences with Multiple Time Periods. Relevant when timing varies and the required parallel-trends conditions are defensible. Do not treat a convenient regression or nonsignificant pretrend as proof of identification.
+- Selection and partial identification: Lee, Training, Wages, and Sample Selection: Estimating Sharp Bounds on Treatment Effects. Relevant bounding ideas for informative selection. Inspect the necessary assumptions, including those required for trimming; do not apply them automatically to every missing economic outcome.
+- Sequential policy evaluation: Jiang and Li, Doubly Robust Off-policy Value Evaluation. Relevant to logged sequential regimes with justified behavior probabilities and support. Offline replay cannot certify unsupported actions, hidden decision inputs or a programme's mature owner value by itself.
+- Repeated looks and stopping: Howard et al., Time-uniform, Nonparametric, Nonasymptotic Confidence Sequences. Evaluate sequential inference only where its conditional dependence and distribution assumptions hold. Anytime validity does not repair causal identification or justify treating thousands of dependent decisions as independent samples.
+- Independent private-market valuation: 2025 IPEV Valuation Guidelines and IFRS 13. Relevant foundations include ownership/capital-structure adjustments, as-of evidence, calibration and documented valuation judgments. The frozen benchmark's conservative bounds and endpoint adjustments remain its own protocol; do not assert automatic accounting compliance or confuse a valuation mark with realized cash.
+- Test quality: the user-selected OpenClaw test-audit skill.
+Prefer mature statistical/econometric libraries where their assumptions fit. Record reuse/adapt/build choices, exact versions, numerical/inference limitations, licensing/access, compute cost and operational burden. FINNOR must own OutcomeEstimand semantics, admissibility of credit, source joins and aggregate reconciliation. A library may supply an estimator; it cannot supply missing causal evidence or independently certify FINNOR's value.
+No general architecture search. Follow additional primary references only when an identified implementation decision materially requires them.
+Mission
+First audit only enough of the repository to identify:
+KEEP
+BROKEN
+BOUNDED
+MISSING
+REPLACE
+COMMODITY
+Then implement the strongest defensible solution for S7.
+Preserve demonstrated FINNOR invariants including authority, tenant isolation, bitemporal truth, provenance, uncertainty, durable responsibility, effect/InterventionLineage identity, unknown-outcome handling, ExperienceLedger integrity and Ring-0 enforcement.
+Inside S7's boundary, you may replace existing implementations, abstractions, algorithms, dependencies or runtime topology where justified.
+Research externally only when an identified implementation decision materially benefits from current knowledge. Prefer primary documentation, source code and research. Do not browse generically before identifying the problem.
+Frozen S7 specification
+Name: Economic attribution.
+Fundamental responsibility: Determine the incremental economic consequences attributable to intervention programmes.
+Canonical primitive: OutcomeEstimand.
+Owns: Preregistered contrasts, measurement and horizons; assignment versus actual exposure; interference/noncompliance/censoring treatment; identifiable value or bounds; reconciled programme/company/portfolio accounting.
+Explicitly does NOT own: Physical completion, operational model training, enterprise objectives or self-selected reward definitions. Allocating aggregate credit does not identify each action's causal contribution.
+Why distinct: Mechanical settlement and subsequent profit do not establish causal economic value.
+Required capability
+Build one coherent estimand/attribution system with these observable properties:
+1. An immutable, preregistered economic question. Bind OutcomeEstimand to the authorized mandate, legal owner/ownership interests, eligible opportunity population, assignment unit, programme/regime versions, comparator, time zero, outcome definitions, horizon, accounting convention, causal contrast and analysis plan. Bind collection/assignment to S2 protocols and interventions to S3 vocabulary. Freeze required choices before assignment and access to scored outcomes. Retrospective analysis remains explicitly retrospective; revisions append new versions and never erase original commitments.
+2. Complete assignment and realization. Resolve authentic programme/policy/allocation/obligation/effect references and preserve intended, authorized, attempted, acknowledged, observed, verified and reconciled separately. Measure actual treatment with method, coverage, error and source references. Keep failed, declined, rejected, cancelled, partial, overridden, unknown and censored episodes. Programme assignment is the primary intention-to-treat contrast. Execution failure or noncompliance does not remove an assigned programme from its economic denominator.
+3. Identification specific to the actual contrast. Support design-based attribution where assignment warrants it and compatible observational identification or bounds where justified. Make exchangeability, positivity, consistency, selection, interference, time alignment and transport assumptions explicit. Separate stated assumptions, independently supported evidence and refutations. Narrow confidence intervals or predictive fit cannot establish a missing counterfactual. Unsupported contrasts remain unidentified or bounded.
+4. Adaptive programmes and shared economic effects. Evaluate complete contingent regimes, including their registered learning/replanning rules, human support and stopping behavior. Handle delayed effects, time-varying confounding, carryover, shared shocks and strategic response within the declared identification domain. Record assignment probabilities when genuinely known; never reconstruct them as fact from decisions after the event. Account for portfolio spillovers, capital displacement and shared counterparties. Unjustified action-level or IID decompositions cannot certify programme value.
+5. Honest missingness and uncertainty. Handle exposure ambiguity, selection, censoring and informative missing outcomes under explicit assumptions or defensible bounds. Preserve bankruptcies, adverse outcomes and end-of-horizon obligations. An outcome that is economically zero differs from an outcome never observed. Report sampling, identification, measurement, valuation, cost and numerical uncertainty with their dependence; propagate unresolved gaps to aggregate comparisons. Never replace unknowns by zero, midpoint certainty or successful-case averages.
+6. Mature owner-value accounting. Reconcile realized owner cash/distributions, independently bounded residual equity, additional owner capital, uncovered owner liabilities and complete attributable costs under the frozen equation below. Bind currency, dates, ownership/waterfalls and item identities to supported evidence. Revenue, EBITDA, enterprise-value changes, IRR/MOIC and borrowed cash are not interchangeable with incremental net owner value. Preserve qualified existing arithmetic without booking its modeled outputs as realized evidence.
+7. Independent residual valuation. Before assignment, register the independent valuation authority, permitted as-of evidence/methods, ownership/debt adjustments, conservative endpoint treatment, conflicts/blinding rules and uncertainty bounds. Require traceable independent supporting inputs and signed assessments under actual authorized identity. FINNOR's forecasts may inform decisions and be examined by independent valuers; they cannot certify FINNOR's own H2 endpoint. Missing defensible valuation bounds remain missing.
+8. One accounting destination per economic item. Prevent double counting across cash, retained assets, debt, liabilities, cost records, overlapping programmes and nested ownership. Distributions remove the corresponding value from residual equity; retained cash stays there until distributed. Additional capital is an owner outflow. Debt-funded distributions retain the offsetting debt/equity adjustment. Costs already reflected in cash, equity or liabilities are not deducted again. Internal portfolio transfers and overlapping credits must reconcile at the registered owner boundary.
+9. Aggregate credit with explicit limits. Reconcile programme, company and portfolio assessments without assuming additive intervention effects. Preserve jointly caused, interacting and unallocated value where component contributions are unidentified. A Shapley allocation, feature attribution or accounting allocation may be labeled as such; it is not independently identified causal credit. Unresolved joint effects cannot be forced into per-agent rewards for S8.
+10. Evidence horizons and useful consumers. H0 records execution/verification/settlement; H1 records intermediate causal/operational/decision evidence; H2 records mature owner outcomes with independent residual/liability qualification, complete costs and valid attribution or bounds. H1 may inform S1/S3/S4 decisions under its qualification. It cannot substitute for H2 in the economic multiplier. S8 receives permitted versioned assessments, uncertainty, failures and corrections; S7 neither trains S3's operational model nor promotes its own estimator.
+11. Protected lineage and durable assessment. Emit typed immutable S7 references and append attribution/cost/correction events through actual S6 ExperienceLedger enforcement. Preserve both valid-time and knowledge-time, original preregistration, dependencies, source revisions, human corrections and capability versions. Independently resolve owner references rather than trusting submitted JSON. Retries, concurrent ingestion, restart and late statements must not duplicate value or rewrite history. Missing protected receipts remain explicitly unqualified.
+12. Qualified comparison and bounded operation. Implement the frozen benchmark's accounting, comparator, uncertainty and admissibility checks. Enforce declared statistical/computational validity and S5 budgets; use ModelComputeFabric for exact available method/runtime/route/compute/cost provenance. Numerical exhaustion, weak support, absent metering or excessive uncertainty produces a qualified bound, inconclusive result or refusal. It must not produce a fabricated economic win.
+These are properties of one attribution responsibility. Do not build a second enterprise truth store, experiment designer, control planner, execution engine, allocation ledger or capability-promotion system.
+Frozen economic measurement
+Implement the locked accounting and benchmark semantics without replacing them with a more convenient metric.
+For controller/programme a at registered horizon T:
+W_a(T)
+  = Σ[t ≤ T] D_t × (Cash_owner,a(t) − K_add,a(t))
+    + D_T × (E_res,a(T) − L_extra,a(T))
+    − C_once,a(T)
+    − W_opening
+
+V_a^H2 = E_P[W_a(T) − W_0(T)]
+B      = max[b ∈ qualified baselines] V_b^H2
+M_economic = V_FINNOR^H2 / B, only when B ≥ ε > 0
+Here:
+- Cash_owner is realized owner cash/distributions, net of settled owner liabilities and costs assigned to that cash leg.
+- K_add is additional owner capital contributed.
+- E_res is independently and conservatively bounded residual equity, net of entity debt/liabilities already incorporated in that valuation.
+- L_extra contains only outstanding owner-borne liabilities not reflected elsewhere.
+- C_once contains the complete discounted attributable intervention/system/human/compute/data/integration/maintenance/recovery costs not already deducted. Include attributable learning, failed research, admission, remediation and realistic development/integration allocation. No amortization across hypothetical future missions.
+- W_opening is the matched opening owner wealth. 0 is preregistered business-as-usual. P is the fixed eligible portfolio/opportunity distribution. Discount/capital-carry conventions are registered and do not charge the same capital cost twice.
+Report realized cash and independently bounded residual equity separately. Speculative modeled upside is never booked as realized cash. An unmetered cost or unresolved liability is not free.
+Compare pinned current FINNOR, independently equipped frontier-plus-specialist controllers, Muse, dots and relevant expert PE/operations baselines using matched starting assets, eligible opportunities, information rights, preparation, capital/resource/risk envelopes and horizon. Include all comparator human support and costs.
+Preserve simultaneous 95% intervals [L_a,U_a], incorporating sampling, identification, valuation, costs and censoring. The locked economic claim requires:
+L_FINNOR ≥ 100 × max_b U_b
+max_b L_b ≥ ε
+
+Named comparisons additionally require:
+L_FINNOR ≥ 10 × U_Muse, with L_Muse ≥ ε
+L_FINNOR ≥ 10 × U_dots, with L_dots ≥ ε
+All registered reach, material absolute-value, decision-payoff, capital, downside, resource and safety requirements must also pass. The strongest-baseline maximum and simultaneous inference cannot be replaced by choosing the weakest comparator.
+Preserve the primary T = 36 months endpoint from programme assignment, at least 90 days of closed-loop operation, the registered downside floor ES_0.99(−W_a) ≤ R_0, and all frozen power, stopping, multiplicity and denominator requirements. Shorter intermediate results do not satisfy that system endpoint. Longer exit claims require their registered longer endpoint.
+Refresh frontier comparators at least quarterly and after material releases; keep pinned current FINNOR and all prior dated evidence. Unavailable/unrun proprietary comparators remain unmeasured. Their failure is not required for FINNOR's absolute reach gate.
+Capability dominance uses the separate frozen multidimensional frontier. Do not manufacture M_capability, multiply economic and capability scores, or distribute 100× across scopes.
+Execution
+Create/update S7-specific records, preserving upstream plans and evidence:
+/Users/paramdave/Desktop/FINNOR/scope-7/scope-plan.md
+/Users/paramdave/Desktop/FINNOR/scope-7/scope-status.md
+/Users/paramdave/Desktop/FINNOR/scope-7/scope-evidence/
+scope-plan.md must contain executable milestones with:
+capability
+affected components
+validation
+failure condition
+Before implementation, record the supported estimand/accounting/identification domain, failure model, source requirements, independent authorities, tolerances, uncertainty coverage targets, inference assumptions, budgets and test-selection rationale. Register challenge cases and scoring before their first scored use.
+Then work continuously:
+inspect
+→ implement
+→ run
+→ observe
+→ repair
+→ verify
+→ record evidence
+→ continue
+Do not stop at planning or design.
+If a validation fails because of your changes, repair it before progressing.
+Use subagents only for genuinely independent workstreams such as research, implementation, adversarial review or test analysis, where the user's active instructions permit them.
+Integrate actual owners and authenticated runtime consumers. Necessary upstream interface changes must be minimal, versioned and ownership-preserving. Keep scientific/economic estimation, valuation and analytics outside Ring-0; S6 authenticates/enforces identities, references, receipts and protected access, not the truth of S7's reasoning.
+Use actual available authorized financial/outcome sources and independently commissioned programmes. Do not initiate a consequential experiment merely to obtain a score. If a required field cohort, protected interface, independent valuer or mature follow-up is unavailable, finish all independently achievable implementation and verification, then state the exact remaining dependency.
+Verification
+Test the required property, not merely your implementation.
+Use the strongest appropriate combination of:
+integration/property/fuzz tests
+concurrency + crash/restart testing
+fault injection
+adversarial inputs
+tenant/authority attacks
+independent readback
+load/performance tests
+shadow/staging execution
+formal or model-based verification
+prospective experiments
+These are available techniques, not a quota. Keep only tests that protect distinct material contracts.
+Required test-audit discipline
+Read and apply the full OpenClaw test-audit skill.
+For each new/changed test, justify its observable contract, credible regression, missing coverage and any test-only production seam. Prefer the strongest real owner boundary; additional layers need distinct risks. Demonstrated regressions must fail before repair for the intended reason and pass afterward.
+Before deleting coverage, record the skill's required evidence and satisfy its retention bar. Preserve meaningful financial, security, protocol, persistence and release contracts. Slow/static alone is not grounds for deletion.
+Translate OpenClaw-specific runners/review tools into verified FINNOR equivalents; disclose unavailable tooling. Keep discovery focused and read-only until evidence supports edits. Do not edit relevant source/tests during their active runner.
+Follow FINNOR AGENTS.md: prefer end-to-end tests with repeatable artifacts; never write unit tests after writing code. Document isolated-system failure models before implementation.
+Mocks/fixtures prove only mocked semantics. Independent generators may provide observed input data; they must not provide the attribution, protected receipt, maturity certificate or reconciliation result that the production owner should establish.
+High-consequence challenges
+Choose the smallest sufficient set covering distinct material risks:
+- False causal credit: known zero, positive, negative and interacting effects; selection favoring apparently successful programmes; confounded outcomes and common market shocks. Use withheld generative truth or independent design-based oracles. A confident positive claim under a registered nonidentified case must fail.
+- Adaptive exposure and interference: failed delivery, dose changes, human overrides, delayed effects, shared supplier responses, policy-version changes and resource displacement. Challenge the complete programme contrast and exposure mapping. Intended treatment cannot silently become actual-treatment credit.
+- Selection, uncertainty and repeated looks: informative missingness, bankruptcies, immature follow-up, weak overlap, small numbers of independent clusters and opportunistic stopping. Verify supported coverage/bounds across registered repeated trials; report Monte Carlo uncertainty. A single truth falling inside one interval is not calibration evidence.
+- Owner-value conservation: distributions versus retained cash, new capital, debt-funded payouts, diluted ownership, already embedded costs, outstanding liabilities, overlapping programmes and intra-portfolio transfers. Independently reconcile source statements and totals. Conservation checks alone do not establish causal attribution.
+- Independent valuation and maturity: reject FINNOR forecasts submitted as self-certified H2; challenge stale as-of evidence, wrong ownership/debt, unauthorized valuation identity, missing bounds and H1 relabeling. Qualified residual marks remain separate from realized distributions.
+- History and authority: change an estimand after seeing outcomes; substitute a cohort, treatment or source version; forge references/receipts; ingest duplicate, conflicting or late records; restart during persistence; attempt cross-tenant or sealed-evaluator access. Verify append-only assessments and exact independent readback.
+- Benchmark gaming and scale: exclude costly failures, move costs to another programme, select a weak comparator, divide by negligible/negative value, hide wide intervals or pool incompatible benchmark versions. Exercise registered portfolio/dependence/horizon sizes within budgets, retaining unresolved cases and complete cost accounting.
+These are failure families, not seven mandatory suites. Extend existing authoritative coverage where it owns the contract. Avoid duplicate happy paths, implementation snapshots, source-grep substitutes for executable behavior, implementation-derived expected values and denial tests stopped by an unrelated guard.
+Use tractable exact assignment distributions, independent reference estimators and known-generative subclasses where appropriate. Independent implementations must not share the same faulty transformations or economic-item classification. Approximate computation retains numerical/certificate uncertainty; estimator agreement is corroboration, not proof of identification.
+Preserve rigorous separation:
+- Deterministic bookkeeping and lineage correctness.
+- Empirical runtime/recovery behavior.
+- Statistical bias, coverage, power and sensitivity under registered assumptions.
+- Independently collected prospective outcomes and valuation evidence.
+- Mature system economic comparisons.
+Generated economic episodes are not actual PE programmes. Fixtures, retrospective replays, forecast accuracy and estimator consistency cannot replace prospective mature evidence.
+Each repeatable artifact must record exact source/runtime/library versions, estimand/preregistration digests, lawful data cuts, assignment/exposure/dependence mappings, protected references where available, independent truth/oracles, actual accounting items, assumptions, exclusions, costs, uncertainties, failures, seeds and rerun commands.
+Before completion, independently attack the implementation for bypasses, stale state, false verification, duplicated consequences, cross-tenant effects, invalid model assumptions, benchmark gaming and scaling failures.
+Run focused owner/dependency verification and required repository checks. Repair introduced regressions. Preserve meaningful baseline failures and distinguish them from new failures. Report actual test-audit decisions and independent final review; never delete a meaningful failing test to obtain green results.
+Done
+The scope is complete only when the frozen S7 falsification/completion gate passes for its declared validity domain.
+Frozen gate:
+- Strongest relevant baseline: Design-based causal inference plus independent owner-value reconciliation/valuation.
+- Test: Known-effect tests and prospective programmes with interference, noncompliance, censoring and residual equity.
+- Failure condition: False credit, invalid bounds, self-certified residual value, omitted costs/cases or double counting.
+- Required completion evidence: Preregistered contrasts, independently collected mature outcomes/valuation bounds, complete costs and reconciled aggregate attribution.
+“Estimator integrated,” “attribution dashboard,” “model predicts profit,” “accounting balances” and “tests green” do not replace this gate. A narrower software/statistical qualification remains narrower. Do not narrow the registered domain after a failure to obtain completion.
+Classify every material claim as:
+DETERMINISTICALLY_VERIFIED
+EMPIRICALLY_VERIFIED
+PROBABILISTICALLY_SUPPORTED
+PARTIAL
+BLOCKED_EXTERNAL
+UNKNOWN
+State the exact version, domain, assumptions, horizon and evidence. Never promote evidence strength to make the scope appear complete.
+Preserve these boundaries:
+- Exactly eight scopes and the five frozen contracts remain unchanged: ExperienceLedger, ModelComputeFabric, intervention lineage, joint mandate/decision, and IR enforcement/independent admission.
+- S1 owns beliefs; S2 designs measurement/assignment; S3 owns intervention dynamics; S4 chooses contingent behavior; S5 commits shared resources; S6 executes and settles; S7 qualifies causal/economic attribution; S8 independently admits capability evolution.
+- S7 may estimate necessary statistical nuisance quantities within an attribution method. It cannot take ownership of S3's operational dynamics, S2's experiment design or S4's policy choice.
+- S7 cannot choose its own business utility, redefine the outcome after observing results, self-issue independent valuation/admission or modify Ring-0. An authenticated signature verifies issuer/content; it does not make a causal claim true.
+- Corrections, revised valuations, actual bills and adverse outcomes append linked assessments. S8 may consume permitted history but cannot rewrite it or silently convert unidentified credit into training truth.
+- H0/H1 cannot replace H2. Evidence maturity follows its supported claim and registered endpoint, not elapsed age alone.
+- Full S7 qualification is distinct from proving FINNOR's eventual economic 100×, named 10× comparisons or capability dominance. None may be claimed without its own complete evidence.
+- Missing S7-owned implementation is not an external blocker. Genuine unavailable field access, independent authority, protected integration or elapsed follow-up must be specified precisely after all independent authorized work is complete.
+- Causal identification, attainable economic headroom, transfer and distribution shift remain research/build risks; they do not reopen the frozen architecture.
+If implementation reveals a genuine contradiction in the frozen architecture, record it precisely, continue all safe work, and do not redesign the architecture yourself.
+Final response
+Return only:
+IMPLEMENTED
+CHANGED
+EVIDENCE
+COMPLETION GATE
+REMAINING LIMITATIONS
+FRONTIER DELTA
+NEXT DEPENDENCIES
+Include actual test-audit decisions and independent verification under EVIDENCE. Distinguish software qualification, statistical support, prospective outcome evidence and mature owner-value attribution. Report unidentified value and incomplete costs explicitly.
+Persist until the requested S7 work is complete or an actually external blocker prevents further implementation. Complete all independent authorized work before reporting a blocker. Do not stop at an audit, plan, scaffold, estimator wrapper, synthetic demo or favorable mocked result.

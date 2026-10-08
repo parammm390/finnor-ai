@@ -14,7 +14,7 @@ import { ingestReceipt } from "./memory-ingest";
 import { isRetiredWaterAction, isRetiredWaterWorkflow, RetiredVerticalError, type ReceiptEvidence } from "@finnor/shared-types";
 import { workflowStepJobKey } from "./job-identity";
 import { randomUUID } from "node:crypto";
-import { SCOPE2_RUNTIME_PROTOCOL_VERSION } from "./commands";
+import { SCOPE2_RUNTIME_PROTOCOL_VERSION, GOVERNED_OBLIGATION_PROTOCOL_VERSION,workflowJobType } from "./commands";
 import { findRuntimeOperatorControlTx, recordRuntimeOperatorControlTx, runtimeOperatorControlKey, type RuntimeOperatorControlRequest } from "./operator-controls";
 
 // Overridable (FINNOR_STEP_LEASE_SECONDS) so the chaos-test script can prove real
@@ -38,22 +38,30 @@ async function assertActiveStepTx(db: Db, tenantId: string, step: Pick<WorkflowS
   if (isRetiredWaterWorkflow(run.workflowType)) throw new RetiredVerticalError("water");
 }
 
+function priorStepsSettledPredicate() {
+  return sql`NOT EXISTS (SELECT 1 FROM finnor_os.workflow_steps predecessor
+    WHERE predecessor.tenant_id=${workflowSteps.tenantId}
+      AND predecessor.workflow_run_id=${workflowSteps.workflowRunId}
+      AND predecessor.sequence<${workflowSteps.sequence} AND predecessor.status<>'completed')`;
+}
+
 async function enqueueWorkflowStepJobTx(
   db: Db,
-  step: Pick<WorkflowStepRow, "id" | "tenantId" | "dispatchGeneration" | "correlationId" | "protocolVersion">,
+  step: Pick<WorkflowStepRow, "id" | "tenantId" | "dispatchGeneration" | "correlationId" | "protocolVersion" | "payload">,
 ): Promise<void> {
   const payload = step.correlationId
     ? { tenantId: step.tenantId, workflowStepId: step.id, workflowStepGeneration: step.dispatchGeneration, _correlationId: step.correlationId }
     : { tenantId: step.tenantId, workflowStepId: step.id, workflowStepGeneration: step.dispatchGeneration };
   await db.insert(jobs).values({
     tenantId: step.tenantId,
-    type: step.protocolVersion >= SCOPE2_RUNTIME_PROTOCOL_VERSION ? "run_workflow_step_v2" : "run_workflow_step",
+    type: workflowJobType(step.protocolVersion),
     payload,
     idempotencyKey: workflowStepJobKey(step.tenantId, step.id, step.dispatchGeneration),
     lane: "interactive",
     priority: 100,
     protocolVersion: step.protocolVersion,
     retrySafety: "durably_effect_guarded",
+    ...(step.protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION?{runAt:new Date((step.payload as Record<string,any>).notBefore),maxAttempts:64}:{}),
   }).onConflictDoNothing({ target: jobs.idempotencyKey });
 }
 
@@ -66,6 +74,7 @@ export async function enqueueStep(tenantId: string, stepId: string, idempotencyK
       eq(workflowSteps.tenantId, tenantId),
       eq(workflowSteps.id, stepId),
       eq(workflowSteps.status, "pending"),
+      priorStepsSettledPredicate(),
     )).limit(1);
     if (!step) return;
     await assertActiveStepTx(db, tenantId, step);
@@ -179,7 +188,51 @@ export async function redriveStepTx(
     });
     return null;
   }
+  if(step.stepType==='execute_governed_obligation'&&step.effectCommitAt){
+    if(control)await recordRuntimeOperatorControlTx(db,tenantId,{controlType:'step_redrive',targetType:'workflow_step',targetId:stepId,expectedVersion:control.expectedVersion,observedFence:step.claimFence,actorId:control.actorId,authorityDecisionId:control.authorityDecisionId,reason:control.reason,evidence:{reasonCode:'governed_possible_dispatch_requires_readback'},outcome:'rejected',controlKey:control.controlKey});
+    return null;
+  }
   await assertActiveStepTx(db, tenantId, step);
+  const [causalReady] = await db.select({ id: workflowSteps.id }).from(workflowSteps).where(and(
+    eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.id, step.id), priorStepsSettledPredicate(),
+  )).limit(1);
+  if (!causalReady) {
+    if (control) await recordRuntimeOperatorControlTx(db, tenantId, {
+      controlType: "step_redrive", targetType: "workflow_step", targetId: stepId,
+      expectedVersion: control.expectedVersion, observedFence: step.claimFence,
+      actorId: control.actorId, authorityDecisionId: control.authorityDecisionId,
+      reason: control.reason, evidence: { reasonCode: "predecessor_unsettled", sequence: step.sequence },
+      outcome: "rejected", controlKey: control.controlKey,
+    });
+    return null;
+  }
+
+  if (control) await recordRuntimeOperatorControlTx(db, tenantId, {
+    controlType: "step_redrive",
+    targetType: "workflow_step",
+    targetId: stepId,
+    expectedVersion: control.expectedVersion,
+    observedFence: step.claimFence,
+    actorId: control.actorId,
+    authorityDecisionId: control.authorityDecisionId,
+    reason: control.reason,
+    evidence: { transition: "redrive", fromGeneration: control.expectedVersion, toGeneration: control.expectedVersion + 1 },
+    outcome: "applied",
+    controlKey: control.controlKey,
+  });
+
+  if (step.claimToken) {
+    await db.update(workflowStepClaims).set({
+      outcome: "superseded",
+      finishedAt: new Date(),
+    }).where(and(
+      eq(workflowStepClaims.tenantId, tenantId),
+      eq(workflowStepClaims.workflowStepId, step.id),
+      eq(workflowStepClaims.claimToken, step.claimToken),
+      eq(workflowStepClaims.claimFence, step.claimFence),
+      sql`${workflowStepClaims.finishedAt} IS NULL`,
+    ));
+  }
 
   if (control) await recordRuntimeOperatorControlTx(db, tenantId, {
     controlType: "step_redrive",
@@ -227,6 +280,7 @@ export async function redriveStepTx(
     eq(workflowSteps.tenantId, tenantId),
     eq(workflowSteps.id, stepId),
     eq(workflowSteps.dispatchGeneration, step.dispatchGeneration),
+    priorStepsSettledPredicate(),
   )).returning();
   if (!redriven) return null;
 
@@ -256,6 +310,7 @@ export async function redriveNextPendingStepTx(
   )).orderBy(workflowSteps.sequence);
   const next = steps.find((step) => step.status === "pending");
   if (!next) return null;
+  if (steps.some(step => step.sequence < next.sequence && step.status !== "completed")) return null;
   const context: Record<string, unknown> = {};
   for (const step of steps) {
     if (step.status === "completed" && step.evidence) {
@@ -322,7 +377,7 @@ async function openReceiptForClaimTx(db: Db, tenantId: string, step: WorkflowSte
     policyApplied,
     riskTier: "medium",
     proposedAction: effect ? effect.effect as Record<string, unknown> : { stepType: step.stepType, payload: step.payload },
-    approval: { required: true, approvedBy: command?.requestedBy ?? undefined, at: command?.createdAt.toISOString() },
+    approval: step.protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION?{required:true}:{ required: true, approvedBy: command?.requestedBy ?? undefined, at: command?.createdAt.toISOString() },
     correlationId: step.correlationId ?? undefined,
     domainActionId: step.domainActionId ?? undefined,
     businessEffectId: effect?.id,
@@ -414,6 +469,7 @@ export async function claimStep(
     }).from(workflowSteps).where(and(
       eq(workflowSteps.id, stepId),
       eq(workflowSteps.tenantId, tenantId),
+      priorStepsSettledPredicate(),
     )).limit(1);
     if (candidate) await assertActiveStepTx(db, tenantId, candidate);
     if (!candidate) return null;
@@ -459,13 +515,15 @@ export async function claimStep(
           eq(workflowSteps.tenantId, tenantId),
           eq(workflowSteps.status, "pending"),
           eq(workflowSteps.dispatchGeneration, requestedGeneration),
+          priorStepsSettledPredicate(),
           ...(candidate.protocolVersion >= SCOPE2_RUNTIME_PROTOCOL_VERSION
             ? [sql`${workflowSteps.causalReadyAt} IS NOT NULL`]
             : []),
+          ...(candidate.protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION?[sql`(${workflowSteps.payload}->>'notBefore')::timestamptz<=clock_timestamp()`]:[]),
           // §2.7: a paused/cancelled/escalated run must genuinely stop making progress,
           // not just display a different status label — this is the actual enforcement
           // point, checked atomically in the same UPDATE as the claim itself.
-          sql`${workflowSteps.workflowRunId} NOT IN (SELECT id FROM ${workflowRuns} WHERE status IN ('paused', 'cancelled', 'escalated'))`,
+          sql`${workflowSteps.workflowRunId} IN (SELECT id FROM ${workflowRuns} WHERE tenant_id=${tenantId} AND status='running')`,
         ),
       )
       .returning();
@@ -492,8 +550,8 @@ export async function claimStep(
   return claimed;
 }
 
-/** §5.3: a plugin execution may report the real sources it relied on — hybridRetrieve's
- *  structured facts + semantic hits, for an answer action — under `output.citations`.
+/** §5.3: a plugin execution may report the real sources it relied on under
+ *  `output.citations`.
  *  Pulled out here so any completed step's real evidence (not just answer actions)
  *  overwrites the open-time placeholder when present. */
 function extractCitations(actualResult: Record<string, unknown>): ReceiptEvidence[] | undefined {
@@ -726,7 +784,7 @@ export async function advanceWorkflow(tenantId: string, workflowRunId: string): 
     db.select().from(workflowSteps).where(and(eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.workflowRunId, workflowRunId))).orderBy(workflowSteps.sequence),
   );
   const next = allSteps.find((s) => s.status === "pending");
-  if (next) {
+  if (next && allSteps.every(s => s.sequence >= next.sequence || s.status === "completed")) {
     const context: Record<string, unknown> = {};
     for (const s of allSteps) {
       if (s.status === "completed" && s.evidence) {
@@ -832,8 +890,8 @@ export async function advanceWorkflow(tenantId: string, workflowRunId: string): 
  * job handler, exactly like recoverExpiredRunningJobs() in apps/worker/src/queue.ts.
  * The matching integration_operations row is the source of truth for what to do:
  *  - no claim row yet:  nothing external happened — safe to reset and re-enqueue.
- *  - status 'succeeded': the real effect happened, only the bookkeeping write was lost —
- *    mark the step completed and resume (exactly-once, resumed correctly).
+ *  - status 'succeeded': execution returned, but settlement may be missing. Persist
+ *    observation work atomically with releasing the expired claim; never redispatch.
  *  - status 'running':  crashed mid-call, delivery unknown — NEVER blindly retry; open
  *    a reconciliation_case instead (the blueprint's own rule).
  *  - status 'failed':   a failed attempt delivered nothing — safe to reset and retry.
@@ -851,6 +909,14 @@ export async function recoverStaleSteps(tenantId: string): Promise<{ recovered: 
   let reconciled = 0;
 
   for (const step of stale) {
+    if(step.stepType==='execute_governed_obligation'&&step.effectCommitAt){
+      // The protected ExperienceLedger owns external attempts for this class.
+      // Absence of a legacy integration_operations row cannot justify rearming it.
+      await withTenant(tenantId,async db=>{
+        const [parked]=await db.update(workflowSteps).set({status:'waiting_observation',executionState:'reconciling',leaseExpiresAt:null,leaseHeartbeatAt:null,claimToken:null,claimOwner:null,evidence:{...(step.evidence as Record<string,unknown>),responsibilityRetained:true,settlementEstablished:false,recovery:'EXPIRED_GOVERNED_DISPATCH_READ_ONLY'},updatedAt:new Date()}).where(and(eq(workflowSteps.tenantId,tenantId),eq(workflowSteps.id,step.id),eq(workflowSteps.status,'leased'),eq(workflowSteps.claimFence,step.claimFence),eq(workflowSteps.dispatchGeneration,step.dispatchGeneration),lt(workflowSteps.leaseExpiresAt,new Date()))).returning({id:workflowSteps.id});
+        if(parked&&step.claimToken)await db.update(workflowStepClaims).set({outcome:'reconciliation_required',finishedAt:new Date()}).where(and(eq(workflowStepClaims.tenantId,tenantId),eq(workflowStepClaims.workflowStepId,step.id),eq(workflowStepClaims.claimToken,step.claimToken),sql`${workflowStepClaims.finishedAt} IS NULL`));
+      });reconciled++;continue;
+    }
     const [claimRow] = await withTenant(tenantId, (db) =>
       db
         .select()
@@ -867,13 +933,28 @@ export async function recoverStaleSteps(tenantId: string): Promise<{ recovered: 
     }
 
     if (claimRow.status === "succeeded") {
-      await completeStep(
-        tenantId,
-        step.id,
-        { operationKey: claimRow.operationKey, resumedFromRecovery: true },
-        { kind: "recovery", claimFence: step.claimFence, dispatchGeneration: step.dispatchGeneration },
-      );
-      await advanceWorkflow(tenantId, step.workflowRunId);
+      await withTenant(tenantId, async db => {
+        const [parked] = await db.update(workflowSteps).set({
+          status: "waiting_observation", executionState: "awaiting_observation",
+          evidence: { operationKey: claimRow.operationKey, resumedFromRecovery: true, qualification: "ATTEMPT_SUCCEEDED_SETTLEMENT_UNESTABLISHED" },
+          leaseExpiresAt: null, leaseHeartbeatAt: null, claimToken: null, claimOwner: null, updatedAt: new Date(),
+        }).where(and(
+          eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.id, step.id), eq(workflowSteps.status, "leased"),
+          eq(workflowSteps.claimFence, step.claimFence), eq(workflowSteps.dispatchGeneration, step.dispatchGeneration),
+          lt(workflowSteps.leaseExpiresAt, new Date()),
+        )).returning({ id: workflowSteps.id });
+        if (!parked) return;
+        if (step.claimToken) await db.update(workflowStepClaims).set({ outcome: "awaiting_observation", finishedAt: new Date() }).where(and(
+          eq(workflowStepClaims.tenantId, tenantId), eq(workflowStepClaims.workflowStepId, step.id),
+          eq(workflowStepClaims.claimToken, step.claimToken), eq(workflowStepClaims.claimFence, step.claimFence),
+          sql`${workflowStepClaims.finishedAt} IS NULL`,
+        ));
+        await db.insert(jobs).values({
+          tenantId, type: "observe_external_effect", lane: "interactive", priority: 100,
+          payload: { tenantId, integrationOperationId: claimRow.id },
+          idempotencyKey: `observe-recovered-attempt:${claimRow.id}:${step.dispatchGeneration}`,
+        }).onConflictDoNothing({ target: jobs.idempotencyKey });
+      });
       recovered++;
       continue;
     }

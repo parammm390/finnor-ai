@@ -1,0 +1,17 @@
+.ct-decision-slice { margin-top: 24px; padding: 20px; border: 1px solid currentColor; border-radius: 12px; }
+.ct-decision-slice h4 { font-size: 1.1rem; margin: 0 0 8px; }
+.ct-decision-slice h5 { font-size: 1rem; margin: 20px 0 8px; }
+.ct-decision-slice button { padding: 8px 12px; border: 1px solid currentColor; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.ct-decision-slice button:disabled { cursor: not-allowed; opacity: .55; }
+.ct-decision-slice :is(button, textarea, summary, pre):focus-visible { outline: 3px solid #88b8ff; outline-offset: 3px; }
+.ct-decision-slice__actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.ct-decision-slice__variables { list-style: none; padding: 0; max-height: 420px; overflow: auto; }
+.ct-decision-slice__variables li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid currentColor; }
+.ct-decision-slice__variables small { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.ct-decision-slice__warning, .ct-decision-slice [role="alert"] { padding: 12px; border-left: 3px solid #ca8900; }
+.ct-decision-slice pre { max-height: 360px; overflow: auto; font-size: .8rem; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ct-decision-slice label { display: block; margin: 12px 0; }
+.ct-decision-slice textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 10px; background: transparent; color: inherit; border: 1px solid currentColor; border-radius: 6px; }
+.ct-decision-slice details { margin: 12px 0; }
+.ct-decision-slice summary { cursor: pointer; }
+@media (max-width: 600px) { .ct-decision-slice { padding: 12px; } .ct-decision-slice__variables li { align-items: flex-start; flex-direction: column; } }

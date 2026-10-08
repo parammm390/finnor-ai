@@ -1,4 +1,4 @@
-import type { AttentionQueueResult, WorkforceStatusResult } from "@finnor/shared-types";
+import type { AttentionQueueResult, WorkforceStatusResult, BeliefView } from "@finnor/shared-types";
 import type { WorkAggregate } from "@finnor/db";
 import type { IcWorkspaceReadModel } from "./ic-types";
 import type { PeEntityType, PeWorldRootRef, PeWorldState } from "./types";
@@ -285,6 +285,7 @@ export interface CompanyBrainRelationshipRegistration {
 }
 
 export interface CompanyBrainProjection {
+  beliefView?: BeliefView;
   root: PeWorldRootRef;
   asOf: string;
   nodes: CompanyBrainNode[];

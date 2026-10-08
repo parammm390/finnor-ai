@@ -1,0 +1,1043 @@
+{
+  "schema": "finnor.m2.verification-progress.v1",
+  "qualification": "Scoped public ordinary E2Es. A later PASS does not erase the first FAIL. Not a final committed reconstruction or independent GateM2.",
+  "runs": [
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/failure-first-m1-deadlines-1",
+      "driverSha256": "0b0ec340d8aed36b67b1c4965166f06826d1cc16f4da9f74b7bd8b25bdb56e03",
+      "resultSha256": "a4000afdec95f6049e5880ea22d3940f5aa74ab6eaad921f67f62b3454938125",
+      "sourceScriptSha256": "212240893ec61753ac1c0874b8ffe3c6d9e975823ff6e3bacf5cc3b2d4c818e4",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 2,
+        "NOT_RUN": 0
+      },
+      "cases": [
+        {
+          "id": "bounded-owner-io-and-failed-liability",
+          "status": "FAIL",
+          "failure": "Native SQL acquisition exceeded the whole request deadline"
+        },
+        {
+          "id": "bounded-governor-release-and-retained-expiry",
+          "status": "FAIL",
+          "failure": "Physical release extended the whole request envelope"
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/failure-first-m2-1",
+      "driverSha256": "c062f680e6b4815e89e87f92bde8eef45f40ad9f0bac2692aac24e14b91c8236",
+      "resultSha256": "0b23dd17ce034141d11fa68cdd34621961db707838f596f0c38a78b42ec75a2b",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 4
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "FAIL",
+          "failure": "{\"status\":404,\"body\":{\"error\":\"Unknown Company Brain operation\",\"code\":\"NOT_FOUND\"}}\n\n404 !== 202\n"
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m1-deadline-repair-1",
+      "driverSha256": "45a205a1b543d82060e80eb292ffb348b9e86d69d6239a70dceecbc08bcfdb03",
+      "resultSha256": "57882fd8f898f32b005a528160ef6c291afc2eed6fbe64c574d176ef63bb6988",
+      "sourceScriptSha256": "212240893ec61753ac1c0874b8ffe3c6d9e975823ff6e3bacf5cc3b2d4c818e4",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 2,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "cases": [
+        {
+          "id": "bounded-owner-io-and-failed-liability",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "bounded-governor-release-and-retained-expiry",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m1-physical-cancellation-repair-1",
+      "driverSha256": "fee37ff4b0261d36d2ec8469faa80d00deade0aead0d451a67e6053fec626538",
+      "resultSha256": "21d93af96092012731283371154268fb49aa8efaecc43a27e1443da78d67a00a",
+      "sourceScriptSha256": "212240893ec61753ac1c0874b8ffe3c6d9e975823ff6e3bacf5cc3b2d4c818e4",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "cases": [
+        {
+          "id": "bounded-owner-io-and-failed-liability",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "whole-authentication-and-body-stream-deadline",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "bounded-governor-release-and-retained-expiry",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-calibration-source-first-1",
+      "driverSha256": "9e89239558cc64f250cded20b5a7ecc235103f8cd02043c382d9b47e29a9f0bd",
+      "resultSha256": "cdd734dd62b26800cb10f1ede416700eac855b06c507b2354fd6dc7b723e033d",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 1,
+        "FAIL": 1,
+        "NOT_RUN": 4
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "FAIL",
+          "failure": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'STOPPED'\n- 'WAITING'\n"
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-deadline-registry-first-1",
+      "driverSha256": "43a3a411f3e53c75998582b575551f77f82864394795cf629c7dbaa1a907d874",
+      "resultSha256": "2187519b336def312abc6df28d0ff217d500dac9878869733a1977828cbf0e87",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 2,
+        "NOT_RUN": 7
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "FAIL",
+          "failure": "Expected values to be strictly equal:\n\n200 !== 413\n"
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "FAIL",
+          "failure": "Actual secured OpenAPI missing deliberation-submit"
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-deadline-registry-repair-1",
+      "driverSha256": "c7a150b1b6643e099af5609813c6ef0b4331bf99b69e350297f963ae0df261a3",
+      "resultSha256": "28cb44552d18991fcbe7bed312bcfa1e3a25e75ace0c16f830eea2b27537924a",
+      "sourceScriptSha256": "85b7dc5173fb1865b3c30a497e74c806c243938193fe8d3bad8232dd6de701ae",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 7
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-native-1",
+      "driverSha256": "add55846e1b9689ddb9987420bb9caccaed6b03846a407d0913dff36a4dc2cb8",
+      "resultSha256": "2cb5bfee9c8e101c8e55216d7fc798070fb82592de9282207cfffcace760fd17",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 4
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "FAIL",
+          "failure": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '3.5'\n- '3.5000000000000000'\n      ^\n"
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-native-2",
+      "driverSha256": "d9ac55af96c9264f08fe8e7e58c131101ac2851183d6a58159cc7e3e608d0e74",
+      "resultSha256": "7ea32b7e3cd323bd13a1ccdf194d7ed3797e2bce352f9fd7076e07769d07947c",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 4,
+        "FAIL": 1,
+        "NOT_RUN": 0
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "FAIL",
+          "failure": "Failed query: insert into \"finnor_os\".\"evidence_chunks\" (\"id\", \"source_id\", \"version_id\", \"scope\", \"tenant_id\", \"ordinal\", \"content\", \"token_count\", \"entity_refs\", \"time_refs\", \"embedding\", \"created_at\") values (default, $1, $2, $3, $4, $5, $6, $7, $8, $9, default, default)\nparams: c94abfc1-f27d-4861-8a1a-d93271577206,414d0a1d-0420-434e-b1b4-8035307e243a,tenant,eb8ffc96-6aa0-4a22-84a4-a7666dad6b73,1,{\"schema\":\"finnor.m2.public-decision-loss-dataset.v1\",\"scope\":\"PUBLIC_FINITE_MECHANICS_UNADMITTED\",\"lossUnit\":\"USD\",\"objectiveRef\":{\"owner\":\"BUSINESS_OWNER\",\"id\":\"supplied-joint-net-utility\",\"version\":\"fixture-v1\",\"contentDigest\":\"bae6855c8b8714b8ff5c425f930ae332fec42340e920438e218959e4f5c35ea5\"},\"predeclaredBinFields\":[\"taskStratum\",\"regime\",\"mechanism\",\"route\"],\"rows\":[{\"id\":\"TRAIN-0\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-0\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-0\",\"checkerLineage\":\"TRAIN-checker-0\",\"ancestry\":\"TRAIN-ancestry-0\",\"modelLineage\":\"TRAIN-model-0\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":10,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-0\",\"version\":\"fixture-v1\",\"contentDigest\":\"c5edf59cafe30abdb51c77a24f55cfcf2af3322fda8d405183a24230028b41d6\"}},{\"id\":\"TRAIN-1\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-1\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-1\",\"checkerLineage\":\"TRAIN-checker-1\",\"ancestry\":\"TRAIN-ancestry-1\",\"modelLineage\":\"TRAIN-model-1\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":11,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-1\",\"version\":\"fixture-v1\",\"contentDigest\":\"3c5dc6511fb12d516442af08e87d2ed1f3492092af681ae5d2d1ab3c7f573a28\"}},{\"id\":\"TRAIN-2\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-2\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-2\",\"checkerLineage\":\"TRAIN-checker-2\",\"ancestry\":\"TRAIN-ancestry-2\",\"modelLineage\":\"TRAIN-model-2\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":12,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-2\",\"version\":\"fixture-v1\",\"contentDigest\":\"dc90077e3c91739d102394561d4184e4ba9ea719fb6424160f5c6fdd4ddd91f2\"}},{\"id\":\"TRAIN-3\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-3\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-3\",\"checkerLineage\":\"TRAIN-checker-3\",\"ancestry\":\"TRAIN-ancestry-3\",\"modelLineage\":\"TRAIN-model-3\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":13,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-3\",\"version\":\"fixture-v1\",\"contentDigest\":\"3b4169296f1e9df04cf7c30777caaab647148cf11be1613b3ee3dff7d270fd60\"}},{\"id\":\"TRAIN-4\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-4\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-4\",\"checkerLineage\":\"TRAIN-checker-4\",\"ancestry\":\"TRAIN-ancestry-4\",\"modelLineage\":\"TRAIN-model-4\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":14,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-4\",\"version\":\"fixture-v1\",\"contentDigest\":\"78362a27020d22fc6e2712ab23ae5c44144c50d9a47bca72b6266d927265040b\"}},{\"id\":\"TRAIN-5\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-5\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-5\",\"checkerLineage\":\"TRAIN-checker-5\",\"ancestry\":\"TRAIN-ancestry-5\",\"modelLineage\":\"TRAIN-model-5\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":15,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-5\",\"version\":\"fixture-v1\",\"contentDigest\":\"6b4d5682bc114c50bd2899b15d749e816856e44403f475836e3b74f64d52a884\"}},{\"id\":\"TRAIN-6\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-6\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-6\",\"checkerLineage\":\"TRAIN-checker-6\",\"ancestry\":\"TRAIN-ancestry-6\",\"modelLineage\":\"TRAIN-model-6\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":16,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-6\",\"version\":\"fixture-v1\",\"contentDigest\":\"d34e3fe8072990be18619f0d9c14beaa757ddaf7856942ac2b9dcd831b1f7362\"}},{\"id\":\"TRAIN-7\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-7\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-7\",\"checkerLineage\":\"TRAIN-checker-7\",\"ancestry\":\"TRAIN-ancestry-7\",\"modelLineage\":\"TRAIN-model-7\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":17,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-7\",\"version\":\"fixture-v1\",\"contentDigest\":\"96895e51061de40ed08d5b8b2bc46db8e647815a4f18bde0315dc2cb3d8177a6\"}},{\"id\":\"TRAIN-8\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-8\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-8\",\"checkerLineage\":\"TRAIN-checker-8\",\"ancestry\":\"TRAIN-ancestry-8\",\"modelLineage\":\"TRAIN-model-8\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":18,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-8\",\"version\":\"fixture-v1\",\"contentDigest\":\"a0901e67d554975d2c09f7f76c3f6d8587bf33bbe2647e084464ca634975485a\"}},{\"id\":\"TRAIN-9\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-9\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-9\",\"checkerLineage\":\"TRAIN-checker-9\",\"ancestry\":\"TRAIN-ancestry-9\",\"modelLineage\":\"TRAIN-model-9\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":19,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-9\",\"version\":\"fixture-v1\",\"contentDigest\":\"7f1c36507c4e6e1a4c46951b38ffeee60439531aeda9a5bd0ef41baa65373f44\"}},{\"id\":\"TRAIN-10\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-10\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-10\",\"checkerLineage\":\"TRAIN-checker-10\",\"ancestry\":\"TRAIN-ancestry-10\",\"modelLineage\":\"TRAIN-model-10\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":20,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-10\",\"version\":\"fixture-v1\",\"contentDigest\":\"9dcb6dfab5322d3b9c2ad6b27e308d254a8e69668e0ff00820dfb7de0fd6d235\"}},{\"id\":\"TRAIN-11\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-11\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-11\",\"checkerLineage\":\"TRAIN-checker-11\",\"ancestry\":\"TRAIN-ancestry-11\",\"modelLineage\":\"TRAIN-model-11\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":21,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-11\",\"version\":\"fixture-v1\",\"contentDigest\":\"f2bb3283e45fd1d1b9cff11b2cf01a36cfed9ce3cf48f055e8f04d827dd507b4\"}},{\"id\":\"TRAIN-12\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-12\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-12\",\"checkerLineage\":\"TRAIN-checker-12\",\"ancestry\":\"TRAIN-ancestry-12\",\"modelLineage\":\"TRAIN-model-12\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":22,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-12\",\"version\":\"fixture-v1\",\"contentDigest\":\"fc4cd22280d2832c378de6fbd98ee48ec9d751ddc7328badb362f6d25509b9af\"}},{\"id\":\"TRAIN-13\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-13\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-13\",\"checkerLineage\":\"TRAIN-checker-13\",\"ancestry\":\"TRAIN-ancestry-13\",\"modelLineage\":\"TRAIN-model-13\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":23,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-13\",\"version\":\"fixture-v1\",\"contentDigest\":\"1935e3cf0d13849846df0981c9301c95aee8fe2757fc1c536a4c36fb9e41c27e\"}},{\"id\":\"TRAIN-14\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-14\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-14\",\"checkerLineage\":\"TRAIN-checker-14\",\"ancestry\":\"TRAIN-ancestry-14\",\"modelLineage\":\"TRAIN-model-14\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":24,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-14\",\"version\":\"fixture-v1\",\"contentDigest\":\"8e22f63ca5099f83ccfb93d8575f3fac0919d7811bf1f59aad8b481bae538f10\"}},{\"id\":\"TRAIN-15\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-15\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-15\",\"checkerLineage\":\"TRAIN-checker-15\",\"ancestry\":\"TRAIN-ancestry-15\",\"modelLineage\":\"TRAIN-model-15\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":25,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-15\",\"version\":\"fixture-v1\",\"contentDigest\":\"9b2bd8f5ddba225d5e28ab921ce7e8e8dc5c72839b24d16c34e825b6c80ea4d2\"}},{\"id\":\"TRAIN-16\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-16\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-16\",\"checkerLineage\":\"TRAIN-checker-16\",\"ancestry\":\"TRAIN-ancestry-16\",\"modelLineage\":\"TRAIN-model-16\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":26,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-16\",\"version\":\"fixture-v1\",\"contentDigest\":\"0588b874e80d8522313384fb7cb92a203ca0f8f396256eb94f2818f3368a4b82\"}},{\"id\":\"TRAIN-17\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-17\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-17\",\"checkerLineage\":\"TRAIN-checker-17\",\"ancestry\":\"TRAIN-ancestry-17\",\"modelLineage\":\"TRAIN-model-17\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":27,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-17\",\"version\":\"fixture-v1\",\"contentDigest\":\"3b5fb1a0fcc788b233780a1fa4e9bacbdc863a4116f2cbe75a8789cdb3389c32\"}},{\"id\":\"TRAIN-18\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-18\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-18\",\"checkerLineage\":\"TRAIN-checker-18\",\"ancestry\":\"TRAIN-ancestry-18\",\"modelLineage\":\"TRAIN-model-18\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":28,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-18\",\"version\":\"fixture-v1\",\"contentDigest\":\"79bdff0441081a97b08d87f872d4fe5800916e928e15f90df0140b575f8856e8\"}},{\"id\":\"TRAIN-19\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-19\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-19\",\"checkerLineage\":\"TRAIN-checker-19\",\"ancestry\":\"TRAIN-ancestry-19\",\"modelLineage\":\"TRAIN-model-19\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":29,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-19\",\"version\":\"fixture-v1\",\"contentDigest\":\"cfdf8a5d91739b44cacb3205e3ce78cfe82b13820a4f65004ff0e8061ca02b25\"}},{\"id\":\"TRAIN-20\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-20\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-20\",\"checkerLineage\":\"TRAIN-checker-20\",\"ancestry\":\"TRAIN-ancestry-20\",\"modelLineage\":\"TRAIN-model-20\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":30,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-20\",\"version\":\"fixture-v1\",\"contentDigest\":\"66cf7df593bb94d66dd2e6abaea4eda279c891ccf3b91c7b2054ce8887b438ab\"}},{\"id\":\"TRAIN-21\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-21\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-21\",\"checkerLineage\":\"TRAIN-checker-21\",\"ancestry\":\"TRAIN-ancestry-21\",\"modelLineage\":\"TRAIN-model-21\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":31,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-21\",\"version\":\"fixture-v1\",\"contentDigest\":\"27e92396e0178356ea2335574206ed9811466e544ee88e51951dd24fafc049cc\"}},{\"id\":\"TRAIN-22\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-22\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-22\",\"checkerLineage\":\"TRAIN-checker-22\",\"ancestry\":\"TRAIN-ancestry-22\",\"modelLineage\":\"TRAIN-model-22\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":32,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-22\",\"version\":\"fixture-v1\",\"contentDigest\":\"7b7263ca3bef2d8207d514476ee1d639f0f306eda5729957d7824ec5e1ea90de\"}},{\"id\":\"TRAIN-23\",\"split\":\"TRAIN\",\"company\":\"TRAIN-company-23\",\"timeBlock\":\"TRAIN-time\",\"sourceLineage\":\"TRAIN-source-23\",\"checkerLineage\":\"TRAIN-checker-23\",\"ancestry\":\"TRAIN-ancestry-23\",\"modelLineage\":\"TRAIN-model-23\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":33,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"TRAIN-ref-23\",\"version\":\"fixture-v1\",\"contentDigest\":\"aae93a59b05757c8281dfc06b1b8107b636be37d97b38b714a1e1afce06eafc3\"}},{\"id\":\"CALIBRATION-0\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-0\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-0\",\"checkerLineage\":\"CALIBRATION-checker-0\",\"ancestry\":\"CALIBRATION-ancestry-0\",\"modelLineage\":\"CALIBRATION-model-0\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":10,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-0\",\"version\":\"fixture-v1\",\"contentDigest\":\"d1cb076d4fb1ec9e1f1b9121330aabd9f5d5c510d92aa20729d27e8e065c7cab\"}},{\"id\":\"CALIBRATION-1\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-1\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-1\",\"checkerLineage\":\"CALIBRATION-checker-1\",\"ancestry\":\"CALIBRATION-ancestry-1\",\"modelLineage\":\"CALIBRATION-model-1\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":11,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-1\",\"version\":\"fixture-v1\",\"contentDigest\":\"edcea7f570e0dd249e4502a7ccd72ce83777b47f18e4c85c38743cc1f76ab5f4\"}},{\"id\":\"CALIBRATION-2\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-2\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-2\",\"checkerLineage\":\"CALIBRATION-checker-2\",\"ancestry\":\"CALIBRATION-ancestry-2\",\"modelLineage\":\"CALIBRATION-model-2\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":12,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-2\",\"version\":\"fixture-v1\",\"contentDigest\":\"8fdf1cf1a8b0f44dbbfe5f522c4aeb8343d9d8938ea2e449ff0fd260f921fd08\"}},{\"id\":\"CALIBRATION-3\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-3\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-3\",\"checkerLineage\":\"CALIBRATION-checker-3\",\"ancestry\":\"CALIBRATION-ancestry-3\",\"modelLineage\":\"CALIBRATION-model-3\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":13,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-3\",\"version\":\"fixture-v1\",\"contentDigest\":\"0634f045c180994b93879339ecb4369901c2c95fed5f34618608a925d5f31e82\"}},{\"id\":\"CALIBRATION-4\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-4\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-4\",\"checkerLineage\":\"CALIBRATION-checker-4\",\"ancestry\":\"CALIBRATION-ancestry-4\",\"modelLineage\":\"CALIBRATION-model-4\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":14,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-4\",\"version\":\"fixture-v1\",\"contentDigest\":\"7eefc4dba0b3689b012e0ce43d0bbea733033662824d59ef823fbf566dd1468b\"}},{\"id\":\"CALIBRATION-5\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-5\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-5\",\"checkerLineage\":\"CALIBRATION-checker-5\",\"ancestry\":\"CALIBRATION-ancestry-5\",\"modelLineage\":\"CALIBRATION-model-5\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":15,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-5\",\"version\":\"fixture-v1\",\"contentDigest\":\"a4fbb4328521a40e45e91b7bf992daa28a077ea6f3c1ad2b2c24636cd6bc9c7e\"}},{\"id\":\"CALIBRATION-6\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-6\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-6\",\"checkerLineage\":\"CALIBRATION-checker-6\",\"ancestry\":\"CALIBRATION-ancestry-6\",\"modelLineage\":\"CALIBRATION-model-6\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":16,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-6\",\"version\":\"fixture-v1\",\"contentDigest\":\"619e02c55cdd90ab1a7847fcebb2c317ab235a58d25b9577c659ed06aa70481f\"}},{\"id\":\"CALIBRATION-7\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-7\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-7\",\"checkerLineage\":\"CALIBRATION-checker-7\",\"ancestry\":\"CALIBRATION-ancestry-7\",\"modelLineage\":\"CALIBRATION-model-7\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":17,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-7\",\"version\":\"fixture-v1\",\"contentDigest\":\"819ba07fcc7616121de5d88a4ff50cb87fda78f6f294860d24d0cf8ef41aa793\"}},{\"id\":\"CALIBRATION-8\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-8\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-8\",\"checkerLineage\":\"CALIBRATION-checker-8\",\"ancestry\":\"CALIBRATION-ancestry-8\",\"modelLineage\":\"CALIBRATION-model-8\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":18,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-8\",\"version\":\"fixture-v1\",\"contentDigest\":\"f3f70608ca54a8ceb8c5c7cf04c75f99807b0ed52cdb4cf9fb1b88ad2e27bc21\"}},{\"id\":\"CALIBRATION-9\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-9\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-9\",\"checkerLineage\":\"CALIBRATION-checker-9\",\"ancestry\":\"CALIBRATION-ancestry-9\",\"modelLineage\":\"CALIBRATION-model-9\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":19,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-9\",\"version\":\"fixture-v1\",\"contentDigest\":\"2d054eca2d016149ce746e0b3b96e6c0bf52fafc61613d84aebde0d948c73cdd\"}},{\"id\":\"CALIBRATION-10\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-10\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-10\",\"checkerLineage\":\"CALIBRATION-checker-10\",\"ancestry\":\"CALIBRATION-ancestry-10\",\"modelLineage\":\"CALIBRATION-model-10\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":20,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-10\",\"version\":\"fixture-v1\",\"contentDigest\":\"aec097b9c2f7db13379a637f393390289d73bba81f05bf5b2a67af59883c5fee\"}},{\"id\":\"CALIBRATION-11\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-11\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-11\",\"checkerLineage\":\"CALIBRATION-checker-11\",\"ancestry\":\"CALIBRATION-ancestry-11\",\"modelLineage\":\"CALIBRATION-model-11\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":21,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-11\",\"version\":\"fixture-v1\",\"contentDigest\":\"beb3c59a7b7eebff57b4ea42199d50c449fc7e8038341a655a91b5000775c1b1\"}},{\"id\":\"CALIBRATION-12\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-12\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-12\",\"checkerLineage\":\"CALIBRATION-checker-12\",\"ancestry\":\"CALIBRATION-ancestry-12\",\"modelLineage\":\"CALIBRATION-model-12\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":22,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-12\",\"version\":\"fixture-v1\",\"contentDigest\":\"5b5408714bd9e77aaf0aa4f687617eb4156b4ec90dd07c0bfc76716f7a149d33\"}},{\"id\":\"CALIBRATION-13\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-13\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-13\",\"checkerLineage\":\"CALIBRATION-checker-13\",\"ancestry\":\"CALIBRATION-ancestry-13\",\"modelLineage\":\"CALIBRATION-model-13\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":23,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-13\",\"version\":\"fixture-v1\",\"contentDigest\":\"baa1161f317ef8fb62c0cde952176b93a142602b6113e86744c24c3fa863a9e2\"}},{\"id\":\"CALIBRATION-14\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-14\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-14\",\"checkerLineage\":\"CALIBRATION-checker-14\",\"ancestry\":\"CALIBRATION-ancestry-14\",\"modelLineage\":\"CALIBRATION-model-14\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":24,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-14\",\"version\":\"fixture-v1\",\"contentDigest\":\"7eb512d8737840583156104d01524df043143282217ac97816b2a050bba755d7\"}},{\"id\":\"CALIBRATION-15\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-15\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-15\",\"checkerLineage\":\"CALIBRATION-checker-15\",\"ancestry\":\"CALIBRATION-ancestry-15\",\"modelLineage\":\"CALIBRATION-model-15\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":25,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-15\",\"version\":\"fixture-v1\",\"contentDigest\":\"50e83127fb47fa611d7ae41d6d18630a08478dfbee29e445766cae953b657c29\"}},{\"id\":\"CALIBRATION-16\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-16\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-16\",\"checkerLineage\":\"CALIBRATION-checker-16\",\"ancestry\":\"CALIBRATION-ancestry-16\",\"modelLineage\":\"CALIBRATION-model-16\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":26,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-16\",\"version\":\"fixture-v1\",\"contentDigest\":\"4a9a6e4511e5cc00d06811ae38c26363203e9b28297338f5515d9a88f582bcea\"}},{\"id\":\"CALIBRATION-17\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-17\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-17\",\"checkerLineage\":\"CALIBRATION-checker-17\",\"ancestry\":\"CALIBRATION-ancestry-17\",\"modelLineage\":\"CALIBRATION-model-17\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":27,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-17\",\"version\":\"fixture-v1\",\"contentDigest\":\"3cba811160cbe32e84f6e757dbe2c89e2edc4e68f455b98afcb020c7f176d8b2\"}},{\"id\":\"CALIBRATION-18\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-18\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-18\",\"checkerLineage\":\"CALIBRATION-checker-18\",\"ancestry\":\"CALIBRATION-ancestry-18\",\"modelLineage\":\"CALIBRATION-model-18\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":28,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-18\",\"version\":\"fixture-v1\",\"contentDigest\":\"c7ef1dfdcb3d4bbc652fd84b97ae357c801724842f5fd57be70facfd48c3edd2\"}},{\"id\":\"CALIBRATION-19\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-19\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-19\",\"checkerLineage\":\"CALIBRATION-checker-19\",\"ancestry\":\"CALIBRATION-ancestry-19\",\"modelLineage\":\"CALIBRATION-model-19\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":29,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-19\",\"version\":\"fixture-v1\",\"contentDigest\":\"370269ed436681e05ffcd3a9e621664060b0faa263c0eed250abe49897a1f715\"}},{\"id\":\"CALIBRATION-20\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-20\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-20\",\"checkerLineage\":\"CALIBRATION-checker-20\",\"ancestry\":\"CALIBRATION-ancestry-20\",\"modelLineage\":\"CALIBRATION-model-20\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":30,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-20\",\"version\":\"fixture-v1\",\"contentDigest\":\"54ad9b8a02bd7a284430f6f502aa337e66a5ace002379d3a41707a18c64f91b9\"}},{\"id\":\"CALIBRATION-21\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-21\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-21\",\"checkerLineage\":\"CALIBRATION-checker-21\",\"ancestry\":\"CALIBRATION-ancestry-21\",\"modelLineage\":\"CALIBRATION-model-21\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":31,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-21\",\"version\":\"fixture-v1\",\"contentDigest\":\"4d23f6eb11dd0fa90844ac0640cdcff98df62a332dc6594b3f5f7148271bfb0c\"}},{\"id\":\"CALIBRATION-22\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-22\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-22\",\"checkerLineage\":\"CALIBRATION-checker-22\",\"ancestry\":\"CALIBRATION-ancestry-22\",\"modelLineage\":\"CALIBRATION-model-22\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":32,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-22\",\"version\":\"fixture-v1\",\"contentDigest\":\"fa4c783ca4ae20dc4d2853015a8db5f11bdff2621f09b19c20448f75b600ce92\"}},{\"id\":\"CALIBRATION-23\",\"split\":\"CALIBRATION\",\"company\":\"CALIBRATION-company-23\",\"timeBlock\":\"CALIBRATION-time\",\"sourceLineage\":\"CALIBRATION-source-23\",\"checkerLineage\":\"CALIBRATION-checker-23\",\"ancestry\":\"CALIBRATION-ancestry-23\",\"modelLineage\":\"CALIBRATION-model-23\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":33,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"CALIBRATION-ref-23\",\"version\":\"fixture-v1\",\"contentDigest\":\"d4e349c2c01a2070759fd09ff88a9290086b1269dae9fd49575e7b54d5d03eda\"}},{\"id\":\"HELD_OUT-0\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-0\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-0\",\"checkerLineage\":\"HELD_OUT-checker-0\",\"ancestry\":\"HELD_OUT-ancestry-0\",\"modelLineage\":\"HELD_OUT-model-0\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":10,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-0\",\"version\":\"fixture-v1\",\"contentDigest\":\"5eb799ab7e36237642b9757c7defbc70b6b0f3a1d876c568b0bcf7022cc1d9f7\"}},{\"id\":\"HELD_OUT-1\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-1\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-1\",\"checkerLineage\":\"HELD_OUT-checker-1\",\"ancestry\":\"HELD_OUT-ancestry-1\",\"modelLineage\":\"HELD_OUT-model-1\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":11,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-1\",\"version\":\"fixture-v1\",\"contentDigest\":\"6efc5584536158ce86fe9dded61d798650844fd79134d1aa837b98c6e9dcfb64\"}},{\"id\":\"HELD_OUT-2\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-2\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-2\",\"checkerLineage\":\"HELD_OUT-checker-2\",\"ancestry\":\"HELD_OUT-ancestry-2\",\"modelLineage\":\"HELD_OUT-model-2\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":12,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-2\",\"version\":\"fixture-v1\",\"contentDigest\":\"8dd6ac35ea5729e94f8b26f479a070cbc5050666d7d9acb91b2df75fcf13a436\"}},{\"id\":\"HELD_OUT-3\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-3\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-3\",\"checkerLineage\":\"HELD_OUT-checker-3\",\"ancestry\":\"HELD_OUT-ancestry-3\",\"modelLineage\":\"HELD_OUT-model-3\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":13,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-3\",\"version\":\"fixture-v1\",\"contentDigest\":\"865a3cf0afade660b1deb813d13adf6ce16a46378e348363a60827632b6d2848\"}},{\"id\":\"HELD_OUT-4\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-4\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-4\",\"checkerLineage\":\"HELD_OUT-checker-4\",\"ancestry\":\"HELD_OUT-ancestry-4\",\"modelLineage\":\"HELD_OUT-model-4\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":14,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-4\",\"version\":\"fixture-v1\",\"contentDigest\":\"191d2f683bc3bd923739bfef5434432bc0da08298c8aa8ad9bb8f5c5fa8c83c0\"}},{\"id\":\"HELD_OUT-5\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-5\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-5\",\"checkerLineage\":\"HELD_OUT-checker-5\",\"ancestry\":\"HELD_OUT-ancestry-5\",\"modelLineage\":\"HELD_OUT-model-5\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":15,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-5\",\"version\":\"fixture-v1\",\"contentDigest\":\"caa7bae2cd3b8ab2ad8d72721094b50cf155d2cdb5f88d317f653b256bb3d0d9\"}},{\"id\":\"HELD_OUT-6\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-6\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-6\",\"checkerLineage\":\"HELD_OUT-checker-6\",\"ancestry\":\"HELD_OUT-ancestry-6\",\"modelLineage\":\"HELD_OUT-model-6\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":16,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-6\",\"version\":\"fixture-v1\",\"contentDigest\":\"133b2972fd691aeca3a0ecb02c16abd4f9dd1106421f251846f1203bc883b97e\"}},{\"id\":\"HELD_OUT-7\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-7\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-7\",\"checkerLineage\":\"HELD_OUT-checker-7\",\"ancestry\":\"HELD_OUT-ancestry-7\",\"modelLineage\":\"HELD_OUT-model-7\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":17,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-7\",\"version\":\"fixture-v1\",\"contentDigest\":\"c0a060793a34364d6e35482a2b1a54120d6d61ed1828935f837a67f917a87cbe\"}},{\"id\":\"HELD_OUT-8\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-8\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-8\",\"checkerLineage\":\"HELD_OUT-checker-8\",\"ancestry\":\"HELD_OUT-ancestry-8\",\"modelLineage\":\"HELD_OUT-model-8\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":18,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-8\",\"version\":\"fixture-v1\",\"contentDigest\":\"97a4dd0a51f5d5652d1ec10ff436ba47ee889f27ace840eddb8b456cf330bedd\"}},{\"id\":\"HELD_OUT-9\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-9\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-9\",\"checkerLineage\":\"HELD_OUT-checker-9\",\"ancestry\":\"HELD_OUT-ancestry-9\",\"modelLineage\":\"HELD_OUT-model-9\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":19,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-9\",\"version\":\"fixture-v1\",\"contentDigest\":\"ac821d0eeda065525e4ecdcf7a3d10c521b778666ad8d99d00575c5400ca8cae\"}},{\"id\":\"HELD_OUT-10\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-10\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-10\",\"checkerLineage\":\"HELD_OUT-checker-10\",\"ancestry\":\"HELD_OUT-ancestry-10\",\"modelLineage\":\"HELD_OUT-model-10\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":20,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-10\",\"version\":\"fixture-v1\",\"contentDigest\":\"172c52574c54527bb52bbfc56ce8bba8890102dc4f118d040b53bbfdfdfe39c7\"}},{\"id\":\"HELD_OUT-11\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-11\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-11\",\"checkerLineage\":\"HELD_OUT-checker-11\",\"ancestry\":\"HELD_OUT-ancestry-11\",\"modelLineage\":\"HELD_OUT-model-11\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":21,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-11\",\"version\":\"fixture-v1\",\"contentDigest\":\"64f1e2248f72c418c79756598bba725604379161908d37b52ce9362ba9465a02\"}},{\"id\":\"HELD_OUT-12\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-12\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-12\",\"checkerLineage\":\"HELD_OUT-checker-12\",\"ancestry\":\"HELD_OUT-ancestry-12\",\"modelLineage\":\"HELD_OUT-model-12\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":22,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-12\",\"version\":\"fixture-v1\",\"contentDigest\":\"5fed97a9332548997935262f6118ea91228bd7a5dc76a7a4600978a3003caed5\"}},{\"id\":\"HELD_OUT-13\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-13\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-13\",\"checkerLineage\":\"HELD_OUT-checker-13\",\"ancestry\":\"HELD_OUT-ancestry-13\",\"modelLineage\":\"HELD_OUT-model-13\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":23,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-13\",\"version\":\"fixture-v1\",\"contentDigest\":\"9c9b25691d9d6ee8ce18dfa00a3fef950137135d1b6c48d46cb88be359fc51c3\"}},{\"id\":\"HELD_OUT-14\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-14\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-14\",\"checkerLineage\":\"HELD_OUT-checker-14\",\"ancestry\":\"HELD_OUT-ancestry-14\",\"modelLineage\":\"HELD_OUT-model-14\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":24,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-14\",\"version\":\"fixture-v1\",\"contentDigest\":\"c41737c0061d890d26588cea143ad2e519ee8813def717503c827db147c6c31d\"}},{\"id\":\"HELD_OUT-15\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-15\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-15\",\"checkerLineage\":\"HELD_OUT-checker-15\",\"ancestry\":\"HELD_OUT-ancestry-15\",\"modelLineage\":\"HELD_OUT-model-15\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":25,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-15\",\"version\":\"fixture-v1\",\"contentDigest\":\"b282947843844df6993a5cdc4b3e897a54cc550d36c3aa32686891051150700d\"}},{\"id\":\"HELD_OUT-16\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-16\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-16\",\"checkerLineage\":\"HELD_OUT-checker-16\",\"ancestry\":\"HELD_OUT-ancestry-16\",\"modelLineage\":\"HELD_OUT-model-16\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":26,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-16\",\"version\":\"fixture-v1\",\"contentDigest\":\"cf935de0a8bdb0102652c1861f87deed8f8b83282093819ede242d1b9d7fbd7b\"}},{\"id\":\"HELD_OUT-17\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-17\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-17\",\"checkerLineage\":\"HELD_OUT-checker-17\",\"ancestry\":\"HELD_OUT-ancestry-17\",\"modelLineage\":\"HELD_OUT-model-17\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":27,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-17\",\"version\":\"fixture-v1\",\"contentDigest\":\"161d337649526f743cfcf99bb3fc125f7f9bb4fedbf0273b05b2476bae71a08b\"}},{\"id\":\"HELD_OUT-18\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-18\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-18\",\"checkerLineage\":\"HELD_OUT-checker-18\",\"ancestry\":\"HELD_OUT-ancestry-18\",\"modelLineage\":\"HELD_OUT-model-18\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":28,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-18\",\"version\":\"fixture-v1\",\"contentDigest\":\"d839a355d884078be55a06d8855d0fce7fcd42eb095bd0b04a3b49f3c9816e71\"}},{\"id\":\"HELD_OUT-19\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-19\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-19\",\"checkerLineage\":\"HELD_OUT-checker-19\",\"ancestry\":\"HELD_OUT-ancestry-19\",\"modelLineage\":\"HELD_OUT-model-19\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":29,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-19\",\"version\":\"fixture-v1\",\"contentDigest\":\"99227612b48c29744e2f9e70d8576543d32243ba742a7ddac42bb6465ebef7aa\"}},{\"id\":\"HELD_OUT-20\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-20\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-20\",\"checkerLineage\":\"HELD_OUT-checker-20\",\"ancestry\":\"HELD_OUT-ancestry-20\",\"modelLineage\":\"HELD_OUT-model-20\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":100,\"completed\":false,\"independentlyAccepted\":false,\"elapsedMs\":30,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-20\",\"version\":\"fixture-v1\",\"contentDigest\":\"742160f1f771f632b3db560276fbfff2eb2fee5bffb70b1d6f6a7ad6383675d2\"}},{\"id\":\"HELD_OUT-21\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-21\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-21\",\"checkerLineage\":\"HELD_OUT-checker-21\",\"ancestry\":\"HELD_OUT-ancestry-21\",\"modelLineage\":\"HELD_OUT-model-21\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":31,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-21\",\"version\":\"fixture-v1\",\"contentDigest\":\"a1b7d552d8d241cecb87547264fa070cd6655dd2bc7aa129c4b251d5034361d5\"}},{\"id\":\"HELD_OUT-22\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-22\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-22\",\"checkerLineage\":\"HELD_OUT-checker-22\",\"ancestry\":\"HELD_OUT-ancestry-22\",\"modelLineage\":\"HELD_OUT-model-22\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":32,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-22\",\"version\":\"fixture-v1\",\"contentDigest\":\"79181f7d125012d9a53fa271c4f21164a8bde4954cc49d2cc609f86307a844e5\"}},{\"id\":\"HELD_OUT-23\",\"split\":\"HELD_OUT\",\"company\":\"HELD_OUT-company-23\",\"timeBlock\":\"HELD_OUT-time\",\"sourceLineage\":\"HELD_OUT-source-23\",\"checkerLineage\":\"HELD_OUT-checker-23\",\"ancestry\":\"HELD_OUT-ancestry-23\",\"modelLineage\":\"HELD_OUT-model-23\",\"regime\":\"finite-local\",\"taskStratum\":\"mechanics\",\"mechanism\":\"EXECUTE_CHECK_CHAIN\",\"route\":\"P1_NATIVE\",\"featuresKnownAt\":\"2026-01-01T00:00:00.000Z\",\"outcomeKnownAt\":\"2026-01-02T00:00:00.000Z\",\"beforeLoss\":100,\"afterLoss\":0,\"completed\":true,\"independentlyAccepted\":true,\"elapsedMs\":33,\"nativeAttempts\":2,\"costUSD\":null,\"oracleRef\":{\"owner\":\"PUBLIC_EXACT_REFERENCE\",\"id\":\"HELD_OUT-ref-23\",\"version\":\"fixture-v1\",\"contentDigest\":\"8770adeaa815fa642c5feef5a75ea7892b95e7eb09dadccdc3d93ca571bfb4be\"}}]},1,[],[]"
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-prediction-first-1",
+      "driverSha256": "eea397059cc50cc4dcc41e345abbff1bb8e17794d635e36bc6576c10e27d3e8c",
+      "resultSha256": "e5444cb032a896b5d0a8e2ef2ec1814a5f1393c62de44fdfdfd04ee40b33b873",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 6
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "FAIL",
+          "failure": "The expression evaluated to a falsy value:\n\n  assert(first.output.chains.some((c:any)=>c.conditionalGain===100&&c.expectedGain===75&&c.completionProbability===.75&&c.acceptanceProbability===.75&&c.expectedNet===71&&c.support==='PUBLIC_MODEL_RELATIVE_DIAGNOSTIC'))\n"
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-prediction-repair-1",
+      "driverSha256": "a574aedd09ebf76c24a4568a28ea1a2e8dc50707a0a6898619aae86a88d230e5",
+      "resultSha256": "0ab94b50b321adb3a704cdda6d38fbebb0bafe05c4405363d7e397dccba0ead8",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 2,
+        "FAIL": 0,
+        "NOT_RUN": 5
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-source-premise-repair-1",
+      "driverSha256": "18b3cbf5987356b815981ccc34384532178797e59121a0e1813cfe2dc546a683",
+      "resultSha256": "37942c877bd4bd0e2fa3c9fff88322183dc111cd234588770f99f151f45b6329",
+      "sourceScriptSha256": "16578ad52f25672a864c0b13e3c10019a2f6a2e6c852275471f8653e7da91f9b",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 1,
+        "FAIL": 0,
+        "NOT_RUN": 5
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "PASS",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/m2-sql-cancellation-first-1",
+      "driverSha256": "0f8471b201e26459790d025a0cc2693a615311aae0a3c5ddd9fc5753dc12adf7",
+      "resultSha256": "4b92e3725be1ed44688f682329b054981330ce91239700484da93292edb5a66d",
+      "sourceScriptSha256": "85b7dc5173fb1865b3c30a497e74c806c243938193fe8d3bad8232dd6de701ae",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 1,
+        "FAIL": 1,
+        "NOT_RUN": 8
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "FAIL",
+          "failure": "Expected values to be strictly equal:\n\n1 !== 0\n"
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/completion-a/evidence/a0-m2-refinement-current-1",
+      "sourceCommit": "4eb70a865cd52badfbd3a9133c6afc553ed5cfcc",
+      "sourceTree": "fd7eac382591922107cd36758d06edad773e78f8",
+      "completeSourceDigest": "d7ea1d14ae91a7fca9bd4fc0ddd1e07119ff630481e4f3266d202a372b780320",
+      "sourceStability": {
+        "schema": "finnor.m2.source-stability.v1",
+        "status": "PASS",
+        "beforeDigest": "d7ea1d14ae91a7fca9bd4fc0ddd1e07119ff630481e4f3266d202a372b780320",
+        "afterDigest": "d7ea1d14ae91a7fca9bd4fc0ddd1e07119ff630481e4f3266d202a372b780320",
+        "beforeCommit": "4eb70a865cd52badfbd3a9133c6afc553ed5cfcc",
+        "afterCommit": "4eb70a865cd52badfbd3a9133c6afc553ed5cfcc",
+        "beforeTree": "fd7eac382591922107cd36758d06edad773e78f8",
+        "afterTree": "fd7eac382591922107cd36758d06edad773e78f8",
+        "changedPaths": [],
+        "fileCount": 125364
+      },
+      "driverSha256": "cafaffd870dbec668df69b6f98726972087f9d96189e7477e2408a3ae0042ac9",
+      "resultSha256": "81e222cb132239e8e1045eeb043ec6c1556c9dbd18c58ee860726dc0dc41b5d9",
+      "sourceScriptSha256": "ca737b3f04a7cb6ff1e0929abbc90e7a7f958647f8c9085f654ddbdff104191f",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 16
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-L-transport-body-rate-and-runtime-authorization",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-M-exact-work-code-and-complete-cost-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-N-immutable-exact-missing-owner-requests",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-O-real-bearer-auth-HTTP-and-bootstrap-SQL-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-P-authoritative-stored-module-and-compiler-bytes",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-Q-actual-worker-whole-owner-IO-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-S-real-model-refinement-original-frontier-budget",
+          "status": "FAIL",
+          "failure": null
+        }
+      ],
+      "qualification": "Real disposable native owner E2E; local unmetered development, not sealed admission/frontier/economic qualification"
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/completion-a/evidence/a0-m2-refinement-continuation-1",
+      "sourceCommit": "337bccc9363634a311e6e3872e79bdf368fce6b7",
+      "sourceTree": "c08e8bf7606558a375d31f0c7b88ddc1f3ce3745",
+      "completeSourceDigest": "86eff13206d73d6c675edf14558be7ba5361a272a4b0b05b80e069831c65a11d",
+      "sourceStability": {
+        "schema": "finnor.m2.source-stability.v1",
+        "status": "PASS",
+        "beforeDigest": "86eff13206d73d6c675edf14558be7ba5361a272a4b0b05b80e069831c65a11d",
+        "afterDigest": "86eff13206d73d6c675edf14558be7ba5361a272a4b0b05b80e069831c65a11d",
+        "beforeCommit": "337bccc9363634a311e6e3872e79bdf368fce6b7",
+        "afterCommit": "337bccc9363634a311e6e3872e79bdf368fce6b7",
+        "beforeTree": "c08e8bf7606558a375d31f0c7b88ddc1f3ce3745",
+        "afterTree": "c08e8bf7606558a375d31f0c7b88ddc1f3ce3745",
+        "changedPaths": [],
+        "fileCount": 2570
+      },
+      "driverSha256": "cafaffd870dbec668df69b6f98726972087f9d96189e7477e2408a3ae0042ac9",
+      "resultSha256": "e695db8e78c1ee87d6b0b685cbe6c8a7b11908a38625716b67fd54a1a1c9ee11",
+      "sourceScriptSha256": "ca737b3f04a7cb6ff1e0929abbc90e7a7f958647f8c9085f654ddbdff104191f",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 16
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-L-transport-body-rate-and-runtime-authorization",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-M-exact-work-code-and-complete-cost-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-N-immutable-exact-missing-owner-requests",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-O-real-bearer-auth-HTTP-and-bootstrap-SQL-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-P-authoritative-stored-module-and-compiler-bytes",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-Q-actual-worker-whole-owner-IO-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-S-real-model-refinement-original-frontier-budget",
+          "status": "FAIL",
+          "failure": null
+        }
+      ],
+      "qualification": "Real disposable native owner E2E; local unmetered development, not sealed admission/frontier/economic qualification"
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/completion-a/evidence/a0-m2-refinement-publication-diagnostics-1",
+      "sourceCommit": "08875440c68442227b7fd9c5cca76dbda53c2723",
+      "sourceTree": "4e5267b7d8acabf7505b709b3fba768078ffcc15",
+      "completeSourceDigest": "7c3196f4e86fe19de97fe30092228b1bc290e42b3c9848aa26060776578ac5db",
+      "sourceStability": {
+        "schema": "finnor.m2.source-stability.v1",
+        "status": "PASS",
+        "beforeDigest": "7c3196f4e86fe19de97fe30092228b1bc290e42b3c9848aa26060776578ac5db",
+        "afterDigest": "7c3196f4e86fe19de97fe30092228b1bc290e42b3c9848aa26060776578ac5db",
+        "beforeCommit": "08875440c68442227b7fd9c5cca76dbda53c2723",
+        "afterCommit": "08875440c68442227b7fd9c5cca76dbda53c2723",
+        "beforeTree": "4e5267b7d8acabf7505b709b3fba768078ffcc15",
+        "afterTree": "4e5267b7d8acabf7505b709b3fba768078ffcc15",
+        "changedPaths": [],
+        "fileCount": 2571
+      },
+      "driverSha256": "cafaffd870dbec668df69b6f98726972087f9d96189e7477e2408a3ae0042ac9",
+      "resultSha256": "188d7d35698d99ebe3ffebc6fba774f39708e390d0ba903ec13ad92615f5e55f",
+      "sourceScriptSha256": "c91d3d394ef2464a4dd35fd3636629f04f0b644bf9fa5b76f1ace9412804272d",
+      "exitCode": 1,
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 16
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-L-transport-body-rate-and-runtime-authorization",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-M-exact-work-code-and-complete-cost-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-N-immutable-exact-missing-owner-requests",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-O-real-bearer-auth-HTTP-and-bootstrap-SQL-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-P-authoritative-stored-module-and-compiler-bytes",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-Q-actual-worker-whole-owner-IO-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-S-real-model-refinement-original-frontier-budget",
+          "status": "FAIL",
+          "failure": null
+        }
+      ],
+      "qualification": "Real disposable native owner E2E; local unmetered development, not sealed admission/frontier/economic qualification"
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/completion-a/evidence/a0-m2-continuation-original-boundaries-1",
+      "sourceCommit": "5714b9649eda284a8ca048f3ed8659420c65c535",
+      "sourceTree": "478ede964c3fead70c4f8860a72b19917c01c2b8",
+      "completeSourceDigest": "d6b7d36573431e28a175718d29eaac8fe462dfdc7f883806006c84e4e8b582d9",
+      "sourceStability": {
+        "schema": "finnor.m2.source-stability.v1",
+        "status": "PASS",
+        "beforeDigest": "d6b7d36573431e28a175718d29eaac8fe462dfdc7f883806006c84e4e8b582d9",
+        "afterDigest": "d6b7d36573431e28a175718d29eaac8fe462dfdc7f883806006c84e4e8b582d9",
+        "beforeCommit": "5714b9649eda284a8ca048f3ed8659420c65c535",
+        "afterCommit": "5714b9649eda284a8ca048f3ed8659420c65c535",
+        "beforeTree": "478ede964c3fead70c4f8860a72b19917c01c2b8",
+        "afterTree": "478ede964c3fead70c4f8860a72b19917c01c2b8",
+        "changedPaths": [],
+        "fileCount": 2572
+      },
+      "driverSha256": "cafaffd870dbec668df69b6f98726972087f9d96189e7477e2408a3ae0042ac9",
+      "resultSha256": "c175eefbfbb60f7fc1f2587148aabd9d7ae22d7306e665153a62b2dffe5c4cd9",
+      "sourceScriptSha256": "c91d3d394ef2464a4dd35fd3636629f04f0b644bf9fa5b76f1ace9412804272d",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 4,
+        "FAIL": 0,
+        "NOT_RUN": 13
+      },
+      "cases": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-B-owner-finite-complementary-chain-stop",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-C-current-privacy-immutable-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-D-real-source-calibration-leakage",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-E-bounded-decode-grant-protected-refusal",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-F-fifty-correlated-wordings-operative-source",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-G-frozen-decision-loss-prediction-executed",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-I-whole-reader-SQL-cancellation",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-J-native-contract-discovery-registry",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-K-release-server-cancellation-not-only-response",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-L-transport-body-rate-and-runtime-authorization",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-M-exact-work-code-and-complete-cost-history",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-N-immutable-exact-missing-owner-requests",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-O-real-bearer-auth-HTTP-and-bootstrap-SQL-deadline",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-P-authoritative-stored-module-and-compiler-bytes",
+          "status": "NOT_RUN",
+          "failure": null
+        },
+        {
+          "id": "M2-Q-actual-worker-whole-owner-IO-deadline",
+          "status": "PASS",
+          "failure": null
+        },
+        {
+          "id": "M2-S-real-model-refinement-original-frontier-budget",
+          "status": "PASS",
+          "failure": null
+        }
+      ],
+      "qualification": "Real disposable native owner E2E; local unmetered development, not sealed admission/frontier/economic qualification"
+    }
+  ],
+  "gates": {
+    "ordinary": "PARTIAL_ENGINEERING_IN_PROGRESS",
+    "GateM2": "UNPASSED",
+    "GateP2": "UNPASSED",
+    "equipped": "UNMEASURED",
+    "protected": "UNPASSED",
+    "USD": "UNKNOWN_UNRECONCILED",
+    "H2": "UNESTABLISHED",
+    "deployment": "NOT_REQUESTED_NOT_PERFORMED"
+  }
+}

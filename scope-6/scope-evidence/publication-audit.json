@@ -1,0 +1,286 @@
+{
+  "schema": "finnor.s6.publication-audit.v1",
+  "recordedAt": "2026-10-03T19:57:47.009862+00:00",
+  "status": "PASS_REPOSITORY_CONTROLLED",
+  "sourceHeadBeforeEvidenceCommit": "bb324a4ff2292112e0f84d81e5c17818f627cf5f",
+  "node": "v22.22.3",
+  "frozenInventorySha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+  "originalPromptSha256": "10ce31af7b7d80a538178fbfe268de70d424a1a7f391ac49d488c2edc6f50cdf",
+  "evidence": [
+    {
+      "name": "native",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/native/results.json",
+      "sha256": "5e163195ffb49b2b20e6b96180fa6b768125ea54f773d494fadfcf73fbd55bc6",
+      "detail": {
+        "cases": 12
+      }
+    },
+    {
+      "name": "ownerNativeInput",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/owner-native-input/results.json",
+      "sha256": "c2f157bfacd7781baf8bd7211343deba20e5fcf9e47e98d0b34032e7f03972da",
+      "detail": {
+        "cases": 5
+      }
+    },
+    {
+      "name": "ownerTransport",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/owner/results.json",
+      "sha256": "d56db443f661feb0ad0caf960e3ab7f676cf816af7ac8695f64b4c36af1c5411",
+      "detail": {
+        "cases": 8
+      }
+    },
+    {
+      "name": "ledger",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/ledger-qualified-final/results.json",
+      "sha256": "55eba9638273f89910399bbcf289ea0be4ea839a551dae5f2075769dadb6ab55",
+      "detail": {
+        "cases": 19
+      }
+    },
+    {
+      "name": "executor",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/executor-final/results.json",
+      "sha256": "e88c02a02d3cc54e95db909588c9e099a2f5e14235f1c72b4bddbd09dfc4dcc4",
+      "detail": {
+        "cases": 4
+      }
+    },
+    {
+      "name": "sourceFreeze",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/native/manifest.json",
+      "sha256": "f758ec29f1ce4b810d0f7cec93b08684eaf915b8dc852c51361c6573ade934ea",
+      "detail": {
+        "scope": "native-owner-final/native/manifest.json"
+      }
+    },
+    {
+      "name": "sourceFreeze",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/owner-native-input/manifest.json",
+      "sha256": "da3ebe9c5bc404c17364d915f6382277b1b6bcb6f602ec5831f588fb88b3332c",
+      "detail": {
+        "scope": "native-owner-final/owner-native-input/manifest.json"
+      }
+    },
+    {
+      "name": "sourceFreeze",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/native-owner-final/owner/manifest.json",
+      "sha256": "cc4dbcf001fe15ff4bf58bb786991e5f08c377c354a38b0a72c2625591c555ef",
+      "detail": {
+        "scope": "native-owner-final/owner/manifest.json"
+      }
+    },
+    {
+      "name": "sourceFreeze",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/ledger-qualified-final/manifest.json",
+      "sha256": "b700cc9a15ded322261eafecd856a209ae1b521912a75c10822de9220f5215e3",
+      "detail": {
+        "scope": "ledger-qualified-final/manifest.json"
+      }
+    },
+    {
+      "name": "compiledWriter",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/compiled-writer-final/results.json",
+      "sha256": "9f75c62e118eb56594a04a4867f6015811935ee1d3a29bdfa166745868499264",
+      "detail": {
+        "rounds": 32,
+        "diagnosticCrashRecovery": "PASS"
+      }
+    },
+    {
+      "name": "protocol",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/protocol-final/results.json",
+      "sha256": "e9b0cd51457f3fab03f3cb2d8e6462800ef5b3486970e42b2e44a89812ca8a31",
+      "detail": {
+        "positiveStates": {
+          "obligation": 9472,
+          "append": 161,
+          "provider-history-conditional-no-pending-expiry": 888,
+          "provider-history-actual-delayed-arrival": 303
+        },
+        "unsafeControls": 12,
+        "fullCompletionGatePassed": false,
+        "retainedDelayedArrivalCounterexample": true
+      }
+    },
+    {
+      "name": "completeRepository",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-5/scope-evidence/repository-2026-10-03T19-27-15-518Z/manifest.json",
+      "sha256": "70151e2480ab3018da100e4f062511c418d241b81e985b1c0c51abfabd3eeb19",
+      "detail": {
+        "commands": 7,
+        "backendPassed": 1308,
+        "backendFailed": 0,
+        "backendSkipped": 27,
+        "testFilesPassed": 217,
+        "testFilesSkipped": 6,
+        "disclosedExistingExclusion": "tests/integration/phase6-conversation-context-kernel.test.ts"
+      }
+    },
+    {
+      "name": "S1",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-5/scope-evidence/upstream-2026-10-03T19-44-13-dab07e8b/s1/results.json",
+      "sha256": "7c21b07e669d4fd637811b6b1af1bf0ee5ae6319a87905739bd6158f1bae79d5",
+      "detail": {
+        "cases": 28,
+        "qualification": "Original owner corpus; local and assumption conditional; no scientific gate promotion"
+      }
+    },
+    {
+      "name": "S2",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-5/scope-evidence/upstream-2026-10-03T19-44-13-dab07e8b/s2/results.json",
+      "sha256": "553b559aaa341328cdbf96a082af64c3cb494f1e627ad6cf0f365d263c95ffdb",
+      "detail": {
+        "cases": 19,
+        "qualification": "Original owner corpus; local and assumption conditional; no scientific gate promotion"
+      }
+    },
+    {
+      "name": "S3",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-3/scope-evidence/run-2026-10-03T19-52-14-ea1f2641/results.json",
+      "sha256": "9a3979cabdecc255be67236b7d7d2b6f41ec7d370d38f763a708527654ae3576",
+      "detail": {
+        "cases": 16,
+        "qualification": "Original owner corpus; local and assumption conditional; no scientific gate promotion"
+      }
+    },
+    {
+      "name": "S4",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-5/scope-evidence/upstream-2026-10-03T19-44-13-dab07e8b/s4/results.json",
+      "sha256": "cb8519fa344b0e206191eae6ea75a9791458770c0c6ec0cd8200394f637fdfa3",
+      "detail": {
+        "cases": 38,
+        "qualification": "Original owner corpus; local and assumption conditional; no scientific gate promotion"
+      }
+    },
+    {
+      "name": "S5",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/.codex/workspaces/finnor-six-scope-publication/scope-5/scope-evidence/run-2026-10-03T19-30-55-2c19cf4d/results.json",
+      "sha256": "0a5c0b9dda2d8b4c21401e22d13e348cd142a0655433a19433966922c1f983bd",
+      "detail": {
+        "cases": 14,
+        "qualification": "Original owner corpus; local and assumption conditional; no scientific gate promotion"
+      }
+    },
+    {
+      "name": "fiveIntermediateBranches",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/branch-checks/manifest.json",
+      "sha256": "97e80be7bde907b3fcf0278028f0b68eced1723a651f17ab6df9f24ca7076f62",
+      "detail": {
+        "branches": 5,
+        "check": "Backend TypeScript"
+      }
+    },
+    {
+      "name": "finalSourceFreeze",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/final-source-freeze.json",
+      "sha256": "3971aeb0dd2b2b813544eb6273c3863e72bfd724398e0a5517068980f3eaf131",
+      "detail": {
+        "files": 1016
+      }
+    },
+    {
+      "name": "credentialScan",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/stack-gitleaks-qualified.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "detail": {
+        "scanner": "8.30.1",
+        "range": "origin/main..HEAD",
+        "findings": 0,
+        "exactPublicModelIdentifierException": "Public S4 delayed-actor model identifier; exact field/value/path; credential fields remain scanned"
+      }
+    },
+    {
+      "name": "scannerNegativeControls",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/secret-policy-qualified.json",
+      "sha256": "25b07c2ac44be8689af47e34ddcf7a48c72aebd289b52b1426df9890b8dcff40",
+      "detail": {
+        "scanner": "8.24.3",
+        "credentialFieldsRemainDetected": true
+      }
+    },
+    {
+      "name": "stackAndInheritedSQL",
+      "status": "PASS",
+      "artifact": "/Users/paramdave/Desktop/FINNOR/scope-6/scope-evidence/pr-publication/recovery/stack-source-audit.json",
+      "sha256": "45a1fde88f1c061a030d4f30885ff300e80bfab263cd1c623a9fc63cb20d5d60",
+      "detail": {
+        "existingMainMigrations": 151,
+        "protectedSourceModules": 7,
+        "primaryIndexSha256": "fa36217e24882ea7d9ff755939202bb1b6a4718ccf117478279f32415ce9e1ab"
+      }
+    },
+    {
+      "name": "staticAndBuild",
+      "status": "PASS",
+      "detail": {
+        "backendAndS1ToS6TypeScript": true,
+        "rootTypeScript": true,
+        "authz": true,
+        "openapiGenerated": true,
+        "peBoundary": true,
+        "rootReleaseTests": 33,
+        "rootReleaseMutationAndDeploymentGuards": true,
+        "rootManifestAndForms": true,
+        "apiBuild": true,
+        "retirementGuards": true
+      },
+      "retirementLogSha256": "9386265b83f246371c3235ca7c755af36f33b6dd427c8281efe138885b23e034",
+      "buildLogDigest": "c437d91c5c2560c4e262710f557510d3f3a48384cc71d084c0825fe59bfd37ca"
+    }
+  ],
+  "retainedFailures": [
+    "Initial seven publication failures; reproduced and repaired against unchanged owning assertions",
+    "Wrong fixture acknowledgement declaration; restored original webhook/readback contract",
+    "S4 numerical timeout under concurrent validation; original full S4 38-case replay passed",
+    "S3 10-second cold timeout under concurrent validation; isolated original 16-case replay passed",
+    "Ledger replay without required test authentication returned 401; registered authentication/retained native database replay passed"
+  ],
+  "productionAdmission": false,
+  "fullExternalFrozenGatePassed": false,
+  "economicMultiplierEstablished": false,
+  "newChallengeFamilies": false,
+  "expandedAdmissionDomain": false,
+  "privateKeysOrCredentialsIncluded": false,
+  "externalItems": [
+    {
+      "id": "X1",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X2",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X3",
+      "status": "BLOCKED_EXTERNAL"
+    },
+    {
+      "id": "X4",
+      "status": "BLOCKED_EXTERNAL"
+    }
+  ],
+  "sourceQualification": "Local PostgreSQL/native owner/independent fixture readback and compiled candidate; same OS identity and disposable authority. Historical process mapping is used only for unchanged mapped provider source."
+}

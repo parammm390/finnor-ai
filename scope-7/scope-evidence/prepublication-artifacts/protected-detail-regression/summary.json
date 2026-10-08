@@ -1,0 +1,28 @@
+{
+  "artifactSha256": "63f84a945a60d1d3407655d6e398816b8ad5dace752204472da3c67f8b9654a2",
+  "artifact": "results.json.gz",
+  "qualification": "DISPOSABLE_TEST_AUTHORITY_SEPARATE_PROCESS_NO_H2_ECONOMIC_OR_PRODUCTION_ADMISSION",
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "id": "s7-h2-exact-immutable-commitment",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "foreign-owner-h2-cannot-borrow-s7-permission",
+      "status": "PASS",
+      "failure": null
+    },
+    {
+      "id": "s7-detail-cannot-borrow-other-subject-digest",
+      "status": "FAIL",
+      "failure": "AssertionError [ERR_ASSERTION]: {\"status\":200,\"body\":{\"receipt\":{\"schema\":\"finnor.s6.ledger-receipt.v1\",\"kind\":\"EVENT\",\"identity\":\"s7-event:f3022d2581450c5f5b2306d8b68eab67a9d1c108506f91e232b99ef37ac3132a\",\"eventId\":\"s7-event:f3022d2581450c5f5b2306d8b68eab67a9d1c108506f91e232b99ef37ac3132a\",\"eventDigest\":\"becdea71dbf3028ead48a82fa5dd96152eef673b73abd3bf55bf99fd205b876d\",\"tenantId\":\"7ae1861c-bf7b-4b8b-b67c-b66dcfa35509\",\"principalId\":\"8d5f2fe7-e5b3-401e-941f-1fee21fa31e3\",\"semanticOwner\":\"S7\",\"protectedExecution\":false,\"rightsRefs\":[\"s7-disposable-rights\"],\"episodeId\":\"s7-test\",\"sequence\":2,\"previousCheckpoint\":\"a9a32a281bb85b47c0ca8e65f55aae072a2caee1dc1c08e41a304097a24c4d13\",\"sealed\":false,\"requestDigest\":\"cd4ab2e0f8bb52129e3dd0f0568ecbbf193b81430f46b37bcc37a8e5ddda2ad6\",\"contentFile\":\"b22a06224addbd09093443a7a030da009171ba2c8cc9417af6f1f2889647b3cf.json\",\"storedDigest\":\"cd4ab2e0f8bb52129e3dd0f0568ecbbf193b81430f46b37bcc37a8e5ddda2ad6\",\"references\":[{\"contentDigest\":\"7e51d3804c23ecd0110108ba13148c92b23e856e8124c665f12068d7fe0aa3b5\",\"id\":\"subject:e477936c-97b9-4af8-af67-beb26bbd9adf\",\"owner\":\"S7\",\"version\":\"test-v1\"}],\"parentCheckpoints\":[],\"releaseId\":\"s7-disposable-candidate\",\"verifierDigest\":\"71f4f5e3468eede0d1925a2064557d1e0449d065336ecd51168eb7efa82e7b3d\",\"policyDigest\":\"21bbce90f215b632cd36de6771043f4d73848acee82f187491a5d3a3c2d79b85\",\"appendAt\":\"2026-10-03T20:47:53.988Z\",\"checkpointDigest\":\"7a069a6c0d1765e39156c01417adc1c890f0b0b8922f17a267fb657a4af8e5ae\",\"signature\":\"M9v1EnGk6TXWEF1Xkje592uzfSYAD5n3Aa/XTeo9BJPNlWxzTpRuYVC8Rfd6ZjAOzrO/f/oqsMF7WMPz/+tWAQ==\"}}}\n\n200 !== 409\n"
+    },
+    {
+      "id": "restart-exact-history-and-tenant-refusal",
+      "status": "PASS",
+      "failure": null
+    }
+  ]
+}

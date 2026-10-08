@@ -2,7 +2,7 @@
 // 0006_security_controls.sql) — a real composite PK (bucket_key, window_started_at)
 // makes the increment atomic under concurrent requests, not just app-level counting.
 
-import { getPool } from "@finnor/db";
+import { getPool, queryWithExecutionDeadline, DatabaseExecutionDeadlineError } from "@finnor/db";
 import Redis from "ioredis";
 
 const DEFAULT_LIMIT_PER_MINUTE = 120;
@@ -89,13 +89,14 @@ export async function checkRateLimit(bucketKey: string, limit = Number(process.e
     }
   }
   try {
-    const { rows } = await getPool().query(
+    const { rows } = await queryWithExecutionDeadline(getPool(),
       `INSERT INTO finnor_os.api_rate_limits (bucket_key, window_started_at, count) VALUES ($1, $2, 1)
        ON CONFLICT (bucket_key, window_started_at) DO UPDATE SET count = finnor_os.api_rate_limits.count + 1
        RETURNING count`, [bucketKey, windowStartedAt],
     );
     return (rows[0]?.count ?? 0) <= limit;
   } catch (error) {
+    if (error instanceof DatabaseExecutionDeadlineError) throw error;
     if (!mayUseProcessLocalFallback()) {
       console.error("[rate-limit] durable counter unavailable; production rate limit failed closed", error instanceof Error ? error.message : error);
       return false;

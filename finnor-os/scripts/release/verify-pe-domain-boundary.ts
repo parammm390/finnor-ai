@@ -88,7 +88,6 @@ const COGNITION_PATHS = [
   "packages/orchestration/src/planner-memory.ts",
   "packages/epistemic-runtime/fixtures",
   "packages/epistemic-runtime/src",
-  "tests/planner-evals",
 ] as const;
 
 const RETIRED_COGNITION_PATTERN = /\b(?:water[ _-]?test|water[ -]treatment|water-treatment|household|technician|service_visit|maintenance_agreement|warehouse_stock|inventory_item|dealer[ _-]?zero|water dispatch|water reorder)\b/i;
@@ -295,7 +294,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 16) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 16 including additive P7 workforce_status`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 17) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 17 including P7 workforce_status and P1 harness_program_v1`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

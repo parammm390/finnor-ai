@@ -1,0 +1,113 @@
+{
+  "schema": "finnor.s7.publication-source.v1",
+  "base": "2fd7793049f4bae44580e280512ccca2a0644bbc",
+  "migrationHead": "0156_economic_attribution.sql",
+  "node": "v22.18.0",
+  "sources": [
+    {
+      "path": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "sha256": "a1b55c0305ac264be29d4a08bcedf7e213229b12fb0d3a9f5ed4ded04e1d4613"
+    },
+    {
+      "path": "finnor-os/docs/authz-matrix.md",
+      "sha256": "44ae3abb0b479261a0c8be6210caa754891d98cedae1c77fb4efffa403298926"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "sha256": "a3aa1869e4839405141694b1d73d15de77e274943bfd86285758c46290ca1ad8"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "sha256": "c06f1ef7a2a2dfc2f74d66b7d9cf8800e3bf7c344b56ab884aabab89378cc288"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0156_economic_attribution.sql",
+      "sha256": "e38ac3db923a7a120d0163a57c6024fe361d97059b0c181e909620f39e0385f1"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/economic-attribution.ts",
+      "sha256": "2420a78eed9df7ab5356f7a6a6a25ff93a415435125bd0478dede1a2ac82d24b"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
+      "sha256": "2ae6153e823fb8051c274cfed4b0aeb4ad6fae775e83afa0933e0c6bc875fcd3"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "73a544ed9f97109b936428d28da0865af50305deb40b7570018cff1800d469c4"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/owner-transport.ts",
+      "sha256": "d17843d14a98b2ed7197b8377f26b9fd2ad1626907b701140a52d4526ce9e9df"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/economic-store.ts",
+      "sha256": "30c9863fe305daa3623e0056cfdfef48cb2d7057c90746a8d1d13027cbda85e5"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-economic-assignments.ts",
+      "sha256": "c28a0490db5eada69ecf5ea8c4f715bbeef32ed1d1f8dd18d19ac527262627a6"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "sha256": "25ecec3156542ccee9817784cfb2b6f07da317ea97e349073a534990086803d6"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-economic-consumers.ts",
+      "sha256": "4aab994241d1b4e9a21bc118ae3ef8d7569b81f89465bd44912da5231de99df4"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "sha256": "a2f081f77364837979febb1ff7c791f47956890029ce32a8bfcafc8a8e256890"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/economic-attribution.ts",
+      "sha256": "0db198753dd84518af0e10e3c668fd3a954ea2696b577d45f88fe8473eb91670"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "sha256": "cad400e2a52e79c64f3a1c31bc7b1f83c2a505c8ada2279eded1ec956ef7181d"
+    },
+    {
+      "path": "finnor-os/scripts/s7/economic-fixtures.mts",
+      "sha256": "d88428be794e3e29c5ee0ded5bfbcb50350eccf67f0e887cf5fe3d5089b719b9"
+    },
+    {
+      "path": "finnor-os/scripts/s7/ledger-fixture.mts",
+      "sha256": "a97c2f01008fb008b04548dce4f209cc98faba77967dfa491237ca8a915adb2f"
+    },
+    {
+      "path": "finnor-os/scripts/s7/run-integrated-e2e.mts",
+      "sha256": "2f435cb9ffc0eb0d8d6e7c7150049671618dad929dc03c8e55929e7b7eb1b53a"
+    },
+    {
+      "path": "finnor-os/scripts/s7/run-maturity-e2e.mts",
+      "sha256": "b76f701a94c2f37d04aebd6a7283b75154cbeb3b39c48a3bebb53e827b63602c"
+    },
+    {
+      "path": "finnor-os/scripts/s7/run-owner-e2e.mts",
+      "sha256": "21bdd6d5e39b5d06110d71f90f0dda3fa9537a4463718fd184217f78af6b2a3a"
+    },
+    {
+      "path": "finnor-os/scripts/s7/run-protected-e2e.mts",
+      "sha256": "4154da6cdcfc2996f2777c2b72dc5f03b52654cdbd0e8505a8bf634b25c943bf"
+    },
+    {
+      "path": "finnor-os/scripts/s7/run-statistical-e2e.mts",
+      "sha256": "279a0fcc0f97c23deaede2ba109518422092e0ccdb0ecda97d639e4b702fd484"
+    },
+    {
+      "path": "finnor-os/scripts/s7/tsconfig.json",
+      "sha256": "410d41db636dc73848536eaa42c0848b2c7f5710d59ad66b9a72bd519620b219"
+    },
+    {
+      "path": "finnor-os/tests/integration/economic-attribution-owner.e2e.test.ts",
+      "sha256": "921d6887acb7ffa2399855d705596e07b7cbad77b9f8944386515321d7ef7c9d"
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "sha256": "0d8856c7ee84a3f3af1eef1d3957f89ff92c24ef5e6b39e200f610639548bf3f"
+    }
+  ],
+  "qualification": "SOFTWARE_AND_DISPOSABLE_OWNER_PROOFS; FIELD_COMPLETION_PENDING"
+}

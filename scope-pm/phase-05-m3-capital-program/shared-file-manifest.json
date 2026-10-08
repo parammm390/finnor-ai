@@ -1,0 +1,396 @@
+{
+  "schema": "finnor.m3.shared-file-cut.v1",
+  "repoLocation": {
+    "type": "git",
+    "repoUrl": "https://github.com/parammm390/finnor-ai/"
+  },
+  "baseCommit": "f4b74450f7fd21a7b7080db2b2a9c72488c5fe46",
+  "baseTree": "4760bb1eff3c11239ca7dc8e0b382b13f687e2e2",
+  "observedAt": "2026-10-05T23:44:07.984376+00:00",
+  "ownerAssignments": {
+    "finnor-os/packages/private-equity/src/decision-slice/": "M1 evidence/dependency/projection owner",
+    "finnor-os/packages/private-equity/src/evidence-execution/": "P4 typed derivation/consumer owner",
+    "finnor-os/packages/private-equity/src/world-state.ts": "S1 historical facts/currentness owner, with Core Work membership",
+    "finnor-os/packages/private-equity/src/enterprise-control.ts": "S4 policy/proposal/currentness owner",
+    "finnor-os/packages/epistemic-runtime/src/": "S4 control contracts/search/observable history owner",
+    "finnor-os/packages/private-equity/src/enterprise-allocation.ts": "S5 allocation owner",
+    "finnor-os/packages/private-equity/src/allocation-proposal.ts": "S5 pure canonical proposal adapter, added for M3",
+    "finnor-os/packages/db/": "Core database/runtime registry, S1 history and private M3 durability",
+    "finnor-os/packages/shared-types/": "Original S4/P4 wire owners and additive M3 export",
+    "finnor-os/apps/": "Existing authenticated Core dispatch and durable worker",
+    "src/components/centropy/canvas/": "Existing Work/Canvas presentation, additive M3 controls",
+    "scripts/centropy/": "Existing product discovery generator",
+    "src/lib/centropy/": "Existing generated capability discovery",
+    "finnor-os/scripts/": "Existing release/schema generators",
+    "scope-2/": "Recovered immutable historical S2 registration",
+    "scope-3/": "Recovered immutable historical S3 registration",
+    "scope-4/": "Recovered immutable historical S4 registration"
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "patch": "shared",
+      "oldSha256": "2cd167712f2f953224585046e6294b715d0bce0f44769701e440540328e88df7",
+      "newSha256": "37d18ff2121abfbf2a5ad2f6092ac226f9b7fd2c7131bc30871d363505696541",
+      "bytes": 438,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "patch": "shared",
+      "oldSha256": "c535f89470ba12ea8c5898ec806559651171056a8ba6f42cca40330092b82ecb",
+      "newSha256": "02aeedc70be8d4940e926295c09efc60607c1a96b3025878fa054fb6195a8b0a",
+      "bytes": 15158,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "patch": "shared",
+      "oldSha256": "598239accb2582913b36700cf2d347d53ed1c10c205387510d6ca9bd60777ea3",
+      "newSha256": "396af17bd6fe96339c9674dcdf0a87f08648c86f3753997582c8e9f5ed64b1a0",
+      "bytes": 14580,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/openapi.json",
+      "patch": "shared",
+      "oldSha256": "ce06fb8f9b3a7eec2e91a3d709e735f9124710fdf0f15fc9c041787dd2ba3b1c",
+      "newSha256": "e65c05a9a95fb25b516a0c06bf30dff96629615bc830aac492e3c9db055f981a",
+      "bytes": 723025,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/package-lock.json",
+      "patch": "shared",
+      "oldSha256": "54d1f69642fa11a06ee9501ce31646d3c12173efea199154ee77860739653b68",
+      "newSha256": "163e7ee31057514bfc3c19efab8e567278f553cb9895ad548979cf43e58e27e0",
+      "bytes": 258208,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "patch": "shared",
+      "oldSha256": "999e4aa680b4c259333c55c5f0e600441cc31ba8724c313808e58d2f56c5a064",
+      "newSha256": "59715adeb5441d880e3aa36527a55cfefdf1fce75d8f4283c59463e10fd21276",
+      "bytes": 11217,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "patch": "shared",
+      "oldSha256": "2246ae83e13e56635250d33301c8a51663b639941cf35a25e19b9d0059142cf8",
+      "newSha256": "819c5dc70681b61d9690b20f0ed7e259f03ef2c0b7ee159e06840cbad3e9adee",
+      "bytes": 272,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "patch": "shared",
+      "oldSha256": "a763b0d69dc1eb20607c21b72205749fc4f962301c06eee28ce56260c668011b",
+      "newSha256": "8b678187b4c6bd025d0316d06c4a9a1109429699a458ece96586bf79f3a3e3df",
+      "bytes": 1506143,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0158_m3_capital_program.sql",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "55e9c53dfb5a21bf7209b2d3a6eeca8f19e58a93f01f5f706ee88d13397fb490",
+      "bytes": 13520,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/contingent-control.ts",
+      "patch": "shared",
+      "oldSha256": "f4fde74b7a1672c37fa7caac472e2b7bcf06ca4f09c49cbd49a74480a1c58ad8",
+      "newSha256": "308fff66f0e38c8c4cac760b7f6618199276a3aa8a3fe9ed9c800ff88ed6cfd5",
+      "bytes": 30387,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/control-contracts.ts",
+      "patch": "shared",
+      "oldSha256": "4290511ac980319d04878d74f6d9ee1853d99aea04f3338a64571e74bff4003d",
+      "newSha256": "cf129e6035b8e5c973a00d4339ea00da44c3515c65985472edf37092976b484f",
+      "bytes": 10706,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/control-observations.ts",
+      "patch": "shared",
+      "oldSha256": "4925e66fcf795d463d31485947771c07a9f31bb2f25144237edb3db046df9af8",
+      "newSha256": "08e55b6a5253e4fc65efaf9d933c63046470065001feb39a462c4e2c891eef71",
+      "bytes": 6192,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/package.json",
+      "patch": "shared",
+      "oldSha256": "b9e8da192d7c64ffc41a452db3694aac71edb3bae37c555b947ac44eb55b6182",
+      "newSha256": "24caa793590b969f781731e44fb661b2bed7a39572e467369d8ccb827caf6183",
+      "bytes": 633,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-proposal.ts",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "ea85809b21b6290bdda97b3e71bcf5278cb8a8d5b1e55d37660b203c815cce34",
+      "bytes": 15261,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/adapters.ts",
+      "patch": "shared",
+      "oldSha256": "ddb99f74c94cca2eca4c0d9f2123899986ec2fb0b3d481b013f937f40071b465",
+      "newSha256": "67f8d1f3e0800849d918de92e63455fd22ac0fa2c6a3c98589999c8d759b6a4d",
+      "bytes": 23764,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/checker.ts",
+      "patch": "shared",
+      "oldSha256": "d8ddb63f460859dea7b361106248bd0a9e0be9c7bac0794e9a4255ca3fdfe201",
+      "newSha256": "d4173a9e0f6ee7a984730030d28dd0f3e8bdf03d22c3c5b3c8053f4ab9420bce",
+      "bytes": 11494,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/consumer.ts",
+      "patch": "shared",
+      "oldSha256": "4c18204f70b2f1f0162082c6644aa312f39ed7e72609f7d9c70b2564e50dca29",
+      "newSha256": "8313a4adb0f4b6bb8f573933291092210a250981c59eb6aa2c80cc52722087e3",
+      "bytes": 6040,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/contracts.ts",
+      "patch": "shared",
+      "oldSha256": "a6338f582bb7b8db66fb4956cca201c1cb4087923ceaf1add6545ecfe5966c5e",
+      "newSha256": "3ee5166e14c80f39b9220fc9c85ffb3fdd7e1653fa0717f43b93c60dd9471510",
+      "bytes": 10576,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/graph.ts",
+      "patch": "shared",
+      "oldSha256": "9c7d67bcb76f5a84f56bdf503f4506e8773d460a17379d1b509ae758233bd781",
+      "newSha256": "5fea83e7e097b7438a8fa6c0394ff04f833615c239cf2b69c9952baecd9441d8",
+      "bytes": 12299,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/handler.ts",
+      "patch": "shared",
+      "oldSha256": "8a8680f4619e6721812dc2db3ab6a1088e29c1a3de8c57d3060d68a23e71c3e2",
+      "newSha256": "fa3e2d3aa8a98888c4671545f261f6798bc5eb9cadf1b213c6daa8bf5d83a251",
+      "bytes": 4030,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/decision-slice/service.ts",
+      "patch": "shared",
+      "oldSha256": "1db0111204fd5a3bdbf1eede29b2eeb198b3255939f4a1758b153a60c745089b",
+      "newSha256": "ae13e315eee8a048ae62d90319ad33ed3dbac41171c5cfca13d04f17f0e15959",
+      "bytes": 23103,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "patch": "shared",
+      "oldSha256": "415a77a87e3b906d29c9ebf4c26204b0eff77aee605da17603c1e5684877a258",
+      "newSha256": "5aed798af33537dbddfe2f330d0557bc0980b941a5839a7d1be5dec0c2e942bf",
+      "bytes": 34783,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "patch": "shared",
+      "oldSha256": "f1c56b170597a598084253c07da601a3ed6eedddb2574b1d09fadc3f4f3529a8",
+      "newSha256": "c6be5b6d732536dccd84a304f5cd33967e89bf7a92505490119cc2bfef9af6f7",
+      "bytes": 40565,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/evidence-execution/api.ts",
+      "patch": "shared",
+      "oldSha256": "7ee9ed39dca9d1f1976ab1c642ae766b04360e0a2b852fccaeb7287e62943203",
+      "newSha256": "c53b9fb8bef2e2d5115e51ff792c7982e82e1538451dad28aba16a838f53db86",
+      "bytes": 10769,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/evidence-execution/consumer.ts",
+      "patch": "shared",
+      "oldSha256": "b33ff06a1916ea1f441a2c8fdff5276db29b81c3676f46b226c43f2b590e490c",
+      "newSha256": "82a719f598cca03f478f7072cefba8998324661a1a4d539c1ddcf233103509fe",
+      "bytes": 7735,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/world-state.ts",
+      "patch": "shared",
+      "oldSha256": "0b474b877eb43ff793c1d227874204395c803394f5b5fdedc7407cdd850c76d5",
+      "newSha256": "00c0d18c381f20755587df64fe3c8883836ad21030f759535de8d76a0203ff66",
+      "bytes": 75551,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/contingent-control.ts",
+      "patch": "shared",
+      "oldSha256": "2c4da9521a6023fb534d2d1427d402eb31cfbf444ca21332df175250e5d3527f",
+      "newSha256": "3d99eeee797af2524af116dde31adf368df67104d641ff84a30046e69fbee391",
+      "bytes": 11422,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/evidence-execution.ts",
+      "patch": "shared",
+      "oldSha256": "321ab79c447d7a64bfc194a442ff6b602622ef9756044abd94c0c7d9ec37530b",
+      "newSha256": "096ac3e3206e7acbdf7bbc30bb5c12f63dfe9ced612f40fb9673717f7286a93e",
+      "bytes": 9509,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "patch": "shared",
+      "oldSha256": "d0e8181f66c8f10f8d88aefbcb40640bd30782041260d8a3a4f77254d40125bc",
+      "newSha256": "8b420c44dfc084c9a1aec6a1d8f1ac625351fd4dc6d9f053f5b2bdeb65d3b9d3",
+      "bytes": 15862,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/scripts/bundle-migrations.ts",
+      "patch": "shared",
+      "oldSha256": "a9d8f73e5ab367131a2edab0c68c020884232ea30700599b4f54c51344584484",
+      "newSha256": "6c24ec8b90b89e94d7a95909ddb66e0ebf00b4eb5c21bc0a0c9d1158bddaec24",
+      "bytes": 1408,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "patch": "shared",
+      "oldSha256": "f01fd43125e5e7eb0d432a3716eef93d6a72853de52cb73618674e5c3cec6978",
+      "newSha256": "ed50f0c11fbd5725521b893a815ec5dad97c4f0f954b3c0f55a96731e55a86c8",
+      "bytes": 54391,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "scope-2/scope-evidence/failure-model.md",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "3ba421019801f3d9b38bdef254c87cb1846a099d82c167f270f35c753f641f2a",
+      "bytes": 2385,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scope-2/scope-plan.md",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "c796eec94ec6b23b142525d7379465bef48d1c2893b2443d8be7eae08eca5d5a",
+      "bytes": 8134,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scope-3/scope-evidence/failure-model.md",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "c2a2a3cd82c65a29d4428024b68c56e4ac2e2605cdc2f7bdf7025ccd7c3d28fe",
+      "bytes": 5236,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scope-4/scope-evidence/additional-challenge-registration.json",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "c97a8853e5785f68515b7f8dd6835176fe88b47e1ff1cc80816acfe4ce63804c",
+      "bytes": 1155,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scope-4/scope-evidence/failure-model.md",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "b5d81f25a95d9f616c2d48e9ee5452969ce07a2895e22f11bc2f11fc011dfa46",
+      "bytes": 2820,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scope-4/scope-evidence/final-challenge-registration.json",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "6471a47f4a8349613837dbf9d4f01d8271758afd558e8698a341b631d0645c89",
+      "bytes": 7623,
+      "originalOwner": "S2/S3/S4 immutable historical registration"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "patch": "shared",
+      "oldSha256": "8ce393a80de71b4d88c065eac8f10c72dd3f4ff3950988a3bf11224a1bd1d361",
+      "newSha256": "2167a3f352c301c0208db85c73a5ec267e757a9f6b5425c166bfdd2e045a1d88",
+      "bytes": 13442,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/CanvasDocument.tsx",
+      "patch": "shared",
+      "oldSha256": "108b8adcbbb73218df3f0a1328119092c355ffc7da552b96708f7b14c29fca20",
+      "newSha256": "eb02fd2404d47a657a217f2ec27390d8b0c26a4404c26bb4c7daeeb4abb81e97",
+      "bytes": 28790,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "832dfb2580590a151e76497c4979acc5a17ef8565e4bd0fb0b16b2539931bdf1",
+      "bytes": 35221,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-compose.ts",
+      "patch": "shared",
+      "oldSha256": "b907639f1ca0954f91186485b58ea9a7da5c542879cc3e5dd91c05707dfbc0c3",
+      "newSha256": "cf76118f1e5a1a27cce3eef20aa9c69834caac900ca282417bda992edafa539c",
+      "bytes": 15805,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-contract.ts",
+      "patch": "shared",
+      "oldSha256": "9563112b8a93a36aa651480b6e05e689ed61b65b638443e2224e701ef40c45b5",
+      "newSha256": "126681eeb6195432070a9b5761f56e4d6a6dbabc830628bc110b6ba447fd5c88",
+      "bytes": 6571,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-program-view.ts",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "3488f25fcb616a96e4f66d0bce94230bccca7981686084b19ad22fe08ff495a1",
+      "bytes": 7475,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-program.css",
+      "patch": "shared",
+      "oldSha256": null,
+      "newSha256": "58c3c55bca1567c8f7b7aef98285c8f78cd0305eb1504895b71aa87aa37cec5a",
+      "bytes": 2052,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "patch": "shared",
+      "oldSha256": "d3e0e6617d911976faf96c0c4f94dfec28c7e3732b78aab9ebeceaa26c8c5749",
+      "newSha256": "b97901a24aa9dbd7eb22a6f78aada84bad57bcad2f3d4d33eae486666980921a",
+      "bytes": 266239,
+      "originalOwner": "Existing shared owner surface, additive M3 integration"
+    }
+  ],
+  "excludedUserWork": [
+    "finnor-os/scripts/p4/run-owner-regressions.mts",
+    "scope-pm/phase-05-m3-capital-program/base-receipt.json"
+  ],
+  "qualification": "EXACT_SCOPED_SHARED_PREIMAGES_NO_PEER_IMPORT"
+}

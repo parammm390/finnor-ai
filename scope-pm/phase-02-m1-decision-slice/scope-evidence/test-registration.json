@@ -1,0 +1,63 @@
+{
+  "schema": "finnor.m1.test-registration.v1",
+  "authoredBeforeProductionCode": true,
+  "oracle": "Independent exact subset enumeration and hand-specified native graph dependencies; never compiler output",
+  "qualification": "Public/generated H0/H1 owner-boundary fixtures, no protected authentication/admission/H2 evidence",
+  "cases": [
+    "native-api-work-consumer-witness-cold-reconstruction",
+    "fatal-remote-change-of-control-appendix",
+    "new-financing-collateral-dependency-and-stale-work",
+    "joint-product-threshold-conditional-arms",
+    "cycles-zero-denominator-decimal-boundaries-partial-search",
+    "semantic-period-currency-entity-instrument-mismatch",
+    "bounded-tail-source-standing-and-knowledge-visibility",
+    "shared-capital-and-unknown-outcome-liability",
+    "missing-budget-and-tampered-projection-witness",
+    "foreign-denied-forged-revoked-read-witness-context",
+    "presentation-only-patch-cas-corruption-symlink-cold-restart",
+    "relevant-membership-change-and-unrelated-root",
+    "p4-pending-and-schema-refusal",
+    "authenticated-ui-witness-keyboard-reload-refusal"
+  ],
+  "publicFixture": {
+    "availableEquity": "95",
+    "A": {"EV": "120", "EBITDA": "20", "debt": "70", "equity": "50", "payoff": "20"},
+    "B": {"EV": "100", "EBITDA": "25", "debt": "50", "equity": "50", "payoff": "18"},
+    "C": {"EV": "90", "EBITDA": "15", "debt": "45", "equity": "45", "payoff": "14"},
+    "expected": [
+      {"leverage": "3.5", "reserved": "0", "selected": ["A", "C"], "payoff": "34"},
+      {"leverage": "3.0", "reserved": "0", "A_debt": "60", "A_equity": "60", "selected": ["B", "C"], "payoff": "32"},
+      {"leverage": "3.5", "reserved": "25", "selected": ["A"], "payoff": "20"}
+    ]
+  },
+  "numericProjectionBudget": null,
+  "numericExclusionAuthorized": false,
+  "comparativeGate": "UNPASSED",
+  "p4CombinedGate": "AUTHENTIC_OWNER_API_CONSUMER_WITNESS_RESTART_CORRECTION_FAILED_PRODUCER_AND_DOM_FINANCIAL_WITNESS_VERIFIED; original comparison/admission UNPASSED",
+  "extensions": [
+    {"id": "bounded-owner-io-and-failed-liability", "authoredBeforeRepair": true, "redRun": "run-2026-10-04T23-30-46-7d2b73e0"},
+    {"id": "physical-kill-cancel-and-late-publication", "authoredBeforeRepair": true, "redRun": "run-2026-10-04T23-37-14-6eae4f46"},
+    {"id": "computational-lag-tampering", "family": "semantic-period-currency-entity-instrument-mismatch", "authoredBeforeRepair": true, "redRun": "run-2026-10-04T23-45-59-7cbdc42a"},
+    {"id": "resource-denied-witness-context-no-existence-leak", "authoredBeforeRepair": true, "redRun": "run-2026-10-04T23-59-56-90e2a003"},
+    {"id": "whole-authentication-and-body-stream-deadline", "authoredBeforeRepair": true, "redRun": "run-2026-10-05T00-09-31-3ee374c8"},
+    {"id": "bounded-governor-release-and-retained-expiry", "authoredBeforeRepair": true, "redRun": "run-2026-10-05T00-20-27-9651e5f4"},
+    {"id": "authentic-p4-work-demand-consumer-witness-restart-invalidation", "authoredBeforeRepair": true, "redRun": "run-2026-10-05T00-45-31-f069c4ca", "contextHandleRedRun": "run-2026-10-05T01-22-13-09df73b2", "oracle": "Real P4 handles and durable queue produce public A120-70=50; typed M1 native output50, same Work revision, actual P4 witness/currentness, fresh process, exact period mismatch refusal and debt correction invalidate old M1 read/witness"},
+    {"id": "bounded-disposable-fifo-and-byte-growth", "authoredBeforeRepair": true, "redRun": "run-2026-10-05T01-33-47-dca36b27", "oracle": "A real model-managed FIFO must refuse before any writer arrives; retained verified context reconstructs after its removal. Descriptor reads are bounded to the original stat size plus one byte, not unbounded read-to-EOF."},
+    {"id": "physical-native-cpu-deadline", "authoredBeforeValidation": true, "firstRun": "run-2026-10-05T01-45-33-7a3198c3", "oracle": "Actual6002-node owner model and1000ms grant refuse413 within2500ms with retained attempts. This is the measured finite native domain, not universal CPU preemption or aggregate RSS certification."},
+    {"id": "decisive-native-source-beyond-1000-owner-tail", "authoredBeforeValidation": true, "firstRun": "run-2026-10-05T01-49-11-eb24dbe3", "oracle": "Independent SQL count1001, decisive largest ID omitted by the actual S1 owner bound, native input UNKNOWN/null and no numerical runs"},
+    {"id": "resource-revocation-during-owner-computation", "authoredBeforeValidation": true, "fixtureRepair": "Lock actual S1 canonical history, not a presumed current-only table; preserve actual grants and generic404"},
+    {"id": "actual-s6-unknown-effect-liability", "authoredBeforeValidation": true, "oracle": "Actual native unknown observer and durable intent history with authorizedEffectHash null produce reconciliation_required, stale prior membership, retained material obligation and decision refusal"}
+  ],
+  "latestNativeExtensionRerun": "run-2026-10-05T00-26-50-c30824d9",
+  "browserQualification": "CURRENT PARTIAL_VALIDATION run-2026-10-05T03-07-18-d6da98b3: actual bearer/API/component/P4 producer50/witness/reference reload/refusal/revocation via labelled DOM; axe0 violations/27 passes/1 incomplete. Native keys/screenshot/contrast BLOCKED_TOOL. Earlier target/timeout failures retained. No partial is PASS; no new/headless replacement or desktop close.",
+  "comparisonProtocol": "scope-pm/phase-02-m1-decision-slice/comparison-protocol.md",
+  "uiReferenceLifecycleExtension": {
+    "authoredBeforeRepair": true,
+    "failureModel": "P4 reference state can survive a principal/Work/model change and is lost on hard reload, orphaning the saved qualified view's binding-specific key.",
+    "oracle": "Only validated bounded ID/output metadata persists in principal/Work/model/scenario scope. A new scope starts clean, reload restores refs before owner-view lookup, nonexistent producer IDs never supply values, and partial DOM evidence never counts as native keyboard/visual/contrast PASS."
+  },
+  "authenticP4UiExtension": {
+    "authoredBeforeValidation": true,
+    "oracle": "Actual metric handles, registered durable P4 JobQueue, TESTED EV120−debt70=50 and native persisted financial base reach the existing ScenarioLab. User ID/output reference controls compile P4_RESOLVED and show the authentic P4 witness. Model scope changes clear old refs. Decision still refuses; no fake producer or keyboard substitution PASS."
+  }
+}

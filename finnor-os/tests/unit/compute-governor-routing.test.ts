@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocked = vi.hoisted(() => {
   const query = vi.fn();
   const release = vi.fn();
-  const connect = vi.fn(async () => ({ query, release }));
+  const on = vi.fn(), removeListener = vi.fn();
+  const connect = vi.fn(async () => ({ query, release, on, removeListener }));
   return { query, release, connect };
 });
 
@@ -45,7 +46,7 @@ describe("distinct provider and model capacity contracts", () => {
       .resolves.toBe("provider-ok");
     expect(invoke).toHaveBeenCalledOnce();
     expect(mocked.query).toHaveBeenCalledWith(expect.stringContaining("FROM compute_resource_policies"), [["provider:microsoft-graph"]]);
-    expect(mocked.release).toHaveBeenCalledOnce();
+    expect(mocked.release).toHaveBeenCalledTimes(2);
   });
 
   it("fails closed when a model invocation lacks the mandatory model:global policy", async () => {

@@ -1,0 +1,136 @@
+{
+  "schema": "finnor.s4.challenge-registration.v1",
+  "registeredAt": "2026-10-01T20:19:00Z",
+  "scoringUnchanged": {
+    "normalization": 100,
+    "maxNormalizedRegret": 0.05,
+    "tolerance": 1e-08
+  },
+  "challenges": [
+    {
+      "invariant": "A SETTLED effect retains residual debt; an unlocked exposure cannot rewrite another commitment",
+      "regression": "discard all settled fields or apply every pending schedule regardless of channel ownership",
+      "strongerExistingCoverage": "pending tail and unknown status do not exercise settled residuals or unlocked overwrite",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Two resource dimensions obey aggregate coupling on the complete path",
+      "regression": "check individual limits and omit the coupling row",
+      "strongerExistingCoverage": "single-capacity fixture does not constrain cross-dimension coupling",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "A consistent trusted S5 reference can bind a proposed branch; expired/revoked references cannot",
+      "regression": "make allocation binding circular or treat expiry as a static property",
+      "strongerExistingCoverage": "forged HTTP reference establishes no issuer but cannot exercise a future trusted resolver contract",
+      "testOnlySeam": false,
+      "qualification": "reference resolver contract only; no S5 issuer or authority"
+    },
+    {
+      "invariant": "Twenty-four-period eight-choice search ends within fixed budget, retains a full feasible incumbent and reports an inconclusive wide gap",
+      "regression": "unbounded recursion, unchecked WAIT or zero gap on partial search",
+      "strongerExistingCoverage": "one-expansion small case does not exercise growing history",
+      "testOnlySeam": false,
+      "budget": {
+        "maxExpansions": 2000,
+        "deadlineMs": 2000,
+        "worlds": 4,
+        "horizon": 24,
+        "choices": 8
+      }
+    },
+    {
+      "invariant": "Actual current-source correction and an independent durable unknown effect invalidate or withhold ordinary owner use",
+      "regression": "trust body pins or empty obligation list",
+      "strongerExistingCoverage": "rights suspension and supplied unknown-effect fixture do not exercise independent database truth",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Fresh process replays original retained kernel and input artifact",
+      "regression": "rely on warm heap state or regenerate sampled output from seed",
+      "strongerExistingCoverage": "pool restart leaves loaded module memory intact",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Unavailable numerical executable, tiny deadline and oversized streamed request are explicit bounded failures",
+      "regression": "report WAIT, ignore upstream elapsed time or parse unbounded bytes",
+      "strongerExistingCoverage": "expansion exhaustion and concurrent calls do not inject these faults",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Human override records its supplied demand and cannot change policy or grant authority",
+      "regression": "silently mutate policy or omit declared human effort",
+      "strongerExistingCoverage": "normal branch choice does not exercise an override",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Business grid and issuance knowledge both bound decision time; completed periods are stale",
+      "regression": "permit a current call to choose a period whose economic time already ended",
+      "strongerExistingCoverage": "future observation availability did not test expired business periods",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Actual learned S3 counterparty lag changes S4 full-horizon pricing choice",
+      "regression": "drop state/exposure lags when translating the S3 kernel while the independent reference actor callback still passes",
+      "strongerExistingCoverage": "separate S3 dynamics and finite S4 actor tests do not exercise their composition",
+      "testOnlySeam": false,
+      "domain": "generated linear actor response, H4, price option expires at period1, consequences through period3; no field prediction"
+    },
+    {
+      "invariant": "An unresolved inquiry law cannot be silently excluded from a zero-gap certificate",
+      "regression": "mark unresolved alternatives but still set completeSearch=true",
+      "strongerExistingCoverage": "unsupported mandate and model support tests do not test a missing candidate observation law",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Permitted temporal S2 observation flows through a real S1 source update, linked S3 refit, original-horizon S4 replan and branch choice; future/foreign/tampered observations fail",
+      "regression": "temporal tokens incorrectly forced into IID count realizations, or revision drops prior known costs/history",
+      "strongerExistingCoverage": "finite protocol and reference signal tests do not exercise the temporal owner consumer",
+      "testOnlySeam": false,
+      "businessPeriodMs": 30000,
+      "horizon": 2,
+      "generatedMeasurement": 0.25,
+      "instrumentThreshold": 0.2
+    },
+    {
+      "invariant": "Missing immutable kernel/input is a bounded unavailable response and restoration recovers exact replay",
+      "regression": "raw open failure leaks diagnostics or becomes an unqualified service failure",
+      "strongerExistingCoverage": "complete artifact restart and wrong reference do not exercise missing referenced artifact",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "Linked replan preserves episode, original horizon, elapsed prefix and recorded pending/residual obligations until owner reconciliation",
+      "regression": "accept a new empty obligation list or reset the horizon/elapsed time while retaining priorPolicyRef",
+      "strongerExistingCoverage": "current supplied unknown status and canonical durable-effect readback do not exercise dropping an earlier recorded obligation",
+      "testOnlySeam": false
+    },
+    {
+      "invariant": "No new policy artifact is published if a dependency store fails; after recovery a retry creates a complete independent artifact",
+      "regression": "write policy before its kernel/input files",
+      "strongerExistingCoverage": "missing dependency after successful creation does not test partial publication on write failure",
+      "testOnlySeam": false,
+      "fault": "temporary symlink on ordinary kernel directory; original directory preserved and restored"
+    },
+    {
+      "invariant": "Existing occupancy is distinct from remaining resource consumption and prefix consumption in a continuation",
+      "regression": "use one obligation amount as both occupied stock and incremental spend, either permitting excess capacity or double-counting debit",
+      "strongerExistingCoverage": "occupied-capacity case has no prefix usage; temporal continuation has zero resource usage",
+      "testOnlySeam": false,
+      "fixedInputs": {
+        "prefixUsage": 8,
+        "remainingDemand": 2,
+        "occupiedStock": 5,
+        "totalLimit": 10,
+        "capacity": 5,
+        "temptingNewOccupancy": 3,
+        "feasibleNewOccupancy": 0,
+        "feasibleUtility": 6
+      }
+    }
+  ],
+  "extensionsRegisteredAt": "2026-10-01T20:32:16.780936+00:00",
+  "reviewRepairChallengesRegisteredAt": "2026-10-01T20:48:59.869230+00:00",
+  "lineageChallengeRegisteredAt": "2026-10-01T21:02:12.589861+00:00",
+  "publicationChallengeRegisteredAt": "2026-10-01T21:07:49.742161+00:00",
+  "stockFlowChallengeRegisteredAt": "2026-10-01T21:10:19.243254+00:00"
+}

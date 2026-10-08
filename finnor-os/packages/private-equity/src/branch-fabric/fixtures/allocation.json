@@ -1,0 +1,12 @@
+{
+  "schema": "finnor.public-allocation-input.v1",
+  "currency": "USD",
+  "unit": "registered synthetic fixture value, not dollars paid",
+  "period": "PUBLIC_FIXTURE_SINGLE_PERIOD",
+  "programmes": [
+    {"id": "A", "enterpriseValue": 120, "ebitda": 20, "debtCap": 70, "registeredNetPayoff": 20},
+    {"id": "B", "enterpriseValue": 100, "ebitda": 25, "debtCap": 50, "registeredNetPayoff": 18},
+    {"id": "C", "enterpriseValue": 90, "ebitda": 15, "debtCap": 45, "registeredNetPayoff": 14}
+  ],
+  "qualification": "IMMUTABLE_PUBLIC_SYNTHETIC_H0_DIAGNOSTIC_NOT_ENTERPRISE_FACT_OR_VALUE"
+}

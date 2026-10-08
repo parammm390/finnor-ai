@@ -108,6 +108,7 @@ export interface OperatingCompanyDirectory {
 }
 
 export interface OperatingContext {
+  beliefViews?: import("./enterprise-beliefs").BeliefView[];
   version: 1;
   assembledAt: string;
   truthPrecedence: readonly OperatingEvidenceKind[];

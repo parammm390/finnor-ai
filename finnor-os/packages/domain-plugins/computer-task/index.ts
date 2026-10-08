@@ -68,8 +68,13 @@ export const computerTaskPlugin: DomainEnginePlugin = {
   },
   async execute(draft, tools): Promise<ExecutionResult> {
     try {
-      const input = ComputerTaskSchema.parse(draft.payload) as ComputerTaskInput;
-      const queued = await queueComputerRun(input, tools.runtimeContext());
+      const runtime = tools.runtimeContext();
+      const { tenantId: envelopeTenant, ...semanticPayload } = draft.payload;
+      if (envelopeTenant !== undefined && envelopeTenant !== runtime?.tenantId) {
+        throw new Error("Computer task runtime tenant does not match the semantic envelope");
+      }
+      const input = ComputerTaskSchema.parse(semanticPayload) as ComputerTaskInput;
+      const queued = await queueComputerRun(input, runtime);
       return {
         status: "success",
         output: { computerRunId: queued.run.id, computerRunStatus: queued.run.status, pendingComputerRun: true, duplicate: !queued.created },

@@ -158,6 +158,7 @@ const DecisionSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("wait"),
     waitFor: WaitForSchema.optional(),
+    earliestAt: z.string().datetime().optional(),
     deadlineAt: z.string().datetime().optional(),
     // Backward-compatible timer-only shape. It is normalized into a durable wait,
     // not scheduled as a blind Objective iteration.
@@ -360,6 +361,8 @@ export interface StartObjectiveOptions extends ObjectiveBudgets {
   successCondition?: ObjectiveSuccessCondition;
   /** Phase 5 binding only. The existing Objective controller remains the runtime. */
   outcomePack?: OutcomePackStartBinding;
+  /** Internal producer prepares a selected method before native controller delivery. */
+  deferInitialIteration?: boolean;
 }
 
 export interface StartObjectiveResult {
@@ -730,7 +733,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
             payload: { objectiveLoopId: existing.id, duplicate: true },
           });
         }
-        await scheduleIterationTx(db, existing, new Date(), ctx.correlationId);
+        if (!options.deferInitialIteration) await scheduleIterationTx(db, existing, new Date(), ctx.correlationId);
       }
       return { loop: existing, created: false } as const;
     }
@@ -807,11 +810,56 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
         budgets: { maxSteps: created.maxSteps, maxActions: created.maxActions, maxQueries: created.maxQueries },
       },
     });
-    await scheduleIterationTx(db, created, new Date(), ctx.correlationId);
+    if (!options.deferInitialIteration) await scheduleIterationTx(db, created, new Date(), ctx.correlationId);
     return { loop: created, created: true } as const;
   });
   const loop = loopClaim.loop;
   return { workId: input.workId, workInputId: input.workInputId, instructionId: input.instructionId, objectiveLoopId: loop.id, state: loop.state, duplicate: input.duplicate };
+}
+
+/** P1 is a finite query implementation under the existing Objective controller.
+ * Native input, principal and lineage are re-read; this never creates action,
+ * resource or completion authority. Original loop counters/grants remain intact. */
+export async function bindHarnessWorkObjective(params: {
+  tenantId:string; principalId:string; workId:string; workInputId:string;
+  instruction:string; programId:string; acceptanceDigest:string; deadlineAt:string;
+}): Promise<{id:string;revision:number}> {
+  const condition = parseObjectiveSuccessCondition({version:1,statement:params.instruction,mode:"all",source:"explicit",criteria:[
+    {kind:"canonical_query",request:{intent:"harness_program_v1",programId:params.programId,workId:params.workId},assertion:{path:["data","status"],operator:"eq",expected:"TESTED"}},
+    {kind:"canonical_query",request:{intent:"harness_program_v1",programId:params.programId,workId:params.workId},assertion:{path:["data","program","acceptanceDigest"],operator:"eq",expected:params.acceptanceDigest}},
+  ]});
+  const [existing] = await withTenant(params.tenantId,db=>db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId))).limit(1));
+  if (!existing) {
+    const result=await startWorkObjective(params.instruction,{tenantId:params.tenantId,userId:params.principalId,employeeId:params.principalId,role:"owner"},{workId:params.workId,workInputId:params.workInputId,instructionId:params.workInputId,channel:"console",successCondition:condition,maxSteps:12,maxActions:0,maxQueries:12,deadlineAt:new Date(params.deadlineAt),deferInitialIteration:true});
+    return {id:result.objectiveLoopId,revision:1};
+  }
+  return withTenant(params.tenantId,async db=>{
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${existing.id} FOR UPDATE`);
+    const [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,existing.id))).limit(1);
+    const [actor]=await db.select({role:users.role,status:users.status}).from(users).where(and(eq(users.tenantId,params.tenantId),eq(users.id,params.principalId))).limit(1);
+    const [input]=await db.select().from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(desc(workInputs.createdAt),desc(workInputs.id)).limit(1);
+    const [event]=await db.select().from(workEvents).where(and(eq(workEvents.tenantId,params.tenantId),eq(workEvents.workId,params.workId),sql`${workEvents.eventType} IN ('input_received','recovery_input_received')`,sql`${workEvents.payload}->>'workInputId'=${params.workInputId}`)).limit(1);
+    if(!loop||loop.createdBy!==params.principalId||actor?.status!=="active"||actor.role!=="owner"||input?.id!==params.workInputId||input.instructionText!==params.instruction)throw Error("HARNESS_OBJECTIVE_EXACT_PRINCIPAL_INPUT_REQUIRED");
+    if(canonicalJson(loop.successCondition)===canonicalJson(condition))return {id:loop.id,revision:loop.revision};
+    const old=parseObjectiveSuccessCondition(loop.successCondition);
+    if(!old.criteria.every(c=>c.kind==="canonical_query"&&c.request.intent==="harness_program_v1"&&c.request.workId===params.workId)||!event||loop.state==="cancelled")throw Error("HARNESS_OBJECTIVE_NATIVE_CONTINUATION_UNAVAILABLE");
+    await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR UPDATE`);
+    const [latestPlan]=await db.select({workInputId:workPlanRevisions.workInputId}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId))).orderBy(desc(workPlanRevisions.revision)).limit(1);
+    if(!latestPlan||latestPlan.workInputId===params.workInputId)throw Error("HARNESS_OBJECTIVE_FRESH_NATIVE_INPUT_REQUIRED");
+    await db.update(workObjectiveSteps).set({phase:"finished",executionState:"superseded",iterationOutcome:"blocked",failure:{code:"EXPLICIT_NATIVE_INPUT_CONTINUATION"},claimOwner:null,claimUntil:null,completedAt:new Date()}).where(and(eq(workObjectiveSteps.tenantId,params.tenantId),eq(workObjectiveSteps.objectiveLoopId,loop.id),sql`${workObjectiveSteps.completedAt} IS NULL`));
+    const [updated]=await db.update(workObjectiveLoops).set({objective:params.instruction,successCondition:condition,state:"continue",revision:loop.revision+1,successVerification:null,successVerifiedAt:null,completedAt:null,leaseOwner:null,leaseUntil:null,nextRunAt:null,reason:"Fresh native input selected a new finite programme; original Objective grants retained.",updatedAt:new Date()}).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id))).returning();
+    await transitionWorkTx(db,params.tenantId,params.workId,"executing","harness_objective_continued",{objectiveLoopId:loop.id,revision:updated!.revision,workInputId:params.workInputId},{expectedWorkInputId:params.workInputId});
+    return {id:loop.id,revision:updated!.revision};
+  });
+}
+
+/** Transactional native delivery after the producer's immutable result commits. */
+export async function schedulePreparedHarnessObjectiveTx(db:Db,params:{tenantId:string;workId:string;planRevisionId:string}):Promise<void>{
+  const [plan]=await db.select({objectiveLoopId:workPlanRevisions.objectiveLoopId,status:workPlanRevisions.status}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
+  if(!plan?.objectiveLoopId||plan.status!=="active")throw Error("HARNESS_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED");
+  const [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,plan.objectiveLoopId))).limit(1);
+  if(!loop||loop.state!=="continue")throw Error("HARNESS_NATIVE_OBJECTIVE_FENCED");
+  await scheduleIterationTx(db,loop,new Date());
 }
 
 async function workerContext(tenantId: string, workId: string): Promise<{ ctx: TenantContext; work: typeof works.$inferSelect }> {
@@ -933,7 +981,14 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   if (!aggregate) throw new Error("Objective Work aggregate not found");
   const vertical = await resolveTenantVertical(tenantId);
   let businessRequest: OperationalQueryRequest;
-  if (vertical.verticalKey === "private_equity") {
+  const success = parseObjectiveSuccessCondition(loop.successCondition);
+  const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query" && c.request.intent==="harness_program_v1" && c.request.workId===workId);
+  const harnessRequest = harnessOnly && success.criteria[0]?.kind==="canonical_query" ? success.criteria[0].request : null;
+  if (harnessRequest) {
+    // Analytical programme objectives have a registered current owner reader;
+    // a deal-free company objective is never treated as IC readiness.
+    businessRequest=harnessRequest;
+  } else if (vertical.verticalKey === "private_equity") {
     const resolution = await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
     if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
     // The close-readiness composition includes PE2 eligibility plus P3 decision
@@ -945,8 +1000,13 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   }
   const businessAuthority = await evaluateAuthority(ctx, queryAuthorityRequest(businessRequest, workId));
   if (businessAuthority.outcome !== "allowed") throw new Error(`Authority denied canonical objective inspection: ${businessAuthority.reasonCode}`);
+  const harnessInput = harnessRequest ? await withTenant(tenantId,async db=>{
+    const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,tenantId),eq(workInputs.workId,workId))).orderBy(desc(workInputs.createdAt),desc(workInputs.id)).limit(1);
+    if(!input)throw Error("HARNESS_NATIVE_INSPECTION_INPUT_REQUIRED");return input.id;
+  }):undefined;
   const businessState = await executeTenantOperationalQuery(tenantId, businessRequest, {
     workId,
+    ...(harnessRequest ? {userId:ctx.userId,employeeId:ctx.employeeId,workInputId:harnessInput}:{}),
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
   const privateEquityIcBasis = businessRequest.intent === "closing_readiness"
@@ -1619,6 +1679,7 @@ function planDecision(node: PlanNode): ObjectiveDecision {
     return {
       kind: "wait",
       waitFor: node.waitFor as z.infer<typeof WaitForSchema>,
+      ...(node.earliestAt ? { earliestAt: node.earliestAt } : {}),
       ...(node.deadlineAt ? { deadlineAt: node.deadlineAt } : {}),
       condition: "Wait for the exact selected PlanGraph event correlation.",
       reason: "Enter the selected immutable PlanGraph wait node through the durable event-wait boundary.",
@@ -2603,6 +2664,8 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: "The proposed wait deadline was outside the objective's safe deadline.", decision, observation: { requestedDeadlineAt: deadlineValue, objectiveDeadlineAt: loop.deadlineAt.toISOString() }, progressMade: false })).outcome;
       }
       const waitFor = decision.waitFor ?? { eventType: "deadline.reached" };
+      const earliest=decision.earliestAt?new Date(decision.earliestAt):undefined;
+      if(earliest&&(!Number.isFinite(earliest.getTime())||earliest>loop.deadlineAt||(requested&&earliest>requested)))return (await finishIteration({tenantId:params.tenantId,loop,step,outcome:"blocked",reason:"Wait earliest event time was outside its accepted deadline.",decision,progressMade:false})).outcome;
       return (await finishIteration({
         tenantId: params.tenantId,
         loop,
@@ -2614,7 +2677,7 @@ export class ObjectiveLoopRuntime {
         observation: { waitingFor: waitFor, deadlineAt: requested?.toISOString() ?? null, inboundContentTreatment: "untrusted_evidence" },
         progressMade: false,
         scheduledFor: requested,
-        durableWait: { waitFor, conditionSummary: decision.condition ?? `Wait for ${waitFor.eventType}`, deadlineAt: requested },
+        durableWait: { waitFor, conditionSummary: decision.condition ?? `Wait for ${waitFor.eventType}`, earliestAt:earliest, deadlineAt: requested },
       })).outcome;
     }
 
@@ -2640,6 +2703,7 @@ export class ObjectiveLoopRuntime {
         }
         const result = await executeTenantOperationalQuery(params.tenantId, validated.request, {
           workId: params.workId,
+          ...(validated.request.intent === "harness_program_v1" ? {userId:ctx.userId,employeeId:ctx.employeeId,workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Owned local input diagnostic</title>
+<body>
+<h1>Owned local input diagnostic, not P6 evidence</h1>
+<button id="activate" type="button">Activate diagnostic</button>
+<output id="calls" aria-live="polite">0</output>
+<form id="form"><button id="submit" type="submit">Submit inert form diagnostic</button></form>
+<output id="submissions" aria-live="polite">0</output>
+<script>
+const button = document.querySelector("#activate"), calls = document.querySelector("#calls");
+button.addEventListener("click", () => { calls.textContent = String(Number(calls.textContent) + 1); });
+const form = document.querySelector("#form"), submissions = document.querySelector("#submissions");
+form.addEventListener("submit", event => { event.preventDefault();submissions.textContent = String(Number(submissions.textContent) + 1); });
+</script>
+</body></html>

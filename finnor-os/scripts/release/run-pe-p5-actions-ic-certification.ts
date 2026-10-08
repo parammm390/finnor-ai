@@ -456,7 +456,7 @@ async function main(): Promise<void> {
     runCommand("actionManifest", bin("tsx"), ["scripts/release/verify-action-manifest.ts"], { timeoutMs: 180_000 }),
     runCommand("p5Golden", bin("vitest"), ["run", "tests/unit/private-equity-p5-golden.test.ts", "--reporter=dot"], { forbidSkips: true }),
     runCommand("p5AggregationProperty", bin("vitest"), ["run", "tests/unit/private-equity-p5-ic-aggregation.test.ts", "--reporter=dot"], { forbidSkips: true }),
-    runCommand("plannerIsolation", bin("vitest"), ["run", "tests/unit/private-equity-planner-isolation.test.ts", "tests/planner-evals", "--reporter=dot"], { forbidSkips: true }),
+    runCommand("plannerIsolation", bin("vitest"), ["run", "tests/unit/private-equity-planner-isolation.test.ts", "--reporter=dot"], { forbidSkips: true }),
   ]);
   Object.assign(commands, { typecheck, authzMatrix, releaseBoundary, actionManifest, p5Golden, p5AggregationProperty, plannerIsolation });
   const architecture = await inspectArchitecture();

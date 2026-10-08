@@ -1,0 +1,117 @@
+{
+  "qualification": "CORRECTED_HISTORICAL_SUMMARY; ORIGINAL_ORCHESTRATION_MASKED_FAILURES; SEE_CI_REPAIR",
+  "checks": [
+    {
+      "command": "npm run release:truth",
+      "exitCode": null,
+      "artifact": "release-truth.log.gz",
+      "rawSha256": "7cdcdb7149727e52e0f76cb4820d096194bf01bf5d0d1240affd63187439efac",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run test:release",
+      "exitCode": 1,
+      "artifact": "release-tests.log.gz",
+      "rawSha256": "206f9b8044b6c32f5b3a59c9be5fccd2ab941d3d7fc994066fd25ad89a10d801",
+      "status": "FAIL_OBSERVED_IN_RETAINED_LOG"
+    },
+    {
+      "command": "npm run workspace:check",
+      "exitCode": null,
+      "artifact": "workspace.log.gz",
+      "rawSha256": "ebb076cc26ca30becc23c832cadbfa2c7a1b00b0644f85d57850c2432e713113",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npm run typecheck",
+      "exitCode": null,
+      "artifact": "backend-types.log.gz",
+      "rawSha256": "220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npx tsc -p scripts/s7/tsconfig.json",
+      "exitCode": null,
+      "artifact": "s7-types.log.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npm run openapi",
+      "exitCode": null,
+      "artifact": "openapi.log.gz",
+      "rawSha256": "e663a9ea2240f53ac40c0293173002b46ef4dd6cd43a6ab59db95f8eacf28e75",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npm run authz:matrix && npm run authz:matrix:check",
+      "exitCode": null,
+      "artifact": "authz.log.gz",
+      "rawSha256": "8a813e7a445b3ead3fc1cc65c2dada66ad7406e1f32e40705c551abbe60a99c9",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npm run PE-DOMAIN-BOUNDARY",
+      "exitCode": null,
+      "artifact": "domain.log.gz",
+      "rawSha256": "12ff989735799297e96dafb3b8316e9980886699c2516cf04bfd8bf1703f1641",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npx tsc --noEmit -p tsconfig.json",
+      "exitCode": null,
+      "artifact": "root-types.log.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": null,
+      "artifact": "root-lint.log.gz",
+      "rawSha256": "9ca966f444874e91d01a9d5d90866e0aaf0074e0fb3e6b4f1fc87bb9017bc56b",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run centropy:manifest:check",
+      "exitCode": 1,
+      "artifact": "root-manifest.log.gz",
+      "rawSha256": "680493717ce8b28f04493a8b89fe3a4d6fa18aae129fcd8e3e6a6c76f96981a3",
+      "status": "FAIL_OBSERVED_IN_RETAINED_LOG"
+    },
+    {
+      "command": "npm run centropy:forms:check",
+      "exitCode": null,
+      "artifact": "root-forms.log.gz",
+      "rawSha256": "11f77f9ec5bc03a200db1555166bd49bf555aa5fab11384a70ffd4824052342f",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run test:unit",
+      "exitCode": null,
+      "artifact": "root-unit.log.gz",
+      "rawSha256": "df6ccfe972987bc9dde16fd9d57c9e6f6f465f36c4fb799205b214f8bcd49bda",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run release:p8-zero-resurrection",
+      "exitCode": null,
+      "artifact": "root-retirement.log.gz",
+      "rawSha256": "d8f050d9f6afe7f11a037799522f769acc33623a09e43aee1dfb1783a0802199",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "npm run contrast-audit",
+      "exitCode": null,
+      "artifact": "root-contrast.log.gz",
+      "rawSha256": "cfdeb2d27fed33787342b28f5fe173c839b59b5615d1eb472a10a838a8017130",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    },
+    {
+      "command": "cd finnor-os && npm run test:planner-evals",
+      "exitCode": null,
+      "artifact": "planner-evals.log.gz",
+      "rawSha256": "48911dd2dab2103c0e8d7423b2e6ec7cbf1ccdc3163d592c7c866c5c79706ba5",
+      "status": "ORIGINAL_EXIT_CODE_NOT_INDEPENDENTLY_RECORDED"
+    }
+  ]
+}

@@ -1,3 +1,11 @@
+import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
+import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
+import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
+import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
+import {runCapitalProgramJob} from '@finnor/private-equity/src/capital-program/worker';
+import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
 // Worker service (§16): one process, multiple job-type handlers registered by string key.
 
 import "dotenv/config";
@@ -34,6 +42,7 @@ import { maintainIntegrationSubscriptions } from "./handlers/maintain-integratio
 import { materializeArtifactVersion } from "./handlers/materialize-artifact-version";
 import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph, scanEpistemicFreshness } from "./handlers/epistemic-impact";
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
+import {runEvidenceDerivationJob} from '@finnor/private-equity/src/evidence-execution/worker';
 import { getPool, parseWorkloadClass, startComputeControlLeadership, type WorkloadClass } from "@finnor/db";
 import { startClassHealthServer } from "./class-health";
 import { startComputeTelemetry } from "./telemetry";
@@ -41,12 +50,22 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
+  queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
+  queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
+  queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);
+  queue.register('run_interface_acquisition_v1',runInterfaceAcquisitionJob,PRODUCTION_JOB_CONTRACTS.run_interface_acquisition_v1);
+  queue.register('run_branch_fabric_v1',(payload,execution)=>handleBranch(payload,execution!),PRODUCTION_JOB_CONTRACTS.run_branch_fabric_v1);
   queue.register("reconciliation", reconciliation, PRODUCTION_JOB_CONTRACTS.reconciliation);
+  queue.register('run_evidence_derivation_v1',runEvidenceDerivationJob,PRODUCTION_JOB_CONTRACTS.run_evidence_derivation_v1);
+  queue.register('run_compute_search_unit_v1',runComputeSearchUnitJob,PRODUCTION_JOB_CONTRACTS.run_compute_search_unit_v1);
+  queue.register('run_harness_program_v1',runHarnessProgramJob,PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);
   queue.register("process_instruction", processInstruction, PRODUCTION_JOB_CONTRACTS.process_instruction);
   queue.register("run_workflow_step", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step);
   // Protocol 2 uses a new physical type so a mixed-deploy protocol-1 worker cannot
   // claim an incompatible payload merely because its old SQL ignores version fields.
   queue.register("run_workflow_step_v2", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step_v2);
+  queue.register("run_workflow_step_v3", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step_v3);
   queue.register("critic_review", criticReview, PRODUCTION_JOB_CONTRACTS.critic_review);
   queue.register("learning_digest", learningDigest, PRODUCTION_JOB_CONTRACTS.learning_digest);
   queue.register("scan_approval_expiry", scanApprovalExpiry, PRODUCTION_JOB_CONTRACTS.scan_approval_expiry);

@@ -9,7 +9,7 @@ on:
         default: true
   push:
     branches: [main]
-    paths: ["package.json", "package-lock.json", "finnor-os/**", ".github/workflows/security.yml"]
+    paths: ["package.json", "package-lock.json", "finnor-os/**", ".gitleaks.toml", ".github/workflows/security.yml", "infra/deployment/release-toolchain.json", "scripts/centropy/verify-secret-scan-policy.mjs"]
 permissions:
   actions: read
   contents: read
@@ -18,13 +18,75 @@ jobs:
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+      # The original action only requests the first page of PR commits.
+      # Independently scan all local base-to-head history, including side parents
+      # and a merge's diff against each parent. Never rely on that API page.
+      - name: Scan complete base-to-head history
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          fail() { printf '::error::%s\n' "$1"; exit 1; }
+          export GIT_NO_LAZY_FETCH=1
+          version=8.24.3
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          checksum=9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
+          tooling="$(mktemp -d "${RUNNER_TEMP}/finnor-gitleaks.XXXXXX")" || fail "Cannot create scanner tooling directory"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/${archive}" \
+            --output "${tooling}/${archive}" || fail "Cannot acquire pinned scanner"
+          printf '%s  %s\n' "$checksum" "${tooling}/${archive}" | sha256sum --check --strict - \
+            || fail "Scanner archive checksum mismatch"
+          tar -xzf "${tooling}/${archive}" -C "$tooling" gitleaks || fail "Cannot extract verified scanner"
+          scanner="${tooling}/gitleaks"
+          [[ "$("$scanner" version)" == "$version" ]] || fail "Scanner version mismatch"
+          : > "${tooling}/no-ignore-file"
+
+          if [[ -n "$PR_BASE_SHA" || -n "$PR_HEAD_SHA" ]]; then
+            base="$PR_BASE_SHA"
+            head="$PR_HEAD_SHA"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            base="$PUSH_BASE_SHA"
+            head="$HEAD_SHA"
+          else
+            echo "::error::No auditable base-to-head history for this event"
+            exit 1
+          fi
+          [[ "$base" =~ ^[0-9a-f]{40}$ && "$head" =~ ^[0-9a-f]{40}$ ]] || fail "Invalid or missing history endpoints"
+          [[ "$(git rev-parse --is-shallow-repository)" == "false" ]] || fail "Incomplete shallow history"
+          git cat-file -e "${head}^{commit}" || fail "Head commit is unavailable"
+          if [[ "$base" == "0000000000000000000000000000000000000000" && "$EVENT_NAME" == "push" ]]; then
+            scan_range="$head"
+          else
+            git cat-file -e "${base}^{commit}" || fail "Base commit is unavailable"
+            scan_range="${base}..${head}"
+          fi
+          [[ "$(git rev-parse HEAD)" == "$head" ]] || fail "Checkout does not match the scanned head"
+          git rev-list "$scan_range" > "${tooling}/commits.txt" || fail "Cannot enumerate complete history"
+          count="$(wc -l < "${tooling}/commits.txt")"
+          [[ "$count" -gt 0 ]] || fail "History range contains no auditable commits"
+          printf 'Complete history range: %s; reachable commits: %s\n' "$scan_range" "$count"
+          "$scanner" git . --config=.gitleaks.toml --redact=100 --no-banner \
+            --ignore-gitleaks-allow --gitleaks-ignore-path="${tooling}/no-ignore-file" \
+            --log-opts="-m ${scan_range}"
   osv:
     name: osv-scanner
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
@@ -32,6 +94,9 @@ jobs:
     # action makes GitHub reject it before the dependency scan begins.
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2
     with:
+      fail-on-vuln: true
       scan-args: |-
         --lockfile=package-lock.json
         --lockfile=finnor-os/package-lock.json
+        --lockfile=finnor-os/apps/supplier-canary/package-lock.json
+        --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/requirements-s5.txt

@@ -120,7 +120,7 @@ function hasStrongWaitCorrelation(wait: WorkEventWaitCriteria): boolean {
  * correlation such as DelegationRef, TaskRef, run id, provider conversation, or id. */
 export function integrationEventMatchesWait(event: EventRow, wait: WaitRow): boolean {
   if (event.tenantId !== wait.tenantId || event.eventType !== wait.expectedEventType) return false;
-  if (event.occurredAt < wait.earliestAt) return false;
+  if (event.occurredAt > new Date() || event.occurredAt < wait.earliestAt) return false;
   if (wait.deadlineAt && event.occurredAt > wait.deadlineAt) return false;
   if (event.workId && event.workId !== wait.workId) return false;
   if (!exact(wait.subjectType, event.partyType) || !exact(wait.subjectId, event.partyId)) return false;

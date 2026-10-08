@@ -36,6 +36,7 @@ export const COMPUTE_TELEMETRY_FRESHNESS_SECONDS = 150;
 export interface ProductionJobContract {
   protocolVersions: readonly number[];
   retrySafety: JobRetrySafety;
+  leaseRecovery?: "immediate_after_expiry";
   defaultClass: WorkloadClass;
   allowedClasses: readonly WorkloadClass[];
   classificationRule: JobClassificationRule;
@@ -49,10 +50,12 @@ const tenantFixed = (
   workloadClass: WorkloadClass,
   retrySafety: JobRetrySafety,
   rationale: string,
-  options: { protocolVersions?: readonly number[]; obligationKind?: JobObligationKind } = {},
+  options: { protocolVersions?: readonly number[]; obligationKind?: JobObligationKind;
+    leaseRecovery?: "immediate_after_expiry" } = {},
 ): ProductionJobContract => ({
   protocolVersions: options.protocolVersions ?? [1],
   retrySafety,
+  ...(options.leaseRecovery ? { leaseRecovery: options.leaseRecovery } : {}),
   defaultClass: workloadClass,
   allowedClasses: [workloadClass],
   classificationRule: "fixed",
@@ -77,10 +80,20 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
+  run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
+  run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
+  run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),
+  run_compute_search_unit_v1: { ...tenantFixed("INTERACTIVE", "reconcilable", "P2 original-episode compute; submitted unknown attempts reconcile before retry."), protocolVersions: [1, 2] },
+  run_branch_fabric_v1: tenantFixed("HEAVY", "pure", "P3 frozen registered native branch work; no live mutation replay or self-admission."),
+  run_evidence_derivation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded native evidence computation for accepted Work; no protected admission."),
+  run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; no effect authority."),
   reconciliation: tenantFixed("INTERACTIVE", "locally_idempotent", "Provider events may unblock an actively observed effect."),
   process_instruction: tenantFixed("INTERACTIVE", "locally_idempotent", "An accepted user instruction has a near-term response dependency."),
   run_workflow_step: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Scope-2 workflow execution advances accepted Work."),
   run_workflow_step_v2: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Versioned Scope-2 workflow execution advances accepted Work.", { protocolVersions: [2] }),
+  run_workflow_step_v3: tenantFixed("INTERACTIVE", "durably_effect_guarded", "S6 delivers exact S4 obligations through protected dispatch and read-only recovery.", { protocolVersions: [3] }),
   critic_review: tenantFixed("BACKGROUND", "locally_idempotent", "The asynchronous second opinion does not gate durable action acceptance."),
   learning_digest: tenantFixed("BACKGROUND", "locally_idempotent", "Daily learning aggregation is scheduled and coalescible.", { obligationKind: "coalescible" }),
   scan_approval_expiry: tenantFixed("BACKGROUND", "locally_idempotent", "Scheduled approval hygiene has no active-session SLO.", { obligationKind: "coalescible" }),

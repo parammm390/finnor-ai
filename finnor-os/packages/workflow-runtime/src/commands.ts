@@ -10,6 +10,12 @@ import { createHash } from "node:crypto";
 import { maybeChaosKill } from "./chaos";
 
 export const SCOPE2_RUNTIME_PROTOCOL_VERSION = 2;
+export const GOVERNED_OBLIGATION_PROTOCOL_VERSION = 3;
+
+export function workflowJobType(protocolVersion:number):string {
+  if(protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION)return 'run_workflow_step_v3';
+  return protocolVersion>=SCOPE2_RUNTIME_PROTOCOL_VERSION?'run_workflow_step_v2':'run_workflow_step';
+}
 
 export interface StepDefinition {
   stepType: string;
@@ -46,6 +52,8 @@ export interface SubmitCommandParams {
    * the command. Tests/admin importers may opt out only when intentionally creating
    * a paused graph that another transaction will drive. */
   enqueueFirstStep?: boolean;
+  /** New semantic step types use a different queue type so old workers cannot claim them. */
+  protocolVersion?: 2 | 3;
 }
 
 export interface SubmitCommandResult {
@@ -81,6 +89,7 @@ function commandHash(params: SubmitCommandParams): string {
     policyVersion: params.policyVersion ?? null,
     executionClass: params.executionClass ?? null,
     workId: params.workId ?? null,
+    ...(params.protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION?{protocolVersion:params.protocolVersion}:{}),
   };
   return `sha256:${createHash("sha256").update(stable(immutable)).digest("hex")}`;
 }
@@ -92,23 +101,27 @@ async function enqueueFirstStepTx(
   dispatchGeneration: number,
   protocolVersion: number,
   correlationId?: string,
+  notBefore?: string,
 ): Promise<void> {
   const payload = correlationId
     ? { tenantId, workflowStepId: stepId, workflowStepGeneration: dispatchGeneration, _correlationId: correlationId }
     : { tenantId, workflowStepId: stepId, workflowStepGeneration: dispatchGeneration };
   await db.insert(jobs).values({
     tenantId,
-    type: protocolVersion >= SCOPE2_RUNTIME_PROTOCOL_VERSION ? "run_workflow_step_v2" : "run_workflow_step",
+    type: workflowJobType(protocolVersion),
     payload,
     idempotencyKey: workflowStepJobKey(tenantId, stepId, dispatchGeneration),
     lane: "interactive",
     priority: 100,
     protocolVersion,
     retrySafety: "durably_effect_guarded",
+    ...(protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION?{runAt:new Date(notBefore!),maxAttempts:64}:{}),
   }).onConflictDoNothing({ target: jobs.idempotencyKey });
 }
 
 export async function submitCommand(db: Db, params: SubmitCommandParams): Promise<SubmitCommandResult> {
+  const protocolVersion=params.protocolVersion??SCOPE2_RUNTIME_PROTOCOL_VERSION;
+  if(protocolVersion===GOVERNED_OBLIGATION_PROTOCOL_VERSION && (params.workflowType!=='single_action'||params.steps.length!==1||params.steps[0]!.stepType!=='execute_governed_obligation'||typeof params.steps[0]!.payload.notBefore!=='string'||!Number.isFinite(Date.parse(params.steps[0]!.payload.notBefore))))throw new Error('Governed obligation command requires one exact scheduled step');
   if (
     isRetiredWaterAction(params.commandType)
     || isRetiredWaterWorkflow(params.workflowType)
@@ -139,7 +152,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
       const steps = run ? await db.select().from(workflowSteps).where(eq(workflowSteps.workflowRunId, run.id)) : [];
       const first = steps.sort((a, b) => a.sequence - b.sequence)[0];
       if (first && first.status === "pending" && params.enqueueFirstStep !== false) {
-        await enqueueFirstStepTx(db, params.tenantId, first.id, first.dispatchGeneration, first.protocolVersion, params.correlationId);
+        await enqueueFirstStepTx(db, params.tenantId, first.id, first.dispatchGeneration, first.protocolVersion, params.correlationId,(first.payload as Record<string,any>).notBefore);
       }
       return {
         commandId: existingCommand.id,
@@ -165,7 +178,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
       policyVersion: params.policyVersion ?? null,
       executionClass: params.executionClass ?? null,
       authorizedAt: params.authorizedAt ?? new Date(),
-      protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+      protocolVersion,
       commandHash: immutableCommandHash,
       status: "approved",
     } as const;
@@ -188,7 +201,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
       workId,
       workflowType: params.workflowType,
       status: "running",
-      protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+      protocolVersion,
     })
     .returning();
 
@@ -205,7 +218,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
         correlationId: params.correlationId ?? null,
         domainActionId: params.domainActionId ?? null,
         businessEffectId: params.businessEffectId ?? null,
-        protocolVersion: SCOPE2_RUNTIME_PROTOCOL_VERSION,
+        protocolVersion,
         // Runtime sequence causality is recorded separately from Authority/budget
         // eligibility. Scope-1 remains the owner of upstream PlanGraph causality.
         causalReadyAt: i === 0 ? new Date() : null,
@@ -224,7 +237,7 @@ export async function submitCommand(db: Db, params: SubmitCommandParams): Promis
     // This insert uses the caller's Db transaction. A committed command can never
     // exist without its executable first job, and a rolled-back approval leaves
     // neither command nor job behind.
-    await enqueueFirstStepTx(db, params.tenantId, stepRows[0].id, stepRows[0].dispatchGeneration, stepRows[0].protocolVersion, params.correlationId);
+    await enqueueFirstStepTx(db, params.tenantId, stepRows[0].id, stepRows[0].dispatchGeneration, stepRows[0].protocolVersion, params.correlationId,(stepRows[0].payload as Record<string,any>).notBefore);
   }
 
   // Real SIGKILL certification point while the caller's tenant transaction is still

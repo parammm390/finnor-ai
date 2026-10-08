@@ -23,7 +23,6 @@
     "@finnor/security": "*",
     "@finnor/shared-types": "*",
     "@finnor/tools": "*",
-    "@finnor/voice-os": "*",
     "@finnor/workflow-runtime": "*",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.4",
     "@modelcontextprotocol/sdk": "^1.12.0",

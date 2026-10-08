@@ -14,6 +14,7 @@ import {
   rolePermissions,
   users,
   withTenant,
+  withTenantClientTransaction,
   works,
   type Db,
 } from "@finnor/db";
@@ -26,6 +27,7 @@ import type {
   TenantContext,
 } from "@finnor/shared-types";
 import { and, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const RISK_RANK: Record<AuthorityRisk, number> = { low: 1, medium: 2, high: 3 };
@@ -61,6 +63,14 @@ type LoadedAuthority = {
   grants: Grant[];
 };
 
+type AuthorityReadDb = Pick<Db, "select">;
+
+/** Explicit table reads need no relational-schema reconstruction. Each call
+ * still reads current authority through Core's scoped, deadline-bound client. */
+function withAuthorityRead<T>(tenantId: string, fn: (db: AuthorityReadDb) => Promise<T>): Promise<T> {
+  return withTenantClientTransaction(tenantId, { readOnly: true }, (client) => fn(drizzle(client)));
+}
+
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -93,7 +103,7 @@ function normalizeResources(request: AuthorityRequest): AuthorityResource[] {
   return [...new Map(rows.map((row) => [`${row.type}:${row.id ?? "*"}`, row])).values()];
 }
 
-async function isAssigned(db: Db, tenantId: string, employeeId: string, resource: AuthorityResource): Promise<boolean> {
+async function isAssigned(db: AuthorityReadDb, tenantId: string, employeeId: string, resource: AuthorityResource): Promise<boolean> {
   if (resource.type === "user" || resource.type === "employee") return resource.id === employeeId;
   if (!resource.id) return false;
   if (resource.type === "work") {
@@ -103,7 +113,7 @@ async function isAssigned(db: Db, tenantId: string, employeeId: string, resource
   return false;
 }
 
-async function scopeAllows(db: Db, tenantId: string, employeeId: string, assignment: Assignment, resource: AuthorityResource): Promise<boolean> {
+async function scopeAllows(db: AuthorityReadDb, tenantId: string, employeeId: string, assignment: Assignment, resource: AuthorityResource): Promise<boolean> {
   if (assignment.scope.kind === "tenant") return true;
   if (assignment.scope.kind === "resources") {
     if (!resource.id) return false;
@@ -129,7 +139,7 @@ async function everyResourceAllows(
   return true;
 }
 
-async function loadAuthorities(db: Db, tenantId: string, employeeIds: string[]): Promise<Map<string, LoadedAuthority>> {
+async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeIds: string[]): Promise<Map<string, LoadedAuthority>> {
   const uniqueEmployeeIds = [...new Set(employeeIds)];
   const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates).where(eq(authorityStates.tenantId, tenantId)).limit(1);
   if (uniqueEmployeeIds.length === 0) return new Map();
@@ -173,7 +183,7 @@ async function loadAuthorities(db: Db, tenantId: string, employeeIds: string[]):
   }));
 }
 
-async function loadAuthority(db: Db, tenantId: string, employeeId: string): Promise<LoadedAuthority> {
+async function loadAuthority(db: AuthorityReadDb, tenantId: string, employeeId: string): Promise<LoadedAuthority> {
   const authorities = await loadAuthorities(db, tenantId, [employeeId]);
   return authorities.get(employeeId) ?? { revision: 1, employee: null, assignments: [], grants: [] };
 }
@@ -512,7 +522,7 @@ export async function isFinalApprovalStep(tenantId: string, actionId: string): P
 export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ employeeId: string; revision: number; roles: string[] }> {
   const employeeId = ctx.employeeId ?? ctx.userId;
   if (!UUID.test(employeeId)) throw new Error("Canonical employee identity is required");
-  return withTenant(ctx.tenantId, async (db) => {
+  return withAuthorityRead(ctx.tenantId, async (db) => {
     const auth = await loadAuthority(db, ctx.tenantId, employeeId);
     if (!auth.employee || auth.employee.status !== "active") throw new Error("Employee identity is not active");
     return { employeeId, revision: auth.revision, roles: auth.assignments.map((row) => row.roleKey) };
@@ -524,7 +534,7 @@ export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ e
  * controls the current employee can exercise, without turning a read into history.
  * Mutation routes still call evaluateAuthority and remain the final authorizer. */
 export async function canExerciseAuthority(ctx: TenantContext, request: AuthorityRequest): Promise<boolean> {
-  return withTenant(ctx.tenantId, async (db) => {
+  return withAuthorityRead(ctx.tenantId, async (db) => {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     const legacyApprovalAllowed = async (): Promise<boolean> => {
       if (process.env.NODE_ENV === "production" || request.operation !== "approval") return false;

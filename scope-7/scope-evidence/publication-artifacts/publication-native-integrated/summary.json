@@ -1,0 +1,46 @@
+{
+  "sourcesUnchanged": true,
+  "qualification": "REAL_OWNER_SQL_AND_PROTECTED_SEPARATE_PROCESS_WITH_DISPOSABLE_GENERATED_AUTHORITY; NO_FIELD_H2_OR_ADMISSION",
+  "cases": [
+    {
+      "id": "protected-prospective-question-and-S2-owned-law",
+      "status": "PASS"
+    },
+    {
+      "id": "S2-independent-draws-concurrent-retry-and-no-rerandomization",
+      "status": "PASS"
+    },
+    {
+      "id": "signed-financial-joins-and-generated-programme-ITT-not-field-H2",
+      "status": "PASS"
+    },
+    {
+      "id": "authentic-but-unrelated-money-is-rejected-as-economic-support",
+      "status": "PASS"
+    },
+    {
+      "id": "company-portfolio-and-S8-readback-preserve-uncertainty-no-action-reward",
+      "status": "PASS"
+    },
+    {
+      "id": "atomic-owner-record-origin-rollback",
+      "status": "PASS"
+    },
+    {
+      "id": "S7-full-source-manifest-survives-event-bound",
+      "status": "PASS"
+    },
+    {
+      "id": "native-benchmark-keeps-required-unrun-and-H1-comparisons-inconclusive",
+      "status": "PASS"
+    },
+    {
+      "id": "late-economic-notice-cannot-be-ignored-by-fresh-assessment",
+      "status": "PASS"
+    },
+    {
+      "id": "late-invalidation-retained-and-propagated-to-S8",
+      "status": "PASS"
+    }
+  ]
+}

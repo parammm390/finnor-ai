@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.completed-release.initial-integration.v1",
+  "parents": [
+    "d8d72f8f37f20761e7cd7d8517b80acaa124115a",
+    "7813b7794099e91cf5f3afa5ebb6658ae2d97751"
+  ],
+  "dependencyConflict": "Resolved hono4.13.7, retaining S7 security fix and fs-ext; cleanup removals retained",
+  "backendTypes": "PASS",
+  "frontendTypes": "PASS",
+  "releaseControlAssertions": 22,
+  "existingBackendKeeperTests": 706,
+  "existingBackendPendingTests": 0,
+  "generatedContractsAndReleaseInventory": "PASS",
+  "dependencyMode": "Exact installed third-party versions with candidate-owned workspace links; not a fresh install",
+  "productionReady": false,
+  "pushOrDeploymentPerformed": false
+}

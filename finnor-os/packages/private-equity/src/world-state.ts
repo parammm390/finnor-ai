@@ -3,7 +3,7 @@ import {
   type PrivateEquityAssertion,
 } from "./epistemic";
 import {
-  peTransaction,
+  peClientTransaction,
   shapePeRow,
   assertPeUuid,
   type PeClient,
@@ -14,6 +14,7 @@ import {
   type PrivateEquityAssertionSourceRow,
 } from "./source-mapping";
 import { isMilestoneLate, isRequestOverdue } from "./state-machines";
+import { authorizeBeliefResources, authorizeBeliefCandidateCut, authorizeBeliefSourceScopes, worldBeliefView, type WorldReadAuthorization } from "./enterprise-beliefs";
 import {
   PE_ENTITY_TYPES,
   PE_WORLD_ROOT_TYPES,
@@ -27,6 +28,7 @@ import {
 
 const MAX_WORLD_ROWS = 1_000;
 const MAX_WORLD_CANDIDATES = 5_000;
+const MAX_PERMITTED_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 const ROOT_TYPES = new Set<PeWorldRootRef["entityType"]>(PE_WORLD_ROOT_TYPES);
 const INSTITUTIONAL_TYPES = [
   "pe_fund", "pe_vehicle", "pe_fund_vehicle_link", "pe_strategy_mandate",
@@ -48,10 +50,14 @@ interface HistoryRow {
   entity_id: string;
   entity_version: number;
   snapshot: Record<string, unknown>;
+  snapshot_json?: string;
   snapshot_hash: string;
   recorded_at: Date;
   origin: "mutation" | "baseline";
   hash_valid: boolean;
+  /** Exact top-level numeric text from PostgreSQL, before JSON parsing. */
+  decimal_fields?: Record<string, string> | null;
+  committed_at?: Date | null;
 }
 
 interface CoverageRow {
@@ -161,6 +167,11 @@ function addHistory(target: Map<string, HistoryRow>, rows: HistoryRow[]): void {
   }
 }
 
+function commitCutPredicate(timestampParameter: string, alias?: string): string {
+  const xmin = alias ? `${alias}.xmin` : "xmin";
+  return `(CASE WHEN current_setting('app.s1_commit_cut',true)='required' THEN pg_xact_commit_timestamp(${xmin})<=${timestampParameter} ELSE true END)`;
+}
+
 async function latestExact(
   client: PeClient,
   tenantId: string,
@@ -171,10 +182,12 @@ async function latestExact(
   if (entityTypes.length === 0 || entityIds.length === 0) return [];
   const result = await client.query<HistoryRow>(
     `SELECT DISTINCT ON (entity_type,entity_id)
-       entity_type,entity_id::text,entity_version,snapshot,snapshot_hash,recorded_at,origin,
-       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid
+       entity_type,entity_id::text,entity_version,snapshot,snapshot::text AS snapshot_json,snapshot_hash,recorded_at,origin,
+       CASE WHEN current_setting('track_commit_timestamp')='on' THEN pg_xact_commit_timestamp(xmin) END AS committed_at,
+       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid,
+       (SELECT jsonb_object_agg(key,value::text) FROM jsonb_each(snapshot) WHERE jsonb_typeof(value)='number' AND key NOT IN ('version','revision','entity_version')) AS decimal_fields
        FROM finnor_os.canonical_entity_versions
-      WHERE tenant_id=$1 AND recorded_at<=$2
+      WHERE tenant_id=$1 AND recorded_at<=$2 AND ${commitCutPredicate("$2")}
         AND entity_type=ANY($3::text[]) AND entity_id=ANY($4::uuid[])
       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC
       LIMIT $5`,
@@ -194,10 +207,12 @@ async function latestBySnapshotField(
   if (entityTypes.length === 0 || values.length === 0) return [];
   const result = await client.query<HistoryRow>(
     `SELECT DISTINCT ON (entity_type,entity_id)
-       entity_type,entity_id::text,entity_version,snapshot,snapshot_hash,recorded_at,origin,
-       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid
+       entity_type,entity_id::text,entity_version,snapshot,snapshot::text AS snapshot_json,snapshot_hash,recorded_at,origin,
+       CASE WHEN current_setting('track_commit_timestamp')='on' THEN pg_xact_commit_timestamp(xmin) END AS committed_at,
+       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid,
+       (SELECT jsonb_object_agg(key,value::text) FROM jsonb_each(snapshot) WHERE jsonb_typeof(value)='number' AND key NOT IN ('version','revision','entity_version')) AS decimal_fields
        FROM finnor_os.canonical_entity_versions
-      WHERE tenant_id=$1 AND recorded_at<=$2 AND entity_type=ANY($3::text[])
+      WHERE tenant_id=$1 AND recorded_at<=$2 AND ${commitCutPredicate("$2")} AND entity_type=ANY($3::text[])
         AND snapshot->>$4=ANY($5::text[])
       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC
       LIMIT $6`,
@@ -215,10 +230,12 @@ async function latestLinks(
 ): Promise<HistoryRow[]> {
   const result = await client.query<HistoryRow>(
     `SELECT DISTINCT ON (entity_type,entity_id)
-       entity_type,entity_id::text,entity_version,snapshot,snapshot_hash,recorded_at,origin,
-       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid
+       entity_type,entity_id::text,entity_version,snapshot,snapshot::text AS snapshot_json,snapshot_hash,recorded_at,origin,
+       CASE WHEN current_setting('track_commit_timestamp')='on' THEN pg_xact_commit_timestamp(xmin) END AS committed_at,
+       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid,
+       (SELECT jsonb_object_agg(key,value::text) FROM jsonb_each(snapshot) WHERE jsonb_typeof(value)='number' AND key NOT IN ('version','revision','entity_version')) AS decimal_fields
        FROM finnor_os.canonical_entity_versions
-      WHERE tenant_id=$1 AND recorded_at<=$2
+      WHERE tenant_id=$1 AND recorded_at<=$2 AND ${commitCutPredicate("$2")}
         AND entity_type IN ('pe_document_link','pe_evidence_link')
         AND (
           (snapshot->>'world_root_type'=$3 AND snapshot->>'world_root_id'=$4)
@@ -232,7 +249,7 @@ async function latestLinks(
 }
 
 function shaped(row: HistoryRow): Record<string, unknown> {
-  return shapePeRow(row.snapshot);
+  return shapePeRow({ ...row.snapshot, ...(row.decimal_fields ?? {}) });
 }
 
 function arrayFor(history: Map<string, HistoryRow>, type: string): Record<string, unknown>[] {
@@ -348,7 +365,7 @@ async function loadProviderWorldContext(
             canonical_entity_type,canonical_entity_id::text
        FROM finnor_os.external_ref_observations
       WHERE tenant_id=$1 AND evidence_version_id=ANY($2::uuid[])
-        AND retrieved_at<=$3 AND received_at<=$3
+        AND retrieved_at<=$3 AND received_at<=$3 AND ${commitCutPredicate("$3")}
       ORDER BY retrieved_at,id LIMIT $4`,
     [tenantId, evidenceVersionIds, clock, MAX_WORLD_ROWS + 1],
   ) : { rows: [] as ProviderEvidenceRow[] };
@@ -387,16 +404,16 @@ async function loadProviderWorldContext(
        SELECT DISTINCT source_scope_id
          FROM finnor_os.external_ref_observations
         WHERE tenant_id=$1 AND evidence_source_id=ANY($4::uuid[])
-          AND retrieved_at<=$2 AND received_at<=$2
+          AND retrieved_at<=$2 AND received_at<=$2 AND ${commitCutPredicate("$2")}
      ), latest_coverage AS (
        SELECT DISTINCT ON (source_scope_id) *
          FROM finnor_os.integration_source_coverage_history
-        WHERE tenant_id=$1 AND effective_from<=$2 AND recorded_at<=$2
+        WHERE tenant_id=$1 AND effective_from<=$2 AND recorded_at<=$2 AND ${commitCutPredicate("$2")}
           AND (effective_to IS NULL OR effective_to>$2)
         ORDER BY source_scope_id,effective_from DESC,recorded_at DESC,coverage_revision DESC
      )
      SELECT c.id::text coverage_history_id,s.id::text source_scope_id,s.integration_id::text,s.source_kind,s.scope_key,
-            (s.updated_at<=$2) current_descriptor_safe,
+            (s.updated_at<=$2 AND ${commitCutPredicate("$2", "s")}) current_descriptor_safe,
             s.provider_scope_type current_provider_scope_type,s.provider_resource_id current_provider_resource_id,
             s.provider_parent_id current_provider_parent_id,s.enabled current_enabled,
             s.root_binding_type current_root_binding_type,s.root_binding_id::text current_root_binding_id,
@@ -416,15 +433,15 @@ async function loadProviderWorldContext(
        FROM finnor_os.integration_source_scopes s
        LEFT JOIN latest_coverage c ON c.source_scope_id=s.id
       WHERE s.tenant_id=$1 AND s.provider='microsoft_graph'
-        AND (c.id IS NOT NULL OR (s.configured_at<=$2 AND s.updated_at<=$2))
+        AND (c.id IS NOT NULL OR (s.configured_at<=$2 AND s.updated_at<=$2 AND ${commitCutPredicate("$2", "s")}))
         AND (
           s.id IN (SELECT source_scope_id FROM linked_scopes)
           OR EXISTS (
             SELECT 1 FROM roots
              WHERE roots.entity_type=coalesce(nullif(c.source_descriptor->>'rootBindingType',''),
-                                               CASE WHEN s.updated_at<=$2 THEN s.root_binding_type END)
+                                               CASE WHEN s.updated_at<=$2 AND ${commitCutPredicate("$2", "s")} THEN s.root_binding_type END)
                AND roots.entity_id=coalesce(nullif(c.source_descriptor->>'rootBindingId',''),
-                                             CASE WHEN s.updated_at<=$2 THEN s.root_binding_id::text END)
+                                             CASE WHEN s.updated_at<=$2 AND ${commitCutPredicate("$2", "s")} THEN s.root_binding_id::text END)
           )
         )
       ORDER BY s.id LIMIT $5`,
@@ -578,18 +595,31 @@ async function latestTenantHistory(
   tenantId: string,
   knowledgeAt: Date,
 ): Promise<HistoryRow[]> {
-  const types = [...new Set<string>([...PE_ENTITY_TYPES, ...INSTITUTIONAL_TYPES])];
+  const types = [...new Set<string>([...PE_ENTITY_TYPES, ...INSTITUTIONAL_TYPES, "work_entity_link"])];
+  const payload = await client.query<{ bytes: string }>(
+    `SELECT coalesce(sum(octet_length(snapshot::text)),0)::text AS bytes FROM (
+       SELECT snapshot FROM finnor_os.canonical_entity_versions
+       WHERE tenant_id=$1 AND recorded_at<=$2 AND ${commitCutPredicate("$2")} AND entity_type=ANY($3::text[])
+         AND (entity_type IN ('pe_metric_observation','pe_benchmark_observation','pe_fact_coverage') OR recorded_at=(
+           SELECT max(v.recorded_at) FROM finnor_os.canonical_entity_versions v
+           WHERE v.tenant_id=canonical_entity_versions.tenant_id AND v.entity_type=canonical_entity_versions.entity_type
+             AND v.entity_id=canonical_entity_versions.entity_id AND v.recorded_at<=$2 AND ${commitCutPredicate("$2", "v")}))
+       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC LIMIT $4
+     ) permitted_cut`, [tenantId, knowledgeAt, types, MAX_WORLD_CANDIDATES + 1]);
+  if (BigInt(payload.rows[0]?.bytes ?? "0") > BigInt(MAX_PERMITTED_SNAPSHOT_BYTES)) throw new PeDomainError("PE_PERMITTED_VIEW_BYTES_EXCEEDED", "Permitted world snapshot byte budget exceeded");
   const result = await client.query<HistoryRow>(
-    `SELECT entity_type,entity_id::text,entity_version,snapshot,snapshot_hash,recorded_at,origin,
-       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid
+    `SELECT entity_type,entity_id::text,entity_version,snapshot,snapshot::text AS snapshot_json,snapshot_hash,recorded_at,origin,
+       CASE WHEN current_setting('track_commit_timestamp')='on' THEN pg_xact_commit_timestamp(xmin) END AS committed_at,
+       snapshot_hash=encode(public.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex') AS hash_valid,
+       (SELECT jsonb_object_agg(key,value::text) FROM jsonb_each(snapshot) WHERE jsonb_typeof(value)='number' AND key NOT IN ('version','revision','entity_version')) AS decimal_fields
        FROM finnor_os.canonical_entity_versions
-      WHERE tenant_id=$1 AND recorded_at<=$2 AND entity_type=ANY($3::text[])
+      WHERE tenant_id=$1 AND recorded_at<=$2 AND ${commitCutPredicate("$2")} AND entity_type=ANY($3::text[])
         AND (entity_type IN ('pe_metric_observation','pe_benchmark_observation','pe_fact_coverage') OR recorded_at=(
           SELECT max(v.recorded_at) FROM finnor_os.canonical_entity_versions v
            WHERE v.tenant_id=canonical_entity_versions.tenant_id
              AND v.entity_type=canonical_entity_versions.entity_type
              AND v.entity_id=canonical_entity_versions.entity_id
-             AND v.recorded_at<=$2))
+             AND v.recorded_at<=$2 AND ${commitCutPredicate("$2", "v")}))
       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC
       LIMIT $4`,
     [tenantId, knowledgeAt, types, MAX_WORLD_CANDIDATES + 1],
@@ -705,6 +735,8 @@ function connectedHistory(rows: HistoryRow[], root: PeWorldRootRef, validAt: Dat
       case "pe_outcome": return (s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "") || decisions.has(asString(row, "decision_id") ?? "");
       case "pe_exit": return holdings.has(asString(row, "portfolio_holding_id") ?? "");
       case "pe_fact_coverage": return (s.subject_type === "pe_fund" ? funds : s.subject_type === "pe_vehicle" ? vehicles : s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "");
+      case "work_entity_link": return s.history_deleted !== true
+        && selected.has(`${String(s.entity_type)}:${String(s.entity_id)}`);
       default: return deals.has(asString(row, "deal_id") ?? "")
         || (row.entity_type === "pe_document_link" || row.entity_type === "pe_evidence_link")
           && (String(s.world_root_type) === root.entityType && String(s.world_root_id) === root.entityId);
@@ -745,12 +777,58 @@ export interface PeWorldTemporalQuery {
   knowledgeAt?: Date | string;
 }
 
-/** Historical meaning: only canonical snapshots recorded at or before `at`, and
- * only evidence both effective and retrieved at or before `at`, are eligible. */
+/** Historical cuts require retained database commit visibility. Current reads
+ * use the actual database snapshot; provider timestamps never backdate access. */
 export async function loadPrivateEquityWorldState(
   ctx: PeMutationContext,
   root: PeWorldRootRef,
   at?: Date | string | PeWorldTemporalQuery,
+): Promise<PeWorldState> {
+  return readAuthorizedWorldState(ctx, root, at, true);
+}
+
+/** Reconstruct and authorize the same current owner cut without serializing a
+ * belief value. This is a permission check, never a currentness certificate. */
+export async function authorizePrivateEquityWorldState(ctx: PeMutationContext, root: PeWorldRootRef): Promise<void> {
+  await readAuthorizedWorldState(ctx, root, undefined, false);
+}
+
+async function readAuthorizedWorldState(
+  ctx: PeMutationContext,
+  root: PeWorldRootRef,
+  at: Date | string | PeWorldTemporalQuery | undefined,
+  buildBelief: boolean,
+): Promise<PeWorldState> {
+  if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
+  assertPeUuid(root.entityId, "world root entityId");
+  // This reconstruction scans a tenant-wide candidate cut. Require authority for
+  // that cut before scanning; a root-only grant must not learn forbidden scope
+  // through global truncation/coverage signals. Fine-grained federation needs a
+  // permission-filtered source adapter before it can enter this query class.
+  const authorization = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, { type: "tenant", id: ctx.auth.tenantId }]);
+  await authorizeBeliefCandidateCut(ctx);
+  const world = await reconstructPrivateEquityWorldState(ctx, root, at, authorization, buildBelief);
+  const resources = [
+    { type: root.entityType, id: root.entityId },
+    { type: "tenant", id: ctx.auth.tenantId },
+    ...world.provenance.map(ref => ({ type: ref.entityType, id: ref.entityId })),
+    ...world.evidence.map(ref => ({ type: "evidence_source", id: String(ref.sourceId) })),
+    ...world.documents.map(ref => ({ type: "document", id: String(ref.id) })),
+    ...world.sourceCoverage.map(ref => ({ type: "integration_source_scope", id: String(ref.sourceScopeId) })),
+  ];
+  const current = await authorizeBeliefResources(ctx, resources);
+  await authorizeBeliefCandidateCut(ctx);
+  await authorizeBeliefSourceScopes(ctx, root, world.evidence.map(ref => String(ref.sourceId)));
+  if (current.revision !== authorization.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  return world;
+}
+
+async function reconstructPrivateEquityWorldState(
+  ctx: PeMutationContext,
+  root: PeWorldRootRef,
+  at: Date | string | PeWorldTemporalQuery | undefined,
+  authorization: WorldReadAuthorization,
+  buildBelief: boolean,
 ): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
@@ -762,8 +840,9 @@ export async function loadPrivateEquityWorldState(
     throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "PE world-state validAt or knowledgeAt timestamp is malformed");
   }
 
-  return peTransaction(ctx, async (_db, client) => {
-    const transactionAt = (await client.query<{ at: Date }>("SELECT transaction_timestamp() AS at")).rows[0]!.at;
+  return peClientTransaction(ctx, async (client) => {
+    const transactionAt = (await client.query<{ at: Date }>("SELECT clock_timestamp() AS at")).rows[0]!.at;
+    if (requestedKnowledgeAt && requestedKnowledgeAt > transactionAt) throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "Knowledge time cannot be in the future");
     const clock = requestedKnowledgeAt ?? transactionAt;
     const validClock = requestedValidAt ?? clock;
     const stateAt = clock.toISOString();
@@ -779,7 +858,7 @@ export async function loadPrivateEquityWorldState(
     const coverage = await client.query<CoverageRow>(
       `SELECT entity_type,coverage_started_at FROM finnor_os.canonical_history_coverage
         WHERE entity_type=ANY($1::text[])`,
-      [[...PE_ENTITY_TYPES, "external_organization", "external_contact"]],
+      [[...PE_ENTITY_TYPES, "external_organization", "external_contact", "work_entity_link"]],
     );
     const coverageByType = new Map<string, Date>(coverage.rows.map((row) => [row.entity_type, row.coverage_started_at]));
     const rootCoverage = coverageByType.get(root.entityType);
@@ -790,13 +869,35 @@ export async function loadPrivateEquityWorldState(
     });
     const allCoverageTimes = [...coverageByType.values()].map((value) => value.getTime());
     const fullBaselineAt = allCoverageTimes.length ? new Date(Math.max(...allCoverageTimes)).toISOString() : null;
+    const workCoverage = coverageByType.get("work_entity_link");
+    const workHistoryUnavailable = !workCoverage || workCoverage.getTime() > clock.getTime();
     if (clock.getTime() < rootCoverage.getTime()) {
-      return emptyWorld(root, validAt, stateAt, {
+      const world = emptyWorld(root, validAt, stateAt, {
         status: "unavailable_before_baseline",
         baselineAt: rootCoverage.toISOString(),
         unavailableEntityTypes: [...unavailableTypes],
         reasons: ["HISTORY_UNAVAILABLE_BEFORE_BASELINE"],
       });
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      return world;
+    }
+
+    // Timestamped insertion precedes transaction commit. A historical read must
+    // not retrospectively reveal data that was still uncommitted at its cut.
+    // PostgreSQL may discard commit timestamps; missing attestation never falls
+    // back to a source/caller clock. No database configuration is changed here.
+    await client.query("SELECT set_config('app.s1_commit_cut',$1,true)", [requestedKnowledgeAt ? "required" : "current"]);
+    if (requestedKnowledgeAt) {
+      const tracked = (await client.query<{ enabled: boolean }>("SELECT current_setting('track_commit_timestamp')='on' AS enabled")).rows[0]?.enabled;
+      const missing = !tracked || (await client.query<{ missing: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM finnor_os.canonical_entity_versions WHERE tenant_id=$1 AND recorded_at<=$2 AND pg_xact_commit_timestamp(xmin) IS NULL)
+          OR EXISTS (SELECT 1 FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND created_at<=$2 AND pg_xact_commit_timestamp(xmin) IS NULL) AS missing`,
+        [ctx.auth.tenantId, clock])).rows[0]?.missing;
+      if (missing) {
+        const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["HISTORICAL_COMMIT_VISIBILITY_UNAVAILABLE"] });
+        if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
+        return world;
+      }
     }
 
     const history = new Map<string, HistoryRow>();
@@ -806,15 +907,27 @@ export async function loadPrivateEquityWorldState(
     // A root created after `at` is truthfully absent then. Never substitute its
     // current row or traverse current relationships backwards in time.
     if (!rootRow || !validAtRow(rootRow, validClock)) {
-      return emptyWorld(root, validAt, stateAt, {
-        status: unavailableTypes.length ? "partial" : "complete",
+      const world = emptyWorld(root, validAt, stateAt, {
+        status: unavailableTypes.length || workHistoryUnavailable ? "partial" : "complete",
         baselineAt: fullBaselineAt,
         unavailableEntityTypes: [...unavailableTypes],
-        reasons: unavailableTypes.length ? ["Some PE types did not yet have history coverage"] : [],
+        reasons: [
+          ...(unavailableTypes.length ? ["Some PE types did not yet have history coverage"] : []),
+          ...(workHistoryUnavailable ? ["Core Work relationship history is unavailable before its recorded baseline"] : []),
+        ],
       });
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      return world;
     }
 
-    const tenantCandidates = await latestTenantHistory(client, ctx.auth.tenantId, clock);
+    let tenantCandidates: HistoryRow[];
+    try { tenantCandidates = await latestTenantHistory(client, ctx.auth.tenantId, clock); }
+    catch (error) {
+      if (!(error instanceof PeDomainError) || error.code !== "PE_PERMITTED_VIEW_BYTES_EXCEEDED") throw error;
+      const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["PERMITTED_CANDIDATE_BYTE_BUDGET_EXCEEDED"] });
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      return world;
+    }
     const connectedRows = connectedHistory(latestCorrections(tenantCandidates), root, validClock);
     addHistory(history, connectedRows);
     let strategyRows: HistoryRow[] = [];
@@ -855,6 +968,7 @@ export async function loadPrivateEquityWorldState(
     addHistory(history, linkRows);
 
     const reasons: string[] = [];
+    if (workHistoryUnavailable) reasons.push("Core Work relationship history is unavailable before its recorded baseline");
     if (tenantCandidates.length > MAX_WORLD_CANDIDATES) reasons.push(`Tenant history exceeded the ${MAX_WORLD_CANDIDATES}-row graph candidate bound`);
     if ([rootRows, opportunityRows, dealRows, childRows, linkRows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
       reasons.push(`World history exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
@@ -902,21 +1016,41 @@ export async function loadPrivateEquityWorldState(
       temporalPayload: "current_projection_unversioned",
     }));
 
-    const evidenceSourceIds = collectUuid(evidenceLinks, "evidenceSourceId");
+    const ownerEvidence = safeHistory.map(shaped).filter(row => typeof row.evidenceSourceId === "string");
+    const evidenceBindings = [...evidenceLinks, ...ownerEvidence];
+    const evidenceSourceIds = collectUuid(evidenceBindings, "evidenceSourceId");
+    if (evidenceSourceIds.length) {
+      const payload = await client.query<{ bytes: string }>(
+        `SELECT coalesce(sum(octet_length(snapshot::text)),0)::text AS bytes FROM (
+          SELECT v.snapshot FROM finnor_os.evidence_source_versions v
+          WHERE v.tenant_id=$1 AND v.source_id=ANY($2::uuid[]) AND v.as_of<=$3 AND v.retrieved_at<=$4 AND v.created_at<=$4 AND ${commitCutPredicate("$4", "v")}
+          ORDER BY v.source_id,v.version_number DESC,v.id DESC LIMIT $5
+        ) permitted_evidence`, [ctx.auth.tenantId, evidenceSourceIds, validClock, clock, MAX_WORLD_ROWS + 1]);
+      if (BigInt(payload.rows[0]?.bytes ?? "0") > BigInt(MAX_PERMITTED_SNAPSHOT_BYTES)) {
+        const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["PERMITTED_EVIDENCE_BYTE_BUDGET_EXCEEDED"] });
+        if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
+        return world;
+      }
+    }
     const evidenceVersionsRaw = evidenceSourceIds.length ? await client.query<PrivateEquityAssertionSourceRow & SqlRow>(
       `SELECT s.id::text source_id,v.id::text version_id,s.source_type,v.as_of,v.retrieved_at,v.snapshot,
-              v.version_number,v.content_hash
+              v.version_number,v.content_hash,v.created_at,v.snapshot::text AS exact_snapshot_json,
+              (SELECT coalesce(jsonb_agg(jsonb_build_object('propositionId',assertion->>'propositionId','valueJson',(assertion->'value')::text)),'[]'::jsonb)
+                FROM jsonb_array_elements(CASE WHEN jsonb_typeof(v.snapshot->'claims')='array' THEN v.snapshot->'claims' ELSE '[]'::jsonb END) AS claims(assertion)
+                WHERE jsonb_typeof(assertion->'propositionId')='string' AND assertion ? 'value') AS exact_assertions,
+              CASE WHEN current_setting('track_commit_timestamp')='on' THEN pg_xact_commit_timestamp(v.xmin) END AS committed_at,
+              encode(public.digest(convert_to(v.snapshot::text,'UTF8'),'sha256'),'hex') AS evidence_snapshot_hash
          FROM finnor_os.evidence_sources s
          JOIN finnor_os.evidence_source_versions v ON v.tenant_id=s.tenant_id AND v.source_id=s.id
         WHERE s.tenant_id=$1 AND s.id=ANY($2::uuid[])
-          AND v.as_of<=$3 AND v.retrieved_at<=$4
+          AND v.as_of<=$3 AND v.retrieved_at<=$4 AND v.created_at<=$4 AND ${commitCutPredicate("$4", "v")}
         ORDER BY s.id,v.version_number DESC,v.id DESC LIMIT $5`,
       [ctx.auth.tenantId, evidenceSourceIds, validClock, clock, MAX_WORLD_ROWS + 1],
     ) : { rows: [] as Array<PrivateEquityAssertionSourceRow & SqlRow> };
     if (evidenceVersionsRaw.rows.length > MAX_WORLD_ROWS) reasons.push(`Evidence exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     const explicitVersionsBySource = new Map<string, Set<string>>();
     const floatingVersionSources = new Set<string>();
-    for (const link of evidenceLinks) {
+    for (const link of evidenceBindings) {
       const sourceId = typeof link.evidenceSourceId === "string" ? link.evidenceSourceId : null;
       if (!sourceId) continue;
       if (typeof link.evidenceVersionId === "string") {
@@ -942,9 +1076,13 @@ export async function loadPrivateEquityWorldState(
       sourceType: row.source_type,
       versionNumber: row.version_number,
       contentHash: row.content_hash,
+      snapshotHash: row.evidence_snapshot_hash,
       asOf: row.as_of.toISOString(),
       retrievedAt: row.retrieved_at.toISOString(),
+      knowledgeAt: new Date(Math.max(row.retrieved_at.getTime(), (row.created_at as Date).getTime(), (row.committed_at as Date | null)?.getTime() ?? clock.getTime())).toISOString(),
       snapshot: row.snapshot,
+      exactSnapshotJson: row.exact_snapshot_json,
+      exactAssertions: row.exact_assertions,
     }));
     const worldRootRefs = [...new Map(safeHistory
       .filter((row) => ROOT_TYPES.has(row.entity_type as PeWorldRootRef["entityType"]))
@@ -957,16 +1095,17 @@ export async function loadPrivateEquityWorldState(
       eligibleEvidenceRows.map((row) => row.version_id),
       eligibleEvidenceRows.map((row) => row.source_id),
     );
+    const revokedProvider = await client.query<{ revoked: boolean }>(
+      `SELECT EXISTS (
+        SELECT 1 FROM finnor_os.integration_source_scopes s
+        WHERE s.tenant_id=$1 AND (NOT s.enabled OR NOT s.effective_permissions @> s.required_permissions)
+          AND ((s.root_binding_type=$2 AND s.root_binding_id=$3::uuid) OR EXISTS (
+            SELECT 1 FROM finnor_os.external_ref_observations o WHERE o.tenant_id=s.tenant_id
+              AND o.source_scope_id=s.id AND o.evidence_source_id=ANY($4::uuid[])
+          ))
+      ) AS revoked`, [ctx.auth.tenantId, root.entityType, root.entityId, evidenceSourceIds]);
+    if (revokedProvider.rows[0]?.revoked) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
 
-    const workRaw = entityRefs.length ? await client.query<SqlRow>(
-      `SELECT l.* FROM finnor_os.work_entity_links l
-        WHERE l.tenant_id=$1 AND l.created_at<=$3 AND EXISTS (
-          SELECT 1 FROM jsonb_to_recordset($2::jsonb) AS scoped(entity_type text,entity_id uuid)
-           WHERE scoped.entity_type=l.entity_type AND scoped.entity_id=l.entity_id
-        )
-        ORDER BY l.created_at,l.id LIMIT $4`,
-      [ctx.auth.tenantId, encodedEntityRefs, clock, MAX_WORLD_ROWS + 1],
-    ) : { rows: [] as SqlRow[] };
     const taskRaw = entityRefs.length ? await client.query<SqlRow>(
       `SELECT t.* FROM finnor_os.tasks t
         WHERE t.tenant_id=$1 AND t.created_at<=$3 AND EXISTS (
@@ -983,13 +1122,7 @@ export async function loadPrivateEquityWorldState(
       return { id: String(row.id), subjectType: row.subject_type, subjectId: String(row.subject_id), temporalPayload: "reference_only" };
     });
 
-    const workLinks = workRaw.rows.map((row) => ({
-      ...shapePeRow(row),
-      temporalPayload: "current_projection_unversioned",
-    }));
-    if (workLinks.length) {
-      reasons.push("Core Work relationship metadata has no temporal version; historical payload is an explicitly marked current projection");
-    }
+    const workLinks = arrayFor(safeMap, "work_entity_link");
 
     const eventsRaw = entityRefs.length ? await client.query<SqlRow>(
       `SELECT e.* FROM finnor_os.business_events e
@@ -1001,7 +1134,7 @@ export async function loadPrivateEquityWorldState(
         ORDER BY e.occurred_at,e.id LIMIT $5`,
       [ctx.auth.tenantId, clock, encodedEntityRefs, dealIds, MAX_WORLD_ROWS + 1],
     ) : { rows: [] as SqlRow[] };
-    if ([workRaw.rows, taskRaw.rows, eventsRaw.rows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
+    if ([taskRaw.rows, eventsRaw.rows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
       reasons.push(`Related Core graph rows exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     }
 
@@ -1108,7 +1241,9 @@ export async function loadPrivateEquityWorldState(
           : Number.isFinite(entryAt) && entryAt <= validClock.getTime() ? "active" : row.holdingStatus,
       };
     });
-    const assertions: PrivateEquityAssertion[] = privateEquityAssertionsFromRows(eligibleEvidenceRows, 200, root);
+    const allAssertions: PrivateEquityAssertion[] = privateEquityAssertionsFromRows(eligibleEvidenceRows, 201, root);
+    if (allAssertions.length > 200) reasons.push("Evidence assertions exceeded the 200-claim interpretation bound");
+    const assertions = allAssertions.slice(0, 200);
     const epistemic = buildPrivateEquityWorldEpistemicSnapshot({
       tenantId: ctx.auth.tenantId,
       principalId: ctx.auth.employeeId ?? ctx.auth.userId,
@@ -1130,7 +1265,7 @@ export async function loadPrivateEquityWorldState(
       evidenceRefs: [] as string[],
     }] : [];
 
-    return {
+    const world: PeWorldState = {
       root,
       stateAt,
       validAt,
@@ -1211,5 +1346,14 @@ export async function loadPrivateEquityWorldState(
         origin: row.origin,
       })),
     };
+    const owners = await client.query<{ entity_type: string; writable_owner: string }>(
+      "SELECT entity_type,writable_owner FROM finnor_os.canonical_truth_registry WHERE active AND entity_type=ANY($1::text[])",
+      [[...new Set([...safeHistory.map(row => row.entity_type), "evidence_source_version"])]]);
+    const ownerByType = new Map(owners.rows.map(row => [row.entity_type, row.writable_owner]));
+    if (safeHistory.some(row => !ownerByType.has(row.entity_type))) throw new PeDomainError("PE_HISTORY_OWNER_UNAVAILABLE", "Canonical semantic owner could not be resolved");
+    if (buildBelief) world.beliefView = worldBeliefView(ctx, world, safeHistory.map(row => ({ entityType: row.entity_type, entityId: row.entity_id,
+      version: row.entity_version, owner: ownerByType.get(row.entity_type)!, snapshotHash: row.snapshot_hash,
+      recordedAt: new Date(Math.max(row.recorded_at.getTime(), row.committed_at?.getTime() ?? clock.getTime())).toISOString(), snapshot: shaped(row), snapshotJson: row.snapshot_json })), authorization, ownerByType.get("evidence_source_version"));
+    return world;
   }, { readOnly: true });
 }

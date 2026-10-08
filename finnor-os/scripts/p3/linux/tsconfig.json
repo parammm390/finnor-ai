@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["*.mts", "../../../packages/private-equity/src/branch-fabric/**/*.ts", "../../../packages/private-equity/src/branch-fabric/**/*.d.ts"]
+}

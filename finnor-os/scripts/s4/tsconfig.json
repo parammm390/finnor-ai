@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["./*.mts"],
+  "exclude": ["../../node_modules", "../../apps/**/.next"]
+}

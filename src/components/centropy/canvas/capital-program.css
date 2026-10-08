@@ -1,0 +1,20 @@
+.ct-capital-program { color: var(--ct-text, #e6e8ed); display: grid; gap: 1rem; }
+.ct-capital-program form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.ct-capital-program label { display: grid; gap: .45rem; font-size: .9rem; }
+.ct-capital-program input, .ct-capital-program select { width: 100%; min-height: 40px; padding: .55rem; background: var(--ct-bg, #181b21); color: inherit; border: 1px solid var(--ct-border, #707886); border-radius: 5px; }
+.ct-capital-program button { min-height: 40px; padding: .55rem .8rem; background: var(--ct-bg, #181b21); color: inherit; border: 1px solid var(--ct-border, #707886); border-radius: 5px; }
+.ct-capital-program button:disabled { opacity: .55; cursor: not-allowed; }
+.ct-capital-program :focus-visible { outline: 2px solid #9ebaff; outline-offset: 3px; }
+.ct-capital-program .ct-capital-program__check { display: flex; align-items: center; }
+.ct-capital-program__check input { width: 20px; min-height: 20px; }
+.ct-capital-program form p { grid-column: 1 / -1; }
+.ct-capital-program fieldset { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; border: 1px solid var(--ct-border, #707886); border-radius: 5px; padding: 1rem; }
+.ct-capital-program legend { padding: 0 .4rem; font-weight: 600; }
+.ct-capital-program fieldset details { grid-column: 1 / -1; }
+.ct-capital-program__actions { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
+.ct-capital-program__candidates { display: grid; gap: 1rem; }
+.ct-capital-program__candidates article { border: 1px solid var(--ct-border, #707886); border-radius: 6px; padding: 1rem; display: grid; gap: .6rem; overflow-wrap: anywhere; }
+.ct-capital-program h4, .ct-capital-program h5 { font-weight: 600; font-size: 1rem; }
+.ct-capital-program pre { max-height: 400px; overflow: auto; padding: .7rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ct-capital-program li { margin: .5rem 0; }
+.ct-capital-program [role="alert"] { color: #ffb8ae; }

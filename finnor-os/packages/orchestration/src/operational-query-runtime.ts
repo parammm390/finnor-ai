@@ -2,6 +2,7 @@ import { resolveTenantVertical } from "@finnor/db";
 import {
   executePrivateEquityOperationalQuery,
   isPrivateEquityOperationalQuery,
+  executeHarnessProgramQuery,
 } from "@finnor/private-equity";
 import {
   executeOperationalQuery as executeCoreOperationalQuery,
@@ -10,6 +11,7 @@ import {
 import {
   PRIVATE_EQUITY_VERTICAL,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  PROGRAM_OPERATIONAL_QUERY_INTENTS,
   assertExecutableVertical,
   type CanonicalOperationalQueryRequest,
   type CanonicalOperationalQueryIntent,
@@ -27,7 +29,7 @@ export function operationalQueryIntentsForVertical(verticalKey: string): Canonic
   assertExecutableVertical(verticalKey);
   return [
     ...CORE_OPERATIONAL_QUERY_INTENTS,
-    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS : []),
+    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? [...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,...PROGRAM_OPERATIONAL_QUERY_INTENTS] : []),
   ];
 }
 
@@ -42,6 +44,7 @@ export async function executeTenantOperationalQuery<T extends CanonicalOperation
   const vertical = await resolveTenantVertical(tenantId);
   const allowed = operationalQueryIntentsForVertical(vertical.verticalKey);
   if (!allowed.includes(request.intent)) throw new Error("Operational query intent is unavailable for this tenant vertical");
+  if (request.intent === "harness_program_v1") return executeHarnessProgramQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if (PE.has(request.intent)) {
     if (!isPrivateEquityOperationalQuery(request)) throw new Error("Invalid private-equity query contract");
     return executePrivateEquityOperationalQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;

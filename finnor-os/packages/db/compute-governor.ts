@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getPool } from "./index";
+import { connectWithExecutionDeadline, releaseOwnedComputeLeases } from "./execution-deadline";
 import { parseWorkloadClass, type WorkloadClass } from "./compute-contract";
 
 export class ComputeCapacityUnavailableError extends Error {
@@ -40,7 +41,7 @@ export async function acquireComputeResourceLeases(input: {
   const keys = [...new Set(input.resourceKeys)].sort();
   if (keys.length === 0) throw new Error("A compute invocation requires at least one resource policy key");
   const tenantKey = input.tenantId ?? "__global__";
-  const client = await getPool().connect();
+  const client = await connectWithExecutionDeadline(getPool());
   try {
     await client.query("BEGIN");
     const policies = await client.query<{
@@ -104,7 +105,7 @@ export async function renewComputeResourceLeases(leases: readonly ComputeResourc
   if (leases.length === 0) return true;
   const owned = JSON.stringify(leases.map((lease) => ({ resource_key: lease.resourceKey,
     token: lease.token, fence: lease.fence, owner_id: lease.ownerId })));
-  const client = await getPool().connect();
+  const client = await connectWithExecutionDeadline(getPool());
   try {
     await client.query("BEGIN");
     const matched = await client.query<{ id: string }>(`
@@ -139,13 +140,8 @@ export async function renewComputeResourceLeases(leases: readonly ComputeResourc
 
 export async function releaseComputeResourceLeases(leases: ComputeResourceLease[], reason: string): Promise<void> {
   if (leases.length === 0) return;
-  await getPool().query(`
-    UPDATE compute_resource_leases l
-       SET released_at=clock_timestamp(),release_reason=$2
-      FROM jsonb_to_recordset($1::jsonb) AS owned(resource_key text,token uuid,fence bigint,owner_id text)
-     WHERE l.resource_key=owned.resource_key AND l.lease_token=owned.token
-       AND l.fence=owned.fence AND l.owner_id=owned.owner_id AND l.released_at IS NULL`,
-  [JSON.stringify(leases.map((lease) => ({ resource_key: lease.resourceKey, token: lease.token, fence: lease.fence, owner_id: lease.ownerId }))), reason]);
+  await releaseOwnedComputeLeases(getPool(),
+    JSON.stringify(leases.map((lease) => ({ resource_key: lease.resourceKey, token: lease.token, fence: lease.fence, owner_id: lease.ownerId }))), reason);
 }
 
 async function executeWithRenewedLeases<T>(

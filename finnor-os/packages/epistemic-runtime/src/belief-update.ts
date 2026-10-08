@@ -111,18 +111,12 @@ function confidenceFor(records: EvidenceRecord[], canonical: boolean): Confidenc
       reasonCodes: ["CANONICAL_TRUTH_SELECTED"],
     };
   }
-  const corroboratingOwners = new Set(records.map((record) => `${record.source.owner}:${record.source.ref}`)).size;
   const best = records
     .map((record) => record.confidence)
     .sort((left, right) => confidenceRank(left.level) - confidenceRank(right.level))[0];
-  if (corroboratingOwners > 1 && best && confidenceRank(best.level) <= confidenceRank("MEDIUM")) {
-    return {
-      level: best.level === "VERIFIED" ? "VERIFIED" : "HIGH",
-      basis: "CORROBORATED",
-      heuristicVersion: EPISTEMIC_HEURISTIC_VERSION,
-      reasonCodes: ["MULTIPLE_CONSISTENT_SOURCES"],
-    };
-  }
+  // Distinct citations do not establish independent evidence. This contract has
+  // no independently attested origin/dependence model, so copies and unknown
+  // origins retain the best individual assessment without a corroboration lift.
   return best ? { ...best, reasonCodes: [...best.reasonCodes] } : {
     level: "UNSUPPORTED",
     basis: "NO_SUPPORT",
@@ -294,7 +288,10 @@ function evaluateProposition(
   const newestTime = Math.max(...winnerTier.map(evidenceTime));
   const newest = winnerTier.filter((record) => evidenceTime(record) === newestTime);
   const superseding = newest.filter((record) => (record.supersedesEvidenceRefs?.length ?? 0) > 0);
-  const selectedTier = superseding.length > 0 ? superseding : newest;
+  const explicitlySuperseded = new Set(superseding.flatMap(record => record.supersedesEvidenceRefs ?? []));
+  const remaining = newest.filter(record => !explicitlySuperseded.has(record.id));
+  // Cyclic retraction metadata cannot eliminate the whole competing set.
+  const selectedTier = remaining.length ? remaining : newest;
   const selectedValue = selectedTier[0]!.value;
   const sameTimeConflict = selectedTier.some((record) => !equalJson(record.value, selectedValue));
   const staleValues = winnerTier.filter((record) => evidenceTime(record) < newestTime && !equalJson(record.value, selectedValue));

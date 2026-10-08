@@ -61,6 +61,23 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
   }
   if (projection) {
     const nodes = projection.nodes
+    const companyEdge=projection.edges.find(edge=>edge.fromRef.id===projection.root.entityId&&["deal_company","opportunity_company"].includes(edge.relationship))
+    const programRoot=companyEdge&&/^[0-9a-f-]{36}$/i.test(companyEdge.toRef.id)?{entityType:"external_organization",entityId:companyEdge.toRef.id}:projection.root
+    if(work&&programRoot.entityType==="external_organization"){
+      const ownerBasis={schemaVersion:1 as const,sourceKind:"company_brain" as const,
+        entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],
+        workRefs:[{workId:work.work.id,recordType:"work"}],truthState:"UNKNOWN" as const,
+        asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf}
+      blocks.push({...ownerBasis,id:"capital-program:"+programRoot.entityId,type:"capital_program",title:"Economic arrangements",
+        payload:{root:{entityType:"external_organization",entityId:programRoot.entityId},workId:work.work.id}})
+      blocks.push({...ownerBasis,id:"branch-fabric:"+programRoot.entityId,type:"branch_fabric",title:"Branch rehearsal",
+        payload:{rootId:programRoot.entityId,workId:work.work.id}})
+    }
+    if(programRoot.entityType==="external_organization"){blocks.push({id:"interface-synthesis:"+programRoot.entityId,type:"interface_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Interface acquisition",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"interface_capability"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
+    if(programRoot.entityType==="external_organization"){blocks.push({id:"program-synthesis:"+programRoot.entityId,type:"program_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Analytical method",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"harness_program"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
+    if(programRoot.entityType==="external_organization"){blocks.push({id:"compute-search:"+programRoot.entityId,type:"compute_search",schemaVersion:1,sourceKind:"company_brain",title:"Allocated computation",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"compute_search"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
+    if(programRoot.entityType==="external_organization"){blocks.push({id:"deliberation:"+programRoot.entityId,type:"deliberation_policy",schemaVersion:1,sourceKind:"company_brain",title:"Deliberation",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"deliberation_policy"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
+    if(companyEdge&&/^[0-9a-f-]{36}$/i.test(companyEdge.toRef.id)){blocks.push({id:"evidence-execution:"+companyEdge.toRef.id,type:"evidence_execution",schemaVersion:1,sourceKind:"company_brain",title:"Evidence calculations",payload:{root:{entityType:"external_organization",entityId:companyEdge.toRef.id},workId:work?.work.id??null},entityRefs:[],sourceRefs:[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}],workRefs:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     const select = (...types: string[]) => nodes.filter((node) => types.includes(node.type))
     const conditions = select("pe_closing_condition", "pe_closing_item")
     const risks = select("pe_deal_risk", "pe_finding")
@@ -85,12 +102,12 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
         investmentCaseTitle: underwriting.investmentCase.title,
         modelName: model?.name ?? "Model name unavailable", modelVersion: version?.versionKey ?? null,
         scenarioName: scenario?.name ?? (run?.scenarioId ? "Scenario name unavailable" : "Base case"),
-        runId: run?.id ?? null, status: run?.status ?? "NO RUN", validity: run?.validity ?? "UNKNOWN",
-        outputs: run ? Object.entries(run.result.outputs).map(([nodeId, output]) => ({ nodeId, label: nodeLabel(nodeId), value: financialValue(output.value), unit: output.currency ? `${output.currency} · ${output.unit}` : output.unit, truthClass: output.truthClass })) : [],
-        failedChecks: run?.result.checks.filter((check) => !check.passed).map((check) => ({ nodeId: check.nodeId, code: check.code, message: check.message, severity: check.severity })) ?? [],
+        runId: run?.id ?? null, status: run?.status ?? (underwriting.invalidatedRuns?.length?"INVALIDATED":"NO RUN"), validity: run?.validity ?? "UNKNOWN",
+        outputs: run?.result ? Object.entries(run.result.outputs).map(([nodeId, output]) => ({ nodeId, label: nodeLabel(nodeId), value: financialValue(output.value), unit: output.currency ? `${output.currency} · ${output.unit}` : output.unit, truthClass: output.truthClass })) : [],
+        failedChecks: run?.result?.checks.filter((check) => !check.passed).map((check) => ({ nodeId: check.nodeId, code: check.code, message: check.message, severity: check.severity })) ?? [],
       },
       entityRefs: entityRefs(caseNodes), sourceRefs: sourceRefs(caseNodes), workRefs: run?.workId ? [{ workId: run.workId, recordType: "underwriting_run", recordId: run.id }] : [],
-      truthState: run ? "KNOWN" : "KNOWN_EMPTY", asOf: run?.computedAt ?? underwriting.investmentCase.updatedAt, createdAt: underwriting.investmentCase.createdAt, updatedAt: run?.computedAt ?? underwriting.investmentCase.updatedAt,
+      truthState: !run&&underwriting.invalidatedRuns?.length?"STALE":run ? "KNOWN" : "KNOWN_EMPTY", asOf: run?.computedAt ?? underwriting.investmentCase.updatedAt, createdAt: underwriting.investmentCase.createdAt, updatedAt: run?.computedAt ?? underwriting.investmentCase.updatedAt,
     })
   }
   if (ic) {

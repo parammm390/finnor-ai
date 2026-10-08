@@ -1,0 +1,9 @@
+[
+  {"id":"development-a","split":"induction","company":"synthetic-a","price":"120","debt":"70","ebitda":"20","fee":"2","liability":"0","currency":"USD","frequency":"annual"},
+  {"id":"development-b","split":"induction","company":"synthetic-b","price":"180","debt":"80","ebitda":"40","fee":"4","liability":"0","currency":"USD","frequency":"annual"},
+  {"id":"development-failed","split":"adverse","company":"synthetic-failed","price":"80","debt":"20","ebitda":"0","fee":"1","liability":"0","currency":"USD","frequency":"annual"},
+  {"id":"held-apart-alias","split":"held-apart","company":"synthetic-c","price":"245","debt":"100","ebitda":"50","fee":"5","liability":"0","currency":"USD","frequency":"annual"},
+  {"id":"held-apart-composition","split":"held-apart","company":"synthetic-d","price":"245","debt":"100","ebitda":"50","fee":"5","liability":"20","currency":"USD","frequency":"annual"},
+  {"id":"held-apart-currency","split":"mismatch","company":"synthetic-e","price":"300","debt":"110","ebitda":"50","fee":"5","liability":"0","currency":"EUR","frequency":"annual"},
+  {"id":"held-apart-frequency","split":"mismatch","company":"synthetic-f","price":"400","debt":"100","ebitda":"20","fee":"2","liability":"0","currency":"USD","frequency":"monthly"}
+]

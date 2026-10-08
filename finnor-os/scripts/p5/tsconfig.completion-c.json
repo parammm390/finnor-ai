@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {"allowImportingTsExtensions": true},
+  "include": ["test-support.mts", "run-browser-fixture.mts"],
+  "exclude": ["../../node_modules", "../../**/node_modules", "../../**/.next"]
+}

@@ -4,6 +4,7 @@
 import { z } from "zod";
 import type { ToolCallResult, RetryPolicy } from "./wrap";
 import { wrappedCall, DEFAULT_RETRY } from "./wrap";
+import { IntegrationError } from "./errors";
 import { createHash } from "node:crypto";
 import { ensureSecretsLoaded, minimizeExternalInput } from "@finnor/security";
 import {
@@ -39,6 +40,23 @@ export interface ToolRuntimeContext {
   providerIdempotencyKey?: string;
   providerIdempotencyScope?: string;
   providerIdempotencyExpiresAt?: Date;
+  /** Trusted worker verifier, invoked before every physical adapter entry.
+   * Same-process validation is bounded to trusted plugins, not hostile isolation. */
+  beforeConsequentialDispatch?: (request: ConsequentialDispatchRequest) => Promise<void>;
+  semanticMemberKey?: string;
+}
+
+export interface ConsequentialDispatchRequest {
+  toolName: string;
+  provider: string;
+  input: Readonly<Record<string, unknown>>;
+  runtime: Readonly<ToolRuntimeContext>;
+}
+
+function freezeInput(value: unknown): void {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return;
+  for (const child of Object.values(value)) freezeInput(child);
+  Object.freeze(value);
 }
 
 export interface ToolExecutionContract {
@@ -123,6 +141,10 @@ export class ToolRegistry {
     runtime: Readonly<ToolRuntimeContext>,
   ): Promise<ToolCallResult> {
     initObservability();
+    if(runtime.tenantId&&(runtime.businessEffectId||runtime.domainActionId)){
+      const {withTenant}=await import('@finnor/db');
+      await withTenant(runtime.tenantId,db=>(async()=>{await (await import('../../db/governed-egress')).assertNativeEffectAdapterAdmission(db,runtime.tenantId!,runtime,'OFFICE_CONNECTOR');})(),runtime.actorId);
+    }
     await ensureSecretsLoaded();
     const tool = this.tools.get(name);
     if (!tool) {
@@ -147,7 +169,8 @@ export class ToolRegistry {
         error: `Invalid input for ${name}: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
       };
     }
-    const safeInput = tool.piiAllowlist ? minimizeExternalInput(parsed.data, tool.piiAllowlist) : parsed.data;
+    const safeInput = structuredClone(tool.piiAllowlist ? minimizeExternalInput(parsed.data, tool.piiAllowlist) : parsed.data);
+    freezeInput(safeInput);
     const start = Date.now();
     const invocationContext: ProviderInvocationContext | null = executionContract.effect === "consequential"
       ? {
@@ -176,7 +199,16 @@ export class ToolRegistry {
         ...(invocationContext ? {
           audit: {
             prepare: (ordinal: number) => prepareProviderInvocation(invocationContext, ordinal),
-            requestMayHaveLeft: (invocationId: string) => markProviderRequestMayHaveLeft(invocationContext.tenantId, invocationId),
+            requestMayHaveLeft: async (invocationId: string) => {
+              if (runtime.businessEffectId && !runtime.beforeConsequentialDispatch) {
+                throw new IntegrationError(tool.integration, "Effect-bound dispatch lacks the current worker verifier", false, "auth", "definite_pre_dispatch");
+              }
+              if (runtime.beforeConsequentialDispatch) {
+                try { await runtime.beforeConsequentialDispatch({ toolName: name, provider: tool.integration, input: safeInput, runtime }); }
+                catch (error) { throw new IntegrationError(tool.integration, error instanceof Error ? error.message : "Dispatch admission unavailable", false, "auth", "definite_pre_dispatch"); }
+              }
+              await markProviderRequestMayHaveLeft(invocationContext.tenantId, invocationId);
+            },
             acknowledged: (invocationId: string, output: Record<string, unknown>) => recordProviderInvocationAcknowledged(invocationContext, invocationId, output),
             failed: (invocationId: string, failure: { kind: string; message: string; definitePreDispatch: boolean; definiteRejection?: boolean }) => recordProviderInvocationFailure(invocationContext, invocationId, failure),
           },
@@ -202,6 +234,7 @@ export interface ToolCallContext {
   workflowStepClaimId?: string;
   /** Deterministic namespace for independently queued targets/batches of one action. */
   operationKeyPrefix?: string;
+  beforeConsequentialDispatch?: ToolRuntimeContext["beforeConsequentialDispatch"];
 }
 
 /**
@@ -281,10 +314,11 @@ export class ScopedToolRegistry extends ToolRegistry {
     if (contract?.effect === "read_only") return this.base.callWithRuntimeContext(name, input, this.runtimeContext());
     const safeKey = createHash("sha256").update(semanticKey).digest("hex").slice(0, 32);
     const operationKey = `${this.ctx.operationKeyPrefix ? `${this.ctx.operationKeyPrefix}:` : ""}${name}:semantic:${safeKey}`;
-    return this.callForOperation(name, input, operationKey);
+    return this.callForOperation(name, input, operationKey, semanticKey);
   }
 
-  private async callForOperation(name: string, input: Record<string, unknown>, operationKey: string): Promise<ToolCallResult> {
+  private async callForOperation(name: string, suppliedInput: Record<string, unknown>, operationKey: string, semanticMemberKey?: string): Promise<ToolCallResult> {
+    const input = structuredClone(suppliedInput);
     const requestHash = hashInput(input);
     const declaredProvider = this.base.integrationFor(name) ?? undefined;
     const provider = declaredProvider;
@@ -347,6 +381,8 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.workflowStepClaimId ? { workflowStepClaimId: this.ctx.workflowStepClaimId } : {}),
       providerOperationAttemptId: claim.providerOperationAttemptId,
       providerOperationRequestHash: requestHash,
+      ...(this.ctx.beforeConsequentialDispatch ? { beforeConsequentialDispatch: this.ctx.beforeConsequentialDispatch } : {}),
+      ...(semanticMemberKey ? { semanticMemberKey } : {}),
       ...(claim.operation.providerIdempotencyKey ? { providerIdempotencyKey: claim.operation.providerIdempotencyKey } : {}),
       ...(claim.operation.providerIdempotencyScope ? { providerIdempotencyScope: claim.operation.providerIdempotencyScope } : {}),
       ...(claim.operation.providerIdempotencyExpiresAt ? { providerIdempotencyExpiresAt: claim.operation.providerIdempotencyExpiresAt } : {}),

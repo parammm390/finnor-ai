@@ -238,7 +238,7 @@ function assertSolverBlock(block: CircularBlock, nodes: Readonly<Record<string, 
   if (d(block.settings.absoluteTolerance).isNegative() || d(block.settings.relativeTolerance).isNegative()) fail("INVALID_SOLVER_BLOCK", "Solver tolerances must be nonnegative");
 }
 
-function buildExecutionOrder(nodes: Readonly<Record<string, ModelNode>>, blocks: readonly CircularBlock[]): string[] {
+function buildExecutionOrder(nodes: Readonly<Record<string, ModelNode>>, blocks: readonly CircularBlock[], checkpoint?: () => void): string[] {
   const membership = new Map<string, string>();
   for (const block of blocks) assertSolverBlock(block, nodes, membership);
   const components = new Set<string>();
@@ -247,6 +247,7 @@ function buildExecutionOrder(nodes: Readonly<Record<string, ModelNode>>, blocks:
   const incoming = new Map<string, Set<string>>([...components].map((id) => [id, new Set()]));
   const outgoing = new Map<string, Set<string>>([...components].map((id) => [id, new Set()]));
   for (const node of Object.values(nodes)) {
+    checkpoint?.();
     const target = componentOf(node.id);
     for (const dependency of node.dependencies) {
       const source = componentOf(dependency);
@@ -258,16 +259,44 @@ function buildExecutionOrder(nodes: Readonly<Record<string, ModelNode>>, blocks:
       outgoing.get(source)!.add(target);
     }
   }
-  const ready = [...components].filter((id) => incoming.get(id)!.size === 0).sort();
+  // Preserve the original lexicographically smallest ready-component order,
+  // without re-sorting a large fan-out frontier for every inserted component.
+  const ready: string[] = [];
+  const push = (id: string): void => {
+    let index = ready.push(id) - 1;
+    while (index > 0) {
+      const parent = (index - 1) >> 1;
+      if (ready[parent]! <= id) break;
+      ready[index] = ready[parent]!;
+      index = parent;
+    }
+    ready[index] = id;
+  };
+  const pop = (): string => {
+    const first = ready[0]!, last = ready.pop()!;
+    if (ready.length) {
+      let index = 0;
+      while (index * 2 + 1 < ready.length) {
+        let child = index * 2 + 1;
+        if (child + 1 < ready.length && ready[child + 1]! < ready[child]!) child++;
+        if (last <= ready[child]!) break;
+        ready[index] = ready[child]!;
+        index = child;
+      }
+      ready[index] = last;
+    }
+    return first;
+  };
+  for (const id of components) if (incoming.get(id)!.size === 0) push(id);
   const componentOrder: string[] = [];
   while (ready.length) {
-    const current = ready.shift()!;
+    checkpoint?.();
+    const current = pop();
     componentOrder.push(current);
     for (const next of [...outgoing.get(current)!].sort()) {
       incoming.get(next)!.delete(current);
       if (incoming.get(next)!.size === 0) {
-        ready.push(next);
-        ready.sort();
+        push(next);
       }
     }
   }
@@ -290,7 +319,8 @@ function semanticModel(model: UnderwritingModelIR): unknown {
   };
 }
 
-export function compileUnderwritingModel(model: UnderwritingModelIR): CompiledUnderwritingModel {
+export function compileUnderwritingModel(model: UnderwritingModelIR, checkpoint?: () => void): CompiledUnderwritingModel {
+  checkpoint?.();
   if (!model || model.schemaVersion !== UNDERWRITING_MODEL_SCHEMA_VERSION) fail("MODEL_SCHEMA_INVALID", "Unsupported underwriting ModelIR schema");
   if (!MODEL_KEY.test(model.modelKey) || typeof model.modelVersion !== "string" || !model.modelVersion.trim()) fail("MODEL_SCHEMA_INVALID", "Model identity is invalid");
   if (!model.minimumEngineVersion.startsWith("finnor-underwriting-engine/1.")) {
@@ -303,11 +333,13 @@ export function compileUnderwritingModel(model: UnderwritingModelIR): CompiledUn
   }
   const nodes: Record<string, ModelNode> = {};
   for (const node of model.nodes) {
+    checkpoint?.();
     assertNodeMetadata(node);
     if (nodes[node.id]) fail("DUPLICATE_NODE", "Model contains a duplicate node ID", { nodeId: node.id });
     nodes[node.id] = node;
   }
   for (const node of model.nodes) {
+    checkpoint?.();
     for (const dependency of node.dependencies) if (!nodes[dependency]) fail("MISSING_DEPENDENCY", "Node dependency does not exist", { nodeId: node.id, dependency });
     assertExpressionNode(node, nodes);
     if (node.kind === "constant" && node.valueType === "decimal") {
@@ -354,11 +386,12 @@ export function compileUnderwritingModel(model: UnderwritingModelIR): CompiledUn
       ids.add(tranche.id);
     }
   }
-  const executionOrder = buildExecutionOrder(nodes, model.circularBlocks ?? []);
+  const executionOrder = buildExecutionOrder(nodes, model.circularBlocks ?? [], checkpoint);
   const dependencyGraph: Record<string, readonly string[]> = {};
   const dependentsGraph: Record<string, string[]> = {};
   for (const id of Object.keys(nodes)) dependentsGraph[id] = [];
   for (const node of model.nodes) {
+    checkpoint?.();
     dependencyGraph[node.id] = Object.freeze([...node.dependencies]);
     for (const dependency of node.dependencies) dependentsGraph[dependency]!.push(node.id);
   }

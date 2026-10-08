@@ -1,0 +1,7 @@
+{
+  "version": "1.7.11",
+  "archive": "https://github.com/rhysd/actionlint/releases/download/v1.7.11/actionlint_1.7.11_darwin_arm64.tar.gz",
+  "archiveSha256": "a21ba7366d8329e7223faee0ed69eb13da27fe8acabb356bb7eb0b7f1e1cb6d8",
+  "officialChecksumVerified": true,
+  "binary": "/var/folders/qp/j_yc8vfs6pd0mrx0xrb722640000gn/T/finnor-actionlint-9qy5esng/actionlint"
+}

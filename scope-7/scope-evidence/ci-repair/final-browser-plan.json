@@ -1,0 +1,21 @@
+[
+  {
+    "id": "public-product-browser",
+    "command": [
+      "npx",
+      "playwright",
+      "test",
+      "e2e/private-equity-product-contract.spec.ts",
+      "--reporter=list"
+    ]
+  },
+  {
+    "id": "lighthouse",
+    "command": [
+      "node",
+      "scripts/lighthouse-gate.mjs",
+      "http://localhost:3088/centropy?lowPower=1",
+      "/Users/paramdave/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+    ]
+  }
+]

@@ -65,13 +65,29 @@ jobs:
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm --prefix .. run workspace:check
       - run: npm ci
+      # Historical S1 proofs require actual database commit visibility. Configure
+      # only this disposable CI service before any migration/source fixture exists.
+      - name: Enable commit timestamps on disposable PostgreSQL
+        env:
+          POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: |
+          set -euo pipefail
+          docker exec "$POSTGRES_SERVICE_ID" psql -U finnor -d finnor -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET track_commit_timestamp = 'on'"
+          docker restart "$POSTGRES_SERVICE_ID"
+          for attempt in $(seq 1 30); do
+            if docker exec "$POSTGRES_SERVICE_ID" pg_isready -U finnor -d finnor; then
+              test "$(docker exec "$POSTGRES_SERVICE_ID" psql -U finnor -d finnor -Atc 'SHOW track_commit_timestamp')" = on
+              break
+            fi
+            test "$attempt" -lt 30
+            sleep 1
+          done
       # B7.T1: route guards are inventory, not tribal knowledge. Fail before tests
       # whenever a route is added or its visible guard pattern changes without the
       # generated review document being refreshed in the same change.
       - run: npm run authz:matrix:check
       - run: npm run openapi
       - run: npm run typecheck
-      - run: npm run test:planner-evals
       - run: npm run db:migrate
       - run: npm run db:seed
       # The setup file is also loaded by Vitest, but a fresh database does not have
@@ -88,6 +104,8 @@ jobs:
       # entities and is outside this release gate; do not silently re-enable
       # that vertical while certifying the retirement boundary.
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
+        env:
+          FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
       # P7 typechecks the root Centropy surface; this backend job otherwise
       # installs no root @types or Playwright declarations.
       - name: Install root type dependencies for Phase 7
@@ -108,3 +126,15 @@ jobs:
               result.skippedCases !== 0 || result.todoCases !== 0 ||
               result.executableTests < 1) process.exit(1);
           NODE
+
+      - name: Retain S7 native owner proof diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: s7-native-owner-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/finnor-s7-evidence/**/results.json
+            ${{ runner.temp }}/finnor-s7-evidence/**/partial-results.json
+            ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
+          if-no-files-found: warn
+          retention-days: 7

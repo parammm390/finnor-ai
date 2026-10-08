@@ -85,17 +85,6 @@ export function renderTemplate(template: string, values: Record<string, unknown>
   });
 }
 
-/** §5.5: "thresholds live in policy rows, not code." Every answer action reads its
- *  retrieval confidence threshold the same way — a plain number under
- *  domain_policies.policy.retrievalConfidenceThreshold, shared by all four answer
- *  actions so a dealer configures this once per action type, not per plugin's own
- *  bespoke config key. Returns undefined (not a fabricated default) when unset —
- *  hybridRetrieve's own DEFAULT_CONFIDENCE_THRESHOLD applies in that case. */
-export function readConfidenceThreshold(policy: DomainPolicy): number | undefined {
-  const raw = (policy.policy as Record<string, unknown> | undefined)?.retrievalConfidenceThreshold;
-  return typeof raw === "number" ? raw : undefined;
-}
-
 /**
  * Stub plugin factory (§31 pattern): valid, typed, placeholder-marked. Registers its
  * action types, validates/drafts real drafts, and returns an explicit not_implemented
