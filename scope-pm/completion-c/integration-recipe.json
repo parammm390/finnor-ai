@@ -1,0 +1,265 @@
+{
+  "schema": "finnor.completion-c.integration-recipe.v1",
+  "branch": "completion/track-c-2026-10-07",
+  "declaredReleaseParent": "d8d72f8f37f20761e7cd7d8517b80acaa124115a",
+  "parentMeaning": "PUBLISHED_S7_DRAFT_REPOSITORY_QUALIFIED_NOT_PROTECTED_FIELD_ADMITTED",
+  "canonicalP5": {
+    "commit": "957971997d437d126e718511c1ea673745ef1c84",
+    "tree": "57deb10af7673f6381da4da26d4839ec32b0fea0",
+    "parent": "94423a17ac24992f4edaf12b0ab99d6731a80a7e",
+    "exactFourPatchReconstruction": "PASS",
+    "adopted": "BACKEND_AND_CANONICAL_FRONTEND_JOIN_NOT_FULL_DELIVERY",
+    "poolAlternativeEvidence": false
+  },
+  "adoptedPeerGenerations": [
+    {
+      "track": "A",
+      "generation": "a394dea6220f7524653bfefd7f620ce974b5095bfd85cb212e507e76de437563",
+      "commit": "310dc58d05c61ae6cb9536753768be49604143df",
+      "tree": "721bb02b65e802c70809c84b27bdcf4942607652",
+      "state": "EARLY_CALLABLE_PORTS_ALL_GATES_UNPASSED",
+      "adopted": "REVIEWED_OWNER_DELTAS_SHARED_JOINS_APPEND_ONLY_M2_SQL_NOT_ORIGINAL_COMPLETION",
+      "sourceReconstruction": "22_EXACT_PARENT_TREES_PASS",
+      "originalGates": "UNQUALIFIED"
+    }
+  ],
+  "observedPeerGenerations": [
+    {
+      "track": "A",
+      "generation": "a394dea6220f7524653bfefd7f620ce974b5095bfd85cb212e507e76de437563",
+      "commit": "310dc58d05c61ae6cb9536753768be49604143df",
+      "tree": "721bb02b65e802c70809c84b27bdcf4942607652",
+      "state": "EARLY_CALLABLE_PORTS_ALL_GATES_UNPASSED",
+      "adopted": "REVIEWED_OWNER_DELTAS_SHARED_JOINS_APPEND_ONLY_M2_SQL_NOT_ORIGINAL_COMPLETION",
+      "sourceReconstruction": "22_EXACT_PARENT_TREES_PASS",
+      "originalGates": "UNQUALIFIED",
+      "integrity": "97_ARTIFACTS_BUNDLE_22_TREES_VERIFIED"
+    },
+    {
+      "commit": "729aa8075cdde70921ee9df2f367ca3c3140c2d2",
+      "generation": "42e1f4e5005a10ba4252e919f28b08bfb05ccf68929384f16436d5e397686dd5",
+      "publishedAt": "2026-10-07T03:49:17.211175+00:00",
+      "receipt": "generations/42e1f4e5005a10ba4252e919f28b08bfb05ccf68929384f16436d5e397686dd5/receipt.json",
+      "receiptSha256": "2624b1e0c37225a0711317f8a2f2b3e6a45f3e70af4352a437e2d666d37c933b",
+      "state": "EARLY_CALLABLE_PORTS_ORIGINAL_MISSIONS_INCOMPLETE",
+      "track": "B",
+      "tree": "ccaf23002987d12393786102dd3c8948da68ac50",
+      "adopted": false,
+      "integrity": "23_ARTIFACTS_BUNDLE_EXACT_PARENT_TREE_VERIFIED"
+    }
+  ],
+  "orderedPatches": [
+    {
+      "phase": "P4",
+      "receipt": "evidence/integration/P4-02-import.json"
+    },
+    {
+      "phase": "P1_WITH_FROZEN_M1_P3",
+      "receipt": "evidence/integration/P1-01-import.json",
+      "manualConflictsResolved": true
+    },
+    {
+      "phase": "P2",
+      "receipt": "evidence/integration/P2-01-import.json"
+    },
+    {
+      "phase": "S8",
+      "receipt": "evidence/integration/S8-01-import.json"
+    },
+    {
+      "phase": "P5",
+      "receipt": "evidence/integration/P5-02-import.json"
+    },
+    {
+      "phase": "S8_AUTHENTIC_OWNER_SEAMS",
+      "patch": "evidence/integration/S8-owner-seams-original.patch"
+    },
+    {
+      "phase": "CANONICAL_COMPANY_BRAIN_API",
+      "receipt": "evidence/integration/API-01-import.json"
+    },
+    {
+      "phase": "CANONICAL_FRONTEND",
+      "receipt": "evidence/integration/FRONTEND-01-import.json",
+      "manualConflictsResolved": true
+    },
+    {
+      "phase": "AUTHENTIC_S8_LEDGER_FIXTURE",
+      "receipt": "evidence/integration/LEDGER_S8-01-import.json"
+    },
+    {
+      "phase": "SHARED_FORWARD_MIGRATIONS",
+      "receipt": "evidence/integration/source-migrations.json"
+    },
+    {
+      "phase": "P7_RESTRICTED_NATIVE",
+      "source": "finnor-os/packages/private-equity/src/live-recompilation",
+      "firstCheckpoint": "633766ba186565c4c34ebe4f08ef1e75829c90f8",
+      "authenticatedHttpAndCanvas": "PENDING_NEXT_IMMUTABLE_CHECKPOINT"
+    },
+    {
+      "phase": "TRACK_A_OWNER-01",
+      "receipt": "evidence/integration/TRACK_A_OWNER-01-import.json",
+      "manualConflictsResolved": false
+    },
+    {
+      "phase": "TRACK_A_SHARED-01",
+      "receipt": "evidence/integration/TRACK_A_SHARED-01-import.json",
+      "manualConflictsResolved": false
+    },
+    {
+      "phase": "TRACK_A_DISPATCH-01",
+      "receipt": "evidence/integration/TRACK_A_DISPATCH-01-import.json",
+      "manualConflictsResolved": true
+    },
+    {
+      "phase": "TRACK_A_HARNESS-01",
+      "receipt": "evidence/integration/TRACK_A_HARNESS-01-import.json",
+      "manualConflictsResolved": false
+    },
+    {
+      "phase": "TRACK_A_FRONTEND-01",
+      "receipt": "evidence/integration/TRACK_A_FRONTEND-01-import.json",
+      "manualConflictsResolved": true
+    },
+    {
+      "phase": "TRACK_A_APPEND_ONLY_M2_SQL",
+      "receipt": "evidence/integration/track-a-source-migrations.json"
+    }
+  ],
+  "migrationPlan": "migration-plan.json",
+  "independentFinalReconstruction": "NOT_RUN",
+  "runtimeClosure": "PENDING",
+  "cleanInstall": "NOT_RUN",
+  "publishedHistoryUpgrade": {
+    "exactS7Mechanics": "PASS_WITH_PHYSICAL_INTERRUPT_AND_RESTART",
+    "evidence": "evidence/track-a-adoption-01/p7-native-18/migration-installation.json",
+    "finalTenPhaseUpgrade": "NOT_RUN",
+    "privateAppliedHistories": "NOT_RECONCILED",
+    "registryCount": 166,
+    "head": "0164_completion_c_m2_control_continuation.sql"
+  },
+  "mountedStory": {
+    "status": "FAIL_WORLD_ROOT_THEN_BLOCKED_NATIVE_KEYBOARD_FOCUS",
+    "evidence": "../phase-10-p5-interface-synthesis/evidence/completion-c-mounted-14/result.json",
+    "manualFocusProbeAndCapture": "PASS_HARMLESS_PROBE_NOT_MOUNTED_ACCEPTANCE",
+    "persistentPreview": "../phase-10-p5-interface-synthesis/evidence/completion-c-persistent-16/server-receipt.json",
+    "authCspRepair": "CONFIGURED_DEVELOPMENT_LOOPBACK_ONLY_PRODUCTION_UNCHANGED",
+    "originalGate": "UNQUALIFIED"
+  },
+  "push": false,
+  "pullRequest": null,
+  "deployment": null,
+  "ownerRequests": [
+    {
+      "owner": "A",
+      "predicate": "ORIGINAL_MISSIONS_AND_GATES_UNQUALIFIED_M1_M2_MOUNTED_CHALLENGES_NOT_RUN"
+    },
+    {
+      "owner": "B",
+      "predicate": "VERIFIED_EARLY_GENERATION_REVIEWED_CUMULATIVE_ADOPTION_PENDING"
+    },
+    {
+      "owner": "C",
+      "predicate": "P1_ORIGINAL_RED_MISSING_P3_ROUTE_AND_BASELINE_P5_ABSENCE_ASSERTION_RETAINED"
+    }
+  ],
+  "affectedOriginalRegressions": [
+    {
+      "suite": "m1-01",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/m1-01/driver-receipt.json",
+      "counts": {
+        "PASS": 24,
+        "FAIL": 0,
+        "NOT_RUN": 1
+      },
+      "driverExit": 0,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "m2-03",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/m2-03/driver-receipt.json",
+      "counts": {
+        "PASS": 5,
+        "FAIL": 0,
+        "NOT_RUN": 13
+      },
+      "driverExit": 0,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "m2-04",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/m2-04/driver-receipt.json",
+      "counts": {
+        "PASS": 6,
+        "FAIL": 0,
+        "NOT_RUN": 12
+      },
+      "driverExit": 0,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "m2-05",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/m2-05/driver-receipt.json",
+      "counts": {
+        "PASS": 6,
+        "FAIL": 0,
+        "NOT_RUN": 12
+      },
+      "driverExit": 0,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "p4-01-red",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/p4-01-red/driver-receipt.json",
+      "counts": {
+        "PASS": 14,
+        "FAIL": 1,
+        "NOT_RUN": 0
+      },
+      "driverExit": 1,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "p4-02",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/p4-02/driver-receipt.json",
+      "counts": {
+        "PASS": 45,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "driverExit": 0,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "p1-01",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/p1-01/driver-receipt.json",
+      "counts": {
+        "PASS": 27,
+        "FAIL": 2,
+        "NOT_RUN": 0
+      },
+      "driverExit": 1,
+      "sourceStability": "PASS",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    },
+    {
+      "suite": "p2-01",
+      "receipt": "scope-pm/completion-c/evidence/track-a-adoption-01/p2-01/driver-receipt.json",
+      "counts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "driverExit": 0,
+      "sourceStability": "NOT_CAPTURED_BY_ORIGINAL_P2_WRAPPER",
+      "qualification": "ACTUAL_NATIVE_SELECTED_OR_ORIGINAL_OWNER_RUN_NOT_ORIGINAL_GATE"
+    }
+  ]
+}

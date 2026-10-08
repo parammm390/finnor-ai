@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.m3.continuation-producer-receipt.v1",
+  "repoLocation": {
+    "type": "git",
+    "repoUrl": "https://github.com/parammm390/finnor-ai/"
+  },
+  "observedAt": "2026-10-05T23:44:07.985622+00:00",
+  "workspace": "/Users/paramdave/.factory/worktrees/pm-m3-capital-program/FINNOR",
+  "branch": "codex/pm-m3-capital-program",
+  "gitCommonDirectory": "/Users/paramdave/.factory/worktrees/pm-m1-decision-slice/FINNOR/.git",
+  "featureBase": {
+    "commit": "f4b74450f7fd21a7b7080db2b2a9c72488c5fe46",
+    "tree": "4760bb1eff3c11239ca7dc8e0b382b13f687e2e2"
+  },
+  "m1": {
+    "commit": "c1e2aa3d55ccfeaaad12978d9d3bb5ce7723f733",
+    "tree": "112ddc7ee1b2080c65448aa3cd8b14371d9bb2cb",
+    "finalJoin": "PENDING_UNCOMMITTED_OWNER_HANDOFF"
+  },
+  "p4Import": "32d7d6ba6e8bfe344a04a63ffee34e4904df654e",
+  "committedJoins": {
+    "P1": null,
+    "P3": null,
+    "M4": null,
+    "M2": null
+  },
+  "closure": {
+    "historicalFreeze": "scope-evidence/continuation-predecessor-20261005.json",
+    "historicalFreezeSha256": "88afba17211d2abadb6b665b7e886a3a81dd8864b0ae2db5944a74faf8dc3027",
+    "fileCount": 1577,
+    "frozenClosureSha256": "88afba17211d2abadb6b665b7e886a3a81dd8864b0ae2db5944a74faf8dc3027",
+    "lockfiles": [
+      {
+        "path": "package-lock.json",
+        "sha256": "6a294c8ad8e54a88ae07d63f8ec193739f860a2696aef030abdc84268b311521"
+      },
+      {
+        "path": "finnor-os/package-lock.json",
+        "sha256": "163e7ee31057514bfc3c19efab8e567278f553cb9895ad548979cf43e58e27e0"
+      }
+    ],
+    "readinessHead": "0158_m3_capital_program.sql",
+    "migrationCount": 155,
+    "openApiPathCount": 178
+  },
+  "exclusions": [
+    "finnor-os/scripts/p4/run-owner-regressions.mts",
+    "scope-pm/phase-05-m3-capital-program/base-receipt.json"
+  ],
+  "publicAncestry": "PR_PUBLIC_BASE_UNRESOLVED_NO_PUBLISH_OR_DEPLOY",
+  "qualification": "PROVISIONAL_NATIVE_CUMULATIVE_PREDECESSOR_NOT_FINAL_M1_OR_ORIGINAL_GATE"
+}

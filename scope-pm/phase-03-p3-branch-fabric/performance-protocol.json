@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.p3.performance-protocol.v1",
+  "room": "PUBLIC_H0_MECHANICS_NOT_SEALED_COMPARATIVE",
+  "minimumPairs": 12,
+  "modes": ["COLD_BUILD", "CLEAN_WARM_IMAGE", "PRIVATE_STATE_CLONE", "VERIFIED_CHECKPOINT_RESTORE"],
+  "matchedInputs": ["allocation-95-3.5-0", "allocation-95-3.0-0", "allocation-95-3.0-25", "financing-C_01-fee2000"],
+  "perAttemptWallMs": 30000,
+  "perRequestWallMs": 120000,
+  "maxAttempts": 3,
+  "concurrency": 1,
+  "acknowledgementP95TargetMs": 100,
+  "warmImprovementClaimRequires": {"pairedMedianRatioAtMost": 0.8, "lower95PercentPairedImprovementAbove": 0},
+  "analysis": "Retain all failed/unused/rejected cells. Report paired median, min/max, empirical P95 and paired bootstrap by request, fixed analysis seed17. No scored isolation denominator on Darwin. Report physical-unit development throughput only. USD/frontier admission is unpassed when missing.",
+  "stoppingRule": "Complete12 pairs or stop for observed hard budget/runtime failure; no selective rerun or changed oracle. Any amendment is separately recorded before its run.",
+  "costScope": ["preparation", "unused warm cells", "launch", "execution", "checking", "checkpoint read/write", "publication", "failed/cancelled/interrupted/resumed attempts", "storage", "control"],
+  "dollarGate": "UNRECONCILED_NOT_ZERO",
+  "originalP3Gate": "UNPASSED_UNTIL_LINUX_EGRESS_RESOURCE_CRASH_AND_INDEPENDENT_COMPARISON_QUALIFY"
+}

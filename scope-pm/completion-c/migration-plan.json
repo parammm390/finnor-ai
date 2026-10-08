@@ -1,0 +1,59 @@
+{
+  "schema": "finnor.completion-c.forward-migration-plan.v1",
+  "releaseParent": "d8d72f8f37f20761e7cd7d8517b80acaa124115a",
+  "supportedStartingHistories": [
+    "EMPTY",
+    "EXACT_PUBLISHED_S7"
+  ],
+  "privateAppliedHistories": "NOT_YET_RECONCILED_DO_NOT_APPLY_THIS_RECIPE",
+  "publishedSqlBytes": "UNCHANGED",
+  "tracker": "finnor_os._migrations, complete filename, per-file transaction",
+  "source": "957971997d437d126e718511c1ea673745ef1c84",
+  "forward": [
+    {
+      "original": "0155_p4_evidence_execution.sql",
+      "release": "0157_completion_p4_evidence_execution.sql"
+    },
+    {
+      "original": "0156_p3_branch_fabric_candidate.sql",
+      "release": "0158_completion_p3_branch_fabric_candidate.sql"
+    },
+    {
+      "original": "0157_p1_program_synthesis.sql",
+      "release": "0159_completion_p1_program_synthesis.sql"
+    },
+    {
+      "original": "0161_p2_compute_search.sql",
+      "release": "0161_p2_compute_search.sql"
+    },
+    {
+      "original": "0162_p5_interface_acquisition.sql",
+      "release": "0162_p5_interface_acquisition.sql"
+    }
+  ],
+  "p7Slot": "0162z_completion_c_p7_native.sql",
+  "aBMigrationSlots": "TRACK_A_APPEND_ONLY_RESOLVED_TRACK_B_NO_HANDOFF",
+  "currentRegistryCount": 166,
+  "head": "0164_completion_c_m2_control_continuation.sql",
+  "qualification": "166_FILES_EMPTY_OWNER_INSTALL_AND_EXACT_S7_PHYSICAL_INTERRUPT_RESTART_PASS_NOT_FINAL_TEN_PHASE_INSTALL",
+  "trackAForward": [
+    {
+      "original": "0162_m2_deliberation_policy.sql",
+      "release": "0163_completion_c_m2_deliberation_policy.sql",
+      "source": "310dc58d05c61ae6cb9536753768be49604143df",
+      "sha256": "d4b994dda7da9feeab762dc0d1530576c21df9ec73f7447102b27b90ff1282bd",
+      "bytes": 4121,
+      "transformation": "REGISTRY_FILENAME_ONLY_SQL_BYTES_EXACT"
+    },
+    {
+      "original": "0163_m2_control_continuation.sql",
+      "release": "0164_completion_c_m2_control_continuation.sql",
+      "source": "310dc58d05c61ae6cb9536753768be49604143df",
+      "sha256": "f543024e1464c1db1e28690cd5ca048969c8012c7f0847faf72ca70e6448a3cb",
+      "bytes": 1927,
+      "transformation": "REGISTRY_FILENAME_ONLY_SQL_BYTES_EXACT"
+    }
+  ],
+  "preTrackAHistoryEvidence": "../phase-09-p7-live-recompilation/evidence/native-14-latest-upgrade/migration-installation.json",
+  "selectedHistoryEvidence": "evidence/track-a-adoption-01/p7-native-18/migration-installation.json"
+}

@@ -1,0 +1,18 @@
+{
+  "status": "PROVISIONAL_COMMITTED_M1_NATIVE_BASE_FINAL_JOIN_PENDING",
+  "sourceRepo": "/Users/paramdave/.factory/worktrees/pm-m1-decision-slice/FINNOR",
+  "checkout": "/Users/paramdave/.factory/worktrees/pm-m3-capital-program/FINNOR",
+  "branch": "codex/pm-m3-capital-program",
+  "commonDir": "/Users/paramdave/.factory/worktrees/pm-m1-decision-slice/FINNOR/.git",
+  "base": {
+    "commit": "c1e2aa3d55ccfeaaad12978d9d3bb5ce7723f733",
+    "tree": "112ddc7ee1b2080c65448aa3cd8b14371d9bb2cb",
+    "parent": "32d7d6ba6e8bfe344a04a63ffee34e4904df654e"
+  },
+  "p4ImportCommit": "32d7d6ba6e8bfe344a04a63ffee34e4904df654e",
+  "limitations": [
+    "exact final ordinary-native M1 committed handoff pending",
+    "no active peer worktree files imported"
+  ],
+  "observedAt": "2026-10-05T05:22:50Z"
+}
