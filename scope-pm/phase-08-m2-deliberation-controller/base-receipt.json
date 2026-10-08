@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.p2.exact-reconstruction.v1",
+  "completedAt": "2026-10-05T23:20:40.021416+00:00",
+  "checkout": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/FINNOR",
+  "gitCommonDir": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/FINNOR/.git",
+  "baseCommit": "fb003abd3fc0c99c9cc25db0d153f2580e097de9",
+  "baseTree": "e625ead88b69962371f590a5b2480b6309f9589c",
+  "finalCommit": "94423a17ac24992f4edaf12b0ab99d6731a80a7e",
+  "finalTree": "935d784533ff1706f3cb8bdab1e7f82e923b6cd4",
+  "finalParents": [
+    "0db37b5dffdb7336725be76aeef229bff1658b97"
+  ],
+  "orderedP1Patches": 21,
+  "orderedP2Patches": 8,
+  "trackedFilesVerified": 2518,
+  "byteMismatches": [],
+  "modesAndBlobsMatched": true,
+  "gitStatus": "",
+  "qualification": "EXACT_OFFLINE_SOURCE_RECONSTRUCTION; CLEAN_RUNTIME_EXECUTION_IS_A_SEPARATE_RECEIPT"
+}

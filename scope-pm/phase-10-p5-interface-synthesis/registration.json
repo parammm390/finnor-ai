@@ -1,0 +1,247 @@
+{
+  "schema": "finnor.p5.registration.v1",
+  "registeredAt": "2026-10-06T03:28:00.577Z",
+  "missionSha256": "5977e03c83a927ea01a42ae1b01abdcca1405cf713ee5a5cbc30429e39407417",
+  "families": [
+    {
+      "id": "P5-01",
+      "predicate": "Catalogue semantic mismatch despite similar tool/name: no reuse, authentic pending discovery.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-02",
+      "predicate": "Stale schema/UI witness: old domain quarantined before invocation.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-03",
+      "predicate": "Permitted unseen API discovery: generated module genuinely maps actual withheld schema.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-04",
+      "predicate": "Permitted unseen UI acquisition: generated scoped binding executes actual held-out layout.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-05",
+      "predicate": "Missing test access/observer: admission null/prototype or S6 handoff, not READY.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-06",
+      "predicate": "Discovery performs hidden live write: independently detect/reject, preserve violation.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-07",
+      "predicate": "Malicious docs/schema refs/redirect/import: broker/egress/isolation refusal, no credential leak.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-08",
+      "predicate": "Same-name C_01/C_010 entities: exact ID/account field changed only as requested.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-09",
+      "predicate": "Other tenant/application account: authorization refusal without private target disclosure.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-10",
+      "predicate": "Requested20 observed200: independent predicate rejects, never VERIFIED.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-11",
+      "predicate": "Company name next to different record's changed field: independent exact entity rejection.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-12",
+      "predicate": "Decimal scales/separators/rounding: exact allowed conversion or unsupported refusal.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-13",
+      "predicate": "Currency mismatch/missing conversion: no arbitrary equivalence or hidden FX assumption.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-14",
+      "predicate": "Dates/timezone/unit convention drift: valid domain or quarantine, no reused coefficients.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-15",
+      "predicate": "Explicit null versus missing/empty/zero: independently observed field state distinguishes.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-16",
+      "predicate": "Reordered/duplicate UI controls: stable exact field scope or safe ambiguity refusal.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-17",
+      "predicate": "Submit versus autosave behavior: actual mutation boundary and observation proven.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-18",
+      "predicate": "Partial/truncated response/green toast: acknowledged only, target observer still required.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-19",
+      "predicate": "Strong revision/operation ID mismatch: reject stale/other operation's state.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-20",
+      "predicate": "Credential rotation same semantics: current broker identity checked, secret never in module.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-21",
+      "predicate": "Permission/account change or mid-run revocation: no new forbidden effect/read/current capability.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-22",
+      "predicate": "Unsupported browser/generated protected adapter: original S6 gate refuses before egress.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-23",
+      "predicate": "Crash before durable submission: proven safe retry only under original operation identity.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-24",
+      "predicate": "Write may have left/response lost: one actual mutation, UNKNOWN then bounded reconciliation.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-25",
+      "predicate": "Observation unavailable after mutation: retained UNKNOWN/liability, no fake pass or blind retry.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-26",
+      "predicate": "Idempotency/request/target conflict: exact original binding refusal, no reset.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-27",
+      "predicate": "Worker loss/redelivery/old fence: durable acquisition/replay without renewed grants/publication.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-28",
+      "predicate": "Cancel after possible egress: no mutation replay or unjustified S5 resource release.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-29",
+      "predicate": "Composition validity intersection: unsupported postcondition remains pending/refused.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-30",
+      "predicate": "Self-admission/evaluator access: candidate cannot promote itself/read sealed fixtures.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-31",
+      "predicate": "P1/P3 invocation uses actual issued module/domain: no cast or counterfeit branch qualification.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-32",
+      "predicate": "Actual committed P7 drift join: affected proposal/material invalidated; no parallel continuation authority.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-33",
+      "predicate": "Learning/test/recovery versus warm invocation cost: complete once-only accounting or explicit unknown.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    },
+    {
+      "id": "P5-34",
+      "predicate": "Auth cache/retention/corrupt bytes/storage/cleanup: private evidence protected, no late READY claim.",
+      "status": "REGISTERED_NOT_RUN",
+      "oracle": "original predicate, independent persisted requested/decoy state and role/SQL/process observations",
+      "novelty": "PUBLIC_DEVELOPMENT_NOT_SEALED"
+    }
+  ],
+  "fixtureOwner": "scripts/p5/target.mjs; driver reference state and constants not imported by producer",
+  "originalGate": "NOT_RUN"
+}

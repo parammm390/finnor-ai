@@ -1,0 +1,43 @@
+{
+  "schema": "finnor.m2.failure-first-record.v1",
+  "productionEditsAtRun": false,
+  "runs": [
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/failure-first-m2-1",
+      "resultSHA256": "0b23dd17ce034141d11fa68cdd34621961db707838f596f0c38a78b42ec75a2b",
+      "counts": {
+        "PASS": 0,
+        "FAIL": 1,
+        "NOT_RUN": 4
+      },
+      "failures": [
+        {
+          "id": "M2-A-original-P1-executed-module",
+          "message": "{\"status\":404,\"body\":{\"error\":\"Unknown Company Brain operation\",\"code\":\"NOT_FOUND\"}}\n\n404 !== 202\n",
+          "elapsedMs": 12846.724208
+        }
+      ]
+    },
+    {
+      "evidenceDirectory": "/Users/paramdave/.codex/visualizations/2026/10/05/01a10e5c-862f-7370-8f85-ec583dfc6aa8/m2-deliberation/failure-first-m1-deadlines-1",
+      "resultSHA256": "a4000afdec95f6049e5880ea22d3940f5aa74ab6eaad921f67f62b3454938125",
+      "counts": {
+        "PASS": 0,
+        "FAIL": 2,
+        "NOT_RUN": 0
+      },
+      "failures": [
+        {
+          "id": "bounded-owner-io-and-failed-liability",
+          "message": "Native SQL acquisition exceeded the whole request deadline",
+          "elapsedMs": 1529.7090829999997
+        },
+        {
+          "id": "bounded-governor-release-and-retained-expiry",
+          "message": "Physical release extended the whole request envelope",
+          "elapsedMs": 2670.674541999999
+        }
+      ]
+    }
+  ]
+}

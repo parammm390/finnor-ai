@@ -1,0 +1,91 @@
+{
+  "schema": "finnor.p6.evidence-index.v1",
+  "version": "p6-exact-structural-v1",
+  "GateP6": "UNQUALIFIED",
+  "notIndependentScientificSamples": true,
+  "entries": [
+    {
+      "path": "evidence/native-11-overlay/driver-receipt.json",
+      "sha256": "22d14abdfd96028367e7539a78d486c234f3d125d1130a0ed654a91824689c74",
+      "bytes": 1030
+    },
+    {
+      "path": "evidence/mounted-20-overlay/result.json",
+      "sha256": "d6bbf1105af5824d2d35d7fdab04401b07a44d4ec291cfea65ff5ef5a1dc89c4",
+      "bytes": 1116
+    },
+    {
+      "path": "evidence/existing-regressions-02/summary.json",
+      "sha256": "92e935e0f041f6af0ca450af4a8590dd33c0387c23a2a5ff43e862de904119ad",
+      "bytes": 3663
+    },
+    {
+      "path": "evidence/p1-regressions-07/driver-receipt.json",
+      "sha256": "b65c2e331fc17e40c8bacb82dc97fc809befe12116b8437bf9f9ca4257f5615f",
+      "bytes": 2812
+    },
+    {
+      "path": "evidence/p1-capital-06/driver-receipt.json",
+      "sha256": "b539ca0b98b230f6de31ec91cf864a2e8ccb90ca5b8bba836701bba7a1ac4b48",
+      "bytes": 2398
+    },
+    {
+      "path": "evidence/p5-native-01/driver-receipt.json",
+      "sha256": "65688a612962a3b0387d3b51f440184a6226be4da1c50fcdff3aae262b8bb6f8",
+      "bytes": 974
+    },
+    {
+      "path": "evidence/p5-acquisition-01/driver-receipt.json",
+      "sha256": "510fc016eca2da9f036778a56ea0ba2cf0b531fdfd6ad05b255c50a5c9e3a9f0",
+      "bytes": 1009
+    },
+    {
+      "path": "evidence/p5-programme-01/driver-receipt.json",
+      "sha256": "78b25318a4b047ae329db60e5386da007d594eefbc559a4f351958684b6be17e",
+      "bytes": 977
+    },
+    {
+      "path": "evidence/p5-crash-01/driver-receipt.json",
+      "sha256": "64e4b7300ec39958d21364d3d0ad3a857d9a5b2e7fc294f618afe8bbc39fd5c2",
+      "bytes": 973
+    },
+    {
+      "path": "evidence/p7-native-02/results.json",
+      "sha256": "0bb7e7f8fd02527ef2d13c3b4f71a35baa57c46940c409092066d44c8bff3d4a",
+      "bytes": 658550,
+      "originalSha256": "8db4396226c804dab537b328aed94e0e2e3e87eaaa42a7636f39c44e569b47b2",
+      "evidenceRedacted": true
+    },
+    {
+      "path": "evidence/p7-native-02/source-check.json",
+      "sha256": "eeee9aca43ad7174f83d84bf7898954e31599be5e4fefbbfdb47cdf2bf975777",
+      "bytes": 4890
+    },
+    {
+      "path": "evidence/p7-native-02/cleanup.json",
+      "sha256": "30e131a2d113e3743929e883d14ec6a45dad2c50b5fde7074a3ddd1ffc7bd2d8",
+      "bytes": 211
+    },
+    {
+      "path": "evidence/packet-validation-03.json",
+      "sha256": "55055235d5effc477338383fd55a6d23d80dd1868154b8027ea45f8864625672",
+      "bytes": 525
+    },
+    {
+      "path": "evidence/typecheck-overlay-12.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/typecheck-frontend-03.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "legacyOwnerException": "owner-regression-exceptions.md",
+  "finalCut": "RESOLVE_FROM_DELIVERY_MANIFEST",
+  "redactionReceipts": [
+    "evidence/evidence-redaction-01.json",
+    "evidence/evidence-redaction-02.json"
+  ]
+}

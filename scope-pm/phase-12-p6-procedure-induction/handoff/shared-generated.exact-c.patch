@@ -1,0 +1,1871 @@
+diff --git a/finnor-os/openapi.json b/finnor-os/openapi.json
+index d60ac9997..3efef7764 100644
+--- a/finnor-os/openapi.json
++++ b/finnor-os/openapi.json
+@@ -1839,6 +1839,17 @@
+                 "continuation-submit",
+                 "continuation-read",
+                 "continuation-projection",
++                "procedure-experience",
++                "procedure-induce",
++                "procedure-induction-read",
++                "procedure-induction-cancel",
++                "procedure-read",
++                "procedure-component",
++                "procedure-counterexample",
++                "procedure-projection",
++                "procedure-admission-request",
++                "procedure-interface",
++                "procedure-costs",
+                 "deliberation-submit",
+                 "deliberation-read",
+                 "deliberation-projection",
+@@ -14568,6 +14579,699 @@
+         }
+       }
+     },
++    "/api/company-brain/procedure-experience": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "programIds": {
++                    "type": "array",
++                    "items": {
++                      "type": "string",
++                      "format": "uuid"
++                    },
++                    "minItems": 1,
++                    "maxItems": 32
++                  },
++                  "knowledgeCut": {
++                    "type": "string",
++                    "format": "date-time"
++                  },
++                  "mode": {
++                    "type": "string",
++                    "enum": [
++                      "ordinary_disposable",
++                      "protected"
++                    ]
++                  }
++                },
++                "required": [
++                  "programIds",
++                  "knowledgeCut",
++                  "mode"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-induce": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "schema": {
++                    "type": "string",
++                    "const": "finnor.p6.induction-request.v1"
++                  },
++                  "root": {
++                    "type": "object",
++                    "properties": {
++                      "entityType": {
++                        "type": "string",
++                        "enum": [
++                          "pe_strategy",
++                          "pe_opportunity",
++                          "pe_deal",
++                          "pe_fund",
++                          "pe_vehicle",
++                          "external_organization",
++                          "pe_portfolio_holding"
++                        ]
++                      },
++                      "entityId": {
++                        "type": "string",
++                        "format": "uuid"
++                      }
++                    },
++                    "required": [
++                      "entityType",
++                      "entityId"
++                    ],
++                    "additionalProperties": false
++                  },
++                  "workId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "programIds": {
++                    "type": "array",
++                    "items": {
++                      "type": "string",
++                      "format": "uuid"
++                    },
++                    "minItems": 2,
++                    "maxItems": 32
++                  },
++                  "knowledgeCut": {
++                    "type": "string",
++                    "format": "date-time"
++                  },
++                  "idempotencyKey": {
++                    "type": "string",
++                    "minLength": 1,
++                    "maxLength": 160
++                  },
++                  "mode": {
++                    "type": "string",
++                    "enum": [
++                      "ordinary_disposable",
++                      "protected"
++                    ]
++                  }
++                },
++                "required": [
++                  "schema",
++                  "root",
++                  "workId",
++                  "programIds",
++                  "knowledgeCut",
++                  "idempotencyKey",
++                  "mode"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-induction-read": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "inductionId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "inductionId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-induction-cancel": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "inductionId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "inductionId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-read": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "capsuleId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-component": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "ref": {
++                    "type": "object",
++                    "properties": {
++                      "owner": {
++                        "type": "string",
++                        "enum": [
++                          "P1",
++                          "P4",
++                          "P5",
++                          "P6",
++                          "S1",
++                          "S2",
++                          "S3",
++                          "S4",
++                          "S5",
++                          "S6",
++                          "S7",
++                          "S8"
++                        ]
++                      },
++                      "id": {
++                        "type": "string",
++                        "minLength": 1,
++                        "maxLength": 512
++                      },
++                      "version": {
++                        "type": "string",
++                        "minLength": 1,
++                        "maxLength": 128
++                      },
++                      "contentDigest": {
++                        "type": "string",
++                        "pattern": "^[a-f0-9]{64}$"
++                      }
++                    },
++                    "required": [
++                      "owner",
++                      "id",
++                      "version",
++                      "contentDigest"
++                    ],
++                    "additionalProperties": false
++                  }
++                },
++                "required": [
++                  "capsuleId",
++                  "ref"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-counterexample": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "type": {
++                    "type": "string",
++                    "enum": [
++                      "CORRECTION",
++                      "FAILURE",
++                      "UNKNOWN",
++                      "REVOKED"
++                    ]
++                  },
++                  "reason": {
++                    "type": "string",
++                    "minLength": 1,
++                    "maxLength": 2000
++                  },
++                  "idempotencyKey": {
++                    "type": "string",
++                    "minLength": 1,
++                    "maxLength": 160
++                  }
++                },
++                "required": [
++                  "capsuleId",
++                  "type",
++                  "reason",
++                  "idempotencyKey"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-projection": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "root": {
++                    "type": "object",
++                    "properties": {
++                      "entityType": {
++                        "type": "string",
++                        "enum": [
++                          "pe_strategy",
++                          "pe_opportunity",
++                          "pe_deal",
++                          "pe_fund",
++                          "pe_vehicle",
++                          "external_organization",
++                          "pe_portfolio_holding"
++                        ]
++                      },
++                      "entityId": {
++                        "type": "string",
++                        "format": "uuid"
++                      }
++                    },
++                    "required": [
++                      "entityType",
++                      "entityId"
++                    ],
++                    "additionalProperties": false
++                  },
++                  "workId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "root",
++                  "workId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-admission-request": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "capsuleId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-interface": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "programId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "acquisitionId": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "outputKey": {
++                    "type": "string",
++                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
++                  }
++                },
++                "required": [
++                  "capsuleId",
++                  "programId",
++                  "acquisitionId",
++                  "outputKey"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
++    "/api/company-brain/procedure-costs": {
++      "post": {
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "requestBody": {
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "capsuleId": {
++                    "type": "string",
++                    "format": "uuid"
++                  }
++                },
++                "required": [
++                  "capsuleId"
++                ],
++                "additionalProperties": false,
++                "$schema": "http://json-schema.org/draft-07/schema#"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Authorized ordinary procedure preimage or lifecycle receipt; no admission"
++          },
++          "202": {
++            "description": "Bounded ordinary induction accepted on original Work"
++          },
++          "400": {
++            "description": "Strict bounded procedure schema rejected"
++          },
++          "404": {
++            "description": "Absent or unauthorized principal-scoped procedure resource"
++          },
++          "422": {
++            "description": "Rights, currentness, grant or unsupported protected-port predicate unpassed"
++          }
++        }
++      }
++    },
+     "/api/company-brain/deliberation-submit": {
+       "post": {
+         "security": [
+diff --git a/src/lib/centropy/capability-manifest.generated.json b/src/lib/centropy/capability-manifest.generated.json
+index 47c7e0f86..f95491be5 100644
+--- a/src/lib/centropy/capability-manifest.generated.json
++++ b/src/lib/centropy/capability-manifest.generated.json
+@@ -4468,6 +4468,331 @@
+       "tests": [],
+       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+     },
++    {
++      "capabilityId": "http.post.company-brain.procedure-admission-request",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-admission-request",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-component",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-component",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-costs",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-costs",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-counterexample",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-counterexample",
++      "routeDepth": 2,
++      "classification": "MUTATION",
++      "kind": "mutation",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "backend_policy",
++      "effectClass": "domain_mutation",
++      "verificationClass": "canonical_reread",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [
++        "company-brain"
++      ],
++      "timeoutClass": "WRITE",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-experience",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-experience",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-induce",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-induce",
++      "routeDepth": 2,
++      "classification": "MUTATION",
++      "kind": "mutation",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "backend_policy",
++      "effectClass": "domain_mutation",
++      "verificationClass": "canonical_reread",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [
++        "company-brain"
++      ],
++      "timeoutClass": "WRITE",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-induction-cancel",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-induction-cancel",
++      "routeDepth": 2,
++      "classification": "CONTROL",
++      "kind": "control",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "backend_policy",
++      "effectClass": "runtime_control",
++      "verificationClass": "canonical_reread",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [
++        "company-brain"
++      ],
++      "timeoutClass": "WRITE",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-induction-read",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-induction-read",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-interface",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-interface",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-projection",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-projection",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.procedure-read",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/procedure-read",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
+     {
+       "capabilityId": "http.post.company-brain.program-artifact",
+       "family": "company-brain",
+diff --git a/src/lib/centropy/openapi-types.ts b/src/lib/centropy/openapi-types.ts
+index 16d0780e4..3642b8545 100644
+--- a/src/lib/centropy/openapi-types.ts
++++ b/src/lib/centropy/openapi-types.ts
+@@ -1,4 +1,4 @@
+-// Generated from finnor-os/openapi.json, SHA-256 129c9ea8e0b0b59d7f2190f2988333989b77e7a63c21dc2dae3f5ebd41ec9ab9.
++// Generated from finnor-os/openapi.json, SHA-256 83406e29126c996bd9d85045449687ebc35e485d87da448a85d1636c0562b06d.
+ export interface paths {
+     "/api/outcome-packs/control": {
+         parameters: {
+@@ -1727,7 +1727,7 @@ export interface paths {
+                 query?: never;
+                 header?: never;
+                 path: {
+-                    operation: "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read";
++                    operation: "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read";
+                 };
+                 cookie?: never;
+             };
+@@ -9454,6 +9454,793 @@ export interface paths {
+         patch?: never;
+         trace?: never;
+     };
++    "/api/company-brain/procedure-experience": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        programIds: string[];
++                        /** Format: date-time */
++                        knowledgeCut: string;
++                        /** @enum {string} */
++                        mode: "ordinary_disposable" | "protected";
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-induce": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** @constant */
++                        schema: "finnor.p6.induction-request.v1";
++                        root: {
++                            /** @enum {string} */
++                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
++                            /** Format: uuid */
++                            entityId: string;
++                        };
++                        /** Format: uuid */
++                        workId: string;
++                        programIds: string[];
++                        /** Format: date-time */
++                        knowledgeCut: string;
++                        idempotencyKey: string;
++                        /** @enum {string} */
++                        mode: "ordinary_disposable" | "protected";
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-induction-read": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        inductionId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-induction-cancel": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        inductionId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-read": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-component": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                        ref: {
++                            /** @enum {string} */
++                            owner: "P1" | "P4" | "P5" | "P6" | "S1" | "S2" | "S3" | "S4" | "S5" | "S6" | "S7" | "S8";
++                            id: string;
++                            version: string;
++                            contentDigest: string;
++                        };
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-counterexample": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                        /** @enum {string} */
++                        type: "CORRECTION" | "FAILURE" | "UNKNOWN" | "REVOKED";
++                        reason: string;
++                        idempotencyKey: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-projection": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        root: {
++                            /** @enum {string} */
++                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
++                            /** Format: uuid */
++                            entityId: string;
++                        };
++                        /** Format: uuid */
++                        workId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-admission-request": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-interface": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                        /** Format: uuid */
++                        programId: string;
++                        /** Format: uuid */
++                        acquisitionId: string;
++                        outputKey: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/api/company-brain/procedure-costs": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        put?: never;
++        post: {
++            parameters: {
++                query?: never;
++                header?: never;
++                path?: never;
++                cookie?: never;
++            };
++            requestBody?: {
++                content: {
++                    "application/json": {
++                        /** Format: uuid */
++                        capsuleId: string;
++                    };
++                };
++            };
++            responses: {
++                /** @description Authorized ordinary procedure preimage or lifecycle receipt; no admission */
++                200: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Bounded ordinary induction accepted on original Work */
++                202: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Strict bounded procedure schema rejected */
++                400: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Absent or unauthorized principal-scoped procedure resource */
++                404: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++                /** @description Rights, currentness, grant or unsupported protected-port predicate unpassed */
++                422: {
++                    headers: {
++                        [name: string]: unknown;
++                    };
++                    content?: never;
++                };
++            };
++        };
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
+     "/api/company-brain/deliberation-submit": {
+         parameters: {
+             query?: never;

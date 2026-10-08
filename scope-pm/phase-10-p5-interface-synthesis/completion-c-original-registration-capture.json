@@ -1,0 +1,26 @@
+[
+  {
+    "path": "scope-pm/phase-10-p5-interface-synthesis/registration.json",
+    "commit": "957971997d437d126e718511c1ea673745ef1c84",
+    "sha256": "e2522e53a88b825cc694733ec4c880a5a56c133d7b1de765a9291aa21a942faa",
+    "meaning": "ORIGINAL_REGISTRATION_NOT_ADOPTED_BEHAVIORAL_EVIDENCE"
+  },
+  {
+    "path": "scope-pm/phase-10-p5-interface-synthesis/failure-model.md",
+    "commit": "957971997d437d126e718511c1ea673745ef1c84",
+    "sha256": "bfae8c86cbeb30f00c348979952225db934bc013134e0c2f650cf23e37449a9b",
+    "meaning": "ORIGINAL_REGISTRATION_NOT_ADOPTED_BEHAVIORAL_EVIDENCE"
+  },
+  {
+    "path": "scope-pm/phase-10-p5-interface-synthesis/catalogue-boundary-registration.md",
+    "commit": "957971997d437d126e718511c1ea673745ef1c84",
+    "sha256": "011b70b9336bc30df91658bd2b4e147e6fcadd4f94e69de4eaa701e773195fae",
+    "meaning": "ORIGINAL_REGISTRATION_NOT_ADOPTED_BEHAVIORAL_EVIDENCE"
+  },
+  {
+    "path": "scope-pm/phase-10-p5-interface-synthesis/crash-boundary-registration.md",
+    "commit": "957971997d437d126e718511c1ea673745ef1c84",
+    "sha256": "51c17829d5fcf0b5da548dd973f110880a0eda1b91d4fe6affe97be31813304c",
+    "meaning": "ORIGINAL_REGISTRATION_NOT_ADOPTED_BEHAVIORAL_EVIDENCE"
+  }
+]

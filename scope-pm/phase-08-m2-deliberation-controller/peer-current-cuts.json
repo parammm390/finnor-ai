@@ -1,0 +1,28 @@
+{
+  "schema": "finnor.m2.peer-qualification-observation.v1",
+  "rows": [
+    {
+      "owner": "M3",
+      "checkout": "/Users/paramdave/.factory/worktrees/pm-m3-capital-program/FINNOR",
+      "commit": "993860078282630b72144f2356f8257cef2221a5",
+      "tree": "b68562fbd2cfb0338799e210e0b3dfeb8be9ab48",
+      "handoffPath": "scope-pm/phase-05-m3-capital-program/integration-handoff.md",
+      "handoffSha256": "5245d2deb6bdeb49902520c448b59e47011b9229e2d1e3db4a7a7a7216cd92c1",
+      "status": "SUPPORTED_NATIVE_PRODUCER_PARTIAL_ORIGINAL_GATE_AND_JOIN_PENDING",
+      "runtimeImport": false,
+      "currentBaseCompatiblePort": null
+    },
+    {
+      "owner": "M4",
+      "checkout": "/Users/paramdave/.factory/worktrees/pm-m4-counterexample-search/FINNOR",
+      "commit": "ee9018546a587cea4500b7f331c3b073a18d71c7",
+      "tree": "ab2df876f815b172643fe9e6adbb8d5ea08325fd",
+      "handoffPath": "scope-pm/phase-06-m4-counterexample-search/integration-handoff.md",
+      "handoffSha256": "0752a0630af435140e101581d11eddf6eb6ab41f82392f40cc2ed44b631159f6",
+      "status": "DIAGNOSTIC_PRODUCER_PARTIAL_ORIGINAL_CAPITALPROGRAM_READER_PENDING",
+      "runtimeImport": false,
+      "currentBaseCompatiblePort": null
+    }
+  ],
+  "qualification": "Read-only committed observations; no working files or peer dependencies imported; shared integration serialized by the M2 writer. Genuine P1-native M2 is independent of these pending ports."
+}
