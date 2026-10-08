@@ -53,7 +53,6 @@ jobs:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
       REDIS_URL: redis://localhost:6379
       AUTH_DEV_BYPASS: "1"
-      FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-query-evidence
       # CI uses vanilla PostgreSQL; the migration runner rejects this test seam
       # for the canonical production database.
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
@@ -111,6 +110,7 @@ jobs:
       - run: npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts
         env:
           FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
+          FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-query-evidence
       # P7 typechecks the root Centropy surface; this backend job otherwise
       # installs no root @types or Playwright declarations.
       - name: Install root type dependencies for Phase 7
