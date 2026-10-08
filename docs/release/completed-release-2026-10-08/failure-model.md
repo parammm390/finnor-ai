@@ -343,3 +343,19 @@ Run the exact original authentic P4 repair alone, then retain its complete
 scenario result. The current full existing keeper corpus passes 706/706 with
 zero failed or pending assertions; both types and actual Next route type
 generation pass. These checks do not make the failing native scenario PASS.
+
+## Mounted M3 initial hydration, before readiness repair
+
+The full native denominator now passes 29/29. The subsequent actual Work/Canvas
+run fails its unchanged 25-second browser wait while the persisted conversation
+is still restoring. Its retained Next log shows first proxy compilation taking
+19.6 seconds, followed by real bearer `/me` and Thread reads. This is not a
+native pointer/keyboard pass or a completed rendered workflow.
+
+Before opening the bounded interaction sequence, measure actual development
+route readiness through the signed-bearer Next proxy for `/me` and the exact
+owned Thread. Both must return 200 through the real handlers. Do not stub
+responses, extend the browser wait, renew a business grant or skip any original
+interaction/currentness/role/refusal assertions. Retain readiness timings and
+label this a prepared local development-server mounted profile, not cold-start,
+hosted authentication, clean-install or physical input qualification.

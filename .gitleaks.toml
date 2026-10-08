@@ -33,3 +33,69 @@ condition = "AND"
 paths = ['''(^|/)finnor-os/scripts/s4/run-s4-e2e\.mts$''']
 regexTarget = "match"
 regexes = ['''modelKey\s*=\s*['"]s4-actual-delayed-actor['"]''']
+
+# These exact static underwriting identities are public authored metadata.
+# Anchor the entire detector match, not a whole source line or arbitrary modelKey.
+[[rules.allowlists]]
+description = "Exact authored M1 CPU and live-revocation model identifiers"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/m1/run-e2e\.mts$''']
+regexTarget = "match"
+regexes = ['''^modelKey:'m1-(?:cpu-boundary|live-revocation)'$''']
+
+[[rules.allowlists]]
+description = "Exact authored P4 frontier consumer and incumbent model identifiers"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/p4/frontier-comparison\.mts$''']
+regexTarget = "match"
+regexes = ['''^modelKey: 'p4-frontier-(?:consumer|incumbent)'$''']
+
+# The default detector spans these two adjacent remainingPredicates strings.
+# This does not exempt idempotencyKey, other predicates, or any credential field.
+[[rules.allowlists]]
+description = "Exact adjacent authored S6 remaining-predicate labels"
+condition = "AND"
+paths = ['''(^|/)finnor-os/packages/private-equity/src/program-synthesis/owners\.ts$''']
+regexTarget = "match"
+regexes = ['''^S6_EXACT_APPROVAL_AND_CREDENTIAL_EGRESS','S6_INDEPENDENT_OBSERVATION'$''']
+
+# Complete history also contains this single literal test reference. Do not
+# exempt runtime idempotency values or other values on this source path.
+[[rules.allowlists]]
+description = "Exact authored M4 duplicate-request fixture reference"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/m4/run-e2e\.mts$''']
+regexTarget = "match"
+regexes = ['''^idempotencyKey:'m4-idempotency'$''']
+
+[[rules.allowlists]]
+description = "Exact authored nonconsequential M3 candidate identity"
+condition = "AND"
+paths = ['''(^|/)finnor-os/packages/private-equity/src/capital-program/v2-owners\.ts$''']
+regexTarget = "match"
+regexes = ['''^candidateKey:'m3-nonconsequential-proposal'$''']
+
+# Each value is the verified SHA-256 of the named public migration, not a key.
+[[rules.allowlists]]
+description = "Four exact public SQL source pins in this release allocation"
+condition = "AND"
+paths = ['''(^|/)docs/release/completed-release-2026-10-08/migration-allocation\.json$''']
+regexTarget = "match"
+regexes = [
+  '''^0141_restricted_digest_projection_access\.sql": "45f4832a2e63eecbab99ccb8ef38c47491ce5f4afef2d6e935df87c090b41aab"$''',
+  '''^0085_phase1_identity_access_fabric\.sql": "59f49a2e99bb4c495091e8647e903767f0daf098b6bd7ad1878421e2bd37a982"$''',
+  '''^0088_staging_os_keychain_auth_profiles\.sql": "da578eb5b1aeaf158fa568eb3ead7e3b7d64ca92ef8df523297e9dbca77ce57a"$''',
+  '''^0079_tenant_credential_references\.sql": "a8b237e21706c24856c625d0bd6a4c1bc6979c86fab7fbb6c625a923fac660ba"$''',
+]
+
+# The detector mistakes this exact requirements prose fragment for a token.
+# Never exempt the containing JSON line or any other token semantics.
+[[rules.allowlists]]
+description = "Exact authored observation-time requirements prose fragment"
+condition = "AND"
+paths = [
+  '''(^|/)scope-pm/completion-c/all-ten-gates\.json$''',
+  '''(^|/)scope-pm/completion-c/all-ten-requirements\.json$''',
+]
+regexTarget = "match"
+regexes = ['''^token semantics, observed/available/known $''']

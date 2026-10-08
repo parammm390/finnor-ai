@@ -1,18 +1,22 @@
 {
-  "schema": "centropy.secret-scan-policy-proof/v1",
+  "schema": "centropy.secret-scan-policy-proof/v2",
   "status": "PASS",
-  "capturedAt": "2026-09-28T19:59:08.918Z",
+  "capturedAt": "2026-10-08T18:25:52.027Z",
   "scannerVersion": "8.24.3",
-  "binarySha256": "531b6b70a924b24fe5ccddb83f0d2fdcc68d68fa6abfcf343aa4f4a2ec7ee5ba",
-  "configurationSha256": "3c8d9ec8dc9f2c9c8170e1e1ee368e19c77a38c372a8c764bb19d1193a7c8431",
+  "binarySha256": "af9afd0ae3a0ff6d7f08c4ec4e28686b7e4de6962fe1eadecc497d15cdf731e2",
+  "configurationSha256": "162f084d49199f7691366560c62399c44960418a93482478c05873f1ab6fed92",
+  "verifierSha256": "4dccc7618194919e33f99850e1fdeecc8f0c0aabb029be55c4c7dd023f111e18",
   "steps": [
-    "Show the default scanner detects the authored high entropy business references",
-    "Show the exact field/value/path policy allows those references",
-    "Show accessToken and apiKey fields remain detected on the same evidence path"
+    "Show default rules detect each exact authored metadata match",
+    "Show only exact path and detector-match pairs are permitted",
+    "Reject wrong-path copies, same-path and same-line credentials, changed fields and changed values",
+    "Show runtime idempotency keys and the default AWS credential detector remain scanned",
+    "Exercise the actual -m base-to-head command with more than 30 ancestors, a side parent and a merge-only introduction"
   ],
   "scans": [
     {
       "fixture": "business",
+      "path": "docs/centropy/evidence/probe.json",
       "policy": "default",
       "inputSha256": "5eb783980d596445f8e6bb32c867c3801752d83cbecb8befa13c496ae9e616b7",
       "inputBytes": 210,
@@ -22,6 +26,7 @@
         "templateKey",
         "versionKey"
       ],
+      "expectedFindingCount": 4,
       "exitCode": 1,
       "findingCount": 4,
       "ruleIds": [
@@ -30,6 +35,7 @@
     },
     {
       "fixture": "business",
+      "path": "docs/centropy/evidence/probe.json",
       "policy": "configured",
       "inputSha256": "5eb783980d596445f8e6bb32c867c3801752d83cbecb8befa13c496ae9e616b7",
       "inputBytes": 210,
@@ -39,12 +45,14 @@
         "templateKey",
         "versionKey"
       ],
+      "expectedFindingCount": 0,
       "exitCode": 0,
       "findingCount": 0,
       "ruleIds": []
     },
     {
       "fixture": "credential",
+      "path": "docs/centropy/evidence/probe.json",
       "policy": "configured",
       "inputSha256": "2d8d0d790f007ce20cc885d841b0f35b14a9d3306a24246e6fd5ae3e0a6692cc",
       "inputBytes": 108,
@@ -52,13 +60,988 @@
         "accessToken",
         "apiKey"
       ],
+      "expectedFindingCount": 2,
       "exitCode": 1,
       "findingCount": 2,
       "ruleIds": [
         "generic-api-key"
       ]
+    },
+    {
+      "fixture": "m1",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "default",
+      "inputSha256": "3b72db2989701c6c0431adf65b59d5138eb802591fa7d6005b4ebe9a8e820111",
+      "inputBytes": 88,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 2,
+      "exitCode": 1,
+      "findingCount": 2,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m1",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "3b72db2989701c6c0431adf65b59d5138eb802591fa7d6005b4ebe9a8e820111",
+      "inputBytes": 88,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "m1-wrong-path",
+      "path": "unrelated/m1.txt",
+      "policy": "configured",
+      "inputSha256": "3b72db2989701c6c0431adf65b59d5138eb802591fa7d6005b4ebe9a8e820111",
+      "inputBytes": 88,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 2,
+      "exitCode": 1,
+      "findingCount": 2,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m1-same-path-credential",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m1-same-line-credential",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "ebd153c170227e778c9d065492836cdc4b4373bd26ed23506738877d94eff7cc",
+      "inputBytes": 139,
+      "fields": [
+        "modelKey",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "p4",
+      "path": "finnor-os/scripts/p4/frontier-comparison.mts",
+      "policy": "default",
+      "inputSha256": "5879fdeef8b5b6d82b470e827ef51c97fd84c39df6d1360376190429143b3e9c",
+      "inputBytes": 198,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 4,
+      "exitCode": 1,
+      "findingCount": 4,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "p4",
+      "path": "finnor-os/scripts/p4/frontier-comparison.mts",
+      "policy": "configured",
+      "inputSha256": "5879fdeef8b5b6d82b470e827ef51c97fd84c39df6d1360376190429143b3e9c",
+      "inputBytes": 198,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "p4-wrong-path",
+      "path": "unrelated/p4.txt",
+      "policy": "configured",
+      "inputSha256": "5879fdeef8b5b6d82b470e827ef51c97fd84c39df6d1360376190429143b3e9c",
+      "inputBytes": 198,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 4,
+      "exitCode": 1,
+      "findingCount": 4,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "p4-same-path-credential",
+      "path": "finnor-os/scripts/p4/frontier-comparison.mts",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "p4-same-line-credential",
+      "path": "finnor-os/scripts/p4/frontier-comparison.mts",
+      "policy": "configured",
+      "inputSha256": "cf2a1693beda5fc4f583d765b63bbc0eafd9689bc6af4624d142f892e22111d2",
+      "inputBytes": 249,
+      "fields": [
+        "modelKey",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "predicates",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "default",
+      "inputSha256": "86ce32e907761976f8f54f0e6c49cf533c33910e6afee83f521a0e03d45762ee",
+      "inputBytes": 111,
+      "fields": [
+        "remainingPredicates"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "predicates",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "configured",
+      "inputSha256": "86ce32e907761976f8f54f0e6c49cf533c33910e6afee83f521a0e03d45762ee",
+      "inputBytes": 111,
+      "fields": [
+        "remainingPredicates"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "predicates-wrong-path",
+      "path": "unrelated/predicates.txt",
+      "policy": "configured",
+      "inputSha256": "86ce32e907761976f8f54f0e6c49cf533c33910e6afee83f521a0e03d45762ee",
+      "inputBytes": 111,
+      "fields": [
+        "remainingPredicates"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "predicates-same-path-credential",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "predicates-same-line-credential",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "configured",
+      "inputSha256": "7ba501e9e96f9a746ec8af22fbbd4806e8a16215da7c53d208020d37cdbfa2f1",
+      "inputBytes": 162,
+      "fields": [
+        "remainingPredicates",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "default",
+      "inputSha256": "9432ae93adfae4e8c38cd810dd7f21c9bb5e09ed1fcac3e89c84c13b9cb58061",
+      "inputBytes": 150,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 3,
+      "exitCode": 1,
+      "findingCount": 3,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "9432ae93adfae4e8c38cd810dd7f21c9bb5e09ed1fcac3e89c84c13b9cb58061",
+      "inputBytes": 150,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "m4-wrong-path",
+      "path": "unrelated/m4.txt",
+      "policy": "configured",
+      "inputSha256": "9432ae93adfae4e8c38cd810dd7f21c9bb5e09ed1fcac3e89c84c13b9cb58061",
+      "inputBytes": 150,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 3,
+      "exitCode": 1,
+      "findingCount": 3,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4-same-path-credential",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4-same-line-credential",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "5e460b815d9800ef1205c84471b11449983c8a19a71e51a4a45a43e76d7866e7",
+      "inputBytes": 201,
+      "fields": [
+        "idempotencyKey",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "candidate",
+      "path": "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts",
+      "policy": "default",
+      "inputSha256": "d25390d6cb85d86c149377bd84ea4821a2cdefc429723e640c453fdf5107f3e1",
+      "inputBytes": 63,
+      "fields": [
+        "candidateKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "candidate",
+      "path": "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts",
+      "policy": "configured",
+      "inputSha256": "d25390d6cb85d86c149377bd84ea4821a2cdefc429723e640c453fdf5107f3e1",
+      "inputBytes": 63,
+      "fields": [
+        "candidateKey"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "candidate-wrong-path",
+      "path": "unrelated/candidate.txt",
+      "policy": "configured",
+      "inputSha256": "d25390d6cb85d86c149377bd84ea4821a2cdefc429723e640c453fdf5107f3e1",
+      "inputBytes": 63,
+      "fields": [
+        "candidateKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "candidate-same-path-credential",
+      "path": "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "candidate-same-line-credential",
+      "path": "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts",
+      "policy": "configured",
+      "inputSha256": "fa06420e40155191f0f6d62d941c74a2b11a5119266a94e99d09786ecf49300d",
+      "inputBytes": 114,
+      "fields": [
+        "candidateKey",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-pins",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "default",
+      "inputSha256": "6a1ee5252bdc89b6e4b11d3a53dd8a1b4e22e1f26542880c01986ade69ac1263",
+      "inputBytes": 460,
+      "fields": [
+        "0141_restricted_digest_projection_access.sql",
+        "0085_phase1_identity_access_fabric.sql",
+        "0088_staging_os_keychain_auth_profiles.sql",
+        "0079_tenant_credential_references.sql"
+      ],
+      "expectedFindingCount": 4,
+      "exitCode": 1,
+      "findingCount": 4,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-pins",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "6a1ee5252bdc89b6e4b11d3a53dd8a1b4e22e1f26542880c01986ade69ac1263",
+      "inputBytes": 460,
+      "fields": [
+        "0141_restricted_digest_projection_access.sql",
+        "0085_phase1_identity_access_fabric.sql",
+        "0088_staging_os_keychain_auth_profiles.sql",
+        "0079_tenant_credential_references.sql"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "migration-pins-wrong-path",
+      "path": "unrelated/migration-pins.txt",
+      "policy": "configured",
+      "inputSha256": "6a1ee5252bdc89b6e4b11d3a53dd8a1b4e22e1f26542880c01986ade69ac1263",
+      "inputBytes": 460,
+      "fields": [
+        "0141_restricted_digest_projection_access.sql",
+        "0085_phase1_identity_access_fabric.sql",
+        "0088_staging_os_keychain_auth_profiles.sql",
+        "0079_tenant_credential_references.sql"
+      ],
+      "expectedFindingCount": 4,
+      "exitCode": 1,
+      "findingCount": 4,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-pins-same-path-credential",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-pins-same-line-credential",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "6b61f4f8079448ddff22102434eb8ca1372f9933dc6003e8230b4c124899d0d8",
+      "inputBytes": 511,
+      "fields": [
+        "0141_restricted_digest_projection_access.sql",
+        "0085_phase1_identity_access_fabric.sql",
+        "0088_staging_os_keychain_auth_profiles.sql",
+        "0079_tenant_credential_references.sql",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-0",
+      "path": "scope-pm/completion-c/all-ten-gates.json",
+      "policy": "default",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-0",
+      "path": "scope-pm/completion-c/all-ten-gates.json",
+      "policy": "configured",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "prose-0-wrong-path",
+      "path": "unrelated/prose-0.txt",
+      "policy": "configured",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-0-same-path-credential",
+      "path": "scope-pm/completion-c/all-ten-gates.json",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-0-same-line-credential",
+      "path": "scope-pm/completion-c/all-ten-gates.json",
+      "policy": "configured",
+      "inputSha256": "de5c4eff039ecc65f4dddd7d9758b21bd06dfc3ebe9f68252186c3e04207dafe",
+      "inputBytes": 166,
+      "fields": [
+        "verbatim",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-1",
+      "path": "scope-pm/completion-c/all-ten-requirements.json",
+      "policy": "default",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-1",
+      "path": "scope-pm/completion-c/all-ten-requirements.json",
+      "policy": "configured",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 0,
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": []
+    },
+    {
+      "fixture": "prose-1-wrong-path",
+      "path": "unrelated/prose-1.txt",
+      "policy": "configured",
+      "inputSha256": "2c839320469fb2da4d3542d886515f483c72b20850bdc575774eb4d3d9499089",
+      "inputBytes": 115,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-1-same-path-credential",
+      "path": "scope-pm/completion-c/all-ten-requirements.json",
+      "policy": "configured",
+      "inputSha256": "f701b4c5462caf724adf270ceda1187f69af984268a46759ae6b8a59ac4c5f59",
+      "inputBytes": 51,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-1-same-line-credential",
+      "path": "scope-pm/completion-c/all-ten-requirements.json",
+      "policy": "configured",
+      "inputSha256": "de5c4eff039ecc65f4dddd7d9758b21bd06dfc3ebe9f68252186c3e04207dafe",
+      "inputBytes": 166,
+      "fields": [
+        "verbatim",
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "model-value-m1",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "af6d4d3c7b3a92b4600eb5e3b7c02772076e2c4d3463326b39c210fca82af4c1",
+      "inputBytes": 53,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "model-value-p4",
+      "path": "finnor-os/scripts/p4/frontier-comparison.mts",
+      "policy": "configured",
+      "inputSha256": "af6d4d3c7b3a92b4600eb5e3b7c02772076e2c4d3463326b39c210fca82af4c1",
+      "inputBytes": 53,
+      "fields": [
+        "modelKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "model-wrong-field",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "5923036370aed35295b2b109d8a6bb301e200ee50b362324edeb13e197e61221",
+      "inputBytes": 34,
+      "fields": [
+        "apiKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "predicate-altered-value",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "configured",
+      "inputSha256": "0fa3259f53e3c1c8e12dd2fd127aa3a8e7741a9455b4ffd854ff1889296f3d6d",
+      "inputBytes": 117,
+      "fields": [
+        "remainingPredicates"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "runtime-idempotency-not-exempt",
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "policy": "configured",
+      "inputSha256": "cb29a4103da4040cd98f0209422415aa2802a357cffdfcc3435b24374b18f8d9",
+      "inputBytes": 59,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4-altered-idempotency",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "cb29a4103da4040cd98f0209422415aa2802a357cffdfcc3435b24374b18f8d9",
+      "inputBytes": 59,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "m4-runtime-uuid-not-exempt",
+      "path": "finnor-os/scripts/m4/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "6306b1d93257d92c2e694392a335f5c67fe42acfcc3bca7832fb016387380d53",
+      "inputBytes": 63,
+      "fields": [
+        "idempotencyKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "candidate-altered-value",
+      "path": "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts",
+      "policy": "configured",
+      "inputSha256": "5b0f3fbd86755632e41b2e8cb00c333cd11a7174aac962df6aff835f05845264",
+      "inputBytes": 57,
+      "fields": [
+        "candidateKey"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-altered-0141_restricted_digest_projection_access.sql",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "1dff8492979fc524b6dabb8b7daf2c99f607baffbc64e51417c7649a45ddc427",
+      "inputBytes": 89,
+      "fields": [
+        "0141_restricted_digest_projection_access.sql"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-altered-0085_phase1_identity_access_fabric.sql",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "b29e2bb229518dec224be08d6a5fc10ec89489d25fc1fc1637d29afb244331ca",
+      "inputBytes": 83,
+      "fields": [
+        "0085_phase1_identity_access_fabric.sql"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-altered-0088_staging_os_keychain_auth_profiles.sql",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "efd524ff52d6ab6d07479edf997e204fc738aca06cdd63e5ba9df9b9e0cc321c",
+      "inputBytes": 87,
+      "fields": [
+        "0088_staging_os_keychain_auth_profiles.sql"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "migration-altered-0079_tenant_credential_references.sql",
+      "path": "docs/release/completed-release-2026-10-08/migration-allocation.json",
+      "policy": "configured",
+      "inputSha256": "ecc4d874a34a687495fcfddebcdc2043cf74f147ea7c4df53373e5e4d2b20592",
+      "inputBytes": 82,
+      "fields": [
+        "0079_tenant_credential_references.sql"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "prose-altered-value",
+      "path": "scope-pm/completion-c/all-ten-gates.json",
+      "policy": "configured",
+      "inputSha256": "e957b97fc1fd9d20a28e52da60e614322a84e0ed23c117fa1c19298ca0fbbcc9",
+      "inputBytes": 75,
+      "fields": [
+        "verbatim"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ]
+    },
+    {
+      "fixture": "default-aws-rule-active",
+      "path": "finnor-os/scripts/m1/run-e2e.mts",
+      "policy": "configured",
+      "inputSha256": "a9bee0f39c08a77a548ca34b609aad165931789d3c7055de403363f5ce059218",
+      "inputBytes": 50,
+      "fields": [
+        "aws_access_key_id"
+      ],
+      "expectedFindingCount": 1,
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "aws-access-token"
+      ]
     }
   ],
-  "reproduce": "node scripts/centropy/verify-secret-scan-policy.mjs <pinned-gitleaks-8.24.3-path>",
-  "limitation": "Authored scanner fixtures; no external credentials or external security certification are claimed."
+  "historyScans": [
+    {
+      "fixture": "allowed-metadata",
+      "placement": "allowed-metadata",
+      "range": "7731b7772073c76718b08e5d047d01e1cd1062b0..7cd0d2b76634052d7d9241121930805ba25242fd",
+      "commitCount": 36,
+      "firstParentCount": 35,
+      "introducedCommit": null,
+      "sideParentIncluded": true,
+      "logOptions": "-m 7731b7772073c76718b08e5d047d01e1cd1062b0..7cd0d2b76634052d7d9241121930805ba25242fd",
+      "inputSha256": "bab9421ee05ad7327f8f3c4a2e68afc87096cbab7b1198e3137e993546c998e7",
+      "exitCode": 0,
+      "findingCount": 0,
+      "ruleIds": [],
+      "introductionDetected": true,
+      "findings": []
+    },
+    {
+      "fixture": "late-commit",
+      "placement": "late",
+      "range": "161790bd70156307db58f534c5431a1a8cb9a47d..73ab7c27e4fd1725dae20266ffeda1773fe65249",
+      "commitCount": 36,
+      "firstParentCount": 35,
+      "introducedCommit": "6734f8077bf4bd2e257630cd1ec72fca6ec2397f",
+      "sideParentIncluded": true,
+      "logOptions": "-m 161790bd70156307db58f534c5431a1a8cb9a47d..73ab7c27e4fd1725dae20266ffeda1773fe65249",
+      "inputSha256": "8c8d14bd3c8298e646ffb81d524ce5b78cfd0685b76dbb820467590db1bbea60",
+      "exitCode": 1,
+      "findingCount": 2,
+      "ruleIds": [
+        "generic-api-key"
+      ],
+      "introductionDetected": true,
+      "findings": [
+        {
+          "ruleId": "generic-api-key",
+          "path": "late-credential.ts",
+          "line": 1,
+          "commit": "6734f8077bf4bd2e257630cd1ec72fca6ec2397f"
+        },
+        {
+          "ruleId": "generic-api-key",
+          "path": "late-credential.ts",
+          "line": 1,
+          "commit": "a935522cd001d58c68e65381b8878f06f23318b4"
+        }
+      ]
+    },
+    {
+      "fixture": "side-parent",
+      "placement": "side-parent",
+      "range": "97313f5d7f66a172186b8d5f1dc7e586eedede2f..4e666c1d3d47af4e960c91c81be0d0e2d000ed9c",
+      "commitCount": 36,
+      "firstParentCount": 35,
+      "introducedCommit": "afaa1b74785cd1ae5e7a3117144aade094c525e7",
+      "sideParentIncluded": true,
+      "logOptions": "-m 97313f5d7f66a172186b8d5f1dc7e586eedede2f..4e666c1d3d47af4e960c91c81be0d0e2d000ed9c",
+      "inputSha256": "bab9421ee05ad7327f8f3c4a2e68afc87096cbab7b1198e3137e993546c998e7",
+      "exitCode": 1,
+      "findingCount": 1,
+      "ruleIds": [
+        "generic-api-key"
+      ],
+      "introductionDetected": true,
+      "findings": [
+        {
+          "ruleId": "generic-api-key",
+          "path": "side-credential.ts",
+          "line": 1,
+          "commit": "afaa1b74785cd1ae5e7a3117144aade094c525e7"
+        }
+      ]
+    },
+    {
+      "fixture": "merge-only",
+      "placement": "merge-only",
+      "range": "3b4ad302e18e432932413d1aedd4657b3c839552..7c33e6c2006facfa38260aae17f4c63e84ee6aa1",
+      "commitCount": 36,
+      "firstParentCount": 35,
+      "introducedCommit": "7c33e6c2006facfa38260aae17f4c63e84ee6aa1",
+      "sideParentIncluded": true,
+      "logOptions": "-m 3b4ad302e18e432932413d1aedd4657b3c839552..7c33e6c2006facfa38260aae17f4c63e84ee6aa1",
+      "inputSha256": "dfeb203898cbc85337318278b64b42a31fb73d23cdb1c677f1382ad8d93fda3f",
+      "exitCode": 1,
+      "findingCount": 2,
+      "ruleIds": [
+        "generic-api-key"
+      ],
+      "introductionDetected": true,
+      "findings": [
+        {
+          "ruleId": "generic-api-key",
+          "path": "merge-credential.ts",
+          "line": 1,
+          "commit": "7c33e6c2006facfa38260aae17f4c63e84ee6aa1"
+        },
+        {
+          "ruleId": "generic-api-key",
+          "path": "merge-credential.ts",
+          "line": 1,
+          "commit": "7c33e6c2006facfa38260aae17f4c63e84ee6aa1"
+        }
+      ]
+    }
+  ],
+  "secretValuesPersisted": false,
+  "reproduce": "node scripts/centropy/verify-secret-scan-policy.mjs <pinned-gitleaks-8.24.3-path> <proof-output-path>",
+  "limitation": "Authored local scanner fixtures and temporary Git objects; no real credential, repository commit, external certification, fresh dependency install, or production build is claimed."
 }

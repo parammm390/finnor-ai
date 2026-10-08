@@ -1,7 +1,20 @@
 {
   "schema": "finnor-release-toolchain.v1",
   "nodeVersion": "22",
-  "vercelCliVersion": "59.18.0",
+  "vercelCliVersion": "50.15.1",
+  "securityScanners": {
+    "gitleaks": {
+      "version": "8.24.3",
+      "linuxX64ArchiveUrl": "https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz",
+      "linuxX64ArchiveSha256": "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
+    },
+    "osv": {
+      "version": "2.3.8",
+      "reusableWorkflowSha": "9a498708959aeaef5ef730655706c5a1df1edbc2",
+      "scannerActionSha": "8dc09193bb540e09b23da07ad7e30bd33bf87018",
+      "reporterActionSha": "8dc09193bb540e09b23da07ad7e30bd33bf87018"
+    }
+  },
   "actions": [
     {
       "uses": "actions/checkout",
@@ -15,8 +28,8 @@
     },
     {
       "uses": "aws-actions/configure-aws-credentials",
-      "version": "v6.3.0",
-      "sha": "e1253824e5c10ff9df46874f81ed3ec929e19cfd"
+      "version": "v6.2.4",
+      "sha": "cbe3b392738ccf3f987d68400dafcf4b0624a56c"
     },
     {
       "uses": "gitleaks/gitleaks-action",
@@ -25,8 +38,8 @@
     },
     {
       "uses": "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml",
-      "version": "v2.6.0",
-      "sha": "a345acffa64b0eaede81a3d9aae6141214d9c8fc"
+      "version": "v2.3.8",
+      "sha": "9a498708959aeaef5ef730655706c5a1df1edbc2"
     },
     {
       "uses": "grafana/setup-k6-action",

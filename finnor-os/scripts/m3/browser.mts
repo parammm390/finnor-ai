@@ -128,6 +128,16 @@ export async function mountedCapitalChallenge(input:{
    if(next.exitCode!==null)throw Error('NEXT_START_FAILED');await new Promise(yes=>setTimeout(yes,100));
   }
   assert(url,'Next did not start');
+  const origin=new URL(url).origin;
+  for(const path of ['/api/centropy/me',`/api/centropy/threads/${thread.id}?limit=100`]){
+   const started=performance.now(),response=await fetch(origin+path,{headers:{authorization:`Bearer ${token}`},
+    signal:AbortSignal.timeout(45000)});
+   await response.arrayBuffer();
+   steps.push({action:'Actual signed-bearer development route readiness',path,status:response.status,wallMs:performance.now()-started});
+   assert.equal(response.status,200,'Real development proxy must be ready before bounded browser interaction');
+  }
+  steps.push({action:'Mounted runtime profile',preparation:'PREPARED_LOCAL_DEVELOPMENT',
+   coldStartQualified:false,hostedAuthenticationQualified:false});
   await ab(['open',url]);await ab(['wait','--text','Sign in']);
   const session={access_token:token,refresh_token:'disposable-unused',token_type:'bearer',expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,
    user:{id:b.principal,email,role:'authenticated',aud:'authenticated',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()}};

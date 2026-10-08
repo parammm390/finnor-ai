@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 6efff3b8571482a29335a8f2f43210cbeaefd5d84bae063493548ce93da17b1c.
+// Generated from finnor-os/openapi.json, SHA-256 4f3300fbd63508cc6daedecab6a3b66ab84c9dbaaa9597a017323a2c221d1f96.
 export interface paths {
     "/api/outcome-packs/control": {
         parameters: {
@@ -16952,7 +16952,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -16966,8 +16966,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17144,7 +17151,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17158,8 +17165,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17231,7 +17245,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17245,8 +17259,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17313,7 +17334,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17327,8 +17348,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17400,7 +17428,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17414,8 +17442,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17487,7 +17522,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17501,8 +17536,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17577,7 +17619,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17591,8 +17633,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17659,7 +17708,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17673,8 +17722,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17877,7 +17933,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17891,8 +17947,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17959,7 +18022,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Current owner, rights, custody, lease or cancellation predicate changed. */
+                /** @description Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17973,8 +18036,15 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Required authentic owner reader unavailable. */
-                424: {
+                /** @description Authentic owner checks rejected the requested challenge. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required authentic runtime configuration unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };

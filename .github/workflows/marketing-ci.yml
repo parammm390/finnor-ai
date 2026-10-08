@@ -50,7 +50,7 @@ jobs:
       - name: Install Finnor OS type dependencies
         run: npm ci --prefix finnor-os --no-audit --no-fund
       # Phase 7 §7.8: no-restricted-properties(Math.random) under src/components/
-      # centropy and src/app/centropy, defined in .eslintrc.cjs — this is what actually
+      # centropy and src/app/centropy, defined in eslint.config.mjs — this is what actually
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
       - run: npm run lint
@@ -66,19 +66,15 @@ jobs:
         run: |
           npm run test:release
           npm run release:p8-zero-resurrection
-      # D9.T3 — committed, reproducible WCAG contrast audit (glass fill + RiskBadge
-      # materials, both real `data-mood` variants). Replaces the earlier throwaway
-      # Node scripts C3/D9 ran locally and deleted — this makes a future token
-      # regression fail CI instead of relying on someone re-running it by hand.
+      # Committed, reproducible WCAG contrast audit of the actual palette pairs.
       - run: node scripts/contrast-audit.mjs
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      # Runs against the production build via `next start` (playwright.config.ts's
-      # webServer), not `next dev` — closer to what's actually deployed.
-      # The Private Equity product contract's authenticated flows skip cleanly here (no
-      # TEST_OWNER_EMAIL/TEST_OWNER_PASSWORD secret configured yet — see
-      # finnor-os/docs/owner-actions.md for why a real credential isn't faked);
-      # its public shell, redirect, and honest-demo assertions run for real.
+      # Runs against the production build via the explicit `next start` below.
+      # Playwright's development-server fallback is not the CI runtime profile.
+      # The selected product-contract file runs its public shell, redirect and
+      # honest-demo assertions. Authenticated owner workflows are separate gates;
+      # these public cases do not qualify owner credentials or authentication.
       #
       # Start+wait+test all in ONE step, deliberately: `npm run start &` in its own
       # separate `run:` step looked right (that step even reported success, and a
@@ -97,7 +93,8 @@ jobs:
           TEST_OWNER_PASSWORD: ${{ secrets.TEST_OWNER_PASSWORD }}
         run: |
           set -e
-          npm run start > server.log 2>&1 & server_pid=$!
+          node node_modules/next/dist/bin/next start > server.log 2>&1 & server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           npx wait-on http://localhost:3000 --timeout 60000
           set +e
           chrome_path="$(node -e 'const { chromium } = require("@playwright/test"); process.stdout.write(chromium.executablePath())')"
@@ -137,3 +134,14 @@ jobs:
           fi
           test "$lighthouse_status" -eq 0 && exit "$test_status"
           exit "$lighthouse_status"
+      - name: Retain public browser gate diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: public-browser-gates-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            server.log
+            lighthouse-gate.log
+            playwright.log
+          if-no-files-found: warn
+          retention-days: 7

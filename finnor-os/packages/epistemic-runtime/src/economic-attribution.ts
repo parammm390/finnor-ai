@@ -15,8 +15,11 @@ const refuse = (code: string): never => { throw new EconomicContractError(code);
 export function canonicalEconomic(value: unknown): string {
     let nodes = 0, bytes = 0;
     const parts: string[] = [];
-    const push = (s: string) => {
-        bytes += Buffer.byteLength(s);
+    // Reuse only bounded property-name tokens within this traversal, never values.
+    const keyTokens = new Map<string, { text: string; bytes: number }>();
+    const keyOrders = new Map<string, string[]>();
+    const push = (s: string, ascii = false, byteLength?: number) => {
+        bytes += byteLength ?? (ascii ? s.length : Buffer.byteLength(s));
         if (bytes > 8388608)
             refuse('ECONOMIC_SEMANTIC_BYTE_LIMIT');
         parts.push(s);
@@ -25,29 +28,44 @@ export function canonicalEconomic(value: unknown): string {
         if (++nodes > 1000000 || depth > 64)
             refuse('ECONOMIC_SEMANTIC_COMPLEXITY_LIMIT');
         if (v === null || typeof v === 'string' || typeof v === 'boolean' || typeof v === 'number' && Number.isFinite(v)) {
-            push(JSON.stringify(v));
+            push(JSON.stringify(v), typeof v !== 'string');
             return;
         }
         if (Array.isArray(v)) {
-            push('[');
+            push('[', true);
             v.forEach((x, i) => {
                 if (i)
-                    push(',');
+                    push(',', true);
                 visit(x, depth + 1);
             });
-            push(']');
+            push(']', true);
             return;
         }
         if (v && typeof v === 'object' && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null)) {
-            push('{');
+            push('{', true);
             const r = v as Record<string, unknown>;
-            Object.keys(r).sort((a, b) => a.localeCompare(b)).forEach((k, i) => {
+            const keys = Object.keys(r);
+            const shape = keys.length <= 64 && keys.every(k => k.length <= 128) ? JSON.stringify(keys) : null;
+            let ordered = shape === null ? undefined : keyOrders.get(shape);
+            if (!ordered) {
+                ordered = keys.sort((a, b) => a.localeCompare(b));
+                if (shape !== null && keyOrders.size < 32)
+                    keyOrders.set(shape, ordered);
+            }
+            ordered.forEach((k, i) => {
                 if (i)
-                    push(',');
-                push(JSON.stringify(k) + ':');
+                    push(',', true);
+                let token = keyTokens.get(k);
+                if (!token) {
+                    const text = JSON.stringify(k) + ':';
+                    token = { text, bytes: Buffer.byteLength(text) };
+                    if (k.length <= 128 && keyTokens.size < 128)
+                        keyTokens.set(k, token);
+                }
+                push(token.text, false, token.bytes);
                 visit(r[k], depth + 1);
             });
-            push('}');
+            push('}', true);
             return;
         }
         refuse('ECONOMIC_NON_CANONICAL_JSON');
