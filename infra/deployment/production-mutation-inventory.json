@@ -171,7 +171,11 @@
         "scripts/release/verify-release.mjs",
         "scripts/release/validate-deployment-truth.mjs",
         "scripts/release/release-policy.mjs",
-        "scripts/release/vercel-protection.mjs"
+        "scripts/release/vercel-protection.mjs",
+        "scripts/release/vercel-protection.d.mts",
+        "finnor-os/packages/db/production-database-admission.mjs",
+        "finnor-os/packages/db/production-database-admission.d.mts",
+        "finnor-os/packages/db/read-production-database-secret.mjs"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"
@@ -207,7 +211,10 @@
         "scripts/release/production-mutation-guard.test.mjs",
         "scripts/release/protected-env.test.mjs",
         "scripts/release/release-policy.test.mjs",
-        "scripts/release/supplier-canary-health.test.mjs"
+        "scripts/release/supplier-canary-health.test.mjs",
+        "scripts/release/compute-artifact-e2e-fixture.mjs",
+        "scripts/release/compute-noop.e2e.test.mjs",
+        "scripts/release/canary-artifact.e2e.test.mjs"
       ],
       "classification": "READ_ONLY",
       "state": "TEST_ONLY"
@@ -227,7 +234,7 @@
     },
     {
       "id": "declarative-production-source",
-      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json"],
+      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json"],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."

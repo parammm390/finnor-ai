@@ -12,6 +12,7 @@ import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import pg from "pg";
 import { repairWorkspaceV3Rows } from "./workspace-v3-repair";
 import { authorizeProductionMutation } from "../../../scripts/release/production-mutation-guard.mjs";
+import { assertProductionDatabaseTarget } from "../../packages/db/production-database-admission.mjs";
 
 async function main(): Promise<void> {
   const envPath = process.argv[2];
@@ -45,7 +46,7 @@ async function main(): Promise<void> {
       taskFamily?: string;
       ecrRepository?: string;
     };
-    database?: { host?: string };
+    database?: { host?: string; projectRef?: string; applicationRole?: { role?: string; superuser?: boolean; bypassRls?: boolean } };
   };
   const contract = JSON.parse(contractRaw.toString("utf8")) as {
     topology: {
@@ -58,7 +59,7 @@ async function main(): Promise<void> {
         ecrRepository: string;
       };
       computePlane: { classes: { REALTIME: { serviceName: string; taskFamily: string } } };
-      database: { host: string };
+      database: { host: string; supabaseUrl: string; schema: string };
     };
   };
   const evidenceAge = Date.now() - Date.parse(evidence.checkedAt ?? "");
@@ -80,6 +81,10 @@ async function main(): Promise<void> {
     evidence.aws?.taskFamily !== activeService.taskFamily ||
     evidence.aws?.ecrRepository !== contract.topology.worker.ecrRepository ||
     evidence.database?.host !== contract.topology.database.host ||
+    evidence.database?.projectRef !== new URL(contract.topology.database.supabaseUrl).hostname.split(".")[0] ||
+    evidence.database?.applicationRole?.role !== "finnor_app" ||
+    evidence.database?.applicationRole?.superuser !== false ||
+    evidence.database?.applicationRole?.bypassRls !== false ||
     !Number.isFinite(evidenceAge) || evidenceAge < 0 || evidenceAge > 60 * 60 * 1000
   ) {
     throw new Error("Production migration refused: preflight evidence is stale or does not match this release/topology");
@@ -89,13 +94,7 @@ async function main(): Promise<void> {
   const databaseUrl = protectedEnvironment.MIGRATIONS_DATABASE_URL;
   if (!databaseUrl) throw new Error("MIGRATIONS_DATABASE_URL is missing from the protected production environment");
 
-  const parsed = new URL(databaseUrl);
-  if (["localhost", "127.0.0.1", "::1"].includes(parsed.hostname)) {
-    throw new Error("Refusing to run the production migrator against a local database");
-  }
-  if (parsed.hostname !== contract.topology.database.host) {
-    throw new Error(`Refusing migration for unknown database host ${parsed.hostname}`);
-  }
+  assertProductionDatabaseTarget(databaseUrl, contract.topology.database, "owner");
 
   const applied = await migrate(databaseUrl, undefined, productionMutationCapability);
   const workspaceV3 = await repairWorkspaceV3Rows(databaseUrl, productionMutationCapability);

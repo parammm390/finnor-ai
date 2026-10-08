@@ -5,9 +5,11 @@ import { promises as dns } from "node:dns"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { readProtectedEnvValue } from "./protected-env.mjs"
+import { readProtectedEnv, readProtectedEnvValue } from "./protected-env.mjs"
 import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
+import { assertProductionDatabaseTarget, verifyRestrictedApplicationRole } from "../../finnor-os/packages/db/production-database-admission.mjs"
+import { readProductionDatabaseSecret } from "../../finnor-os/packages/db/read-production-database-secret.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const contract = loadContract()
@@ -256,10 +258,21 @@ if (!realtimeDnsMatches) {
 if (!realtimeDnsMatches) throw new Error(`realtime.finnorai.com does not resolve to ALB ${loadBalancer.DNSName}`)
 
 const databaseUrl = readProtectedEnvValue(databaseEnvPath, "MIGRATIONS_DATABASE_URL")
-const parsedDatabaseUrl = new URL(databaseUrl)
-if (parsedDatabaseUrl.hostname !== contract.topology.database.host) throw new Error(`database host ${parsedDatabaseUrl.hostname} differs from the canonical contract`)
+const ownerTarget = assertProductionDatabaseTarget(databaseUrl, contract.topology.database, "owner")
+const protectedEnvironment = readProtectedEnv(databaseEnvPath)
+assertProductionDatabaseTarget(protectedEnvironment.DATABASE_URL, contract.topology.database, "application")
+const applicationUrl = await readProductionDatabaseSecret(protectedEnvironment, worker)
+assertProductionDatabaseTarget(applicationUrl, contract.topology.database, "application")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
+const application = new pg.Client({ ...pgConnectionConfig(applicationUrl), connectionTimeoutMillis: 15_000 })
+let applicationRole
+try {
+  await application.connect()
+  await application.query("BEGIN READ ONLY")
+  applicationRole = await verifyRestrictedApplicationRole(application, contract.topology.database)
+  await application.query("ROLLBACK")
+} finally { await application.end() }
 const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })
 await client.connect()
 let migrationHead
@@ -343,7 +356,7 @@ const evidence = {
       desiredCount: value.service.desiredCount,
     }])),
   },
-  database: { host: parsedDatabaseUrl.hostname, migrationHead, businessCounts },
+  database: { ...ownerTarget, migrationHead, businessCounts, applicationRole },
 }
 writeFileSync(resolve(outputPath), `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 })
 console.log(JSON.stringify(evidence, null, 2))

@@ -347,7 +347,7 @@ async function main(): Promise<void> {
       "tests/unit/phase6-plan-progress.test.ts",
       "tests/unit/phase6-attention.test.ts",
       "tests/unit/phase6-dispatch-health.test.ts",
-      "tests/unit/openapi-operational-query-contract.test.ts",
+      "tests/integration/production-query-surface.test.ts",
       "tests/unit/objective-success-contract.test.ts",
       "tests/unit/instruction-cancellation-semantics.test.ts",
     ])]),

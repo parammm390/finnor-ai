@@ -14,7 +14,7 @@ import {
   setEpistemicKillSwitch,
 } from "@finnor/epistemic-runtime";
 import { prepareTenantPrivateEquityEpistemicGraph } from "@finnor/private-equity";
-import { isCanonicalProductionDatabaseTarget } from "../../packages/db/production-target-guard";
+import { assertProductionDatabaseTarget, type ProductionDatabaseTarget } from "../../packages/db/production-database-admission.mjs";
 import { authorizeProductionMutation } from "../../../scripts/release/production-mutation-guard.mjs";
 
 const MAX_TENANTS = 100;
@@ -54,11 +54,12 @@ async function main(): Promise<void> {
   await authorizeProductionMutation("epistemic-impact-activate");
 
   const contractRaw = await readFile(fileURLToPath(new URL("../../../infra/deployment/production.contract.json",import.meta.url)));
-  const contract = JSON.parse(contractRaw.toString("utf8")) as { topology:{ database:{ host:string } }; release:{ requiredMigrationHead:string } };
+  const contract = JSON.parse(contractRaw.toString("utf8")) as { topology:{ database:ProductionDatabaseTarget }; release:{ requiredMigrationHead:string } };
   const preflightPath = process.env.FINNOR_PREFLIGHT_EVIDENCE;
   if (!preflightPath) throw new Error("Scope-5 cutover requires release preflight evidence");
   const preflight = JSON.parse(await readFile(preflightPath,"utf8")) as {
     ok?:boolean; commitSha?:string; remoteMain?:string; contractSha256?:string;
+    database?:{ projectRef?:string; appRole?:{ role?:string } };
   };
   if (preflight.ok !== true || preflight.commitSha !== RELEASE_SHA || preflight.remoteMain !== RELEASE_SHA
     || preflight.contractSha256 !== createHash("sha256").update(contractRaw).digest("hex")) {
@@ -67,10 +68,11 @@ async function main(): Promise<void> {
   const protectedEnv = parse(await readFile(envPath));
   const ownerUrl = protectedEnv.MIGRATIONS_DATABASE_URL;
   const appUrl = protectedEnv.DATABASE_URL;
-  if (!ownerUrl || !appUrl || new URL(ownerUrl).hostname !== contract.topology.database.host
-    || !isCanonicalProductionDatabaseTarget(appUrl)
-    || ["localhost","127.0.0.1","::1"].includes(new URL(appUrl).hostname)) {
-    throw new Error("Scope-5 cutover database targets differ from the protected production contract");
+  if (!ownerUrl || !appUrl) throw new Error("Scope-5 cutover requires protected owner and application database configuration");
+  const ownerTarget = assertProductionDatabaseTarget(ownerUrl,contract.topology.database,"owner");
+  assertProductionDatabaseTarget(appUrl,contract.topology.database,"application");
+  if (preflight.database?.projectRef !== ownerTarget.projectRef || preflight.database?.appRole?.role !== "finnor_app") {
+    throw new Error("Scope-5 cutover requires the exact project and restricted application-role admission");
   }
   if (CURRENT_MIGRATION_HEAD !== contract.release.requiredMigrationHead) {
     throw new Error("Scope-5 cutover code and production migration head differ");

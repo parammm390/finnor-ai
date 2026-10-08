@@ -1,5 +1,5 @@
 import EmbeddedPostgres from "embedded-postgres";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -24,8 +24,11 @@ import { comparePrivateEquityOutcomeAssessment, prepareTenantPrivateEquityEpiste
 import { causalReplayProjection } from "@finnor/read-models";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)),"../..");
-const REPORT_JSON = resolve(REPO,"docs/release/scope5-epistemic-impact-certification.json");
-const REPORT_MD = resolve(REPO,"docs/release/scope5-epistemic-impact-certification.md");
+const REPORT_DIR = process.env.FINNOR_CERTIFICATION_OUTPUT_DIR
+  ? resolve(process.env.FINNOR_CERTIFICATION_OUTPUT_DIR)
+  : resolve(REPO,"docs/release");
+const REPORT_JSON = resolve(REPORT_DIR,"scope5-epistemic-impact-certification.json");
+const REPORT_MD = resolve(REPORT_DIR,"scope5-epistemic-impact-certification.md");
 type Gate = { id: string; status: "PASS_INTEGRATION" | "BLOCKED_EXTERNAL"; evidence: string };
 type BenchmarkResult = { scenario:string; propositions:number; fullMedianMs:number; incrementalMedianMs:number;
   fullEvaluations:number; incrementalEvaluations:number; equivalent:boolean };
@@ -55,18 +58,35 @@ async function withDatabase<T>(name: string, run: (url: string) => Promise<T>): 
   const directory = await mkdtemp(join(tmpdir(), `finnor-scope5-${name}-`));
   const port = await freePort();
   const postgres = new EmbeddedPostgres({ databaseDir: directory,user:"finnor",password:"finnor",
-    port,persistent:false,onLog:() => undefined });
+    port,persistent:false,postgresFlags:["-c","track_commit_timestamp=on"],onLog:() => undefined });
   process.env.FINNOR_TEST_MANAGED_EXTENSIONS = "omit";
   try {
     await postgres.initialise(); await postgres.start(); await postgres.createDatabase("scope5");
     const url = `postgres://finnor:finnor@127.0.0.1:${port}/scope5`;
+    const prerequisite = new pg.Client({ connectionString:url });
+    await prerequisite.connect();
+    try {
+      const tracked = (await prerequisite.query<{track_commit_timestamp:string}>(
+        "SHOW track_commit_timestamp")).rows[0]?.track_commit_timestamp;
+      assert.equal(tracked,"on","Scope 5 embedded PostgreSQL requires commit tracking before migrations");
+      console.log(`SCOPE5_EMBEDDED_PREREQUISITES ${JSON.stringify({ name,trackCommitTimestamp:true,verifiedBeforeMigrations:true })}`);
+    } finally { await prerequisite.end(); }
     process.env.DATABASE_URL = url;
     return await run(url);
   } finally {
     await closePool().catch(() => undefined);
     await postgres.stop().catch(() => undefined);
     await rm(directory,{recursive:true,force:true});
+    console.log(`SCOPE5_EMBEDDED_CLEANUP ${JSON.stringify({ name,directory,removed:true })}`);
   }
+}
+
+async function nativeKnowledgeBoundary(client: pg.Client): Promise<string> {
+  const at = (await client.query<{at:string}>(
+    `SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS at`,
+  )).rows[0]!.at;
+  assert.match(at,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/);
+  return at;
 }
 
 async function populatedUpgrade(): Promise<void> {
@@ -576,8 +596,9 @@ await withDatabase("fresh",async (url) => {
       propositions:[{id:"cross:source",subject:{kind:"entity",type:"test",id:sourceId},predicate:{name:"rating"}}],
       dependencies:[],bindings:[{propositionId:"cross:source",sourceKind:"evidence_source",sourceType:"manual",
         sourceId,valuePath:"rating",evidenceKind:"DOCUMENT"}]}),/tenant|source/i);
+    const isolationKnownAt=await nativeKnowledgeBoundary(client);
     await assert.rejects(replayDurableEpistemicGraph({tenantId:otherTenantId,graphVersionId:staged.graphVersionId,
-      validAt:new Date().toISOString(),knownAt:new Date().toISOString()}),/cross-tenant/);
+      validAt:isolationKnownAt,knownAt:isolationKnownAt}),/cross-tenant/);
     pass("tenant-isolation",`Cross-tenant source binding and historical graph replay rejected`);
     const baseline = await baselineDurableEpistemicGraph(tenantId,1);
     assert.equal(baseline.complete,false);
@@ -585,7 +606,7 @@ await withDatabase("fresh",async (url) => {
     assert.equal(resumedBaseline.complete,true);
     assert.equal((await client.query("SELECT count(*)::int count FROM finnor_os.epistemic_changesets WHERE tenant_id=$1",[tenantId])).rows[0].count,0);
     pass("bounded-baseline",`Baseline resumed after one-node batch; 3 propositions evaluated without fabricated ChangeSets`);
-    const historicalKnownAt=(await client.query<{at:Date}>("SELECT clock_timestamp() at")).rows[0]!.at.toISOString();
+    const historicalKnownAt=await nativeKnowledgeBoundary(client);
     const before = await client.query("SELECT belief FROM finnor_os.epistemic_current WHERE tenant_id=$1",[tenantId]);
     assert.equal(before.rows.length,3);
     const unrelatedBefore = (await client.query<{semantic_hash:string}>(
@@ -669,7 +690,7 @@ await withDatabase("fresh",async (url) => {
     assert.equal(oracle.equivalent,true);
     assert.equal(oracle.checked,3);
     pass("full-oracle",`All 3 durable beliefs match independent full recomputation after source change`);
-    const laterKnownAt=(await client.query<{at:Date}>("SELECT clock_timestamp() at")).rows[0]!.at.toISOString();
+    const laterKnownAt=await nativeKnowledgeBoundary(client);
     const preservedReplay=await replayDurableEpistemicGraph({tenantId,graphVersionId:staged.graphVersionId,
       validAt:historicalKnownAt,knownAt:historicalKnownAt});
     const laterReplay=await replayDurableEpistemicGraph({tenantId,graphVersionId:staged.graphVersionId,
@@ -784,8 +805,9 @@ await withDatabase("fresh",async (url) => {
     const reactivated = (await client.query("SELECT mode,graph_structure_epoch,staged_structure_epoch FROM finnor_os.epistemic_runtime_controls WHERE tenant_id=$1",[tenantId])).rows[0];
     assert.equal(reactivated.mode,"active");
     assert.equal(reactivated.graph_structure_epoch,reactivated.staged_structure_epoch);
+    const retiredKnownAt=await nativeKnowledgeBoundary(client);
     const retiredReplay=await replayDurableEpistemicGraph({tenantId,graphVersionId:staged.graphVersionId,
-      validAt:new Date().toISOString(),knownAt:new Date().toISOString()});
+      validAt:retiredKnownAt,knownAt:retiredKnownAt});
     assert.equal(retiredReplay.status,"UNAVAILABLE_AFTER_RETIREMENT");
     pass("structural-refresh",`New PE Deal advanced epoch, fenced execution, rebuilt/baselined graph and required explicit reactivation`);
   } finally { await client.end(); }
@@ -797,7 +819,9 @@ await digitalTwinRestatement();
 performanceCorpus();
 gates.push({id:"staging-and-live",status:"BLOCKED_EXTERNAL",evidence:"No staging/live deployment or exact release worker proof was supplied; local embedded PostgreSQL is not an external environment."});
 const report = {schema:"finnor.scope5-epistemic-impact-certification.v1",generatedAt:new Date().toISOString(),
-  migrationHead:CURRENT_MIGRATION_HEAD,status:"PASS_INTEGRATION",gates,benchmarks};
+  migrationHead:CURRENT_MIGRATION_HEAD,status:"PASS_INTEGRATION",
+  embeddedPostgres:{trackCommitTimestamp:true,verifiedBeforeMigrations:true},gates,benchmarks};
+await mkdir(dirname(REPORT_JSON),{recursive:true});
 await writeFile(REPORT_JSON,JSON.stringify(report,null,2)+"\n");
 await writeFile(REPORT_MD,["# Scope 5 Epistemic Intelligence certification","",
   `Generated: ${report.generatedAt}`,

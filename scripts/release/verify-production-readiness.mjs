@@ -1,4 +1,5 @@
 import { vercelProtectionHeaders } from "./vercel-protection.mjs"
+import { evaluateProductionReadiness } from "./production-readiness-policy.mjs"
 
 const [baseUrl, expectedSha, component = "api"] = process.argv.slice(2)
 
@@ -13,24 +14,11 @@ const response = await fetch(url, {
   signal: AbortSignal.timeout(20_000),
 })
 const body = await response.json().catch(() => null)
-const authority = body?.checks?.productAuthority?.detail
-const release = body?.checks?.runtimeRelease?.detail
+const { ok, checks, authority } = evaluateProductionReadiness({
+  responseOk: response.ok, status: response.status, body, expectedSha,
+})
 
-const checks = {
-  http: response.ok,
-  ready: body?.ok === true,
-  finalPeGateRequired: authority?.finalPeGateRequired === true,
-  authorityState: authority?.state === "water_retired",
-  activeProductVertical: authority?.activeProductVertical === "private_equity",
-  authorityCheck: body?.checks?.productAuthority?.ok === true,
-  runtimeEpoch: body?.checks?.runtimeEpoch?.ok === true,
-  runtimeRelease: body?.checks?.runtimeRelease?.ok === true,
-  expectedRelease: release?.expectedReleaseSha === expectedSha,
-  migration: body?.checks?.migrations?.ok === true,
-  workerFleet: body?.checks?.workerFleet?.ok === true,
-}
-
-if (Object.values(checks).some((value) => !value)) {
+if (!ok) {
   console.error(JSON.stringify({ ok: false, url, status: response.status, checks, body }, null, 2))
   process.exit(1)
 }
