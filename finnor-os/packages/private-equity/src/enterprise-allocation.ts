@@ -14,6 +14,7 @@ import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transp
 import type { PeMutationContext } from './types';
 import {recheckAllocationCapability} from '../../capability-evolution/src/consumer';
 import type {CapabilityUseLease} from '../../capability-evolution/src/lifecycle';
+export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');

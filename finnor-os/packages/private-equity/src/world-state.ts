@@ -3,7 +3,7 @@ import {
   type PrivateEquityAssertion,
 } from "./epistemic";
 import {
-  peTransaction,
+  peClientTransaction,
   shapePeRow,
   assertPeUuid,
   type PeClient,
@@ -595,7 +595,7 @@ async function latestTenantHistory(
   tenantId: string,
   knowledgeAt: Date,
 ): Promise<HistoryRow[]> {
-  const types = [...new Set<string>([...PE_ENTITY_TYPES, ...INSTITUTIONAL_TYPES])];
+  const types = [...new Set<string>([...PE_ENTITY_TYPES, ...INSTITUTIONAL_TYPES, "work_entity_link"])];
   const payload = await client.query<{ bytes: string }>(
     `SELECT coalesce(sum(octet_length(snapshot::text)),0)::text AS bytes FROM (
        SELECT snapshot FROM finnor_os.canonical_entity_versions
@@ -735,6 +735,8 @@ function connectedHistory(rows: HistoryRow[], root: PeWorldRootRef, validAt: Dat
       case "pe_outcome": return (s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "") || decisions.has(asString(row, "decision_id") ?? "");
       case "pe_exit": return holdings.has(asString(row, "portfolio_holding_id") ?? "");
       case "pe_fact_coverage": return (s.subject_type === "pe_fund" ? funds : s.subject_type === "pe_vehicle" ? vehicles : s.subject_type === "pe_portfolio_holding" ? holdings : companies).has(asString(row, "subject_id") ?? "");
+      case "work_entity_link": return s.history_deleted !== true
+        && selected.has(`${String(s.entity_type)}:${String(s.entity_id)}`);
       default: return deals.has(asString(row, "deal_id") ?? "")
         || (row.entity_type === "pe_document_link" || row.entity_type === "pe_evidence_link")
           && (String(s.world_root_type) === root.entityType && String(s.world_root_id) === root.entityId);
@@ -782,6 +784,21 @@ export async function loadPrivateEquityWorldState(
   root: PeWorldRootRef,
   at?: Date | string | PeWorldTemporalQuery,
 ): Promise<PeWorldState> {
+  return readAuthorizedWorldState(ctx, root, at, true);
+}
+
+/** Reconstruct and authorize the same current owner cut without serializing a
+ * belief value. This is a permission check, never a currentness certificate. */
+export async function authorizePrivateEquityWorldState(ctx: PeMutationContext, root: PeWorldRootRef): Promise<void> {
+  await readAuthorizedWorldState(ctx, root, undefined, false);
+}
+
+async function readAuthorizedWorldState(
+  ctx: PeMutationContext,
+  root: PeWorldRootRef,
+  at: Date | string | PeWorldTemporalQuery | undefined,
+  buildBelief: boolean,
+): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
   // This reconstruction scans a tenant-wide candidate cut. Require authority for
@@ -790,7 +807,7 @@ export async function loadPrivateEquityWorldState(
   // permission-filtered source adapter before it can enter this query class.
   const authorization = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, { type: "tenant", id: ctx.auth.tenantId }]);
   await authorizeBeliefCandidateCut(ctx);
-  const world = await reconstructPrivateEquityWorldState(ctx, root, at, authorization);
+  const world = await reconstructPrivateEquityWorldState(ctx, root, at, authorization, buildBelief);
   const resources = [
     { type: root.entityType, id: root.entityId },
     { type: "tenant", id: ctx.auth.tenantId },
@@ -811,6 +828,7 @@ async function reconstructPrivateEquityWorldState(
   root: PeWorldRootRef,
   at: Date | string | PeWorldTemporalQuery | undefined,
   authorization: WorldReadAuthorization,
+  buildBelief: boolean,
 ): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
@@ -822,7 +840,7 @@ async function reconstructPrivateEquityWorldState(
     throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "PE world-state validAt or knowledgeAt timestamp is malformed");
   }
 
-  return peTransaction(ctx, async (_db, client) => {
+  return peClientTransaction(ctx, async (client) => {
     const transactionAt = (await client.query<{ at: Date }>("SELECT clock_timestamp() AS at")).rows[0]!.at;
     if (requestedKnowledgeAt && requestedKnowledgeAt > transactionAt) throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "Knowledge time cannot be in the future");
     const clock = requestedKnowledgeAt ?? transactionAt;
@@ -840,7 +858,7 @@ async function reconstructPrivateEquityWorldState(
     const coverage = await client.query<CoverageRow>(
       `SELECT entity_type,coverage_started_at FROM finnor_os.canonical_history_coverage
         WHERE entity_type=ANY($1::text[])`,
-      [[...PE_ENTITY_TYPES, "external_organization", "external_contact"]],
+      [[...PE_ENTITY_TYPES, "external_organization", "external_contact", "work_entity_link"]],
     );
     const coverageByType = new Map<string, Date>(coverage.rows.map((row) => [row.entity_type, row.coverage_started_at]));
     const rootCoverage = coverageByType.get(root.entityType);
@@ -851,6 +869,8 @@ async function reconstructPrivateEquityWorldState(
     });
     const allCoverageTimes = [...coverageByType.values()].map((value) => value.getTime());
     const fullBaselineAt = allCoverageTimes.length ? new Date(Math.max(...allCoverageTimes)).toISOString() : null;
+    const workCoverage = coverageByType.get("work_entity_link");
+    const workHistoryUnavailable = !workCoverage || workCoverage.getTime() > clock.getTime();
     if (clock.getTime() < rootCoverage.getTime()) {
       const world = emptyWorld(root, validAt, stateAt, {
         status: "unavailable_before_baseline",
@@ -858,7 +878,7 @@ async function reconstructPrivateEquityWorldState(
         unavailableEntityTypes: [...unavailableTypes],
         reasons: ["HISTORY_UNAVAILABLE_BEFORE_BASELINE"],
       });
-      world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
       return world;
     }
 
@@ -875,7 +895,7 @@ async function reconstructPrivateEquityWorldState(
         [ctx.auth.tenantId, clock])).rows[0]?.missing;
       if (missing) {
         const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["HISTORICAL_COMMIT_VISIBILITY_UNAVAILABLE"] });
-        world.beliefView = worldBeliefView(ctx, world, [], authorization);
+        if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
         return world;
       }
     }
@@ -888,12 +908,15 @@ async function reconstructPrivateEquityWorldState(
     // current row or traverse current relationships backwards in time.
     if (!rootRow || !validAtRow(rootRow, validClock)) {
       const world = emptyWorld(root, validAt, stateAt, {
-        status: unavailableTypes.length ? "partial" : "complete",
+        status: unavailableTypes.length || workHistoryUnavailable ? "partial" : "complete",
         baselineAt: fullBaselineAt,
         unavailableEntityTypes: [...unavailableTypes],
-        reasons: unavailableTypes.length ? ["Some PE types did not yet have history coverage"] : [],
+        reasons: [
+          ...(unavailableTypes.length ? ["Some PE types did not yet have history coverage"] : []),
+          ...(workHistoryUnavailable ? ["Core Work relationship history is unavailable before its recorded baseline"] : []),
+        ],
       });
-      world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
       return world;
     }
 
@@ -902,7 +925,7 @@ async function reconstructPrivateEquityWorldState(
     catch (error) {
       if (!(error instanceof PeDomainError) || error.code !== "PE_PERMITTED_VIEW_BYTES_EXCEEDED") throw error;
       const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["PERMITTED_CANDIDATE_BYTE_BUDGET_EXCEEDED"] });
-      world.beliefView = worldBeliefView(ctx, world, [], authorization);
+      if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
       return world;
     }
     const connectedRows = connectedHistory(latestCorrections(tenantCandidates), root, validClock);
@@ -945,6 +968,7 @@ async function reconstructPrivateEquityWorldState(
     addHistory(history, linkRows);
 
     const reasons: string[] = [];
+    if (workHistoryUnavailable) reasons.push("Core Work relationship history is unavailable before its recorded baseline");
     if (tenantCandidates.length > MAX_WORLD_CANDIDATES) reasons.push(`Tenant history exceeded the ${MAX_WORLD_CANDIDATES}-row graph candidate bound`);
     if ([rootRows, opportunityRows, dealRows, childRows, linkRows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
       reasons.push(`World history exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
@@ -1004,7 +1028,7 @@ async function reconstructPrivateEquityWorldState(
         ) permitted_evidence`, [ctx.auth.tenantId, evidenceSourceIds, validClock, clock, MAX_WORLD_ROWS + 1]);
       if (BigInt(payload.rows[0]?.bytes ?? "0") > BigInt(MAX_PERMITTED_SNAPSHOT_BYTES)) {
         const world = emptyWorld(root, validAt, stateAt, { status: "partial", baselineAt: fullBaselineAt, unavailableEntityTypes: [], reasons: ["PERMITTED_EVIDENCE_BYTE_BUDGET_EXCEEDED"] });
-        world.beliefView = worldBeliefView(ctx, world, [], authorization);
+        if (buildBelief) world.beliefView = worldBeliefView(ctx, world, [], authorization);
         return world;
       }
     }
@@ -1082,15 +1106,6 @@ async function reconstructPrivateEquityWorldState(
       ) AS revoked`, [ctx.auth.tenantId, root.entityType, root.entityId, evidenceSourceIds]);
     if (revokedProvider.rows[0]?.revoked) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
 
-    const workRaw = entityRefs.length ? await client.query<SqlRow>(
-      `SELECT l.* FROM finnor_os.work_entity_links l
-        WHERE l.tenant_id=$1 AND l.created_at<=$3 AND EXISTS (
-          SELECT 1 FROM jsonb_to_recordset($2::jsonb) AS scoped(entity_type text,entity_id uuid)
-           WHERE scoped.entity_type=l.entity_type AND scoped.entity_id=l.entity_id
-        )
-        ORDER BY l.created_at,l.id LIMIT $4`,
-      [ctx.auth.tenantId, encodedEntityRefs, clock, MAX_WORLD_ROWS + 1],
-    ) : { rows: [] as SqlRow[] };
     const taskRaw = entityRefs.length ? await client.query<SqlRow>(
       `SELECT t.* FROM finnor_os.tasks t
         WHERE t.tenant_id=$1 AND t.created_at<=$3 AND EXISTS (
@@ -1107,13 +1122,7 @@ async function reconstructPrivateEquityWorldState(
       return { id: String(row.id), subjectType: row.subject_type, subjectId: String(row.subject_id), temporalPayload: "reference_only" };
     });
 
-    const workLinks = workRaw.rows.map((row) => ({
-      ...shapePeRow(row),
-      temporalPayload: "current_projection_unversioned",
-    }));
-    if (workLinks.length) {
-      reasons.push("Core Work relationship metadata has no temporal version; historical payload is an explicitly marked current projection");
-    }
+    const workLinks = arrayFor(safeMap, "work_entity_link");
 
     const eventsRaw = entityRefs.length ? await client.query<SqlRow>(
       `SELECT e.* FROM finnor_os.business_events e
@@ -1125,7 +1134,7 @@ async function reconstructPrivateEquityWorldState(
         ORDER BY e.occurred_at,e.id LIMIT $5`,
       [ctx.auth.tenantId, clock, encodedEntityRefs, dealIds, MAX_WORLD_ROWS + 1],
     ) : { rows: [] as SqlRow[] };
-    if ([workRaw.rows, taskRaw.rows, eventsRaw.rows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
+    if ([taskRaw.rows, eventsRaw.rows].some((rows) => rows.length > MAX_WORLD_ROWS)) {
       reasons.push(`Related Core graph rows exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     }
 
@@ -1342,7 +1351,7 @@ async function reconstructPrivateEquityWorldState(
       [[...new Set([...safeHistory.map(row => row.entity_type), "evidence_source_version"])]]);
     const ownerByType = new Map(owners.rows.map(row => [row.entity_type, row.writable_owner]));
     if (safeHistory.some(row => !ownerByType.has(row.entity_type))) throw new PeDomainError("PE_HISTORY_OWNER_UNAVAILABLE", "Canonical semantic owner could not be resolved");
-    world.beliefView = worldBeliefView(ctx, world, safeHistory.map(row => ({ entityType: row.entity_type, entityId: row.entity_id,
+    if (buildBelief) world.beliefView = worldBeliefView(ctx, world, safeHistory.map(row => ({ entityType: row.entity_type, entityId: row.entity_id,
       version: row.entity_version, owner: ownerByType.get(row.entity_type)!, snapshotHash: row.snapshot_hash,
       recordedAt: new Date(Math.max(row.recorded_at.getTime(), row.committed_at?.getTime() ?? clock.getTime())).toISOString(), snapshot: shaped(row), snapshotJson: row.snapshot_json })), authorization, ownerByType.get("evidence_source_version"));
     return world;

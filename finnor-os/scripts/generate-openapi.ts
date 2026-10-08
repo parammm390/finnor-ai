@@ -59,11 +59,13 @@ import { UserPreferencesPatchSchema } from "../apps/api/lib/user-preferences";
 import { WorkflowRunControlSchema } from "../apps/api/lib/run-control-route";
 import { DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
 import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
-import { EVIDENCE_OPERATIONS } from "../packages/private-equity/src/evidence-execution/api";
+import { EVIDENCE_OPERATIONS, EvidenceOperationSchemas } from "../packages/private-equity/src/evidence-execution/api";
 import { PROGRAM_OPERATIONS } from "../packages/private-equity/src/program-synthesis/api";
 import { COMPUTE_SEARCH_OPERATIONS } from "../packages/private-equity/src/compute-search/api";
 import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-synthesis/api";
-import { M1_OPERATIONS } from "../packages/private-equity/src/decision-slice/handler";
+import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
+import { CapitalProgramV2Operations } from "@finnor/shared-types";
+import { M4Operations } from "../packages/private-equity/src/counterexample-search/handler";
 import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-recompilation/api";
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
@@ -703,6 +705,37 @@ for (const operation of DELIBERATION_OPERATIONS) {
       "422": { description: "Current source, owner, module, grant, or supported-domain predicate unpassed" },
     },
   } } });
+}
+
+for (const [operation,schema] of [
+  ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),
+  ...Object.entries(CapitalProgramV2Operations),
+]) {
+  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+    security:secured,requestBody:json(schema),responses:{
+      "200":{description:"Authenticated current owner result; model evidence is not execution authority."},
+      "202":{description:"Accepted bounded durable Work computation, not admission, reservation or consent."},
+      "400":{description:"Strict owner request schema rejected invalid or unknown input."},
+      "404":{description:"Exact permitted owner reference unavailable."},
+      "409":{description:"Currentness, idempotency or handoff prerequisite changed."},
+      "413":{description:"Whole-request byte or resource bound exhausted."},
+      "422":{description:"Required owner port, verified evidence or protected authority unavailable."},
+    },
+  }}});
+}
+for (const [operation,{schema}] of Object.entries(M4Operations)) {
+  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+    security:secured,requestBody:json(schema),responses:{
+      "200":{description:"Authenticated challenge result, issued history or read-only witness replay; not SAFE or admission."},
+      "202":{description:"Accepted bounded challenge or new economic repair request; no renewed parent resources or admission."},
+      "400":{description:"Strict challenge request schema rejected invalid or unknown input."},
+      "404":{description:"Exact permitted search, owner result or custody reference unavailable."},
+      "409":{description:"Current owner, rights, custody, lease or cancellation predicate changed, or authentic M3 reader pending."},
+      "413":{description:"Inherited request resource or byte bound exhausted."},
+      "422":{description:"Authentic owner checks rejected the requested challenge."},
+      "503":{description:"Required authentic runtime configuration unavailable."},
+    },
+  }}});
 }
 
 const document = {

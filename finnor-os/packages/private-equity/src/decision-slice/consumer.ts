@@ -24,7 +24,8 @@ export async function consumeDecisionSlice(ctx:PeMutationContext,value:unknown,u
         const result=executeUnderwritingModel(compiled,candidate.input);
         const prepared=await prepareUnderwritingRun(ctx,{investmentCaseId:candidate.input.investmentCaseId,modelVersionId:candidate.modelRef.id,
           worldAt:candidate.input.worldAt,scenarioId:candidate.scenarioRef?.id,
-          evidenceDerivationInputs:binding.request.source.kind==='UNDERWRITING'?binding.request.source.evidenceDerivationInputs:undefined});
+          evidenceDerivationInputs:binding.request.source.kind==='UNDERWRITING'?binding.request.source.evidenceDerivationInputs:
+            binding.request.source.kind==='POLICY'?binding.request.source.underwriting?.evidenceDerivationInputs:undefined});
         if(!same(prepared.effectiveSnapshot,candidate.input))throw new DecisionSliceError('STALE_INPUT','Authorized native inputs changed before consumer persistence');
         const persisted=await persistPreparedUnderwritingRun(ctx,{prepared,result,scenarioId:candidate.scenarioRef?.id,
           idempotencyKey:`m1:${slice.ref.contentDigest}:${candidate.candidateId}`,workId:binding.work.id});
@@ -67,7 +68,8 @@ export async function decisionSliceWitness(ctx:PeMutationContext,value:unknown,v
       resourceSnapshot:variable.kind==='RESOURCE'||variable.kind==='OUTSTANDING_COMMITMENT'?binding.resourceSnapshot:null,
       gap:binding.gaps.find(g=>`gap:${g.id}`===variable.id)??null});
   }
-  const selected=binding.request.source.kind==='UNDERWRITING'?binding.request.source.evidenceDerivationInputs?.[variable.nativeId]:undefined;
+  const selected=binding.request.source.kind==='UNDERWRITING'?binding.request.source.evidenceDerivationInputs?.[variable.nativeId]:
+    binding.request.source.kind==='POLICY'?binding.request.source.underwriting?.evidenceDerivationInputs?.[variable.nativeId]:undefined;
   const p4=binding.p4.find(d=>d.id===selected?.derivationId||variable.id===`p4:${d.id}:complete-owner`);
   const p4Derivation=p4?{id:p4.id,queryId:p4.queryId,code:p4.code,work:p4.work,program:p4.queryProgram,
     output:selected?p4.result?.outputs[selected.output]:null,witnesses:p4.witnesses,independentChecks:p4.independentChecks,

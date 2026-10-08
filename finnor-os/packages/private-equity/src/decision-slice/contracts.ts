@@ -24,7 +24,8 @@ const UnderwritingSourceSchema = z.object({kind:z.literal('UNDERWRITING'),invest
   evidenceDerivationInputs:z.record(z.string().min(1).max(240),EvidenceUnderwritingBindingSchema)
     .refine(value=>Object.keys(value).length<=16,'At most16 P4 inputs').optional()}).strict();
 const PolicySourceSchema = z.object({kind:z.literal('POLICY'),policyRefs:z.array(RefSchema).min(1).max(16),
-  incumbentRef:RefSchema.nullable().optional(),allocationRef:RefSchema.nullable().optional()}).strict();
+  incumbentRef:RefSchema.nullable().optional(),allocationRef:RefSchema.nullable().optional(),
+  underwriting:UnderwritingSourceSchema.omit({kind:true}).optional()}).strict();
 const AllocationSourceSchema = z.object({kind:z.literal('ALLOCATION'),allocationRef:RefSchema}).strict();
 export const RequestSchema = z.object({
   schema:z.literal('finnor.decision-slice-request.v1'),workId:uuid,

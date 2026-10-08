@@ -6,9 +6,10 @@ import { compileUnderwritingModel, sealInputSnapshot, type UnderwritingModelIR, 
 import { epistemicHash } from '../../../epistemic-runtime/src/source-precedence';
 import { loadEnterpriseBeliefView, authorizeBeliefResources, authorizeBeliefSourceScopes, validateBeliefViewPin } from '../enterprise-beliefs';
 import { prepareUnderwritingRun } from '../underwriting-repository';
-import { readEnterpriseControlDecisionContext } from '../enterprise-control';
+import { readEnterpriseControlDecisionContexts } from '../enterprise-control';
 import { readEnterpriseAllocation, validateEnterpriseAllocation } from '../enterprise-allocation';
 import { readAllocationSnapshot } from '../allocation-store';
+import { authorizePrivateEquityWorldState } from '../world-state';
 import type { PeMutationContext, PeWorldRootRef } from '../types';
 import { copyJson, DecisionSliceError, unavailable, p4Ref, type DecisionSliceRequest, type Gap, type NativeBinding,
   type UnderwritingBinding, type WorkBinding } from './contracts';
@@ -169,8 +170,10 @@ export async function resolveNativeDecision(ctx:PeMutationContext,request:Decisi
   const policies:NativeBinding['policies']=[],underwriting:NativeBinding['underwriting']=[],p4:NativeBinding['p4']=[];
   let allocation:NativeBinding['allocation']=null,resourceSnapshot:NativeBinding['resourceSnapshot']=null;
   const requestedCut={...(request.validAt?{validAt:request.validAt}:{}),...(request.knowledgeAt?{knowledgeAt:request.knowledgeAt}:{})};
-  if(request.source.kind==='UNDERWRITING'){
-    const source=request.source;
+  const financialSource=request.source.kind==='UNDERWRITING'?request.source:
+    request.source.kind==='POLICY'&&request.source.underwriting?{kind:'UNDERWRITING' as const,...request.source.underwriting}:null;
+  if(financialSource){
+    const source=financialSource,financialRequest={...request,source};
     await authorizeBeliefResources(ctx,[{type:'pe_investment_case',id:source.investmentCaseId}]);
     const dealId=await withTenantTransaction(ctx.auth.tenantId,{userId:principal(ctx),readOnly:true},async(_db,c)=>{
       const row=(await c.query<{deal_id:string}>('SELECT deal_id::text FROM finnor_os.pe_investment_cases WHERE tenant_id=$1 AND id=$2',
@@ -180,10 +183,12 @@ export async function resolveNativeDecision(ctx:PeMutationContext,request:Decisi
     views.push(view);
     if(Object.keys(source.evidenceDerivationInputs??{}).length)
       await authorizeBeliefResources(ctx,[{type:'underwriting_model_version',id:source.modelVersionId}]);
-    const external=await resolveP4Inputs(ctx,request,work,view.knowledgeAt);p4.push(...external.derivations);
-    underwriting.push(...await resolveUnderwriting(ctx,request,view,gaps,external));
-    gaps.push(gap('S4_MANDATE_UNAVAILABLE_FOR_NUMERICAL_REQUEST','Native numerical Work has no immutable S4 utility/mandate-choice binding; no business choice is authorized','S4'));
-  }else{
+    const external=await resolveP4Inputs(ctx,financialRequest,work,view.knowledgeAt);p4.push(...external.derivations);
+    underwriting.push(...await resolveUnderwriting(ctx,financialRequest,view,gaps,external));
+    if(request.source.kind==='UNDERWRITING')
+      gaps.push(gap('S4_MANDATE_UNAVAILABLE_FOR_NUMERICAL_REQUEST','Native numerical Work has no immutable S4 utility/mandate-choice binding; no business choice is authorized','S4'));
+  }
+  if(request.source.kind!=='UNDERWRITING'){
     const refs=request.source.kind==='POLICY'?[...request.source.policyRefs,...(request.source.incumbentRef?[request.source.incumbentRef]:[])]:[];
     const allocationRef=request.source.kind==='ALLOCATION'?request.source.allocationRef:request.source.allocationRef;
     if(allocationRef){
@@ -194,14 +199,9 @@ export async function resolveNativeDecision(ctx:PeMutationContext,request:Decisi
       refs.push(...issued.problem.policies.map(p=>p.ref));
     }
     const uniqueRefs=[...new Map(refs.map(ref=>[epistemicHash(ref),ref])).values()];
-    const resolved:Awaited<ReturnType<typeof readEnterpriseControlDecisionContext>>[]=[];
-    // One bounded owner read per candidate, never parallel detached work on refusal.
-    for(let offset=0;offset<uniqueRefs.length;offset+=4){
-      checkEpisode();
-      const batch=await Promise.allSettled(uniqueRefs.slice(offset,offset+4).map(ref=>readEnterpriseControlDecisionContext(ctx,ref)));
-      const failed=batch.find(result=>result.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
-      for(const result of batch)if(result.status==='fulfilled')resolved.push(result.value);
-    }
+    checkEpisode();
+    const resolved=await readEnterpriseControlDecisionContexts(ctx,uniqueRefs);
+    checkEpisode();
     for(const {policy,model,kernel} of resolved){
       policies.push({policy:copyJson(policy),model:copyJson(model),kernel:copyJson(kernel)});
       if(!policy.certificate.completeSearch)gaps.push(gap('PARTIAL_CANDIDATE_SEARCH','S4 remaining search/ranking domain gap is retained','S4'));
@@ -258,7 +258,9 @@ export async function authorizeNativeBinding(ctx:PeMutationContext,binding:Nativ
   if(binding.tenantId!==ctx.auth.tenantId||binding.principalId!==principal(ctx))throw unavailable();
   await resolveDecisionWork(ctx,binding.work.id);
   for(const view of binding.views){
-    await loadEnterpriseBeliefView(ctx,{root:view.root as PeWorldRootRef});
+    if(process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG)
+      await loadEnterpriseBeliefView(ctx,{root:view.root as PeWorldRootRef});
+    else await authorizePrivateEquityWorldState(ctx,view.root as PeWorldRootRef);
     await authorizeBeliefSourceScopes(ctx,view.root as PeWorldRootRef,
       view.claims.filter(c=>c.ownerRef.entityType==='evidence_source_version').map(c=>c.ownerRef.id));
   }

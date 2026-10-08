@@ -8,6 +8,20 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dir = join(root, "packages/db/migrations");
 const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+// These exact historical filename pairs are already deployed. They are not
+// permission to allocate another file at either ordinal.
+const historicalPairs = new Map([
+  ["0131",new Set(["0131_egress_bounded_read_indexes.sql","0131_private_equity_release_baseline.sql"])],
+  ["0141",new Set(["0141_private_equity_outcome_pack_ids.sql","0141_restricted_digest_projection_access.sql"])],
+]);
+const ids = new Map<string,string>();
+for (const name of files) {
+  const id = name.split("_")[0]!;
+  if (!/^\d{4}[a-z]?$/.test(id)) throw new Error(`Invalid migration ID: ${name}`);
+  const prior=ids.get(id),historical=historicalPairs.get(id);
+  if (prior && !(historical?.has(prior)&&historical.has(name))) throw new Error(`Duplicate migration ID ${id}; serialize the integration before generating the bundle`);
+  ids.set(id,name);
+}
 const entries = files.map((name) => {
   const sql = readFileSync(join(dir, name), "utf8");
   return `  { name: ${JSON.stringify(name)}, sql: ${JSON.stringify(sql)} },`;

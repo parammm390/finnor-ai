@@ -28,6 +28,10 @@ export const FinancialSemanticsSchema=z.object({entityType:z.string().max(64),en
  unit:z.enum(['currency','count','ratio','multiple','rate']),currencyCode:z.string().regex(/^[A-Z]{3}$/).nullable(),frequency:z.enum(['annual','quarterly','monthly','instant','daily','weekly','event']),
  calendar:z.enum(['OWNER_RECORDED','GREGORIAN']),consolidation:z.enum(['OWNER_SUBJECT_ONLY','CONSOLIDATED','STANDALONE']),instrument:z.string().max(128),scale:z.enum(['1','1000','1000000']),sign:z.enum(['AS_RECORDED','NEGATE'])}).strict();
 export type FinancialSemantics=z.infer<typeof FinancialSemanticsSchema>;
+export const EvidenceUnderwritingBindingSchema=z.object({derivationId:z.string().uuid(),output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict();
+export const EvidenceUnderwritingInputsSchema=z.record(z.string().min(1).max(128),EvidenceUnderwritingBindingSchema)
+ .refine(bindings=>Object.keys(bindings).length<=16,'At most sixteen exact derived inputs are supported');
+export type EvidenceUnderwritingBinding=z.infer<typeof EvidenceUnderwritingBindingSchema>;
 const semanticInput=FinancialSemanticsSchema.omit({entityType:true,entityId:true});
 const MetricSourceSchema=semanticInput.extend({kind:z.literal('metric'),subject:EvidenceRootSchema,metricKey:z.string().min(1).max(128)}).strict();
 const columns=z.object({entityId:z.string().max(32),metricKey:z.string().max(32),value:z.string().max(32),periodStart:z.string().max(32),periodEnd:z.string().max(32),currencyCode:z.string().max(32),frequency:z.string().max(32),unit:z.string().max(32),calendar:z.string().max(32),consolidation:z.string().max(32),instrument:z.string().max(32),scale:z.string().max(32),sign:z.string().max(32)}).strict();

@@ -50,6 +50,8 @@ export interface ControlAction {
   resources: Record<string, number>; occupancy: Record<string, number>; occupationPeriods: number;
   tailLiability: number; earliestPeriod: number; lastPeriod: number; atMostOnce: boolean;
   exposures: Record<string, number[]>; protocolRef: ExperimentRef | null; informationDelayPeriods: number; humanSeconds: number;
+  /** Conjunction over lawful, already available information, never private worlds. */
+  precondition?: { afterActionIds: string[]; observations: Array<{ instrumentId: string; tokens: string[] }> };
 }
 export interface ControlProblem {
   schema: 'finnor.control-problem.v1'; id: string; episodeId: string; modelRef: ExperimentRef;

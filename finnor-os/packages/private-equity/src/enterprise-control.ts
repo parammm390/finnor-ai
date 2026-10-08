@@ -195,12 +195,100 @@ export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationC
  await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);return immutableControl(preparation);
 }
 
-/** Exact frozen M1 retained-context adapter; current S4/S3 standing remains owner-checked. */
-export async function readEnterpriseControlDecisionContext(ctx:PeMutationContext,value:unknown):Promise<{policy:ContingentPolicy;model:InterventionModel;kernel:InterventionControlSnapshot}>{
- const policy=await readPolicy(ctx,value);await readable(ctx,policy);
- const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);
- const snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
- const adapter=restoreInterventionControlAdapter(model,snapshot);
- if(epistemicHash(adapter.ref)!==epistemicHash(policy.bindings.dynamicsRef)||await current(ctx,policy))throw unavailable();
- return immutableControl({policy,model,kernel:snapshot});
+/** Exact current owner contexts. Nothing is cached across authenticated reads. */
+type ControlDecisionContext={policy:ContingentPolicy;model:InterventionModel;kernel:InterventionControlSnapshot;protocols:ExperimentProtocol[]};
+export async function readEnterpriseControlDecisionContext(ctx:PeMutationContext,value:unknown):Promise<ControlDecisionContext>{
+ return (await readEnterpriseControlDecisionContexts(ctx,[value]))[0]!;
+}
+export async function readEnterpriseControlDecisionContexts(ctx:PeMutationContext,values:unknown[]):Promise<ControlDecisionContext[]>{
+ if(values.length>16)throw new ControlContractError('LIMIT_EXCEEDED','At most sixteen current owner policy contexts may be read together');
+ const policies:ContingentPolicy[]=[];
+ for(const value of values)policies.push(await readPolicy(ctx,value));
+ const models=new Map<string,InterventionModel>(),pins=new Map(policies.flatMap(p=>p.bindings.beliefPins).map(pin=>[epistemicHash(pin),pin])),
+  methods=new Set<string>(),protocols=new Map<string,ExperimentProtocol>(),contexts:ControlDecisionContext[]=[];
+ for(const pin of pins.values())if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')throw unavailable();
+ for(const policy of policies){
+  if(Date.now()>=Date.parse(policy.validUntil))throw unavailable();
+  const method=epistemicHash(policy.compute.backend.sourceDigests);
+  if(!methods.has(method)){
+   if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))throw unavailable();
+   methods.add(method);
+  }
+  const modelKey=epistemicHash(policy.bindings.modelRef);
+  if(!models.has(modelKey))models.set(modelKey,await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef));
+  const model=models.get(modelKey)!,snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest),
+   adapter=restoreInterventionControlAdapter(model,snapshot);
+  if(epistemicHash(adapter.ref)!==epistemicHash(policy.bindings.dynamicsRef))throw unavailable();
+  const inputProtocols=await validatedControlProtocols(ctx,policy,protocols);
+  await recoverPolicyExperience(ctx,policy);
+  contexts.push({policy,model,kernel:snapshot,protocols:inputProtocols});
+ }
+ return immutableControl(contexts);
+}
+async function validatedControlProtocols(ctx:PeMutationContext,policy:ContingentPolicy,validated?:Map<string,ExperimentProtocol>):Promise<ExperimentProtocol[]>{
+ const ref=policy.bindings.inputArtifactRef;
+ if(!ref)throw unavailable();const input=await readArtifact(ctx,'inputs',ref.contentDigest);
+ if(epistemicHash(input)!==ref.contentDigest||epistemicHash(input.problem)!==epistemicHash(policy.problem))throw unavailable();
+ const protocols=input.protocols as ExperimentProtocol[];
+ for(const protocol of protocols){
+  const key=epistemicHash(protocol);
+  if(!validated?.has(key)){
+   if((await validateEnterpriseExperiment(ctx,protocol)).status!=='CURRENT')throw unavailable();
+   validated?.set(key,protocol);
+  }
+ }
+ return immutableControl(protocols);
+}
+/** Pure owner proposal. Neither economic terms nor original limits may expand. */
+export async function synthesizeEnterpriseControlProposal(ctx:PeMutationContext,input:{
+ incumbentPolicyRef:unknown;problem:unknown;remainingDeadlineMs:number;remainingExpansions:number;
+}){
+ const ownerStarted=performance.now(),{policy:incumbent,model,kernel,protocols}=await readEnterpriseControlDecisionContext(ctx,input.incumbentPolicyRef),
+   problem=parseControlProblem(input.problem),m=incumbent.mandate;
+ if(ctx.auth.role!=='owner'||incumbent.principalId!==actor(ctx)||problem.episodeId!==m.episodeId||
+   epistemicHash(problem.modelRef)!==epistemicHash(incumbent.bindings.modelRef)||problem.context!==incumbent.problem.context||
+   problem.regime!==incumbent.problem.regime||epistemicHash(problem.obligations)!==epistemicHash(incumbent.problem.obligations)||
+   problem.continuation||incumbent.problem.continuation||problem.validUntil!==incumbent.problem.validUntil)
+  throw new ControlContractError('INVALID_REQUEST','Proposal changed the authorized owner episode/model/context/history');
+ if(!Number.isInteger(input.remainingDeadlineMs)||input.remainingDeadlineMs<1||input.remainingDeadlineMs>m.search.deadlineMs||
+   !Number.isInteger(input.remainingExpansions)||input.remainingExpansions<1||input.remainingExpansions>m.search.maxExpansions)
+  throw new ControlContractError('INVALID_REQUEST','Proposal cannot renew the original computation grant');
+ if(await unresolvedEffects(ctx))throw new ControlContractError('INVALID_REQUEST','Unreconciled S6 effects require accounted continuation');
+ const dynamics=restoreInterventionControlAdapter(model,kernel),
+   instruments=controlInstrumentSupports(protocols,model,m,problem);
+ const artifact={problem,protocols,kernelRef:dynamics.ref,kernelCompute:kernel.compute},digest=epistemicHash(artifact),
+   inputArtifactRef:ExperimentRef={owner:'S4',id:`control-input:${digest}`,version:'s4-input-v1',contentDigest:digest};
+ const result=await synthesizeContingentControl({mandate:m,problem,dynamics,instruments,
+   beliefPins:incumbent.bindings.beliefPins,inputArtifactRef,priorPolicyRef:incumbent.ref,validUntilCap:incumbent.validUntil,
+   budgetStartedAt:ownerStarted-(m.search.deadlineMs-input.remainingDeadlineMs),remainingExpansions:input.remainingExpansions});
+ await readEnterpriseControlDecisionContext(ctx,incumbent.ref);
+ await saveEvents(ctx,result.experience);await saveArtifact(ctx,'results',epistemicHash(result),result);
+ if(result.policy){
+  await saveArtifact(ctx,'inputs',digest,artifact);await saveArtifact(ctx,'demands',result.policy.demand.contentDigest,result.policy.demand);
+  await saveArtifact(ctx,'policies',result.policy.ref.contentDigest,result.policy);
+  if(await current(ctx,result.policy))throw unavailable();
+ }
+ return immutableControl(result);
+}
+export async function readEnterpriseControlBranchChoice(ctx:PeMutationContext,value:unknown):Promise<ReturnType<typeof decideContingentPolicy>>{
+ const ref=ExperimentRefSchema.parse(value);
+ if(ref.owner!=='S4'||ref.version!=='s4-finite-contingent-v1'||ref.id!==`branch-choice:${ref.contentDigest}`)throw unavailable();
+ const choice:ReturnType<typeof decideContingentPolicy>=await readArtifact(ctx,'choices',ref.contentDigest),{ref:actual,...body}=choice;
+ if(choice.schema!=='finnor.s4.branch-choice.v1'||choice.executionAuthorityGranted!==false||
+   epistemicHash(actual)!==epistemicHash(ref)||epistemicHash(body)!==ref.contentDigest)throw unavailable();
+ await readEnterpriseContingentPolicy(ctx,choice.policyRef);return immutableControl(choice);
+}
+export async function listEnterpriseControlPolicies(ctx:PeMutationContext,root:PeWorldRootRef):Promise<ContingentPolicy[]>{
+ await loadEnterpriseBeliefView(ctx,{root});await checkedStore(ctx);
+ let names:string[];try{names=await readdir(join(directory(ctx),'policies'));}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return [];throw e;}
+ if(names.length>256)throw new ControlContractError('LIMIT_EXCEEDED','Policy discovery requires bounded operator pagination');
+ const policies:ContingentPolicy[]=[];
+ for(const name of names.sort()){
+  if(!/^[a-f0-9]{64}\.json$/.test(name))throw unavailable();const digest=name.slice(0,-5);
+  try{const policy=await readEnterpriseContingentPolicy(ctx,{owner:'S4',id:`contingent-policy:${digest}`,version:'s4-finite-contingent-v1',contentDigest:digest});
+   if(policy.bindings.beliefPins.some(pin=>epistemicHash(pin.root)===epistemicHash(root)))policies.push(policy);
+  }catch(error){if(!(error instanceof PeDomainError&&error.code==='PE_ENTITY_NOT_FOUND'))throw error;}
+  if(policies.length>=16)break;
+ }
+ return policies;
 }

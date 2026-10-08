@@ -1,14 +1,20 @@
 import {z} from 'zod';
 import {receiveWork,attachWorkEntity} from '@finnor/db';
-import {EvidenceHandlesRequestSchema,EvidenceRootSchema} from '@finnor/shared-types';
+import {EvidenceHandlesRequestSchema,EvidenceRequestSchema,EvidenceRootSchema} from '@finnor/shared-types';
 import {loadEnterpriseBeliefView} from '../enterprise-beliefs';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
 import {parseRequest} from './contracts';
 import {createHandle,loadHandle} from './sources';
 import {assertDependencies,authorize,codeIdentity,currentDerivation,event,newId,principal,query,schemaIdentity,sha,stable,storedDerivation,tx,unavailable} from './store';
-import {consumeEvidenceUnderwriting} from './consumer';
+import {consumeEvidenceUnderwriting,EvidenceConsumeRequestSchema} from './consumer';
 export const EVIDENCE_OPERATIONS = ['evidence-handles','evidence-submit','evidence-read','evidence-witness','evidence-replay','evidence-cancel','evidence-consume'] as const;
 const querySchema=z.object({queryId:z.string().uuid()}).strict();
+export const EvidenceOperationSchemas={
+ 'evidence-handles':EvidenceHandlesRequestSchema,'evidence-submit':EvidenceRequestSchema,'evidence-read':querySchema,
+ 'evidence-witness':querySchema.extend({output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict(),
+ 'evidence-replay':querySchema.extend({idempotencyKey:z.string().min(1).max(200)}).strict(),'evidence-cancel':querySchema,
+ 'evidence-consume':EvidenceConsumeRequestSchema,
+} as const;
 const safePredicate=(error:unknown)=>String((error as Error).message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'UNSUPPORTED_EVIDENCE_REQUEST';
 export async function submitEvidence(ctx:PeMutationContext,body:unknown){const request=parseRequest(body);await authorize(ctx,request.root as PeWorldRootRef,request.workId?[{type:'work',id:request.workId}]:[]);
  if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_BINDINGS_UNAVAILABLE');

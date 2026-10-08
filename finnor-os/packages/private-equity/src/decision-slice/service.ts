@@ -10,6 +10,7 @@ import { resolveDecisionWork, resolveNativeDecision, authorizeNativeBinding, rec
 import { buildDecisionGraph, proposeExactProjection } from './graph';
 import { checkDecisionProjection } from './checker';
 import { compileEvidenceDemands } from './evidence-port';
+import { evidenceComputeRefs } from '../evidence-execution/consumer';
 import { contextSeed, retainContext, serveWorkingContext, patchWorkingContext } from './context';
 import { readOptional, readPrivate, readRecord, writePrivate, writeRecord, withStoreLock } from './store';
 import { assertBounded, m1Ref, p4Ref, M1_VERSION, RequestSchema, same, unavailable, DecisionSliceError,
@@ -127,7 +128,8 @@ export async function compileDecisionSlice(ctx:PeMutationContext,value:unknown):
     const policyRequest={ref:m1Ref('decision-policy-request',policyRequestBody),
       kind:mandateRefs.length?'NATIVE_S4_POLICY_REQUEST' as const:'WORK_NUMERICAL_REQUEST_S4_MANDATE_UNAVAILABLE' as const,mandateRefs,candidateRefs,incumbentRefs};
     const upstreamComputeRefs=[...new Set(binding.policies.flatMap(p=>[p.policy.compute.id,p.model.compute.id,p.kernel.compute.id])
-      .concat(binding.allocation?[binding.allocation.certificate.compute.id]:[]))];
+      .concat(binding.allocation?[binding.allocation.certificate.compute.id]:[])
+      .concat(binding.p4.flatMap(evidenceComputeRefs)))];
     const evidenceDemands=compileEvidenceDemands(binding,graph,new Date(Date.now()+Math.max(0,deadline-performance.now())).toISOString());
     const body:Omit<DecisionSlice,'ref'>={
       schema:'finnor.decision-slice.v1',

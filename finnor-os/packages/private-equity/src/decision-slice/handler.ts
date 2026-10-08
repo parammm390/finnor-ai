@@ -9,6 +9,12 @@ const ReadSchema=z.object({sliceRef:RefSchema}).strict();
 const PatchRequest=z.object({sliceRef:RefSchema,expectedContextRef:RefSchema,patch:z.unknown()}).strict();
 const WitnessSchema=z.object({sliceRef:RefSchema,variableId:z.string().min(1).max(1024)}).strict();
 const ConsumeSchema=z.object({sliceRef:RefSchema,use:z.enum(['DECISION','NUMERICAL_ONLY']),decision:z.unknown().optional()}).strict();
+export const M1OperationSchemas={
+  'decision-slice-compile':RequestSchema,'decision-slice-read':ReadSchema,'decision-slice-view':ReadSchema,
+  'decision-slice-context':ReadSchema,'decision-slice-patch':PatchRequest,'decision-slice-witness':WitnessSchema,
+  'decision-slice-consume':ConsumeSchema,'decision-slice-cancel':ReadSchema,'decision-slice-recompile':ReadSchema,
+  'decision-slice-changes':ReadSchema,
+} as const;
 export const M1_OPERATIONS=new Set(['decision-slice-compile','decision-slice-read','decision-slice-context','decision-slice-patch',
   'decision-slice-witness','decision-slice-consume','decision-slice-cancel','decision-slice-recompile','decision-slice-changes','decision-slice-view']);
 export async function handleDecisionSliceOperation(ctx:PeMutationContext,operation:string,body:unknown):Promise<unknown>{

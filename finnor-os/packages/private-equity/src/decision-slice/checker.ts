@@ -69,8 +69,10 @@ export function checkDecisionProjection(input:ProjectionInput,witness:Projection
           if(edge.lagPeriods!==(lags.get(nativeId)??null))reject('NATIVE_COMPUTATIONAL_LAG_CHANGED');
         }
         for(const edge of graph.edges.filter(e=>e.from===id&&e.kind==='COMPUTATIONAL'))if(edge.expressionDigest!==epistemicHash(definition))reject('EXPRESSION_COMMITMENT_CHANGED');
-        if(definition.kind==='input'&&binding.request.source.kind==='UNDERWRITING'){
-          const selected=binding.request.source.evidenceDerivationInputs?.[definition.id];
+        const financialSource=binding.request.source.kind==='UNDERWRITING'?binding.request.source:
+          binding.request.source.kind==='POLICY'?binding.request.source.underwriting:undefined;
+        if(definition.kind==='input'&&financialSource){
+          const selected=financialSource.evidenceDerivationInputs?.[definition.id];
           const derivation=selected&&binding.p4.find(d=>d.id===selected.derivationId);
           const actual=graph.edges.filter(e=>e.from===id&&e.kind==='PROVENANCE'),resolved=candidate.input.values[definition.id];
           if(derivation&&selected){

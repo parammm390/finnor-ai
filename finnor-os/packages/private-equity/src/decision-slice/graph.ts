@@ -47,8 +47,10 @@ export function buildDecisionGraph(binding:NativeBinding):DecisionGraph {
       const expression=node.kind==='expression'||node.kind==='series'?node.expression:node.kind==='check'?node.assertion:null;
       const lags=expression?expressionLags(expression):new Map<string,number|null>();
       for(const dep of node.dependencies)edge(id,`${prefix}:${dep}`,'COMPUTATIONAL',node,lags.get(dep)??null);
-      if(node.kind==='input'&&binding.request.source.kind==='UNDERWRITING'){
-        const selected=binding.request.source.evidenceDerivationInputs?.[node.id];
+      const financialSource=binding.request.source.kind==='UNDERWRITING'?binding.request.source:
+        binding.request.source.kind==='POLICY'?binding.request.source.underwriting:undefined;
+      if(node.kind==='input'&&financialSource){
+        const selected=financialSource.evidenceDerivationInputs?.[node.id];
         const derivation=selected&&binding.p4.find(d=>d.id===selected.derivationId);
         if(derivation)edge(id,`p4:${derivation.id}:complete-owner`,'PROVENANCE',
           {binding:selected,input:candidate.input.values[node.id],derivation:p4Ref(derivation)});

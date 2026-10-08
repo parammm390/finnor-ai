@@ -1,14 +1,25 @@
 import {z} from 'zod';
 import {attachWorkEntity} from '@finnor/db';
 import {compileUnderwritingModel,type ResolvedInput,type UnderwritingInputSnapshot,type UnderwritingModelIR} from '@finnor/underwriting';
-import {FinancialSemanticsSchema,type FinancialSemantics} from '@finnor/shared-types';
+import {FinancialSemanticsSchema,EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding,type EvidenceDerivation,type ExperimentRef} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import {createUnderwritingRun} from '../underwriting-repository';
 import type {PeMutationContext} from '../types';
 import {authorizeBeliefResources} from '../enterprise-beliefs';
 import {assertDependencies,authorize,currentDerivation,sha,stable,tx} from './store';
-export const EvidenceUnderwritingBindingSchema=z.object({derivationId:z.string().uuid(),output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict();
-export type EvidenceUnderwritingBinding=z.infer<typeof EvidenceUnderwritingBindingSchema>;
+export {EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding};
+export const evidenceDerivationRef=(derivation:EvidenceDerivation):ExperimentRef=>({
+ owner:'P4',id:derivation.id,version:derivation.code.version,contentDigest:sha(derivation),
+});
+export function evidenceComputeRefs(derivation:EvidenceDerivation):string[]{
+ return [...new Set([derivation.runtime.fabricInvocationId,...[
+  ...derivation.costs.nativeInvocations,...derivation.sourceHandles.flatMap(handle=>handle.acquisitionInvocations),
+ ].map(raw=>{
+  if(!raw||typeof raw!=='object')return null;
+  const value=raw as Record<string,unknown>;
+  return typeof value.invocationId==='string'?value.invocationId:null;
+ })].filter((id):id is string=>typeof id==='string'))];
+}
 export async function resolveEvidenceUnderwritingInputs(ctx:PeMutationContext,investmentCaseId:string,modelVersionId:string,bindings:Readonly<Record<string,EvidenceUnderwritingBinding>>):Promise<Record<string,ResolvedInput>>{
  if(!Object.keys(bindings).length)return {};if(Object.keys(bindings).length>16)throw Error('DERIVATION_CONSUMER_INPUT_BOUND');
  await authorizeBeliefResources(ctx,[{type:'pe_investment_case',id:investmentCaseId}]);
@@ -41,7 +52,8 @@ export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tena
  if(!identity||identity.status!=='active'||identity.role!=='owner')throw Error('CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE');
  await assertEvidenceSnapshotCurrent({auth:{tenantId,userId:identity.id,employeeId:identity.id,role:'owner'},provenance:{sourceSystem:'P4:existing-consumer-currentness',createdBy:identity.id}},row.input_snapshot,client,true);return true;
 }
-export async function consumeEvidenceUnderwriting(ctx:PeMutationContext,body:unknown){const request=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(EvidenceUnderwritingBindingSchema)}).strict().parse(body);
+export const EvidenceConsumeRequestSchema=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(EvidenceUnderwritingBindingSchema)}).strict();
+export async function consumeEvidenceUnderwriting(ctx:PeMutationContext,body:unknown){const request=EvidenceConsumeRequestSchema.parse(body);
  const derivations=await Promise.all(Object.values(request.bindings).map(binding=>currentDerivation(ctx,binding.derivationId))),workIds=[...new Set(derivations.map(d=>d.work.id))];
  if(workIds.length!==1||request.workId&&request.workId!==workIds[0])throw Error('DERIVATION_CONSUMER_WORK_SCOPE_MISMATCH');const workId=workIds[0]!;
  await authorizeBeliefResources(ctx,[{type:'work',id:workId},{type:'pe_investment_case',id:request.investmentCaseId}]);
