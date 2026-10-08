@@ -15,7 +15,8 @@ await mkdir(out,{recursive:true});await mkdir(privateDir,{recursive:true,mode:0o
 const e=await nativeFixture(),frontendOrigin='http://127.0.0.1:4696';
 const ctx={auth:{tenantId:e.tenant,userId:e.actor,employeeId:e.actor,role:'owner' as const},
  provenance:{createdBy:e.actor,sourceSystem:'P6:disposable-mounted-fixture'}};
-await e.admin.query(await readFile(join(repo,'scope-pm/phase-12-p6-procedure-induction/handoff/schema.proposed.sql'),'utf8'));
+if((await e.admin.query("SELECT name FROM finnor_os._migrations WHERE name='0170_p6_procedure_induction.sql'")).rowCount!==1)
+ throw Error('CANONICAL_REGISTERED_P6_MIGRATION_REQUIRED');
 await e.admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
  VALUES('native:p4',2,2,0,60,'Disposable P6 mounted fixture, no funding')`);
 const contracts=(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS;

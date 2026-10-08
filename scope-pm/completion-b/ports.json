@@ -1,0 +1,109 @@
+{
+  "schema": "finnor.completion-b.ports.v1",
+  "owner": "TRACK_B",
+  "state": "FROZEN_BOUNDED_CLOSURE_FULL_REGRESSION_FAIL_ORIGINAL_MISSIONS_INCOMPLETE",
+  "ports": [
+    {
+      "phase": "P3",
+      "handler": "finnor-os/apps/api/app/api/branches/[operation]/route.ts",
+      "implementation": "finnor-os/packages/private-equity/src/branch-fabric/service.ts",
+      "contracts": "finnor-os/packages/private-equity/src/branch-fabric/contracts.ts",
+      "transport": "Authenticated POST /api/branches/{operation}",
+      "operations": ["prepare", "submit", "read", "list", "compare", "checkpoint", "checkpoint-revoke", "checkpoint-purge", "resume", "cancel", "inspect", "continue"],
+      "worker": "finnor-os/packages/private-equity/src/branch-fabric/worker.ts:handleBranch",
+      "job": "run_branch_fabric_v1",
+      "domain": "Explicit pure/application_fixture/intervention_simulation/live_read classes; registered native owner programmes, not an authentic HarnessProgram transport",
+      "profiles": {
+        "TRUSTED_NATIVE_H0": "Non-hostile native development execution. No isolation qualification.",
+        "LINUX_GVISOR_DEVELOPMENT": "Built fixed gVisor/cgroup backend. Actual authorized Linux hostile-cell execution is NOT_RUN."
+      },
+      "checkpoint": "Authenticated encrypted logical programme/fixture state with private versioned POSIX key custody, revocation, expiry, retention and holds. Raw process-image helpers are not a managed encrypted process-image lifecycle.",
+      "currentness": "Actual Work/input/rights/owner/source/runtime and publication fences are checked before current use and recovery.",
+      "cancel": "Fences new work, aborts actual supported child execution, and retains all costs and cleanup obligations.",
+      "budget": "Original 120-second accepted episode ancestry and shared logical limits are retained. Native logical counters are not aggregate host confinement.",
+      "latestCompletePhysicalRun": "Final frozen affected-20261007T181501-e8c02bbf: all 32 original non-mounted P3 PASS_LOCAL, six unpassed external rows, 398 verified artifact hashes and exact final bytes/selection. This invocation retains no entries in its own resource root. Native development only, not Linux, aggregate confinement, gate proof or reconciliation of either historical cleanup/capacity obligation.",
+      "earlier144042PhysicalRun": "affected-20261007T144042-1082781e, 32 PASS_LOCAL and 6 BLOCKED_EXTERNAL_UNPASSED; all 397 declared P3 hashes and final bytes/SHA independently verify. This is native development execution, not Linux or gate proof. Earlier affected-20261007T123244-cfe91293 remains 20 PASS_LOCAL/12 FAIL/6 blocks with exact historical checker resource cfaec897-6d6b-4a37-89b7-8a8aed0483a5 and queued job/capacity liability; its original precise cause remains UNKNOWN and it is not reconciled by the new invocation.",
+      "earlier144042CutProof": "Earlier full affected-20261007T144042-1082781e is FAIL overall: 184 local passes, one original repair-loop deadline refusal and six external blocks. All 603 hashes/six finals/native54/exact selections and independently recomputed unchanged closure 5f77ae5cad08b56b08479b18861746c69d8574009d564105aa6a344fd516a152 verify. The full P3 suite passes on this cut, but historical liability, Linux, mounted/join, performance and gates remain unqualified.",
+      "latestFullRegression": "Final frozen affected-20261007T181501-e8c02bbf: P3 32 PASS_LOCAL/six unpassed external rows; whole run FAIL with 186 passes/one repo-owned M3 authentic-p4-work-rebind deadline failure. All 610 hashes/six finals/native54/exact selections and independently recomputed equal closure 7eca889db8947e5e89688a3763c8c60c3c6d45c269156a8a71cb6b6403cfe07e verify. No further rerun or gate qualification.",
+      "earlier163926FullRegression": "affected-20261007T163926-9021c1df: P3 31 PASS_LOCAL, one real capacity-retry INTERRUPTED/CANCELLED_OR_FENCE_LOST, six external blocks; whole run 186 passes/one failure. All 609 hashes/six finals/native54/exact selections and independently recomputed equal closure 9a5be1fbc5da258d1ecebefd29fd6f5339fe993dee783103a637382e9d39346c verify. Original precise cause remains UNKNOWN.",
+      "generationSynchronization": "affected-20261007T171433-381748d4 retains the actual observed-generation-1/expected-generation-2 race, event and cost diagnostic, two original passes/one new failure/six blocks, 26 verified hashes and equal closure. After serializing heartbeat read/comparison with intent advancement via shared/exclusive head locks, affected-20261007T172411-b29c1a47 has three selected passes, 26 verified hashes and equal closure 5f03d4b1102e3c392a7f6581e3117c1bc4e31f967ce37377c37e1fa0907d3308. Original deadline, both physical costs, one publication and exact cleanup hold; actual epoch-changing cancellation still prevents publication. Not the original opaque-cause explanation or full/gate proof.",
+      "finalMinimalAffectedRegression": "run-2026-10-07T18-11-00-921Z-38a391af: four PASS_LOCAL/zero FAIL/six external blocks, all seven actual controller SIGKILL windows within the unchanged ten-second observer deadline, original 48-body and exhausted-before-read cancellation controls, and the authentic generation interleaving. All 75 hashes/final bytes/exact selection independently verify. Direct source pins only, not full dependency/runtime closure. Earlier full P3 affected-20261007T173145-c39768d9 remains 24 passes/eight failures/six blocks with 377 verified hashes and unchanged closure. The one final frozen full run is now recorded separately, not pending.",
+      "selectedRepairProof": "affected-20261007T135239-669760b4 records three selected P3 PASS_LOCAL, 30 NOT_RUN_EXCLUDED and six external blocks. The injected owned EACCES is durably retained at REMOVE_PRIVATE_OWNED_DIRECTORY, with capacity held until actual canonical 60-second replay cleans all exact intents without a new programme. All 45 P3 hashes and final bytes verify. The original full-run cleanup cause remains UNKNOWN and its retained resource is not reconciled by this separate control.",
+      "protectedAuthority": false
+    },
+    {
+      "phase": "M3",
+      "handler": "finnor-os/packages/private-equity/src/capital-program/v2-api.ts:handleCapitalProgramOperation",
+      "contracts": "finnor-os/packages/shared-types/src/capital-program.ts",
+      "reader": "finnor-os/packages/private-equity/src/capital-program/challenge-reader.ts:readCurrentCapitalProgram",
+      "readerArguments": ["authenticated PeMutationContext", "exact M3 v2 immutable reference", "exact permitted Work ID"],
+      "transport": "Authenticated POST /api/company-brain/{operation}",
+      "operations": ["capital-program-submit", "capital-program-read", "capital-program-list", "capital-program-context", "capital-program-ports", "capital-program-witness", "capital-program-module", "capital-program-cancel", "capital-program-resume", "capital-program-recompile", "capital-program-select"],
+      "worker": "finnor-os/packages/private-equity/src/capital-program/worker.ts:runCapitalProgramJob",
+      "job": "run_capital_program_v2",
+      "version": "m3-owner-economic-v2",
+      "domain": "Bounded original S3/S4 finite joint worlds, exact registered resource scaling, emitted economic constructor modules, pure S5 proposals and genuine current M1 evidence. Immediate/upfront-stage/lawful observable-stage/inquiry/wait-stop structures are model-relative and unadmitted.",
+      "repair": "One through eight exact original M4 issued handles bind the parent Work, candidate and mandate; construction makes a new immutable M3 child, retains both parents and locked attenuated ancestry resources without renewing the deadline.",
+      "currentness": "Authentic current publication, immutable graph/module/claim preimages and actual M1/owner checks. Initial and final live fences reject revisions committed during a read.",
+      "cancel": "Durable generation fence. Actual scoped cancellation at callback registration is locally verified on run-20261007T122239-9a196c69: generation 2/CANCELLED, callback false before ACK, no publication, unchanged deadline/business rows and retained fenced costs. No cancellation queue-timer callback was observed.",
+      "heartbeat": "One bounded actual canonical callback binds job type/protocol/tenant/query/principal/generation/token/fence/unexpired lease. Five positive queue heartbeats and exact durable publication before ACK pass on run-20261007T122239-9a196c69; six hashes and closure 953124eb3d5f7e3dc5e7412191e0f69c08c86d06b278833927fcf0a1e27cc980 independently verify. Both zero-callback baseline failures remain.",
+      "physicalCancellation": "UNPASSED: A-owned S6 executor SHA-256 9c881eff0274ea58ef08fc4c1dfcf4c53180bd442ab204d7d3e96f6065faf5d3 has no caller abort/live process-identity port. Compatible immutable owner port and real exact-child teardown evidence required; no peer edit or concurrency-bypassing wrapper.",
+      "selection": "MODEL_BRANCH_REVIEW is nonconsequential. OWNER_HANDOFF remains blocked; no S4 selection, S5 reservation or S6 authority is implied.",
+      "mounted": "Original challenge, changed economic repair and linked rechallenge controls are now installed in Economic arrangements. Five pre-install runs remain partial/failed. First installed run fails at fixture document-focus refusal; second and third are PARTIAL_VALIDATION/BLOCKED_TOOL with zero trusted Canvas clicks. Third additionally passes actual focus/hit checks and waits 25 seconds for trusted input. All exact evidence closures independently verify, but none exercises the installed original controls. Post-run diagnostic refuses before input after the assigned document changes. Original-loop execution and registered negatives remain unqualified.",
+      "earlier144042CutProof": "Earlier affected-20261007T144042-1082781e records all 29 original non-mounted M3 PASS. Completion records 18 PASS across 19 selected stories and original-challenge-repair-loop FAIL before child acceptance: capital-program-recompile returns 413/LIMIT_EXCEEDED after the unchanged original repair deadline. Five actual stages and costs remain retained, with no changed child or linked rechallenge claimed on this failed path. All 32 completion hashes/final bytes and independently recomputed full closure verify. Earlier authentic-P4/changed-child failures remain historical; mounted, physical cancellation, complete economics and gates stay unqualified.",
+      "latestFullRegression": "Final frozen affected-20261007T181501-e8c02bbf: M3 28 PASS/one authentic-p4-work-rebind FAIL. Durable child 95591bb6-9100-437f-859b-5ee105aba747 is FAILED/LIMIT_EXCEEDED at its unchanged 2026-10-07T18:22:07.914Z deadline, without publication. This is a retained repo-owned failure, not an external gate. All 21 explicit completion stories, including the distinct changed-economic-child/linked-original-rechallenge loop, PASS. Whole run remains FAIL: 186 passes/one failure/six external rows, 610 verified hashes and equal closure. No further fix or rerun.",
+      "earlier163926FullRegression": "affected-20261007T163926-9021c1df: all 29 original non-mounted M3 and all 21 explicit completion stories PASS, including the authentic changed-economic-child/linked-original-rechallenge loop under inherited clocks. Whole run remains red at P3 capacity retry: 186 passes/one failure/six blocks, 609 verified hashes and independently recomputed equal closure. Not mounted, complete economics, physical cancellation, cumulative adoption or gate proof.",
+      "selectedRepairProof": "affected-20261007T135239-669760b4 passes both heartbeat stories, actual PE/tenant ORM correspondence and live full/projection SQL correspondence; the changed repair child publishes PARTIAL. The projection story's purported cancelled phase is actually INVALIDATED after rights suspension, not exact cancellation proof; this defect is retained and stronger controls are preregistered. The original loop still fails at linked M4 expiry. All 17 completion hashes and final bytes verify; shared proposals are not C adoption or controlled speedup.",
+      "latestSelectedProof": "affected-20261007T141608-91bfa89d passes six explicit completion controls: both heartbeat stories, PE/tenant ORM correspondence, real queued CANCELLED generation 2 and actual FAILED OWNER_OR_STORAGE_FAILURE lifecycle/full-row correspondence, and original changed repair/linked rechallenge. Exact policy bytes/mode are restored, failed costs retained and no failed-row publication exists. All 18 completion hashes/final bytes and independently recomputed closure 5f77ae5cad08b56b08479b18861746c69d8574009d564105aa6a344fd516a152 verify. Not a new full original M3 or six-suite run, physical cancellation, mounted qualification or gate. Prior INVALIDATED-label and deadline failures remain retained.",
+      "actualEmittedReproduction": "run-20261007T143606-0dfe5e61 executes the exact six-case emitted command string at its recorded directory; six PASS, 18 hashes/final bytes/exact selection and independent closure recomputation verify. This does not execute or clear the different historical 17-case full-red command, nor replace the latest full regression failure.",
+      "protectedAuthority": false
+    },
+    {
+      "phase": "M4",
+      "handler": "finnor-os/packages/private-equity/src/counterexample-search/handler.ts:handleCounterexampleOperation",
+      "contracts": "finnor-os/packages/private-equity/src/counterexample-search/contracts.ts",
+      "transport": "Authenticated POST /api/company-brain/{operation}",
+      "operations": ["challenge-submit", "counterexample-diagnostic-submit", "counterexample-read", "counterexample-currentness", "counterexample-view", "counterexample-ledger", "counterexample-witness-replay", "counterexample-cancel", "counterexample-repair-request", "counterexample-retention-purge"],
+      "worker": "finnor-os/packages/private-equity/src/counterexample-search/worker.ts:runCounterexampleSearchJob",
+      "job": "run_counterexample_search_v1",
+      "originalOutput": "finnor.m4.challenge-result.v1",
+      "diagnosticOutput": "Separate explicit diagnostic report, never aliased into ChallengeResult",
+      "candidate": "Exact current authenticated M3 programme; claims are derived from its published original owner preimages, not caller assertions.",
+      "readerModes": {
+        "CURRENT": "Default, genuine current candidate applicability is rechecked.",
+        "ISSUED_HISTORY": "Actual authorization, ciphertext/publication/retention/cancellation checks; HISTORICAL_NOT_RECHECKED is not CURRENT, SAFE or authority."
+      },
+      "issuedEvidenceReader": "finnor-os/packages/private-equity/src/counterexample-search/service.ts:readIssuedCapitalChallenge",
+      "repair": "New M3 economic construction precedes linked original rechallenge. Old reports remain immutable; original trial/byte/lineage/deadline allocations are not renewed.",
+      "custody": "AES-256-GCM and ordinary-role FORCE RLS; actual key-ID/same-ID rotation, ciphertext mutation, retention, foreign principal, cancellation and closed invocation controls executed locally. Managed production key lifecycle remains incomplete.",
+      "resultMeanings": ["FAILURE_WITNESS", "NO_WITNESS_WITHIN_BUDGET", "BLOCKED"],
+      "mounted": "A separate exact original ChallengeResult presenter is installed under the current M3 Work panel. Diagnostic schema and presenter remain distinct. Installed mounted workflow execution is not yet qualified.",
+      "domain": "Supported exact numerical/allocation/model-relative finite-world checks. Full original grounding/legal/scientific/effect/compound domains remain incomplete.",
+      "earlier144042CutProof": "Earlier affected-20261007T144042-1082781e records all 23 original non-mounted M4 PASS, including all four actual SIGKILL recovery windows. All 174 M4 hashes/final bytes and independently recomputed unchanged full closure verify. Overall full regression remains red at original M3 repair-child acceptance after its inherited deadline. Earlier unobserved ACK cause remains UNKNOWN; new success does not explain it. Mounted, full-domain and gates remain unqualified.",
+      "latestFullRegression": "Final frozen affected-20261007T181501-e8c02bbf: all 23 original non-mounted M4 and all 21 explicit completion stories PASS, including changed economic repair/linked original rechallenge with inherited clocks, 12/22 trials and immutable old report. All 174 M4 hashes and final bytes/selection independently verify. Whole run FAILS at the separate repo-owned M3 authentic-P4 child deadline: 186 passes/one failure/six external rows, 610 verified hashes and equal closure. Earlier unknown causes/liabilities, mounted/full-domain/cumulative integration and all original gates remain unqualified.",
+      "earlier163926FullRegression": "affected-20261007T163926-9021c1df: all 23 original non-mounted M4 and all 21 explicit completion stories PASS, including the authentic changed-economic-child/linked-original-rechallenge loop under inherited clocks. Whole run remains red at P3 capacity retry: 186 passes/one failure/six blocks, 609 verified hashes and independently recomputed equal closure. Earlier opaque ACK cause remains UNKNOWN; mounted, full-domain, cumulative adoption and gates remain unqualified.",
+      "selectedRepairProof": "affected-20261007T135239-669760b4 still fails the original loop: linked search e50500e9-7ac4-41ca-9445-ddddc30bb69c expires after 22 debits/11 checks, with its unchanged inherited 13:56:01.639Z deadline. Actual stage and SQL-poll diagnostics are preregistered; no new optimization, four-window proof or full regression has cleared either failure.",
+      "latestOriginalNonMountedProof": "affected-20261007T141608-91bfa89d passes all 23 original non-mounted M4 stories and all four actual CHECK/WITNESS/PUBLICATION/ACK SIGKILL windows. All 174 hashes/final bytes, exact selections and independently recomputed closure verify. Six selected completion controls include changed M3 repair and linked original rechallenge, unchanged inherited clocks, 12/22 trials and immutable old report. Exact server expiry waits do not renew or release leases. Historical ACK failure cause remains UNKNOWN; prior linked expiry remains retained. Not a replacement full six-suite, mounted, full-domain or independent-gate proof.",
+      "protectedAuthority": false
+    }
+  ],
+  "peerGenerationsVerifiedNotAdopted": {
+    "A": "a394dea6220f7524653bfefd7f620ce974b5095bfd85cb212e507e76de437563",
+    "C": "cf04d8c27a3ebb61f4a8845dad11558babf79ef44e10fd64007ca6799f923a34"
+  },
+  "peerCQualification": "Exact commit/tree/artifact reconstruction verified; separate full-patch strict whitespace FAIL retained. Not adopted and behavior not validated by B.",
+  "refreshedAInspectionNotAdopted": {
+    "generation": "2f450cdfc6788e86f51bd884501b752e455e682f8b3345fd7c5287a42c2b4c67",
+    "qualification": "Pointer/receipt and selected artifacts verified; full refreshed commit/tree reconstruction not run. Archive executor bytes exactly match the earlier inspected executor without a physical abort/live process-identity port. Not adopted.",
+    "executorSHA256": "9c881eff0274ea58ef08fc4c1dfcf4c53180bd442ab204d7d3e96f6065faf5d3"
+  },
+  "refreshedCReconstructionNotAdopted": {
+    "generation": "d3d6768bbd541bc35ab04da85c4e0190c59d5e40c41dca07523d50d5b546f5b3",
+    "commit": "a72b4f402cfa1bbf51e518891db2d893b9a71aca",
+    "tree": "ca56b7b91d5a449bbe3a3dd7317c73da712fd5a3",
+    "qualification": "Pinned receipt/generation, 192 artifacts, 742 declared source/contract/migration entries, two lockfiles and 2801 present tree blobs verify. Both exact-parent patches reconstruct the exact tree. Strict whitespace separately FAILS (115 full/30 incremental), and missing pre-base history 13ce6b6cfce3e020a95c355bd3bdb8340ba92127 remains retained. Declared checkpoint ancestry is checked. Source-only; no runtime/behavior validation or adoption."
+  },
+  "cumulativeWriter": "TRACK_C",
+  "productionAdmission": null,
+  "fieldEvidence": null
+}

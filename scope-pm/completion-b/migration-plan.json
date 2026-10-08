@@ -1,0 +1,19 @@
+{
+  "schema": "finnor.completion-b.migration-plan.v1",
+  "state": "LOCAL_DISPOSABLE_CANDIDATES_NOT_CUMULATIVE_UPGRADE",
+  "applier": "TRACK_C",
+  "candidates": [
+    {"localName": "0156_p3_branch_fabric_candidate.sql", "path": "scope-pm/phase-03-p3-branch-fabric/migration.sql", "purpose": "Original P3 private branch storage and policy"},
+    {"localName": "0160_m4_counterexample_search.sql", "path": "finnor-os/packages/db/migrations/0160_m4_counterexample_search.sql", "purpose": "Original M4 ordinary-role encrypted search records, budgets and publications"},
+    {"localName": "0163_p3_checkpoint_lifecycle_candidate.sql", "path": "scope-pm/completion-b/migrations/p3-checkpoint-lifecycle.sql", "purpose": "Forward encrypted logical checkpoint lifecycle, revocation, holds and erasure"},
+    {"localName": "0164_p3_resource_ownership_candidate.sql", "path": "scope-pm/completion-b/migrations/p3-resource-ownership.sql", "purpose": "Forward durable native acquisition/cleanup ownership"},
+    {"localName": "0165_p3_episode_deadline_candidate.sql", "path": "scope-pm/completion-b/migrations/p3-episode-deadline.sql", "purpose": "Forward original accepted ancestry deadline and immutability"}
+  ],
+  "constraints": [
+    "Never alter historical applied or published migration bytes.",
+    "Published S6/S7 use conflicting 0155/0156 names; A/C/private 0162 candidates also require exact registry reconciliation.",
+    "Choose deterministic fresh-install and exact published-history upgrade ordering on C's line.",
+    "Rerun actual FORCE RLS, ordinary-role grants, triggers, restart, queue and owner suites after cumulative application.",
+    "Local candidate success is not production migration authorization."
+  ]
+}

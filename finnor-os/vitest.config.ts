@@ -19,6 +19,7 @@ export default defineConfig({
   css: { postcss: { plugins: [] } },
   resolve: {
     alias: {
+      "@finnor/shared-types/src": r("./packages/shared-types/src"),
       "@finnor/shared-types": r("./packages/shared-types/src/index.ts"),
       "@finnor/policy-schema": r("./packages/policy-schema/src/index.ts"),
       // Deep subpath imports (apps/api's admin/migrate route uses these two) — must

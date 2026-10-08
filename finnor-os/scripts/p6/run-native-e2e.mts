@@ -107,11 +107,12 @@ if (product) {
     await migrate(adminUrl);
     const proposalPath = join(repo, 'scope-pm/phase-12-p6-procedure-induction/handoff/schema.proposed.sql');
     const proposal = await readFile(proposalPath, 'utf8');
-    await admin.query(proposal);
+    const registered='0170_p6_procedure_induction.sql';
+    assert.equal((await admin.query('SELECT name FROM finnor_os._migrations WHERE name=$1',[registered])).rowCount,1);
     await writeFile(join(out, 'migration-proposal-install.json'), JSON.stringify({
       engine: (await admin.query('SELECT version()')).rows,
       proposalDigest: createHash('sha256').update(proposal).digest('hex'),
-      numberedMigrationApplied: false, serialIntegratorAdoption: false,
+      numberedMigrationApplied: registered, serialIntegratorAdoption: true,
       originalRegistry: (await admin.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows,
     }, null, 2));
     await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
