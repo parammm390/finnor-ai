@@ -27,8 +27,10 @@
     "exactRepairReceipt": "owner-workflow-20261008T170245-0b980e64",
     "numericalConsumeElapsedMs": 8197.420916999996,
     "originalRequestDeadlineMs": 30000,
-    "fullCurrentM3": "RUNNING",
-    "currentMountedM3": "PENDING_AFTER_FULL_NATIVE_REPLAY",
+    "fullCurrentM3": {"passed": 29, "failed": 0},
+    "fullCurrentM3Receipt": "owner-workflow-20261008T170613-16f99023",
+    "currentMountedM3": "FAIL_WAIT_TIMED_OUT",
+    "currentMountedM3Receipt": "owner-workflow-20261008T171614-c5340fb5",
     "remainingP1P3P6AndGeneratorChecks": "PENDING",
     "currentCutM4Replay": "PENDING"
   },
