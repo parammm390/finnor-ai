@@ -77,6 +77,13 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
+  run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
+  run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),
+  run_compute_search_unit_v1: { ...tenantFixed("INTERACTIVE", "reconcilable", "P2 original-episode compute; submitted unknown attempts reconcile before retry."), protocolVersions: [1, 2] },
+  run_branch_fabric_v1: tenantFixed("HEAVY", "pure", "P3 frozen registered native branch work; no live mutation replay or self-admission."),
+  run_evidence_derivation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded native evidence computation for accepted Work; no protected admission."),
+  run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; no effect authority."),
   reconciliation: tenantFixed("INTERACTIVE", "locally_idempotent", "Provider events may unblock an actively observed effect."),
   process_instruction: tenantFixed("INTERACTIVE", "locally_idempotent", "An accepted user instruction has a near-term response dependency."),
   run_workflow_step: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Scope-2 workflow execution advances accepted Work."),

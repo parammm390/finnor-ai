@@ -2,7 +2,7 @@
   "name": "finnor-os",
   "version": "0.1.0",
   "private": true,
-  "description": "Finnor AI Operating System \u2014 governed Private Equity execution and evidence platform",
+  "description": "Finnor AI Operating System — governed Private Equity execution and evidence platform",
   "engines": {
     "node": ">=22"
   },
@@ -79,6 +79,7 @@
     "nodemailer": "10.0.11",
     "pdf-parse": "^2.4.5",
     "pg": "^8.13.1",
+    "playwright": "1.61.1",
     "react": "^18",
     "react-dom": "^18",
     "zod": "^3.23.8",

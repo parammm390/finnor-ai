@@ -45,7 +45,7 @@ function nodeSemanticProjection(node: CandidatePlanNode): Record<string, unknown
   };
   if (node.kind === "action") return { ...common, actionType: node.actionType, payload: node.payload };
   if (node.kind === "query") return { ...common, request: node.request };
-  if (node.kind === "wait") return { ...common, waitFor: node.waitFor, deadlineAt: node.deadlineAt ?? null };
+  if (node.kind === "wait") return { ...common, waitFor: node.waitFor, ...(node.earliestAt ? { earliestAt: node.earliestAt } : {}), deadlineAt: node.deadlineAt ?? null };
   return { ...common, criterionId: node.criterionId, observation: node.observation ?? {} };
 }
 
@@ -356,6 +356,7 @@ function compileOne(input: {
     const body = node.kind === "action" ? node.payload : node.kind === "query" ? node.request : node.kind === "wait" ? node.waitFor : node.observation ?? {};
     if (byteLength(body) > input.constraints.budgets.maxPayloadBytes) violations.push(violation(candidate.candidateKey, "PAYLOAD_BUDGET_EXCEEDED", `Node payload exceeds ${input.constraints.budgets.maxPayloadBytes} bytes`, node.key));
     if (node.kind === "wait" && !strongWaitCorrelation(node.waitFor) && !node.deadlineAt) violations.push(violation(candidate.candidateKey, "WAIT_CORRELATION_WEAK", "A wait requires an exact correlation or bounded deadline", node.key));
+    if (node.kind === "wait" && node.earliestAt && (!Number.isFinite(Date.parse(node.earliestAt)) || (node.deadlineAt && Date.parse(node.earliestAt)>Date.parse(node.deadlineAt)))) violations.push(violation(candidate.candidateKey,"DEADLINE_IMPOSSIBLE","Wait earliest event time is outside its finite deadline",node.key));
     if (node.kind === "wait" && node.deadlineAt && input.constraints.deadlineAt && Date.parse(node.deadlineAt) > Date.parse(input.constraints.deadlineAt)) {
       violations.push(violation(candidate.candidateKey, "DEADLINE_IMPOSSIBLE", "Wait deadline extends beyond the accepted Work deadline", node.key));
     }
@@ -424,7 +425,7 @@ function compileOne(input: {
       irreversible: facts?.irreversible ?? true,
     } satisfies PlanActionNode;
     if (node.kind === "query") return { ...base, kind: "query" as const, request: node.request };
-    if (node.kind === "wait") return { ...base, kind: "wait" as const, waitFor: node.waitFor, ...(node.deadlineAt ? { deadlineAt: node.deadlineAt } : {}) };
+    if (node.kind === "wait") return { ...base, kind: "wait" as const, waitFor: node.waitFor, ...(node.earliestAt ? { earliestAt: node.earliestAt } : {}), ...(node.deadlineAt ? { deadlineAt: node.deadlineAt } : {}) };
     return { ...base, kind: "check" as const, criterionId: node.criterionId, assertion: node.observation ?? knownCriteria.get(node.criterionId) ?? {} };
   }).sort((left, right) => left.id.localeCompare(right.id));
   const edges = candidate.nodes.flatMap((node) => (node.dependsOn ?? []).map((dependency) => {

@@ -1,5 +1,5 @@
 /** Ordinary owner transport. Pinned commitments authenticate bytes, not effect authority or truth. */
-import { createHash, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, randomBytes, sign, verify } from 'node:crypto';
 import { constants } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { canonical, LedgerFault,referencePreimageDigest } from './protocol.js';
@@ -213,6 +213,26 @@ export async function readOwnerTransportReference(identity:OwnerTransportScope,i
  return {reference,receipt,executionAuthorityGranted:false as const,qualification:'AUTHENTICATED_CONTENT_AND_COMMITMENT_ONLY_NO_EFFECT_ADMISSION_OR_BUSINESS_TRUTH'};
 }
 
+/** Ordinary attenuated client. A fresh mechanical binding grants no effect. */
+export async function verifyOwnerTransportCapabilityMethod(identity:OwnerTransportScope,input:{revisionRef:Record<string,any>;methodAdmission:{body:Record<string,any>;signature:string}}){
+ if(identity.semanticOwner!=='S8')fail('CAPABILITY_METHOD_READER_OWNER_REQUIRED');
+ const route=await ownerTransportRoute(identity,'CONSUMER')??fail('CAPABILITY_METHOD_READER_ROUTE_UNAVAILABLE');
+ const claim=object(input.methodAdmission.body),nonce=randomBytes(32).toString('hex'),sentAt=Date.now();
+ if(claim.tenantId!==identity.tenantId||claim.principalId!==identity.principalId||claim.domain!==route.protectionDomain||!route.rightsRefs.includes(claim.rightsRef)||claim.executionAuthorityGranted!==false||!same(claim.revisionRef,input.revisionRef))fail('CAPABILITY_METHOD_CLIENT_SCOPE_INVALID');
+ const answer=await request(route,'/verify-capability-method',{...input,nonce});
+ if(answer.status!=='MECHANICALLY_VERIFIED_METHOD_BINDING'||answer.executionAuthorityGranted!==false)fail('CAPABILITY_METHOD_RESPONSE_INVALID');
+ const assessment=object(answer.assessment),{signature:encoded,...body}=assessment;
+ keys(body,['schema','nonce','revisionRef','evaluationRef','admissionRef','methodClaimRef','payloadDigest','dependencyDigest','validityDomainDigest','resourceEnvelopeDigest','validUntil','executionAuthorityGranted','tenantId','principalId','checkedAt','checkpointDigest','releaseId','verifierDigest','policyDigest','domain','qualification']);
+ const pin=route.ledger.acceptedReceipts.find(p=>p.releaseId===body.releaseId&&p.verifierDigest===body.verifierDigest&&p.policyDigest===body.policyDigest)??fail('CAPABILITY_METHOD_RELEASE_UNADMITTED');
+ if(!verify(null,Buffer.from(canonical(body)),publicKey(pin.signerPublicKey),signature(encoded)))fail('CAPABILITY_METHOD_RESPONSE_SIGNATURE_INVALID');
+ const claimRef={owner:'S8',id:'allocation-method-admission:'+ownerTransportHash(claim),version:'s8-s5-allocation-method-v1',contentDigest:ownerTransportHash(claim)};
+ if(body.schema!=='finnor.s6.capability-method-verification.v1'||body.qualification!=='MECHANICAL_METHOD_BINDING_ONLY_NO_INTERVENTION_OR_SCIENTIFIC_VALUE_AUTHORITY'||body.nonce!==nonce||body.tenantId!==identity.tenantId||body.principalId!==identity.principalId||body.domain!==route.protectionDomain||body.executionAuthorityGranted!==false||!same(body.methodClaimRef,claimRef)||!['revisionRef','evaluationRef','admissionRef','payloadDigest','dependencyDigest','validityDomainDigest','resourceEnvelopeDigest','validUntil'].every(k=>same(body[k],claim[k])))fail('CAPABILITY_METHOD_RESPONSE_BINDING_INVALID');
+ if(time(body.checkedAt)<sentAt-1000||time(body.checkedAt)>Date.now()+1000||time(body.validUntil)<=Date.now()||body.checkpointDigest!==null&&!/^[a-f0-9]{64}$/.test(body.checkpointDigest))fail('CAPABILITY_METHOD_RESPONSE_STALE');
+ const current=await ownerTransportRoute(identity,'CONSUMER')??fail('CAPABILITY_METHOD_READER_ROUTE_UNAVAILABLE');
+ if(!current.ledger.acceptedReceipts.some(p=>same(p,pin))||current.protectionDomain!==route.protectionDomain||current.ledger.endpoint!==route.ledger.endpoint||!current.rightsRefs.includes(claim.rightsRef))fail('CAPABILITY_METHOD_ROUTE_CHANGED');
+ return {assessment,methodClaimRef:claimRef,protectionDomain:current.protectionDomain,executionAuthorityGranted:false as const,qualification:'FRESH_AUTHENTICATED_MECHANICAL_METHOD_BINDING_ONLY'};
+}
+
 /** Authenticated semantic-owner read, including the exact accepted event preimage. */
 export async function readOwnerTransportEvent(identity:OwnerTransportScope,id:string){
  const route=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');text(id);
@@ -231,8 +251,8 @@ export async function readOwnerTransportEvent(identity:OwnerTransportScope,id:st
  * remain in the broker. Independently read the returned accepted event afterward. */
 export async function dispatchOwnerTransportRequest(identity:OwnerTransportScope,input:{request:Record<string,any>;authorization:Record<string,any>;delivery?:Record<string,any>},reconcile=false){
  if(identity.semanticOwner!=='S6')fail('DISPATCH_SEMANTIC_OWNER_REQUIRED');
- const transport=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
- const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
+ const route=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
+ const answer=await request(route,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
  if(!['VERIFIED','UNRESOLVED'].includes(answer.status)||!answer.receipt?.identity)fail('DISPATCH_RESPONSE_INVALID');
  const accepted=await readOwnerTransportEvent(identity,answer.receipt.identity),detail=accepted.event.detail;
  if(!same(accepted.receipt,answer.receipt)||accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||detail?.schema!=='finnor.s6.protected-execution.v1'||!same(detail.obligationRef,input.request.ir?.obligationRef)||!same(detail.requestRef,input.request.ref)||!same(detail.effectRef,input.request.ir?.effectRef))fail('DISPATCH_PROTECTED_EVENT_BINDING_INVALID');

@@ -19,6 +19,8 @@
     "@finnor/underwriting": "*",
     "@finnor/workflow-runtime": "*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "@finnor/planning": "*",
+    "typescript": "5.9.3"
   }
 }

@@ -8,6 +8,7 @@ import pg from "pg";
 import * as schema from "./schema";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
+import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
 import { PRODUCTION_JOB_CONTRACTS, classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
 import { pgConnectionConfig } from "./postgres-connection.mjs";
@@ -38,6 +39,7 @@ export * from "./compute-contract";
 export * from "./compute-control";
 export * from "./compute-governor";
 export { pgConnectionConfig } from "./postgres-connection.mjs";
+export * from "./execution-deadline";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;
@@ -166,7 +168,7 @@ export async function withTenantTransaction<T>(
   options: TenantTransactionOptions,
   fn: (db: Db, client: pg.PoolClient) => Promise<T>,
 ): Promise<T> {
-  const client = await getPool().connect();
+  const client = await connectWithExecutionDeadline(getPool());
   const isolation = options.isolation ?? "read committed";
   const begin = `BEGIN ISOLATION LEVEL ${isolation.toUpperCase()}${options.readOnly ? " READ ONLY" : ""}`;
   try {
@@ -233,14 +235,14 @@ export interface ProductRuntimeAuthority extends ProductRuntimeAuthoritySnapshot
  * Readiness uses this snapshot so a wrong or transitional value remains visible
  * in deployment truth instead of being collapsed into an "unavailable" error. */
 export async function readProductRuntimeAuthoritySnapshot(): Promise<ProductRuntimeAuthoritySnapshot | null> {
-  const result = await getPool().query<{
+  const result = await queryWithExecutionDeadline<{
     epoch: number;
     state: string;
     active_product_vertical: string;
     minimum_cutover_protocol: number;
     water_intake_frozen_at: Date | null;
     water_retired_at: Date | null;
-  }>(
+  }>(getPool(),
     `SELECT epoch,state,active_product_vertical,minimum_cutover_protocol,
             water_intake_frozen_at,water_retired_at
        FROM finnor_os.product_runtime_authority
@@ -1401,8 +1403,28 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
         eq(schema.workPlanRevisions.tenantId, params.tenantId),
         eq(schema.workPlanRevisions.workId, params.workId),
       )).orderBy(desc(schema.workPlanRevisions.revision)).limit(1);
-      if (!historicalParent || latestHistorical?.id !== historicalParent.id || !["superseded", "blocked", "failed"].includes(historicalParent.status)) {
-        throw new Error("Replanning parent is not the latest resumable historical PlanRevision");
+      if (!historicalParent || latestHistorical?.id !== historicalParent.id) {
+        throw new Error("Replanning parent is not the latest historical PlanRevision");
+      }
+      if (historicalParent.status === "completed") {
+        // Completed evidence stays immutable. Only a fresh, current native intake
+        // can extend it; replaying an old input cannot reactivate its authority.
+        const [currentInput] = await db.select().from(schema.workInputs).where(and(
+          eq(schema.workInputs.tenantId, params.tenantId),
+          eq(schema.workInputs.workId, params.workId),
+        )).orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id)).limit(1);
+        const [intakeEvent] = await db.select({ id: schema.workEvents.id }).from(schema.workEvents).where(and(
+          eq(schema.workEvents.tenantId, params.tenantId),
+          eq(schema.workEvents.workId, params.workId),
+          sql`${schema.workEvents.eventType} IN ('input_received','recovery_input_received')`,
+          sql`${schema.workEvents.payload}->>'workInputId' = ${params.workInputId}`,
+        )).limit(1);
+        if (!currentInput || currentInput.id !== params.workInputId
+          || currentInput.id === historicalParent.workInputId || !intakeEvent) {
+          throw new Error("Completed PlanRevision continuation requires a new current native Work input");
+        }
+      } else if (!["superseded", "blocked", "failed"].includes(historicalParent.status)) {
+        throw new Error("Replanning parent is not a resumable historical PlanRevision");
       }
       transitionParent = historicalParent;
     }
@@ -1501,8 +1523,12 @@ export async function activeWorkPlanRevision(tenantId: string, workId: string): 
 }
 
 export async function completeWorkPlanRevision(params: { tenantId: string; planRevisionId: string; completionProof: Record<string, unknown> }): Promise<boolean> {
+  return withTenant(params.tenantId, (db) => completeWorkPlanRevisionTx(db, params));
+}
+
+/** Same canonical completion verifier, usable in an existing atomic owner publication. */
+export async function completeWorkPlanRevisionTx(db: Db, params: { tenantId: string; planRevisionId: string; completionProof: Record<string, unknown> }): Promise<boolean> {
   if (params.completionProof.version !== 1 || params.completionProof.verified !== true) throw new Error("A verified CompletionProof is required");
-  return withTenant(params.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${schema.workPlanRevisions} WHERE ${schema.workPlanRevisions.id}=${params.planRevisionId} AND ${schema.workPlanRevisions.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [revision] = await db.select().from(schema.workPlanRevisions).where(and(
       eq(schema.workPlanRevisions.tenantId, params.tenantId),
@@ -1526,7 +1552,6 @@ export async function completeWorkPlanRevision(params: { tenantId: string; planR
       eq(schema.workPlanRevisions.status, "active"),
     )).returning({ id: schema.workPlanRevisions.id });
     return rows.length === 1;
-  });
 }
 
 async function decisionContextSnapshot(

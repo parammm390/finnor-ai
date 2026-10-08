@@ -23,6 +23,8 @@ import {
   integrationEvents,
   withTenant,
   workEventWaits,
+  workObjectiveLoops,
+  workInputs,
   workEntityLinks,
   works,
 } from "@finnor/db";
@@ -531,8 +533,15 @@ async function queryCriterion(params: {
   request: OperationalQueryRequest;
   assertion: ObjectiveSuccessAssertion;
   executionKey: string;
+  loopId:string;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey });
+  const identity = params.request.intent === "harness_program_v1" ? await withTenant(params.tenantId,async db=>{
+    const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
+    const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
+    if(!loop?.createdBy||!input)throw Error("HARNESS_NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED");
+    return {userId:loop.createdBy,employeeId:loop.createdBy,workInputId:input.id};
+  }):{};
+  const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey,...identity });
   const assertion = evaluateObjectiveAssertion(result, params.assertion);
   const executionId = result.execution?.id;
   return {
@@ -801,7 +810,7 @@ export async function evaluateObjectiveSuccessCondition(params: {
 
   const validateEvidence = async (item: ObjectiveCompletionEvidence, index: number): Promise<ObjectiveSuccessCriterionResult> => {
     if (item.kind === "canonical_query") {
-      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}` });
+      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}` });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       return { index, kind: "decision_evidence", satisfied: result.satisfied, basis: result.basis, evidenceRefs: result.evidenceRefs, observed: result.observed };
     }
@@ -838,7 +847,7 @@ export async function evaluateObjectiveSuccessCondition(params: {
       const satisfied = effects.length >= criterion.minimumCount && effects.every(verifiedEffect);
       add(index, criterion, { satisfied, basis: satisfied ? `All ${effects.length} objective Business Effects are verified.` : `Only ${effects.filter(verifiedEffect).length} of ${effects.length} objective Business Effects are verified; minimum ${criterion.minimumCount}.`, evidenceRefs: effects.map((row) => ({ type: "business_effect", id: row.id })), observed: effects.map((row) => ({ id: row.id, status: row.status, verification: row.verification?.state ?? null })) });
     } else if (criterion.kind === "canonical_query") {
-      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: criterion.request, assertion: criterion.assertion, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:criterion:${index}` });
+      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: criterion.request, assertion: criterion.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:criterion:${index}` });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       add(index, criterion, result);
     } else if (criterion.kind === "private_equity_truth") {

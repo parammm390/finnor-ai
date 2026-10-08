@@ -1104,6 +1104,7 @@ export const workQueryExecutions = pgTable(
         "critical_dependencies",
         "closing_readiness",
         "pe_world_state",
+        "harness_program_v1",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),
