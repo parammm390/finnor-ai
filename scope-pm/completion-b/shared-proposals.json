@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.completion-b.shared-proposals.v1",
+  "cumulativeApplier": "TRACK_C_ONLY",
+  "paths": [
+    "finnor-os/apps/api/app/api/branches/[operation]/route.ts",
+    "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+    "finnor-os/apps/worker/src/index.ts",
+    "finnor-os/apps/worker/src/queue.ts",
+    "finnor-os/packages/db/compute-contract.ts",
+    "finnor-os/packages/db/compute-governor.ts",
+    "finnor-os/packages/db/execution-deadline.ts",
+    "finnor-os/packages/db/index.ts",
+    "finnor-os/packages/authority/src/index.ts",
+    "finnor-os/packages/epistemic-runtime/src/source-precedence.ts",
+    "finnor-os/packages/db/counterexample-schema.ts",
+    "finnor-os/packages/db/migrations/0160_m4_counterexample_search.sql",
+    "finnor-os/packages/private-equity/src/allocation-proposal.ts",
+    "finnor-os/packages/private-equity/src/repository.ts",
+    "finnor-os/packages/private-equity/src/world-state.ts",
+    "finnor-os/packages/shared-types/src/capital-program.ts",
+    "finnor-os/scripts/generate-openapi.ts",
+    "finnor-os/openapi.json",
+    "scripts/centropy/generate-capability-manifest.mjs",
+    "src/lib/centropy/capability-manifest.generated.json"
+  ],
+  "forwardCandidateSql": [
+    "scope-pm/phase-03-p3-branch-fabric/migration.sql",
+    "scope-pm/completion-b/migrations/p3-checkpoint-lifecycle.sql",
+    "scope-pm/completion-b/migrations/p3-resource-ownership.sql",
+    "scope-pm/completion-b/migrations/p3-episode-deadline.sql"
+  ],
+  "reconciliation": [
+    "B's scoped transaction/server-timeout proposal overlaps immutable A's execution-deadline proposal. Reconcile exact parents and semantics, not whole-file replacement.",
+    "Client-only tenant/PE transactions preserve existing GUCs, isolation, active vertical, provenance, retries, rollback, deadlines and release. No A-owned phase implementation is changed.",
+    "Actual financial and original-loop profiles identify repeated unused ORM relational construction under the shared tenant wrapper. Defer only that transaction-local ORM until use; preserve real prototype/descriptors/symbols/spread/freeze and the identical already-scoped client. No owner evidence, DB instance or connection is cached across transactions. Stronger real correspondence coverage precedes this proposal; original clocks and complete final owner replay remain unchanged.",
+    "Latest unchanged-clock parent profiles still show eager PE relational construction. The actual PE ORM/raw provenance/isolation/reflection/rollback/read-only/deadline correspondence baseline passes before extracting the same transaction-local ORM helper for both wrappers. A separately registered authenticated M3 live-row lifecycle projection baseline fails before implementation. Only lifecycle/checkpoint/publication/accounting reads omit immutable request/acceptance columns; complete economic search and final owner replay remain unchanged. These later edits need their own frozen affected validation; no speedup or C adoption is inferred.",
+    "Narrow exact fenced capacity release has an independent fixed one-second cleanup drain. No ordinary SQL/business clock is renewed.",
+    "The typed capital-program changes resolve genuine original issued M4 repair handles. They do not confer authority or invent a HarnessProgram.",
+    "Checked-out PostgreSQL connections retain a physical error listener until release, refuse broken bounded queries and discard the client. Original physical pg_terminate_backend and surviving subsequent submission stories pass locally; no cumulative adoption is inferred.",
+    "Only an explicitly registered compatible locally-idempotent handler can opt into immediate expired-lease crash recovery. M3/M4 original clocks, trial debits, attempt counts and lost-delivery costs remain unchanged; other queue recovery policies remain unchanged.",
+    "Actual P3 controller diagnostics retain startup deadlines before any queue claim, including an unchanged 10-second timeout before module readiness. The queue's narrow telemetry imports now resolve the same existing Sentry and logWithTrace exports directly from their observability/logger modules instead of the broad tools barrel. No logger, redaction, claim, retry, expiry, concurrency, resource or authority logic is replaced. This remains a C-only shared proposal requiring original queue/native and full affected owner validation, not a controlled speedup, original-timeout explanation or cumulative adoption.",
+    "All migration names and applied-history collisions must be serialized by C before cumulative installation or upgrade.",
+    "The actual unchanged-clock original-loop profile identifies unused relational-schema construction in authority discovery and canonical-object map/join allocation in S1/M1 replay. The local shared proposal changes only discovery's ORM construction, retaining the identical authenticated SQL boundary and unchanged queries, grant/scope/deny rules and final mutation authorizer. The prewritten ordinary-role discovery/final-authorizer correspondence control retains its initial harness column-name refusal; the harness alone is corrected to the actual users.display_name schema. No authority evidence is cached. A separate original-encoder control passes 12 edge/getter/error controls, 1000 generated values and all 32 hash-verified latest full-run artifacts before the byte-identical concat proposal. These proposals require affected behavior validation and C-only cumulative application; budgets, full final replay, hash algorithm and serialization bytes are unchanged.",
+    "The concurrent-owner cut publishes a genuinely changed M3 child but retains a linked M4 expiry. Its actual six-story profile still observes canonical/SQL-shape allocation costs. Existing prewritten byte/getter/error and row prototype/descriptor/collision/reference controls pass before an additional shared proposal: compact only the private Object.entries array for undefined omission, transform SQL key entries in place, and bound a pure key-spelling memo to 512 entries of at most 128 characters. No row values, rights, owner decisions or source/currentness results are cached. Full original owner replay and unchanged clocks remain mandatory. Affected runtime validation and C-only cumulative application remain separate; profile attribution is not controlled speedup or gate proof.",
+    "A failure-first actual resolver/OpenAPI reproduction records all ten M4 operations missing. Generate exact owner schema/classification metadata without altering request decoders, non-M4 capabilities, unknown-method denial or authority. Repeated-byte stability and preserved non-M4 entries are required; generated contracts remain C-only cumulative proposals, not authenticated or mounted proof.",
+    "A separate failure-first P3 resolver reproduction records all 12 named operations missing and a UUID operation incorrectly allowed by the generic placeholder. Replace only that placeholder with exact owner-schema/classification operations, preserving every non-P3 capability and unchanged request schemas. Exact method/name denial and repeated bytes are required. This remains a C-only catalogue proposal, not Linux or mounted proof.",
+    "Phase panels are B-owned. Shared Canvas mounting and generated exports/OpenAPI remain pending C integration."
+  ],
+  "protectedRuntimeChanges": false,
+  "finalFrozenValidation": "affected-20261007T181501-e8c02bbf ran once on unchanged source/runtime: original queue/P4/IC 54 PASS/zero FAIL/zero PENDING, P3 32 PASS_LOCAL, M4 23 PASS, S1 28 PASS and completion 21 PASS. M3 retains one repo-owned authentic-P4 child deadline failure, so the full run is FAIL with 186 passes/one failure/six unpassed external rows. All 610 hashes/six finals/exact selections and equal closure independently verify. Local execution is not controlled speedup, complete mission, clean install, C adoption or gate qualification.",
+  "deployed": false
+}
