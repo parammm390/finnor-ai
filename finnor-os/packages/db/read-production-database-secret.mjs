@@ -2,15 +2,16 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 
 /** Resolve only the existing canonical database secret. Values remain in memory
  * and never appear in proof metadata or provider-error output. */
-export async function readProductionDatabaseSecret(environment, worker) {
+export async function readProductionDatabaseSecret(environment, worker, kind = "application") {
   let mappings
   try { mappings = JSON.parse(environment.FINNOR_SECRET_IDS || "{}") } catch {
     throw new Error("Canonical managed database secret mapping required")
   }
   const reference = mappings?.DATABASE_URL
-  const name = "finnor/prod/database-url"
+  const name = kind === "application" ? "finnor/prod/database-url"
+    : kind === "worker" ? "finnor/prod/worker-database-url" : null
   const arn = `arn:aws:secretsmanager:${worker.region}:${worker.accountId}:secret:${name}-`
-  if (environment.SECRETS_PROVIDER !== "aws-secrets-manager"
+  if (!name || environment.SECRETS_PROVIDER !== "aws-secrets-manager"
       || (reference !== name && !(typeof reference === "string"
         && reference.startsWith(arn) && /^[A-Za-z0-9]{6}$/.test(reference.slice(arn.length))))) {
     throw new Error("Canonical managed database secret mapping required")

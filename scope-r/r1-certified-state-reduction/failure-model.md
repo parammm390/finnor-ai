@@ -822,3 +822,12 @@ Required selected output stays the actual optimized default Turbopack build.
 2. The actual first seal failed: Git refused an empty bundle when the positive range named only a literal SHA instead of an advertised branch ref. Preserve sealed-handoff-01/failure.json, the actual ordered patch and script preimage.
 3. Runtime/owner tests cannot detect Git artifact reference semantics. The single existing seal operation is the owning proof; repair only its reference and repeat it against unchanged production bytes.
 4. No production seam. Use the actual owned branch, real Git bundle and independent object store; assert reconstructed commit identity as well as tree. No extra test cases or suite reruns.
+
+### Current-main serial integration (before changing runtime migration proof)
+
+1. Protect a real upgrade from current main through R1, immutable existing jobs and idempotent migration replay; preserve separate application/worker database-role authority.
+2. Credible regression: duplicate ordinal0171 prevents bundle generation, wrong R1 filename skips the upgrade, or application credentials claim global queue authority after main isolated the roles. Actual merge conflicts and duplicate files are the before evidence.
+3. Old sealed runtime proof used the pre-role-isolation parent and cannot cover the new174-migration integrated cut. Reuse the existing actual runtime/queue/checker/owner driver and native CI Linux-image proof; no new mathematical/unit suite.
+4. No production seam. Rename only the unpublished R1 migration to0172, preserving SQL bytes; use real current-main pool routing and original role isolation. Preserve all old proof receipts and mark their original cut explicitly.
+
+Finite integration verification: generated migration/capability/authz/deployment contracts and backend typecheck; original mandatory hosted PR jobs including worker-image runtime; one affected existing runtime migration proof. Rerun only a named failing/changed boundary. No unchanged mathematical or full lifecycle campaign.

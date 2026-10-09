@@ -59,7 +59,7 @@ async function main(): Promise<void> {
   if (!preflightPath) throw new Error("Scope-5 cutover requires release preflight evidence");
   const preflight = JSON.parse(await readFile(preflightPath,"utf8")) as {
     ok?:boolean; commitSha?:string; remoteMain?:string; contractSha256?:string;
-    database?:{ projectRef?:string; appRole?:{ role?:string } };
+    database?:{ projectRef?:string; applicationRole?:{ role?:string } };
   };
   if (preflight.ok !== true || preflight.commitSha !== RELEASE_SHA || preflight.remoteMain !== RELEASE_SHA
     || preflight.contractSha256 !== createHash("sha256").update(contractRaw).digest("hex")) {
@@ -71,7 +71,7 @@ async function main(): Promise<void> {
   if (!ownerUrl || !appUrl) throw new Error("Scope-5 cutover requires protected owner and application database configuration");
   const ownerTarget = assertProductionDatabaseTarget(ownerUrl,contract.topology.database,"owner");
   assertProductionDatabaseTarget(appUrl,contract.topology.database,"application");
-  if (preflight.database?.projectRef !== ownerTarget.projectRef || preflight.database?.appRole?.role !== "finnor_app") {
+  if (preflight.database?.projectRef !== ownerTarget.projectRef || preflight.database?.applicationRole?.role !== "finnor_app") {
     throw new Error("Scope-5 cutover requires the exact project and restricted application-role admission");
   }
   if (CURRENT_MIGRATION_HEAD !== contract.release.requiredMigrationHead) {

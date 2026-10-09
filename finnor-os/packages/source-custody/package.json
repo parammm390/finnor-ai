@@ -1,0 +1,7 @@
+{
+  "name": "@finnor/source-custody",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.cjs",
+  "dependencies": { "tsx": "^4.19.2" }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "finnor.vercel-build-settings.v1",
+  "provenance": "Read-only observations of all four canonical Vercel projects, 2026-10-09; no environment values",
+  "components": {
+    "frontend": { "framework": "nextjs", "rootDirectory": null, "buildCommand": null, "devCommand": null, "outputDirectory": null, "nodeVersion": "24.x" },
+    "api": { "framework": "nextjs", "rootDirectory": "apps/api", "buildCommand": null, "devCommand": null, "outputDirectory": null, "nodeVersion": "24.x" },
+    "supplierCanaryApp": { "framework": null, "rootDirectory": null, "buildCommand": null, "devCommand": null, "outputDirectory": null, "nodeVersion": "24.x" },
+    "supplierCanaryAuth": { "framework": null, "rootDirectory": null, "buildCommand": null, "devCommand": null, "outputDirectory": null, "nodeVersion": "24.x" }
+  },
+  "runtimeNodeVersion": "22.x",
+  "runtimeNodeProvenance": "Package engines pin the existing Node 22 release toolchain and native-addon ABI, overriding the observed project default."
+}

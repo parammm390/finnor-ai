@@ -34,7 +34,7 @@ async function test(id:string,predicate:string,fn:()=>Promise<unknown>){
 }
 async function worker(mode='RUN'){
  const startup=performance.now();
- const child=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'child-worker.mts')],{cwd:join(repo,'finnor-os'),env:{...process.env,FINNOR_R1_CHILD_MODE:mode},stdio:['ignore','pipe','pipe','ipc']});children.add(child);
+ const child=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'child-worker.mts')],{cwd:join(repo,'finnor-os'),env:{...process.env,DATABASE_URL:process.env.DATABASE_URL!.replace('finnor_app:finnor_app@','finnor_worker:finnor_worker@'),FINNOR_R1_CHILD_MODE:mode},stdio:['ignore','pipe','pipe','ipc']});children.add(child);
  let stdout='',stderr='';child.stdout!.on('data',b=>stdout+=b);child.stderr!.on('data',b=>stderr+=b);
  const exited=new Promise<number|null>(yes=>child.once('exit',code=>{children.delete(child);yes(code);}));
  child.once('error',()=>undefined);
@@ -70,18 +70,19 @@ try{
  const adminUrl='postgres://finnor:finnor@127.0.0.1:'+port+'/r1_e2e';
  if(selected==='runtime'){
   const migrations=join(repo,'finnor-os/packages/db/migrations'),files=await Promise.all((await readdir(migrations)).filter(p=>p.endsWith('.sql')).sort().map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
-  const prior=files.filter(p=>p.name!=='0171_r1_certified_state_reduction.sql');assert.equal(prior.length,files.length-1);
+  const prior=files.filter(p=>p.name!=='0172_r1_certified_state_reduction.sql');assert.equal(prior.length,files.length-1);
   const priorApplied=await migrate(adminUrl,prior),c=new pg.Client({connectionString:adminUrl});await c.connect();
   try{
    const old=(await c.query("INSERT INTO finnor_os.jobs(type,payload,idempotency_key,protocol_version,max_attempts) VALUES('release_probe',$1::jsonb,'r1-existing-release-probe',1,1) RETURNING *",[JSON.stringify({commitSha:process.env.FINNOR_COMMIT_SHA})])).rows[0];legacyJobId=old.id;
    const catalogSql="SELECT column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='finnor_os' AND table_name='jobs' ORDER BY ordinal_position",before=(await c.query(catalogSql)).rows;
    const upgrade=await migrate(adminUrl,files),replay=await migrate(adminUrl,files),after=(await c.query(catalogSql)).rows,preserved=(await c.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[old.id])).rows[0];
    await artifact('migration-upgrade-replay.json',{priorApplied,upgrade,replay,old,preserved,before,after,migrations:files.map(f=>({name:f.name,sha256:sha(f.sql)})),ordinaryDisposable:true});
-   assert.deepEqual(upgrade,['0171_r1_certified_state_reduction.sql']);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
+   assert.deepEqual(upgrade,['0172_r1_certified_state_reduction.sql']);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
   }finally{await c.end();}
  }else migrationCount=(await migrate(adminUrl)).length;
  admin=new pg.Client({connectionString:adminUrl});await admin.connect();await admin.query("SET app.test_vertical_mode='explicit'");
  await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
+ await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD 'finnor_worker'");
  await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p2',2,2,0,60,'Frozen disposable physical capacity; not a protected S5 funding grant') ON CONFLICT(resource_key) DO UPDATE SET capacity=2,per_tenant_capacity=2,interactive_reserve=0,lease_seconds=60,source=EXCLUDED.source");
  process.env.DATABASE_URL='postgres://finnor_app:finnor_app@127.0.0.1:'+port+'/r1_e2e';await closePool();
  http=await startR1HttpFixture(repo,evidence,{builtApi:selected==='runtime'});

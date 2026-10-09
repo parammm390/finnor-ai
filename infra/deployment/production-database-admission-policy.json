@@ -16,7 +16,10 @@
           ]
         },
         "StringLike": {
-          "kms:EncryptionContext:aws:secretsmanager:arn": "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"
+          "kms:EncryptionContext:aws:secretsmanager:arn": [
+            "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????",
+            "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"
+          ]
         }
       }
     },
@@ -26,7 +29,18 @@
         "secretsmanager:GetSecretValue"
       ],
       "Resource": [
-        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????",
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:PutResourcePolicy"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"
       ]
     },
     {

@@ -63,6 +63,9 @@ const HISTORICAL_OR_CONTROL_FILES = new Set([
   "apps/api/app/api/webhooks/esign/route.ts",
   "scripts/release/verify-pe-domain-boundary.ts",
   "scripts/release/run-pe5-water-retirement-certification.ts",
+  // Disposable upgrade proof stores and preserves historical query records;
+  // it never resolves or executes retired readers.
+  "scripts/release/rehearse-historical-upgrade.ts",
   // Phase 8's runtime-contract verifier scans the retired vocabulary itself;
   // it is a deny/control gate, not executable product doctrine.
   "scripts/release/verify-p8-runtime-contract.ts",

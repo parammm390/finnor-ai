@@ -33,6 +33,37 @@ jobs:
       - run: npm run release:truth
       - run: npm run test:release
 
+  production-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm install --global vercel@50.15.1
+      - name: Verify durable API artifact handoff
+        run: node --test scripts/release/api-artifact.e2e.test.mjs
+      - name: Build every production artifact and exercise the actual compiled API
+        run: node scripts/release/production-artifact.e2e.mjs
+        env:
+          FINNOR_ARTIFACT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-artifact-evidence
+      - name: Retain actual artifact and runtime evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: production-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-production-artifact-evidence/*
+          if-no-files-found: warn
+          retention-days: 7
+
   worker-image:
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -47,15 +47,15 @@ Parameters:
     Type: String
   SecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key","VAPI_API_KEY":"finnor/prod/vapi-api-key","VAPI_WEBHOOK_SECRET":"finnor/prod/vapi-webhook-secret"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key","VAPI_API_KEY":"finnor/prod/vapi-api-key","VAPI_WEBHOOK_SECRET":"finnor/prod/vapi-webhook-secret"}'
     NoEcho: true
   RealtimeSecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key"}'
     NoEcho: true
   HeavySecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn"}'
     NoEcho: true
   SseAllowedOrigins:
     Type: String
@@ -67,7 +67,7 @@ Parameters:
     Type: String
     AllowedValues: [preparing, routing, finalized]
     Default: preparing
-    Description: Preparing warms class services; routing switches ingress while legacy drains; finalized removes legacy after drain proof.
+    Description: Warm, route, finalize after legacy drain.
   LegacyWorkerTaskDefinitionArn:
     Type: String
     Default: ''
@@ -80,6 +80,18 @@ Conditions:
   RunLegacyWorker: !And [!Condition HasLegacyWorkerTask, !Or [!Condition ComputePreparing, !Condition ComputeRouting]]
 
 Resources:
+  WorkerDatabaseSecretPolicy:
+    Type: AWS::SecretsManager::ResourcePolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata: { com.aws.cloudformation.Context: { why: Independent worker credential, must: [API deny remains explicit] } }
+    Properties:
+      SecretId: finnor/prod/worker-database-url
+      BlockPublicPolicy: true
+      ResourcePolicy:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Deny, Principal: { AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/finnor-app-prod' }, Action: 'secretsmanager:*', Resource: '*' }
   WorkerRepository:
     Type: AWS::ECR::Repository
     DeletionPolicy: Retain
@@ -186,7 +198,7 @@ Resources:
           - Effect: Allow
             Action: secretsmanager:GetSecretValue
             Resource:
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
@@ -231,7 +243,7 @@ Resources:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
@@ -260,7 +272,7 @@ Resources:
               - Effect: Allow
                 Action: [secretsmanager:DescribeSecret, secretsmanager:GetSecretValue]
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
               - Effect: Allow
@@ -325,8 +337,9 @@ Resources:
                 Effect: Allow
                 Action: [cloudformation:CreateChangeSet, cloudformation:DescribeChangeSet, cloudformation:DescribeStacks, cloudformation:ExecuteChangeSet]
                 Resource: '*'
-              - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":"arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"}}}
-              - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"]}
+              - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}}}
+              - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
+              - {"Effect":"Allow","Action":["secretsmanager:GetResourcePolicy","secretsmanager:PutResourcePolicy"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
               - {"Effect":"Allow","Action":["cloudformation:GetTemplate"],"Resource":["arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"]}
               - Sid: ComputeScaling
                 Effect: Allow
@@ -337,35 +350,15 @@ Resources:
                 Effect: Allow
                 Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:ListTagsForResource, cloudwatch:TagResource, cloudwatch:UntagResource]
                 Resource: !Sub 'arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:finnor-*'
-              - Sid: ComputeRoleLifecycle
-                Effect: Allow
-                Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:UpdateRoleDescription, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies]
-                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*'
-              - Sid: ComputePolicyLifecycle
-                Effect: Allow
-                Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListEntitiesForPolicy, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy]
-                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/finnor-compute-*'
-              - Sid: ComputeServiceLinkedRoles
-                Effect: Allow
-                Action: iam:CreateServiceLinkedRole
-                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*'
-                Condition:
-                  StringEquals:
-                    iam:AWSServiceName: [ecs.amazonaws.com, ecs.application-autoscaling.amazonaws.com, elasticloadbalancing.amazonaws.com]
-              - Sid: ReleaseLogs
-                Effect: Allow
-                Action: [logs:DescribeLogStreams, logs:GetLogEvents]
-                Resource: !Sub '${WorkerLogGroup.Arn}:*'
+              - { Sid: ComputeRoleLifecycle, Effect: Allow, Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:UpdateRoleDescription, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*' }
+              - { Sid: ComputePolicyLifecycle, Effect: Allow, Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListEntitiesForPolicy, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/finnor-compute-*' }
+              - { Sid: ComputeServiceLinkedRoles, Effect: Allow, Action: iam:CreateServiceLinkedRole, Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*', Condition: { StringEquals: { iam:AWSServiceName: [ecs.amazonaws.com, ecs.application-autoscaling.amazonaws.com, elasticloadbalancing.amazonaws.com] } } }
+              - { Sid: ReleaseLogs, Effect: Allow, Action: [logs:DescribeLogStreams, logs:GetLogEvents], Resource: !Sub '${WorkerLogGroup.Arn}:*' }
               - { Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '*' }
               - Sid: PassOnlyFinnorRoles
                 Effect: Allow
                 Action: iam:PassRole
-                Resource:
-                  - !GetAtt WorkerExecutionRole.Arn
-                  - !GetAtt WorkerTaskRole.Arn
-                  - !GetAtt BackgroundTaskRole.Arn
-                  - !GetAtt HeavyTaskRole.Arn
-                  - !GetAtt RealtimeTaskRole.Arn
+                Resource: [!GetAtt WorkerExecutionRole.Arn, !GetAtt WorkerTaskRole.Arn, !GetAtt BackgroundTaskRole.Arn, !GetAtt HeavyTaskRole.Arn, !GetAtt RealtimeTaskRole.Arn]
 
   AlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup

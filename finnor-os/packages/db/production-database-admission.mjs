@@ -5,7 +5,8 @@ export function assertProductionDatabaseTarget(connectionString, database, kind)
   let url, project;
   try { url = new URL(connectionString); project = new URL(database.supabaseUrl); } catch { reject(); }
   const match = /^([a-z0-9]+)\.supabase\.co$/.exec(project.hostname);
-  const role = kind === "owner" ? "postgres" : kind === "application" ? "finnor_app" : null;
+  const role = kind === "owner" ? "postgres" : kind === "application" ? "finnor_app"
+    : kind === "worker" ? "finnor_worker" : null;
   let username;
   try { username = decodeURIComponent(url.username); } catch { reject(); }
   if (!match || !role || !["postgres:", "postgresql:"].includes(url.protocol)
@@ -15,7 +16,8 @@ export function assertProductionDatabaseTarget(connectionString, database, kind)
   return { host: url.hostname, projectRef: match[1], database: "postgres", port: 5432, role };
 }
 
-export async function verifyRestrictedApplicationRole(client, database) {
+export async function verifyRestrictedApplicationRole(client, database, kind = "application") {
+  const expectedRole = kind === "application" ? "finnor_app" : kind === "worker" ? "finnor_worker" : null;
   const { rows } = await client.query(`
     SELECT current_user AS role, r.rolsuper AS superuser, r.rolbypassrls AS bypass_rls,
       EXISTS (SELECT 1 FROM pg_roles privileged
@@ -23,7 +25,7 @@ export async function verifyRestrictedApplicationRole(client, database) {
           AND pg_has_role(current_user, privileged.oid, 'MEMBER')) AS privileged_membership
     FROM pg_roles r WHERE r.rolname = current_user`);
   const role = rows[0];
-  if (role?.role !== "finnor_app" || role.superuser !== false || role.bypass_rls !== false
+  if (!expectedRole || role?.role !== expectedRole || role.superuser !== false || role.bypass_rls !== false
       || role.privileged_membership !== false) {
     throw new Error("Restricted application database role required");
   }
@@ -37,6 +39,10 @@ export async function verifyRestrictedApplicationRole(client, database) {
   [database.schema]);
   if (!tables.rows.length || tables.rows.some((table) => table.rls !== true || table.owner_membership !== false)) {
     throw new Error("Tenant RLS posture required");
+  }
+  if (kind === "application") {
+    const membership = await client.query("SELECT pg_has_role(current_user, oid, 'MEMBER') AS worker_membership FROM pg_roles WHERE rolname='finnor_worker'");
+    if (membership.rows.some((row) => row.worker_membership)) throw new Error("Application must not inherit worker database authority");
   }
   return { role: role.role, superuser: false, bypassRls: false, privilegedMembership: false,
     tenantTables: tables.rows.length, forcedTables: tables.rows.filter((table) => table.forced).length,

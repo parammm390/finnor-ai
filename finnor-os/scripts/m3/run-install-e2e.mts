@@ -71,12 +71,12 @@ async function facts(c:pg.Client){
  WHERE n.nspname='finnor_os' AND c.relname IN('m3_queries','m3_events','m3_publications','m3_dependencies','m3_branch_reviews','s5_candidate_problems') ORDER BY c.relname`)).rows;
 }
 try{
- await challenge('bundle-head-byte-identity','Release readiness, bundle and disk contain all 172 exact unique migrations; all 166 earlier SQL bodies match the committed predecessor',async()=>{
-  assert.equal(CURRENT_MIGRATION_HEAD,'0170_p6_procedure_induction.sql');assert.equal(names.at(-1),CURRENT_MIGRATION_HEAD);
-  assert.equal(disk.length,172);assert.equal(disk.filter(file=>file.name<'0165').length,166);
+ await challenge('bundle-head-byte-identity','Release readiness, bundle and disk contain all 173 exact unique migrations; all 166 earlier SQL bodies match the committed predecessor',async()=>{
+  assert.equal(CURRENT_MIGRATION_HEAD,'0171_runtime_database_role_isolation.sql');assert.equal(names.at(-1),CURRENT_MIGRATION_HEAD);
+  assert.equal(disk.length,173);assert.equal(disk.filter(file=>file.name<'0165').length,166);
   assert.deepEqual(MIGRATIONS,disk);
   const forward=names.filter(name=>name>='0165');
-  assert.equal(new Set(forward.map(name=>name.split('_')[0])).size,6);
+  assert.equal(new Set(forward.map(name=>name.split('_')[0])).size,7);
   for(const file of disk.filter(file=>file.name<'0165')){
    const committed=spawnSync('git',['-C',repo,'show',`e1125cb75:finnor-os/packages/db/migrations/${file.name}`],{encoding:'utf8'});
    assert.equal(committed.status,0,committed.stderr);assert.equal(sha(file.sql),sha(committed.stdout));
@@ -115,9 +115,9 @@ try{
   const applied=await migrate(url,MIGRATIONS);
   assert.deepEqual(applied,disk.filter(file=>file.name>='0165').map(file=>file.name));
   assert.deepEqual((await current.query('SELECT to_jsonb(l) body FROM finnor_os.work_entity_links l WHERE id=$1',[f.linkId])).rows[0].body,snapshot);
-  assert.equal((await current.query('SELECT count(*)::int n FROM finnor_os._migrations')).rows[0].n,172);
+  assert.equal((await current.query('SELECT count(*)::int n FROM finnor_os._migrations')).rows[0].n,173);
   assert.deepEqual(await migrate(url,MIGRATIONS),[]);
-  return {applied,retainedWorkId:f.workId,retainedLinkId:f.linkId,totalMigrations:172};
+  return {applied,retainedWorkId:f.workId,retainedLinkId:f.linkId,totalMigrations:173};
  });
  await challenge('physical-p6-ddl-tracker-interruption','Terminating the exact backend during tracker insertion rolls back both P6 DDL and tracker row; unchanged retry commits both',async()=>{
   await postgres.createDatabase('m3_interrupted');
@@ -151,10 +151,11 @@ try{
       (SELECT count(*)::int FROM finnor_os._migrations WHERE name=$1) tracker`,[registered])).rows[0];
     assert.deepEqual(after,{ddl:null,tracker:0});
     await interrupted.query('DROP TRIGGER rehearsal_p6_tracker_delay ON finnor_os._migrations;DROP FUNCTION finnor_os.rehearsal_p6_tracker_delay()');
-    assert.deepEqual(await migrate(url,MIGRATIONS),[registered]);
+    const retry=[registered,CURRENT_MIGRATION_HEAD];
+    assert.deepEqual(await migrate(url,MIGRATIONS),retry);
     assert((await interrupted.query("SELECT to_regclass('finnor_os.p6_capsules') table_name")).rows[0].table_name);
     assert.deepEqual(await migrate(url,MIGRATIONS),[]);
-    return {mechanism:'EXACT_OWNED_POSTGRES_BACKEND_TERMINATED_AT_TRACKER_INSERT',pid,exit,after,retry:[registered]};
+    return {mechanism:'EXACT_OWNED_POSTGRES_BACKEND_TERMINATED_AT_TRACKER_INSERT',pid,exit,after,retry};
   }finally{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await closed;}}
  });
  await challenge('truthful-core-upgrade-baseline','Preexisting Core link receives an exact migration baseline, but prior knowledge does not inherit that current payload',async()=>{

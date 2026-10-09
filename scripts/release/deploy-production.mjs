@@ -1,11 +1,12 @@
 import { execFileSync, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { isAbsolute, join, relative, resolve } from "node:path"
 import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnv, sanitizeVercelBuildEnvironment } from "./protected-env.mjs"
 import { worktreeStatus } from "./worktree-state.mjs"
+import { apiBuildContext, normalizeApiProjectRoot, vercelBuildConfiguration, materializeApiFunctions } from "./vercel-build-context.mjs"
 
 const appName = process.argv[2]
 const prepareOnly = process.argv.includes("--prepare-only")
@@ -87,19 +88,26 @@ function withVercelToken(args) {
 
 const appDir = resolve(repoRoot, app.directory)
 const isCanary = appName.startsWith("supplierCanary")
+const isPrepared = isCanary || appName === "api"
 const sha256 = (value) => createHash("sha256").update(value).digest("hex")
-const excludedSource = /(^|[/\\])(?:\.vercel|node_modules|\.git|\.env(?:\.[^/\\]*)?)(?:[/\\]|$)/
+const excludedSource = /(^|[/\\])(?:\.vercel|\.next|node_modules|evidence|\.git|\.env(?:\.[^/\\]*)?)(?:[/\\]|$)/
 
-function treeSha256(directory, { sourceOnly = false, skipNodeModules = false } = {}) {
+function treeSha256(directory, { sourceOnly = false, skipNodeModules = false, outputBoundary } = {}) {
   if (lstatSync(directory).isSymbolicLink() || !lstatSync(directory).isDirectory()) throw new Error("Prepared artifact root must be a real directory")
   const entries = []
   function visit(folder) {
     for (const name of readdirSync(folder).sort()) {
       const path = join(folder, name)
       const key = relative(directory, path).split("\\").join("/")
-      if (sourceOnly && excludedSource.test(key) || skipNodeModules && /^node_modules(?:\/|$)/.test(key)) continue
+      const emitted = outputBoundary && path.startsWith(`${outputBoundary}/`)
+      if (sourceOnly && excludedSource.test(key) || skipNodeModules && !emitted && key.split("/").some(part => ["node_modules", ".next"].includes(part))) continue
       const stat = lstatSync(path)
-      if (stat.isSymbolicLink()) throw new Error(`Prepared artifact contains a symlink: ${key}`)
+      if (stat.isSymbolicLink()) {
+        const target = readlinkSync(path)
+        if (!emitted || isAbsolute(target) || !realpathSync(path).startsWith(`${outputBoundary}/`)) throw new Error(`Prepared artifact contains an unsafe symlink: ${key}`)
+        entries.push([key, "symlink", target])
+        continue
+      }
       if (stat.isDirectory()) { entries.push([key, "directory"]); visit(path) }
       else if (stat.isFile()) entries.push([key, "file", stat.mode & 0o777, sha256(readFileSync(path))])
       else throw new Error(`Prepared artifact contains a special file: ${key}`)
@@ -110,25 +118,26 @@ function treeSha256(directory, { sourceOnly = false, skipNodeModules = false } =
 }
 
 let preparedDir
-if (isCanary) {
+if (isPrepared) {
   const runnerTemp = process.env.RUNNER_TEMP
   if (!runnerTemp || !isAbsolute(runnerTemp) || !existsSync(runnerTemp)) throw new Error("Canary preparation/reuse requires an existing absolute RUNNER_TEMP")
   const runner = realpathSync(runnerTemp)
   if (runner === repoRoot || !relative(repoRoot, runner).startsWith("..")) throw new Error("Prepared canaries must be outside canonical source")
-  preparedDir = join(runner, "finnor-prepared-canaries", commitSha, appName)
+  const area = isCanary ? "finnor-prepared-canaries" : "finnor-prepared-api"
+  preparedDir = join(runner, area, commitSha, appName)
   // Each existing ancestor must remain inside the owned runner root.
-  for (const path of [join(runner, "finnor-prepared-canaries"), join(runner, "finnor-prepared-canaries", commitSha), preparedDir]) {
+  for (const path of [join(runner, area), join(runner, area, commitSha), preparedDir]) {
     if (existsSync(path) && (lstatSync(path).isSymbolicLink() || !lstatSync(path).isDirectory() || !realpathSync(path).startsWith(`${runner}/`))) {
       throw new Error("Prepared canary path has an unsafe ancestor")
     }
   }
 }
-const canaryIdentity = isCanary ? {
-  schema: "finnor.canary-prepared-artifact.v1", component: appName,
+const canaryIdentity = isPrepared ? {
+  schema: isCanary ? "finnor.canary-prepared-artifact.v1" : "finnor.api-prepared-artifact.v1", component: appName,
   organizationId: TEAM_ID, projectId: app.projectId, project: app.project,
-  portalRole: target.portalRole, commitSha, buildId, version, environment, source,
+  ...(isCanary ? { portalRole: target.portalRole } : {}), commitSha, buildId, version, environment, source,
 } : undefined
-const toolchain = isCanary ? {
+const toolchain = isPrepared ? {
   node: process.version,
   vercel: execFileSync("vercel", ["--version"], { encoding: "utf8", env: { PATH: process.env.PATH, HOME: process.env.HOME } }).trim(),
   rootLockSha256: sha256(readFileSync(join(repoRoot, "package-lock.json"))),
@@ -144,10 +153,15 @@ function validateCanaryConfiguration(context) {
   if (project.orgId !== TEAM_ID || project.projectId !== app.projectId) throw new Error("Prepared canary project binding differs from the canonical contract")
   const path = join(context, ".vercel/.env.production.local")
   const values = readProtectedEnv(path)
-  if (values.PORTAL_ROLE !== target.portalRole) throw new Error("Prepared canary portal role differs from the canonical contract")
+  if (isCanary && values.PORTAL_ROLE !== target.portalRole) throw new Error("Prepared canary portal role differs from the canonical contract")
+  if (!isCanary && project.settings?.rootDirectory !== "finnor-os/apps/api") throw new Error("Prepared API root differs from the canonical context")
   for (const [key, value] of Object.entries(values)) {
-    if (/SERVICE[_-]?ROLE|SECRET|PASSWORD|PRIVATE[_-]?KEY|CREDENTIAL/i.test(key) || value.startsWith("sb_secret_")) {
-      throw new Error("Prepared canary environment contains a forbidden credential class")
+    const secretReference = !isCanary && (
+      ["FINNOR_SECRET_IDS", "FINNOR_TENANT_SECRET_PREFIX", "FINNOR_SYSTEM_CREDENTIAL_PROVIDERS"].includes(key)
+      || key === "SECRETS_PROVIDER" && value === "aws-secrets-manager"
+    )
+    if (!secretReference && /SERVICE[_-]?ROLE|SECRET|PASSWORD|PRIVATE[_-]?KEY|CREDENTIAL/i.test(key) || value.startsWith("sb_secret_")) {
+      throw new Error(`Prepared canary environment contains a forbidden credential class: ${key}`)
     }
     if (value.split(".").length === 3) {
       let claims
@@ -167,11 +181,13 @@ function validateCanaryConfiguration(context) {
 }
 
 function canaryHashes(context) {
-  const contextSha256 = treeSha256(context, { skipNodeModules: true })
+  context = realpathSync(context)
+  const outputBoundary = appName === "api" ? join(context, ".vercel/output") : undefined
+  const contextSha256 = treeSha256(context, { skipNodeModules: true, outputBoundary })
   return {
     sourceSha256: treeSha256(appDir, { sourceOnly: true }),
-    outputSha256: treeSha256(join(context, ".vercel/output")),
-    configSha256: treeSha256(join(context, ".vercel"), { skipNodeModules: true }),
+    outputSha256: treeSha256(join(context, ".vercel/output"), { outputBoundary }),
+    configSha256: treeSha256(join(context, ".vercel"), { skipNodeModules: true, outputBoundary }),
     contextSha256,
     toolchainSha256: sha256(JSON.stringify(toolchain)),
   }
@@ -197,8 +213,8 @@ function verifyPreparedCanary() {
   return receipt
 }
 
-const reuseCanary = isCanary && existsSync(preparedDir)
-if (isCanary && deployOnly && !reuseCanary) throw new Error("No durable prepared canary artifact for deploy-only")
+const reuseCanary = isPrepared && existsSync(preparedDir)
+if (isPrepared && deployOnly && !reuseCanary) throw new Error("No durable prepared artifact for deploy-only")
 // Vercel's local build bootstrap can discover the parent finnor-os workspace
 // even when the canary project is rooted at this app directory. Its fallback
 // `npm install` then rewrites the parent workspace lockfile. Build canaries in
@@ -206,7 +222,12 @@ if (isCanary && deployOnly && !reuseCanary) throw new Error("No durable prepared
 // release source; the prebuilt output is still deployed to the exact contract
 // project and verified below.
 const isolateCanaryBuild = appName.startsWith("supplierCanary") && !deployOnly && !reuseCanary
-let buildDir = isolateCanaryBuild ? mkdtempSync(join(tmpdir(), "finnor-vercel-canary-")) : isCanary ? join(preparedDir, "context") : appDir
+let buildDir = isolateCanaryBuild ? mkdtempSync(join(tmpdir(), "finnor-vercel-canary-")) : isPrepared && reuseCanary ? join(preparedDir, "context") : appDir
+if (appName === "api" && !reuseCanary) {
+  const context = apiBuildContext(repoRoot)
+  buildDir = context.directory
+  process.on("exit", context.cleanup)
+}
 if (isolateCanaryBuild) {
   const scratchDir = buildDir
   process.on("exit", () => {
@@ -267,11 +288,16 @@ if (!deployOnly && !reuseCanary) {
     })
     rmSync(join(buildDir, ".vercel"), { recursive: true, force: true })
     cpSync(join(pullDir, ".vercel"), join(buildDir, ".vercel"), { recursive: true })
+    if (appName === "api") {
+      const path = join(buildDir, ".vercel/project.json")
+      const project = normalizeApiProjectRoot(appName, JSON.parse(readFileSync(path, "utf8")), contract)
+      writeFileSync(path, `${JSON.stringify(project, null, 2)}\n`)
+    }
   } finally {
     rmSync(pullDir, { recursive: true, force: true })
   }
   console.log(`Sanitized Vercel build environment: retained ${buildEnvironment.retained}, removed ${buildEnvironment.removed} non-build values`)
-  if (isCanary) {
+  if (isPrepared) {
     // Reject credentials smuggled through public/config naming before the build.
     validateCanaryConfiguration(buildDir)
   }
@@ -284,11 +310,12 @@ if (!deployOnly && !reuseCanary) {
     }
     buildConfig = { ...canonicalConfig, installCommand: app.installCommand }
   }
-  writeFileSync(localConfig, `${JSON.stringify(buildConfig, null, 2)}\n`)
+  writeFileSync(localConfig, `${JSON.stringify(vercelBuildConfiguration(appName, buildConfig), null, 2)}\n`)
   run("vercel", ["build", "--prod", "--yes", "--local-config", localConfig], buildDir, withoutSecrets(env))
+  if (appName === "api") materializeApiFunctions(buildDir)
   const buildChanges = worktreeStatus(repoRoot)
   if (buildChanges) throw new Error(`The ${appName} build changed release source:\n${buildChanges}`)
-  if (isCanary) {
+  if (isPrepared) {
     validateCanaryConfiguration(buildDir)
     preparedReceipt = { ...canaryIdentity, ...canaryHashes(buildDir), toolchain, preparedAt: new Date().toISOString() }
     const parent = resolve(preparedDir, "..")
@@ -297,8 +324,13 @@ if (!deployOnly && !reuseCanary) {
     try {
       cpSync(buildDir, join(publishing, "context"), {
         recursive: true,
+        verbatimSymlinks: true,
         // Only discard the build installation, never a function's traced dependencies.
-        filter: (path) => !/^node_modules(?:[/\\]|$)/.test(relative(buildDir, path)),
+        filter: (path) => {
+          const key = relative(buildDir, path).replaceAll("\\", "/")
+          if (key.startsWith(".vercel/output/")) return true
+          return !key.split("/").some(part => ["node_modules", ".next"].includes(part))
+        },
       })
       writeFileSync(join(publishing, "prepared.json"), `${JSON.stringify(preparedReceipt, null, 2)}\n`, { mode: 0o600 })
       chmodSync(join(publishing, "context/.vercel/.env.production.local"), 0o600)
@@ -317,12 +349,12 @@ if (!deployOnly && !reuseCanary) {
   }
 }
 if (prepareOnly) {
-  console.log(JSON.stringify({ ok: true, app: appName, prepared: true, commitSha, buildId, version, environment, source, ...(isCanary ? { preparedArtifact: { directory: preparedDir, receipt: preparedReceipt } } : {}) }, null, 2))
+  console.log(JSON.stringify({ ok: true, app: appName, prepared: true, commitSha, buildId, version, environment, source, ...(isPrepared ? { preparedArtifact: { directory: preparedDir, receipt: preparedReceipt } } : {}) }, null, 2))
   process.exit(0)
 }
 
 await authorizeProductionMutation("vercel-production-deploy")
-if (isCanary) {
+if (isPrepared) {
   // Authorization is async: recheck the exact bytes at the deployment boundary.
   if (worktreeStatus(repoRoot) || git(["rev-parse", "HEAD"]).toLowerCase() !== commitSha
     || git(["ls-remote", "origin", "refs/heads/main"]).split(/\s+/)[0] !== commitSha) throw new Error("Canonical source changed before canary deployment")
@@ -330,6 +362,9 @@ if (isCanary) {
 }
 const deployArgs = [
   "deploy", "--prebuilt", "--prod", "--yes",
+  // The pinned CLI chunks archives before upload, bounding deployment metadata
+  // without dropping any attested API dependency or rebuilding prepared bytes.
+  ...(appName === "api" ? ["--archive=tgz"] : []),
   "--meta", `finnorCommitSha=${commitSha}`,
   "--meta", `finnorBuildId=${buildId}`,
   "--meta", `finnorVersion=${version}`,
@@ -366,7 +401,7 @@ const result = {
   dirty: false,
   remoteMain,
   deploymentUrl,
-  ...(isCanary ? { preparedArtifact: { directory: preparedDir, receiptSha256: sha256(readFileSync(join(preparedDir, "prepared.json"))), outputSha256: preparedReceipt.outputSha256 } } : {}),
+  ...(isPrepared ? { preparedArtifact: { directory: preparedDir, receiptSha256: sha256(readFileSync(join(preparedDir, "prepared.json"))), outputSha256: preparedReceipt.outputSha256 } } : {}),
 }
 if (outputFile) {
   writeFileSync(resolve(outputFile), `${JSON.stringify(result, null, 2)}\n`)

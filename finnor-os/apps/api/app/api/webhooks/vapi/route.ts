@@ -1,11 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { VapiWebhookSchema } from "@finnor/policy-schema";
 import {
-  adminDb,
   domainActions,
   getPool,
   ingestIntegrationEventTx,
-  tenantPhoneNumbers,
   users,
   withTenant,
 } from "@finnor/db";
@@ -35,21 +33,12 @@ interface VapiToolCall {
 }
 
 async function resolveTenant(call: VapiCall | undefined): Promise<string | null> {
-  if (call?.phoneNumberId) {
-    const rows = await adminDb().select({ tenantId: tenantPhoneNumbers.tenantId })
-      .from(tenantPhoneNumbers)
-      .where(eq(tenantPhoneNumbers.vapiPhoneNumberId, call.phoneNumberId))
-      .limit(2);
-    if (rows.length === 1) return rows[0]!.tenantId;
-  }
-  if (call?.phoneNumber?.number) {
-    const rows = await adminDb().select({ tenantId: tenantPhoneNumbers.tenantId })
-      .from(tenantPhoneNumbers)
-      .where(eq(tenantPhoneNumbers.phoneNumber, call.phoneNumber.number))
-      .limit(2);
-    if (rows.length === 1) return rows[0]!.tenantId;
-  }
-  return null;
+  if (!call?.phoneNumberId && !call?.phoneNumber?.number) return null;
+  const result = await getPool().query<{ tenant_id: string | null }>(
+    "SELECT finnor_os.resolve_phone_routing_tenant($1,$2) AS tenant_id",
+    [call.phoneNumberId ?? null, call.phoneNumber?.number ?? null],
+  );
+  return result.rows[0]?.tenant_id ?? null;
 }
 
 function verify(req: Request, rawBody: string, secret?: string): boolean {

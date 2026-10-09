@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
@@ -18,7 +18,7 @@ export function createFixture(t, scenario = "valid") {
   const repo = join(root, "repo")
   const scripts = join(repo, "scripts/release")
   mkdirSync(scripts, { recursive: true })
-  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs"]) {
+  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs", "vercel-build-context.mjs"]) {
     cpSync(join(sourceRoot, "scripts/release", name), join(scripts, name))
   }
   mkdirSync(join(repo, "infra/deployment"), { recursive: true })
@@ -40,6 +40,9 @@ export function createFixture(t, scenario = "valid") {
   writeFileSync(join(appDir, "vercel.json"), '{"rewrites":[{"source":"/(.*)","destination":"/api/index.mjs"}]}\n')
   mkdirSync(join(appDir, "api"))
   writeFileSync(join(appDir, "api/index.mjs"), 'export default function handler() { return "fixture"; }\n')
+  const apiDir = join(repo, contract.topology.api.releaseWorkingDirectory, "apps/api")
+  mkdirSync(apiDir, { recursive: true })
+  writeFileSync(join(apiDir, "package.json"), '{"name":"fixture-api","private":true,"type":"module"}\n')
   const stateFile = join(root, "state.json")
   const log = join(root, "commands.jsonl")
   const state = { root, repo, scenario, sha: SHA, digest: DIGEST, contract, log }
@@ -180,11 +183,17 @@ export function mockCommand(name, args) {
     const project = [s.contract.topology.supplierCanaryApp, s.contract.topology.supplierCanaryAuth].find((target) => target.projectId === process.env.VERCEL_PROJECT_ID)
     if (args[0] === "pull") {
       mkdirSync(".vercel", { recursive: true })
-      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID }))
+      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID, settings: { rootDirectory: process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? (s.scenario === "api-legacy-root" ? "apps/api" : "finnor-os/apps/api") : null } }))
       writeFileSync(".vercel/.env.production.local", [
         `PORTAL_ROLE=${s.scenario === "wrong-role" ? "wrong" : project?.portalRole ?? "app"}`,
         "NEXT_PUBLIC_FIXTURE=public-config", "DATABASE_URL=fixture-secret-db",
         "SUPABASE_SERVICE_ROLE_KEY=fixture-secret-service", "CANARY_SIGNING_KEY=fixture-secret-signing",
+        ...(process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? [
+          `SECRETS_PROVIDER=${s.scenario === "api-invalid-provider" ? "env" : "aws-secrets-manager"}`,
+          `FINNOR_SECRET_IDS="${JSON.stringify({ GROQ_API_KEY: "finnor/prod/groq-api-key" })}"`,
+          "FINNOR_TENANT_SECRET_PREFIX=finnor/tenants/",
+          "FINNOR_SYSTEM_CREDENTIAL_PROVIDERS=resend",
+        ] : []),
         ...(s.scenario === "public-service-key" ? ["NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=fixture-secret-public-service"] : []),
       ].join("\n"))
       return out("Fixture pull\n")
@@ -195,9 +204,21 @@ export function mockCommand(name, args) {
       mkdirSync(".vercel/output/functions/health.func", { recursive: true })
       writeFileSync(".vercel/output/config.json", '{"version":3}\n')
       writeFileSync(".vercel/output/functions/health.func/index.mjs", `export const role=${JSON.stringify(project?.portalRole)};\n`)
+      if (["api-file-map", "api-legacy-root"].includes(s.scenario)) {
+        symlinkSync("health.func", ".vercel/output/functions/alias.func")
+        writeFileSync(".vercel/output/functions/health.func/.vc-config.json", JSON.stringify({
+          runtime: "nodejs22.x", handler: "index.mjs",
+          filePathMap: { "package-lock.json": "package-lock.json" },
+        }))
+      }
       return out("Fixture build\n")
     }
     if (args[0] === "deploy") {
+      if (process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId) {
+        const providerRoot = s.scenario === "api-legacy-root" ? "apps/api" : "finnor-os/apps/api"
+        if (!existsSync(providerRoot)) throw new Error(`Provider project root does not exist: ${providerRoot}`)
+        if (!args.includes("--archive=tgz")) throw new Error("Request body too large. Limit: 10mb")
+      }
       if (!existsSync(".vercel/output/config.json")) throw new Error("No prepared output")
       log({ command: "deployed-output", outputSha256: hash(readFileSync(".vercel/output/config.json")) })
       return out("Production: https://fixture-deployment.vercel.app\n")
@@ -215,6 +236,9 @@ export function mockCommand(name, args) {
     if (service === "cloudformation" && command === "describe-stacks") {
       const count = readFileSync(s.log, "utf8").split("\n").filter((line) => line.includes('"describe-stacks"')).length
       const parameters = { ImageUri: `${s.contract.topology.worker.accountId}.dkr.ecr.us-east-1.amazonaws.com/finnor-worker@${DIGEST}`, ReleaseCommitSha: SHA, ReleaseBuildId: `finnor-${SHA.slice(0, 12)}`, ReleaseVersion: `0.1.0+${SHA.slice(0, 12)}`, CoreCertificationId: `post-merge:${SHA}`, SupabaseUrl: s.contract.topology.database.supabaseUrl, ComputePlaneStage: s.scenario === "routing-recovery" ? "preparing" : "finalized", LegacyWorkerTaskDefinitionArn: "" }
+      parameters.SecretMap = JSON.stringify(s.contract.topology.worker.secretMap)
+      parameters.RealtimeSecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","SENTRY_DSN","SUPABASE_SERVICE_ROLE_KEY"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
+      parameters.HeavySecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","GROQ_API_KEY","REDIS_URL","SENTRY_DSN"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
       if (s.scenario === "parameter-sha") parameters.ReleaseCommitSha = "c".repeat(40)
       if (s.scenario === "parameter-digest") parameters.ImageUri = "wrong:image"
       return out({ Stacks: [{ StackName: "finnor-production", StackId: `arn:aws:cloudformation:us-east-1:${s.contract.topology.worker.accountId}:stack/finnor-production/fixture`, StackStatus: s.scenario === "unstable-stack" && count > 1 ? "UPDATE_IN_PROGRESS" : "UPDATE_COMPLETE", Parameters: Object.entries(parameters).map(([ParameterKey, ParameterValue]) => ({ ParameterKey, ParameterValue })) }] })

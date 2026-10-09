@@ -8,6 +8,8 @@ import { and, desc, eq, lte, sql } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../../lib/auth";
 import { isRetiredWaterAction } from "@finnor/shared-types";
 
+// Next requires one name for this shared dynamic segment. The URL and tenant
+// authorization remain unchanged; here the segment denotes the tenant ID.
 type Params = { params: Promise<{ operation: string; actionType: string }> };
 
 type PolicyBase = typeof domainPolicies.$inferSelect;

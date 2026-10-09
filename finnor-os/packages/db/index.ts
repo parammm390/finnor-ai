@@ -524,11 +524,13 @@ export async function enqueueJob(
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   const protocolVersion = isProductionJobType(type)
     ? PRODUCTION_JOB_CONTRACTS[type].protocolVersions[0] ?? 1 : 1;
-  await getPool().query(
+  const insert = (client: Pick<pg.PoolClient, "query">) => client.query(
     `INSERT INTO jobs (tenant_id, type, payload, idempotency_key, lane, priority, protocol_version) VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (idempotency_key) DO NOTHING`,
     [tenantId, type, JSON.stringify(fullPayload), idempotencyKey ?? null, lane, priority, protocolVersion],
   );
+  if (tenantId) await withTenantTransaction(tenantId, {}, (_db, client) => insert(client));
+  else await insert(getPool());
 }
 
 /** Scheduled variant of enqueueJob. The run time is part of the durable job row,
@@ -554,12 +556,14 @@ export async function enqueueJobAt(
   const fullPayload = correlationId ? { ...payload, _correlationId: correlationId } : payload;
   const protocolVersion = isProductionJobType(type)
     ? PRODUCTION_JOB_CONTRACTS[type].protocolVersions[0] ?? 1 : 1;
-  await getPool().query(
+  const insert = (client: Pick<pg.PoolClient, "query">) => client.query(
     `INSERT INTO jobs (tenant_id, type, payload, run_at, idempotency_key, lane, priority, protocol_version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      ON CONFLICT (idempotency_key) DO UPDATE SET run_at=LEAST(jobs.run_at, EXCLUDED.run_at)
      WHERE jobs.status='queued'`,
     [tenantId, type, JSON.stringify(fullPayload), runAt, idempotencyKey, lane, priority, protocolVersion],
   );
+  if (tenantId) await withTenantTransaction(tenantId, {}, (_db, client) => insert(client));
+  else await insert(getPool());
 }
 
 /** Read-only access to truthful historical Water operation evidence. Runtime
