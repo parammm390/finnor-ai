@@ -50,8 +50,9 @@ it("separates tenant application access from cross-tenant worker queue authority
     worker = new pg.Client({ host: "127.0.0.1", port, user: "finnor_worker", password: "worker-fixture", database: "finnor" });
     await app.connect();
     await worker.connect();
-    observed.application = await verifyRestrictedApplicationRole(app, { schema: "finnor_os" });
-    observed.worker = await verifyRestrictedApplicationRole(worker, { schema: "finnor_os" }, "worker");
+    const target = { host: "127.0.0.1", supabaseUrl: "https://kpxrnonhnhexutvdywbh.supabase.co", schema: "finnor_os" };
+    observed.application = await verifyRestrictedApplicationRole(app, target);
+    observed.worker = await verifyRestrictedApplicationRole(worker, target, "worker");
     expect((await app.query("SELECT id FROM finnor_os.jobs WHERE id=ANY($1::uuid[])", [[jobA,jobB,globalJob]])).rows).toHaveLength(0);
     await app.query("BEGIN");
     await app.query("SELECT set_config('app.tenant_id',$1,true)", [tenantA]);
