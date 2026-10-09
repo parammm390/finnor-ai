@@ -1404,12 +1404,12 @@
       "source": "finnor-os/apps/api/app/api/outcome-packs/grants/route.ts"
     },
     {
-      "capabilityId": "http.get.policies.$tenantId.$actionType",
+      "capabilityId": "http.get.policies.$operation.$actionType",
       "family": "policies",
       "owner": "@finnor/api",
       "transport": "http",
       "method": "GET",
-      "routePattern": "policies/:tenantId/:actionType",
+      "routePattern": "policies/:operation/:actionType",
       "routeDepth": 3,
       "classification": "ADMIN",
       "kind": "read",
@@ -1429,7 +1429,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [],
-      "source": "finnor-os/apps/api/app/api/policies/[tenantId]/[actionType]/route.ts"
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/route.ts"
     },
     {
       "capabilityId": "http.get.private-equity.ic.cases",
@@ -7103,12 +7103,12 @@
       "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
     },
     {
-      "capabilityId": "http.post.policies.$tenantId.$actionType.simulate",
+      "capabilityId": "http.post.policies.$operation.$actionType.simulate",
       "family": "policies",
       "owner": "@finnor/api",
       "transport": "http",
       "method": "POST",
-      "routePattern": "policies/:tenantId/:actionType/simulate",
+      "routePattern": "policies/:operation/:actionType/simulate",
       "routeDepth": 4,
       "classification": "ADMIN",
       "kind": "mutation",
@@ -7130,7 +7130,7 @@
       ],
       "timeoutClass": "WRITE",
       "tests": [],
-      "source": "finnor-os/apps/api/app/api/policies/[tenantId]/[actionType]/simulate/route.ts"
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/simulate/route.ts"
     },
     {
       "capabilityId": "http.post.private-equity.calibration",
@@ -9181,12 +9181,12 @@
       "source": "finnor-os/apps/api/app/api/operating-profile/route.ts"
     },
     {
-      "capabilityId": "http.put.policies.$tenantId.$actionType",
+      "capabilityId": "http.put.policies.$operation.$actionType",
       "family": "policies",
       "owner": "@finnor/api",
       "transport": "http",
       "method": "PUT",
-      "routePattern": "policies/:tenantId/:actionType",
+      "routePattern": "policies/:operation/:actionType",
       "routeDepth": 3,
       "classification": "ADMIN",
       "kind": "mutation",
@@ -9208,7 +9208,7 @@
       ],
       "timeoutClass": "WRITE",
       "tests": [],
-      "source": "finnor-os/apps/api/app/api/policies/[tenantId]/[actionType]/route.ts"
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/route.ts"
     },
     {
       "capabilityId": "http.put.threads.$id.canvas",

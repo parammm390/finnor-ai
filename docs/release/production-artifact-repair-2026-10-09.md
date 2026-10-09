@@ -76,3 +76,22 @@ The user authorized a normal direct push of the verified repair to `main` if
 existing permissions allow. No branch protection, approval policy, production
 authorization, or AWS permissions are weakened. No manual AWS action is part of
 this repair; the external bootstrap prerequisites remain separate.
+
+## Generated-manifest follow-up
+
+The first main run after `000d2db91` failed root job `113648848119` at
+`centropy:manifest:check`. The policy route consolidation had not been reflected
+in the committed capability manifest. The same command failed locally before
+the follow-up. The canonical generator changed only nine metadata values across
+three ADMIN policy capabilities (IDs, parameter labels and source paths).
+Classification, product/model exposure, methods, URL structure, and authorization
+remain unchanged. The manifest and dependent form/workspace checks, root unit
+tests, types, lint, release policy, P8 reachability and contrast checks passed
+after regeneration.
+
+On that actual SHA, the mandatory Linux production-artifacts job
+`113648846973`, Linux worker-image job `113648847093`, deployment-truth job, and
+both security jobs passed. This follow-up changes no artifact builder, native
+method, runtime dependency, workflow, database or AWS policy. A new production
+run is still required; neither those CI results nor this metadata repair prove
+that deployment has completed.
