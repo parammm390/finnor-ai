@@ -840,3 +840,10 @@ Finite integration verification: generated migration/capability/authz/deployment
 4. No production seam or relaxed predicate. Package the real three-file guard import closure, restore the actual main-generated production declarations, and consolidate only documentary artifacts/verbatim notices with exact byte hashes. Every changed source/test remains in the review; no source-path exclusion or review-gate bypass.
 
 Finite rerun: existing automatic mandatory PR CI and one provider review retry after the review file cap is satisfied. Preserve the original CI failures and artifact IDs. Passed local mathematical/full lifecycle suites are not repeated.
+
+### Worker build-context closure (before repair)
+
+1. Protect packaging of the real migration guard import closure under the canonical Dockerfile-specific context allowlist.
+2. Actual worker-image run37972395704 fails before build: COPY cannot calculate the checksum for scripts/release/worktree-state.mjs because Dockerfile.worker.dockerignore excludes root scripts.
+3. Import closure and local files exist; they do not prove bytes entered the Docker context. The existing actual worker-image gate is the primary after oracle; no new test or widened predicate.
+4. No production seam. Allow only the three audited guard modules and their ancestor directories, preserving all secret/cache exclusions. Push this affected repair without waiting for unrelated CI jobs.
