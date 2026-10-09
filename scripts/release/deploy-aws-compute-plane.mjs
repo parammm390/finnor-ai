@@ -124,12 +124,15 @@ try {
       ReleaseVersion: expected.version, CoreCertificationId: coreCertificationId,
       SupabaseUrl: contract.topology.database.supabaseUrl, ComputePlaneStage: nextStage,
       LegacyWorkerTaskDefinitionArn: legacyTaskArn,
+      SecretMap: JSON.stringify(worker.secretMap),
+      RealtimeSecretMap: JSON.stringify(Object.fromEntries(["DATABASE_URL","SENTRY_DSN","SUPABASE_SERVICE_ROLE_KEY"].map((key) => [key,worker.secretMap[key]]))),
+      HeavySecretMap: JSON.stringify(Object.fromEntries(["DATABASE_URL","GROQ_API_KEY","REDIS_URL","SENTRY_DSN"].map((key) => [key,worker.secretMap[key]]))),
     }
-    const parameters = Object.entries(overrides).map(([key, value]) => `ParameterKey=${key},ParameterValue=${value}`)
-    const preserved = ["VpcId", "PublicSubnet1", "PublicSubnet2", "CertificateArn", "GitHubOidcProviderArn", "GitHubOwner", "GitHubRepositoryName", "GitHubOwnerId", "GitHubRepositoryId", "GitHubEnvironment", "SecretMap", "RealtimeSecretMap", "HeavySecretMap", "SseAllowedOrigins"]
-    for (const key of preserved) if (key in stackParameters) parameters.push(`ParameterKey=${key},UsePreviousValue=true`)
+    const parameters = Object.entries(overrides).map(([ParameterKey, ParameterValue]) => ({ ParameterKey, ParameterValue }))
+    const preserved = ["VpcId", "PublicSubnet1", "PublicSubnet2", "CertificateArn", "GitHubOidcProviderArn", "GitHubOwner", "GitHubRepositoryName", "GitHubOwnerId", "GitHubRepositoryId", "GitHubEnvironment", "SseAllowedOrigins"]
+    for (const ParameterKey of preserved) if (ParameterKey in stackParameters) parameters.push({ ParameterKey, UsePreviousValue: true })
     aws("cloudformation", ["create-change-set", "--stack-name", worker.stackName, "--change-set-name", changesetName,
-      "--change-set-type", "UPDATE", "--template-body", `file://${templatePath}`, "--capabilities", "CAPABILITY_NAMED_IAM", "--parameters", ...parameters])
+      "--change-set-type", "UPDATE", "--template-body", `file://${templatePath}`, "--capabilities", "CAPABILITY_NAMED_IAM", "--parameters", JSON.stringify(parameters)])
     let changeSet
     const deadline = Date.now() + 3 * 60_000
     while (Date.now() < deadline) {

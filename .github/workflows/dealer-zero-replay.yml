@@ -43,6 +43,8 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+          AUTH_DEV_BYPASS: "1"
+          FINNOR_TEST_MANAGED_EXTENSIONS: omit
           FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/runtime-database-role-evidence
         run: >-
           npm test -- --run tests/integration/runtime-database-role-isolation.test.ts
@@ -51,6 +53,11 @@ jobs:
           tests/integration/setup-status-phone-routing.test.ts
           tests/integration/vapi-webhook-identity.test.ts
           tests/integration/vapi-status-update-notify.test.ts
+      - name: Verify class claims in the dedicated disposable compute harness
+        if: ${{ !cancelled() }}
+        env:
+          FINNOR_TEST_MANAGED_EXTENSIONS: omit
+        run: npm run release:scope3:focused
       - name: Retain role and consumer evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
