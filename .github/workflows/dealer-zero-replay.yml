@@ -36,9 +36,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - name: Verify release truth without production credentials
+        if: ${{ !cancelled() }}
         working-directory: .
         run: npm run release:truth && npm run test:release
       - name: Verify independent roles and actual queue and routing consumers
+        if: ${{ !cancelled() }}
         env:
           DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
           FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/runtime-database-role-evidence
