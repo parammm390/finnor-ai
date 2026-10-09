@@ -815,3 +815,10 @@ The root optimized build wrapper now explicitly sets NODE_ENV=production, as
 the existing API build already does. The observed first failure was the module
 resolution boundary; no application code or Next configuration changes.
 Required selected output stays the actual optimized default Turbopack build.
+
+### Seal bundle reference repair (before artifact repair)
+
+1. Protect standalone reconstruction of the exact clean owned commit and tree.
+2. The actual first seal failed: Git refused an empty bundle when the positive range named only a literal SHA instead of an advertised branch ref. Preserve sealed-handoff-01/failure.json, the actual ordered patch and script preimage.
+3. Runtime/owner tests cannot detect Git artifact reference semantics. The single existing seal operation is the owning proof; repair only its reference and repeat it against unchanged production bytes.
+4. No production seam. Use the actual owned branch, real Git bundle and independent object store; assert reconstructed commit identity as well as tree. No extra test cases or suite reruns.

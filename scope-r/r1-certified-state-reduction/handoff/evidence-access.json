@@ -308,7 +308,7 @@
       "bytes": 126785
     }
   ],
-  "sealDestination": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/sealed-handoff-01",
+  "sealDestination": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/sealed-handoff-02",
   "sealStatus": "Not asserted until actual clean-commit seal receipt exists.",
   "retainedObservationLimitation": {
     "schema": "finnor.r1.retained-evidence-provenance.v1",
@@ -316,5 +316,6 @@
     "disposition": "OVERWRITTEN_OBSERVATION_NOT_ORIGINAL_RUN_PROOF",
     "cause": "A retained browser helper captured its original directory while called with the final browser-11 DOM. The original browser-10 mount DOM text is unavailable. Browser-10 screenshots, result records and failure logs remain retained; no original browser-10 mount-DOM proof is claimed.",
     "finalMountedProof": "browser-11-final/browser/results.json"
-  }
+  },
+  "retainedSealFailure": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/sealed-handoff-01/failure.json"
 }

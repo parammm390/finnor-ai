@@ -72,14 +72,16 @@ for item in registry['checks']:
 patch = out/'0001-r1.patch'
 patch.write_bytes(git('format-patch', '--stdout', '--binary', args.parent+'..'+head, binary=True))
 bundle = out/'r1.bundle'
-git('bundle', 'create', str(bundle), args.parent+'..'+head)
+owned_ref = 'refs/heads/codex/r1-certified-state-reduction'
+git('bundle', 'create', str(bundle), args.parent+'..'+owned_ref)
 reconstructed = out/'reconstructed.git'
 subprocess.check_call(['git','init','--bare',str(reconstructed)], stdout=subprocess.DEVNULL)
 # Copy the exact prerequisite from the local source repository into an
 # independent object store; do not use alternates or the worktree's index.
 git('fetch','--no-tags','--depth=1',str(repo),args.parent,cwd=reconstructed)
 git('bundle','verify',str(bundle),cwd=reconstructed)
-git('fetch','--no-tags',str(bundle),head,cwd=reconstructed)
+git('fetch','--no-tags',str(bundle),owned_ref,cwd=reconstructed)
+if git('rev-parse','FETCH_HEAD',cwd=reconstructed).strip() != head: raise SystemExit('Independent reconstruction commit mismatch')
 rebuilt = git('rev-parse','FETCH_HEAD^{tree}',cwd=reconstructed).strip()
 if rebuilt != tree: raise SystemExit('Independent reconstruction tree mismatch')
 
