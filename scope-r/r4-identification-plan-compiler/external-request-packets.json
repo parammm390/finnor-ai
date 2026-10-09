@@ -1,0 +1,59 @@
+{
+  "schema": "finnor.r4.external-request-packets.v1",
+  "authority": "Requests only; no self-admission, grants, publication, activation or effect authority",
+  "pins": {
+    "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+    "rPrdSha256": "5781e4fd0f2bd0ac01d643fafc682905a931ff4cb0384e9eb1527dc8d99c4d59",
+    "method": "y0-0.2.11-current-kernel-trace-v1",
+    "scope": "Full original query, graph family, menu, source law/support/population, registered constraints and owner references must remain identical",
+    "sourceAndEvidenceIndex": "source-manifest.json; evidence-index.json; shared-integration-plan.json",
+    "sealedCommitAndTree": "handoff reconstruction receipt, populated only after local commits"
+  },
+  "requests": [
+    {
+      "owner": "S3",
+      "status": "UNQUALIFIED",
+      "asset": "Independent immutable qualification of the supplied ADMG family, joint laws/linkage, same population/time/units, measurement/selection/missingness and positivity basis",
+      "predicate": "Qualified current source/support/domain references match every input digest and every accepted per-graph premise. A formula or authenticated owner declaration is insufficient.",
+      "destination": "Canonical S3 qualification record; corresponding R4 profile dependency revision"
+    },
+    {
+      "owner": "S2, S5, S6",
+      "status": "NOT_RUN",
+      "asset": "Permitted compatible collection protocol, current resources/commitments, actual protected egress authority and subsequently observed joint data",
+      "predicate": "Existing owners authorize and account actual collection under the original grant. R4 does not reserve resources or perform collection. Unresolved settlement blocks current credit and never permits duplicate physical attempts.",
+      "destination": "Canonical S2/S5/S6 evidence and responsibility receipts; S1 source versions"
+    },
+    {
+      "owner": "S8 and protected evaluator",
+      "status": "NOT_RUN",
+      "asset": "Completed cumulative X/evaluator custody, independent checker/domain admission and frozen matched protected protocol",
+      "predicate": "Freeze endpoint/distribution, paired sample/power/stopping/multiplicity/material margin and all original floors before outcomes. Simultaneous 95% lower bound must be strictly positive and exceed the material margin after full compiler/checker, actual collection and failure costs.",
+      "destination": "Canonical S8 admission and protected comparison receipts, not development UI"
+    },
+    {
+      "owner": "S7 and independent valuation/economic evaluator",
+      "status": "NOT_RUN",
+      "asset": "Mature independently valued owner outcomes, complete attribution/sampling/cost/valuation/missingness uncertainty, eligible named comparators and original H1/H2 assets",
+      "predicate": "Preserve the original 90-day and 36-month qualifications, owner wealth definition, all budgets/floors, economic 100x simultaneous bounds, positive material denominator, business-decision payoff, locked ES_0.99 downside, separate Muse/dots 10x and additional $100 million objectives. Unknown or unrun comparators are never defeated.",
+      "destination": "Immutable canonical S7 estimand/outcome/attribution records and protected economic receipts"
+    }
+  ],
+  "internalGapsNotExternalized": [
+    "Final worker image construction/execution and built API runtime proof",
+    "Sustained controller memory efficiency and complete local monetary/build/container meters",
+    "Actual ordered sealed R1/R4 integration and affected compatibility checks",
+    "Native desktop input qualification",
+    "Exact inherited S6 payment/acquisition interruption receipt is not currently in verified custody"
+  ],
+  "diagnostic": {
+    "evidence": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json",
+    "basis": "Synthetic matched equipped-backend/menu-search mechanics only",
+    "plannedCostDeltaUSD": "6",
+    "actualCollectionCost": null,
+    "validDecisionShortfall": null,
+    "protectedGain": "NOT_RUN",
+    "economicCreditGranted": false,
+    "rerun": "Use the registered run-scientific.py command in verification-plan.json with the complete corpus and a fresh absolute evidence directory"
+  }
+}
