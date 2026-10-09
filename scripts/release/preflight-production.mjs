@@ -263,6 +263,11 @@ const protectedEnvironment = readProtectedEnv(databaseEnvPath)
 assertProductionDatabaseTarget(protectedEnvironment.DATABASE_URL, contract.topology.database, "application")
 const applicationUrl = await readProductionDatabaseSecret(protectedEnvironment, worker)
 assertProductionDatabaseTarget(applicationUrl, contract.topology.database, "application")
+const workerUrl = await readProductionDatabaseSecret({
+  SECRETS_PROVIDER: "aws-secrets-manager",
+  FINNOR_SECRET_IDS: JSON.stringify(worker.secretMap),
+}, worker, "worker")
+assertProductionDatabaseTarget(workerUrl, contract.topology.database, "worker")
 const requireFromOs = createRequire(new URL("../../finnor-os/package.json", import.meta.url))
 const pg = requireFromOs("pg")
 const application = new pg.Client({ ...pgConnectionConfig(applicationUrl), connectionTimeoutMillis: 15_000 })
@@ -273,6 +278,14 @@ try {
   applicationRole = await verifyRestrictedApplicationRole(application, contract.topology.database)
   await application.query("ROLLBACK")
 } finally { await application.end() }
+const workerDatabase = new pg.Client({ ...pgConnectionConfig(workerUrl), connectionTimeoutMillis: 15_000 })
+let workerRole
+try {
+  await workerDatabase.connect()
+  await workerDatabase.query("BEGIN READ ONLY")
+  workerRole = await verifyRestrictedApplicationRole(workerDatabase, contract.topology.database, "worker")
+  await workerDatabase.query("ROLLBACK")
+} finally { await workerDatabase.end() }
 const client = new pg.Client({ ...pgConnectionConfig(databaseUrl), connectionTimeoutMillis: 15_000 })
 await client.connect()
 let migrationHead
@@ -356,7 +369,7 @@ const evidence = {
       desiredCount: value.service.desiredCount,
     }])),
   },
-  database: { ...ownerTarget, migrationHead, businessCounts, applicationRole },
+  database: { ...ownerTarget, migrationHead, businessCounts, applicationRole, workerRole },
 }
 writeFileSync(resolve(outputPath), `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 })
 console.log(JSON.stringify(evidence, null, 2))

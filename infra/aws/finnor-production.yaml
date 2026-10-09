@@ -47,15 +47,15 @@ Parameters:
     Type: String
   SecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key","VAPI_API_KEY":"finnor/prod/vapi-api-key","VAPI_WEBHOOK_SECRET":"finnor/prod/vapi-webhook-secret"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key","VAPI_API_KEY":"finnor/prod/vapi-api-key","VAPI_WEBHOOK_SECRET":"finnor/prod/vapi-webhook-secret"}'
     NoEcho: true
   RealtimeSecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","SENTRY_DSN":"finnor/prod/sentry-dsn","SUPABASE_SERVICE_ROLE_KEY":"finnor/prod/supabase-service-role-key"}'
     NoEcho: true
   HeavySecretMap:
     Type: String
-    Default: '{"DATABASE_URL":"finnor/prod/database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn"}'
+    Default: '{"DATABASE_URL":"finnor/prod/worker-database-url","GROQ_API_KEY":"finnor/prod/groq-api-key","REDIS_URL":"finnor/prod/redis-url","SENTRY_DSN":"finnor/prod/sentry-dsn"}'
     NoEcho: true
   SseAllowedOrigins:
     Type: String
@@ -80,6 +80,15 @@ Conditions:
   RunLegacyWorker: !And [!Condition HasLegacyWorkerTask, !Or [!Condition ComputePreparing, !Condition ComputeRouting]]
 
 Resources:
+  WorkerDatabaseSecretPolicy:
+    Type: AWS::SecretsManager::ResourcePolicy
+    Properties:
+      SecretId: finnor/prod/worker-database-url
+      BlockPublicPolicy: true
+      ResourcePolicy:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Deny, Principal: { AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/finnor-app-prod' }, Action: 'secretsmanager:*', Resource: '*' }
   WorkerRepository:
     Type: AWS::ECR::Repository
     DeletionPolicy: Retain
@@ -186,7 +195,7 @@ Resources:
           - Effect: Allow
             Action: secretsmanager:GetSecretValue
             Resource:
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
@@ -231,7 +240,7 @@ Resources:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
@@ -260,7 +269,7 @@ Resources:
               - Effect: Allow
                 Action: [secretsmanager:DescribeSecret, secretsmanager:GetSecretValue]
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/database-url-*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
                   - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
               - Effect: Allow
@@ -325,8 +334,8 @@ Resources:
                 Effect: Allow
                 Action: [cloudformation:CreateChangeSet, cloudformation:DescribeChangeSet, cloudformation:DescribeStacks, cloudformation:ExecuteChangeSet]
                 Resource: '*'
-              - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":"arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"}}}
-              - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????"]}
+              - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}}}
+              - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
               - {"Effect":"Allow","Action":["cloudformation:GetTemplate"],"Resource":["arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"]}
               - Sid: ComputeScaling
                 Effect: Allow

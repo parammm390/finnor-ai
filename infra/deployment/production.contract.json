@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0170_p6_procedure_induction.sql",
+    "requiredMigrationHead": "0171_runtime_database_role_isolation.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -94,7 +94,7 @@
       "fargateSpot": false,
       "natGateway": false,
       "secretMap": {
-        "DATABASE_URL": "finnor/prod/database-url",
+        "DATABASE_URL": "finnor/prod/worker-database-url",
         "GROQ_API_KEY": "finnor/prod/groq-api-key",
         "REDIS_URL": "finnor/prod/redis-url",
         "SENTRY_DSN": "finnor/prod/sentry-dsn",

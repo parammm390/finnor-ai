@@ -11,7 +11,7 @@ import {
 } from "@finnor/tools";
 import { testZepProviderConnection, embeddingsProviderStatus } from "@finnor/memory";
 import { secretProviderStatus } from "@finnor/security";
-import { adminDb, getPool, tenantPhoneNumbers } from "@finnor/db";
+import { withTenant, getPool, tenantPhoneNumbers } from "@finnor/db";
 import { eq } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
 import { scanActionTypeReadiness, type ActionTypeDescriptor } from "../../../../../../packages/domain-plugins/shared/setup-readiness";
@@ -29,14 +29,14 @@ export async function GET(req: Request): Promise<Response> {
       scanActionTypeReadiness(ctx.tenantId, descriptors),
       testTenantVapiConnection(ctx.tenantId),
       tenantResendStatus(ctx.tenantId),
-      adminDb()
+      withTenant(ctx.tenantId, (db) => db
         .select({
           phoneNumber: tenantPhoneNumbers.phoneNumber,
           vapiPhoneNumberId: tenantPhoneNumbers.vapiPhoneNumberId,
           label: tenantPhoneNumbers.label,
         })
         .from(tenantPhoneNumbers)
-        .where(eq(tenantPhoneNumbers.tenantId, ctx.tenantId)),
+        .where(eq(tenantPhoneNumbers.tenantId, ctx.tenantId))),
       tenantSourceTruthReport(ctx.tenantId),
       testZepProviderConnection(),
     ]);
