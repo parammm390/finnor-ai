@@ -36,6 +36,16 @@
     {
       "Effect": "Allow",
       "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:PutResourcePolicy"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "cloudformation:GetTemplate"
       ],
       "Resource": [

@@ -228,6 +228,9 @@ export function mockCommand(name, args) {
     if (service === "cloudformation" && command === "describe-stacks") {
       const count = readFileSync(s.log, "utf8").split("\n").filter((line) => line.includes('"describe-stacks"')).length
       const parameters = { ImageUri: `${s.contract.topology.worker.accountId}.dkr.ecr.us-east-1.amazonaws.com/finnor-worker@${DIGEST}`, ReleaseCommitSha: SHA, ReleaseBuildId: `finnor-${SHA.slice(0, 12)}`, ReleaseVersion: `0.1.0+${SHA.slice(0, 12)}`, CoreCertificationId: `post-merge:${SHA}`, SupabaseUrl: s.contract.topology.database.supabaseUrl, ComputePlaneStage: s.scenario === "routing-recovery" ? "preparing" : "finalized", LegacyWorkerTaskDefinitionArn: "" }
+      parameters.SecretMap = JSON.stringify(s.contract.topology.worker.secretMap)
+      parameters.RealtimeSecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","SENTRY_DSN","SUPABASE_SERVICE_ROLE_KEY"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
+      parameters.HeavySecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","GROQ_API_KEY","REDIS_URL","SENTRY_DSN"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
       if (s.scenario === "parameter-sha") parameters.ReleaseCommitSha = "c".repeat(40)
       if (s.scenario === "parameter-digest") parameters.ImageUri = "wrong:image"
       return out({ Stacks: [{ StackName: "finnor-production", StackId: `arn:aws:cloudformation:us-east-1:${s.contract.topology.worker.accountId}:stack/finnor-production/fixture`, StackStatus: s.scenario === "unstable-stack" && count > 1 ? "UPDATE_IN_PROGRESS" : "UPDATE_COMPLETE", Parameters: Object.entries(parameters).map(([ParameterKey, ParameterValue]) => ({ ParameterKey, ParameterValue })) }] })
