@@ -831,3 +831,12 @@ Required selected output stays the actual optimized default Turbopack build.
 4. No production seam. Rename only the unpublished R1 migration to0172, preserving SQL bytes; use real current-main pool routing and original role isolation. Preserve all old proof receipts and mark their original cut explicitly.
 
 Finite integration verification: generated migration/capability/authz/deployment contracts and backend typecheck; original mandatory hosted PR jobs including worker-image runtime; one affected existing runtime migration proof. Rerun only a named failing/changed boundary. No unchanged mathematical or full lifecycle campaign.
+
+### Actual hosted artifact failures (before repair)
+
+1. Protect a canonical worker image capable of importing the real migration/owner runtime and a production frontend build that preserves tracked source identity. Also retain the complete handoff while allowing the provider to review the actual code.
+2. Before evidence: worker-image run37969162153 built all four healthy classes but R1 stopped at ERR_MODULE_NOT_FOUND for /app/scripts/release/production-mutation-guard.mjs; production-artifacts rejected next-env.d.ts changing from dev paths to generated production paths. CodeRabbit explicitly refused132files.
+3. Original local proof predates current-main release-guard imports; dev-generated frontend declarations cannot satisfy the actual immutable production build. Reuse the original worker-image/production-artifacts gates as primary after proofs. No new cases or low-level tests.
+4. No production seam or relaxed predicate. Package the real three-file guard import closure, restore the actual main-generated production declarations, and consolidate only documentary artifacts/verbatim notices with exact byte hashes. Every changed source/test remains in the review; no source-path exclusion or review-gate bypass.
+
+Finite rerun: existing automatic mandatory PR CI and one provider review retry after the review file cap is satisfied. Preserve the original CI failures and artifact IDs. Passed local mathematical/full lifecycle suites are not repeated.

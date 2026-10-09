@@ -37,6 +37,8 @@ COPY finnor-os/scripts ./scripts
 # paths. Retain that layout and the root inputs instead of weakening identity.
 COPY package-lock.json /app/package-lock.json
 COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json
+# Real migration imports retain the canonical production guard and its closure.
+COPY scripts/release/production-mutation-guard.mjs scripts/release/release-policy.mjs scripts/release/worktree-state.mjs /app/scripts/release/
 
 RUN npm ci --no-audit --no-fund
 ARG FINNOR_BUILD_ID
