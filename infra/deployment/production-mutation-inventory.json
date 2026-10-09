@@ -169,6 +169,7 @@
         "scripts/release/verify-supplier-canary-release.mjs",
         "scripts/release/verify-p8-zero-resurrection.mjs",
         "scripts/release/verify-release.mjs",
+        "scripts/release/smoke-worker-image.sh",
         "scripts/release/validate-deployment-truth.mjs",
         "scripts/release/release-policy.mjs",
         "scripts/release/vercel-protection.mjs",
@@ -214,7 +215,8 @@
         "scripts/release/supplier-canary-health.test.mjs",
         "scripts/release/compute-artifact-e2e-fixture.mjs",
         "scripts/release/compute-noop.e2e.test.mjs",
-        "scripts/release/canary-artifact.e2e.test.mjs"
+        "scripts/release/canary-artifact.e2e.test.mjs",
+        "scripts/release/worker-image-layout.e2e.test.mjs"
       ],
       "classification": "READ_ONLY",
       "state": "TEST_ONLY"
