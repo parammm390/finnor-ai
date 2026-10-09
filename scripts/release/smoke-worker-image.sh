@@ -24,6 +24,16 @@ cleanup() {
     docker logs "$container_id" > "$evidence/container-failure.log" 2>&1 || true
     docker rm -f "$container_id" >/dev/null 2>&1 || true
   fi
+  # Owner stores intentionally use private/read-only modes. Give the disposable
+  # evidence back to its host owner without weakening those production modes.
+  if [[ -d "$evidence/linux-r1-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-r1-runtime,target=/r1-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /r1-evidence; then
+      echo "::error::failed to return disposable runtime evidence to its host owner"
+      status=1
+    fi
+  fi
   FINNOR_SMOKE_EXIT="$status" FINNOR_SMOKE_EVIDENCE="$evidence" node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -44,7 +54,7 @@ fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   providerDeploymentProof: false,
 }, null, 2) + "\n");
 NODE
-  return "$status"
+  exit "$status"
 }
 trap cleanup EXIT
 
@@ -126,7 +136,7 @@ mkdir -p "$evidence/linux-r1-runtime"
 chmod 2770 "$evidence/linux-r1-runtime"
 image_id="$(cat "$evidence/image-id.txt")"
 source_tree="$(git rev-parse 'HEAD^{tree}')"
-docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
   --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
   --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
   --env FINNOR_M1_PROFILE=DISPOSABLE_NATIVE --env P3_GOVERNORS=1 \
@@ -137,7 +147,13 @@ docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
   --env FINNOR_R1_SOURCE_TREE="$source_tree" --env FINNOR_R1_EVIDENCE_DIR=/r1-evidence \
   --mount "type=bind,source=$evidence/linux-r1-runtime,target=/r1-evidence" \
   "$image" node --import=tsx scripts/r1/run-owners.mts runtime \
-  > "$evidence/linux-r1-runtime/runner.log" 2>&1
+  > "$evidence/linux-r1-runtime/runner.log" 2>&1; then
+  :
+else
+  runtime_status=$?
+  cat "$evidence/linux-r1-runtime/runner.log"
+  exit "$runtime_status"
+fi
 node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
 const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));

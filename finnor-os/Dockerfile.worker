@@ -69,4 +69,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 # production worker entrypoint is TypeScript and retains its current signal handling.
 # Invoke the binary directly so the worker receives ECS SIGTERM as PID 1 instead
 # of placing npm/npx between the runtime and the container signal.
+USER finnor-runtime
 CMD ["node_modules/.bin/tsx", "apps/worker/src/index.ts"]
