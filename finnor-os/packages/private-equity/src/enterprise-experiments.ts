@@ -76,3 +76,30 @@ export async function projectEnterpriseControlObservation(ctx: PeMutationContext
   const digest=epistemicHash(body),ref={owner:'S2',id:`temporal-realization:${digest}`,version:'s2-temporal-control-v1',contentDigest:digest};
   await enqueueNativeReferences(ctx,[{...ref,content:body}],[view.rights.ref]);return immutableControl({...body,ref});
 }
+
+/** Separate R4 observational domain. Existing IID experiment signatures stay intact. */
+export async function registerEnterpriseObservationalAcquisitionProfile(ctx: PeMutationContext, input: {
+  root: PeWorldRootRef; problem: unknown;
+}) {
+  const view = await loadEnterpriseBeliefView(ctx, { root: input.root });
+  if (ctx.auth.role !== "owner" || view.coverage.canonicalStatus !== "COMPLETE" || view.coverage.truncated)
+    throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Permitted observational S2 context is unavailable");
+  const profile = (await import("./r4/owner-adapters")).observationalProfile(view, input.problem);
+  if ((await validateBeliefViewPin(ctx, view.pin)).status !== "CURRENT")
+    throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Permitted observational S2 context changed");
+  const { ref, ...content } = profile;
+  await enqueueNativeReferences(ctx, [{ ...ref, content }], [view.rights.ref]);
+  return immutableControl(profile);
+}
+export async function proposeEnterpriseObservationalAcquisition(ctx: PeMutationContext, input: {
+  root: PeWorldRootRef; problem: import("../../shared-types/src/identification-plan").IdentificationProblem;
+  plan: import("../../shared-types/src/identification-plan").IdentificationPlan;
+  profileRef: import("@finnor/shared-types").ExperimentRef; originalEpisode: string;
+}) {
+  const profile = await registerEnterpriseObservationalAcquisitionProfile(ctx, input);
+  const proposal = (await import("./r4/owner-adapters")).observationalProposal(
+    profile, input.problem, input.plan, input.profileRef, input.originalEpisode);
+  const { ref, ...content } = proposal;
+  await enqueueNativeReferences(ctx, [{ ...ref, content }], [profile.rightsRef]);
+  return immutableControl(proposal);
+}

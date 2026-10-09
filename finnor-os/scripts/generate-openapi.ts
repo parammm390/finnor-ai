@@ -70,6 +70,7 @@ import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-rec
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
+import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
@@ -658,6 +659,20 @@ const paths = {
     post: { security: secured, parameters: [{ name: "key", in: "path", required: true, schema: { type: "string", minLength: 3, maxLength: 160 } }], requestBody: json(ArtifactTemplateInstantiateSchema), responses: { "201": { description: "New Core Document and first immutable version instantiated with lineage" } } },
   },
 } satisfies Record<string, unknown>;
+
+for (const operation of R4_OPERATIONS) {
+  Object.assign(paths, { ["/api/identification-plans/" + operation]: { post: {
+    security: secured, requestBody: json(R4_OPERATION_SCHEMAS[operation]), responses: {
+      "200": { description: "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority." },
+      "202": { description: "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking." },
+      "400": { description: "Strict bounded request or exact owner/scientific premise rejected." },
+      "401": { description: "Authenticated caller required." },
+      "404": { description: "Absent or unauthorized private reference." },
+      "409": { description: "Original Work, profile, source, method, grant or idempotency preimage revised." },
+      "413": { description: "Registered request byte bound exceeded; no silent truncation." },
+    },
+  } } });
+}
 
 for (const operation of COMPUTE_SEARCH_OPERATIONS) {
   const schema = operation === "compute-search-submit" ? ComputeSearchRequestSchema : operation === "compute-search-projection" ? SearchProjectionSchema : SearchIdSchema;

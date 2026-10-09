@@ -1,3 +1,15 @@
+FROM python:3.11.15-slim-bookworm AS r4-scientific
+COPY finnor-os/scripts/r4/requirements.lock /tmp/r4-requirements.lock
+RUN /usr/local/bin/python3.11 -m venv --without-pip /opt/finnor/r4 \
+    && /usr/local/bin/python3.11 -m pip --python /opt/finnor/r4/bin/python install \
+       --no-cache-dir --require-hashes -r /tmp/r4-requirements.lock
+
+FROM python:3.12.13-slim-bookworm AS owner-numerical
+COPY finnor-os/scripts/r4/numerical-requirements.lock /tmp/numerical-requirements.lock
+RUN /usr/local/bin/python3.12 -m venv --without-pip /opt/finnor/numerical \
+    && /usr/local/bin/python3.12 -m pip --python /opt/finnor/numerical/bin/python install \
+       --no-cache-dir --require-hashes -r /tmp/numerical-requirements.lock
+
 FROM node:22-bookworm-slim AS dependencies
 
 WORKDIR /app/finnor-os
@@ -23,12 +35,34 @@ RUN npm ci --no-audit --no-fund
 
 FROM node:22-bookworm-slim
 
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+       libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
+       libssl3 libreadline8 libncursesw6 libuuid1 \
+    && rm -rf /var/lib/apt/lists/*
+# Interpreter libraries and venvs are in the final stage, not just dependencies.
+# The two NumPy/SciPy stacks remain isolated.
+COPY --from=r4-scientific /usr/local /usr/local
+COPY --from=owner-numerical /usr/local /usr/local
+COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
+COPY --from=owner-numerical /opt/finnor/numerical /opt/finnor/numerical
 WORKDIR /app/finnor-os
 COPY --from=dependencies /app /app
 
 ENV NODE_ENV=production \
+    FINNOR_R4_PYTHON=/opt/finnor/r4/bin/python \
+    FINNOR_S3_PYTHON=/opt/finnor/numerical/bin/python \
+    FINNOR_S5_PYTHON=/opt/finnor/numerical/bin/python \
     PORT=8090 \
     SSE_PORT=8090
+
+RUN ldconfig \
+    && /opt/finnor/r4/bin/python -I -c \
+    "import sys,importlib.metadata as m;assert sys.version.split()[0]=='3.11.15';assert m.version('y0')=='0.2.11';from y0.algorithm.identify import identify_outcomes" \
+    && /opt/finnor/numerical/bin/python -I -c \
+    "import sys,numpy,scipy,statsmodels,arch;assert sys.version.split()[0]=='3.12.13';assert numpy.__version__=='2.3.3';assert scipy.__version__=='1.16.2';assert statsmodels.__version__=='0.14.5';assert arch.__version__=='8.0.0'" \
+    && /opt/finnor/r4/bin/python scripts/r4/package-runtime.py \
+       --python /opt/finnor/r4/bin/python --output /app/finnor-os/r4-runtime-inventory.json
 
 EXPOSE 8090
 

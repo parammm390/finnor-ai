@@ -292,3 +292,24 @@ export async function listEnterpriseControlPolicies(ctx:PeMutationContext,root:P
  }
  return policies;
 }
+
+/** Receives a conditional acquisition proposal under the existing owner's utility.
+ * ACCEPT_FOR_PLANNING grants neither collection, a new policy nor a reservation. */
+export async function reviewEnterpriseObservationalAcquisition(ctx:PeMutationContext,input:{
+ incumbentPolicyRef:unknown;proposalRef:ExperimentRef|null;
+ plan:import('../../shared-types/src/identification-plan').IdentificationPlan|null;
+ disposition:'PROPOSE'|'DECLINE'|'WAIT';remainingDeadlineMs:number;originalEpisode:string;
+}){
+ const {policy}=await readEnterpriseControlDecisionContext(ctx,input.incumbentPolicyRef);
+ if(ctx.auth.role!=='owner'||input.remainingDeadlineMs<0||!Number.isFinite(input.remainingDeadlineMs))
+  throw unavailable();
+ const review=(await import('./r4/owner-adapters')).acquisitionReview(policy,input);
+ await saveArtifact(ctx,'acquisition-reviews',review.ref.contentDigest,review);
+ const {ref,...content}=review;
+ await enqueueNativeReferences(ctx,[{...ref,content}],[policy.mandate.rightsRef]);
+ await saveEvents(ctx,[prepareS4Experience(policy.mandate,'POLICY_SEARCH',review.ref.id,{
+  review,utilityUnchanged:true,collectionAuthorityGranted:false,policyChanged:false,
+ },[policy.ref.id])]);
+ await readEnterpriseControlDecisionContext(ctx,policy.ref);
+ return immutableControl(review);
+}
