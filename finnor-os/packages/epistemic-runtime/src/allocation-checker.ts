@@ -1,3 +1,4 @@
+import {exactPolicyActionQuantity} from './exact-allocation-adapter';
 import type { AllocationCertificate, AllocationDualProposal, AllocationLagrangianProof, AllocationCheck, AllocationEnvelope, AllocationOptimizationCertificate, CanonicalAllocationProblem } from '@finnor/shared-types';
 import { epistemicHash } from './source-precedence';
 import { immutableControl } from './control-contracts';
@@ -48,12 +49,12 @@ function prepare(problem:CanonicalAllocationProblem):Prepared {
     for(const policy of p.policies){const raw=schedule(p),path=scenario.policyPaths.find(s=>s.policyRef.id===policy.ref.id)!,funding=p.funding.find(f=>f.policyRef.id===policy.ref.id)!;
       for(const nodeId of path.nodeIds){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;
         for(const binding of p.demandBindings.filter(b=>b.policyRef.id===policy.ref.id)){const amounts=raw.get(binding.resourceId)!;
-          if(binding.component==='TOTAL')amounts[node.period]=amounts[node.period]!.add(number(action.resources[binding.dimensionId]!));
-          else for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)amounts[t]=amounts[t]!.add(number(action.occupancy[binding.dimensionId]!));
+          if(binding.component==='TOTAL')amounts[node.period]=amounts[node.period]!.add((exactPolicyActionQuantity(policy,action,'resources',binding.dimensionId)??number(action.resources[binding.dimensionId]!)));
+          else for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)amounts[t]=amounts[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',binding.dimensionId)??number(action.occupancy[binding.dimensionId]!)));
         }
-        if(funding.actionCostResourceId){const v=raw.get(funding.actionCostResourceId)!;v[node.period]=v[node.period]!.add(number(action.cost));}
-        if(funding.humanSecondsResourceId){const v=raw.get(funding.humanSecondsResourceId)!;v[node.period]=v[node.period]!.add(number(action.humanSeconds));}
-        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add(number(action.tailLiability));}
+        if(funding.actionCostResourceId){const v=raw.get(funding.actionCostResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'cost')??number(action.cost)));}
+        if(funding.humanSecondsResourceId){const v=raw.get(funding.humanSecondsResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds)));}
+        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add((exactPolicyActionQuantity(policy,action,'tailLiability')??number(action.tailLiability)));}
       }demands.set(policy.ref.id,raw);
     }paths.push({id:scenario.id,demands});
   }
@@ -88,8 +89,8 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
     // widened because a separate resource registry permits a larger amount.
     const dimensions=new Map(p.mandate.resources.dimensions.map(d=>[d.id,{spent:ER_ZERO,occupied:zeroes(h+1)}]));let humanSeconds=ER_ZERO;
     for(const id of chosen){const policy=p.policies.find(policy=>policy.ref.id===id);if(!policy)continue;const nodes=p.jointModel.scenarios.find(s=>s.id===path.id)!.policyPaths.find(q=>q.policyRef.id===id)!.nodeIds;
-      for(const nodeId of nodes){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;humanSeconds=humanSeconds.add(number(action.humanSeconds));
-        for(const d of p.mandate.resources.dimensions){const usage=dimensions.get(d.id)!;usage.spent=usage.spent.add(number(action.resources[d.id]!));for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)usage.occupied[t]=usage.occupied[t]!.add(number(action.occupancy[d.id]!));}}
+      for(const nodeId of nodes){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;humanSeconds=humanSeconds.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds)));
+        for(const d of p.mandate.resources.dimensions){const usage=dimensions.get(d.id)!;usage.spent=usage.spent.add((exactPolicyActionQuantity(policy,action,'resources',d.id)??number(action.resources[d.id]!)));for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)usage.occupied[t]=usage.occupied[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',d.id)??number(action.occupancy[d.id]!)));}}
     }
     for(const d of p.mandate.resources.dimensions){const v=dimensions.get(d.id)!;if(v.spent.compare(number(d.totalLimit))>0||v.occupied.some(q=>q.compare(number(d.capacity))>0))reasons.push(`MANDATE_RESOURCE_ENVELOPE:${d.id}:${path.id}`);}
     if(humanSeconds.compare(number(p.mandate.search.maxHumanSeconds))>0)reasons.push(`MANDATE_HUMAN_BUDGET:${path.id}`);
@@ -145,8 +146,8 @@ function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualPropo
     const totals=new Map<string,Map<string,Q>>(),occupied=new Map<string,Map<string,Q[]>>();const human=coeff(()=>ER_ZERO);
     for(const d of p.mandate.resources.dimensions){totals.set(d.id,coeff(()=>ER_ZERO));occupied.set(d.id,new Map(ids.map(id=>[id,zeroes(h+1)])));}
     for(const policy of p.policies)for(const nodeId of s.policyPaths.find(q=>q.policyRef.id===policy.ref.id)!.nodeIds){const node=policy.nodes.find(q=>q.id===nodeId)!,action=policy.problem.actions.find(q=>q.id===node.actionId)!,id=policy.ref.id;
-      human.set(`x:${id}`,human.get(`x:${id}`)!.add(number(action.humanSeconds)));
-      for(const d of p.mandate.resources.dimensions){const a=totals.get(d.id)!;a.set(`x:${id}`,a.get(`x:${id}`)!.add(number(action.resources[d.id]!)));const v=occupied.get(d.id)!.get(id)!;for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)v[t]=v[t]!.add(number(action.occupancy[d.id]!));}
+      human.set(`x:${id}`,human.get(`x:${id}`)!.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds))));
+      for(const d of p.mandate.resources.dimensions){const a=totals.get(d.id)!;a.set(`x:${id}`,a.get(`x:${id}`)!.add((exactPolicyActionQuantity(policy,action,'resources',d.id)??number(action.resources[d.id]!))));const v=occupied.get(d.id)!.get(id)!;for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)v[t]=v[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',d.id)??number(action.occupancy[d.id]!)));}
     }
     for(const d of p.mandate.resources.dimensions){add(`mandate-total:${d.id}:${s.id}`,totals.get(d.id)!,number(d.totalLimit));for(let t=0;t<=h;t++)add(`mandate-occupancy:${d.id}:${s.id}:${t}`,coeff(id=>occupied.get(d.id)!.get(id)![t]!),number(d.capacity));}
     for(const c of p.mandate.resources.couplings)for(let t=0;t<=h;t++)add(`mandate-coupling:${c.id}:${s.id}:${t}`,coeff(id=>sum(Object.entries(c.weights).map(([d,w])=>number(w).mul(occupied.get(d)!.get(id)![t]!)))),number(c.maxPerPeriod));

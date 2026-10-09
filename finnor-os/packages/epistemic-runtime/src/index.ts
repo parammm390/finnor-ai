@@ -42,3 +42,5 @@ export * from "./allocation-checker";
 export * from "./allocation-verifier";
 
 export * from "./economic-attribution";
+export * from './certified-state-reduction';
+export * from './exact-control-policy';

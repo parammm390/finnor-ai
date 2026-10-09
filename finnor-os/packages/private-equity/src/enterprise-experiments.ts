@@ -3,11 +3,31 @@ import { assertExperimentProtocol, assertInterventionModel, controlObservationTo
 import { loadEnterpriseBeliefView, validateBeliefViewPin } from "./enterprise-beliefs";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from "./types";
 import {enqueueNativeReferences,enqueueNativePreparedEvents,nativeReference} from './native-experience-transport';
+import {parseExactInformationModel,ControlFraction,allocationQuantity,controlBytesDigest} from '@finnor/epistemic-runtime';
 
 const protocolReference=(protocol:ExperimentProtocol)=>{const {id,contentDigest,experience,...content}=protocol;return {owner:'S2',id,version:protocol.version,contentDigest,content};};
 async function deliverPrepared(ctx:PeMutationContext,protocol:ExperimentProtocol,events:readonly any[]){await enqueueNativeReferences(ctx,[protocolReference(protocol)],[protocol.beliefBinding.rightsRef]);await enqueueNativePreparedEvents(ctx,'S2',events);}
 
 const principal = (ctx: PeMutationContext) => ctx.auth.employeeId ?? ctx.auth.userId;
+/** Versioned S2 coarsening of an actual current S1 recorded exact decimal.
+ * A supplied finite table supplies categories; it cannot supply a realization.
+ * No measured error law, causal validity or probability admission is inferred. */
+export async function projectEnterpriseExactControlObservation(ctx:PeMutationContext,input:{modelBytes:string;instrumentId:string;availablePeriod:number}){
+ const unavailable=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted exact S2 measurement is unavailable');
+ const model=parseExactInformationModel(input.modelBytes,{deadlineAt:Date.now()+30000,maxSteps:4000000}),instrument=model.observationInstruments.find(i=>i.id===input.instrumentId),m=instrument?.measurement;
+ if(model.tenantId!==ctx.auth.tenantId||model.principalId!==principal(ctx)||!instrument||!m||m.schema!=='finnor.s2.exact-recorded-coarsening.v1'||input.availablePeriod<instrument.delayPeriods||input.availablePeriod>model.horizon.periods)throw unavailable();
+ const period=input.availablePeriod-instrument.delayPeriods,start=Date.parse(model.horizon.startAt)+period*model.horizon.periodMs,end=start+model.horizon.periodMs;
+ if(end>Date.now())throw unavailable();
+ const view=await loadEnterpriseBeliefView(ctx,{root:m.root as PeWorldRootRef});if(view.coverage.canonicalStatus!=='COMPLETE'||view.coverage.truncated)throw unavailable();
+ const series=view.claims.find(c=>c.ownerRef.entityType==='pe_metric_series'&&c.ownerRef.id===m.seriesId),rows=view.claims.filter(c=>c.kind==='OBSERVED_RECORD'&&c.ownerRef.entityType==='pe_metric_observation'&&c.value.metricSeriesId===m.seriesId&&Date.parse(String(c.value.periodStart))===start&&Date.parse(String(c.value.periodEnd))===end);
+ if(!series||series.value.unit!==m.unit||series.value.subjectId!==m.root.entityId||series.value.subjectType!==m.root.entityType||rows.length!==1)throw unavailable();
+ const claim=rows[0]!,value=claim.value.valueNumeric;
+ if(claim.value.valueType!=='number'||!(typeof value==='string'||typeof value==='number'&&Number.isSafeInteger(value))||claim.uncertainty.reasons.includes('PROVENANCE_DEPENDENCY_UNAVAILABLE')||view.contradictions.some(c=>c.claimRefs.includes(claim.ownerRef.revisionId)))throw unavailable();
+ const quantity=allocationQuantity(String(value)),q=new ControlFraction(quantity.n,quantity.d),matches=m.bins.filter(b=>q.compare(ControlFraction.read(b.lowerInclusive))>=0&&q.compare(ControlFraction.read(b.upperExclusive))<0);
+ if(matches.length!==1||!instrument.tokens.includes(matches[0]!.token)||(await validateBeliefViewPin(ctx,view.pin)).status!=='CURRENT')throw unavailable();
+ const body={schema:'finnor.s2.exact-temporal-realization.v1',tenantId:ctx.auth.tenantId,principalId:principal(ctx),modelDigest:controlBytesDigest(input.modelBytes),instrumentRef:instrument.sourceRef,instrumentId:instrument.id,availablePeriod:input.availablePeriod,knowledgeAt:claim.knowledgeAt,token:matches[0]!.token,quantity:q.wire(),source:{root:m.root,seriesRef:series.ownerRef,claimRef:claim.ownerRef,dependencyDigest:view.dependencyDigest,rightsRef:view.rights.ref},qualification:'PERMITTED_RECORDED_EXACT_DECIMAL_SUPPLIED_COARSENING_UNVERIFIED_ERROR',protectedReceipt:null},digest=epistemicHash(body),ref={owner:'S2',id:'exact-temporal-realization:'+digest,version:'s2-exact-temporal-v1',contentDigest:digest};
+ await enqueueNativeReferences(ctx,[{...ref,content:body}],[view.rights.ref]);return immutableControl({...body,ref});
+}
 export async function designEnterpriseExperiments(ctx: PeMutationContext, input: { root: PeWorldRootRef; request: unknown }): Promise<ExperimentDesignBundle> {
   const request = parseExperimentDesignRequest(input.request);
   const view = await loadEnterpriseBeliefView(ctx, { root: input.root });

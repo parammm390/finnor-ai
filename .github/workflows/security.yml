@@ -100,3 +100,4 @@ jobs:
         --lockfile=finnor-os/package-lock.json
         --lockfile=finnor-os/apps/supplier-canary/package-lock.json
         --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
+        --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt

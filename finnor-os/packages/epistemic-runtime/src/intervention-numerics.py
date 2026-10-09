@@ -14,7 +14,7 @@ import numpy as np
 import scipy
 from scipy.spatial import ConvexHull, QhullError
 from scipy.stats import beta, levene
-import statsmodels.api as sm
+from statsmodels.regression.linear_model import OLS
 from statsmodels.stats.diagnostic import acorr_ljungbox
 from arch.bootstrap import MovingBlockBootstrap
 
@@ -50,7 +50,7 @@ def fit(payload):
                 hy = np.asarray([rows[int(i)]['states'][var] for i in holdout])
                 rank = int(np.linalg.matrix_rank(x)); condition = float(np.linalg.cond(x))
                 if rank != len(features) or condition > 1e8: raise ValueError('RANK_OR_CONDITION_FAILURE')
-                estimate = sm.OLS(y, x, missing='raise', hasconst=True).fit(method='qr')
+                estimate = OLS(y, x, missing='raise', hasconst=True).fit(method='qr')
                 residual = y-estimate.predict(x); hresidual = hy-estimate.predict(hx)
                 width = next(v['range'][1]-v['range'][0] for v in request['stateVariables'] if v['id'] == var)
                 rmse = float(np.sqrt(np.mean(hresidual**2))); shift = float(np.abs(np.mean(hresidual))/width)
@@ -76,7 +76,7 @@ def fit(payload):
                 sample = positional[0].astype(int); draw = []
                 for x, y in zip(designs, outcomes):
                     if np.linalg.matrix_rank(x[sample]) != x.shape[1]: raise ValueError('BOOTSTRAP_RANK_FAILURE')
-                    draw.append(sm.OLS(y[sample], x[sample], missing='raise', hasconst=True).fit(method='qr').params.tolist())
+                    draw.append(OLS(y[sample], x[sample], missing='raise', hasconst=True).fit(method='qr').params.tolist())
                 draws.append(draw)
             joint = np.column_stack(residuals)
             results.append({'mechanismId': mechanism['id'], 'status': 'FITTED', 'reason': None, 'equations': equations,

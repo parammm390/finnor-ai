@@ -26,7 +26,9 @@ async function readCurrentPolicies(ctx:PeMutationContext,refs:ExperimentRef[]):P
  return policies;
 }
 function rebuilt(problem:CanonicalAllocationProblem,resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[],knowledgeAt=problem.knowledgeAt):CanonicalAllocationProblem {
-  const {ref,...body}=problem,updated={...body,resources,outstanding,knowledgeAt,snapshotDigest:epistemicHash({resources,outstanding})};return {...updated,ref:allocationRef('S5','allocation-problem',updated)};
+  const {ref,...body}=problem;
+  const exactEncoding=body.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'||outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
+  const updated={...body,resources,outstanding,knowledgeAt,snapshotDigest:epistemicHash({resources,outstanding}),...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};return {...updated,ref:allocationRef('S5','allocation-problem',updated)};
 }
 async function currentPins(ctx:PeMutationContext,resources:AllocationResource[]):Promise<void>{
   for(const resource of resources){if(resource.tenantId!==ctx.auth.tenantId||resource.ownerRef.id!==actor(ctx))throw denied();
@@ -60,7 +62,8 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
   if(input.resourceRefs.length!==snapshot.resources.length||input.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))return failure('STALE_INPUT',['CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED']);
   const policies=await readCurrentPolicies(ctx,input.policyRefs);
   const now=new Date().toISOString(),validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
-  const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt:now,validUntil,methodVersion:S5_VERSION};
+  const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
+  const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt:now,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
   const problem:CanonicalAllocationProblem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
   if(snapshot.resources.some(r=>r.revoked||r.availability.some(a=>a.amount===null||a.basis!=='REPORTED_AVAILABLE')))return failure('UNCERTAINTY_UNRESOLVED',['RESOURCE_RIGHTS_OR_AVAILABILITY_UNRESOLVED']);
   // Existing obligations must be feasible in their own right. An empty selected
@@ -138,7 +141,7 @@ export async function resolveEnterprisePolicyAllocation(ctx:PeMutationContext,va
 export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;policyRef:ExperimentRef;decision?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;idempotencyKey:string}){
   const issued=await readEnterpriseAllocation(ctx,input.allocationRef),requestDigest=epistemicHash(input),previous=issued.consumptions.find(c=>c.idempotencyKey===input.idempotencyKey);
   if(previous){if(previous.requestDigest!==requestDigest)throw new AllocationContractError('IDEMPOTENCY_CONFLICT','S5 consumption retry changed semantic payload');return immutableControl({consumption:previous,choice:null,semanticReplay:true,executionAuthorityGranted:false,protectedReceipt:null});}
-  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
+  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);
   if(!issued.reservation||!await resolveEnterprisePolicyAllocation(ctx,input.allocationRef,policy,decision.knowledgeAt))throw new AllocationContractError('STALE_INPUT','Current owner-resolved allocation required before consumption');
   const choice=await chooseEnterpriseControlBranch(ctx,{...input,allocationRef:input.allocationRef});if(choice.status!=='POLICY_AVAILABLE'||!choice.nodeId)throw new AllocationContractError('INVALID_CANDIDATE',`S4 lawful branch required:${choice.status}:${choice.reasons.join(',')}`);
   const compatible=issued.problem.jointModel.scenarios.filter(s=>s.policyPaths.find(p=>sameAllocationRef(p.policyRef,policy.ref))?.nodeIds.includes(choice.nodeId!)).map(s=>s.id);

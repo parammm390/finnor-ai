@@ -43,6 +43,7 @@ import { materializeArtifactVersion } from "./handlers/materialize-artifact-vers
 import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph, scanEpistemicFreshness } from "./handlers/epistemic-impact";
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
 import {runEvidenceDerivationJob} from '@finnor/private-equity/src/evidence-execution/worker';
+import {runCertifiedStateReductionJob} from '@finnor/private-equity/src/r1/worker';
 import { getPool, parseWorkloadClass, startComputeControlLeadership, type WorkloadClass } from "@finnor/db";
 import { startClassHealthServer } from "./class-health";
 import { startComputeTelemetry } from "./telemetry";
@@ -50,10 +51,12 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);
+  queue.register('run_r1_dependency_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_r1_dependency_continuation_v1);
   queue.register('run_interface_acquisition_v1',runInterfaceAcquisitionJob,PRODUCTION_JOB_CONTRACTS.run_interface_acquisition_v1);
   queue.register('run_branch_fabric_v1',(payload,execution)=>handleBranch(payload,execution!),PRODUCTION_JOB_CONTRACTS.run_branch_fabric_v1);
   queue.register("reconciliation", reconciliation, PRODUCTION_JOB_CONTRACTS.reconciliation);

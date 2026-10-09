@@ -185,3 +185,6 @@ export async function recordEnterpriseInterventionAssessment(ctx: PeMutationCont
     suppliedAuthenticatedAssertionNotScientificTruth: true, changesModelOrIdentification: false, protectedHumanOverrideAuthority: 'UNVERIFIED' });
   await saveEvents(ctx, [event]); return { event, receipt: null, appendAuthorityGranted: false };
 }
+
+/** Versioned S3-owned supplied exact table; learned dynamics retain their domain. */
+export {prepareExactControlSource as prepareEnterpriseExactControlModel,resolveExactControlSource as resolveEnterpriseExactControlModel} from './r1/source';

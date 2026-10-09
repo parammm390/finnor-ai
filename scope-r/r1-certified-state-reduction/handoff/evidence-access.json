@@ -1,0 +1,321 @@
+{
+  "schema": "finnor.r1.evidence-access.v1",
+  "privateEvidenceRoot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence",
+  "rawFileIndex": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/raw-evidence-file-index.json",
+  "rawFileIndexSha256": "824651cea06bf3eee7b507bf2fcb62334eb35c07d06d62841ca5879c3ab86814",
+  "rawEvidenceVisibility": "Private local artifact, readable to this workspace/user. Credentials/disposable auth tokens never published. A release owner on another host must obtain the private handoff through authorized custody.",
+  "publicSanitizedResults": "../evidence/selected-results.json",
+  "publicMountedSummary": "../evidence/mounted-boundary.json",
+  "retainedRunDirectories": [
+    {
+      "directory": "browser-01",
+      "files": 11,
+      "bytes": 715064
+    },
+    {
+      "directory": "browser-02",
+      "files": 91,
+      "bytes": 2297638
+    },
+    {
+      "directory": "browser-03",
+      "files": 114,
+      "bytes": 7055501
+    },
+    {
+      "directory": "browser-04",
+      "files": 116,
+      "bytes": 10649283
+    },
+    {
+      "directory": "browser-05",
+      "files": 114,
+      "bytes": 15379061
+    },
+    {
+      "directory": "browser-06",
+      "files": 125,
+      "bytes": 25960212
+    },
+    {
+      "directory": "browser-07",
+      "files": 148,
+      "bytes": 19422723
+    },
+    {
+      "directory": "browser-08",
+      "files": 153,
+      "bytes": 21319061
+    },
+    {
+      "directory": "browser-09-final",
+      "files": 121,
+      "bytes": 22186942
+    },
+    {
+      "directory": "browser-10-final",
+      "files": 143,
+      "bytes": 30709583
+    },
+    {
+      "directory": "browser-11-final",
+      "files": 173,
+      "bytes": 20773015
+    },
+    {
+      "directory": "inherited-01",
+      "files": 1053,
+      "bytes": 37089535
+    },
+    {
+      "directory": "lifecycle-01",
+      "files": 116,
+      "bytes": 14492524
+    },
+    {
+      "directory": "lifecycle-02-affected",
+      "files": 39,
+      "bytes": 4341849
+    },
+    {
+      "directory": "lifecycle-03-prerequisites",
+      "files": 30,
+      "bytes": 3220020
+    },
+    {
+      "directory": "lifecycle-04-capacity-before",
+      "files": 27,
+      "bytes": 2181845
+    },
+    {
+      "directory": "lifecycle-05-capacity-after",
+      "files": 27,
+      "bytes": 2170214
+    },
+    {
+      "directory": "lifecycle-06-s6-serial",
+      "files": 80,
+      "bytes": 1572986
+    },
+    {
+      "directory": "lifecycle-07-s6-owner-repair",
+      "files": 102,
+      "bytes": 2933500
+    },
+    {
+      "directory": "lifecycle-08-s6-shared-portfolio",
+      "files": 98,
+      "bytes": 2632194
+    },
+    {
+      "directory": "lifecycle-09-principal-s6",
+      "files": 114,
+      "bytes": 4196819
+    },
+    {
+      "directory": "lifecycle-10-s6-complete-registry",
+      "files": 93,
+      "bytes": 2445875
+    },
+    {
+      "directory": "lifecycle-11-s6-owner-resource-pins",
+      "files": 106,
+      "bytes": 3296789
+    },
+    {
+      "directory": "lifecycle-12-s5-mixed-before",
+      "files": 106,
+      "bytes": 3298210
+    },
+    {
+      "directory": "lifecycle-13-s5-mixed-after",
+      "files": 114,
+      "bytes": 4919623
+    },
+    {
+      "directory": "lifecycle-14-s6-resource-exact",
+      "files": 118,
+      "bytes": 6014722
+    },
+    {
+      "directory": "lifecycle-15-late-claim-before",
+      "files": 107,
+      "bytes": 4255674
+    },
+    {
+      "directory": "lifecycle-16-deadline-after",
+      "files": 116,
+      "bytes": 5161791
+    },
+    {
+      "directory": "lifecycle-17-common-final",
+      "files": 296,
+      "bytes": 27911197
+    },
+    {
+      "directory": "lifecycle-18-owned-worker-final",
+      "files": 324,
+      "bytes": 27721221
+    },
+    {
+      "directory": "math-source-after",
+      "files": 10,
+      "bytes": 580696
+    },
+    {
+      "directory": "math-source-before",
+      "files": 10,
+      "bytes": 179830
+    },
+    {
+      "directory": "math-source-before-bound",
+      "files": 10,
+      "bytes": 422745
+    },
+    {
+      "directory": "mathematical-01",
+      "files": 4,
+      "bytes": 668586
+    },
+    {
+      "directory": "mathematical-02",
+      "files": 7,
+      "bytes": 3383122
+    },
+    {
+      "directory": "mathematical-03",
+      "files": 58,
+      "bytes": 3886090
+    },
+    {
+      "directory": "mathematical-04",
+      "files": 18,
+      "bytes": 3646053
+    },
+    {
+      "directory": "mathematical-05-final",
+      "files": 145,
+      "bytes": 10495508
+    },
+    {
+      "directory": "owners-01",
+      "files": 8,
+      "bytes": 432383
+    },
+    {
+      "directory": "owners-02",
+      "files": 8,
+      "bytes": 384097
+    },
+    {
+      "directory": "owners-03-diagnostic",
+      "files": 9,
+      "bytes": 386375
+    },
+    {
+      "directory": "owners-04",
+      "files": 12,
+      "bytes": 685718
+    },
+    {
+      "directory": "owners-05",
+      "files": 13,
+      "bytes": 1882306
+    },
+    {
+      "directory": "owners-06-cofund-before",
+      "files": 9,
+      "bytes": 428010
+    },
+    {
+      "directory": "owners-07",
+      "files": 38,
+      "bytes": 22877613
+    },
+    {
+      "directory": "owners-08-common-before",
+      "files": 109,
+      "bytes": 4183381
+    },
+    {
+      "directory": "owners-09-common-after",
+      "files": 130,
+      "bytes": 26362947
+    },
+    {
+      "directory": "owners-10-common-final",
+      "files": 185,
+      "bytes": 33507291
+    },
+    {
+      "directory": "preimplementation",
+      "files": 0,
+      "bytes": 0
+    },
+    {
+      "directory": "prerepair",
+      "files": 89,
+      "bytes": 861285
+    },
+    {
+      "directory": "release-01-final",
+      "files": 141,
+      "bytes": 7589200
+    },
+    {
+      "directory": "release-02-affected-final",
+      "files": 118,
+      "bytes": 4637326
+    },
+    {
+      "directory": "runtime-built-api-01",
+      "files": 90,
+      "bytes": 17847764
+    },
+    {
+      "directory": "runtime-built-api-02",
+      "files": 15,
+      "bytes": 363686
+    },
+    {
+      "directory": "runtime-built-api-03",
+      "files": 96,
+      "bytes": 3703336
+    },
+    {
+      "directory": "runtime-built-api-04",
+      "files": 106,
+      "bytes": 4215044
+    },
+    {
+      "directory": "runtime-built-api-05",
+      "files": 123,
+      "bytes": 6554873
+    },
+    {
+      "directory": "runtime-built-api-06",
+      "files": 134,
+      "bytes": 7136882
+    },
+    {
+      "directory": "runtime-built-api-07-final",
+      "files": 175,
+      "bytes": 9353308
+    },
+    {
+      "directory": "s3-timeout-diagnosis",
+      "files": 4,
+      "bytes": 126785
+    }
+  ],
+  "sealDestination": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/sealed-handoff-02",
+  "sealStatus": "Not asserted until actual clean-commit seal receipt exists.",
+  "retainedObservationLimitation": {
+    "schema": "finnor.r1.retained-evidence-provenance.v1",
+    "affectedPath": "browser-10-final/browser/mount-dom.txt",
+    "disposition": "OVERWRITTEN_OBSERVATION_NOT_ORIGINAL_RUN_PROOF",
+    "cause": "A retained browser helper captured its original directory while called with the final browser-11 DOM. The original browser-10 mount DOM text is unavailable. Browser-10 screenshots, result records and failure logs remain retained; no original browser-10 mount-DOM proof is claimed.",
+    "finalMountedProof": "browser-11-final/browser/results.json"
+  },
+  "retainedSealFailure": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence/sealed-handoff-01/failure.json"
+}

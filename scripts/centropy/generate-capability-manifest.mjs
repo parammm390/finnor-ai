@@ -21,6 +21,11 @@ function block(source, start, end) {
 }
 
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
+const r1Source=readFileSync(join(project,"finnor-os/packages/private-equity/src/r1/api.ts"),"utf8")
+const r1Registry=r1Source.match(/export const R1_OPERATIONS=\[([^\]]+)\]/)
+if(!r1Registry)throw new Error("Missing delegated R1 operations")
+const r1Operations=[...r1Registry[1].matchAll(/'([^']+)'/g)].map(match=>match[1])
+const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -161,10 +166,11 @@ function routeEntry(method, path, source) {
   // Digital Twin POST includes evidence-backed canonical mutations.
   const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
     path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined
-  const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
-  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
+  const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
+  const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
+  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&r1)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
+  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
@@ -179,7 +185,7 @@ function routeEntry(method, path, source) {
     effectClass: read ? null : classification === "CONTROL" ? "runtime_control" : "domain_mutation",
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
-    invalidationTags: read ? [] : family==="branch-fabric"?["work","branch-fabric"]:
+    invalidationTags: read ? [] : r1?["work","company-brain"]:family==="branch-fabric"?["work","branch-fabric"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",
     tests: [], source,
@@ -196,9 +202,15 @@ for (const file of files(apiRoot)) {
   ])
   const path = relative(apiRoot, file).replace(/\/route\.ts$/, "").replaceAll("\\", "/")
     .replaceAll(/\[([^\].]+)\]/g, ":$1")
+    // Next shares the segment name with S4; existing nested clients still
+    // supply a tenant reference and the backend aliases it before enforcing it.
+    .replace(/^policies\/:operation\/:actionType(?=\/|$)/, "policies/:tenantId/:actionType")
   for (const method of methods) {
     if (path === "company-brain/:operation") {
       for (const operation of companyBrainOperations) routes.push(routeEntry(method, `company-brain/${operation}`, source))
+    } else if(path==="policies/:operation"){
+      for(const operation of r1Operations)routes.push(routeEntry(method,`policies/${operation}`,source))
+      routes.push(routeEntry(method,path,source))
     } else if(path==="branches/:operation"){
       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))
     } else if (path === "read-models/:view") {

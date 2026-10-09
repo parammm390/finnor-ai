@@ -1,3 +1,4 @@
+import {exactPolicyActionQuantity} from './exact-allocation-adapter';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -8,7 +9,7 @@ import { allocationDecimal as decimal, allocationNumber as number, allocationDer
 import { epistemicHash } from './source-precedence';
 
 interface MatrixRow {id:string;coefficients:Record<string,string>;lower:string|null;upper:string|null}
-export interface AllocationMilpInput {schema:'finnor.s5.milp.v1';c:string[];integrality:number[];lowerBounds:Array<string|null>;upperBounds:Array<string|null>;rows:MatrixRow[];budget:{deadlineMs:number;nodeLimit:number}}
+export interface AllocationMilpInput {schema:'finnor.s5.milp.v1'|'finnor.s5.milp.rational.v2';quantityEncoding?:'DECIMAL_OR_RATIONAL_V2';c:string[];integrality:number[];lowerBounds:Array<string|null>;upperBounds:Array<string|null>;rows:MatrixRow[];budget:{deadlineMs:number;nodeLimit:number}}
 interface SolverResult {schema:'finnor.s5.milp-result.v1';status:string;vector:number[]|null;minObjective:number|null;minDualBound:number|null;mipGap:number|null;nodeCount:number|null;termination:string;dualProposal:AllocationDualProposal|null;
   backend:{pythonVersion:string;scipyVersion:string;numpyVersion:string;highsVersion:string};usage:Record<string,unknown>;warnings:string[]}
 const files=['allocation-producer.ts','allocation-solver.py','allocation-checker.ts','allocation-verifier.ts','allocation-verifier-worker.mjs','allocation-contracts.ts','control-contracts.ts','source-precedence.ts','../../db/migrations/0150_portfolio_resource_clearing.sql','../../db/migration-head.ts','../../shared-types/src/allocation.ts','../../private-equity/src/enterprise-allocation.ts','../../private-equity/src/allocation-store.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
@@ -41,9 +42,9 @@ export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:nu
       const path=scenario.policyPaths.find(path=>path.policyRef.id===policy.ref.id)!,funding=p.funding.find(f=>f.policyRef.id===policy.ref.id)!;
       for(const id of path.nodeIds){const n=policy.nodes.find(n=>n.id===id)!,a=policy.problem.actions.find(a=>a.id===n.actionId)!;
         for(const b of p.demandBindings.filter(b=>b.policyRef.id===policy.ref.id)){const values=resources.get(b.resourceId)!;
-          if(b.component==='TOTAL')values[n.period]=values[n.period]!.add(number(a.resources[b.dimensionId]!));
-          else for(let offset=0;offset<a.occupationPeriods&&n.period+offset<=h;offset++)values[n.period+offset]=values[n.period+offset]!.add(number(a.occupancy[b.dimensionId]!));}
-        for(const [resourceId,period,amount]of [[funding.actionCostResourceId,n.period,a.cost],[funding.humanSecondsResourceId,n.period,a.humanSeconds],[funding.terminalLiabilityResourceId,h,a.tailLiability]] as const)if(resourceId){const v=resources.get(resourceId)!;v[period]=v[period]!.add(number(amount));}
+          if(b.component==='TOTAL')values[n.period]=values[n.period]!.add((exactPolicyActionQuantity(policy,a,'resources',b.dimensionId)??number(a.resources[b.dimensionId]!)));
+          else for(let offset=0;offset<a.occupationPeriods&&n.period+offset<=h;offset++)values[n.period+offset]=values[n.period+offset]!.add((exactPolicyActionQuantity(policy,a,'occupancy',b.dimensionId)??number(a.occupancy[b.dimensionId]!)));}
+        for(const [resourceId,period,amount,field]of [[funding.actionCostResourceId,n.period,a.cost,'cost'],[funding.humanSecondsResourceId,n.period,a.humanSeconds,'humanSeconds'],[funding.terminalLiabilityResourceId,h,a.tailLiability,'tailLiability']] as const)if(resourceId){const v=resources.get(resourceId)!;v[period]=v[period]!.add(exactPolicyActionQuantity(policy,a,field)??number(amount));}
       }raw.set(policy.ref.id,resources);
     }
     const base=new Map(p.resources.map(r=>[r.resourceId,r.existingUse.map(quantity)])),minimumBase=new Map(p.resources.map(r=>[r.resourceId,r.existingUse.map(quantity)]));
@@ -61,21 +62,21 @@ export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:nu
     }
     for(const d of p.mandate.resources.dimensions){const totals:Record<string,ExperimentRational>={};const occupancies=Array.from({length:h+1},()=>({} as Record<string,ExperimentRational>));
       for(const policy of p.policies){const index=String(columns.get(policy.ref.id)!);totals[index]=ER_ZERO;const path=scenario.policyPaths.find(q=>q.policyRef.id===policy.ref.id)!;
-        for(const nodeId of path.nodeIds){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;totals[index]=totals[index]!.add(number(action.resources[d.id]!));
-          for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)occupancies[t]![index]=(occupancies[t]![index]??ER_ZERO).add(number(action.occupancy[d.id]!));}}
+        for(const nodeId of path.nodeIds){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;totals[index]=totals[index]!.add((exactPolicyActionQuantity(policy,action,'resources',d.id)??number(action.resources[d.id]!)));
+          for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)occupancies[t]![index]=(occupancies[t]![index]??ER_ZERO).add((exactPolicyActionQuantity(policy,action,'occupancy',d.id)??number(action.occupancy[d.id]!)));}}
       add(`mandate-total:${d.id}:${scenario.id}`,totals,number(d.totalLimit));for(let t=0;t<=h;t++)add(`mandate-occupancy:${d.id}:${scenario.id}:${t}`,occupancies[t]!,number(d.capacity));
     }
     for(const coupling of p.mandate.resources.couplings)for(let t=0;t<=h;t++){const coeffs:Record<string,ExperimentRational>={};
       for(const policy of p.policies){const col=String(columns.get(policy.ref.id)!);coeffs[col]=ER_ZERO;for(const nodeId of scenario.policyPaths.find(q=>q.policyRef.id===policy.ref.id)!.nodeIds){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;
-          if(t>=node.period&&t<node.period+action.occupationPeriods)for(const [id,w]of Object.entries(coupling.weights))coeffs[col]=coeffs[col]!.add(number(w).mul(number(action.occupancy[id]!)));}}
+          if(t>=node.period&&t<node.period+action.occupationPeriods)for(const [id,w]of Object.entries(coupling.weights))coeffs[col]=coeffs[col]!.add(number(w).mul((exactPolicyActionQuantity(policy,action,'occupancy',id)??number(action.occupancy[id]!))));}}
       add(`mandate-coupling:${coupling.id}:${scenario.id}:${t}`,coeffs,number(coupling.maxPerPeriod));}
-    add(`mandate-human:${scenario.id}`,Object.fromEntries(p.policies.map(policy=>[String(columns.get(policy.ref.id)!),sum(scenario.policyPaths.find(path=>path.policyRef.id===policy.ref.id)!.nodeIds.map(id=>number(policy.problem.actions.find(a=>a.id===policy.nodes.find(n=>n.id===id)!.actionId)!.humanSeconds)))])),number(p.mandate.search.maxHumanSeconds));
+    add(`mandate-human:${scenario.id}`,Object.fromEntries(p.policies.map(policy=>[String(columns.get(policy.ref.id)!),sum(scenario.policyPaths.find(path=>path.policyRef.id===policy.ref.id)!.nodeIds.map(id=>exactPolicyActionQuantity(policy,policy.problem.actions.find(a=>a.id===policy.nodes.find(n=>n.id===id)!.actionId)!,'humanSeconds')??number(policy.problem.actions.find(a=>a.id===policy.nodes.find(n=>n.id===id)!.actionId)!.humanSeconds)))])),number(p.mandate.search.maxHumanSeconds));
     const value:Record<string,ExperimentRational>={[z]:number(1)};
     for(const term of scenario.terms){const col=term.policyIds.length===1?columns.get(term.policyIds[0]!)!:productColumns.get([...term.policyIds].sort().join('|'))!;value[col]=(value[col]??ER_ZERO).sub(quantity(term.value));}
     add(`worst-path:${scenario.id}`,value,quantity(scenario.baseValue));add(`risk-floor:${scenario.id}`,{...value,[z]:ER_ZERO},quantity(scenario.baseValue).sub(number(p.mandate.risk.minimumUtility)));
   }
   if(rows.length>30000||totalColumns>1024)throw new AllocationContractError('LIMIT_EXCEEDED','MILP formulation exceeds registered structural limit');
-  return {input:{schema:'finnor.s5.milp.v1',c,integrality,lowerBounds,upperBounds,rows,budget:{deadlineMs:Math.max(1,Math.floor(deadlineMs)),nodeLimit:p.mandate.search.maxExpansions}},policyColumns:ids};
+  return {input:{schema:p.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'?'finnor.s5.milp.rational.v2':'finnor.s5.milp.v1',...(p.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{}),c,integrality,lowerBounds,upperBounds,rows,budget:{deadlineMs:Math.max(1,Math.floor(deadlineMs)),nodeLimit:p.mandate.search.maxExpansions}},policyColumns:ids};
 }
 export async function produceAllocationCandidate(problem:CanonicalAllocationProblem,deadlineAt:number):Promise<{status:AllocationResultState;selectedPolicyIds:string[]|null;reasons:string[];compute:S5ComputeInvocation;solverUpperBoundEstimate:number|null;dualProposal:AllocationDualProposal|null}> {
   const start=performance.now(),cpu=process.cpuUsage(),startedAt=new Date().toISOString(),rss=process.memoryUsage().rss;

@@ -1,3 +1,4 @@
+import {env as runtimeEnvironment} from 'node:process';
 import {z} from 'zod';
 import {requireProcedureMode} from '../procedure-induction/admission';
 import {receiveWork,attachWorkEntity,loadEmployeeConversationThread,appendEmployeeConversationMessage,updateEmployeeConversationThreadContext} from '@finnor/db';
@@ -16,7 +17,7 @@ const idSchema=z.object({programId:z.string().uuid()}).strict();
 
 export async function submitHarnessProgram(ctx:PeMutationContext,body:unknown){
  const request=parseHarnessRequest(body);if(request.procedure)requireProcedureMode(request.procedure);await authorize(ctx,request.root,request.workId?[{type:'work',id:request.workId}]:[]);validateAcceptance(request);
- if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
+ if(request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
  if(request.limits?.requiredAggregateLimits&&Object.keys(request.limits.requiredAggregateLimits).length)throw Error('HARNESS_AGGREGATE_RESOURCE_BOUND_UNAVAILABLE');
  const user=await tx(ctx,async c=>(await c.query('SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2',[ctx.auth.tenantId,principal(ctx)])).rows[0],true);if(user?.status!=='active'||user.role!=='owner')throw unavailable();
  for(const s of request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[]);
