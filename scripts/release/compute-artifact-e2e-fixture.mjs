@@ -214,6 +214,7 @@ export function mockCommand(name, args) {
       if (process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId) {
         const providerRoot = s.scenario === "api-legacy-root" ? "apps/api" : "finnor-os/apps/api"
         if (!existsSync(providerRoot)) throw new Error(`Provider project root does not exist: ${providerRoot}`)
+        if (!args.includes("--archive=tgz")) throw new Error("Request body too large. Limit: 10mb")
       }
       if (!existsSync(".vercel/output/config.json")) throw new Error("No prepared output")
       log({ command: "deployed-output", outputSha256: hash(readFileSync(".vercel/output/config.json")) })

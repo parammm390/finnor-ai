@@ -362,6 +362,9 @@ if (isPrepared) {
 }
 const deployArgs = [
   "deploy", "--prebuilt", "--prod", "--yes",
+  // The pinned CLI chunks archives before upload, bounding deployment metadata
+  // without dropping any attested API dependency or rebuilding prepared bytes.
+  ...(appName === "api" ? ["--archive=tgz"] : []),
   "--meta", `finnorCommitSha=${commitSha}`,
   "--meta", `finnorBuildId=${buildId}`,
   "--meta", `finnorVersion=${version}`,

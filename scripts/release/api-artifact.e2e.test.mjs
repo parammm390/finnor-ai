@@ -27,6 +27,7 @@ test("API prepare preserves provider-pulled unescaped JSON and deploy-only consu
   assert.equal(f.canary("api", "--prepare-only").status, 0)
   const deployed = f.canary("api", "--deploy-only")
   assert.equal(deployed.status, 0, deployed.stderr)
+  assert.ok(f.events().find(e => e.command === "vercel" && e.args[0] === "deploy").args.includes("--archive=tgz"))
   assert.equal(f.events().filter(e => e.command === "vercel" && e.args[0] === "build").length, 1)
   writeFileSync(join(directory, "context/.vercel/output/config.json"), '{"version":3,"tampered":true}')
   assert.notEqual(f.canary("api", "--deploy-only").status, 0)
