@@ -39,3 +39,9 @@ Final worker image/built API execution, cumulative R1 compatibility, complete
 meters, sustained controller memory, inherited S6 receipt custody and native
 desktop input are not all qualified. Do not label this complete functional
 delivery until the exact remaining internal gates pass.
+
+An independently owned cumulative candidate was constructed from immutable
+R1 parent `24154e827` followed by the two R4 groups. It passes 5 actual R4
+owner/transport/migration cases and 42 existing R1 exact/reference cases.
+Its head is `3cd89219c85fc8310d6208d75ed782400cf763a8`. This remains PARTIAL,
+not combined compatibility or image qualification.

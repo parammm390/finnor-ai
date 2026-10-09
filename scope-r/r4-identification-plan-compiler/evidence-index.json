@@ -1,6 +1,6 @@
 {
   "schema": "finnor.r4.private-evidence-index.v1",
-  "updatedUTC": "2026-10-09T19:28:54.823327+00:00",
+  "updatedUTC": "2026-10-09T19:54:50.572240+00:00",
   "scientificSourceMatches": [
     {
       "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/packages/epistemic-runtime/src/identification-plan/producer.py",
@@ -184,6 +184,31 @@
       "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/os-types.log",
       "sha256": "220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7",
       "bytes": 53
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+      "sha256": "d41316ec7b772807d37d5c61d997f9ab1c67dbb54eb2c8447f931c11bb14d68b",
+      "bytes": 258794
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/freeze.json",
+      "sha256": "5f6e7713ecb54c06e028f03594c4525c21139639190ab7c44ff2f0232a45ab90",
+      "bytes": 789
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/migration.json",
+      "sha256": "ca01354d6a8127c4a05a20be4736f808fc582f7fe077a156040f510c00298402",
+      "bytes": 18883
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/worker-ready.json",
+      "sha256": "9add5ba2da5fa669b491a3b85e109d6ebb8d543afe329377b46b9a16c92be5d8",
+      "bytes": 1450
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json",
+      "sha256": "bbfc432eb25a293eac4f5e0e0a9c8b14e7f4ad46801b17d91154bb918177b708",
+      "bytes": 10622
     }
   ],
   "qualification": "Hashes locate private retained evidence, not admission or one fresh all-predicate campaign",

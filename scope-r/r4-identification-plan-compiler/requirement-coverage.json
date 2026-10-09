@@ -1,5 +1,5 @@
 {
-  "capturedUTC": "2026-10-09T19:28:54.823327+00:00",
+  "capturedUTC": "2026-10-09T19:54:50.572240+00:00",
   "prompt": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/issued/R4-IdentificationPlanCompiler-goal.md",
   "sha256": "3c5363064f2c44446e50917ca914f16d24638f23213fd06720c30ff513cc39f0",
   "basis": "Retained dependency-scoped scientific/owner/fault/DOM evidence; original failures preserved",
@@ -304,7 +304,7 @@
       "requirement": "R4phase4/no unfinished R1 dependency/release contribution",
       "section": "opening/9",
       "locatedText": "Contribute only R4",
-      "status": "DOCUMENTED_LOCAL_SEAL_PENDING",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
       "boundary": "verification-and-handoff",
       "evidence": [
         "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
@@ -332,7 +332,7 @@
       "requirement": "Scope-exclusive and shared commit groups; concrete conflict obligations",
       "section": "3",
       "locatedText": "Shared integration obligations are concrete",
-      "status": "DOCUMENTED_LOCAL_SEAL_PENDING",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
       "boundary": "verification-and-handoff",
       "evidence": [
         "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
@@ -360,13 +360,11 @@
       "requirement": "Observed0171 collision; serial number allocation/replay",
       "section": "1/3",
       "locatedText": "numeric collision",
-      "status": "PARTIAL_LOCAL_CANDIDATE_ONLY_COMBINED_NOT_RUN",
+      "status": "PARTIAL_SELECTED_CUMULATIVE_CASES_NOT_FULL_COMPATIBILITY",
       "boundary": "verification-and-handoff",
       "evidence": [
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json"
       ]
     },
     {
@@ -374,13 +372,11 @@
       "requirement": "Separate local vs combined actual integrated cut; seal pending owner packet",
       "section": "3/9",
       "locatedText": "R1_PLUS_R4_INTEGRATED",
-      "status": "PARTIAL_LOCAL_CANDIDATE_ONLY_COMBINED_NOT_RUN",
+      "status": "PARTIAL_SELECTED_CUMULATIVE_CASES_NOT_FULL_COMPATIBILITY",
       "boundary": "verification-and-handoff",
       "evidence": [
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
-        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json"
       ]
     },
     {
@@ -430,7 +426,7 @@
       "requirement": "Frozen campaign/oracles/reruns/finite handoff",
       "section": "7/9",
       "locatedText": "maximum expensive passes",
-      "status": "DOCUMENTED_LOCAL_SEAL_PENDING",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
       "boundary": "verification-and-handoff",
       "evidence": [
         "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
@@ -462,7 +458,7 @@
     "Sustained controller RSS exceeded fixed 1 GiB guard in serial campaign",
     "Native desktop input remains PARTIAL",
     "Complete monetary/build/container/human meters unavailable",
-    "Actual sealed cumulative R1 adoption/checks are separate",
+    "Full cumulative R1 compatibility is incomplete despite selected 5 R4 and 42 R1 passes",
     "Inherited S6 interruption receipt not in verified custody"
   ]
 }

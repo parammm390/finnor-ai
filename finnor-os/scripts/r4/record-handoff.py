@@ -38,6 +38,8 @@ files.extend(["owner-faults-1/faults/producer-kill.json", "owner-faults-1/faults
               "final-local-checks/api-build.log", "final-local-checks/work-build.log",
               "final-local-checks/scientific-runtime.json", "final-local-checks/affected-release-guards.log",
               "final-local-checks/r4-script-types-final.log", "final-local-checks/os-types.log"])
+files.extend(["serial-r4-1/results.json", "serial-r4-1/freeze.json", "serial-r4-1/migration.json",
+              "serial-r4-1/worker-ready.json", "serial-r1-mathematical-1/mathematical-results.json"])
 indexed = []
 for name in files:
     p = evidence / name
@@ -66,18 +68,21 @@ for row in coverage["rows"]:
     elif c == "common.3.Pi":
         row["status"] = "NOT_APPLICABLE_PI_NOT_ADOPTED"
     elif c in ["current.combined", "current.migration"]:
-        row["status"] = "PARTIAL_LOCAL_CANDIDATE_ONLY_COMBINED_NOT_RUN"
+        row["status"] = "PARTIAL_SELECTED_CUMULATIVE_CASES_NOT_FULL_COMPATIBILITY"
+        row["evidence"] = [str(evidence / "serial-r4-1/results.json"),
+                           str(evidence / "serial-r1-mathematical-1/mathematical-results.json")]
     elif c == "blueprint.delivery":
         row["status"] = "INCOMPLETE_FINAL_IMAGE_BUILT_API_RUNTIME"
     elif c in ["current.ownership", "common.14", "blueprint.finite"]:
-        row["status"] = "DOCUMENTED_LOCAL_SEAL_PENDING"
+        row["status"] = "DOCUMENTED_LOCAL_COMMITTED_GROUPS"
 coverage["capturedUTC"] = now
 coverage["basis"] = "Retained dependency-scoped scientific/owner/fault/DOM evidence; original failures preserved"
 coverage["overallFunctionalGate"] = "INCOMPLETE_FINAL_PACKAGE_GATE"
 coverage["limitations"] = ["Final worker image not built/executed; no Docker/Podman/Lima/Colima",
     "Built API runtime proof not complete", "Sustained controller RSS exceeded fixed 1 GiB guard in serial campaign",
     "Native desktop input remains PARTIAL", "Complete monetary/build/container/human meters unavailable",
-    "Actual sealed cumulative R1 adoption/checks are separate", "Inherited S6 interruption receipt not in verified custody"]
+    "Full cumulative R1 compatibility is incomplete despite selected 5 R4 and 42 R1 passes",
+    "Inherited S6 interruption receipt not in verified custody"]
 write(record / "requirement-coverage.json", coverage)
 
 python = repo.parent / "runtime/y0/bin/python"
