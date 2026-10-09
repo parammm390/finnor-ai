@@ -320,47 +320,19 @@ jobs:
           FINNOR_TEST_MANAGED_EXTENSIONS: omit
 
       - name: Build and smoke-test exact worker image without production credentials
-        run: |
-          set -euo pipefail
-          image="finnor-worker:${FINNOR_COMMIT_SHA}"
-          container_id=""
-          cleanup() { if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null 2>&1 || true; fi; }
-          trap cleanup EXIT
-          docker build --file finnor-os/Dockerfile.worker --tag "$image" finnor-os
-          for attempt in $(seq 1 30); do
-            pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
-            sleep 2
-          done
-          pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
-          supabase_url="$(node -e 'const fs=require("node:fs"); const contract=JSON.parse(fs.readFileSync("infra/deployment/production.contract.json","utf8")); process.stdout.write(contract.topology.database.supabaseUrl);')"
-          container_id="$(docker run --detach --network host \
-            --env NODE_ENV=test \
-            --env FINNOR_ENVIRONMENT=production \
-            --env FINNOR_RELEASE_SOURCE=github-actions \
-            --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
-            --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" \
-            --env FINNOR_VERSION="$FINNOR_VERSION" \
-            --env FINNOR_WORKER_DEPLOYMENT_ID=ecs:container-smoke \
-            --env FINNOR_WORKLOAD_CLASS=REALTIME \
-            --env FINNOR_WORKER_CAPABILITIES=jobs,realtime,sse \
-            --env SECRETS_PROVIDER=env \
-            --env DATABASE_URL=postgres://finnor:finnor@127.0.0.1:5432/finnor \
-            --env POSTGRES_URL_NON_POOLING=postgres://finnor:finnor@127.0.0.1:5432/finnor \
-            --env SUPABASE_URL="$supabase_url" \
-            --env CENTROPY_SSE_ALLOWED_ORIGINS=https://finnorai.com \
-            --env WORKER_CONCURRENCY=2 \
-            --env WORKER_INTERACTIVE_RESERVED_CONCURRENCY=0 \
-            --env FINNOR_DB_POOL_MAX=1 \
-            "$image")"
-          ready=0
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | node -e 'const fs=require("node:fs"); const body=JSON.parse(fs.readFileSync(0,"utf8")); if(body.ok!==true || body.realtime!==true || body.release?.commitSha!==process.env.FINNOR_COMMIT_SHA || body.release?.buildId!==process.env.FINNOR_BUILD_ID || body.release?.version!==process.env.FINNOR_VERSION || !body.capabilities?.includes("jobs") || !body.capabilities?.includes("sse") || body.capabilities?.includes("orchestration")) process.exit(1)'; then ready=1; break; fi
-            sleep 2
-          done
-          if test "$ready" != 1; then docker logs "$container_id" || true; echo "::error::worker container smoke test did not expose /healthz"; exit 1; fi
-          docker stop --time 30 "$container_id" >/dev/null
-          test "$(docker inspect --format '{{.State.ExitCode}}' "$container_id")" = "0"
-          container_id=""
+        run: bash scripts/release/smoke-worker-image.sh
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Retain exact Linux worker smoke evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: production-worker-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-worker-image-smoke/*
+          if-no-files-found: warn
+          retention-days: 7
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""

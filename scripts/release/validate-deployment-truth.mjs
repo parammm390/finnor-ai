@@ -60,12 +60,12 @@ for (const path of ["finnor-os/packages/db/migration-head.ts", "finnor-os/apps/s
   required(declared === repositoryMigrationHead, `${path} migration head ${declared ?? "<missing>"} differs from repository head ${repositoryMigrationHead}`)
 }
 
-for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/.dockerignore", "scripts/release/deploy-aws-compute-plane.mjs", "scripts/release/compute-plane-policy.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
+for (const path of ["infra/aws/finnor-production.yaml", "finnor-os/Dockerfile.worker", "finnor-os/Dockerfile.worker.dockerignore", "scripts/release/smoke-worker-image.sh", "scripts/release/deploy-aws-compute-plane.mjs", "scripts/release/compute-plane-policy.mjs", "scripts/release/preflight-production.mjs", "scripts/release/verify-production-parity.mjs", "scripts/release/vercel-protection.mjs", "scripts/release/configure-vercel-realtime.mjs"]) required(existsSync(join(repoRoot, path)), `required AWS release surface is missing: ${path}`)
 required(!existsSync(join(repoRoot, "scripts/release/deploy-aws-worker.mjs")), "retired single-worker deployer still exists")
 
 const dockerfile = read("finnor-os/Dockerfile.worker")
-const dockerignore = read("finnor-os/.dockerignore")
-for (const invariant of ["FROM node:22", "COPY package.json package-lock.json", "COPY apps ./apps", "COPY packages ./packages", "npm ci", "EXPOSE 8090", "apps/worker/src/index.ts"]) required(dockerfile.includes(invariant), `worker Dockerfile lost ${invariant}`)
+const dockerignore = read("finnor-os/Dockerfile.worker.dockerignore")
+for (const invariant of ["FROM node:22", "WORKDIR /app/finnor-os", "COPY finnor-os/package.json finnor-os/package-lock.json", "COPY finnor-os/apps ./apps", "COPY finnor-os/packages ./packages", "COPY package-lock.json /app/package-lock.json", "COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json", "npm ci", "EXPOSE 8090", "apps/worker/src/index.ts"]) required(dockerfile.includes(invariant), `worker Dockerfile lost ${invariant}`)
 for (const invariant of [".env", ".vercel", "node_modules", ".git"]) required(dockerignore.includes(invariant), `worker Docker context does not exclude ${invariant}`)
 
 const cfn = read("infra/aws/finnor-production.yaml")
@@ -112,10 +112,13 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "docker build", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "release:scope5:rollout", "phase5-readiness", "npm run release:scope4-digital-twin", "npm run release:scope5-epistemic-impact"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "bash scripts/release/smoke-worker-image.sh", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "release:scope5:rollout", "phase5-readiness", "npm run release:scope4-digital-twin", "npm run release:scope5-epistemic-impact"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+const workerSmoke = read("scripts/release/smoke-worker-image.sh")
+for (const marker of ['docker build --file finnor-os/Dockerfile.worker --tag "$image" .', "REALTIME INTERACTIVE BACKGROUND HEAVY", "/healthz", "SIGTERM", '[[ "$exit_code" == "0" ]]']) required(workerSmoke.includes(marker), `shared worker image gate lost ${marker}`)
 for (const argument of ['--preflight-evidence="$FINNOR_PREFLIGHT_EVIDENCE"', '--database-env="$FINNOR_PROTECTED_DATABASE_ENV"', '--image-digest="$FINNOR_ECR_IMAGE_DIGEST"']) required(workflow.includes(argument), `compute deploy argument does not match the exact --key=value parser: ${argument}`)
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
 const backendCi = read(".github/workflows/ci.yml")
+required(backendCi.includes("  worker-image:") && backendCi.includes("run: bash scripts/release/smoke-worker-image.sh"), "mandatory PR backend gate omits the exact production worker image smoke")
 const prVerdict = read(".github/workflows/pr-verdict.yml")
 required(prVerdict.includes("uses: ./.github/workflows/ci.yml") && backendCi.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "PR backend gate must run the full active suite while excluding the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")

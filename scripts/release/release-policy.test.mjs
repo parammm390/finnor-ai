@@ -108,7 +108,9 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
   assert.doesNotMatch(workflow, /azure\/login|AZURE_|deploy-azure|RunCommand|cloudapp\.azure/i)
   assert.match(workflow, /aws-actions\/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c/)
-  assert.match(workflow, /docker build/)
+  const smoke = readFileSync(new URL("./smoke-worker-image.sh", import.meta.url), "utf8")
+  assert.match(workflow, /bash scripts\/release\/smoke-worker-image\.sh/)
+  assert.match(smoke, /docker build/)
   assert.match(workflow, /docker push/)
   assert.match(workflow, /deploy-aws-compute-plane\.mjs/)
   const computeSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECS[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]

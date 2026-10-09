@@ -33,6 +33,64 @@ jobs:
       - run: npm run release:truth
       - run: npm run test:release
 
+  worker-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --prefix finnor-os
+      - name: Derive exact worker smoke metadata
+        run: |
+          sha="$(git rev-parse HEAD)"
+          echo "FINNOR_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
+          echo "FINNOR_BUILD_ID=finnor-${sha:0:12}" >> "$GITHUB_ENV"
+          echo "FINNOR_VERSION=0.1.0+${sha:0:12}" >> "$GITHUB_ENV"
+      - name: Prepare disposable worker smoke database
+        run: |
+          npm run db:bundle
+          git diff --exit-code -- packages/db/migrations-bundle.ts
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+        env:
+          DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
+          FINNOR_TEST_MANAGED_EXTENSIONS: omit
+      - name: Verify relocated worker source custody
+        run: node --test scripts/release/worker-image-layout.e2e.test.mjs
+        env:
+          FINNOR_WORKER_LAYOUT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-worker-layout
+      - name: Build and smoke-test exact worker image without production credentials
+        run: bash scripts/release/smoke-worker-image.sh
+      - name: Retain exact Linux worker smoke evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: worker-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/finnor-worker-image-smoke/*
+            ${{ runner.temp }}/finnor-worker-layout/*.json
+          if-no-files-found: warn
+          retention-days: 7
+
   test:
     runs-on: ubuntu-latest
     services:
