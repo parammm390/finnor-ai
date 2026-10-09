@@ -40,6 +40,9 @@ export function createFixture(t, scenario = "valid") {
   writeFileSync(join(appDir, "vercel.json"), '{"rewrites":[{"source":"/(.*)","destination":"/api/index.mjs"}]}\n')
   mkdirSync(join(appDir, "api"))
   writeFileSync(join(appDir, "api/index.mjs"), 'export default function handler() { return "fixture"; }\n')
+  const apiDir = join(repo, contract.topology.api.releaseWorkingDirectory, "apps/api")
+  mkdirSync(apiDir, { recursive: true })
+  writeFileSync(join(apiDir, "package.json"), '{"name":"fixture-api","private":true,"type":"module"}\n')
   const stateFile = join(root, "state.json")
   const log = join(root, "commands.jsonl")
   const state = { root, repo, scenario, sha: SHA, digest: DIGEST, contract, log }
@@ -201,7 +204,7 @@ export function mockCommand(name, args) {
       mkdirSync(".vercel/output/functions/health.func", { recursive: true })
       writeFileSync(".vercel/output/config.json", '{"version":3}\n')
       writeFileSync(".vercel/output/functions/health.func/index.mjs", `export const role=${JSON.stringify(project?.portalRole)};\n`)
-      if (s.scenario === "api-file-map") {
+      if (["api-file-map", "api-legacy-root"].includes(s.scenario)) {
         symlinkSync("health.func", ".vercel/output/functions/alias.func")
         writeFileSync(".vercel/output/functions/health.func/.vc-config.json", JSON.stringify({
           runtime: "nodejs22.x", handler: "index.mjs",
