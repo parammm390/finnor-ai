@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
@@ -18,7 +18,7 @@ export function createFixture(t, scenario = "valid") {
   const repo = join(root, "repo")
   const scripts = join(repo, "scripts/release")
   mkdirSync(scripts, { recursive: true })
-  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs"]) {
+  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs", "vercel-build-context.mjs"]) {
     cpSync(join(sourceRoot, "scripts/release", name), join(scripts, name))
   }
   mkdirSync(join(repo, "infra/deployment"), { recursive: true })
@@ -180,7 +180,7 @@ export function mockCommand(name, args) {
     const project = [s.contract.topology.supplierCanaryApp, s.contract.topology.supplierCanaryAuth].find((target) => target.projectId === process.env.VERCEL_PROJECT_ID)
     if (args[0] === "pull") {
       mkdirSync(".vercel", { recursive: true })
-      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID }))
+      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID, settings: { rootDirectory: process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? "apps/api" : null } }))
       writeFileSync(".vercel/.env.production.local", [
         `PORTAL_ROLE=${s.scenario === "wrong-role" ? "wrong" : project?.portalRole ?? "app"}`,
         "NEXT_PUBLIC_FIXTURE=public-config", "DATABASE_URL=fixture-secret-db",
@@ -195,6 +195,13 @@ export function mockCommand(name, args) {
       mkdirSync(".vercel/output/functions/health.func", { recursive: true })
       writeFileSync(".vercel/output/config.json", '{"version":3}\n')
       writeFileSync(".vercel/output/functions/health.func/index.mjs", `export const role=${JSON.stringify(project?.portalRole)};\n`)
+      if (s.scenario === "api-file-map") {
+        symlinkSync("health.func", ".vercel/output/functions/alias.func")
+        writeFileSync(".vercel/output/functions/health.func/.vc-config.json", JSON.stringify({
+          runtime: "nodejs22.x", handler: "index.mjs",
+          filePathMap: { "package-lock.json": "package-lock.json" },
+        }))
+      }
       return out("Fixture build\n")
     }
     if (args[0] === "deploy") {

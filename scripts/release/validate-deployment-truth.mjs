@@ -119,6 +119,7 @@ for (const argument of ['--preflight-evidence="$FINNOR_PREFLIGHT_EVIDENCE"', '--
 required(!workflow.includes("azure/login") && !workflow.includes("deploy-azure-worker") && !workflow.includes("FINNOR_CORE_CERTIFICATION_FILE="), "production workflow still carries Azure or Phase 6 certification machinery")
 const backendCi = read(".github/workflows/ci.yml")
 required(backendCi.includes("  worker-image:") && backendCi.includes("run: bash scripts/release/smoke-worker-image.sh"), "mandatory PR backend gate omits the exact production worker image smoke")
+required(backendCi.includes("  production-artifacts:") && backendCi.includes("run: node scripts/release/production-artifact.e2e.mjs"), "mandatory backend gate omits the real four-component Vercel artifact/runtime proof")
 const prVerdict = read(".github/workflows/pr-verdict.yml")
 required(prVerdict.includes("uses: ./.github/workflows/ci.yml") && backendCi.includes("npm test -- --exclude tests/integration/phase6-conversation-context-kernel.test.ts"), "PR backend gate must run the full active suite while excluding the retired Phase 6 integration fixture")
 required(!/\bprj_[A-Za-z0-9]+|\bteam_[A-Za-z0-9]+/.test(workflow), "production workflow must resolve Vercel IDs from the canonical contract")

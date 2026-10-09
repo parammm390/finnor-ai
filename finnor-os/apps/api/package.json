@@ -2,6 +2,7 @@
   "name": "@finnor/api",
   "version": "0.1.0",
   "private": true,
+  "engines": { "node": "22.x" },
   "scripts": {
     "dev": "next dev -p 3100",
     "build": "next build",
@@ -21,6 +22,7 @@
     "@finnor/provider-microsoft365": "*",
     "@finnor/read-models": "*",
     "@finnor/security": "*",
+    "@finnor/source-custody": "*",
     "@finnor/shared-types": "*",
     "@finnor/tools": "*",
     "@finnor/workflow-runtime": "*",

@@ -8,7 +8,9 @@ import { and, desc, eq, lte, sql } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../../lib/auth";
 import { isRetiredWaterAction } from "@finnor/shared-types";
 
-type Params = { params: Promise<{ tenantId: string; actionType: string }> };
+// Next requires one name for this shared dynamic segment. The URL and tenant
+// authorization remain unchanged; here the segment denotes the tenant ID.
+type Params = { params: Promise<{ operation: string; actionType: string }> };
 
 type PolicyBase = typeof domainPolicies.$inferSelect;
 type PolicyRevision = typeof domainPolicyRevisions.$inferSelect;
@@ -29,7 +31,7 @@ function projectRevision(base: PolicyBase, revision: PolicyRevision): PolicyBase
 
 export async function GET(req: Request, { params }: Params): Promise<Response> {
   try {
-    const { tenantId, actionType } = await params;
+    const { operation: tenantId, actionType } = await params;
     if (isRetiredWaterAction(actionType)) return Response.json({ error: "RETIRED_VERTICAL" }, { status: 410 });
     const ctx = await requireContext(req);
     if (ctx.tenantId !== tenantId) {
@@ -65,7 +67,7 @@ export async function GET(req: Request, { params }: Params): Promise<Response> {
 
 export async function PUT(req: Request, { params }: Params): Promise<Response> {
   try {
-    const { tenantId, actionType } = await params;
+    const { operation: tenantId, actionType } = await params;
     if (isRetiredWaterAction(actionType)) return Response.json({ error: "RETIRED_VERTICAL" }, { status: 410 });
     const ctx = await requireContext(req);
     if (ctx.tenantId !== tenantId) {

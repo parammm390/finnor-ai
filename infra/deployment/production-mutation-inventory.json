@@ -170,6 +170,7 @@
         "scripts/release/verify-p8-zero-resurrection.mjs",
         "scripts/release/verify-release.mjs",
         "scripts/release/smoke-worker-image.sh",
+        "scripts/release/vercel-build-context.mjs",
         "scripts/release/validate-deployment-truth.mjs",
         "scripts/release/release-policy.mjs",
         "scripts/release/vercel-protection.mjs",
@@ -216,7 +217,9 @@
         "scripts/release/compute-artifact-e2e-fixture.mjs",
         "scripts/release/compute-noop.e2e.test.mjs",
         "scripts/release/canary-artifact.e2e.test.mjs",
-        "scripts/release/worker-image-layout.e2e.test.mjs"
+        "scripts/release/worker-image-layout.e2e.test.mjs",
+        "scripts/release/production-artifact.e2e.mjs",
+        "scripts/release/api-artifact.e2e.test.mjs"
       ],
       "classification": "READ_ONLY",
       "state": "TEST_ONLY"
@@ -236,7 +239,7 @@
     },
     {
       "id": "declarative-production-source",
-      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json"],
+      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json", "infra/deployment/vercel-build-settings.json"],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."
