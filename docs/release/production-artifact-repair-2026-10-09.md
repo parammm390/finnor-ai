@@ -95,3 +95,23 @@ both security jobs passed. This follow-up changes no artifact builder, native
 method, runtime dependency, workflow, database or AWS policy. A new production
 run is still required; neither those CI results nor this metadata repair prove
 that deployment has completed.
+
+## API environment custody follow-up
+
+Production `37877943722` passed canonical graph, the complete root gate,
+readiness and post-merge certification. Release job `113652604473` then refused
+the sanitized API environment at the credential-name guard. The established
+allowlist/preflight uses `SECRETS_PROVIDER=aws-secrets-manager` as a noncredential
+selector. Permit only that exact API value, preserving all other credential,
+service-role and canary restrictions. Diagnostics identify names, never values.
+
+The richer prewritten API lifecycle fixture also reproduced JSON-reference
+truncation caused by treating dotenv quoting as JSON escaping. Read valid
+JSON-string-quoted inputs correctly; emit parse-verified, lossless dotenv
+delimiters. Fail closed on unrepresentable values rather than accepting
+changed configuration. Canonical JSON references now survive prepare, reuse
+and deploy-only without exposing credentials. The 21 focused API/canary,
+protected-environment and database-connection checks passed, including invalid
+selector, credential injection, tampering and escaping-link refusal. Scoped
+lint, mutation inventory and both generated-manifest checks passed. No full
+local builds or AWS actions were run for this follow-up.

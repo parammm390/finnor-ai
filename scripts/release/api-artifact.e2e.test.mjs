@@ -3,6 +3,7 @@ import test from "node:test"
 import { join } from "node:path"
 import { readFileSync, writeFileSync, readlinkSync, unlinkSync, symlinkSync } from "node:fs"
 import { createFixture, SHA } from "./compute-artifact-e2e-fixture.mjs"
+import { readProtectedEnv } from "./protected-env.mjs"
 
 // Controller lifecycle proof. Actual compiler/function proof is the separate,
 // mandatory production-artifact.e2e.mjs, never this mocked provider.
@@ -15,6 +16,10 @@ test("API prepare persists the canonical root and deploy-only consumes it withou
   const receipt = JSON.parse(readFileSync(join(directory, "prepared.json"), "utf8"))
   assert.equal(receipt.schema, "finnor.api-prepared-artifact.v1")
   assert.equal(receipt.component, "api")
+  assert.match(readFileSync(join(directory, "context/.vercel/.env.production.local"), "utf8"), /SECRETS_PROVIDER="aws-secrets-manager"/)
+  assert.deepEqual(JSON.parse(readProtectedEnv(join(directory, "context/.vercel/.env.production.local")).FINNOR_SECRET_IDS), {
+    GROQ_API_KEY: "finnor/prod/groq-api-key",
+  })
   const output = join(directory, "context/.vercel/output")
   assert.equal(readlinkSync(join(output, "functions/alias.func")), "health.func")
   assert.ok(readFileSync(join(output, "functions/health.func/package-lock.json")).length)
@@ -43,4 +48,13 @@ test("API prepared artifact refuses a function alias escaping its output boundar
   symlinkSync(f.repo, alias)
   assert.notEqual(f.canary("api", "--deploy-only").status, 0)
   assert.equal(f.events().filter(e => e.command === "vercel" && e.args[0] === "deploy").length, 0)
+})
+
+test("API prepare rejects a noncanonical provider selector before building or deploying", t => {
+  const f = createFixture(t, "api-invalid-provider")
+  f.setScenario("api-invalid-provider")
+  const result = f.canary("api", "--prepare-only")
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /forbidden credential class/)
+  assert.equal(f.events().filter(e => e.command === "vercel" && ["build", "deploy"].includes(e.args[0])).length, 0)
 })

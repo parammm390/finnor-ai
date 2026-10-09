@@ -156,9 +156,12 @@ function validateCanaryConfiguration(context) {
   if (isCanary && values.PORTAL_ROLE !== target.portalRole) throw new Error("Prepared canary portal role differs from the canonical contract")
   if (!isCanary && project.settings?.rootDirectory !== "finnor-os/apps/api") throw new Error("Prepared API root differs from the canonical context")
   for (const [key, value] of Object.entries(values)) {
-    const secretReference = !isCanary && ["FINNOR_SECRET_IDS", "FINNOR_TENANT_SECRET_PREFIX", "FINNOR_SYSTEM_CREDENTIAL_PROVIDERS"].includes(key)
+    const secretReference = !isCanary && (
+      ["FINNOR_SECRET_IDS", "FINNOR_TENANT_SECRET_PREFIX", "FINNOR_SYSTEM_CREDENTIAL_PROVIDERS"].includes(key)
+      || key === "SECRETS_PROVIDER" && value === "aws-secrets-manager"
+    )
     if (!secretReference && /SERVICE[_-]?ROLE|SECRET|PASSWORD|PRIVATE[_-]?KEY|CREDENTIAL/i.test(key) || value.startsWith("sb_secret_")) {
-      throw new Error("Prepared canary environment contains a forbidden credential class")
+      throw new Error(`Prepared canary environment contains a forbidden credential class: ${key}`)
     }
     if (value.split(".").length === 3) {
       let claims

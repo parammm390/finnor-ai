@@ -185,6 +185,12 @@ export function mockCommand(name, args) {
         `PORTAL_ROLE=${s.scenario === "wrong-role" ? "wrong" : project?.portalRole ?? "app"}`,
         "NEXT_PUBLIC_FIXTURE=public-config", "DATABASE_URL=fixture-secret-db",
         "SUPABASE_SERVICE_ROLE_KEY=fixture-secret-service", "CANARY_SIGNING_KEY=fixture-secret-signing",
+        ...(process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? [
+          `SECRETS_PROVIDER=${s.scenario === "api-invalid-provider" ? "env" : "aws-secrets-manager"}`,
+          `FINNOR_SECRET_IDS=${JSON.stringify(JSON.stringify({ GROQ_API_KEY: "finnor/prod/groq-api-key" }))}`,
+          "FINNOR_TENANT_SECRET_PREFIX=finnor/tenants/",
+          "FINNOR_SYSTEM_CREDENTIAL_PROVIDERS=resend",
+        ] : []),
         ...(s.scenario === "public-service-key" ? ["NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=fixture-secret-public-service"] : []),
       ].join("\n"))
       return out("Fixture pull\n")
