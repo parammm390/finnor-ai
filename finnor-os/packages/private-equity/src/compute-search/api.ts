@@ -1,3 +1,4 @@
+import {env as runtimeEnvironment} from 'node:process';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {DatabaseExecutionDeadlineError} from '@finnor/db';
@@ -35,7 +36,7 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
   if(operation==='compute-search-submit'){
    const request=ComputeSearchRequestSchema.parse(body),q=await requestRow(ctx,request.programId);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
    await validateDeliberationBinding(ctx,q,request);
-   if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+   if(request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
    const binding=await resolveSearchOwners(ctx,q,request),digest=sha(request);
    const accepted=await tx(ctx,async c=>{
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4702))',[ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);

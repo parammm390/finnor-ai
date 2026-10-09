@@ -1,3 +1,4 @@
+import {env as runtimeEnvironment} from 'node:process';
 import {z} from 'zod';
 import {open} from 'node:fs/promises';
 import {constants} from 'node:fs';
@@ -13,7 +14,7 @@ export const EndpointSchema=z.object({id:z.string().regex(/^[A-Za-z0-9_-]{1,64}$
 export type Endpoint=z.infer<typeof EndpointSchema>&{key:string;digest:string};
 export async function readEndpointConfig():Promise<Endpoint[]> {
  const path=process.env.FINNOR_P2_ENDPOINT_CONFIG;if(!path)return [];
- if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_DIAGNOSTIC_ENDPOINT_PROFILE_REQUIRED');
+ if(runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_DIAGNOSTIC_ENDPOINT_PROFILE_REQUIRED');
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
  try {const st=await fd.stat();if(!st.isFile()||st.size>16384||st.uid!==process.getuid?.())throw Error('P2_ENDPOINT_CONFIG_BOUNDS_OR_OWNER');
   const value=z.object({schema:z.literal('finnor.p2.endpoint-config.v1'),endpoints:z.array(EndpointSchema).max(4)}).strict().parse(JSON.parse(await fd.readFile('utf8')));

@@ -80,6 +80,8 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
+  run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
   run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
   run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),

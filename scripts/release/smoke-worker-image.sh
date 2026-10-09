@@ -33,13 +33,13 @@ const classes = ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"];
 const successfulClasses = classes.filter(c => fs.existsSync(path.join(directory, `${c}-shutdown.json`)));
 fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   schema: "finnor.worker-image-smoke.v1",
-  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 ? "PASS" : "FAIL",
+  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) ? "PASS" : "FAIL",
   commitSha: process.env.FINNOR_COMMIT_SHA,
   buildId: process.env.FINNOR_BUILD_ID,
   version: process.env.FINNOR_VERSION,
   dockerfileSha256: crypto.createHash("sha256").update(fs.readFileSync("finnor-os/Dockerfile.worker")).digest("hex"),
   successfulClasses,
-  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero"],
+  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image"],
   rerun: "bash scripts/release/smoke-worker-image.sh",
   providerDeploymentProof: false,
 }, null, 2) + "\n");
@@ -48,12 +48,13 @@ NODE
 }
 trap cleanup EXIT
 
-docker build --file finnor-os/Dockerfile.worker --tag "$image" .
+docker build --file finnor-os/Dockerfile.worker --tag "$image" . --build-arg "FINNOR_BUILD_ID=$FINNOR_BUILD_ID"
 docker image inspect --format '{{.Id}}' "$image" > "$evidence/image-id.txt"
 for attempt in $(seq 1 30); do
   pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
   sleep 2
 done
+
 pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
 supabase_url="$(node -p "require('./infra/deployment/production.contract.json').topology.database.supabaseUrl")"
 
@@ -117,3 +118,28 @@ NODE
   docker rm "$container_id" >/dev/null
   container_id=""
 done
+
+# The same final image, including its Python environment and compiled API, must
+# execute the owning flow. This is isolated ordinary development, with no network
+# access to external providers or production DB and no protected admission flag.
+mkdir -p "$evidence/linux-r1-runtime"
+chmod 2770 "$evidence/linux-r1-runtime"
+image_id="$(cat "$evidence/image-id.txt")"
+source_tree="$(git rev-parse 'HEAD^{tree}')"
+docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+  --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+  --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
+  --env FINNOR_M1_PROFILE=DISPOSABLE_NATIVE --env P3_GOVERNORS=1 \
+  --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+  --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" --env FINNOR_VERSION="$FINNOR_VERSION" \
+  --env FINNOR_RELEASE_SOURCE=ordinary-image-verification \
+  --env FINNOR_R1_PACKAGED_SOURCE=1 --env FINNOR_R1_IMAGE_ID="$image_id" \
+  --env FINNOR_R1_SOURCE_TREE="$source_tree" --env FINNOR_R1_EVIDENCE_DIR=/r1-evidence \
+  --mount "type=bind,source=$evidence/linux-r1-runtime,target=/r1-evidence" \
+  "$image" node --import=tsx scripts/r1/run-owners.mts runtime \
+  > "$evidence/linux-r1-runtime/runner.log" 2>&1
+node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
+const fs = require("node:fs");
+const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") process.exit(1);
+NODE

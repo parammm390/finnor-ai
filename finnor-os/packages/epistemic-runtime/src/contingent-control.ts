@@ -1,3 +1,4 @@
+export { evaluateExactContingentControl } from './exact-continuation';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +29,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
  now?:string;beliefPins?:BeliefViewPin[];priorPolicyRef?:ExperimentRef|null;validUntilCap?:string;inputArtifactRef?:ExperimentRef|null;budgetStartedAt?:number;
  remainingExpansions?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[]}> {
  const m=parseEconomicMandate(input.mandate),p=parseControlProblem(input.problem),d=input.dynamics,now=input.now??new Date().toISOString();
+ if(p.schema!=='finnor.control-problem.v1')throw new ControlContractError('INVALID_REQUEST','Exact information tables require the versioned exact S4 continuation owner');
  const start=input.budgetStartedAt??performance.now(),cpu=process.cpuUsage(),rss=process.memoryUsage().rss,startedAt=new Date().toISOString();
  const expansionLimit=input.remainingExpansions??m.search.maxExpansions;
  if(!Number.isSafeInteger(expansionLimit)||expansionLimit<1||expansionLimit>m.search.maxExpansions)
@@ -171,8 +173,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
 }
 
 export function decideContingentPolicy(policy:ContingentPolicy,value:unknown,allocation:ResolvedPolicyAllocation|null=null):ControlDecision {
- assertContingentPolicy(policy);const input=parseControlDecision(value);let status:PolicyResultState='POLICY_AVAILABLE',node:PolicyNode|undefined,reasons:string[]=[];
- const rootPeriod=policy.problem.continuation?.elapsedPeriods??0;
+ assertContingentPolicy(policy);const input=parseControlDecision(value,policy);let status:PolicyResultState='POLICY_AVAILABLE',node:PolicyNode|undefined,reasons:string[]=[];
+ const rootPeriod=policy.exactProfile?(policy.nodes.find(n=>n.id===policy.rootNodeId)?.period??0):policy.problem.continuation?.elapsedPeriods??0;
  if(Date.parse(input.knowledgeAt)<Math.max(Date.parse(policy.knowledgeAt)+(input.period-rootPeriod)*policy.mandate.horizon.periodMs,Date.parse(policy.mandate.horizon.startAt)+input.period*policy.mandate.horizon.periodMs)||Date.parse(input.knowledgeAt)>=Math.min(Date.parse(policy.validUntil),Date.parse(policy.mandate.horizon.startAt)+(input.period+1)*policy.mandate.horizon.periodMs)||input.period<rootPeriod||input.period>=policy.mandate.horizon.periods||input.actionHistory.length!==input.period||input.observations.some(o=>Date.parse(o.knowledgeAt)>Date.parse(input.knowledgeAt)||o.availablePeriod>input.period)) {status='STALE_INPUT';reasons.push('KNOWLEDGE_TIME_ELAPSED_TIME_OR_OBSERVATION_AVAILABILITY_INVALID');}
  else if(input.rightsRef!==policy.bindings.rightsRef){status='BLOCKED_AUTHORITY';reasons.push('RIGHTS_REVISION_CHANGED');}
  else if(allocation&&checkPolicyAllocation(policy,allocation,input.knowledgeAt).status==='BLOCKED_ALLOCATION'){status='BLOCKED_ALLOCATION';reasons.push('ALLOCATION_REVOKED_EXPIRED_OR_INCONSISTENT');}
@@ -186,7 +188,7 @@ export function decideContingentPolicy(policy:ContingentPolicy,value:unknown,all
    }
   }
  }
- const contextDigest=epistemicHash({input,policyRef:policy.ref,bindings:policy.bindings,resolvedAllocationRef:allocation?.ref??null});const body={schema:'finnor.s4.branch-choice.v1' as const,policyRef:policy.ref,status,nodeId:node?.id??null,actionId:node?.actionId??null,contextDigest,reasons,executionAuthorityGranted:false as const};
+ const contextDigest=epistemicHash({input,policyRef:policy.ref,bindings:policy.bindings,resolvedAllocationRef:allocation?.ref??null});const body={schema:policy.exactProfile?'finnor.s4.branch-choice.exact.v2' as const:'finnor.s4.branch-choice.v1' as const,policyRef:policy.ref,status,nodeId:node?.id??null,actionId:node?.actionId??null,contextDigest,reasons,executionAuthorityGranted:false as const};
  return immutableControl({...body,ref:{owner:'S4',id:`branch-choice:${epistemicHash(body)}`,version:policy.version,contentDigest:epistemicHash(body)}});
 }
 export function checkPolicyAllocation(policy:ContingentPolicy,allocation:ResolvedPolicyAllocation|null,knowledgeAt:string):{status:PolicyResultState;reasons:string[];executionAuthorityGranted:false} {

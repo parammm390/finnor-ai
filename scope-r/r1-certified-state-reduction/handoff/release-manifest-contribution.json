@@ -1,0 +1,87 @@
+{
+  "schema": "finnor.r1.serial-release-contribution.v1",
+  "scope": "R1",
+  "implementedOutput": "ControlQuotient",
+  "appliedSchemaRevisions": {
+    "model": "finnor.s3.exact-information-model.v1",
+    "candidate": "finnor.control-quotient.v1",
+    "checkerReceipt": "finnor.r1.independent-check.v1",
+    "artifactEnvelope": "finnor.r1.artifact-envelope.v1",
+    "producerEnvelope": "finnor.r1.producer-envelope.v1",
+    "ownerPolicy": "finnor.s4.exact-continuation.v2",
+    "exactPolicyProfile": "finnor.s4.exact-policy-profile.v2",
+    "commonRequest": "finnor.r1.run.v2",
+    "commonResult": "finnor.r1.common-result.v1",
+    "immutableRecordRead": "finnor.r1.record-read.v1",
+    "mountedWork": "finnor.r1.work-projection.v1"
+  },
+  "legacyRequestCompatibility": "finnor.r1.run.v1 remains the existing mounted caller",
+  "integrationParent": "713226e4c37ad83d1fe9745cbb032962a333c841",
+  "sourceCodeDigest": "05ee392892184916814aa8c29040a9451776069044d5d4a60d04b163a7eee878",
+  "sourcePins": "source-pins.json",
+  "exactFinalCommitTree": "Provided by verified external seal receipt; no self-referential invented commit",
+  "migration": {
+    "head": "0171_r1_certified_state_reduction.sql",
+    "sha256": "2f242bb329384796fc29a768b0aff63d4782ce0efcee5e70bc6a8cd6396e3a68"
+  },
+  "jobVersions": {
+    "run_certified_state_reduction_v1": 1,
+    "run_r1_dependency_continuation_v1": 1
+  },
+  "ownerInterfaces": {
+    "S1": "Evidence/rights/asOf/P7 currentness canonical records",
+    "S3": "Explicit original exact information model/preparation, supplied premises",
+    "S4": "Actual checked class-indexed continuation evaluation, original policy aliases/global ties/branch lookup",
+    "S5": "Original exact canonical resource demand/check/reservation, genuine grant and shared counters",
+    "S6": "No effect authority; unknown settlement responsibility retained",
+    "S7": "No profit grading or H2 credit",
+    "S8": "Ordinary independent scientific receipt only; no admission or activation"
+  },
+  "otherROutputs": {
+    "R2": {
+      "principalOutputFromPRD": "JointSearchCertificate",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R3": {
+      "principalOutputFromPRD": "ElicitationProtocol",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R4": {
+      "principalOutputFromPRD": "IdentificationPlan",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R5": {
+      "principalOutputFromPRD": "CoalitionProgramme",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R6": {
+      "principalOutputFromPRD": "DecisionProof",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R7": {
+      "principalOutputFromPRD": "DecisionAtlas",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    },
+    "R8": {
+      "principalOutputFromPRD": "SolverCapsule",
+      "implementation": "NOT_IMPLEMENTED_BY_THIS_R1_CONTRIBUTION",
+      "schemaRevision": null
+    }
+  },
+  "eightOutputReleaseManifest": "NOT_ISSUED; contribution for eventual serial integrator",
+  "qualification": {
+    "scientificDomainAdmission": "UNQUALIFIED",
+    "protectedActivation": "NOT_RUN",
+    "protectedPostXGain": "NOT_RUN",
+    "economicRelease": "UNQUALIFIED",
+    "H2": "UNKNOWN"
+  },
+  "ownerPackets": "owner-request-packets.json",
+  "otherOutputNamesSource": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/sources/01-Pasted text.txt:11"
+}

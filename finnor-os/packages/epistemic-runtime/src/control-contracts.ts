@@ -23,6 +23,13 @@ const precondition=z.object({afterActionIds:z.array(text).max(8),observations:z.
 const actionSchema=z.object({id:text,kind:z.enum(['INQUIRE','INTERVENE','WAIT','STOP']),cost:nonnegative,costUnit:text,resources:amounts,occupancy:amounts,occupationPeriods:z.number().int().min(1).max(24),tailLiability:nonnegative,earliestPeriod:z.number().int().min(0).max(23),lastPeriod:z.number().int().min(0).max(23),atMostOnce:z.boolean(),exposures:z.record(text,z.array(number).min(1).max(24)),protocolRef:ExperimentRefSchema.nullable(),informationDelayPeriods:z.number().int().min(1).max(24),humanSeconds:nonnegative.max(900),precondition:precondition.optional()}).strict();
 const continuation=z.object({elapsedPeriods:z.number().int().min(1).max(23),actionHistory:z.array(text).min(1).max(23),observations:z.array(z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict()).max(192),accruedUtility:z.object({value:number,unit:text,sourceRef:ExperimentRefSchema}).strict(),usedResources:amounts,humanSeconds:nonnegative.max(900),accountingRef:ExperimentRefSchema}).strict();
 const problemSchema=z.object({schema:z.literal('finnor.control-problem.v1'),id:text,episodeId:text,modelRef:ExperimentRefSchema,context:text,regime:text,baselineExposures:schedules,actions:z.array(actionSchema).min(1).max(8),observations:z.array(ControlObservationSchema).max(8),obligations:z.array(obligation).max(32),validUntil:time,continuation:continuation.optional()}).strict();
+const display=z.number().finite(),displayAmounts=z.record(text,display.nonnegative()),displaySchedules=z.record(text,z.array(display).max(12));
+const rational=z.object({numerator:z.string().regex(/^-?(?:0|[1-9]\d*)$/).max(128),denominator:z.string().regex(/^[1-9]\d*$/).max(128)}).strict();
+const exactMeasurement=z.object({schema:z.literal('finnor.s2.exact-recorded-coarsening.v1'),root:z.object({entityType:text,entityId:text}).strict(),seriesId:text,unit:text,bins:z.array(z.object({token:text,lowerInclusive:rational,upperExclusive:rational}).strict()).min(1).max(128)}).strict();
+const exactObservation=ControlObservationSchema.extend({schema:z.literal('finnor.s2.control-observation.exact.v2'),bins:z.array(z.object({category:text,lowerInclusive:display,upperExclusive:display}).strict()).max(128),qualification:z.literal('SUPPLIED_EXACT_INFORMATION_TOKENS_UNVERIFIED'),exact:z.object({tokens:z.array(text).min(1).max(128),measurement:exactMeasurement.nullable(),numericProjection:z.literal('PRESENTATION_ONLY')}).strict()}).strict();
+const exactAction=actionSchema.extend({cost:display.nonnegative(),resources:displayAmounts,occupancy:displayAmounts,occupationPeriods:z.number().int().min(0).max(13),tailLiability:display.nonnegative(),humanSeconds:display.nonnegative(),exposures:displaySchedules,precondition:precondition.extend({observations:z.array(z.object({instrumentId:text,tokens:z.array(text).min(1).max(128)}).strict()).max(8)}).strict()}).strict();
+const exactObligation=obligation.extend({exposures:displaySchedules.nullable(),resources:displayAmounts.nullable(),occupancy:displayAmounts.nullable(),terminalLiability:display.nonnegative().nullable()}).strict();
+const exactProblemSchema=problemSchema.extend({schema:z.literal('finnor.control-problem.exact.v2'),actions:z.array(exactAction).min(1).max(8),observations:z.array(exactObservation).max(8),obligations:z.array(exactObligation).max(256),exactSource:z.object({modelDigest:z.string().regex(/^[a-f0-9]{64}$/),sourceRef:ExperimentRefSchema,quantityEncoding:z.literal('NORMALIZED_RATIONAL_PAIRS'),numericProjection:z.literal('PRESENTATION_ONLY')}).strict(),continuation:z.never().optional()}).strict();
 const observation=z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict();
 const decisionSchema=z.object({knowledgeAt:time,period:z.number().int().min(0).max(24),actionHistory:z.array(text).max(24),observations:z.array(observation).max(192),rightsRef:text,obligations:z.array(obligation).max(32),allocationRefs:z.array(ExperimentRefSchema).max(16)}).strict();
 export function immutableControl<T>(v:T):T {const copy=structuredClone(v);const freeze=(x:unknown):void=>{if(x&&typeof x==='object'){for(const y of Object.values(x))freeze(y);Object.freeze(x);}};freeze(copy);return copy;}
@@ -37,8 +44,13 @@ export function parseEconomicMandate(v:unknown):EconomicMandate {
  return immutableControl(m);
 }
 export function parseControlProblem(v:unknown):ControlProblem {
- const p=parse<ControlProblem>(problemSchema,v);
+ const exact=!!v&&typeof v==='object'&&(v as ControlProblem).schema==='finnor.control-problem.exact.v2';
+ const p=parse<ControlProblem>(exact?exactProblemSchema:problemSchema,v);
  if(new Set(p.actions.map(a=>a.id)).size!==p.actions.length||new Set(p.observations.map(a=>a.id)).size!==p.observations.length||new Set(p.obligations.map(a=>a.effectRef.id)).size!==p.obligations.length)throw new ControlContractError('INVALID_REQUEST','Duplicate action, instrument or effect obligation');
+ // The v2 object is a display/lookup projection, not an alternative input law.
+ // Action legality is checked from its bound original exact table, whose
+ // declared finite policy family is shared by R1-off and R1-on.
+ if(exact)return immutableControl(p);
  if(p.actions.some(a=>a.earliestPeriod>a.lastPeriod||(!['WAIT','STOP'].includes(a.kind)&&!a.atMostOnce)||(['WAIT','STOP'].includes(a.kind)&&a.atMostOnce)||(a.kind==='INQUIRE')!==Boolean(a.protocolRef)||(a.kind==='INTERVENE')!==Boolean(Object.keys(a.exposures).length)))throw new ControlContractError('INVALID_REQUEST','Action meaning, commitment or inquiry binding is incomplete');
  for(const action of p.actions)if(action.precondition){
   const condition=action.precondition;
@@ -51,7 +63,7 @@ export function parseControlProblem(v:unknown):ControlProblem {
    const temporal=p.observations.find(i=>i.id===observation.instrumentId),
     inquiry=p.actions.find(a=>a.kind==='INQUIRE'&&a.protocolRef?.id===observation.instrumentId);
    if(!temporal&&!inquiry||new Set(observation.tokens).size!==observation.tokens.length||
-    temporal&&observation.tokens.some(token=>!temporal.bins.some(bin=>bin.category===token)))
+    temporal&&observation.tokens.some(token=>!(temporal.exact?.tokens.includes(token)??temporal.bins.some(bin=>bin.category===token))))
     throw new ControlContractError('INVALID_REQUEST','Commitment condition cannot read a private world, forecast or undeclared token');
   }
  }
@@ -65,11 +77,13 @@ export function parseControlProblem(v:unknown):ControlProblem {
  for(const action of p.actions)visit(action.id);
  return immutableControl(p);
 }
-export const parseControlDecision=(v:unknown)=>immutableControl(parse<ControlDecisionInput>(decisionSchema,v));
+export const parseControlDecision=(v:unknown,policy?:ContingentPolicy)=>immutableControl(parse<ControlDecisionInput>(policy?.exactProfile?decisionSchema.extend({obligations:z.array(exactObligation).max(256)}).strict():decisionSchema,v));
 export const CONTROL_ADMISSION=Object.freeze({status:'BLOCKED_EXTERNAL' as const,executionAuthorityGranted:false as const,appendAuthorityGranted:false as const,methodAdmitted:false as const,receipt:null});
 export function assertContingentPolicy(v:unknown):asserts v is ContingentPolicy {
  if(!v||typeof v!=='object')throw new ControlContractError('INVALID_POLICY','S4 policy unavailable');
  const p=v as ContingentPolicy,{ref,...body}=p;
- if(p.schema!=='finnor.contingent-policy.v1'||p.version!=='s4-finite-contingent-v1'||ref?.owner!=='S4'||ref.version!==p.version||ref.contentDigest!==epistemicHash(body)||ref.id!==`contingent-policy:${ref.contentDigest}`||epistemicHash(p.admission)!==epistemicHash(CONTROL_ADMISSION))throw new ControlContractError('INVALID_POLICY','S4 policy commitment or admission is invalid');
+ if(!((p.schema==='finnor.contingent-policy.v1'&&p.version==='s4-finite-contingent-v1'&&!p.exactProfile)||(p.schema==='finnor.contingent-policy.exact.v2'&&p.version==='s4-finite-contingent-exact-v2'&&p.exactProfile?.schema==='finnor.s4.exact-policy-profile.v2'))||ref?.owner!=='S4'||ref.version!==p.version||ref.contentDigest!==epistemicHash(body)||ref.id!==`contingent-policy:${ref.contentDigest}`||epistemicHash(p.admission)!==epistemicHash(CONTROL_ADMISSION))throw new ControlContractError('INVALID_POLICY','S4 policy commitment or admission is invalid');
  parseEconomicMandate(p.mandate);parseControlProblem(p.problem);
+ if(p.exactProfile&&(p.problem.schema!=='finnor.control-problem.exact.v2'||p.demand.schema!=='finnor.contingent-resource-demand.exact.v2'||p.problem.exactSource?.modelDigest!==p.exactProfile.modelDigest||p.demand.exact?.modelDigest!==p.exactProfile.modelDigest||epistemicHash(p.problem.exactSource.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||epistemicHash(p.demand.exact.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||p.certificate.basis!=='MODEL_RELATIVE_EXACT_INFORMATION_TABLE'||p.certificate.numericalTolerance!==0||p.exactProfile.evaluation.modelDigest!==p.exactProfile.modelDigest||p.exactProfile.authoritativeQuantities!=='ORIGINAL_EXACT_SOURCE'||p.exactProfile.legacyNumbers!=='PRESENTATION_ONLY'))throw new ControlContractError('INVALID_POLICY','Exact policy source and arithmetic binding differs');
+ if(!p.exactProfile&&(p.problem.schema!=='finnor.control-problem.v1'||p.demand.schema!=='finnor.contingent-resource-demand.v1'||p.demand.exact))throw new ControlContractError('INVALID_POLICY','Legacy policy cannot claim an exact quantity projection');
 }

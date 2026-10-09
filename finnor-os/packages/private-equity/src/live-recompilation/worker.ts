@@ -9,6 +9,7 @@ import { continuationRow, priorHead, assertContinuationCut, appendContinuation, 
 import { P7_VERSION, ref, type ContinuationPatch } from './contracts';
 
 export async function runProgrammeContinuationJob(payload: Record<string, unknown>, execution?: Readonly<JobExecutionContext>) {
+  if(payload.schema==='finnor.r1.p7-invalidation.v1')return (await import('../r1/dependencies')).runR1DependencyContinuation(payload,execution);
   if (!execution || execution.protocolVersion !== 1 || execution.retrySafety !== 'locally_idempotent' ||
     typeof payload.tenantId !== 'string' || execution.tenantId !== payload.tenantId ||
     typeof payload.principalId !== 'string' || typeof payload.continuationId !== 'string')

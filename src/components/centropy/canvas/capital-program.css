@@ -18,3 +18,4 @@
 .ct-capital-program pre { max-height: 400px; overflow: auto; padding: .7rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .ct-capital-program li { margin: .5rem 0; }
 .ct-capital-program [role="alert"] { color: #ffb8ae; }
+.ct-capital-program__exact { display: grid; gap: .8rem; border: 1px solid var(--ct-border, #707886); border-radius: 6px; padding: 1rem; overflow-wrap: anywhere; }

@@ -1,3 +1,4 @@
+import {env as runtimeEnvironment} from 'node:process';
 import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError,executionDeadlineMilliseconds,withDatabaseExecutionDeadline} from '@finnor/db';
 import {z} from 'zod';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
@@ -40,7 +41,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
  let attempt:{id:string;body:any}|null=null,leases:Awaited<ReturnType<typeof acquireComputeResourceLeases>>=[],released=false;
  const started=performance.now();let physicalCompleted=false,result:any=null,endpoint:any=null;
  try{
-  if(s.request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+  if(s.request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
   const q=await currentSearch(ctx,s);if(!s.context)throw Error('P2_CURRENT_SOURCE_CONTEXT_REQUIRED');
   if(deliveryDeadline!==null&&deliveryDeadline>Date.parse(q.proposed.bounds.deadlineAt))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_CANNOT_EXTEND_PARENT');
   const originalDeadline=Math.min(deliveryDeadline??Infinity,Date.parse(q.proposed.bounds.deadlineAt));

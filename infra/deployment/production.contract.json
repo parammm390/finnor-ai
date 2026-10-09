@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0170_p6_procedure_induction.sql",
+    "requiredMigrationHead": "0171_r1_certified_state_reduction.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

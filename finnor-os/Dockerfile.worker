@@ -1,4 +1,22 @@
-FROM node:22-bookworm-slim AS dependencies
+FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS node-runtime
+
+# Keep Python and its shared-library dependencies in the final runtime itself.
+# Debian's node-gyp build interpreter is not the supported scientific runtime.
+FROM python:3.12.13-slim-bookworm@sha256:4766d8b510c428e595d74b9cc5bbb2fae8e26316fffb4adc89908d79aacd58a2 AS scientific-runtime
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends libstdc++6 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 1000 finnor-runtime \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin finnor-runtime
+COPY finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt /opt/finnor-requirements/intervention.txt
+COPY finnor-os/packages/epistemic-runtime/src/requirements-s5.txt /opt/finnor-requirements/allocation.txt
+RUN python -m venv /opt/finnor-python \
+    && /opt/finnor-python/bin/python -m pip install --no-cache-dir \
+       -r /opt/finnor-requirements/intervention.txt \
+       -r /opt/finnor-requirements/allocation.txt \
+    && /opt/finnor-python/bin/python -I -c "import sys, numpy, scipy, statsmodels, arch; assert sys.version_info[:2] == (3, 12); assert (numpy.__version__, scipy.__version__, statsmodels.__version__, arch.__version__) == ('2.3.3', '1.16.2', '0.14.5', '8.0.0')"
+
+FROM node-runtime AS dependencies
 
 WORKDIR /app/finnor-os
 
@@ -11,6 +29,7 @@ RUN apt-get update \
 # available so the existing embedded orchestrator, handlers, projections, and SSE
 # gateway run from the same process without a source rewrite.
 COPY finnor-os/package.json finnor-os/package-lock.json finnor-os/tsconfig.json finnor-os/tsconfig.base.json ./
+COPY finnor-os/Dockerfile.worker ./Dockerfile.worker
 COPY finnor-os/apps ./apps
 COPY finnor-os/packages ./packages
 COPY finnor-os/scripts ./scripts
@@ -20,15 +39,24 @@ COPY package-lock.json /app/package-lock.json
 COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json
 
 RUN npm ci --no-audit --no-fund
+ARG FINNOR_BUILD_ID
+RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 npm run build --workspace=@finnor/api \
+    && rm -rf apps/api/.next/cache
 
-FROM node:22-bookworm-slim
+FROM scientific-runtime
 
 WORKDIR /app/finnor-os
+COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=dependencies /app /app
 
 ENV NODE_ENV=production \
     PORT=8090 \
-    SSE_PORT=8090
+    SSE_PORT=8090 \
+    FINNOR_R1_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S3_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S5_PYTHON=/opt/finnor-python/bin/python \
+    OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1
 
 EXPOSE 8090
 

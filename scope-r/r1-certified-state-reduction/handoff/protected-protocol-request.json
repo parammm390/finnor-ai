@@ -1,0 +1,69 @@
+{
+  "status": "OWNER_PROTOCOL_REQUIRED_BEFORE_PROTECTED_RESULTS",
+  "endpoint": null,
+  "domainDistributionRef": null,
+  "sampleSize": null,
+  "power": null,
+  "stoppingRuleRef": null,
+  "multiplicityRuleRef": null,
+  "materialMargin": null,
+  "comparatorAssetRefs": null,
+  "epsilon": null,
+  "absoluteOwnerValueFloor": null,
+  "reason": "These registered parameters and independently equipped actors are absent; they are not guessed from development fixtures.",
+  "frozenFloors": {
+    "correctnessMinimum": 0.95,
+    "decisionLossMaximum": 0.05,
+    "calibrationCoverageErrorMaximum": 0.02,
+    "mean90IntervalWidthMaximum": 0.5,
+    "episodeUsd": 100,
+    "episodeHumanSeconds": 900,
+    "aggregatePeakGiB": 16,
+    "initialResponseSeconds": 30,
+    "episodeWallSeconds": 3600,
+    "preparationHumanHours": 80,
+    "preparationUsd": 10000,
+    "operationalDays": 90,
+    "companiesDeals": 100,
+    "systemTypes": 10,
+    "concurrentMissions": 1000,
+    "interactingOpportunities": 10000,
+    "economicHorizonMonths": 36
+  },
+  "registeredCoordinates": {
+    "firms": 16,
+    "strategicCounterparties": 8,
+    "resourcePools": 4,
+    "K": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      64,
+      256,
+      1000
+    ],
+    "T": [
+      64,
+      128,
+      256,
+      512,
+      1024,
+      4096,
+      16384,
+      64000
+    ],
+    "faultProbabilities": [
+      0,
+      0.001,
+      0.01,
+      0.05
+    ],
+    "visibility": "1/(k_o+1), delay k_o",
+    "adaptiveHistory": "k_s, coupling k_s/(k_s+1)",
+    "causalLags": "k_c; fixed total coefficient L2 magnitude; original identifiability/heterogeneity subclasses",
+    "resourceCoupling": "A=(1-kappa)A_local+kappa A_shared; kappa=k_r/(k_r+1); fixed capacities/resource mass"
+  },
+  "scoringAuthority": "Original locked S architecture and independent S7/S8 owners; no R1 profit grader or changed assets"
+}

@@ -1,0 +1,392 @@
+{
+  "schema": "finnor.r1.finite-verification.v1",
+  "frozenAt": "2026-10-09T01:31:35.038637+00:00",
+  "status": "FROZEN_BEFORE_PRODUCT_AND_COSTLY_RUNS",
+  "totalCostlyWallCeilingSeconds": 23400,
+  "checks": [
+    {
+      "id": "exact-reference",
+      "required": true,
+      "command": "scripts/r1/run-native.py mathematical",
+      "oracle": "Independent Fraction complete lawful-policy enumeration, full optimal action sets, world payoff vectors and independent complete relation/lift check",
+      "rerunTrigger": "model/reducer/checker/S4 arithmetic or source profile changes",
+      "wallCeilingSeconds": 1800,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "mathematical-03"
+        },
+        {
+          "privateEvidenceDirectory": "mathematical-04"
+        },
+        {
+          "privateEvidenceDirectory": "mathematical-05-final",
+          "driverReceiptSha256": "6c5748e7302cbdb647fdb00399346c7fe99502d70e8eb509b378f678a6a9cd0b",
+          "counts": {
+            "PASS": 42,
+            "FAIL": 0,
+            "NOT_RUN": 0
+          }
+        }
+      ],
+      "qualification": "Actual selected ordinary development checks passed; protected admission and business/economic claims remain unqualified."
+    },
+    {
+      "id": "authenticated-durable-owners",
+      "required": true,
+      "command": "scripts/r1/run-native.py owners",
+      "oracle": "Real HTTP auth, original Work, S3 source, S4 off/on evaluation, positive S5 exact feasibility/reservation, SQL jobs and physical worker/checker",
+      "rerunTrigger": "owner/queue/migration/grant/contract changes",
+      "wallCeilingSeconds": 3600,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "owners-07"
+        },
+        {
+          "privateEvidenceDirectory": "owners-10-common-final",
+          "driverReceiptSha256": "08eb1560fbb65829230eb270b1c3d7672f8adcdf47c08b9a49c7874d514eb3fd",
+          "counts": {
+            "PASS": 3,
+            "FAIL": 0,
+            "NOT_RUN": 0
+          }
+        }
+      ],
+      "qualification": "Actual selected ordinary development checks passed; protected admission and business/economic claims remain unqualified."
+    },
+    {
+      "id": "lifecycle-security",
+      "required": true,
+      "command": "scripts/r1/run-native.py lifecycle",
+      "oracle": "Physical process death, cancellation, duplicate claims, rights/source/Work revision, S5 contention and principal lock publication fences with retained liabilities",
+      "rerunTrigger": "lifecycle/security/dependency changes",
+      "wallCeilingSeconds": 3600,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "lifecycle-01"
+        },
+        {
+          "privateEvidenceDirectory": "lifecycle-14-s6-resource-exact"
+        },
+        {
+          "privateEvidenceDirectory": "lifecycle-15-late-claim-before"
+        },
+        {
+          "privateEvidenceDirectory": "lifecycle-16-deadline-after"
+        },
+        {
+          "privateEvidenceDirectory": "lifecycle-18-owned-worker-final",
+          "driverReceiptSha256": "c63825ddfc1b55821f1724fe37fd53f55155e012857a5373a7aaab6b389df85a",
+          "counts": {
+            "PASS": 17,
+            "FAIL": 0,
+            "NOT_RUN": 0
+          }
+        }
+      ],
+      "selectedCases": [
+        "identity-funded-original-fallback",
+        "checker-sigkill-funded-original-fallback",
+        "checker-original-deadline",
+        "worker-sigkill-cold-reconciliation",
+        "cancel-real-checker",
+        "source-restatement-real-p7",
+        "work-input-revision",
+        "principal-revoked-during-search",
+        "method-replacement-cold-restart",
+        "duplicate-and-stale-durable-delivery",
+        "foreign-tenant-and-principal",
+        "two-works-one-issued-grant",
+        "bounded-arithmetic-original-remaining-grant",
+        "physical-capacity-refusal-is-not-source-revision",
+        "s6-unknown-responsibility",
+        "principal-row-lock-before-publication",
+        "late-durable-claim-original-deadline"
+      ],
+      "qualification": "Actual selected ordinary development checks passed; protected admission and business/economic claims remain unqualified."
+    },
+    {
+      "id": "mounted-capital-work",
+      "required": true,
+      "command": "scripts/r1/run-native.py browser",
+      "oracle": "Mounted existing Work pending/current/model-relative/fallback/readback and clearing on identity/revocation",
+      "rerunTrigger": "UI/client/auth/projection changes",
+      "wallCeilingSeconds": 1800,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "browser-02"
+        },
+        {
+          "privateEvidenceDirectory": "browser-03"
+        },
+        {
+          "privateEvidenceDirectory": "browser-04"
+        },
+        {
+          "privateEvidenceDirectory": "browser-05"
+        },
+        {
+          "privateEvidenceDirectory": "browser-06"
+        },
+        {
+          "privateEvidenceDirectory": "browser-07"
+        },
+        {
+          "privateEvidenceDirectory": "browser-08"
+        },
+        {
+          "privateEvidenceDirectory": "browser-09-final",
+          "status": "INTERRUPTED",
+          "receipt": "host-interruption.json"
+        },
+        {
+          "privateEvidenceDirectory": "browser-10-final",
+          "status": "FAIL",
+          "receipt": "driver-interruption.json",
+          "scope": "Four mounted steps passed; fixture replacement startup/ENOSPC failed, no deadline reset."
+        },
+        {
+          "privateEvidenceDirectory": "browser-11-final",
+          "status": "PASS_LOCAL",
+          "driverReceiptSha256": "1db39c364412d71ae73039e2d0c4aa19bcb33576ec2e9bbeffbd0c19e1f4207f",
+          "mountedUiSteps": 8
+        }
+      ],
+      "qualification": "All eight actual mounted steps passed on final common-contract production cut; two UI-accepted runs under same original episode, physical checker kill/funded fallback, retained UNKNOWN, Work/principal/source/access clearing. Local signed Auth, actual security/RLS; no hostedAuth/protected/economic qualification.",
+      "operatorCommands": [
+        "scripts/r1/mounted-control.py <private browser/fixture.json> queued-start",
+        "scripts/r1/mounted-control.py <private browser/fixture.json> checker-kill"
+      ],
+      "operatorBasis": "Prearmed disposable controls only; mounted browser supplies queued UI evidence and initiates both runs. No deadline reset. Worker replacement only after actual exit."
+    },
+    {
+      "id": "affected-s4-s5-p7",
+      "required": true,
+      "command": "scripts/r1/run-native.py inherited",
+      "oracle": "Registered affected original S4/S5 owner and P7 invalidation selections with NOT_RUN list",
+      "rerunTrigger": "affected original contracts change",
+      "wallCeilingSeconds": 3600,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "inherited-01",
+          "driverReceiptSha256": "26bdcb664c8d036e54d00088a740a73e6645d05f70acbae1e37e68af1a214c72",
+          "counts": {
+            "PASS": 3,
+            "FAIL": 0,
+            "NOT_RUN": 0
+          }
+        }
+      ],
+      "qualification": "Actual selected ordinary development checks passed; protected admission and business/economic claims remain unqualified.",
+      "selectedOriginalDrivers": {
+        "s4": {
+          "registeredCases": [
+            "complete-cost-inquiry",
+            "useless-signal",
+            "too-costly-information",
+            "delayed-information-misses-option",
+            "wait-for-option",
+            "stop-with-terminal-debt",
+            "adaptive-reaction-reverses-myopic",
+            "coupled-occupied-capacity",
+            "unsafe-do-nothing",
+            "action-reveals-hidden-regime",
+            "fixed-correlated-paths",
+            "noisy-support-not-prior",
+            "adaptive-history-response",
+            "anti-foresight-and-explicit-failures",
+            "exhaustion-and-unknown-obligation",
+            "allocation-consistency-no-self-clearance",
+            "available-signal-continuation-and-prefix-replan",
+            "settled-liability-channel-lock-and-support",
+            "joint-resource-coupling",
+            "continuation-resource-stock-and-flow",
+            "unresolved-candidate-law-gap",
+            "business-period-and-missing-signal",
+            "trusted-allocation-reference-contract",
+            "large-history-fixed-budget",
+            "actual-temporal-observation-linked-loop",
+            "actual-learned-lagged-counterparty-control",
+            "actual-s1-s3-owner-policy",
+            "owner-restart-revision-and-tamper",
+            "owner-publication-dependency-fault",
+            "owner-obligation-and-horizon-preservation",
+            "actual-cold-process-replay",
+            "owner-numerical-deadline-and-byte-faults",
+            "owner-recorded-human-override",
+            "actual-s2-instrument-and-prior-boundary",
+            "owner-foreign-and-forged-activation",
+            "owner-source-rights-and-budgets",
+            "actual-source-change-and-unknown-effect",
+            "independent-no-effects-readback"
+          ],
+          "selection": "FULL_DRIVER",
+          "inheritedAuthBypass": true
+        },
+        "s5": {
+          "registeredCases": [
+            "coupled-choice-original-covenant-and-bound",
+            "issuer-identity-foreign-scope-and-revision",
+            "liquidity-timing-uncertain-proceeds-and-existing-breach",
+            "common-path-contingent-optionality",
+            "signed-covenant-contingent-lower-bound",
+            "flow-stock-semantic-class-scope-and-terminal-debt",
+            "multi-process-concurrent-reservation-and-replay",
+            "transaction-abort-and-resource-revision-race",
+            "actual-s4-handoff-crash-unknown-expiry-and-release",
+            "exact-margin-unavailable-solver-and-deadline",
+            "registered-coupled-stress-and-matched-reference",
+            "bounded-registry-remains-operable",
+            "cold-exact-read-keeps-owner-io-live",
+            "independent-final-accountability-readback"
+          ],
+          "selection": "FULL_DRIVER",
+          "inheritedAuthBypass": true
+        },
+        "p7": {
+          "selectedCases": [
+            "normal-worker-registration",
+            "source-continuation",
+            "commit-race",
+            "principal-boundary",
+            "physical-intake-crash-recovery",
+            "authenticated-http-boundary"
+          ],
+          "selection": "EMPTY_HISTORY_NATIVE_SELECTED_NOT_ALL34",
+          "authBypass": false
+        }
+      }
+    },
+    {
+      "id": "runtime-migration",
+      "required": true,
+      "command": "scripts/r1/run-native.py runtime",
+      "oracle": "Final packaged API/worker/checker, old/new protocol restart and migration replay",
+      "rerunTrigger": "runtime/lock/image/migration changes",
+      "wallCeilingSeconds": 3600,
+      "status": "PASS_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "runtime-built-api-02"
+        },
+        {
+          "privateEvidenceDirectory": "runtime-built-api-03",
+          "driverReceiptSha256": "d9ef11350fc539a7b69c02f2d119324413b4d58009c43ebd85a4bed029325d6d"
+        },
+        {
+          "privateEvidenceDirectory": "runtime-built-api-04",
+          "driverReceiptSha256": "8ac3dfa07d3c1fe8e0244d4cb444abbfa62b00b8d31e1d15c6fd33417e857653"
+        },
+        {
+          "privateEvidenceDirectory": "runtime-built-api-05",
+          "driverReceiptSha256": "baa9ba481282baaa3b2a2865190f0312d63093084072ab9803bfb6abce802c99"
+        },
+        {
+          "privateEvidenceDirectory": "runtime-built-api-06",
+          "driverReceiptSha256": "5b92ad2a8ebf33a08b369e345c058fe224f510095360132f492968c8f750d686"
+        },
+        {
+          "privateEvidenceDirectory": "runtime-built-api-07-final",
+          "driverReceiptSha256": "bc0dd0098ce8005c87519788ad6a454f48a81bf51a86101de7236e31613c9a5e",
+          "counts": {
+            "PASS": 1,
+            "FAIL": 0,
+            "NOT_RUN": 0
+          }
+        }
+      ],
+      "qualification": "Actual rebuilt optimized macOS API owner/queue/physical-child/S4/S5/restart/migration proof passed. Production refuses configured bypass and missing managed secrets. Linux image remains NOT_RUN locally."
+    },
+    {
+      "id": "release-static",
+      "required": true,
+      "command": "scripts/r1/run-native.py release",
+      "oracle": "Backend typecheck, root lint/build/workspace/generated client checks, canonical release truth/security checks",
+      "rerunTrigger": "final source changes",
+      "wallCeilingSeconds": 3600,
+      "status": "PASS_SELECTED_LOCAL",
+      "evidence": [
+        {
+          "privateEvidenceDirectory": "runtime/api-build-route-tree-after"
+        },
+        {
+          "privateEvidenceDirectory": "runtime/api-build-s5-loader-after"
+        },
+        {
+          "privateEvidenceDirectory": "release-01-final",
+          "actualPassed": 13,
+          "actualFailed": 2
+        },
+        {
+          "privateEvidenceDirectory": "release-02-affected-final",
+          "actualPassed": 3,
+          "actualNotRun": 12
+        }
+      ],
+      "qualification": "All 15 selected commands passed across initial unaffected checks and three justified affected reruns. Initial migration-reporting and default-root dependency-boundary failures retained. No all-15 rerun is claimed. Hosted OSV/gitleaks and Linux image are unproven.",
+      "selectedCommands": [
+        "api-build",
+        "backend-typecheck",
+        "root-lint",
+        "root-workspace",
+        "capability-manifest",
+        "openapi-client",
+        "human-forms",
+        "authz-matrix",
+        "active-action-manifest",
+        "pe-domain-boundary",
+        "release-truth",
+        "release-security-policy",
+        "native-production-secrets",
+        "root-existing-tests",
+        "root-build"
+      ],
+      "selectionRule": "FINNOR_R1_CASE_FILTER selects command IDs; every other registered command stays NOT_RUN. Linux image/history-secret/OSV/hosted CI are separately unproven."
+    },
+    {
+      "id": "sealed-handoff",
+      "required": true,
+      "command": "scripts/r1/seal.py",
+      "oracle": "Immutable source tree, evidence hashes, standalone reconstruction and one draft PR",
+      "rerunTrigger": "final code/evidence changes",
+      "wallCeilingSeconds": 1800,
+      "status": "NOT_RUN",
+      "evidence": [],
+      "qualification": "Seal driver and publication remain unfinished"
+    }
+  ],
+  "expansionRule": "Named uncovered requirement or newly observed failure, registered before added test/run",
+  "repeatedFailureRule": "After two same-predicate failures diagnose queue/process/lease/SQL/source/fixture/browser before another run",
+  "externalGates": {
+    "scientificDomainAdmission": "UNQUALIFIED",
+    "protectedActivation": "NOT_RUN",
+    "protectedPostXComparison": "NOT_RUN",
+    "economicRelease": "UNQUALIFIED",
+    "H2": "UNKNOWN"
+  },
+  "retention": "Security, migration, release, mathematical and owner-contract checks retained. Time alone is not deletion authority.",
+  "lastStatusAuditAt": "2026-10-09T17:30:06.243648+00:00",
+  "namedExpansions": [
+    {
+      "registeredAt": "2026-10-09T15:00:12.594039+00:00",
+      "case": "late-durable-claim-original-deadline",
+      "uncoveredRequirement": "Terminal disposition for a real accepted queue job claimed after its original decision deadline, with no child accepted",
+      "beforeEvidence": "browser-06/browser/expired-accepted-sql-before.json",
+      "wallCeilingUnchanged": true
+    },
+    {
+      "registeredAt": "2026-10-09T15:47:38.889307+00:00",
+      "requirement": "PRD2.2and2.3completecommonenvelope/entrypoint",
+      "primaryCase": "positive-owner-reduction",
+      "distinctRisk": "Canonical Work/profile/grant references, immutable claim/receipt/event mapping and cancellation-ref replay",
+      "beforeEvidencePending": "owners-08-common-before",
+      "additionalSuite": false,
+      "wallCeilingUnchanged": true
+    }
+  ],
+  "stopRuleApplied": "All selected local proofs complete; no exploratory or repeated suite runs after this cut. Existing hosted mandatory PR gates run normally after publication."
+}

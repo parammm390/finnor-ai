@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PE_WORLD_ROOT_TYPES, PeDomainError, fitEnterpriseInterventionModel, queryEnterpriseInterventionModel, validateEnterpriseInterventionModel,
-  projectEnterpriseInterventionExperiment, designEnterpriseInterventionExperiment, recordEnterpriseInterventionAssessment } from '@finnor/private-equity';
-import { ExperimentRefSchema, InterventionContractError, ExperimentContractError } from '@finnor/epistemic-runtime';
+  prepareEnterpriseExactControlModel, projectEnterpriseInterventionExperiment, designEnterpriseInterventionExperiment, recordEnterpriseInterventionAssessment } from '@finnor/private-equity';
+import { ExactControlError, ExperimentRefSchema, InterventionContractError, ExperimentContractError } from '@finnor/epistemic-runtime';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 
 export const runtime = 'nodejs';
@@ -38,6 +38,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
     const [auth, route] = await Promise.all([requireContext(req), params]), ctx = { auth };
     const body = await boundedJson(req);
     switch (route.operation) {
+      case 'exact-control-model': return response(await prepareEnterpriseExactControlModel(ctx,z.object({workId:z.string().uuid(),workRevision:z.string().uuid(),modelBytes:z.string().max(2*1024*1024),mandate:z.unknown()}).strict().parse(body)));
       case 'fit': return response(await fitEnterpriseInterventionModel(ctx, fit.parse(body).request));
       case 'refit': { const input = refit.parse(body); return response(await fitEnterpriseInterventionModel(ctx, input.request, input.priorRef)); }
       case 'query': { const input = query.parse(body); return response(await queryEnterpriseInterventionModel(ctx, { modelRef: input.modelRef, query: input.query })); }
@@ -48,6 +49,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       default: return response({ error: 'S3 operation was not found', code: 'NOT_FOUND' }, 404);
     }
   } catch (e) {
+    if (e instanceof ExactControlError) return response({status:e.disposition,error:e.predicate,code:'EXACT_MODEL_UNSUPPORTED'},400);
     if (e instanceof z.ZodError) return response({ error: 'Invalid S3 request', code: 'INVALID_REQUEST' }, 400);
     if (e instanceof InterventionContractError || e instanceof ExperimentContractError) return response({ error: e.message, code: e.code }, e.code === 'LIMIT_EXCEEDED' ? 413 : e.code === 'PERMITTED_CONTEXT_UNAVAILABLE' ? 404 : 400);
     if (e instanceof PeDomainError) return response({ error: e.message, code: e.code }, /NOT_FOUND/.test(e.code) ? 404 : /INVALID/.test(e.code) ? 400 : 422);
