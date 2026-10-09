@@ -10,6 +10,14 @@ export function readProtectedEnv(path) {
   for (const [, name, literal] of content.matchAll(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\\r\n]|\\.)*")\s*$/gm)) {
     try { values[name] = JSON.parse(literal) } catch { /* Ordinary dotenv quoting remains governed by parseEnv. */ }
   }
+  // Vercel also wraps JSON objects in unescaped double quotes. Recover only
+  // complete, valid secret-reference maps; never loosen ordinary dotenv parsing.
+  for (const [, literal] of content.matchAll(/^\s*(?:export\s+)?FINNOR_SECRET_IDS\s*=\s*"(\{[^\r\n]*\})"\s*$/gm)) {
+    try {
+      const mappings = JSON.parse(literal)
+      if (mappings && typeof mappings === "object" && !Array.isArray(mappings)) values.FINNOR_SECRET_IDS = literal
+    } catch { /* Invalid maps still fail canonical secret admission. */ }
+  }
   return values
 }
 

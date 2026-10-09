@@ -7,7 +7,7 @@ import { readProtectedEnv } from "./protected-env.mjs"
 
 // Controller lifecycle proof. Actual compiler/function proof is the separate,
 // mandatory production-artifact.e2e.mjs, never this mocked provider.
-test("API prepare persists the canonical root and deploy-only consumes it without rebuilding", t => {
+test("API prepare preserves provider-pulled unescaped JSON and deploy-only consumes its canonical root without rebuilding", t => {
   const f = createFixture(t, "api-artifact")
   f.setScenario("api-file-map")
   const prepared = f.canary("api", "--prepare-only")
