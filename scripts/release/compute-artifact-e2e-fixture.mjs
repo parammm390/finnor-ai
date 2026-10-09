@@ -180,7 +180,7 @@ export function mockCommand(name, args) {
     const project = [s.contract.topology.supplierCanaryApp, s.contract.topology.supplierCanaryAuth].find((target) => target.projectId === process.env.VERCEL_PROJECT_ID)
     if (args[0] === "pull") {
       mkdirSync(".vercel", { recursive: true })
-      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID, settings: { rootDirectory: process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? "apps/api" : null } }))
+      writeFileSync(".vercel/project.json", JSON.stringify({ orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID, settings: { rootDirectory: process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId ? (s.scenario === "api-legacy-root" ? "apps/api" : "finnor-os/apps/api") : null } }))
       writeFileSync(".vercel/.env.production.local", [
         `PORTAL_ROLE=${s.scenario === "wrong-role" ? "wrong" : project?.portalRole ?? "app"}`,
         "NEXT_PUBLIC_FIXTURE=public-config", "DATABASE_URL=fixture-secret-db",
@@ -211,6 +211,10 @@ export function mockCommand(name, args) {
       return out("Fixture build\n")
     }
     if (args[0] === "deploy") {
+      if (process.env.VERCEL_PROJECT_ID === s.contract.topology.api.projectId) {
+        const providerRoot = s.scenario === "api-legacy-root" ? "apps/api" : "finnor-os/apps/api"
+        if (!existsSync(providerRoot)) throw new Error(`Provider project root does not exist: ${providerRoot}`)
+      }
       if (!existsSync(".vercel/output/config.json")) throw new Error("No prepared output")
       log({ command: "deployed-output", outputSha256: hash(readFileSync(".vercel/output/config.json")) })
       return out("Production: https://fixture-deployment.vercel.app\n")

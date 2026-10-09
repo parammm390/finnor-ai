@@ -23,8 +23,9 @@ export function normalizeApiProjectRoot(component, project, contract) {
   if (component !== "api") return project
   const original = project.settings?.rootDirectory
   const expected = "apps/api"
-  if (original !== expected) throw new Error("API project build root differs from the canonical observed settings")
-  return { ...project, settings: { ...project.settings, rootDirectory: join(contract.topology.api.releaseWorkingDirectory, expected).replaceAll("\\", "/") } }
+  const canonical = join(contract.topology.api.releaseWorkingDirectory, expected).replaceAll("\\", "/")
+  if (original !== expected && original !== canonical) throw new Error("API project build root differs from the canonical observed settings")
+  return { ...project, settings: { ...project.settings, rootDirectory: canonical } }
 }
 
 export function vercelBuildConfiguration(component, configuration) {

@@ -39,6 +39,17 @@ test("API deploy-only refuses missing prepared bytes without building or deployi
   assert.equal(f.events().filter(e => e.command === "vercel").length, 1) // version read only
 })
 
+test("API deploy-only reproduces the provider's stale project-root failure without rebuilding", t => {
+  const f = createFixture(t, "api-legacy-provider-root")
+  f.setScenario("api-legacy-root")
+  const prepared = f.canary("api", "--prepare-only")
+  assert.equal(prepared.status, 0, prepared.stderr)
+  const deployed = f.canary("api", "--deploy-only")
+  assert.notEqual(deployed.status, 0)
+  assert.match(deployed.stderr, /Provider project root does not exist: apps\/api/)
+  assert.equal(f.events().filter(e => e.command === "vercel" && e.args[0] === "build").length, 1)
+})
+
 test("API prepared artifact refuses a function alias escaping its output boundary", t => {
   const f = createFixture(t, "api-artifact-escape")
   f.setScenario("api-file-map")
