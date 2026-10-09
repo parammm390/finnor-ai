@@ -6,12 +6,12 @@ import {
   authProfiles,
   closePool,
   configureTenantVertical,
-  getPool,
   integrationSourceCoverageHistory,
   integrationSourceScopes,
   integrationSubscriptions,
   tenantIntegrations,
   withTenant,
+  withTenantTransaction,
 } from "@finnor/db";
 import {
   clearMicrosoftGraphTokenCache,
@@ -43,6 +43,10 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
   const integrationId = randomUUID();
   const sourceScopeId = randomUUID();
   let admin: pg.Client;
+
+  function tenantQueueQuery(statement: string) {
+    return withTenantTransaction(tenantId, { readOnly: true }, (_db, client) => client.query(statement, [tenantId]));
+  }
 
   const job = { tenantId, integrationId, sourceScopeId, scope: "mail:mailbox-worker:folder-worker" };
 
@@ -225,7 +229,7 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
       lifecycleNotificationUrl: process.env.MICROSOFT_GRAPH_WEBHOOK_URL,
       changeType: "created,updated,deleted",
     });
-    const initialJobs = await getPool().query("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1", [tenantId]);
+    const initialJobs = await tenantQueueQuery("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1");
     expect(initialJobs.rows[0]).toMatchObject({ type: "sync_source", payload: { subscriptionEstablished: true, sourceScopeId } });
 
     await withTenant(tenantId, (db) => db.update(integrationSubscriptions).set({ renewAt: new Date(Date.now() - 1_000) })
@@ -381,7 +385,7 @@ describe.skipIf(!available)("P2 Microsoft subscription maintenance", () => {
       .where(and(eq(integrationSubscriptions.tenantId, tenantId), eq(integrationSubscriptions.sourceScopeId, sourceScopeId))));
     expect(rows.find((row) => row.id === expiredId)?.status).toBe("expired");
     expect(rows.find((row) => row.providerSubscriptionId === `provider-replacement-${sourceScopeId}`)).toMatchObject({ status: "active", recoveryState: "running" });
-    const queued = await getPool().query("SELECT payload FROM finnor_os.jobs WHERE type='sync_source' AND payload->>'tenantId'=$1", [tenantId]);
+    const queued = await tenantQueueQuery("SELECT payload FROM finnor_os.jobs WHERE type='sync_source' AND payload->>'tenantId'=$1");
     expect(queued.rows[0]?.payload).toMatchObject({ sourceScopeId, forceRecovery: true });
   });
 });

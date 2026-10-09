@@ -6,13 +6,13 @@ import {
   authProfiles,
   closePool,
   configureTenantVertical,
-  getPool,
   integrationSourceCoverageHistory,
   integrationSourceScopes,
   integrationSubscriptions,
   jobs,
   tenantIntegrations,
   withTenant,
+  withTenantTransaction,
 } from "@finnor/db";
 import { hashSubscriptionClientState } from "@finnor/provider-microsoft365";
 import { and, desc, eq } from "drizzle-orm";
@@ -41,6 +41,10 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
   const providerSubscriptionId = `provider-${randomUUID()}`;
   const clientState = `state-${"a".repeat(40)}`;
   let admin: pg.Client;
+
+  function tenantQueueQuery(statement: string) {
+    return withTenantTransaction(tenantId, { readOnly: true }, (_db, client) => client.query(statement, [tenantId]));
+  }
 
   function request(overrides: Record<string, unknown> = {}): Request {
     return new Request("https://api.finnor.test/api/webhooks/microsoft-graph", {
@@ -163,7 +167,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/plain");
     expect(await response.text()).toBe(token);
-    expect((await getPool().query("SELECT count(*)::int count FROM finnor_os.jobs WHERE payload->>'tenantId'=$1", [tenantId])).rows[0]?.count).toBe(0);
+    expect((await tenantQueueQuery("SELECT count(*)::int count FROM finnor_os.jobs WHERE payload->>'tenantId'=$1")).rows[0]?.count).toBe(0);
   });
 
   it("validates the registered subscription and durably deduplicates a fast-path wake before returning 202", async () => {
@@ -171,7 +175,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
     expect((await POST(request())).status).toBe(202);
     expect((await POST(request())).status).toBe(202);
     expect(Date.now() - started).toBeLessThan(3_000);
-    const queued = await getPool().query("SELECT type,payload,status FROM finnor_os.jobs WHERE payload->>'tenantId'=$1", [tenantId]);
+    const queued = await tenantQueueQuery("SELECT type,payload,status FROM finnor_os.jobs WHERE payload->>'tenantId'=$1");
     expect(queued.rows).toHaveLength(1);
     expect(queued.rows[0]).toMatchObject({ type: "sync_source", status: "queued", payload: { tenantId, sourceScopeId } });
     const [subscription] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions).where(eq(integrationSubscriptions.id, subscriptionId)));
@@ -183,7 +187,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
     expect((await POST(request({ clientState: `wrong-${"b".repeat(40)}` }))).status).toBe(401);
     expect((await POST(request({ resource: "users('other-mailbox')/messages('message-a')" }))).status).toBe(401);
     expect((await POST(request({ tenantId: randomUUID() }))).status).toBe(401);
-    expect((await getPool().query("SELECT count(*)::int count FROM finnor_os.jobs WHERE payload->>'tenantId'=$1", [tenantId])).rows[0]?.count).toBe(0);
+    expect((await tenantQueueQuery("SELECT count(*)::int count FROM finnor_os.jobs WHERE payload->>'tenantId'=$1")).rows[0]?.count).toBe(0);
   });
 
   it("returns 5xx and rolls back notification state when durable queue insertion fails", async () => {
@@ -211,7 +215,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
       withTenant(tenantId, (db) => db.select().from(integrationSourceCoverageHistory)
         .where(eq(integrationSourceCoverageHistory.sourceScopeId, sourceScopeId))
         .orderBy(desc(integrationSourceCoverageHistory.coverageRevision)).limit(1).then((rows) => rows[0])),
-      getPool().query("SELECT payload FROM finnor_os.jobs WHERE type='sync_source' AND payload->>'tenantId'=$1", [tenantId]),
+      tenantQueueQuery("SELECT payload FROM finnor_os.jobs WHERE type='sync_source' AND payload->>'tenantId'=$1"),
     ]);
     expect(subscription).toMatchObject({ status: "active", recoveryState: "required", failureCode: "missed_notifications" });
     expect(coverage).toMatchObject({ state: "RECOVERING" });
@@ -226,7 +230,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
       eq(integrationSubscriptions.id, subscriptionId),
     )));
     expect(subscription).toMatchObject({ status: "removed", recoveryState: "required", failureCode: "subscription_removed" });
-    const queued = await getPool().query("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1 ORDER BY type", [tenantId]);
+    const queued = await tenantQueueQuery("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1 ORDER BY type");
     expect(queued.rows.map((row) => row.type)).toEqual(["maintain_integration_subscriptions", "sync_source"]);
   });
 
@@ -235,7 +239,7 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
     expect(response.status).toBe(202);
     const [subscription] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions).where(eq(integrationSubscriptions.id, subscriptionId)));
     expect(subscription?.status).toBe("reauthorization_required");
-    const queued = await getPool().query("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1", [tenantId]);
+    const queued = await tenantQueueQuery("SELECT type,payload FROM finnor_os.jobs WHERE payload->>'tenantId'=$1");
     expect(queued.rows[0]).toMatchObject({ type: "maintain_integration_subscriptions", payload: { reason: "reauthorization_required" } });
   });
 });
