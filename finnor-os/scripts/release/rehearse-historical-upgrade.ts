@@ -219,6 +219,14 @@ async function main() {
         INSERT INTO finnor_os.households(id,tenant_id,address) VALUES ('22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111111','Synthetic address');
         INSERT INTO finnor_os.communications_log(tenant_id,household_id,channel,direction,content)
           VALUES ('11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','sms','inbound','Historical rehearsal message');
+        INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name)
+          VALUES ('33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111','history@test.invalid','owner','active','Historical fixture');
+        INSERT INTO finnor_os.works(id,tenant_id,status,initial_channel,initial_instruction,created_by)
+          VALUES ('44444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111','completed','console','Historical query evidence','33333333-3333-4333-8333-333333333333');
+        INSERT INTO finnor_os.work_query_executions(tenant_id,work_id,intent,execution_key,status,result_summary)
+          SELECT '11111111-1111-4111-8111-111111111111'::uuid,'44444444-4444-4444-8444-444444444444'::uuid,
+            intent,'historical:intent:'||intent,'succeeded','{}'::jsonb
+          FROM unnest(ARRAY['business_state','customer_lookup','inventory_status','money_summary','schedule_range']) intent;
       `);
     } finally { await client.end(); }
     await migrate(url, historical.filter((migration) => migration.name < "0131"));
@@ -263,6 +271,9 @@ async function main() {
     await verification.connect();
     try {
       assert.equal((await verification.query("SELECT count(*)::int AS n FROM finnor_os.communications_log")).rows[0].n, 1);
+      assert.deepEqual((await verification.query("SELECT intent FROM finnor_os.work_query_executions WHERE execution_key LIKE 'historical:intent:%' ORDER BY intent")).rows.map(row => row.intent),
+        ["business_state","customer_lookup","inventory_status","money_summary","schedule_range"]);
+      assert.equal((await verification.query("SELECT convalidated FROM pg_constraint WHERE conrelid='finnor_os.work_query_executions'::regclass AND conname='work_query_executions_intent_check'")).rows[0].convalidated, true);
       assert.equal((await verification.query("SELECT count(*)::int AS n FROM finnor_os._migrations WHERE name = ANY($1)", [historicalNames])).rows[0].n, historicalNames.length);
       const historicalJobs = await verification.query<{ idempotency_key: string; status: string; workload_class: string; classification_policy_revision: number }>(
         "SELECT idempotency_key,status,workload_class,classification_policy_revision FROM finnor_os.jobs WHERE idempotency_key LIKE 'historical:%' ORDER BY idempotency_key",

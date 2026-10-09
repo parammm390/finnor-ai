@@ -108,9 +108,24 @@ export async function migrate(
         // PostgreSQL cannot install them, so an explicit non-production test seam
         // omits only their CREATE EXTENSION statements and still applies every
         // application object from the immutable historical migration.
-        const executableSql = omitManagedPlatformExtensions && file === "0132_platform_objects_and_legacy_compatibility.sql"
+        let executableSql = omitManagedPlatformExtensions && file === "0132_platform_objects_and_legacy_compatibility.sql"
           ? sql.replace(/^CREATE EXTENSION IF NOT EXISTS (?:pg_cron|pg_graphql|pg_net|pgmq).*;$/gm, "-- provider-managed extension omitted by non-production test seam")
           : sql;
+        if (file === "0159_completion_p1_program_synthesis.sql") {
+          // Preserve immutable query history without reactivating retired readers.
+          // Historical SQL stays byte-identical; the validated storage constraint
+          // retains its previous catalogue alongside the exact P1 addition.
+          const previous = await client.query<{ definition: string }>(
+            "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='finnor_os.work_query_executions'::regclass AND conname='work_query_executions_intent_check'",
+          );
+          const definition = previous.rows[0]?.definition;
+          const addition = /ALTER TABLE finnor_os\.work_query_executions ADD CONSTRAINT work_query_executions_intent_check CHECK\s*(\([\s\S]*?\));/.exec(executableSql);
+          if (previous.rows.length !== 1 || !definition?.startsWith("CHECK (") || !addition) {
+            throw new Error("P1 query-history constraint prerequisite differs from the reviewed migration");
+          }
+          executableSql = executableSql.replace(addition[0],
+            `ALTER TABLE finnor_os.work_query_executions ADD CONSTRAINT work_query_executions_intent_check CHECK ((${definition.slice(6)}) OR ${addition[1]});`);
+        }
         await client.query(executableSql);
         await client.query("INSERT INTO finnor_os._migrations (name) VALUES ($1)", [file]);
         await client.query("COMMIT");
