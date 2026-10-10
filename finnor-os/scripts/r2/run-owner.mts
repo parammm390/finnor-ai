@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {appendFile,mkdir,mkdtemp,readFile,writeFile,readdir} from 'node:fs/promises';
+import {createWriteStream} from 'node:fs';
 import {join,resolve,relative} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL} from 'node:url';
@@ -19,7 +20,7 @@ import {POST as s3Post} from '../../apps/api/app/api/interventions/[operation]/r
 import {POST as s4Post} from '../../apps/api/app/api/policies/[operation]/route';
 import {quantities,originalDecimal,hash,ref} from './fixtures.mts';
 import {R2_PROFILE,R2_VERSION} from '../../packages/shared-types/src/robust-programme-search';
-import {writeM3Record} from '../../packages/private-equity/src/capital-program/v2-store';
+import {writeM3Record,readM3Record} from '../../packages/private-equity/src/capital-program/v2-store';
 import {m3Ref} from '../../packages/private-equity/src/capital-program/v2-contracts';
 import {r2Ref} from '../../packages/private-equity/src/capital-program/r2-native';
 const repo=resolve('..'),out=process.env.FINNOR_R2_EVIDENCE_DIR!,cases:any[]=[],traffic:any[]=[],began=new Date().toISOString(),serve=process.argv.includes('--serve'),caseFlag=process.argv.indexOf('--case'),lane=caseFlag<0?'positive':process.argv[caseFlag+1];
@@ -151,6 +152,36 @@ try{
   await artifact('matched-diagnostic.json',result);return result;
  });
  if(lane==='responsibility'&&cases[0].status==='PASS'){
+  await challenge('method-replacement-during-check-and-restart',async()=>{
+   const path=join(repo,'finnor-os/packages/epistemic-runtime/src/r2-encoding.ts'),originalBytes=await readFile(path),observed=[];
+   for(const mode of ['during-check','fresh-worker']){
+    const admitted=await newQuery('method-replacement-'+mode),before=(await admin!.query('SELECT deadline_at,acceptance FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0];
+    let child:Awaited<ReturnType<typeof nativeChild>>|null=null,running:ReturnType<typeof tick>|null=null;
+    try{
+     if(mode==='during-check'){running=tick();child=await nativeChild(admitted.queryId,'check-policy');}
+     else{const prepared=preparedWorker!;preparedWorker=undefined;prepared.child.kill('SIGTERM');await prepared.exit;}
+     const changedBytes=Buffer.concat([originalBytes,Buffer.from('\n// Disposable method identity revision '+randomUUID()+'\n')]);
+     await artifact('method-replacement/'+mode+'-source.json',{path,originalSha256:sha(originalBytes),replacementSha256:sha(changedBytes),originalCode:before.acceptance.code.digest});
+     await writeFile(path,changedBytes);
+     if(child)process.kill(child.pid,'SIGCONT');
+     await(running??tick());if(child)assert(await exited(child.pid));
+     const row=(await admin!.query('SELECT status,deadline_at,result_digest,error FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+      publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows,
+      physical=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD'",[admitted.queryId])).rows;
+     assert(['INVALIDATED','FAILED'].includes(row.status),JSON.stringify(row));assert.equal(row.result_digest,null);assert.equal(publications.length,0);
+     assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
+     if(mode==='during-check')assert(physical.some(v=>v.body.phase==='check-proof'&&v.body.state==='EXITED'));
+     else assert.equal(physical.length,0);
+     await durable(admitted.queryId);observed.push({mode,admitted,child,row,publications,nativeEvents:physical.length,originalDeadlineRetained:true,newGrant:false});
+    }finally{
+     await writeFile(path,originalBytes);
+     if(child){try{process.kill(child.pid,'SIGCONT');}catch{}}
+     if(running)await running;
+    }
+    const read=ok(await api('capital-program-read',{queryId:admitted.queryId}));assert.equal(read.program,null);
+   }
+   assert.equal(sha(await readFile(path)),sha(originalBytes));return observed;
+  });
   await challenge('ordinary-producer-false-certificate-claims',async()=>{
    const published=JSON.parse(await readFile(join(out,'positive-program.json'),'utf8')),observed=[];
    for(const mode of ['false-zero-gap','false-infeasible','checker-receipt-identity']){
@@ -171,6 +202,30 @@ try{
     await admin!.query('INSERT INTO finnor_os.m3_publications(tenant_id,principal_id,query_id,generation,result_digest) VALUES($1,$2,$3,1,$4)',[f.tenant,f.principal,queryId,program.ref.contentDigest]);
     const result=await api('capital-program-read',{queryId});assert.equal(result.status,422);assert(JSON.stringify(result).includes('R2_CERTIFICATE_CLAIM_MISMATCH'),JSON.stringify(result));await durable(queryId);observed.push({mode,queryId,result,originalAcceptedReceipts:true,newGrant:false});
    }return observed;
+  });
+  await challenge('live-work-input-and-principal-fences',async()=>{
+   const published=JSON.parse(await readFile(join(out,'positive-program.json'),'utf8')),
+    graph=(await readM3Record<any>(f.ctx,'graphs',published.program.ownerBoundGraph)).body,observed=[];
+   assert.deepEqual(graph.closureBasis.affectedRegions,['original-domain','bound-and-worlds','original-policy','canonical-demand','executable-module']);
+   assert.deepEqual(graph.closureBasis.keptRegions,[]);await artifact('p7-r2-owner-closure.json',graph);
+   for(const mode of ['new-work-input','principal-suspended']){
+    const admitted=await newQuery('live-fence-'+mode),before=(await admin!.query('SELECT work_id,work_input_id,deadline_at FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+     running=tick(),child=await nativeChild(admitted.queryId,'check-policy');let revision:unknown;
+    try{
+     if(mode==='new-work-input')revision=await receiveWork({tenantId:f.tenant,userId:f.principal,workId:before.work_id,instruction:'Actual revised R2 Work input',channel:'console',idempotencyKey:randomUUID()});
+     else await admin!.query("UPDATE finnor_os.users SET status='suspended' WHERE id=$1 AND tenant_id=$2",[f.principal,f.tenant]);
+     try{process.kill(child.pid,'SIGCONT');}catch{}
+     await running;assert(await exited(child.pid));await durable(admitted.queryId);
+     const row=(await admin!.query('SELECT status,deadline_at,result_digest,error FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+      publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows;
+     assert.equal(row.result_digest,null);assert.equal(publications.length,0);assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
+     observed.push({mode,admitted,before,child,revision,row,publications,originalDeadlineRetained:true,newGrant:false});
+    }finally{
+     if(mode==='principal-suspended')await admin!.query("UPDATE finnor_os.users SET status='active' WHERE id=$1 AND tenant_id=$2",[f.principal,f.tenant]);
+     try{process.kill(child.pid,'SIGCONT');}catch{}await running;
+    }
+    const current=ok(await api('capital-program-read',{queryId:admitted.queryId}));assert.equal(current.program,null);assert(!['COMPLETE','PARTIAL'].includes(current.status));await durable(admitted.queryId);
+   }return {graph,observed,independentNewP7Executor:'NOT_REQUESTED_OR_RUN',continuationAuthority:'EXISTING_LINKED_M3_ONLY'};
   });
   await challenge('original-budget-with-and-without-incumbent',async()=>{
    const observed=[];
@@ -296,7 +351,8 @@ try{
   const catalogue=ok(await api('capital-program-context',{workId:f.workId,root:f.root}));await artifact('catalogue-before-browser.json',catalogue);
   const {validateBeliefViewPin}=await import('../../packages/private-equity/src/enterprise-beliefs');await artifact('owner-pins-before-browser.json',await Promise.all(f.incumbent.bindings.beliefPins.map((pin:any)=>validateBeliefViewPin(f.ctx,pin))));
   assert(catalogue.policies.some((p:any)=>p.ref.id===f.incumbent.ref.id),'Actual deal catalogue lacks the current incumbent');
-  let log='';next=spawn(process.execPath,["--max-old-space-size=1024",join(repo,'node_modules/next/dist/bin/next'),'dev','--hostname','127.0.0.1','--port','0','--webpack'],{cwd:repo,env:{...process.env,NODE_ENV:'development',NEXT_PUBLIC_OS_API_URL:upstream,NEXT_PUBLIC_SUPABASE_URL:issuerUrl,NEXT_PUBLIC_SUPABASE_ANON_KEY:'r2-disposable-public-key',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});next.stdout!.on('data',b=>log+=b);next.stderr!.on('data',b=>log+=b);
+  let log='';const frontendLog=createWriteStream(join(out,'next-live.log'),{flags:'wx',mode:0o600});frontendLog.on('error',error=>console.error('FRONTEND_EVIDENCE_WRITE_FAILED',String(error)));
+  next=spawn(process.execPath,["--max-old-space-size=1024",join(repo,'node_modules/next/dist/bin/next'),'dev','--hostname','127.0.0.1','--port','0','--webpack'],{cwd:repo,env:{...process.env,NODE_ENV:'development',NEXT_PUBLIC_OS_API_URL:upstream,NEXT_PUBLIC_SUPABASE_URL:issuerUrl,NEXT_PUBLIC_SUPABASE_ANON_KEY:'r2-disposable-public-key',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});for(const stream of [next.stdout!,next.stderr!])stream.on('data',b=>{log+=b;frontendLog.write(b);});next.once('exit',()=>frontendLog.end());
   let frontend='';for(let i=0;i<300;i++){const match=log.match(/http:\/\/127\.0\.0\.1:(\d+)/);if(match){frontend='http://127.0.0.1:'+match[1];break;}if(next.exitCode!==null)throw Error(log);await new Promise(yes=>setTimeout(yes,100));}assert(frontend,log);
   await artifact('ready.json',{frontend,issuerUrl,upstream,login:frontend+'/centropy/login',workUrl:frontend+'/centropy/investigations/'+thread.id+'?root='+encodeURIComponent('pe_deal:'+dealRoot.entityId),email,password:'r2-disposable-local-password',workId:f.workId,policyId:f.incumbent.ref.id,sourceId,expectedLower:'100'});console.log('R2_BROWSER_READY '+out);
   let workerLog='',workerError='';const liveWorker=spawn(process.execPath,['--import','tsx','scripts/r2/worker-child.mts','--loop'],{cwd:join(repo,'finnor-os'),env:{...process.env,DATABASE_URL:workerUrl},stdio:['ignore','pipe','pipe']});

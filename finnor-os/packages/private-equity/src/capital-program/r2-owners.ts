@@ -5,7 +5,7 @@ import {R2_PROFILE,R2_VERSION} from '@finnor/shared-types/src/robust-programme-s
 import {controlInstrumentSupports} from '../../../epistemic-runtime/src/control-observations';
 import {r2Quantity as q} from '../../../epistemic-runtime/src/r2-rational';
 import {readSourceObject} from '../deliberation/store';
-import {revisions,assertDependencies} from '../evidence-execution/store';
+import {revisions,assertDependencies,codeIdentity} from '../evidence-execution/store';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
 import type {CapitalOwnerBinding} from './v2-owners';
 import type {CapitalProgramV2Request} from './v2-contracts';
@@ -91,6 +91,8 @@ export async function resolveR2Owners(ctx:PeMutationContext,request:CapitalProgr
 export async function assertR2Current(ctx:PeMutationContext,request:CapitalProgramV2Request,binding:CapitalOwnerBinding):Promise<void>{
  if(!binding.r2)return;
  await assertDependencies(ctx,binding.dependencies);
+ const code=await codeIdentity().catch(()=>{throw new CapitalProgramV2Error('STALE_INPUT','R2 loaded/current programme method identity changed');});
+ if(code.digest!==binding.code.digest)throw new CapitalProgramV2Error('STALE_INPUT','R2 admitted programme method identity changed');
  const root=binding.model.request.roots[0]!,r=request.robust!,row=await readSourceObject(ctx,root,r.source.sourceId,r.source.versionId),runtime=await loadR2Runtime();
  if(row.content_hash!==r.source.contentDigest||!m3Same(runtime.ref,binding.r2.runtimeRef)||Date.now()>=Date.parse(binding.validUntil))
   throw new CapitalProgramV2Error('STALE_INPUT','R2 exact source, scientific runtime/checker or original validity changed');

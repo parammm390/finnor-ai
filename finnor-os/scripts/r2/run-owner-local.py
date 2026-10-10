@@ -28,7 +28,13 @@ with (output/'runner.log').open('x') as log:
     run = subprocess.run(['node', '--import', 'tsx', 'scripts/r2/run-owner.mts', *sys.argv[1:]],
                          cwd=repo/'finnor-os', env=env, stdout=log, stderr=subprocess.STDOUT, timeout=1200)
 result_path=output/'results.json'
-result=json.loads(result_path.read_text()) if result_path.exists() else {'cases':[]}
-status=run.returncode if result['cases'] and all(c['status']=='PASS' for c in result['cases']) else 1
+try:
+    result=json.loads(result_path.read_text()) if result_path.exists() else {'cases':[]}
+except (OSError, ValueError):
+    result={'cases':[]}
+complete=bool(result['cases']) and all(c['status']=='PASS' for c in result['cases'])
+if '--serve' in sys.argv:
+    complete=complete and any(c['id']=='mounted-Work' and c['status']=='PASS' for c in result['cases'])
+status=run.returncode if complete else 1
 print(json.dumps({'output': str(output), 'exitCode': status}))
 sys.exit(status)
