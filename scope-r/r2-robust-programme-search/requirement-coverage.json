@@ -4,32 +4,38 @@
   "rows": [
     {
       "requirement": "original full grammar/world/current owner input",
-      "status": "VERIFIED_CONDITIONAL_DEVELOPMENT_SOURCE; FINAL_HANDOFF_AUDIT_PENDING",
-      "evidence": "independent-semantics.md"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "full-family exact MILP and separate correspondence/proof checks",
-      "status": "VERIFIED_CONDITIONAL_DEVELOPMENT_SOURCE; FINAL_HANDOFF_AUDIT_PENDING"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "complete fixed-world feasibility and retained compatible bounds",
-      "status": "VERIFIED_CONDITIONAL_DEVELOPMENT_SOURCE; FINAL_HANDOFF_AUDIT_PENDING"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "actual S4/S5 consumption",
-      "status": "VERIFIED_CONDITIONAL_DEVELOPMENT_SOURCE; FINAL_HANDOFF_AUDIT_PENDING"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "authenticated durable worker and mounted Work",
-      "status": "IN_PROGRESS"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "physical grants/fault/currentness/fallback",
-      "status": "VERIFIED_CONDITIONAL_DEVELOPMENT_SOURCE; FINAL_HANDOFF_AUDIT_PENDING"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "final runtime/migrations/build/reconstruction",
-      "status": "IN_PROGRESS"
+      "status": "IMPLEMENTED_REQUIRES_SEALED_HANDOFF_EVIDENCE",
+      "evidence": "Private handoff clause-audit.json and manifest.json: exact predicate, source dependency comparison, raw hashes, qualification and retained failures"
     },
     {
       "requirement": "PRD13/14 protected gain/economic/90days/H2 obligations",
