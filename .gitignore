@@ -38,3 +38,10 @@ vercel_output.txt
 /vapi_call_transcripts.md
 /coverage/
 /artifacts/
+
+# Private R2 native/owner evidence: retained in immutable hashed handoff archives.
+/scope-r/r2-robust-programme-search/evidence/
+/scope-r/r2-robust-programme-search/handoff/
+
+# Generated Python bytecode is runtime scratch, never a checker source pin.
+**/__pycache__/

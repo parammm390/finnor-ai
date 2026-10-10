@@ -3,6 +3,7 @@ import type {ExperimentRef} from './experiments';
 import type {AllocationCheck,CanonicalAllocationProblem} from './allocation';
 import type {ControlDecision,ControlDecisionInput} from './contingent-control';
 import {FinancialSemanticsSchema,EvidenceUnderwritingInputsSchema} from './evidence-execution';
+import {R2RequestSchema,type JointSearchCertificate,type ExactBranchReview} from './robust-programme-search';
 
 export const CAPITAL_PROGRAM_V2_VERSION='m3-owner-economic-v2' as const;
 const uuid=z.string().uuid(),text=z.string().min(1).max(128);
@@ -40,6 +41,7 @@ export const CapitalProgramV2RequestSchema=z.object({
     resultRef:CapitalProgramV2RefSchema.extend({owner:z.literal('M4')}).strict(),
   }).strict()).min(1).max(8).optional(),
   resource:CapitalProgramV2ResourceSchema,
+  robust:R2RequestSchema.optional(),
 }).strict().superRefine((value,ctx)=>{
   if(value.permitted.structures.some(s=>s==='STAGED'||s==='OBSERVABLE_STAGE')&&!value.permitted.stageFractions.length)
     ctx.addIssue({code:z.ZodIssueCode.custom,path:['permitted','stageFractions'],message:'A staged domain requires an explicit bounded fraction'});
@@ -88,9 +90,10 @@ export interface CapitalProgramV2 {
     parents:ExperimentRef[];requestRef:CapitalProgramV2Ref;inputDigest:string;knowledgeAt:string;validAt:string;validUntil:string;
     ownerVector:Array<{key:string;digest:string}>;
     recompilation:{parentQueryId:string;parents:ExperimentRef[];
+      affectedRegions?:string[];keptRegions?:string[];
       changedDependencies:Array<{key:string;previousDigest:string|null;currentDigest:string|null}>}|null;
     sourceDigests:Array<{path:string;sha256:string}>;schemaDigest:string;runtime:{node:string;platform:string;architecture:string;imageAttestation:null};
-    grant:{limits:CapitalProgramV2Request['resource'];qualification:string;financialFundingRef:null;aggregatePhysicalLimits:'UNENFORCED';
+    grant:{limits:CapitalProgramV2Request['resource'];qualification:string;financialFundingRef:null;aggregatePhysicalLimits:'UNENFORCED'|'SHARED_R2_SERIAL_CHILD_GRANT';
       deadlineAt?:string;parentEpisodeQueryId?:string|null};
     invocationRefs:string[];admission:{status:'BLOCKED_EXTERNAL';receipt:null};
   };
@@ -102,7 +105,7 @@ export interface CapitalProgramV2 {
   allocation:{problem:CanonicalAllocationProblem|null;checks:AllocationCheck[];qualification:string;reservationCreated:false};
   incumbentAndSearchGap:{
     incumbentDigest:string;selectedDigest:string|null;valueBounds:[number,number]|null;generatedDescriptors:number;attemptedDescriptors:number;
-    remainingDescriptors:number;finiteDomainComplete:boolean;upperBound:null;globalOptimalityClaimed:false;
+    remainingDescriptors:number;finiteDomainComplete:boolean;upperBound:string|null;globalOptimalityClaimed:boolean;
     modeledImprovement:number|null;unsampledModelGap:'UNKNOWN';identificationGap:'UNKNOWN';selectionQualification:string;
   };
   blockers:Array<{code:string;owner:string;requirement:string}>;pendingRequests:CapitalProgramV2Pending[];
@@ -111,6 +114,7 @@ export interface CapitalProgramV2 {
     outputBytes:number;generated:number;attempted:number;refinementSteps:number;expansions:number;externalModelCalls:0;
     upstreamComputeRefs:string[];upstreamChargesDuplicated:false;unknownAttemptIds:string[];failedAttemptCostsRetained:true};
   limitations:string[];
+  jointSearchCertificate?:JointSearchCertificate;
 }
 export type CapitalProgramV2Status='QUEUED'|'RUNNING'|'TESTED'|'PARTIAL'|'FAILED'|'INVALIDATED'|'CANCELLED';
 export interface CapitalProgramV2BranchReview {
@@ -133,11 +137,13 @@ export interface CapitalProgramV2QueryView {
   progress:{attempted:number;generated:number;refinementSteps:number};
   failure:{code:string;requirement:string}|null;parentQueryId:string|null;executionAuthorityGranted:false;
   branchReviews:CapitalProgramV2BranchReview[];
+  exactBranchReviews?:ExactBranchReview[];
   attemptCosts:CapitalProgramV2AttemptCost[];
 }
 export const CapitalProgramV2Operations={
   'capital-program-submit':CapitalProgramV2RequestSchema,
   'capital-program-read':z.object({queryId:uuid}).strict(),
+  'capital-program-status':z.object({queryId:uuid}).strict(),
   'capital-program-list':z.object({workId:uuid,limit:z.number().int().min(1).max(32).optional()}).strict(),
   'capital-program-context':z.object({workId:uuid,root:z.object({entityType:text,entityId:uuid}).strict()}).strict(),
   'capital-program-ports':z.object({workId:uuid}).strict(),

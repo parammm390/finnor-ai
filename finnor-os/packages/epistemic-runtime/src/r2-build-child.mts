@@ -1,0 +1,10 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {constructR2Family} from './r2-encoding';
+import type {R2OriginalProblem,R2Request} from '@finnor/shared-types/src/robust-programme-search';
+const [input,output,absolute]=process.argv.slice(2);
+if(!input||!output||!absolute)throw Error('R2_PHYSICAL_BUILD_INPUT');
+const body=JSON.parse(await readFile(input,'utf8')) as {original:R2OriginalProblem;caps:R2Request['budget']};
+const deadline=Number(absolute);
+const family=constructR2Family(body.original,body.caps,()=>{if(Date.now()>=deadline)throw Error('R2_ORIGINAL_CONSTRUCTION_DEADLINE');});
+await writeFile(output,JSON.stringify(family),{flag:'wx',mode:0o400});
+console.log(JSON.stringify({worlds:family.coverage.allWorlds.length,variants:family.variants.length,histories:family.histories.length,courses:family.courses.length}));

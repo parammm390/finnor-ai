@@ -3,7 +3,7 @@ import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { withTenantTransaction } from '@finnor/db';
-import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
+import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlDecision, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
 import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
  ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
@@ -11,6 +11,12 @@ import { loadEnterpriseBeliefView, validateBeliefViewPin } from './enterprise-be
 import { validateEnterpriseExperiment, projectEnterpriseExperiment, projectEnterpriseControlObservation } from './enterprise-experiments';
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from './types';
 import {enqueueNativeReferences,enqueueNativePreparedEvents,enqueueNativeMandate,nativeRecordReference,nativeReference,nativeOwnerTransportConfigured} from './native-experience-transport';
+import type {ExactContingentPolicy,R2CheckReceipt} from '@finnor/shared-types/src/robust-programme-search';
+import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
+import {r2Ref,loadR2Runtime} from './capital-program/r2-native';
+import {chooseExactS4Branch} from './capital-program/r2-owners';
+import {codeIdentity} from './evidence-execution/store';
+import {readSourceObject} from './deliberation/store';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const unavailable=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S4 context is unavailable');
@@ -272,6 +278,12 @@ export async function synthesizeEnterpriseControlProposal(ctx:PeMutationContext,
 }
 export async function readEnterpriseControlBranchChoice(ctx:PeMutationContext,value:unknown):Promise<ReturnType<typeof decideContingentPolicy>>{
  const ref=ExperimentRefSchema.parse(value);
+ if(ref.version===R2_VERSION){
+  if(ref.owner!=='S4'||ref.id!==`branch-choice:${ref.contentDigest}`)throw unavailable();
+  const choice=await readArtifact(ctx,'exact-choices',ref.contentDigest) as ControlDecision,{ref:actual,...body}=choice;
+  if(choice.schema!=='finnor.s4.branch-choice.v1'||choice.executionAuthorityGranted!==false||epistemicHash(actual)!==epistemicHash(ref)||epistemicHash(body)!==ref.contentDigest)throw unavailable();
+  await readEnterpriseExactControlPolicy(ctx,choice.policyRef);return immutableControl(choice);
+ }
  if(ref.owner!=='S4'||ref.version!=='s4-finite-contingent-v1'||ref.id!==`branch-choice:${ref.contentDigest}`)throw unavailable();
  const choice:ReturnType<typeof decideContingentPolicy>=await readArtifact(ctx,'choices',ref.contentDigest),{ref:actual,...body}=choice;
  if(choice.schema!=='finnor.s4.branch-choice.v1'||choice.executionAuthorityGranted!==false||
@@ -291,4 +303,60 @@ export async function listEnterpriseControlPolicies(ctx:PeMutationContext,root:P
   if(policies.length>=16)break;
  }
  return policies;
+}
+
+/** Versioned ordinary exact consumer. Only the internal independently accepted
+ * original full-world checker can supply this writer; no route accepts receipts. */
+export async function persistEnterpriseExactControlPolicy(ctx:PeMutationContext,policy:ExactContingentPolicy,check:R2CheckReceipt):Promise<void>{
+ const {ref,...body}=policy;
+ if(ctx.auth.role!=='owner'||policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||
+  !check.feasible||check.lower!==policy.value||check.policyDigest!==epistemicHash({variant:policy.variant,decisions:policy.decisions,worldCourses:policy.worldCourses})||
+  check.originalDigest!==epistemicHash(policy.original)||epistemicHash(ref)!==epistemicHash(r2Ref('exact-contingent-policy',body,'S4')))
+  throw new ControlContractError('INVALID_POLICY','Independent exact original policy acceptance differs');
+ await readEnterpriseControlDecisionContext(ctx,policy.original.incumbentPolicyRef);
+ await saveArtifact(ctx,'exact-policy-checks',check.ref.contentDigest,check);
+ await saveArtifact(ctx,'exact-policies',policy.ref.contentDigest,policy);
+ await saveEvents(ctx,[prepareS4Experience(policy.original.mandate,'POLICY_SEARCH',policy.ref.id,{policyRef:policy.ref,checkerRef:check.ref,
+  exactFiniteWorlds:policy.worldCourses.map(c=>c.worldId),qualification:'SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED',executionAuthorityGranted:false},[policy.original.incumbentPolicyRef.id])]);
+}
+export async function readEnterpriseExactControlPolicy(ctx:PeMutationContext,value:unknown):Promise<ExactContingentPolicy>{
+ const ref=ExperimentRefSchema.parse(value);if(ref.owner!=='S4'||ref.version!==R2_VERSION||ref.id!==`exact-contingent-policy:${ref.contentDigest}`)throw unavailable();
+ const policy=await readArtifact(ctx,'exact-policies',ref.contentDigest) as ExactContingentPolicy,{ref:actual,...body}=policy;
+ if(policy.schema!=='finnor.s4.exact-contingent-policy.v1'||policy.version!==R2_VERSION||policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||
+  epistemicHash(actual)!==epistemicHash(ref)||epistemicHash(body)!==ref.contentDigest||policy.executionAuthorityGranted!==false||policy.reservationGranted!==false||
+  policy.admission.status!=='BLOCKED_EXTERNAL'||policy.admission.receipt!==null||Date.now()>=Date.parse(policy.validUntil))throw unavailable();
+ const base=await readEnterpriseControlDecisionContext(ctx,policy.original.incumbentPolicyRef);
+ if(epistemicHash(base.policy.mandate)!==epistemicHash(policy.original.mandate)||epistemicHash(base.policy.problem)!==epistemicHash(policy.original.problem)||
+  epistemicHash(base.model.request)!==epistemicHash(policy.original.modelRequest)||epistemicHash((await codeIdentity()).files)!==epistemicHash(policy.sourceIdentity))throw unavailable();
+ const source=policy.original.sourceRef,versionId=source.id.replace(/^source-version:/,''),
+  sourceId=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>(await c.query('SELECT source_id::text FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',[ctx.auth.tenantId,versionId])).rows[0]?.source_id);
+ if(!sourceId)throw unavailable();const original=await readSourceObject(ctx,base.model.request.roots[0],sourceId,versionId);
+ if(original.content_hash!==source.contentDigest||epistemicHash(JSON.parse(original.content))!==epistemicHash(policy.original.source))throw unavailable();
+ const check=await readArtifact(ctx,'exact-policy-checks',policy.checkerReceipt.contentDigest) as R2CheckReceipt;
+ const {ref:checkRef,...checkBody}=check;
+ if(!check.feasible||check.lower!==policy.value||check.originalDigest!==epistemicHash(policy.original)||
+  check.policyDigest!==epistemicHash({variant:policy.variant,decisions:policy.decisions,worldCourses:policy.worldCourses})||epistemicHash(check.ref)!==epistemicHash(policy.checkerReceipt)||
+  checkRef.contentDigest!==epistemicHash(checkBody)||epistemicHash((await loadR2Runtime()).ref)!==epistemicHash(policy.runtimeRef)||
+  epistemicHash(check.provenance.runtimeRef)!==epistemicHash(policy.runtimeRef))throw unavailable();
+ return immutableControl(policy);
+}
+export async function chooseEnterpriseExactControlBranch(ctx:PeMutationContext,input:{policyRef:unknown;decision:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>}):Promise<ControlDecision>{
+ const policy=await readEnterpriseExactControlPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
+ for(const observation of decision.observations){const instrument=policy.original.problem.observations.find(i=>i.id===observation.instrumentId);
+  if(!instrument){let matched=false;
+   for(const measurement of input.measurements??[]){const {realization:r}=await projectEnterpriseExperiment(ctx,{protocol:measurement.protocol,events:measurement.events}),protocol=measurement.protocol as ExperimentProtocol;
+    if(!r.analysis.valid||r.unknownOutcomes.length||observation.sourceRef.owner!=='S2'||observation.sourceRef.id!==r.id||observation.sourceRef.contentDigest!==r.contentDigest||
+     !policy.original.protocols.some(p=>p.ref.id===r.protocolRef&&p.ref.contentDigest===protocol.contentDigest)||Date.parse(r.knowledgeAt)>Date.parse(decision.knowledgeAt))continue;
+    const tokens=protocol.metrics.observations.filter(o=>epistemicHash(o.counts)===epistemicHash(r.analysis.counts)).map(o=>JSON.stringify({counts:o.counts,sampleSize:o.sampleSize,stop:o.stop}));
+    if(observation.instrumentId===protocol.id&&tokens.includes(observation.token))matched=true;
+   }
+   if(!matched)throw new ControlContractError('INVALID_REQUEST','Current original S2 realization is required for this exact inquiry branch');continue;
+  }
+  const original=await observeEnterpriseControl(ctx,{policyRef:policy.original.incumbentPolicyRef,instrumentId:instrument.id,availablePeriod:observation.availablePeriod});
+  if(epistemicHash(original.ref)!==epistemicHash(observation.sourceRef)||original.token!==observation.token||Date.parse(original.knowledgeAt)>Date.parse(decision.knowledgeAt))
+   throw new ControlContractError('INVALID_REQUEST','Exact branch cannot consume a forecast or caller supplied observation');
+ }
+ const choice=chooseExactS4Branch(policy,decision);await saveArtifact(ctx,'exact-choices',choice.ref.contentDigest,choice);
+ await saveEvents(ctx,[prepareS4Experience(policy.original.mandate,'BRANCH_CHOICE',policy.ref.id,{choice,decision,qualification:'EXACT_ORIGINAL_MODEL_BRANCH_REVIEW_NO_EXECUTION'},[policy.ref.id],decision.knowledgeAt)]);
+ await readEnterpriseExactControlPolicy(ctx,policy.ref);return choice;
 }

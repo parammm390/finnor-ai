@@ -21,6 +21,13 @@ export const CapitalRequestViewSchema = z.object({
     semantics: z.record(z.unknown()),
     evidenceDerivationInputs: z.record(z.object({ derivationId: z.string().uuid(), output: text })).optional(),
   }).optional(),
+  robust: z.object({
+    schema: z.literal("finnor.r2.request.v1"), domainProfile: z.literal("S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"),
+    source: z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(), contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }),
+    initialWorlds: z.array(text).min(1).max(32),
+    budget: z.object({ maxPaths: z.number().int(), maxHistories: z.number().int(), maxVariables: z.number().int(), maxRows: z.number().int(),
+      maxProofBytes: z.number().int(), cpuMs: z.number().int(), memoryMiB: z.number().int(), maxNativeCalls: z.number().int() }),
+  }).optional(),
   challengeEvidence: z.array(z.object({ searchId: z.string().uuid(), resultRef: CapitalRefViewSchema })).min(1).max(8).optional(),
   resource: z.object({
     deadlineMs: z.number().int().min(1).max(30000), maxAttempts: z.number().int().min(1).max(16),

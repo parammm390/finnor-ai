@@ -1,0 +1,137 @@
+{
+  "schema": "finnor.r2.external-qualification-packet.v1",
+  "status": "NOT_RUN",
+  "authority": "Submitted R2 goal, complete R PRD 13/14 and final S architecture; no deployment or effect authority",
+  "immutableCut": "Resolved by final private handoff manifest, not a mutable main alias",
+  "developmentDomain": "Pure bounded original-history finite worlds; S4<=8 actions/8 instruments/24 periods, S5<=32 worlds; exact supplied model only",
+  "states": {
+    "functional": "Pending final handoff gate",
+    "domain": "SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED",
+    "independentAdmission": "BLOCKED_EXTERNAL",
+    "activation": "NOT_AUTHORIZED",
+    "postXGain": "NOT_RUN",
+    "economicRelease": "NOT_RUN",
+    "publication": "NOT_AUTHORIZED"
+  },
+  "requests": [
+    {
+      "owner": "S8",
+      "asset": "Independent evaluator/admission/revocation custody for exact source/runtime/checker/domain",
+      "acceptance": "Independently authenticate original encoding/full-world/proof/owner case evidence, enforce untouched data/trust boundary and grant bounded domain before activation",
+      "destination": "handoff/external-receipts/s8-admission.json"
+    },
+    {
+      "owner": "Serial integration/release owner",
+      "asset": "Completed cumulative-X immutable equipped comparator and independent evaluator, original frozen generator and scoring assets, actual configuration and route attestations",
+      "acceptance": "Register endpoint, distribution/cells, numeric material margin, power/sample size, interference clusters, stopping, multiplicity, simultaneous 95% inference and cost allocation before any outcomes; paired signed improvement LCB>0 and >registered material margin, all original floors passing",
+      "destination": "handoff/external-receipts/post-x-comparison.json"
+    },
+    {
+      "owner": "S7 and independent business/evaluation owner",
+      "asset": "Preregistered BAU assignment and independent mature outcomes/valuation/attribution at 36 months",
+      "acceptance": "Intention-to-treat matched owner wealth accounting, all uncertainties and complete cost reconciliation, simultaneous intervals and positive material denominator/downside floors before economic credit",
+      "destination": "handoff/external-receipts/h2-economic-release.json"
+    },
+    {
+      "owner": "Protected production release/activation authority",
+      "asset": "Qualified target substrate/image, database/bootstrap roles, exact admitted S8 capability and authorized exposure/domain",
+      "acceptance": "Current source/runtime/role/domain/source-rights/reservations/UNKNOWN/recovery checks and explicit activation authorization. The local Mac development runtime does not grant Linux/cloud installation",
+      "destination": "handoff/external-receipts/activation.json"
+    }
+  ],
+  "frozenGenerator": {
+    "firms": 16,
+    "strategicCounterparties": 8,
+    "resourcePools": 4,
+    "K": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      64,
+      256,
+      1000
+    ],
+    "T": [
+      64,
+      128,
+      256,
+      512,
+      1024,
+      4096,
+      16384,
+      64000
+    ],
+    "partialVisibility": "1/(k_o+1)",
+    "passiveObservationDelayPeriods": "k_o",
+    "activeInquiry": "Identical costed permitted acquisition",
+    "strategicHistoryPeriods": "k_s",
+    "strategicCoupling": "k_s/(k_s+1)",
+    "causalLags": "k_c",
+    "causalMagnitude": "Fixed total coefficient L2; separate identification/confounding/heterogeneity/context strata",
+    "resourceOccupationPeriods": "k_r",
+    "resourceMatrix": "A=(1-kappa)A_local+kappa A_shared; kappa=k_r/(k_r+1); fixed capacities and per-column resource mass",
+    "novelty": "Frozen seen/withheld-schema/interface/composition partitions and permitted discovery access",
+    "faultProbabilities": [
+      0,
+      0.001,
+      0.01,
+      0.05
+    ],
+    "custody": "Executable transition/payoff/scoring assets, finite cell set/weights, PRNG/precision and sealed 256-bit seed commitments unavailable here; do not substitute R2 fixtures or infer monotonicity"
+  },
+  "floors": {
+    "completion": ">=0.95 under original estimation/confidence procedure",
+    "decisionLoss": "<=0.05 normalized expected regret or explicitly reference-qualified shortfall on preregistered fixed economic scale; valid upper bound required for global-regret PASS",
+    "predictionCoverageError": "<=0.02 at 50/80/90/95%",
+    "mean90PercentWidth": "<=0.5 fixed outcome range",
+    "hardConstraints": "All registered finances/resources/shared reservations/unresolved obligations",
+    "authorityAudit": "Zero observed violations in tested supported domain; no universal zero-risk claim"
+  },
+  "envelopes": {
+    "startingCapitalExposureNormalized": 1,
+    "eachPoolCapacityNormalized": 1,
+    "episodeMoneyUSD": 100,
+    "episodeHumanSeconds": 900,
+    "aggregateSimultaneousPeakGiB": 16,
+    "initialResponseSeconds": 30,
+    "episodeWallSeconds": 3600,
+    "preparationHumanHours": 80,
+    "preparationMoneyUSD": 10000,
+    "costs": "Model/native/license/data/orchestration/failed/cancelled/check/cache/storage/build/rebuild/human/maintenance/recovery once, frozen amortization and actual reuse denominator; all material meters mandatory"
+  },
+  "reach": {
+    "operationalConsecutiveDays": 90,
+    "companiesDeals": 100,
+    "systemTypes": 10,
+    "concurrentMissions": 1000,
+    "interactingOpportunities": 10000,
+    "primaryEconomicMonths": 36,
+    "horizons": "H0 settlement; H1 provisional; independent H2 required"
+  },
+  "economic": {
+    "ownerWealth": "Owner realized cash/distributions net of settled owner liabilities + independently bounded residual equity net of included entity debt - additional contributed capital - outstanding owner-borne liabilities outside equity - complete attributable costs once; common opening wealth and one discount/carry convention",
+    "canonicalReconciliation": "One item identity across programme/company/portfolio; distributions remove residual assets; debt-funded distributions retain debt; no duplicate liability/cost",
+    "assignment": "ITT including declined/rejected proposals, overrides, failures, partial delivery, interference, noncompliance and censoring/missing outcomes",
+    "intervals": "Simultaneous 95% [L_a,U_a] include attribution/sampling/cost/valuation/missing-outcome/identification uncertainty",
+    "hundredX": "L_new>=100*max_b(U_b) AND max_b(L_b)>=epsilon>0; preregister material epsilon, absolute owner-value and business-decision-payoff floors, sample/power/multiplicity/stopping",
+    "downside": "Locked ES_0.99(-W_a)<=R_0, matched capital/leverage/peak-exposure/capital-dollar-time/liquidity/covenants/resources/horizon; sparse absence of loss is insufficient",
+    "namedTenX": "Separate Muse/dots 10x only where positive qualified denominator; NOT_RUN competitors never defeated",
+    "absoluteAdditionalOwnerValueUSD": 100000000,
+    "excludedCredits": "Forecasts/AUM/borrowing/gross revenue/market movement/mechanical receipts/clerical savings and multiplied component gains"
+  },
+  "benchmarkCompatibility": "Original T starts at64, exceeding the current S4 24-period constructor. No scalar frontier/reach or original benchmark gain is claimed. The evaluator must supply an explicitly qualified compatible domain/adapter before scored use; do not narrow frozen assets after results.",
+  "commonManifestContribution": {
+    "outputSchema": "finnor.joint-search-certificate.v1",
+    "version": "r2-original-history-rational-v1",
+    "methodDomain": "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE",
+    "runtimeCheckerRefs": "Actual final handoff manifest",
+    "fallback": "No compatible admitted exact-domain fallback in inspected current owners",
+    "otherSevenScopes": "No invented schema/runtime/admission implementation"
+  },
+  "governingAssets": {
+    "prd": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/sources/01-Pasted text.txt",
+    "finalLock": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/sources/09-architecture-locked-specification.md"
+  }
+}

@@ -21,12 +21,35 @@ COPY infra/deployment/production.contract.json /app/infra/deployment/production.
 
 RUN npm ci --no-audit --no-fund
 
+# Build the same pinned exact runtime for the image architecture. Mac binaries
+# are never copied into Linux. Protected R2 activation remains separately guarded.
+FROM dependencies AS r2-scientific-build
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends cmake curl xz-utils bzip2 zlib1g-dev patchelf \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3 scripts/r2/build-native.py --build-root /opt/r2-build
+
 FROM node:22-bookworm-slim
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends python3 python3-venv libstdc++6 zlib1g \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/finnor-os
 COPY --from=dependencies /app /app
+# Existing S3/S5/S2 numerical callees use their ordinary configured interpreter.
+RUN python3 -m venv /opt/finnor-python \
+    && /opt/finnor-python/bin/python -m pip install --no-cache-dir -r packages/epistemic-runtime/src/intervention-requirements.txt \
+    && /opt/finnor-python/bin/python -m pip freeze --all > /opt/finnor-python/installed-versions.txt
+COPY --from=r2-scientific-build /opt/r2-build/runtime /opt/finnor-r2/runtime
+# Preserve pinned GNU source archives for notices and relinking obligations.
+COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
+COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
 
-ENV NODE_ENV=production \
+ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
+    FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S3_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S5_PYTHON=/opt/finnor-python/bin/python \
+    NODE_ENV=production \
     PORT=8090 \
     SSE_PORT=8090
 
