@@ -203,6 +203,28 @@ try{
     const result=await api('capital-program-read',{queryId});assert.equal(result.status,422);assert(JSON.stringify(result).includes('R2_CERTIFICATE_CLAIM_MISMATCH'),JSON.stringify(result));await durable(queryId);observed.push({mode,queryId,result,originalAcceptedReceipts:true,newGrant:false});
    }return observed;
   });
+  await challenge('scientific-runtime-currentness-during-check',async()=>{
+   const runtime=process.env.FINNOR_R2_RUNTIME!,observed=[];
+   for(const mode of ['solver-binary','unsafe-cut-configuration','checker-source']){
+    const path=mode==='solver-binary'?join(runtime,'bin/scip'):mode==='unsafe-cut-configuration'?join(runtime,'manifest.json'):join(repo,'finnor-os/packages/epistemic-runtime/python/r2_check.py'),
+     originalBytes=await readFile(path),admitted=await newQuery('scientific-identity-'+mode),before=(await admin!.query('SELECT deadline_at FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+     running=tick(),child=await nativeChild(admitted.queryId,'check-policy');
+    try{
+     let changedBytes:Buffer;
+     if(mode==='unsafe-cut-configuration'){const manifest=JSON.parse(originalBytes.toString());manifest.configuration.cuts=true;changedBytes=Buffer.from(JSON.stringify(manifest));}
+     else changedBytes=Buffer.concat([originalBytes,Buffer.from(mode==='checker-source'?'\n# Disposable original checker identity revision\n':'\n')]);
+     await artifact('scientific-identity/'+mode+'.json',{mode,path,originalSha256:sha(originalBytes),replacementSha256:sha(changedBytes),originalGrantRenewed:false});
+     await writeFile(path,changedBytes);try{process.kill(child.pid,'SIGCONT');}catch{}await running;assert(await exited(child.pid));await durable(admitted.queryId);
+     const row=(await admin!.query('SELECT status,deadline_at,result_digest,failure FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+      publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows,
+      accepted=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_REJECTED_CLAIM' AND body->>'upper'='210'",[admitted.queryId])).rows,
+      proofChecks=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD' AND body->>'phase'='check-proof' AND body->>'state'='EXITED'",[admitted.queryId])).rows;
+     assert.equal(row.result_digest,null);assert.equal(publications.length,0);assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
+     assert(accepted.length&&proofChecks.some(v=>v.body.receipt.exitCode===0),'Genuine original accepted upper proof prerequisite missing');observed.push({mode,admitted,child,row,publications,accepted,proofChecks});
+    }finally{await writeFile(path,originalBytes);try{process.kill(child.pid,'SIGCONT');}catch{}await running;}
+    assert.equal(sha(await readFile(path)),sha(originalBytes));const current=ok(await api('capital-program-read',{queryId:admitted.queryId}));assert.equal(current.program,null);
+   }return observed;
+  });
   await challenge('live-work-input-and-principal-fences',async()=>{
    const published=JSON.parse(await readFile(join(out,'positive-program.json'),'utf8')),
     graph=(await readM3Record<any>(f.ctx,'graphs',published.program.ownerBoundGraph)).body,observed=[];
@@ -361,7 +383,7 @@ try{
   let browserResult:any=null;for(let i=0;i<2400;i++){const bytes=await readFile(join(out,'browser-done.json'),'utf8').catch(()=>null);if(bytes){browserResult=JSON.parse(bytes);break;}if(liveWorker.exitCode!==null)throw Error('Physical browser worker exited before observation');await new Promise(yes=>setTimeout(yes,250));}
   liveWorker.kill('SIGTERM');const exitCode=await workerExit;await artifact('worker/browser-persistent-worker.json',{pid:liveWorker.pid,exitCode,workerLog,workerError});
   for(const q of (await admin!.query('SELECT id FROM finnor_os.m3_queries WHERE tenant_id=$1 AND principal_id=$2',[f.tenant,f.principal])).rows)await durable(q.id);
-  cases.push({id:'mounted-Work',status:browserResult?.status==='PASS'?'PASS':'FAIL',observed:browserResult,reason:browserResult?'Observed browser predicate failed':'Finite browser observation window exhausted; no mounted success claimed'});
+  cases.push({id:'mounted-Work',status:browserResult?.status==='PASS'?'PASS':'FAIL',observed:browserResult,reason:browserResult?.status==='PASS'?null:browserResult?'Observed browser predicate failed':'Finite browser observation window exhausted; no mounted success claimed'});
   stopped=true;await artifact('next.log.json',{log});
  }
 }catch(error){cases.push({id:'owner-setup-or-runtime',status:'FAIL',error:String(error),stack:(error as Error).stack});}
