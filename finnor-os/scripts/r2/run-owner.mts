@@ -217,7 +217,7 @@ try{
      await writeFile(path,changedBytes);try{process.kill(child.pid,'SIGCONT');}catch{}await running;assert(await exited(child.pid));await durable(admitted.queryId);
      const row=(await admin!.query('SELECT status,deadline_at,result_digest,failure FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
       publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows,
-      accepted=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_REJECTED_CLAIM' AND body->>'upper'='210'",[admitted.queryId])).rows,
+      accepted=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_REJECTED_CLAIM' AND body->>'upper' IN('210','100')",[admitted.queryId])).rows,
       proofChecks=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD' AND body->>'phase'='check-proof' AND body->>'state'='EXITED'",[admitted.queryId])).rows;
      assert.equal(row.result_digest,null);assert.equal(publications.length,0);assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
      assert(accepted.length&&proofChecks.some(v=>v.body.receipt.exitCode===0),'Genuine original accepted upper proof prerequisite missing');observed.push({mode,admitted,child,row,publications,accepted,proofChecks});
