@@ -21,7 +21,7 @@ import {POST as s4Post} from '../../apps/api/app/api/policies/[operation]/route'
 import {quantities,originalDecimal,hash,ref} from './fixtures.mts';
 import {R2_PROFILE,R2_VERSION} from '../../packages/shared-types/src/robust-programme-search';
 import {writeM3Record,readM3Record} from '../../packages/private-equity/src/capital-program/v2-store';
-import {m3Ref} from '../../packages/private-equity/src/capital-program/v2-contracts';
+import {m3Ref,m3Hash} from '../../packages/private-equity/src/capital-program/v2-contracts';
 import {r2Ref} from '../../packages/private-equity/src/capital-program/r2-native';
 const repo=resolve('..'),out=process.env.FINNOR_R2_EVIDENCE_DIR!,cases:any[]=[],traffic:any[]=[],began=new Date().toISOString(),serve=process.argv.includes('--serve'),caseFlag=process.argv.indexOf('--case'),lane=caseFlag<0?'positive':process.argv[caseFlag+1];
 assert(['positive','responsibility','compatibility','diagnostic'].includes(lane??''),'Unknown registered owner lane');
@@ -204,23 +204,31 @@ try{
    }return observed;
   });
   await challenge('scientific-runtime-currentness-during-check',async()=>{
-   const runtime=process.env.FINNOR_R2_RUNTIME!,observed=[];
-   for(const mode of ['solver-binary','unsafe-cut-configuration','checker-source']){
+   const runtime=process.env.FINNOR_R2_RUNTIME!,observed=[],scientificIndex=process.argv.indexOf('--scientific-only'),
+    modes=scientificIndex<0?['solver-binary','unsafe-cut-configuration','checker-source']:[process.argv[scientificIndex+1]];
+   assert(modes.every(mode=>['solver-binary','unsafe-cut-configuration','checker-source'].includes(mode!)),'Unknown scientific identity probe');
+   for(const mode of modes){
     const path=mode==='solver-binary'?join(runtime,'bin/scip'):mode==='unsafe-cut-configuration'?join(runtime,'manifest.json'):join(repo,'finnor-os/packages/epistemic-runtime/python/r2_check.py'),
-     originalBytes=await readFile(path),admitted=await newQuery('scientific-identity-'+mode),before=(await admin!.query('SELECT deadline_at FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+     originalBytes=await readFile(path),admitted=await newQuery('scientific-identity-'+mode),before=(await admin!.query('SELECT tenant_id,principal_id,acceptance,deadline_at FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
      running=tick(),child=await nativeChild(admitted.queryId,'check-policy');
     try{
+     const accepted=[],graphDir=join(process.env.FINNOR_M3_STORE!,before.tenant_id,before.principal_id,'graphs');
+     for(const name of await readdir(graphDir)){
+      if(!name.endsWith('.json'))continue;const record=JSON.parse(await readFile(join(graphDir,name),'utf8'));
+      if(record.body?.schema==='finnor.r2.original-proof-artifact.v1'&&record.body.encoding.originalDigest===m3Hash(before.acceptance.r2.original)&&['210','100'].includes(record.body.checkerReceipt.upper))
+       accepted.push({ref:record.ref,body:(await readM3Record<any>(f.ctx,'graphs',record.ref)).body});
+     }
+     const proofChecks=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD' AND body->>'phase'='check-proof' AND body->>'state'='EXITED'",[admitted.queryId])).rows;
+     assert(accepted.length&&proofChecks.some(v=>v.body.receipt.exitCode===0),'Genuine original accepted upper proof prerequisite missing');
      let changedBytes:Buffer;
      if(mode==='unsafe-cut-configuration'){const manifest=JSON.parse(originalBytes.toString());manifest.configuration.cuts=true;changedBytes=Buffer.from(JSON.stringify(manifest));}
      else changedBytes=Buffer.concat([originalBytes,Buffer.from(mode==='checker-source'?'\n# Disposable original checker identity revision\n':'\n')]);
      await artifact('scientific-identity/'+mode+'.json',{mode,path,originalSha256:sha(originalBytes),replacementSha256:sha(changedBytes),originalGrantRenewed:false});
      await writeFile(path,changedBytes);try{process.kill(child.pid,'SIGCONT');}catch{}await running;assert(await exited(child.pid));await durable(admitted.queryId);
      const row=(await admin!.query('SELECT status,deadline_at,result_digest,failure FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
-      publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows,
-      accepted=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_REJECTED_CLAIM' AND body->>'upper' IN('210','100')",[admitted.queryId])).rows,
-      proofChecks=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD' AND body->>'phase'='check-proof' AND body->>'state'='EXITED'",[admitted.queryId])).rows;
+      publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows;
      assert.equal(row.result_digest,null);assert.equal(publications.length,0);assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
-     assert(accepted.length&&proofChecks.some(v=>v.body.receipt.exitCode===0),'Genuine original accepted upper proof prerequisite missing');observed.push({mode,admitted,child,row,publications,accepted,proofChecks});
+     observed.push({mode,admitted,child,row,publications,accepted,proofChecks});
     }finally{await writeFile(path,originalBytes);try{process.kill(child.pid,'SIGCONT');}catch{}await running;}
     assert.equal(sha(await readFile(path)),sha(originalBytes));const current=ok(await api('capital-program-read',{queryId:admitted.queryId}));assert.equal(current.program,null);
    }return observed;
