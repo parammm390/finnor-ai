@@ -165,7 +165,7 @@ try{
      await writeFile(path,changedBytes);
      if(child)process.kill(child.pid,'SIGCONT');
      await(running??tick());if(child)assert(await exited(child.pid));
-     const row=(await admin!.query('SELECT status,deadline_at,result_digest,error FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+     const row=(await admin!.query('SELECT status,deadline_at,result_digest,failure FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
       publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows,
       physical=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R2_PHYSICAL_CHILD'",[admitted.queryId])).rows;
      assert(['INVALIDATED','FAILED'].includes(row.status),JSON.stringify(row));assert.equal(row.result_digest,null);assert.equal(publications.length,0);
@@ -216,7 +216,7 @@ try{
      else await admin!.query("UPDATE finnor_os.users SET status='suspended' WHERE id=$1 AND tenant_id=$2",[f.principal,f.tenant]);
      try{process.kill(child.pid,'SIGCONT');}catch{}
      await running;assert(await exited(child.pid));await durable(admitted.queryId);
-     const row=(await admin!.query('SELECT status,deadline_at,result_digest,error FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
+     const row=(await admin!.query('SELECT status,deadline_at,result_digest,failure FROM finnor_os.m3_queries WHERE id=$1',[admitted.queryId])).rows[0],
       publications=(await admin!.query('SELECT * FROM finnor_os.m3_publications WHERE query_id=$1',[admitted.queryId])).rows;
      assert.equal(row.result_digest,null);assert.equal(publications.length,0);assert.equal(row.deadline_at.toISOString(),before.deadline_at.toISOString());
      observed.push({mode,admitted,before,child,revision,row,publications,originalDeadlineRetained:true,newGrant:false});
