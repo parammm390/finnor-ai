@@ -9,6 +9,37 @@ ALTER TABLE finnor_os.s5_proposals ADD CONSTRAINT s5_proposal_domain CHECK (
   OR (problem IS NULL AND certificate IS NULL AND demand IS NOT NULL
     AND demand->>'schema'='finnor.x1.institution-resource-demand.v1'
     AND octet_length(demand::text)<=262144));
+ALTER TABLE finnor_os.x1_mapping_admissions
+  ADD COLUMN duty_population_digest text CHECK (duty_population_digest ~ '^[a-f0-9]{64}$');
+-- Older receipts remain readable, but cannot authorize a new typed programme
+-- without a checked population seal.
+CREATE FUNCTION finnor_os.x1_publish_mapping_admission(
+  p_work_id uuid, p_original_digest text, p_candidate_digest text,
+  p_checker_digest text, p_receipts jsonb, p_duty_population_digest text
+) RETURNS finnor_os.x1_mapping_admissions
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
+  v_user uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
+  v_row finnor_os.x1_mapping_admissions;
+BEGIN
+  IF v_tenant IS NULL OR v_user IS NULL
+    OR p_duty_population_digest IS NULL
+    OR p_duty_population_digest !~ '^[a-f0-9]{64}$'
+    OR NOT EXISTS(SELECT 1 FROM finnor_os.works
+      WHERE tenant_id=v_tenant AND id=p_work_id AND created_by=v_user)
+  THEN RAISE EXCEPTION 'X1 checked duty publication requires owned Work'; END IF;
+  INSERT INTO finnor_os.x1_mapping_admissions
+    (tenant_id,work_id,principal_id,original_digest,candidate_digest,
+     checker_digest,receipts,duty_population_digest)
+  VALUES(v_tenant,p_work_id,v_user,p_original_digest,p_candidate_digest,
+    p_checker_digest,p_receipts,p_duty_population_digest)
+  RETURNING * INTO v_row;
+  RETURN v_row;
+END $$;
+REVOKE ALL ON FUNCTION finnor_os.x1_publish_mapping_admission(uuid,text,text,text,jsonb,text) FROM PUBLIC;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='finnor_app') THEN
+  GRANT EXECUTE ON FUNCTION finnor_os.x1_publish_mapping_admission(uuid,text,text,text,jsonb,text) TO finnor_app;
+END IF; END $$;
 
 -- The existing projection's allocation_digest FK now addresses either a
 -- finite certificate digest or an institution demand digest.
@@ -137,6 +168,25 @@ BEGIN
      AND e->>'resourceId'=p_resource_id;
   RETURN v_total;
 END $$;
+-- An opaque native projection, not a synthetic aggregate or another Work's
+-- origin body. The actual reservation ref/envelope participates in S5 checks.
+CREATE FUNCTION finnor_os.s5_institution_outstanding()
+RETURNS TABLE(reservation_ref jsonb,demand_ref jsonb,envelopes jsonb,status text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
+  v_user uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
+BEGIN
+  IF v_tenant IS NULL OR v_user IS NULL OR NOT EXISTS(
+    SELECT 1 FROM finnor_os.users
+    WHERE tenant_id=v_tenant AND id=v_user AND role='owner' AND status='active'
+  ) THEN RAISE EXCEPTION 'S5 owner outstanding authority required'; END IF;
+  RETURN QUERY SELECT o.body->'ref',o.body->'demandRef',s.envelopes,s.status
+    FROM finnor_os.s5_reservations s
+    JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id)
+    WHERE s.tenant_id=v_tenant AND s.status<>'RELEASED'
+      AND o.body->>'schema'='finnor.s5.institution-reservation.v1'
+    ORDER BY s.reservation_id LIMIT 257;
+END $$;
 
 CREATE FUNCTION finnor_os.s5_reserve_institution(
   p_demand jsonb, p_origin jsonb, p_envelopes jsonb, p_request_digest text
@@ -149,6 +199,22 @@ DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
   v_occupied numeric; v_capacity numeric; v_period integer; v_available jsonb; v_matches integer;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended('s5-portfolio:'||v_tenant::text,0));
+  -- This SQL writer is independently callable. Lock the authority and mandate
+  -- rows here, not only in the TypeScript adapter, through publication.
+  PERFORM 1 FROM finnor_os.authority_states a WHERE a.tenant_id=v_tenant FOR SHARE OF a;
+  PERFORM 1 FROM finnor_os.users u
+    WHERE u.tenant_id=v_tenant AND u.id=v_user AND u.role='owner'
+      AND u.status='active' FOR SHARE OF u;
+  IF NOT FOUND THEN RAISE EXCEPTION 'S5 institution owner authority changed'; END IF;
+  PERFORM 1 FROM finnor_os.x1_work_mandates m
+    WHERE m.tenant_id=v_tenant AND m.work_id=(p_demand->>'workId')::uuid
+      AND m.principal_id=v_user AND m.institution_id=p_demand->>'institutionId'
+      AND m.revoked_at IS NULL AND m.valid_from<=clock_timestamp()
+      AND m.expires_at>clock_timestamp()
+      AND (SELECT min(rule->>'deadlineAt') FROM jsonb_array_elements(m.rules) rule)
+        =p_demand->>'originalDeadline'
+    FOR SHARE OF m;
+  IF NOT FOUND THEN RAISE EXCEPTION 'S5 institution mandate changed before publication'; END IF;
   IF v_tenant IS NULL OR v_user IS NULL OR p_demand->>'tenantId'<>v_tenant::text
     OR p_demand->>'principalId' IS DISTINCT FROM v_user::text
     OR p_origin->>'tenantId' IS DISTINCT FROM v_tenant::text
@@ -215,12 +281,15 @@ BEGIN
     IF v_matches<>1 THEN RAISE EXCEPTION 'S5 institution resource missing or ambiguous'; END IF;
     SELECT value INTO v_envelope FROM jsonb_array_elements(p_envelopes)
       WHERE value->>'resourceId'=v_resource->>'resourceId';
-    IF v_envelope IS NULL OR v_envelope->'quantities'->>0<>v_line->>'quantity'
+    IF v_envelope IS NULL OR v_envelope->'quantities'->>0 IS DISTINCT FROM v_line->>'quantity'
       OR v_envelope->>'unit' IS DISTINCT FROM v_resource->>'unit'
       OR v_envelope->>'kind' IS DISTINCT FROM 'CUMULATIVE_EXPENDITURE'
       OR v_envelope->'horizon' IS DISTINCT FROM v_resource->'horizon'
       OR v_envelope->'minimumQuantities' IS DISTINCT FROM v_envelope->'quantities'
+      OR jsonb_typeof(v_envelope->'quantities') IS DISTINCT FROM 'array'
       OR jsonb_array_length(v_envelope->'quantities')<>jsonb_array_length(v_resource->'availability')
+      OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(v_envelope->'quantities') q
+        WHERE q.value IS NULL OR q.value !~ '^(0|[1-9][0-9]*)$')
       OR v_resource->'currency'<>'null'::jsonb
       OR v_resource->'covenants'<>'[]'::jsonb
       OR v_resource->>'validUntil' IS NULL OR (v_resource->>'validUntil')::timestamptz<=clock_timestamp()
@@ -230,7 +299,7 @@ BEGIN
       v_available:=v_resource->'availability'->v_period;
       IF v_available->>'basis' IS DISTINCT FROM 'REPORTED_AVAILABLE'
         OR v_available->>'amount' IS NULL
-        OR (v_period>0 AND v_envelope->'quantities'->>v_period<>'0')
+        OR (v_period>0 AND v_envelope->'quantities'->>v_period IS DISTINCT FROM '0')
         THEN RAISE EXCEPTION 'S5 institution resource horizon invalid'; END IF;
       SELECT COALESCE(sum((part.value)::numeric),0) INTO v_occupied
         FROM finnor_os.s5_reservations s
@@ -257,6 +326,36 @@ BEGIN
   INSERT INTO finnor_os.s5_reservations(tenant_id,reservation_id,allocation_digest,revision,status,envelopes)
     VALUES(v_tenant,v_id,v_digest,1,'RESERVED',p_envelopes);
   RETURN p_origin;
+END $$;
+
+CREATE FUNCTION finnor_os.s5_invalidate_institution_resource(
+  p_resource_id text, p_prior_ref jsonb, p_new_ref jsonb
+) RETURNS TABLE(reservation_id text, revision integer)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
+  v_user uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
+  v_head jsonb;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('s5-portfolio:'||v_tenant::text,0));
+  SELECT r.body INTO v_head FROM finnor_os.s5_resources r
+    JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision)
+    WHERE r.tenant_id=v_tenant AND r.resource_id=p_resource_id;
+  IF v_tenant IS NULL OR v_user IS NULL OR v_head->'ref' IS DISTINCT FROM p_new_ref
+    OR v_head->'priorRef' IS DISTINCT FROM p_prior_ref
+    OR v_head->'ownerRef'->>'id' IS DISTINCT FROM v_user::text
+    OR NOT EXISTS(SELECT 1 FROM finnor_os.users
+      WHERE tenant_id=v_tenant AND id=v_user AND role='owner' AND status='active')
+  THEN RAISE EXCEPTION 'S5 resource revision owner context changed'; END IF;
+  RETURN QUERY UPDATE finnor_os.s5_reservations s
+    SET revocation_reason='RESOURCE_REVISION_CHANGED',revision=s.revision+1,
+      updated_at=clock_timestamp()
+    FROM finnor_os.s5_reservation_origins o
+    WHERE s.tenant_id=v_tenant AND o.tenant_id=s.tenant_id
+      AND o.reservation_id=s.reservation_id
+      AND o.body->>'schema'='finnor.s5.institution-reservation.v1'
+      AND s.status<>'RELEASED'
+      AND s.envelopes @> jsonb_build_array(jsonb_build_object('resourceId',p_resource_id))
+    RETURNING s.reservation_id,s.revision;
 END $$;
 
 CREATE FUNCTION finnor_os.s5_consume_institution(p_reservation_id text,p_body jsonb)
@@ -368,16 +467,20 @@ BEGIN
 END $$;
 
 REVOKE ALL ON FUNCTION finnor_os.s5_institution_occupancy(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.s5_institution_outstanding() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.s5_institution_visible(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.s5_institution_consumption_visible(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.s5_reserve_institution(jsonb,jsonb,jsonb,text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.s5_invalidate_institution_resource(text,jsonb,jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.s5_consume_institution(text,jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.s5_release_untouched_institution(text) FROM PUBLIC;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='finnor_app') THEN
   GRANT EXECUTE ON FUNCTION finnor_os.s5_institution_occupancy(text) TO finnor_app;
+  GRANT EXECUTE ON FUNCTION finnor_os.s5_institution_outstanding() TO finnor_app;
   GRANT EXECUTE ON FUNCTION finnor_os.s5_institution_visible(text) TO finnor_app;
   GRANT EXECUTE ON FUNCTION finnor_os.s5_institution_consumption_visible(text) TO finnor_app;
   GRANT EXECUTE ON FUNCTION finnor_os.s5_reserve_institution(jsonb,jsonb,jsonb,text) TO finnor_app;
+  GRANT EXECUTE ON FUNCTION finnor_os.s5_invalidate_institution_resource(text,jsonb,jsonb) TO finnor_app;
   GRANT EXECUTE ON FUNCTION finnor_os.s5_consume_institution(text,jsonb) TO finnor_app;
   GRANT EXECUTE ON FUNCTION finnor_os.s5_release_untouched_institution(text) TO finnor_app;
 END IF; END $$;

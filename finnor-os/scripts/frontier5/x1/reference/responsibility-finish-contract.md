@@ -36,3 +36,37 @@ Retained pre-fix observations: reordered charge returned
 `s5_institution_reservations`/`s5_institution_charges` with direct
 `SELECT,INSERT,UPDATE` grant; P1 parsed the institution variant as
 `sources`/`acceptance` missing and `kind`/`institution` unrecognized.
+
+## Second-pass owner regressions, frozen before repair
+
+At native S5 `readStoredAllocation`/`readAllocationConsumptions`, a typed
+reservation ref must resolve as a native stored branch; native snapshots must
+include its actual typed reservation and consumption state through the same
+grammar without a synthesized `institution-occupancy` commitment. Old finite
+certificate behavior remains. At the checked owner admission → P1 submission
+boundary, an immutable seal over the entire responsibilities and unresolved
+population (including derivation/observer/postcondition) must match both the
+checked admission and the persisted request. Neither schema-tag validation nor
+an attacker-recomputed programme/demand digest suffices. The existing offline
+case exercises mutated sealed populations; live P1 acceptance remains pending.
+
+At SQL owner publication, `quantities:[null]` cannot pass the first-period
+eight-unit comparison; all envelope quantities must be non-null exact
+nonnegative integer strings. A resource revision must invalidate the live
+institution clearance via an authorized writer without releasing or
+reinterpreting the original envelope, allowing `putAllocationResource` to
+commit. Independently callable `s5_reserve_institution` must hold current
+mandate and authority rows against revocation/change until reservation
+publication, not rely on the TypeScript caller's locks. The offline SQL
+contract guards those entry points; the frozen live packet owns actual
+transaction and RLS proof.
+
+Retained defective source observations at 9d1e55143: `stored()` accepts
+certificate refs only; `consumptions()` uses certificate policy bindings;
+`snapshot()` synthesizes institution occupation rather than reading the
+typed row; changing an observer or derivation/removing unresolved duties
+while retaining admission and recalculating demand is accepted by P1;
+`NULL <> '8'` is unknown in the SQL first-period comparison; raw
+`putAllocationResource` UPDATE trips `s5_institution_owner_guard`; the
+granted reservation SQL writer reads authority and mandate without locks.
+Run the cases on this source before implementing, retain that failed log.

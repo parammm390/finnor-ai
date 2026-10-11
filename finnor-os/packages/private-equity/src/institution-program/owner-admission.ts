@@ -11,6 +11,7 @@ import { loadPrivateEquityWorldState } from "../world-state";
 import { mapPrivateEquitySourceObservation } from "../source-mapping";
 import { createFundTx, createVehicleTx, linkFundVehicleTx } from "../digital-twin";
 import { readAllocationSnapshot } from "../allocation-store";
+import { deriveInstitutionResponsibilities, verifyInstitutionDutyPopulation } from "./responsibility";
 import type { PeMutationContext } from "../types";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
 import { checkInstitutionInSeparateProcess } from "./checker-process";
@@ -25,6 +26,15 @@ const sha = (value: Buffer | string) => createHash("sha256").update(value).diges
 const profilePath = fileURLToPath(new URL("../../../../../scope-frontier5/x1-institutional-programme-compiler/profile.json", import.meta.url));
 const checkerPath = fileURLToPath(new URL("./checker.ts", import.meta.url));
 const checkerRawPath = fileURLToPath(new URL("./checker-raw.ts", import.meta.url));
+function checkedDutyDigest(original: OriginalInstitutionEvidence, candidate: InstitutionCandidate,
+  check: InstitutionCheck, profile: DigitalInstitutionProfile): string {
+  const lowered = deriveInstitutionResponsibilities({
+    original, candidate, check, profile,
+    admittedCanonicalRefs: original.canonical.entities.map(entity => entity.ref),
+    authorizedOperations: original.current.authorizedOperations,
+  });
+  return verifyInstitutionDutyPopulation(lowered.programme, lowered.responsibilities, lowered.unresolved);
+}
 function canonicalId(tenant: string, institution: string, kind: string, registration: string): string {
   const value = sha(JSON.stringify([tenant, institution, kind, registration])).slice(0, 32);
   return `${value.slice(0, 8)}-${value.slice(8, 12)}-4${value.slice(13, 16)}-8${value.slice(17, 20)}-${value.slice(20)}`;
@@ -266,8 +276,8 @@ async function admitCheckedInstitutionMappings(
       || sha(JSON.stringify(mandate.rules)) !== sha(JSON.stringify(original.mandate.rules))
       || mandate.institutionId !== original.institutionId) throw new Error("X1_MANDATE_CHANGED");
   const prior = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true },
-    async (_db, client) => client.query<{ receipts: AcceptedInstitutionMappingRef[]; checker_digest: string }>(
-      `SELECT receipts,checker_digest FROM finnor_os.x1_mapping_admissions
+    async (_db, client) => client.query<{ receipts: AcceptedInstitutionMappingRef[]; checker_digest: string; duty_population_digest: string | null }>(
+      `SELECT receipts,checker_digest,duty_population_digest FROM finnor_os.x1_mapping_admissions
         WHERE tenant_id=$1 AND work_id=$2 AND principal_id=$3
           AND original_digest=$4 AND candidate_digest=$5 LIMIT 1`,
       [ctx.auth.tenantId, original.workId, ctx.auth.userId, sha(JSON.stringify(original)), sha(JSON.stringify(candidate))],
@@ -275,7 +285,9 @@ async function admitCheckedInstitutionMappings(
   if (prior.rows[0]) {
     if (acceptedCheck.inputDigest !== sha(JSON.stringify(original))
         || acceptedCheck.candidateDigest !== sha(JSON.stringify(candidate))
-        || prior.rows[0].checker_digest !== acceptedCheck.checkerRevision) {
+        || prior.rows[0].checker_digest !== acceptedCheck.checkerRevision
+        || prior.rows[0].duty_population_digest !== checkedDutyDigest(
+          original, candidate, acceptedCheck, profile)) {
       throw new Error("X1_ADMISSION_REPLAY_DIGEST_MISMATCH");
     }
     const current = await loadInstitutionAdmissionOriginal(ctx, original.workId,
@@ -339,6 +351,7 @@ async function admitCheckedInstitutionMappings(
       || check.checkerRevision !== acceptedCheck.checkerRevision) {
     throw new Error("X1_SEPARATE_CHECK_OR_OWNER_CUT_MISMATCH");
   }
+  const dutyPopulationDigest = checkedDutyDigest(independent, candidate, check, profile);
   // Preflight every target before any owner write; unresolved independent
   // sources do not prevent the supported mappings from committing.
   for (const mapping of candidate.mappings) {
@@ -554,9 +567,9 @@ async function admitCheckedInstitutionMappings(
     // SECURITY DEFINER owner function, which re-derives tenant/principal from
     // the request GUCs and cross-checks the referenced Work.
     const publication = await client.query(
-      `SELECT id::text FROM finnor_os.x1_publish_mapping_admission($1,$2,$3,$4,$5::jsonb)`,
+      `SELECT id::text FROM finnor_os.x1_publish_mapping_admission($1,$2,$3,$4,$5::jsonb,$6)`,
       [original.workId, check.inputDigest, check.candidateDigest, check.checkerRevision,
-        JSON.stringify(receipts)],
+        JSON.stringify(receipts), dutyPopulationDigest],
     );
     if (publication.rowCount !== 1) throw new Error("X1_ADMISSION_PUBLICATION_FAILED");
     return receipts;

@@ -18,6 +18,35 @@ const lowered = deriveInstitutionResponsibilities({
   authorizedOperations: original.current.authorizedOperations, profile,
 });
 const duty = lowered.responsibilities[0]!;
+// The checked owner seal covers every persisted duty and unresolved liability.
+// Neither an altered observer/derivation nor an omitted unresolved entry can
+// keep a valid admission seal by merely recomputing the programme/demand hash.
+assert.match((lowered.programme as typeof lowered.programme & {dutyPopulationDigest?:string}).dutyPopulationDigest ?? "",
+  /^[a-f0-9]{64}$/, "checked lowering must seal its entire duty population");
+const { verifyInstitutionDutyPopulation } = await import("../../../packages/private-equity/src/institution-program/responsibility");
+const sealed = verifyInstitutionDutyPopulation(lowered.programme, lowered.responsibilities, lowered.unresolved);
+assert.equal(sealed.length, 64);
+for (const mutate of [
+  (v: typeof lowered) => { v.responsibilities[0]!.obligation.independentObserver.ref = "wrong-observer"; },
+  (v: typeof lowered) => { v.responsibilities[0]!.obligation.postcondition.contractRef = "wrong-postcondition"; },
+  (v: typeof lowered) => { v.responsibilities[0]!.obligation.derivationRevision = "wrong-derivation"; },
+]) {
+  const changed = structuredClone(lowered);
+  mutate(changed);
+  assert.throws(() => verifyInstitutionDutyPopulation(
+    changed.programme, changed.responsibilities, changed.unresolved,
+  ), /X1_P1_CHECKED_DUTY_POPULATION_MISMATCH/);
+}
+const blocked = deriveInstitutionResponsibilities({
+  original, candidate, check, admittedCanonicalRefs: candidate.mappings.map(m => m.canonicalRef),
+  authorizedOperations: [], profile,
+});
+assert.ok(blocked.unresolved.length);
+const omitted = structuredClone(blocked);
+omitted.unresolved.pop();
+assert.throws(() => verifyInstitutionDutyPopulation(
+  omitted.programme, omitted.responsibilities, omitted.unresolved,
+), /X1_P1_CHECKED_DUTY_POPULATION_MISMATCH/);
 const demand = buildInstitutionResourceDemand({
   tenantId: original.tenantId, workId: original.workId, principalId: original.principalId,
   institutionId: original.institutionId, programmeDigest: "a".repeat(64),
@@ -70,6 +99,11 @@ assert.match(sql, /s5_institution_owner_guard/);
 assert.match(sql, /s5_institution_reservation_privacy/);
 assert.match(sql, /s5_institution_state_guard/);
 assert.match(sql, /s5_release_untouched_institution/);
+assert.match(sql, /s5_invalidate_institution_resource/);
+assert.match(sql, /FOR SHARE OF m/);
+assert.match(sql, /FOR SHARE OF a/);
+assert.match(sql, /jsonb_array_elements_text\(v_envelope->'quantities'\)/);
+assert.match(sql, /v_envelope->'quantities'->>0 IS DISTINCT FROM v_line->>'quantity'/);
 assert.doesNotMatch(sql, /GRANT SELECT,INSERT,UPDATE ON finnor_os\.s5_institution_/);
 
 // P1 grammar must accept the checked institution variant without an
@@ -84,6 +118,10 @@ const institution = {
 };
 const parsed = parseHarnessRequest(institution);
 assert.equal(parsed.kind, "institution_responsibility_v1");
+const store = read("../../../packages/private-equity/src/allocation-store.ts");
+assert.match(store, /p\.demand IS NOT NULL[\s\S]*institutionState/);
+assert.doesNotMatch(store, /institution-occupancy['"`]/);
+assert.match(store, /readStoredAllocation[\s\S]*stored/);
 console.log(JSON.stringify({ basis: "offline-development-only", cases: [
   "charge-semantic-replay", "three-operation-observer", "native-s5-grammar-owner-boundary", "p1-institution-request",
 ] }));

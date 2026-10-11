@@ -111,8 +111,13 @@ runbook; nothing here is passed evidence.
   refuse and preserve the original envelope and liability. No direct app-role
   mutation may erase the charge or retroactively change its units/deadline.
 - Reserve a finite S5 certificate in the same pool after A's institution
-  occupation. Its native snapshot must include aggregate typed occupancy,
-  without disclosing A's preimage to B. Conversely, reserve a finite
+  occupation. Its native snapshot must include A's actual typed reservation
+  reference, original envelope and status (not a synthetic
+  `institution-occupancy` ref), without disclosing A's Work, demand body or
+  charge preimage to B. `readStoredAllocation` on A's typed reservation must
+  return the typed native branch; after a charge, `readAllocationConsumptions`
+  must return the same native consumption/state/charge identity without a
+  finite certificate or policy. Conversely, reserve a finite
   certificate first and assert institution reservation sees the retained
   finite occupation. Check old finite consumption/settlement unchanged.
 - Submit a checked institution variant through `submitHarnessProgram` under
@@ -123,6 +128,43 @@ runbook; nothing here is passed evidence.
   unresolved duty and original reservation/deadline. Exact-payload intent
   remains WAITING until downstream independent canonical observation; do not
   score WAITING as completion or claim ordinary dispatch in this stage.
+
+## 0173 second-pass repair challenges (NOT RUN below disk floor)
+
+- Obtain a checked mapping admission through the actual owner, including its
+  immutable `duty_population_digest`. Derive the complete responsibilities and
+  unresolved population from the checked original/candidate. Submit P1 once
+  unchanged, then use the same genuine admission and S5 parent with one
+  altered observer ref, altered postcondition ref, altered derivation revision,
+  and omitted unresolved item in separate submissions. Recomputing the
+  programme/demand digest for each cannot make it equal the independently
+  sealed admission population. Each must fail before P1 request/plan/job
+  publication with `X1_P1_CHECKED_DUTY_POPULATION_MISMATCH` or
+  `X1_P1_CHECKED_OWNER_ADMISSION_REQUIRED`, not with an unrelated Work denial.
+  Older 0172 admissions without a seal remain readable but cannot authorize
+  the typed P1 path.
+- As `finnor_app` under a valid Work/owner/mandate, call the granted
+  `s5_reserve_institution` function directly with an otherwise valid eight-unit
+  demand but an envelope `quantities:[null]` and matching minimum. Assert
+  owner SQL rejects before any proposal/origin/reservation row. Repeat with
+  a nonnumeric later-period quantity. Valid exact integer quantities still
+  reserve, preserving the original parent.
+- Reserve a live typed row; revise its native resource through
+  `putAllocationResource` as its owner. Assert the revision commits, the typed
+  reservation still holds its original envelope/charge/identity, and its
+  `revocation_reason` becomes `RESOURCE_REVISION_CHANGED`. Attempt a new
+  charge and assert stale currentness. A finite live reservation in the same
+  update still receives its native invalidation and experience event. Repeat
+  with a revoked resource.
+- In two physical SQL sessions, call `s5_reserve_institution` directly in A
+  without its TypeScript adapter's `FOR SHARE`. Hold A's transaction after
+  the SQL writer acquired the authority/mandate row locks, concurrently
+  revoke the mandate or bump authority in B, then commit A and B in each
+  serialization order. A published reservation must be ordered before the
+  change or the writer must refuse; it must never publish against a change
+  already committed. Read actual locks/rows and preserve both transactions'
+  timestamps. The owner-only typed guard and principal RLS still reject raw
+  lifecycle writes.
 
 The runner currently returns `NOT_IMPLEMENTED_NOT_RUN` for `owners`; this
 packet is the launch/seed/expected-row contract for its downstream owner

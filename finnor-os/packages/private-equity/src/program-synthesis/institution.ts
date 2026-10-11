@@ -1,5 +1,6 @@
 import type { JobExecutionContext } from '../../../../apps/worker/src/queue';
 import { validateInstitutionDemand } from '../allocation-store';
+import { verifyInstitutionDutyPopulation } from '../institution-program/responsibility';
 import type { PeMutationContext } from '../types';
 import { authorize, codeIdentity, principal, schemaIdentity, sha, stable, tx } from '../evidence-execution/store';
 import { P1_VERSION, isInstitutionRequest, type InstitutionHarnessRequest, type InstitutionHarnessProgram } from './contracts';
@@ -14,6 +15,7 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
  const {programme,responsibilities,unresolved,demand,reservationRef,actions=[]}=request.institution;
  if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')
   throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
+ verifyInstitutionDutyPopulation(programme,responsibilities,unresolved);
  if(request.workId!==programme.workId||request.workId!==demand.workId
    ||programme.tenantId!==ctx.auth.tenantId||demand.tenantId!==ctx.auth.tenantId
    ||programme.principalId!==principal(ctx)||demand.principalId!==principal(ctx)
@@ -35,9 +37,10 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
    ||stable(resource.reservation.demand)!==stable(demand))throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
  const admission=await tx(ctx,async c=>(await c.query(`SELECT id FROM finnor_os.x1_mapping_admissions
    WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND original_digest=$4
-     AND candidate_digest=$5 AND checker_digest=$6`,
+     AND candidate_digest=$5 AND checker_digest=$6 AND duty_population_digest=$7`,
   [ctx.auth.tenantId,principal(ctx),request.workId,programme.admission.originalDigest,
-   programme.admission.candidateDigest,programme.admission.checkerDigest])).rows[0],true);
+   programme.admission.candidateDigest,programme.admission.checkerDigest,
+   programme.dutyPopulationDigest])).rows[0],true);
  if(!admission)throw Error('X1_P1_CHECKED_OWNER_ADMISSION_REQUIRED');
  const mandate=await tx(ctx,async c=>(await c.query<{revision:string;rules:Array<{
   id:string;operation:string;deadlineAt:string;actionPayload?:unknown;

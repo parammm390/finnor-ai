@@ -1,5 +1,5 @@
 import {readHarnessDecisionSlice} from './decision-slice';
-import {chargeInstitutionDemand,validateInstitutionDemand} from '../allocation-store';
+import {recordAllocationConsumption,validateInstitutionDemand} from '../allocation-store';
 import {designEnterpriseExperiments} from '../enterprise-experiments';
 import {queryEnterpriseInterventionModel} from '../enterprise-interventions';
 import {readEnterpriseContingentPolicy,validateEnterpriseContingentPolicy} from '../enterprise-control';
@@ -35,7 +35,7 @@ export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow|I
    reservationRef:q.proposed.reservationRef,goalSuccess:false}};
   const resource=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
   if(resource.status!=='CURRENT')throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
-  const charged=await chargeInstitutionDemand(ctx,q.proposed.reservationRef,{
+  const charged=await recordAllocationConsumption(ctx,q.proposed.reservationRef,{
    responsibilityIdentity:node.stableIdentity,phase:'EXECUTION',ordinal:1,units:1});
   // A checked payload is an intent. The ordinary action bridge and separate
   // canonical observer are downstream; this owner never claims their receipt.

@@ -1,5 +1,35 @@
 # FRONTIER5.X1 status
 
+## Responsibility/S5 second pass, 11 October 2026
+
+The five source findings against `9d1e55143` have bounded regressions
+registered before repair. Original second-pass missing-seal failure is
+retained at `x1-control/evidence/responsibility-second-pass-prefixed/behavior-failure.log`;
+the independent review's four SQL/native counterexamples are recorded in
+`reference/responsibility-finish-contract.md` and deferred to the exact
+live packet for actual SQL/role proof.
+
+The native S5 snapshot now reads each real typed reservation through an
+owner-authorized tenant-wide projection, with a distinct demand reference
+rather than a synthetic certificate/aggregate. `readStoredAllocation`,
+`readAllocationConsumptions` and `recordAllocationConsumption` admit the
+typed branch while finite policy/certificate consumers keep their original
+checks. The owner admission seals the complete checked duties/unresolved
+population; P1 verifies both the population and its immutable admission
+digest before publishing. Migration 0173 rejects NULL/nonnumeric
+quantities, locks mandate/authority in the SQL writer, and grants a narrow
+owner resource-invalidation writer that preserves original envelopes.
+The existing P1/PlanGraph/ObjectiveLoop/restart binding remains; status
+OBSERVED still belongs to the downstream durable continuation feature.
+
+Offline kernel and static checks plus scoped P1 typecheck passed on this
+source cut. Migration 0173 has not been applied. Actual two-principal
+contention, row locks/RLS, native finite/typed consumption, physical P1
+progression and installed Work proof remain **NOT RUN** below the live
+1.5 GiB disk floor. VAL-X1-PROGRAM-001 and VAL-X1-RESOURCE-001 remain
+**UNCLAIMED**. No protected admission, operation authority, global PASS
+or profile reduction is implied.
+
 ## Responsibility finish source cut, 11 October 2026
 
 The five defects from mission `responsibility-finish.md` have pre-code

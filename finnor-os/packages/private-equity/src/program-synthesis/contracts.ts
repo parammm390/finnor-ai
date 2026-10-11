@@ -53,6 +53,7 @@ export const InstitutionHarnessRequestSchema=z.object({
     parentEnvelope:z.object({deadlineAt:instant}).passthrough(),
     admission:z.object({originalDigest:z.string().regex(/^[a-f0-9]{64}$/),
       candidateDigest:z.string().regex(/^[a-f0-9]{64}$/),checkerDigest:z.string().min(1)}).passthrough(),
+    dutyPopulationDigest:z.string().regex(/^[a-f0-9]{64}$/),
   }).passthrough(),
   responsibilities:z.array(z.custom<InstitutionResponsibility>((value)=>!!value&&typeof value==='object'
     &&(value as InstitutionResponsibility).schema==='finnor.x1.institution-responsibility.v1')).max(128),

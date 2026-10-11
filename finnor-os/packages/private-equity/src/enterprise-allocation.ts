@@ -89,7 +89,9 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
   }catch(e){if(e instanceof AllocationContractError&&e.code==='LIMIT_EXCEEDED')return failure('SEARCH_EXHAUSTED',[e.message],produced.compute);if(e instanceof AllocationContractError&&e.code==='STALE_INPUT')return failure('STALE_INPUT',[e.message,'RECLEAR_CURRENT_REVISIONS_WITHIN_OWNER_BUDGET'],produced.compute);throw e;}
 }
 export async function readEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
-  const ref=ExperimentRefSchema.parse(value),issued=await readStoredAllocation(ctx,ref);await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
+  const ref=ExperimentRefSchema.parse(value),issued=await readStoredAllocation(ctx,ref);
+  if(issued.kind!=='finite_allocation_v1')throw denied();
+  await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
   return immutableControl({...issued,consumptions:await readAllocationConsumptions(ctx,ref),executionAuthorityGranted:false,protectedReceipt:null});
 }
 /** Read S5's original qualified settlement and its independently protected S6

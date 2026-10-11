@@ -38,6 +38,20 @@ export type InstitutionResponsibility = {
   status: "LOWERED"; executionAuthorityGranted: false; protectedReceipt: null;
   qualification: "TYPED_OWNER_PROGRESSION_NOT_NUMERIC_S4_NOT_S3_CAUSAL";
 };
+type DutyPopulation = {
+  admission: { originalDigest: string; candidateDigest: string; checkerDigest: string };
+  dutyPopulationDigest: string;
+};
+export function verifyInstitutionDutyPopulation(
+  programme: DutyPopulation, responsibilities: InstitutionResponsibility[],
+  unresolved: Array<{ stableIdentity: string; reason: string; originalDeadline: string }>,
+): string {
+  const digest = hash(["x1-checked-duty-population-v1", programme.admission,
+    responsibilities, unresolved]);
+  if (programme.dutyPopulationDigest !== digest)
+    throw new Error("X1_P1_CHECKED_DUTY_POPULATION_MISMATCH");
+  return digest;
+}
 type Input = {
   original: OriginalInstitutionEvidence; candidate: InstitutionCandidate; check: InstitutionCheck;
   admittedCanonicalRefs: string[]; authorizedOperations: string[]; profile: DigitalInstitutionProfile;
@@ -113,7 +127,7 @@ export function deriveInstitutionResponsibilities(input: Input) {
   }
   if (graphNodes.size > profile.bounds.institutionDependencyNodes
       || graphEdges.size > profile.bounds.institutionDependencyEdges) throw new Error("X1_INSTITUTION_GRAPH_BOUND");
-  const programme = {
+  const programmeBody = {
     schema: "finnor.x1.institution-responsibility-programme.v1" as const,
     version: X1_RESPONSIBILITY_VERSION, semanticOwner: "S4_P1" as const,
     tenantId: original.tenantId, workId: original.workId, principalId: original.principalId,
@@ -127,5 +141,8 @@ export function deriveInstitutionResponsibilities(input: Input) {
     qualification: "TYPED_OWNER_PROGRESSION_NOT_NUMERIC_S4_NOT_S3_CAUSAL" as const,
     executionAuthorityGranted: false as const, protectedReceipt: null,
   };
+  const programme = { ...programmeBody,
+    dutyPopulationDigest: hash(["x1-checked-duty-population-v1",
+      programmeBody.admission, responsibilities, unresolved]) };
   return { programme, responsibilities, unresolved };
 }
