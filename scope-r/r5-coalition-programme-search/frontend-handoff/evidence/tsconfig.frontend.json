@@ -4,6 +4,8 @@
     "incremental": false,
     "baseUrl": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules",
     "paths": {
+      "react": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/@types/react/index.d.ts"],
+      "react/*": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/@types/react/*"],
       "@/*": ["/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/*"],
       "@r5-owner-contract": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/coalition-programme.ts"],
       "@r5-allocation-contract": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/allocation.ts"]

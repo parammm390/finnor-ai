@@ -16,13 +16,25 @@ const sources = [
   "src/components/centropy/canvas/coalition-programme-view.ts",
 ]
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex")
+const pins = (directory, paths) => paths.map(path => ({ path, sha256: sha256(readFileSync(join(directory, path))) }))
+const backendTypes = [
+  "finnor-os/packages/shared-types/src/coalition-programme.ts",
+  "finnor-os/packages/shared-types/src/allocation.ts",
+]
+const tooling = [
+  "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/tsconfig.frontend.json",
+  "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/owner-contract.typecheck.ts",
+  "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/verify-frontend.mjs",
+]
 const started = performance.now()
 const results = {
   schema: "finnor.r5.frontend-static-evidence.v1",
   qualification: "STATIC_SOURCE_ONLY_NOT_MOUNTED_OR_INSTALLED_BUILD",
   root,
   backend,
-  sourcePins: sources.map(path => ({ path, sha256: sha256(readFileSync(join(root, path))) })),
+  sourcePins: pins(root, sources),
+  backendTypePins: pins(backend, backendTypes),
+  toolingPins: pins(root, tooling),
   dependencyVersions: Object.fromEntries(["next", "react", "zod", "typescript", "eslint"].map(name =>
     [name, JSON.parse(readFileSync(join(dependencies, name, "package.json"))).version])),
   lockSha256: sha256(readFileSync(join(root, "package-lock.json"))),
@@ -65,6 +77,10 @@ const transpile = sources.map(path => {
 results.clientTranspile = transpile
 passed = transpile.every(row => row.frontendOnly && row.diagnostics.length === 0) && passed
 passed = run("DIFF_CHECK", "git", ["-C", root, "diff", "--check"]) && passed
+results.sourceCutStable = JSON.stringify(results.sourcePins) === JSON.stringify(pins(root, sources)) &&
+  JSON.stringify(results.backendTypePins) === JSON.stringify(pins(backend, backendTypes)) &&
+  JSON.stringify(results.toolingPins) === JSON.stringify(pins(root, tooling))
+passed = results.sourceCutStable && passed
 results.elapsedMs = performance.now() - started
 results.staticChecksPassed = passed
 writeFileSync(join(evidence, "static-checks.json"), JSON.stringify(results, null, 2) + "\n")
