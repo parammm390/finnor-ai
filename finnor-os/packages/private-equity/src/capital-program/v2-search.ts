@@ -14,12 +14,14 @@ import {m3Hash,m3Ref,m3Blocker,m3Bounded,CapitalProgramV2Error,CAPITAL_PROGRAM_V
  type CapitalProgramV2,type CapitalProgramV2Candidate,type CapitalProgramV2Module} from './v2-contracts';
 import {capitalPendingRequests} from './v2-pending';
 import {searchRobustCapitalProgram} from './r2-search';
+import {searchCoalitionCapitalProgram} from './r5-delivery';
 
 const reason=(error:unknown)=>error instanceof CapitalProgramV2Error?error.message:
  error instanceof Error?/^[A-Z][A-Z0-9_]+$/.test(error.message)?error.message:'OWNER_OR_NATIVE_PREDICATE_UNPASSED':'OWNER_OR_NATIVE_PREDICATE_UNPASSED';
 export async function searchCapitalProgram(ctx:PeMutationContext,q:M3QueryRow,attemptId:string,
  checkpoint:()=>Promise<void>,priorCpuMs=0):Promise<{program:CapitalProgramV2;evidence:CurrentSlice|null}>{
  if(q.request.robust)return searchRobustCapitalProgram(ctx,q,attemptId,checkpoint,priorCpuMs);
+ if(q.request.coalition)return searchCoalitionCapitalProgram(ctx,q,attemptId,checkpoint,priorCpuMs);
  const started=performance.now(),cpu=process.cpuUsage(),rss=process.memoryUsage().rss,binding=q.acceptance,
   acceptedRequest=q.request,request=binding.repairBudget?{...acceptedRequest,resource:binding.repairBudget.remaining}:acceptedRequest,
   {descriptors,omitted,domain}=economicDescriptors(request,binding.policy,binding.model,binding.protocols);

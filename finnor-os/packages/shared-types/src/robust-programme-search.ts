@@ -68,10 +68,13 @@ export interface R2Course {id:string;worldId:string;variantId:string;decisions:R
   constraints:Array<{id:string;period:number;used:string;limit:string}>;terminalLiability:string;
   resourceUse:Record<string,string[]>;supported:boolean}
 export interface RationalRow {id:string;sense:'E'|'L'|'G';rhs:string;terms:Array<[string,string]>}
-export interface R2Encoding {
-  schema:'finnor.r2.milp.v1';originalDigest:string;grammarDigest:string;worldDigest:string;restrictedWorlds:string[];
+export interface RationalMILP {
   variables:Array<{id:string;kind:'BINARY'|'CONTINUOUS';lower:string|null;upper:string|null}>;
-  objective:{sense:'min';terms:Array<[string,string]>};rows:RationalRow[];variants:R2Variant[];courses:R2Course[];
+  objective:{sense:'min';terms:Array<[string,string]>};rows:RationalRow[];
+}
+export interface R2Encoding extends RationalMILP {
+  schema:'finnor.r2.milp.v1';originalDigest:string;grammarDigest:string;worldDigest:string;restrictedWorlds:string[];
+  variants:R2Variant[];courses:R2Course[];
   histories:Array<{key:string;variantId:string;period:number;actionHistory:string[];observations:ControlObservation[];actions:string[]}>;
   coverage:{allWorlds:string[];allVariants:string[];fullHistoriesFixed:true;bigMUsed:false;complete:true};
   tieBreak?:{basis:'ORIGINAL_VARIANT_THEN_FIXED_INFORMATION_HISTORY_ACTION_ORDER';minimumValue:string};

@@ -42,7 +42,13 @@ export const CapitalProgramV2RequestSchema=z.object({
   }).strict()).min(1).max(8).optional(),
   resource:CapitalProgramV2ResourceSchema,
   robust:R2RequestSchema.optional(),
+  coalition:z.object({
+    schema:z.literal('finnor.r5.owner-request.v1'),
+    source:R2RequestSchema.innerType().shape.source,
+  }).strict().optional(),
 }).strict().superRefine((value,ctx)=>{
+  if(value.coalition&&(value.robust||value.financial||value.challengeEvidence))
+    ctx.addIssue({code:z.ZodIssueCode.custom,path:['coalition'],message:'R5 has its own exact source and original episode; incompatible alternate profiles cannot be composed implicitly'});
   if(value.permitted.structures.some(s=>s==='STAGED'||s==='OBSERVABLE_STAGE')&&!value.permitted.stageFractions.length)
     ctx.addIssue({code:z.ZodIssueCode.custom,path:['permitted','stageFractions'],message:'A staged domain requires an explicit bounded fraction'});
   for(const key of ['terms','startPeriods','structures','stageFractions'] as const){
@@ -115,6 +121,7 @@ export interface CapitalProgramV2 {
     upstreamComputeRefs:string[];upstreamChargesDuplicated:false;unknownAttemptIds:string[];failedAttemptCostsRetained:true};
   limitations:string[];
   jointSearchCertificate?:JointSearchCertificate;
+  coalitionProgramme?:import('./coalition-programme').CoalitionProgramme;
 }
 export type CapitalProgramV2Status='QUEUED'|'RUNNING'|'TESTED'|'PARTIAL'|'FAILED'|'INVALIDATED'|'CANCELLED';
 export interface CapitalProgramV2BranchReview {

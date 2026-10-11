@@ -4,7 +4,7 @@ import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
-import {runCapitalProgramJob,runRobustCapitalProgramJob} from '@finnor/private-equity/src/capital-program/worker';
+import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
 import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
 import {runIdentificationPlan} from '@finnor/private-equity/src/r4/worker';
 // Worker service (§16): one process, multiple job-type handlers registered by string key.
@@ -56,6 +56,7 @@ export function createWorker(): JobQueue {
   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_capital_program_r2_v1',runRobustCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_r2_v1);
+  queue.register('run_coalition_programme_v1',runCoalitionProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_coalition_programme_v1);
   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);

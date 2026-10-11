@@ -1,5 +1,5 @@
 import type {ControlObservation} from '@finnor/shared-types';
-import type {ExactWorld,R2OriginalProblem,R2Action,R2Variant,R2Course,R2Decision,R2Encoding,RationalRow,R2Request} from '@finnor/shared-types/src/robust-programme-search';
+import type {ExactWorld,R2OriginalProblem,R2Action,R2Variant,R2Course,R2Decision,R2Encoding,RationalRow,R2Request,RationalMILP} from '@finnor/shared-types/src/robust-programme-search';
 import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
 import {canonicalJson,epistemicHash} from './source-precedence';
 import {r2Quantity as q,r2String as s,r2Zero as zero,r2Sum as sum,r2Divide} from './r2-rational';
@@ -238,11 +238,17 @@ export function encodeR2Master(o:R2OriginalProblem,family:ReturnType<typeof cons
  * SCIPrationalSetString. Preserve the original rows without denominator
  * amplification, which can exceed the native infinity threshold. The original
  * proof binder independently compares every resulting rational coefficient. */
-export function r2Lp(encoding:R2Encoding):string{
+export function r2Lp(encoding:RationalMILP):string{
   const linear=(terms:Array<[string,string]>)=>terms.map(([id,token])=>{const v=q(token);return `${v.n>=0n?'+':'-'} ${v.n<0n?-v.n:v.n}${v.d===1n?'':'/'+v.d} ${id}`;}).join(' ')||'0 z';
   const lines=['Minimize',' obj: '+linear(encoding.objective.terms),'Subject To'];
   for(const row of encoding.rows)lines.push(` ${row.id}: ${linear(row.terms)} ${row.sense==='E'?'=':row.sense==='L'?'<=':'>='} ${s(q(row.rhs))}`);
-  lines.push('Bounds',' z free');for(const v of encoding.variables)if(v.kind==='BINARY')lines.push(` 0 <= ${v.id} <= 1`);
+  lines.push('Bounds');
+  for(const v of encoding.variables.filter(v=>v.kind==='CONTINUOUS')){
+    if(v.lower===null&&v.upper===null)lines.push(` ${v.id} free`);
+    else if(v.upper===null)lines.push(` ${s(q(v.lower!))} <= ${v.id}`);
+    else lines.push(` ${v.lower===null?'-inf':s(q(v.lower))} <= ${v.id} <= ${s(q(v.upper))}`);
+  }
+  for(const v of encoding.variables)if(v.kind==='BINARY')lines.push(` 0 <= ${v.id} <= 1`);
   lines.push('Binary',...encoding.variables.filter(v=>v.kind==='BINARY').map(v=>' '+v.id),'End');return lines.join('\n')+'\n';
 }
 

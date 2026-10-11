@@ -1,0 +1,38 @@
+{
+  "schema": "finnor.r5.packaged-programme.v1",
+  "compiler": {
+    "name": "esbuild",
+    "version": "0.25.12"
+  },
+  "moduleSha256": "51f6d3b17e2db7af73207b2e8ad1a4ca0518031df1093cf4ff37dbc11bfede66",
+  "sources": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/coalition-programme-search/guards.ts",
+      "sha256": "2db6fbab45f3994092cae5f99d495deab46c92004a099266bc87be63f9bf3201"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/coalition-programme-search/programme-child.ts",
+      "sha256": "a1712bf3dcac1f1a20fbce2acc980afd92d7c2c2ed66818b6901b49d49821268"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/coalition-programme-search/programmes.ts",
+      "sha256": "207399ace06874d676e2b62269b838fe126c49d91b5a6012678973eabc894eae"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/coalition-programme-search/selected-programme.ts",
+      "sha256": "f8dea1ab7d66692a9549a1f6e9f71806bbc96830581211daac47dc68857be13f"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/experiment-numerics.ts",
+      "sha256": "7ad3c704d23a6f0d2976217f2302d5f5dbd45e3ccd2436266fed55a488a78941"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/r2-rational.ts",
+      "sha256": "84d31c2db0323f8e6287eef59c057e1f07e54f6e6cbaa0cd38d99bc1d46ef0fa"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/source-precedence.ts",
+      "sha256": "954a9d9924a48d0aa2044be8a52b3da42d9248aa6df5d1825bf7565c521f32a7"
+    }
+  ]
+}

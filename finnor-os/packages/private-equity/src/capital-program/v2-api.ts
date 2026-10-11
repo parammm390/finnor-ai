@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
+import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
 import {readRobustProgramme,reviewExactBranch} from './r2-api';
 import {listR2ExactSources} from './r2-owners';
 import {readSourceObject} from '../deliberation/store';
@@ -53,7 +54,10 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
   return {queryId:prior.id,workId:request.workId,status:prior.status,replayed:true};}
  const binding=await resolveCapitalOwners(ctx,request,true);
  if(binding.r2){const used=process.cpuUsage(admissionCpu);binding.r2.admissionCost={cpuMs:(used.user+used.system)/1000,wallMs:performance.now()-admissionStarted,memoryBytes:process.memoryUsage().rss,money:null};}
+ if(binding.r5){const used=process.cpuUsage(admissionCpu);binding.r5.admissionCost={cpuMs:(used.user+used.system)/1000,wallMs:performance.now()-admissionStarted,memoryBytes:process.memoryUsage().rss,money:null};}
  if(parent){
+  if(parent.request.coalition||request.coalition)
+   throw new CapitalProgramV2Error('BLOCKED_SELECTION','R5 original-episode attenuation is not yet qualified; recompilation cannot receive a fresh native grant');
   if(!m3Same(parent.acceptance.policy.mandate,binding.policy.mandate))
    throw new CapitalProgramV2Error('INVALID_REQUEST','Recompilation cannot change the original economic mandate, utility, horizon or risk');
   const parentRequestRef=m3Ref('capital-program-request',parent.request);
@@ -132,12 +136,15 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
   const id=randomUUID();
   await c.query('INSERT INTO finnor_os.m3_queries(id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,plan_id,plan_digest,idempotency_key,request_digest,request,acceptance,parent_query_id,deadline_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13,$14)',
    [id,ctx.auth.tenantId,principal(ctx),request.workId,binding.work.inputId,binding.work.inputDigest,binding.plan.id,binding.plan.semanticHash,
-    request.idempotencyKey,digest,JSON.stringify(request),JSON.stringify(binding),parentQueryId,binding.repairBudget?.deadlineAt??(request.robust?new Date(Date.now()+Math.min(request.resource.deadlineMs,m3Remaining())).toISOString():null)]);
+    request.idempotencyKey,digest,JSON.stringify(request),JSON.stringify(binding),parentQueryId,binding.repairBudget?.deadlineAt??
+     (request.robust||request.coalition?new Date(Math.min(Date.now()+Math.min(request.resource.deadlineMs,m3Remaining()),
+       binding.r5?Date.parse(binding.r5.original.owner.originalDeadline):Infinity)).toISOString():null)]);
   for(const dependency of binding.dependencies)await c.query('INSERT INTO finnor_os.m3_dependencies(tenant_id,principal_id,query_id,key,revision) VALUES($1,$2,$3,$4,$5)',
    [ctx.auth.tenantId,principal(ctx),id,dependency.key,dependency.revision]);
   await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority,protocol_version,retry_safety) VALUES($1,$4,$2::jsonb,$3,'interactive',0,2,'locally_idempotent')",
    [ctx.auth.tenantId,JSON.stringify({tenantId:ctx.auth.tenantId,principalId:principal(ctx),queryId:id,generation:1,
-     ...(request.robust?{semanticVersion:R2_VERSION}:{})}),`m3:${id}:1`,request.robust?'run_capital_program_r2_v1':'run_capital_program_v2']);
+     ...(request.robust?{semanticVersion:R2_VERSION}:request.coalition?{semanticVersion:R5_VERSION}:{})}),`m3:${id}:1`,
+     request.robust?'run_capital_program_r2_v1':request.coalition?'run_coalition_programme_v1':'run_capital_program_v2']);
   return {queryId:id,workId:request.workId,status:'QUEUED',replayed:false};
  });
 }
@@ -206,6 +213,23 @@ async function readCheckedCapitalProgram(ctx:PeMutationContext,id:string,inspect
    if(error instanceof CapitalProgramV2Error&&['CHECK_FAILED','UNAVAILABLE','LIMIT_EXCEEDED'].includes(error.code))throw error;
    return result(await invalidate(ctx,q,'EXACT_WORLD_OWNER_RESOURCE_OR_METHOD_CHANGED'));
   }
+ }
+ if(q.request.coalition){
+  try{await recheckCapitalOwners(ctx,q.request,q.acceptance);}
+  catch(error){
+   if(error instanceof CapitalProgramV2Error&&['CHECK_FAILED','UNAVAILABLE','LIMIT_EXCEEDED'].includes(error.code))throw error;
+   return result(await invalidate(ctx,q,'COALITION_ORIGINAL_OWNER_SOURCE_RESOURCE_OR_METHOD_CHANGED'));
+  }
+  const coalition=program.coalitionProgramme;
+  if(!coalition||coalition.original.owner.tenantId!==q.tenant_id||coalition.original.owner.principalId!==q.principal_id||
+   coalition.original.owner.workId!==q.work_id||coalition.executionAuthorityGranted!==false)
+   throw new CapitalProgramV2Error('CHECK_FAILED','Current original coalition Work identity differs');
+  const {ref,...body}=coalition;
+  if(ref.owner!=='R5'||ref.version!==R5_VERSION||ref.id!=='coalition-programme:'+ref.contentDigest||ref.contentDigest!==m3Hash(body)||
+   !m3Same(coalition.original,q.acceptance.r5?.original)||!m3Same(coalition.originalRef,q.acceptance.r5?.sourceRef))
+   throw new CapitalProgramV2Error('CHECK_FAILED','Immutable coalition preimage differs');
+  const after=await m3Query(ctx,id);
+  return after.status===q.status&&after.generation===q.generation?result(view(after,program)):result(view(after));
  }
  let details:unknown=null,evidence:CurrentSlice|null=null,branchReviews:CapitalProgramV2BranchReview[]=[];
  try{

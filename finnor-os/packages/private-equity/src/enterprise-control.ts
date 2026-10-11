@@ -21,6 +21,10 @@ import {r2Ref,loadR2Runtime} from './capital-program/r2-native';
 import {chooseExactS4Branch} from './capital-program/r2-owners';
 import {codeIdentity} from './evidence-execution/store';
 import {readSourceObject} from './deliberation/store';
+import type {CoalitionSelection} from '@finnor/shared-types/src/coalition-programme';
+import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
+import {coalitionCheckerIdentity} from './capital-program/r2-native';
+import {assertR5SelectionCurrent} from './capital-program/r5-owners';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const unavailable=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S4 context is unavailable');
@@ -348,6 +352,44 @@ export async function persistEnterpriseExactControlPolicy(ctx:PeMutationContext,
  await saveArtifact(ctx,'exact-policies',policy.ref.contentDigest,policy);
  await saveEvents(ctx,[prepareS4Experience(policy.original.mandate,'POLICY_SEARCH',policy.ref.id,{policyRef:policy.ref,checkerRef:check.ref,
   exactFiniteWorlds:policy.worldCourses.map(c=>c.worldId),qualification:'SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED',executionAuthorityGranted:false},[policy.original.incumbentPolicyRef.id])]);
+}
+/** R5's versioned exact choice uses S4's actual private immutable store and
+ * prepared experience owner. No route accepts a caller-supplied acceptance. */
+export async function persistEnterpriseCoalitionSelection(ctx:PeMutationContext,selection:CoalitionSelection):Promise<void>{
+ const {ref,...body}=selection,check=selection.checker;
+ if(ctx.auth.role!=='owner'||selection.tenantId!==ctx.auth.tenantId||selection.principalId!==actor(ctx)||
+  selection.version!==R5_VERSION||selection.executionAuthorityGranted!==false||selection.reservationGranted!==false||
+  ref.owner!=='S4'||ref.version!==R5_VERSION||ref.id!=='coalition-selection:'+ref.contentDigest||
+  ref.contentDigest!==epistemicHash(body)||check.originalDigest!==epistemicHash(selection.original)||
+  check.candidateDigest!==epistemicHash(selection.candidate)||!check.feasible||check.lower!==selection.value||
+  !check.provenance||epistemicHash(selection.tie.checkerIdentity)!==epistemicHash(await coalitionCheckerIdentity())||
+  Date.now()>=Date.parse(selection.validUntil))
+  throw new ControlContractError('INVALID_POLICY','Independent original joint choice/identity/tie acceptance differs');
+ const context=await readEnterpriseControlDecisionContext(ctx,selection.incumbentPolicyRef);
+ if(epistemicHash(context.policy.mandateRef)!==epistemicHash(selection.mandateRef)||
+  context.policy.bindings.rightsRef!==selection.rightsRef||
+  epistemicHash(context.model.ref)!==epistemicHash(selection.original.model.ref))
+  throw new ControlContractError('INVALID_POLICY','Current S3/S4 mandate/model differs from exact original joint choice');
+ await assertR5SelectionCurrent(ctx,selection);await saveArtifact(ctx,'coalition-selections',ref.contentDigest,selection);
+ await saveEvents(ctx,[prepareS4Experience(context.policy.mandate,'POLICY_SEARCH',ref.id,{
+  selectionRef:ref,originalRef:selection.originalRef,candidateDigest:check.candidateDigest,
+  value:selection.value,demandDigest:selection.demandDigest,tie:selection.tie,
+  qualification:selection.qualification,programmeExecutableQualified:false,reservationCreated:false,
+  executionAuthorityGranted:false},[selection.incumbentPolicyRef.id,selection.originalRef.id])]);
+}
+
+export async function readEnterpriseCoalitionSelection(ctx:PeMutationContext,value:unknown):Promise<CoalitionSelection>{
+ const ref=ExperimentRefSchema.parse(value);
+ if(ref.owner!=='S4'||ref.version!==R5_VERSION||ref.id!=='coalition-selection:'+ref.contentDigest)throw unavailable();
+ const selection=await readArtifact(ctx,'coalition-selections',ref.contentDigest) as CoalitionSelection;
+ const {ref:actual,...body}=selection;
+ if(selection.schema!=='finnor.s4.coalition-selection.v1'||selection.tenantId!==ctx.auth.tenantId||
+  selection.principalId!==actor(ctx)||epistemicHash(actual)!==epistemicHash(ref)||
+  epistemicHash(body)!==ref.contentDigest||selection.executionAuthorityGranted!==false||
+  Date.now()>=Date.parse(selection.validUntil)||
+  epistemicHash(selection.tie.checkerIdentity)!==epistemicHash(await coalitionCheckerIdentity()))throw unavailable();
+ await readEnterpriseControlDecisionContext(ctx,selection.incumbentPolicyRef);
+ await assertR5SelectionCurrent(ctx,selection);return immutableControl(selection);
 }
 export async function readEnterpriseExactControlPolicy(ctx:PeMutationContext,value:unknown):Promise<ExactContingentPolicy>{
  const ref=ExperimentRefSchema.parse(value);if(ref.owner!=='S4'||ref.version!==R2_VERSION||ref.id!==`exact-contingent-policy:${ref.contentDigest}`)throw unavailable();

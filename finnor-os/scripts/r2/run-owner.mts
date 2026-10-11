@@ -10,7 +10,7 @@ import {spawnSync,spawn} from 'node:child_process';
 import {generateKeyPair,exportJWK,SignJWT} from 'jose';
 import EmbeddedPostgres from 'embedded-postgres';
 import pg from 'pg';
-import {closePool,getPool,receiveWork,createEmployeeConversationThread} from '@finnor/db';
+import {closePool,getPool,receiveWork,createEmployeeConversationThread,configureTenantVertical} from '@finnor/db';
 import {migrate} from '../../packages/db/migrate';
 import {createDeal} from '@finnor/private-equity';
 import {createEvidenceSource} from '@finnor/memory';
@@ -18,23 +18,26 @@ import {createUpstreamFixtureSupport} from '../s5/owner-fixture.mts';
 import {POST as allocationPost} from '../../apps/api/app/api/allocations/[operation]/route';
 import {POST as s3Post} from '../../apps/api/app/api/interventions/[operation]/route';
 import {POST as s4Post} from '../../apps/api/app/api/policies/[operation]/route';
+import {POST as s6Post} from '../../apps/api/app/api/obligations/[operation]/route';
+import {POST as p1Post} from '../../apps/api/app/api/coalition-programmes/[operation]/route';
 import {quantities,originalDecimal,hash,ref} from './fixtures.mts';
 import {R2_PROFILE,R2_VERSION} from '../../packages/shared-types/src/robust-programme-search';
 import {writeM3Record,readM3Record} from '../../packages/private-equity/src/capital-program/v2-store';
+import {loadEnterpriseBeliefView} from '../../packages/private-equity/src/enterprise-beliefs';
 import {m3Ref,m3Hash} from '../../packages/private-equity/src/capital-program/v2-contracts';
 import {r2Ref} from '../../packages/private-equity/src/capital-program/r2-native';
 const repo=resolve('..'),out=process.env.FINNOR_R2_EVIDENCE_DIR!,cases:any[]=[],traffic:any[]=[],began=new Date().toISOString(),serve=process.argv.includes('--serve'),caseFlag=process.argv.indexOf('--case'),lane=caseFlag<0?'positive':process.argv[caseFlag+1];
-assert(['positive','responsibility','compatibility','diagnostic'].includes(lane??''),'Unknown registered owner lane');
+assert(['positive','responsibility','compatibility','diagnostic','coalition'].includes(lane??''),'Unknown registered owner lane');
 const sha=(v:string|Buffer)=>createHash('sha256').update(v).digest('hex');
 const artifact=async(name:string,value:unknown)=>{const path=join(out,name);await mkdir(resolve(path,'..'),{recursive:true,mode:0o700});await writeFile(path,JSON.stringify(value,null,2));return path;};
 const onlyIndex=process.argv.indexOf('--only'),only=onlyIndex<0?null:new Set(process.argv[onlyIndex+1]?.split(','));
 async function challenge(id:string,run:()=>Promise<unknown>){if(only&&!only.has(id)&&!['authenticated-contingent-owner','authentication-and-private-scope'].includes(id))return;const start=performance.now();try{cases.push({id,status:'PASS',observed:await run(),wallMs:performance.now()-start});}catch(error){cases.push({id,status:'FAIL',error:String(error),stack:(error as Error).stack,wallMs:performance.now()-start});}console.log(JSON.stringify({id,status:cases.at(-1).status}));await save();}
-async function save(){await artifact('results.json',{schema:'finnor.r2.owner-e2e.v1',began,finishedAt:new Date().toISOString(),cases,traffic,money:null,moneyStatus:'UNMETERED',rerun:'python3 finnor-os/scripts/r2/run-owner-local.py',qualification:'Disposable real signed bearer, ordinary SQL role, actual owners and protocol-2 worker. Protected admission/production activation/economic gain NOT RUN.'});}
+async function save(){await artifact('results.json',{schema:lane==='coalition'?'finnor.r5.durable-native-component-e2e.v1':'finnor.r2.owner-e2e.v1',began,finishedAt:new Date().toISOString(),cases,traffic,money:null,moneyStatus:'UNMETERED',rerun:'python3 finnor-os/scripts/r2/run-owner-local.py'+(lane==='coalition'?' --case coalition':''),qualification:lane==='coalition'?'Actual authenticated R5 durable native component only. Canonical S4/S5/S6 functional completion NOT CLAIMED. Mounted, installed, protected admission and economic gain NOT RUN.':'Disposable real signed bearer, ordinary SQL role, actual owners and protocol-2 worker. Protected admission/production activation/economic gain NOT RUN.'});}
 const listen=async(server:ReturnType<typeof createServer>)=>{await new Promise<void>(yes=>server.listen(0,'127.0.0.1',yes));const addr=server.address();assert(addr&&typeof addr!=='string');return `http://127.0.0.1:${addr.port}`;};
 const portServer=createServer(),portUrl=await listen(portServer),port=Number(new URL(portUrl).port);await new Promise<void>(yes=>portServer.close(()=>yes()));
 const pgdir=await mkdtemp(join(tmpdir(),'finnor-r2-owner-')),postgres=new EmbeddedPostgres({databaseDir:pgdir,user:'finnor',password:'finnor',port,persistent:lane==='compatibility',onLog:(message:string)=>{void appendFile(join(out,"postgres.log"),message+"\n").catch(()=>undefined);}});
-let admin:pg.Client|undefined,issuer:ReturnType<typeof createServer>|undefined,backend:ReturnType<typeof createServer>|undefined,next:ReturnType<typeof spawn>|undefined,upstream='',token='',workerUrl='',acceptedQueryId='',f:any,request:any,stopped=false;const privateIdentities:Array<{scope:string;id:string;tenant:string;email:string}>=[];
-const fixtureApi=async(scope:any,operation:string,body:unknown,handler=allocationPost)=>{const response=await handler(new Request('http://127.0.0.1/api/'+operation,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':scope.tenant,'x-user-id':scope.principal},body:JSON.stringify(body)}),{params:Promise.resolve({operation})});return {status:response.status,body:await response.json() as any};};
+let admin:pg.Client|undefined,issuer:ReturnType<typeof createServer>|undefined,backend:ReturnType<typeof createServer>|undefined,next:ReturnType<typeof spawn>|undefined,upstream='',token='',workerUrl='',acceptedQueryId='',coalitionSelectionRef:any=null,coalitionAllocationRef:any=null,coalitionScheduleRef:any=null,coalitionP1Ref:any=null,f:any,request:any,stopped=false;const privateIdentities:Array<{scope:string;id:string;tenant:string;email:string}>=[];
+const fixtureApi=async(scope:any,operation:string,body:unknown,handler=allocationPost)=>{const response=await handler(new Request('http://127.0.0.1/api/'+operation,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':scope.tenant,'x-user-id':scope.principal,...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}),{params:Promise.resolve({operation})});return {status:response.status,body:await response.json() as any};};
 const ok=(r:any,status=200)=>{assert.equal(r.status,status,JSON.stringify(r));return r.body;};
 const api=async(operation:string,body:unknown,bearer=token)=>{const response=await fetch(upstream+'/api/company-brain/'+operation,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+bearer},body:JSON.stringify(body)});return {status:response.status,body:await response.json() as any};};
 let tickNumber=0,activeWorker:ReturnType<typeof spawn>|undefined,preparedWorker:{child:ReturnType<typeof spawn>;stdout:string;stderr:string;started:number;ready:number;exit:Promise<number|null>}|undefined;
@@ -89,7 +92,7 @@ try{
  // These are declared synthetic observations, not fitted values or receipts.
  for(const row of rows){const residual=row.states.outcome-row.exposures.price;row.exposures.price=[0,.15,.3,-.15][row.period%4];row.states.outcome=row.exposures.price+residual;}
  const day=86400000,support=createUpstreamFixtureSupport({admin:()=>admin,generatedRows:rows,begin:new Date(Math.floor(Date.now()/day)*day-128*day).toISOString(),day,fixtures:{},api:fixtureApi,artifact});
- f=await support.fixture('r2-owner-contingent',2,[{id:'cash',unit:'USD',capacity:200,totalLimit:200}]);
+ f=await support.fixture('r2-owner-contingent',2,[{id:'cash',unit:'USD',capacity:200,totalLimit:200,...(lane==='coalition'?{resourceClass:'CASH'}:{})}]);
  for(const scope of ['other-principal','other-tenant']){const id=randomUUID(),email=scope+'-'+id+'@r2.example.test',tenant=scope==='other-tenant'?randomUUID():f.tenant;
   if(scope==='other-tenant')await admin.query('INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,$3)',[tenant,randomUUID(),'R2 private scope challenge']);
   await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[id,tenant,email]);privateIdentities.push({scope,id,tenant,email});
@@ -125,7 +128,386 @@ try{
  const routeRoot=join(repo,'finnor-os/apps/api/app/api'),routes:any[]=[];
  async function scan(dir:string){for(const entry of await readdir(dir,{withFileTypes:true})){const path=join(dir,entry.name);if(entry.isDirectory())await scan(path);else if(entry.name==='route.ts'){const parts=relative(routeRoot,dir).split('/');routes.push({path,parts,dynamic:parts.filter(p=>p.startsWith('[')).length});}}}await scan(routeRoot);routes.sort((a,b)=>a.dynamic-b.dynamic);
  backend=createServer(async(req,res)=>{try{const url=new URL(req.url??'/','http://127.0.0.1'),parts=url.pathname.replace(/^\/api\//,'').split('/').map(decodeURIComponent),route=routes.find(route=>route.parts.length===parts.length&&route.parts.every((p:string,i:number)=>p.startsWith('[')||p===parts[i]));if(!route){res.writeHead(404);res.end('{}');return;}const params=Object.fromEntries(route.parts.flatMap((p:string,i:number)=>p.startsWith('[')?[[p.slice(1,-1),parts[i]]]:[]));let body='';for await(const bytes of req){body+=bytes;if(body.length>2_000_000)throw Error('HTTP_BODY_BOUND');}const module=await import(pathToFileURL(route.path).href),headers=new Headers();for(const[k,v]of Object.entries(req.headers))if(typeof v==='string')headers.set(k,v);const response=await module[req.method??'GET'](new Request(url,{method:req.method,headers,...(!['GET','HEAD'].includes(req.method??'GET')?{body}:{})}),{params:Promise.resolve(params)});const text=await response.text();res.writeHead(response.status,{'content-type':'application/json','cache-control':'no-store'});res.end(text);traffic.push({path:url.pathname,status:response.status,bearerPresent:headers.has('authorization'),at:new Date().toISOString()});}catch(error){res.writeHead(500,{'content-type':'application/json'});res.end('{"error":"Disposable route host failure"}');traffic.push({path:req.url,status:500,error:String(error)});}});upstream=await listen(backend);
- await challenge('authenticated-contingent-owner',async()=>{await prepareTick();const submitted=ok(await api('capital-program-submit',request),202);acceptedQueryId=submitted.queryId;
+ if(lane==='coalition')await challenge('authenticated-coalition-durable-native-component',async()=>{
+  const otherRoot={entityType:'external_organization',entityId:randomUUID()};
+  await admin!.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')",
+   [otherRoot.entityId,f.tenant,'r5-party-'+otherRoot.entityId]);
+  const snapshot=ok(await fixtureApi(f,'resources',{})),cash=snapshot.resources.find((r:any)=>r.resourceId==='cash');
+  const {ref:cashRef,revision:_revision,priorRef:_prior,...cashBody}=cash;
+  const revised=ok(await fixtureApi(f,'resource',{resource:{...cashBody,permittedRoots:[...cashBody.permittedRoots,otherRoot]},expectedRef:cashRef}));
+  const second=await support.resource(f,'party-1-cash','USD','STOCK',['200','200','200'],undefined,[],{
+   legalEntityRef:ref(otherRoot.entityId,'S1'),resourceClass:'CASH',permittedRoots:[f.root,otherRoot,dealRoot]});
+  const compute=await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['4','4','4'],undefined,[],{
+   resourceClass:'COMPUTE',permittedRoots:[f.root,otherRoot,dealRoot]});
+  const corpus=spawnSync(process.env.FINNOR_R2_PYTHON!,['-c',"import sys,json;sys.path.insert(0,sys.argv[1]);from corpus import joint;print(json.dumps(joint(2)))",
+   join(repo,'finnor-os/scripts/r5')],{encoding:'utf8'});assert.equal(corpus.status,0,corpus.stderr);
+  const original=JSON.parse(corpus.stdout),resources=[revised,second,compute];
+  const workInput=(await admin!.query('SELECT id FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[f.tenant,f.workId])).rows[0];
+  original.owner={...original.owner,tenantId:f.tenant,principalId:f.principal,workId:f.workId,workRevision:workInput.id,
+   originalEpisodeId:'supplied-original-'+f.workId,originalBudgetGrantRef:ref('supplied-capped-native-descriptor-'+f.workId,'BUSINESS_OWNER'),
+   originalDeadline:new Date(Date.now()+600000).toISOString(),dependencies:[]};
+  original.model.ref=f.model.ref;original.objective.mandateRef=f.mandate.ref;original.unit=f.mandate.utility.unit;
+  original.controlDemand={schema:'finnor.r5.control-demand.v1',
+   dimensions:f.mandate.resources.dimensions.map((dimension:any)=>({dimensionId:dimension.id,totalResourceId:dimension.id,occupancyResourceId:null})),
+   humanSecondsByOperator:Object.fromEntries(original.grammar.operators.map((operator:any)=>[operator.id,'0'])),
+   staffing:'NO_EXISTING_EMPLOYMENT_OR_BENEFIT_CHANGE',terminalLiabilityResourceId:null};
+  original.dates=Array.from({length:3},(_,date)=>new Date(Date.parse(f.mandate.horizon.startAt)+date*f.mandate.horizon.periodMs).toISOString());
+  original.valuationDate=original.dates[0];original.discountFactors=['1','1','1'];
+  original.resources=resources.map(r=>({id:r.resourceId,sourceRef:r.ref,unit:r.unit,kind:'CUMULATIVE_EXPENDITURE',
+   available:Object.fromEntries(original.worlds.map((w:any)=>[w.id,r.resourceId==='compute'?['4','4','4']:['200','200','200']]))}));
+  original.parties.forEach((party:any,index:number)=>{
+   party.partyRef=ref('canonical:external_organization:'+[f.root,otherRoot][index].entityId,'S1');
+   party.fundingRef=resources[index].ref;
+   party.settledCash=Object.fromEntries(original.worlds.map((w:any)=>[w.id,['200','200','200']]));
+  });
+  original.grammar.operators.forEach((operator:any)=>{
+   operator.modelRef=f.model.ref;
+   operator.grantChoices=operator.grantChoices.map((grant:any)=>Object.fromEntries(resources.map(r=>[r.resourceId,
+    [...(grant[r.resourceId]??['0','0']),'0']])));
+  });
+  const canonicalSnapshot=ok(await fixtureApi(f,'resources',{}));
+  original.canonicalAllocation={schema:'finnor.r5.canonical-allocation-basis.v1',mandate:f.mandate,
+   resources:canonicalSnapshot.resources,outstanding:canonicalSnapshot.outstanding,
+   snapshotDigest:canonicalSnapshot.snapshotDigest,knowledgeAt:new Date().toISOString()};
+  const coalitionSourceId=(await createEvidenceSource(f.tenant,{sourceKey:'r5-original-'+randomUUID(),sourceType:'pe_document_claim',title:'R5 supplied exact joint coalition programme'})).id;
+  const coalitionVersion=randomUUID(),bytes=JSON.stringify(original),contentDigest=sha(bytes);
+  await admin!.query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,$5,$6::jsonb,clock_timestamp(),clock_timestamp(),clock_timestamp())",
+   [coalitionVersion,coalitionSourceId,f.tenant,contentDigest,bytes,JSON.stringify({worldRoot:f.root,claims:[{predicate:'reported',value:'Supplied unadmitted mathematical model; no consent/effect/admission claim'}]})]);
+  const {robust:_robust,...transport}=request;
+  request={...transport,idempotencyKey:'r5-durable-native-component',coalition:{schema:'finnor.r5.owner-request.v1',
+   source:{sourceId:coalitionSourceId,versionId:coalitionVersion,contentDigest}}};
+  await artifact('r5-inputs.json',{original,request,expected:{qualification:'DURABLE_NATIVE_COMPONENT_NOT_FUNCTIONAL_OWNER_PASS',lower:'9',upper:'9'}});
+  await prepareTick();const submitted=ok(await api('capital-program-submit',request),202);acceptedQueryId=submitted.queryId;
+  const value=await drain(submitted.queryId),programme=value.program?.coalitionProgramme;assert(programme,JSON.stringify(value));
+  assert.equal(value.status,'PARTIAL');assert.equal(programme.status,'INCOMPLETE');assert.equal(programme.lower,'9');assert.equal(programme.upper,'9');
+  assert.equal(programme.checker.candidateDigest,m3Hash(programme.candidate));assert.equal(programme.checker.feasible,true);
+  assert.equal(programme.executionAuthorityGranted,false);assert.equal(programme.owners.s5JointReservationRef,null);
+  assert(programme.owners.s4SelectionRef,'Canonical S4 choice was not reached');
+  const selected=ok(await fixtureApi(f,'coalition-read',{selectionRef:programme.owners.s4SelectionRef},s4Post));
+  coalitionSelectionRef=selected.ref;
+  assert.equal(selected.schema,'finnor.s4.coalition-selection.v1');assert.equal(selected.value,'9');
+  assert.equal(selected.checker.candidateDigest,m3Hash(programme.candidate));
+  const nativeReadback=await readM3Record<{candidate:unknown}>(f.ctx,'modules',programme.nativeComponentRef);
+  assert.equal(selected.tie.originalCandidateDigest,m3Hash(nativeReadback.body.candidate));
+  assert.equal(selected.programmeExecutableQualified,false);assert.equal(selected.executionAuthorityGranted,false);
+  assert.equal(selected.reservationGranted,false);
+  const point=value.program.allocation.checks[0];assert(point?.feasible,'Original canonical S5 point was not reached');
+  assert.equal(point.objective,'9');assert(point.witnesses.some((w:any)=>w.constraintId==='resource:cash'));
+  assert(point.envelopes.some((e:any)=>e.resourceId==='cash'&&e.quantities.some((v:string)=>v!=='0')),
+   'Original coordination costs and signed payer responsibility were omitted');
+  assert(programme.consents.every((c:any)=>c.status==='PROPOSED'&&c.evidenceRef===null));
+  const jobs=(await admin!.query("SELECT type,status,protocol_version FROM finnor_os.jobs WHERE payload->>'queryId'=$1",[submitted.queryId])).rows;
+  assert(jobs.every(job=>job.type==='run_coalition_programme_v1'&&job.protocol_version===2));
+  const physical=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND kind='R5_PHYSICAL_CHILD'",[submitted.queryId])).rows;
+  assert(physical.some(event=>event.body.state==='EXITED'&&event.body.receipt.physicalExitObserved));
+  await artifact('r5-durable-native-component.json',{submitted,value,jobs,physical});
+  assert(programme.owners.p1ProgrammeRef,'Actual selected P1 programme was not compiled/checked');
+  coalitionP1Ref=programme.owners.p1ProgrammeRef;
+  const p1Module=ok(await fixtureApi(f,'read',{programmeRef:coalitionP1Ref},p1Post));
+  assert.equal(p1Module.module.candidateDigest,m3Hash(programme.candidate));
+  assert.equal(p1Module.checked.result.programmeQualified,true);
+  assert.equal(p1Module.module.executionAuthorityGranted,false);
+  const handoff=ok(await fixtureApi(f,'run',{programmeRef:coalitionP1Ref},p1Post));
+  assert.equal(handoff.stage,'STOP_UNADMITTED_EFFECT');assert.equal(handoff.settlementEstablished,false);
+  assert.deepEqual(ok(await fixtureApi(f,'run',{programmeRef:coalitionP1Ref},p1Post)),handoff);
+  const ownerAttempts=(await admin!.query("SELECT body FROM finnor_os.m3_events WHERE query_id=$1 AND body->>'phase' LIKE 'P1_OWNER_HANDOFF_%' ORDER BY created_at,id",
+   [submitted.queryId])).rows;
+  assert.equal(ownerAttempts.filter(event=>event.body.phase==='P1_OWNER_HANDOFF_STARTED').length,1);
+  assert(ownerAttempts.some(event=>event.body.phase==='P1_OWNER_HANDOFF_FINISHED'&&event.body.originalBudgetReplenished===false));
+  await artifact('r5-selected-p1-owner-handoff.json',{p1Module,handoff,ownerAttempts});
+  const prefix='r5-p1:'+coalitionP1Ref.contentDigest;
+  const allocationInput={selectionRef:selected.ref,idempotencyKey:prefix+':reservation'};
+  const cleared=ok(await fixtureApi(f,'coalition-clear',allocationInput));
+  coalitionAllocationRef=cleared.certificate.ref;
+  assert.equal(cleared.certificate.schema,'finnor.s5.coalition-allocation-certificate.v1');
+  assert.equal(cleared.certificate.check.objective,'9');assert.equal(cleared.reservation.status,'CONSUMPTION_PENDING');
+  assert.deepEqual(cleared.certificate.ref,handoff.allocationRef);
+  const replay=ok(await fixtureApi(f,'coalition-clear',allocationInput));assert.deepEqual(replay.reservation,cleared.reservation);
+  const reservedReadback=ok(await fixtureApi(f,'coalition-read',{allocationRef:cleared.certificate.ref}));
+  assert.deepEqual(reservedReadback.certificate,cleared.certificate);
+  await artifact('r5-reservation-currentness-inputs.json',{issued:reservedReadback,
+   actual:ok(await fixtureApi(f,'resources',{})),selection:selected});
+  const sourceResponse=await fixtureApi(f,'coalition-read',{selectionRef:selected.ref},s4Post);
+  if(sourceResponse.status!==200){
+   const {readEnterpriseCoalitionSelection}=await import('../../packages/private-equity/src/enterprise-control');
+   try{await readEnterpriseCoalitionSelection(f.ctx,selected.ref);}
+   catch(error){await artifact('r5-own-currentness-error.json',{message:String(error),stack:(error as Error).stack});throw error;}
+  }
+  const sourceAfterReservation=ok(sourceResponse);
+  assert.deepEqual(sourceAfterReservation,selected,'Verified own commitment invalidated its original S4 source');
+  const consumeInput={allocationRef:cleared.certificate.ref,idempotencyKey:prefix+':consumption'};
+  const consumed=ok(await fixtureApi(f,'coalition-consume',consumeInput));
+  assert.equal(consumed.status,'INTENDED_PENDING_S6');assert.equal(consumed.effectRef,null);
+  assert.deepEqual(consumed.envelope,point.envelopes);
+  assert.deepEqual(ok(await fixtureApi(f,'coalition-consume',consumeInput)),consumed);
+  const released=await fixtureApi(f,'coalition-release',{allocationRef:cleared.certificate.ref,idempotencyKey:'r5-blocked-release'});
+  assert.equal(released.status,422);assert.equal(released.body.code,'BLOCKED_AUTHORITY');
+  const held=ok(await fixtureApi(f,'coalition-read',{allocationRef:cleared.certificate.ref}));
+  assert.equal(held.reservation.status,'CONSUMPTION_PENDING');assert.deepEqual(held.reservation.envelopes,point.envelopes);
+  const scheduleInput={allocationRef:cleared.certificate.ref,consumptionRef:consumed.ref};
+  const schedule=ok(await fixtureApi(f,'coalition-prepare',scheduleInput,s6Post));coalitionScheduleRef=schedule.ref;
+  assert.deepEqual(schedule.ref,handoff.scheduleRef);
+  assert.equal(schedule.schema,'finnor.s6.coalition-proposed-schedule.v1');
+  assert.equal(schedule.status,'PROPOSED_UNADMITTED');assert.equal(schedule.executionAuthorityGranted,false);
+  assert.equal(schedule.settlementEstablished,false);assert.equal(schedule.candidateDigest,programme.checker.candidateDigest);
+  assert.deepEqual(schedule.payments.map((p:any)=>p.division),programme.candidate.division);
+  assert(schedule.requiredConsents.every((c:any)=>c.status==='PROPOSED'&&c.acceptanceObserved===false));
+  assert.deepEqual(ok(await fixtureApi(f,'coalition-prepare',scheduleInput,s6Post)),schedule);
+  assert.deepEqual(ok(await fixtureApi(f,'coalition-read',{scheduleRef:schedule.ref},s6Post)),schedule);
+  const reportInput={scheduleRef:schedule.ref,partyId:schedule.requiredConsents[0].partyId,proposalVersion:schedule.proposalVersion,
+   reportedStatus:'NO_RESPONSE',idempotencyKey:'r5-no-response'};
+  const report=ok(await fixtureApi(f,'coalition-consent',reportInput,s6Post));assert.equal(report.acceptanceObserved,false);
+  assert.deepEqual(ok(await fixtureApi(f,'coalition-consent',reportInput,s6Post)),report);
+  const forgedAcceptance=await fixtureApi(f,'coalition-consent',{...reportInput,reportedStatus:'REPORTED_ACCEPTED',idempotencyKey:'r5-no-evidence'},s6Post);
+  assert.equal(forgedAcceptance.status,400);assert.equal(forgedAcceptance.body.code,'INVALID_REQUEST');
+  const history=ok(await fixtureApi(f,'coalition-consent-history',{scheduleRef:schedule.ref},s6Post));
+  assert.deepEqual(history,[report]);
+  const configuredProfile=process.env.FINNOR_M3_PROFILE;
+  let blockedReservation:any,blockedReport:any;
+  try{
+   process.env.FINNOR_M3_PROFILE='UNQUALIFIED';
+   blockedReservation=await fixtureApi(f,'coalition-clear',allocationInput);
+   blockedReport=await fixtureApi(f,'coalition-consent',{...reportInput,idempotencyKey:'r5-profile-blocked'},s6Post);
+   assert.equal(blockedReservation.body.code,'BLOCKED_AUTHORITY');assert.equal(blockedReport.body.code,'BLOCKED_AUTHORITY');
+   assert.deepEqual(ok(await fixtureApi(f,'coalition-consent-history',{scheduleRef:schedule.ref},s6Post)),history);
+  }finally{process.env.FINNOR_M3_PROFILE=configuredProfile;}
+  assert.equal((await admin!.query('SELECT count(*)::int n FROM finnor_os.business_effects WHERE tenant_id=$1',[f.tenant])).rows[0].n,0);
+  await artifact('r5-proposed-s6-schedule.json',{schedule,report,history,forgedAcceptance,blockedReservation,blockedReport});
+  const queryGrants=(await admin!.query("SELECT DISTINCT g.id,g.effect FROM finnor_os.role_authority_grants g JOIN finnor_os.employee_role_assignments a ON a.tenant_id=g.tenant_id AND a.role_id=g.role_id WHERE a.tenant_id=$1 AND a.employee_id=$2 AND a.active AND (g.capability='*' OR g.capability='query:*' OR g.capability='query:pe_world_state')",
+   [f.tenant,f.principal])).rows;
+  assert(queryGrants.length,'Actual participant query-grant fixture is absent');
+  const responsibilityBefore=(await admin!.query("SELECT status,envelopes,revision FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2",
+   [f.tenant,cleared.reservation.ref.id])).rows;
+  let deniedS5:any,deniedS6:any,deniedP1:any;
+  try{
+   await admin!.query("UPDATE finnor_os.role_authority_grants SET effect='deny' WHERE tenant_id=$1 AND id=ANY($2::uuid[])",
+    [f.tenant,queryGrants.map(grant=>grant.id)]);
+   deniedS5=await fixtureApi(f,'coalition-read',{allocationRef:cleared.certificate.ref});
+   deniedS6=await fixtureApi(f,'coalition-read',{scheduleRef:schedule.ref},s6Post);
+   deniedP1=await fixtureApi(f,'read',{programmeRef:coalitionP1Ref},p1Post);
+   await artifact('r5-rights-denial-responses.json',{queryGrants,deniedS5,deniedS6,deniedP1});
+   assert.equal(deniedS5.status,404);assert.equal(deniedS6.status,404);
+   assert([404,409].includes(deniedP1.status),JSON.stringify(deniedP1));
+   assert.equal(deniedS5.body.problem,undefined);assert.equal(deniedS6.body.selectedProgrammes,undefined);
+   assert.equal(deniedP1.body.module,undefined);
+   const responsibilityAfter=(await admin!.query("SELECT status,envelopes,revision FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2",
+    [f.tenant,cleared.reservation.ref.id])).rows;
+   assert.deepEqual(responsibilityAfter,responsibilityBefore);
+   await artifact('r5-rights-denied-retained-responsibility.json',{queryGrants,deniedS5,deniedS6,deniedP1,
+    responsibilityBefore,responsibilityAfter,sourceRevisionRestored:false,executionAuthorityGranted:false});
+  }finally{
+   for(const grant of queryGrants)await admin!.query("UPDATE finnor_os.role_authority_grants SET effect=$3 WHERE tenant_id=$1 AND id=$2",
+    [f.tenant,grant.id,grant.effect]);
+  }
+  const historical=ok(await api('capital-program-read',{queryId:acceptedQueryId}));
+  assert.equal(historical.status,'INVALIDATED','Original search snapshot must retain the actual S5 dependency fence');
+  await durable(acceptedQueryId);
+  await artifact('r5-canonical-joint-reservation.json',{cleared,replay,reservedReadback,consumed,released,held,historical});
+  return {submitted,programmeRef:programme.ref,qualification:'ACTUAL_AUTHENTICATED_DURABLE_NATIVE_COMPONENT_ONLY',missingOwners:programme.unresolvedClaims};
+ });
+ // Registered owner variants below: every Work, root, source and resource is an
+ // actual disposable owner object. Fixture-only labels select authored inputs;
+ // nothing here is a test-only production hook. Original grants stay 30s.
+ if(lane==='coalition'){
+  const coalitionTransport=(()=>{const {robust:_robust,coalition:_coalition,...transport}=request;return transport;})();
+  // Each registered variant runs against its own actual disposable owner
+  // fixture (fresh tenant/principal/model/mandate/policy), so a prior lane's
+  // legitimate rights/source advances can never fence a later variant and the
+  // variant's own commitments never weaken the primary lane's evidence.
+  const variantFixture=async(label:string)=>{
+   const tenant=randomUUID(),principal=randomUUID(),email='r5-variant-'+label+'@s5.example.test';
+   await admin!.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,$3)",[tenant,randomUUID(),'R5 owner variant '+label]);
+   await admin!.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[principal,tenant,email]);
+   await configureTenantVertical({tenantId:tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:principal,sourceSystem:'s5:e2e'});
+   const bearer=await new SignJWT({email,role:'authenticated'}).setProtectedHeader({alg:'RS256',kid:jwk.kid}).setSubject(principal).setIssuedAt().setExpirationTime('1h').sign(keys.privateKey);
+   const saved=token;token=bearer;
+   try{
+    const fx=await support.fixture('r5-variant-'+label,2,[{id:'cash',unit:'USD',capacity:200,totalLimit:200,resourceClass:'CASH'}],{identity:{tenant,principal}});
+    const base=await support.policy(fx,'incumbent',{cash:25}),problem=structuredClone(base.problem);
+    problem.observations=[{schema:'finnor.s2.control-observation.v1',id:'public-milestone',sourceRef:ref('registered-public-milestone','S2'),variableId:'outcome',unit:'normalized-value',delayPeriods:1,afterActionIds:['programme-incumbent'],bins:[{category:'LOW',lowerInclusive:-6,upperExclusive:.3},{category:'HIGH',lowerInclusive:.3,upperExclusive:6}],qualification:'SUPPLIED_DETERMINISTIC_COARSENING_UNVERIFIED'}];
+    const replanned=ok(await fixtureApi(fx,'replan',{mandate:fx.mandate,problem,protocols:[],scenarios:{pathsPerMechanism:4,seed:20261002},priorPolicyRef:base.ref,reason:'Original owner milestone for bounded contingent commitments'},s4Post));
+    assert.equal(replanned.status,'POLICY_AVAILABLE');fx.incumbent=replanned.policy;
+    await support.resource(fx,'cash','USD','STOCK',['200','200','200'],undefined,[],{permittedRoots:fx.incumbent.bindings.beliefPins.map((pin:any)=>pin.root)});
+    return {fx,bearer,transport:{...coalitionTransport,incumbentPolicyRef:fx.incumbent.ref}};
+   }finally{token=saved;}
+  };
+  const buildCoalition=async(fx:any,label:string,parties:number,computeAvailability:string[],mutate?:(original:any)=>void)=>{
+   const roots=[fx.root];
+   for(let index=1;index<parties;index++){
+    const org={entityType:'external_organization',entityId:randomUUID()};
+    await admin!.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')",
+     [org.entityId,fx.tenant,'r5-party-'+org.entityId]);
+    roots.push(org);
+   }
+   const permitted=[...roots];
+   // Earlier challenges legitimately advance the owner's rights/source witness,
+   // so every revision/creation here carries the actual current belief pin.
+   const freshPins=[(await loadEnterpriseBeliefView(fx.ctx,{root:fx.root})).pin];
+   for(const resource of ok(await fixtureApi(fx,'resources',{})).resources){
+    const {ref:expectedRef,revision:_revision,priorRef:_prior,...body}=resource;
+    const missing=roots.filter(root=>!body.permittedRoots.some((permitted:any)=>permitted.entityType===root.entityType&&permitted.entityId===root.entityId));
+    if(missing.length)ok(await fixtureApi(fx,'resource',{resource:{...body,beliefPins:freshPins,permittedRoots:[...body.permittedRoots,...missing]},expectedRef}));
+   }
+   for(let index=1;index<parties;index++)
+    await support.resource(fx,label+'-cash-'+index,'USD','STOCK',['200','200','200'],undefined,[],{
+     legalEntityRef:ref(roots[index]!.entityId,'S1'),resourceClass:'CASH',permittedRoots:permitted,beliefPins:freshPins});
+   await support.resource(fx,label+'-compute','native-attempt','CUMULATIVE_EXPENDITURE',computeAvailability,undefined,[],{
+    resourceClass:'COMPUTE',permittedRoots:permitted,beliefPins:freshPins});
+   const complete=ok(await fixtureApi(fx,'resources',{}));
+   const cashes=roots.map((_root:any,index:number)=>complete.resources.find((r:any)=>
+    index===0?r.resourceId==='cash':r.resourceId===label+'-cash-'+index));
+   assert(cashes.every(Boolean),'Actual party funding resources missing from the complete current registry');
+   const corpus=spawnSync(process.env.FINNOR_R2_PYTHON!,[ '-c',"import sys,json;sys.path.insert(0,sys.argv[1]);from corpus import joint;print(json.dumps(joint("+parties+")))",
+    join(repo,'finnor-os/scripts/r5')],{encoding:'utf8'});assert.equal(corpus.status,0,corpus.stderr);
+   const original=JSON.parse(corpus.stdout);
+   original.model.ref=fx.model.ref;original.objective.mandateRef=fx.mandate.ref;original.unit=fx.mandate.utility.unit;
+   original.dates=Array.from({length:3},(_,date)=>new Date(Date.parse(fx.mandate.horizon.startAt)+date*fx.mandate.horizon.periodMs).toISOString());
+   original.valuationDate=original.dates[0];original.discountFactors=['1','1','1'];
+   original.resources=complete.resources.map((r:any)=>({id:r.resourceId,sourceRef:r.ref,unit:r.unit,kind:'CUMULATIVE_EXPENDITURE',
+    available:Object.fromEntries(original.worlds.map((w:any)=>[w.id,r.availability.map((a:any)=>a.amount)]))}));
+   original.parties.forEach((party:any,index:number)=>{
+    party.partyRef=ref('canonical:external_organization:'+roots[index]!.entityId,'S1');
+    party.fundingRef=cashes[index].ref;
+    party.settledCash=Object.fromEntries(original.worlds.map((w:any)=>[w.id,['200','200','200']]));
+   });
+   const computeId=label+'-compute';
+   original.grammar.operators.forEach((operator:any)=>{
+    operator.modelRef=fx.model.ref;
+    operator.grantChoices=operator.grantChoices.map((grant:any)=>{
+     const carried=grant.compute??['0','0'];delete grant.compute;
+     return Object.fromEntries(complete.resources.map((r:any)=>[r.resourceId,[...(r.resourceId===computeId?carried:(grant[r.resourceId]??['0','0'])),'0']]));
+    });
+   });
+   // The corpus names its expenditure resource 'compute'; every GRANT feature inside the
+   // family/budget terms must be rebound to this fixture's actual resource id alongside
+   // the grantChoice key remap above, or the packaged child rejects ORIGINAL_GRANT_BINDING.
+   const remapGrantFeature=(node:unknown):void=>{if(Array.isArray(node)){node.forEach(remapGrantFeature);return;}if(node&&typeof node==='object'){const record=node as Record<string,unknown>;if(record.kind==='GRANT'&&record.resourceId==='compute')record.resourceId=computeId;for(const value of Object.values(record))remapGrantFeature(value);}};
+   remapGrantFeature(original);
+   if(mutate)mutate(original);
+   // Human demand keys must name the FINAL operator set (a variant may rename/add
+   // operators): parseCoalitionProblem requires ORIGINAL_COMPLETE_HUMAN_DEMAND.
+   original.controlDemand={schema:'finnor.r5.control-demand.v1',
+    dimensions:fx.mandate.resources.dimensions.map((dimension:any)=>({dimensionId:dimension.id,totalResourceId:dimension.id,occupancyResourceId:null})),
+    humanSecondsByOperator:Object.fromEntries(original.grammar.operators.map((operator:any)=>[operator.id,'0'])),
+    staffing:'NO_EXISTING_EMPLOYMENT_OR_BENEFIT_CHANGE',terminalLiabilityResourceId:null};
+   original.canonicalAllocation={schema:'finnor.r5.canonical-allocation-basis.v1',mandate:fx.mandate,
+    resources:complete.resources,outstanding:complete.outstanding,
+    snapshotDigest:complete.snapshotDigest,knowledgeAt:new Date().toISOString()};
+   return {original,roots,complete};
+  };
+  const submitCoalition=async(fx:any,transport:any,label:string,built:{original:any},workId:string)=>{
+   const original=structuredClone(built.original);
+   const workInput=(await admin!.query('SELECT id FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[fx.tenant,workId])).rows[0];
+   original.owner={...original.owner,tenantId:fx.tenant,principalId:fx.principal,workId,workRevision:workInput.id,
+    originalEpisodeId:'supplied-original-'+workId,originalBudgetGrantRef:ref('supplied-capped-native-descriptor-'+workId,'BUSINESS_OWNER'),
+    originalDeadline:new Date(Date.now()+600000).toISOString(),dependencies:[]};
+   const sourceId=(await createEvidenceSource(fx.tenant,{sourceKey:'r5-original-'+randomUUID(),sourceType:'pe_document_claim',title:'R5 supplied exact joint coalition programme'})).id;
+   const versionId=randomUUID(),bytes=JSON.stringify(original),contentDigest=sha(bytes);
+   await admin!.query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,$5,$6::jsonb,clock_timestamp(),clock_timestamp(),clock_timestamp())",
+    [versionId,sourceId,fx.tenant,contentDigest,bytes,JSON.stringify({worldRoot:fx.root,claims:[{predicate:'reported',value:'Supplied unadmitted mathematical model; no consent/effect/admission claim'}]})]);
+   const submitted=ok(await api('capital-program-submit',{...transport,workId,idempotencyKey:label+':'+randomUUID(),
+    coalition:{schema:'finnor.r5.owner-request.v1',source:{sourceId,versionId,contentDigest}}}),202);
+   const value=await drain(submitted.queryId),programme=value.program?.coalitionProgramme;
+   assert(programme,JSON.stringify(value));
+   assert.equal(value.status,'PARTIAL');assert.equal(programme.status,'INCOMPLETE');
+   assert.equal(programme.executionAuthorityGranted,false);
+   return {submitted,value,programme,original};
+  };
+  await challenge('authenticated-coalition-owner-thirds-division',async()=>{
+   const env=await variantFixture('thirds'),fx=env.fx,saved=token;token=env.bearer;
+   try{
+   const built=await buildCoalition(fx,'thirds',2,['4','4','4'],(original:any)=>{
+    original.transfers[0].bounds={'party-0':['1/3','1/3'],'party-1':['-1/3','-1/3']};
+   });
+   const workId=(await receiveWork({tenantId:fx.tenant,userId:fx.principal,instruction:'R5 owner-authored fixed signed thirds division',channel:'console',idempotencyKey:randomUUID()})).workId;
+   const {submitted,programme}=await submitCoalition(fx,env.transport,'r5-thirds',built,workId);
+   assert.equal(programme.lower,'9');assert.equal(programme.upper,'9');
+   assert.deepEqual(programme.candidate.division[0].amounts,{'party-0':'1/3','party-1':'-1/3'});
+   const handoff=ok(await fixtureApi(fx,'run',{programmeRef:programme.owners.p1ProgrammeRef},p1Post));
+   assert.equal(handoff.stage,'STOP_UNADMITTED_EFFECT');assert.equal(handoff.settlementEstablished,false);
+   const schedule=ok(await fixtureApi(fx,'coalition-read',{scheduleRef:handoff.scheduleRef},s6Post));
+   const legs=JSON.stringify(schedule.payments);
+   assert(legs.includes('"1/3"')&&legs.includes('"-1/3"'),'Original nonterminating division was not retained exactly in the S6 legs');
+   assert(!legs.includes('0.333'),'Decimal approximation of the original division leaked into the S6 legs');
+   const held=ok(await fixtureApi(fx,'coalition-read',{allocationRef:handoff.allocationRef}));
+   assert.equal(held.reservation.status,'CONSUMPTION_PENDING');
+   const envelope=JSON.stringify(held.reservation.envelopes);
+   assert(!envelope.includes('0.333'),'Decimal approximation leaked into the retained S5 envelope');
+   const consumption=(await admin!.query("SELECT body FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND reservation_id=$2",[fx.tenant,held.reservation.ref.id])).rows[0].body;
+   assert.equal(consumption.status,'INTENDED_PENDING_S6');assert.equal(consumption.effectRef,null);
+   await artifact('r5-owner-thirds-division.json',{submitted,programme,handoff,schedule,held,consumption});
+   return {programmeRef:programme.ref,division:programme.candidate.division[0].amounts,qualification:'ACTUAL_OWNER_EXACT_RATIONAL_DIVISION_ONLY'};
+   }finally{token=saved;}
+  });
+  await challenge('authenticated-coalition-four-party-two-branch',async()=>{
+   const env=await variantFixture('quad'),fx=env.fx,saved=token;token=env.bearer;
+   try{
+   const built=await buildCoalition(fx,'quad',4,['4','4','4'],(original:any)=>{
+    const pairA=original.grammar.operators[1];
+    pairA.id='joint-pair-a';pairA.eligibleParties=['party-0','party-1'];pairA.requiredParties=[...pairA.eligibleParties];
+    const pairB=structuredClone(pairA);
+    pairB.id='joint-pair-b';pairB.eligibleParties=['party-2','party-3'];pairB.requiredParties=[...pairB.eligibleParties];
+    original.grammar.operators.push(pairB);
+   });
+   const workId=(await receiveWork({tenantId:fx.tenant,userId:fx.principal,instruction:'R5 four-party two eligible joint branches',channel:'console',idempotencyKey:randomUUID()})).workId;
+   const {submitted,programme}=await submitCoalition(fx,env.transport,'r5-quad',built,workId);
+   assert.equal(programme.lower,'18');assert.equal(programme.upper,'18');
+   assert.equal(programme.candidate.selectedOptionIds.length,2);
+   const handoff=ok(await fixtureApi(fx,'run',{programmeRef:programme.owners.p1ProgrammeRef},p1Post));
+   assert.equal(handoff.stage,'STOP_UNADMITTED_EFFECT');
+   const held=ok(await fixtureApi(fx,'coalition-read',{allocationRef:handoff.allocationRef}));
+   assert.equal(held.reservation.status,'CONSUMPTION_PENDING');
+   assert(held.reservation.envelopes.some((e:any)=>e.resourceId==='quad-compute'&&e.quantities.some((q:string)=>q!=='0')),
+    'Actual joint reservation omitted the shared compute envelope');
+   const reservations=(await admin!.query("SELECT reservation_id,status FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND allocation_digest=$2",[fx.tenant,handoff.allocationRef.contentDigest])).rows;
+   assert.equal(reservations.length,1,'Joint programme must hold exactly one actual coherent S5 reservation');
+   const schedule=ok(await fixtureApi(fx,'coalition-read',{scheduleRef:handoff.scheduleRef},s6Post));
+   assert.equal(schedule.requiredConsents.length,4);
+   assert(schedule.requiredConsents.every((c:any)=>c.status==='PROPOSED'&&c.acceptanceObserved===false));
+   await artifact('r5-four-party-two-branch.json',{submitted,programme,handoff,held,reservations,schedule});
+   return {programmeRef:programme.ref,selected:programme.candidate.selectedOptionIds.length,qualification:'ACTUAL_FOUR_PARTY_TWO_BRANCH_RESERVATION_ONLY'};
+   }finally{token=saved;}
+  });
+  await challenge('authenticated-coalition-competing-works-currentness',async()=>{
+   const env=await variantFixture('contention'),fx=env.fx,saved=token;token=env.bearer;
+   try{
+   const built=await buildCoalition(fx,'contention',2,['1','1','1']);
+   const workA=(await receiveWork({tenantId:fx.tenant,userId:fx.principal,instruction:'R5 competing Work A on one shared compute snapshot',channel:'console',idempotencyKey:randomUUID()})).workId;
+   const workB=(await receiveWork({tenantId:fx.tenant,userId:fx.principal,instruction:'R5 competing Work B on one shared compute snapshot',channel:'console',idempotencyKey:randomUUID()})).workId;
+   const a=await submitCoalition(fx,env.transport,'r5-contention-a',built,workA);
+   const b=await submitCoalition(fx,env.transport,'r5-contention-b',built,workB);
+   assert.equal(a.programme.lower,'9');assert.equal(b.programme.lower,'9');
+   const selectionA=ok(await fixtureApi(fx,'coalition-read',{selectionRef:a.programme.owners.s4SelectionRef},s4Post));
+   const selectionB=ok(await fixtureApi(fx,'coalition-read',{selectionRef:b.programme.owners.s4SelectionRef},s4Post));
+   assert.equal(selectionA.resourceSnapshotDigest,selectionB.resourceSnapshotDigest,
+    'Both Works must reach actual checked publication on the same complete S5 snapshot');
+   const snapshotBefore=(await admin!.query("SELECT count(*)::int n FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND envelopes::text LIKE '%contention-compute%'",[fx.tenant])).rows[0].n;
+   assert.equal(snapshotBefore,0,'Contention compute must be untouched before either handoff');
+   const handoffA=ok(await fixtureApi(fx,'run',{programmeRef:a.programme.owners.p1ProgrammeRef},p1Post));
+   assert.equal(handoffA.stage,'STOP_UNADMITTED_EFFECT');
+   const refused=await fixtureApi(fx,'run',{programmeRef:b.programme.owners.p1ProgrammeRef},p1Post);
+   assert.equal(refused.status,409,JSON.stringify(refused));
+   assert.equal(refused.body.code,'STALE_INPUT','Competing Work must refuse stale original S5 currentness');
+   const bAttempts=(await admin!.query("SELECT count(*)::int n FROM finnor_os.m3_events WHERE query_id=$1 AND body->>'phase' LIKE 'P1_OWNER_HANDOFF_%'",[b.submitted.queryId])).rows[0].n;
+   assert.equal(bAttempts,0,'Refused stale Work must not start a P1 owner attempt');
+   const bCertificates=(await admin!.query("SELECT count(*)::int n FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND certificate->'selectionRef'->>'contentDigest'=$2",[fx.tenant,selectionB.ref.contentDigest])).rows[0].n;
+   assert.equal(bCertificates,0,'Refused Work must not hold any S5 certificate or reservation');
+   const bConsumptions=(await admin!.query("SELECT count(*)::int n FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND policy_id=$2",[fx.tenant,selectionB.ref.id])).rows[0].n;
+   assert.equal(bConsumptions,0,'Refused Work must not record any consumption');
+   const heldContention=(await admin!.query("SELECT reservation_id,status,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND envelopes::text LIKE '%contention-compute%'",[fx.tenant])).rows;
+   assert.equal(heldContention.length,1,'Exactly one actual held envelope may survive the competition');
+   assert.equal(heldContention[0].status,'CONSUMPTION_PENDING');
+   assert.equal((await admin!.query('SELECT count(*)::int n FROM finnor_os.business_effects WHERE tenant_id=$1',[fx.tenant])).rows[0].n,0);
+   const historicalB=ok(await api('capital-program-read',{queryId:b.submitted.queryId}));
+   assert.equal(historicalB.status,'INVALIDATED','Competing original search snapshot must retain the actual S5 dependency fence');
+   await durable(b.submitted.queryId);
+   await artifact('r5-competing-works-currentness.json',{a:{submitted:a.submitted,programmeRef:a.programme.ref},b:{submitted:b.submitted,programmeRef:b.programme.ref},
+    selectionA,selectionB,handoffA,refused,bAttempts,bCertificates,bConsumptions,heldContention,historicalB});
+   return {winnerProgrammeRef:a.programme.ref,refusedProgrammeRef:b.programme.ref,refusal:refused.body.code,qualification:'ACTUAL_COMPETING_WORK_STALE_CURRENTNESS_REFUSAL_ONLY'};
+   }finally{token=saved;}
+  });
+ }
+ if(lane!=='coalition')await challenge('authenticated-contingent-owner',async()=>{await prepareTick();const submitted=ok(await api('capital-program-submit',request),202);acceptedQueryId=submitted.queryId;
   const application=(await getPool().query("SELECT current_user,rolsuper,rolbypassrls,pg_has_role(current_user,'finnor_worker','MEMBER') AS worker_member FROM pg_roles WHERE rolname=current_user")).rows[0],unscopedJobs=(await getPool().query("SELECT id FROM finnor_os.jobs WHERE payload->>'queryId'=$1",[acceptedQueryId])).rows;
   await artifact('database-role-boundary.json',{application,unscopedJobs});assert.equal(application.current_user,'finnor_app');assert.equal(application.worker_member,false);assert.equal(unscopedJobs.length,0);
   const value=await drain(submitted.queryId);assert(value.program,JSON.stringify(value));const c=value.program.jointSearchCertificate;assert(c,JSON.stringify(c));assert.equal(c.status,'COMPLETE',JSON.stringify(c.unresolvedClaims));assert.equal(c.lower,'100');assert.equal(c.upper,'100');assert.equal(c.incumbent.variant.structure,'OBSERVABLE_STAGE');assert(c.iterations.length>=2);assert.equal(c.iterations[0].upper,'210');assert(c.consumer.s5?.current&&c.consumer.s5.feasible);assert.equal(c.exactOptimalityClaimed,true);assert.equal(c.consumer.executionAuthorityGranted,false);await artifact('positive-program.json',value);
@@ -136,6 +518,20 @@ try{
   for(const {scope,id,tenant,email:identityEmail} of privateIdentities){
    const stranger=await new SignJWT({email:identityEmail,role:'authenticated'}).setProtectedHeader({alg:'RS256',kid:jwk.kid}).setSubject(id).setIssuedAt().setExpirationTime('1h').sign(keys.privateKey),
     read=await api('capital-program-read',{queryId:acceptedQueryId},stranger),submit=await api('capital-program-submit',{...request,idempotencyKey:scope},stranger);
+   if(lane==='coalition'){
+    const response=await fetch(upstream+'/api/policies/coalition-read',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+stranger},
+     body:JSON.stringify({selectionRef:coalitionSelectionRef})});
+    assert.equal(response.status,404,'Foreign principal/tenant could read actual S4 coalition preimage');
+    const allocationResponse=await fetch(upstream+'/api/allocations/coalition-read',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+stranger},
+     body:JSON.stringify({allocationRef:coalitionAllocationRef})});
+    assert.equal(allocationResponse.status,404,'Foreign principal/tenant could read the actual S5 joint commitment');
+    const scheduleResponse=await fetch(upstream+'/api/obligations/coalition-read',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+stranger},
+     body:JSON.stringify({scheduleRef:coalitionScheduleRef})});
+    assert.equal(scheduleResponse.status,404,'Foreign principal/tenant could read the actual S6 proposed terms');
+    const programmeResponse=await fetch(upstream+'/api/coalition-programmes/read',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+stranger},
+     body:JSON.stringify({programmeRef:coalitionP1Ref})});
+    assert.equal(programmeResponse.status,404,'Foreign principal/tenant could read the actual selected P1 programme');
+   }
    observed.push({scope,id,tenant,read,submit});await artifact('authentication.json',{invalid,observed});
    assert([401,403,404].includes(read.status),JSON.stringify(read));assert([401,403,404].includes(submit.status),JSON.stringify(submit));
   }return {invalid,observed};

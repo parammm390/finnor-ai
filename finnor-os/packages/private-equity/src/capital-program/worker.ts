@@ -9,15 +9,20 @@ import {m3CheckTime,inM3Episode} from './v2-budget';
 import {CapitalProgramV2Error,m3Hash,type CapitalProgramV2} from './v2-contracts';
 import {withIssuedCapitalChallengeRead} from '../counterexample-search/service';
 import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
+import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
 import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,type ComputeResourceLease} from '../../../db/compute-governor';
 
 export async function runCapitalProgramJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
- return runCapitalJob(payload,execution,false);
+ return runCapitalJob(payload,execution,'LEGACY');
 }
 export async function runRobustCapitalProgramJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
- return runCapitalJob(payload,execution,true);
+ return runCapitalJob(payload,execution,'R2');
 }
-async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<JobExecutionContext>|undefined,robust:boolean):Promise<void>{
+export async function runCoalitionProgrammeJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
+ return runCapitalJob(payload,execution,'R5');
+}
+async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<JobExecutionContext>|undefined,profile:'LEGACY'|'R2'|'R5'):Promise<void>{
+ const robust=profile!=='LEGACY';
  if(!execution||execution.protocolVersion!==2||execution.tenantId!==payload.tenantId||
   typeof payload.queryId!=='string'||typeof payload.principalId!=='string'||typeof payload.tenantId!=='string')
   throw new CapitalProgramV2Error('UNAVAILABLE','Actual compatible durable capital programme claim required');
@@ -32,9 +37,10 @@ async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<J
   provenance:{sourceSystem:'M3:ordinary-native-worker',createdBy:payload.principalId}},
   attemptId=randomUUID();
  let q=await m3Query(ctx,payload.queryId);
- if(Boolean(q.request.robust)!==robust||(robust&&payload.semanticVersion!==R2_VERSION))
+ const originalProfile=q.request.coalition?'R5':q.request.robust?'R2':'LEGACY';
+ if(originalProfile!==profile||(profile==='R2'&&payload.semanticVersion!==R2_VERSION)||(profile==='R5'&&payload.semanticVersion!==R5_VERSION))
   throw new CapitalProgramV2Error('INVALID_REQUEST','Job semantic version differs from its immutable original request');
- const jobType=robust?'run_capital_program_r2_v1':'run_capital_program_v2';
+ const jobType=profile==='R5'?'run_coalition_programme_v1':profile==='R2'?'run_capital_program_r2_v1':'run_capital_program_v2';
  let nativeLeases:ComputeResourceLease[]=[],abandonedNativeGrant=false;
  if(!['QUEUED','RUNNING'].includes(q.status)||q.generation!==payload.generation)return;
  if(process.env.FINNOR_M3_PROFILE!=='DISPOSABLE_NATIVE'||process.env.NODE_ENV==='production')
@@ -94,12 +100,12 @@ async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<J
  });};
  let program:CapitalProgramV2|null=null;
  try{
-  if(abandonedNativeGrant)throw new CapitalProgramV2Error('CHECK_FAILED','Abandoned R2 attempt has unknown physical CPU; no renewed native grant is justified');
+  if(abandonedNativeGrant)throw new CapitalProgramV2Error('CHECK_FAILED','Abandoned shared native attempt has unknown physical CPU; no renewed native grant is justified');
   const remaining=q.deadline_at!.getTime()-Date.now();
   if(remaining<=0)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original durable episode deadline exhausted');
   if(robust){
    nativeLeases=await acquireComputeResourceLeases({resourceKeys:['native:r2'],requiredResourceKeys:['native:r2'],
-    tenantId:ctx.auth.tenantId,workloadClass:'INTERACTIVE',ownerId:`r2:${q.id}:${execution.claimFence}`});
+    tenantId:ctx.auth.tenantId,workloadClass:'INTERACTIVE',ownerId:`${profile.toLowerCase()}:${q.id}:${execution.claimFence}`});
    if(nativeLeases.length!==1||nativeLeases[0]!.leaseSeconds*1000<=remaining+2000)
     throw new CapitalProgramV2Error('CONFIGURATION_REQUIRED','Native permit must outlive original physical lifetime');
    await m3Event(ctx,q.id,attemptId,'CHECK',{phase:'SHARED_NATIVE_GRANT',leases:nativeLeases,deadlineAt:q.deadline_at!.toISOString()});
@@ -147,8 +153,8 @@ async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<J
   let drained=true;
   if(robust&&nativeLeases.length)try{
    const events=await m3Tx(ctx,async c=>(await c.query<{body:{invocationId:string;state:string;receipt?:{physicalExitObserved?:boolean}}}>(
-    "SELECT body FROM finnor_os.m3_events WHERE tenant_id=$1 AND principal_id=$2 AND query_id=$3 AND attempt_id=$4 AND kind='R2_PHYSICAL_CHILD' ORDER BY created_at,id",
-    [ctx.auth.tenantId,ctx.auth.userId,q.id,attemptId])).rows,true);
+    "SELECT body FROM finnor_os.m3_events WHERE tenant_id=$1 AND principal_id=$2 AND query_id=$3 AND attempt_id=$4 AND kind=$5 ORDER BY created_at,id",
+    [ctx.auth.tenantId,ctx.auth.userId,q.id,attemptId,profile==='R5'?'R5_PHYSICAL_CHILD':'R2_PHYSICAL_CHILD'])).rows,true);
    const children=new Map<string,boolean>();for(const {body}of events){if(!children.has(body.invocationId))children.set(body.invocationId,false);
     if(body.state==='EXITED'&&body.receipt?.physicalExitObserved)children.set(body.invocationId,true);if(body.state==='UNKNOWN')children.set(body.invocationId,false);}
    drained=[...children.values()].every(Boolean);

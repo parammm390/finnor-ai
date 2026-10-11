@@ -5,7 +5,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {ExperimentRef} from '@finnor/shared-types';
-import type {R2CheckReceipt,R2Encoding,R2OriginalProblem,R2Request} from '@finnor/shared-types/src/robust-programme-search';
+import type {R2CheckReceipt,R2Encoding,R2OriginalProblem,R2Request,RationalMILP} from '@finnor/shared-types/src/robust-programme-search';
 import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
 import {canonicalJson} from '../../../epistemic-runtime/src/source-precedence';
 import {r2Lp} from '../../../epistemic-runtime/src/r2-encoding';
@@ -61,7 +61,19 @@ export async function loadR2Runtime():Promise<R2Runtime>{
 }
 export interface PhysicalReceipt {schema:'finnor.r2.physical-child.v1';pid:number;exitCode:number|null;termination:string;physicalExitObserved:boolean;
  wallMs:number;cpuMs:number;peakMemoryBytes:number;aggregatePeakMemoryBytes:number;memoryAccountingScope:string;upstreamMemoryReservationBytes:number;originalDeadlineAtMs:number;cpuReservationMs:number;memoryReservationMiB:number;money:null;moneyStatus:'UNMETERED'}
+export async function coalitionCheckerIdentity(){
+ const script=join(r2Repository,'finnor-os/scripts/r5/reference.py');
+ const dependency=join(r2Repository,'finnor-os/scripts/r5/canonical_allocation.py');
+ return {path:script.slice(r2Repository.length+1),sha256:await binaryDigest(script),
+  dependencies:[{path:dependency.slice(r2Repository.length+1),sha256:await binaryDigest(dependency)}]};
+}
 export class R2NativeSession {
+ private coalitionCheckerIdentity:{path:string;sha256:string}|null=null;
+ bindCoalitionChecker(identity:{path:string;sha256:string}):void{
+  if(this.coalitionCheckerIdentity&&canonicalJson(this.coalitionCheckerIdentity)!==canonicalJson(identity))
+   refuse('Original coalition checker cannot be rebound');
+  this.coalitionCheckerIdentity={...identity};
+ }
  readonly receipts:Array<PhysicalReceipt&{phase:string;ref:ExperimentRef}>=[];
  private cpuUsed=0;private live:ReturnType<typeof spawn>|null=null;private calls=0;private parentPeak=process.memoryUsage().rss;
  get aggregatePeakMemoryBytes(){return Math.max(this.upstreamMemoryReservationBytes+this.parentPeak+Math.max(0,...this.receipts.map(r=>r.peakMemoryBytes)),...this.receipts.map(r=>r.aggregatePeakMemoryBytes));}
@@ -71,7 +83,7 @@ export class R2NativeSession {
     readonly onPhysical?:(event:{state:'INTENT'|'STARTED'|'EXITED'|'UNKNOWN';phase:string;invocationId:string;supervisorPid:number|null;receipt:PhysicalReceipt|null})=>Promise<void>,
     readonly heartbeat:()=>Promise<void>=checkpoint,readonly initialCpuMs=0,readonly upstreamMemoryReservationBytes=0){this.cpuUsed=initialCpuMs;}
  async cancel():Promise<void>{const child=this.live;if(!child)return;child.kill('SIGTERM');await new Promise<void>(yes=>{if(child.exitCode!==null||child.signalCode!==null)return yes();child.once('close',()=>yes());});}
- private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory):Promise<{stdout:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
+ private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
   await this.heartbeat();if(this.calls>=this.caps.maxNativeCalls||this.chargedCpuMs>=this.caps.cpuMs)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate native/parent CPU/call grant exhausted');
   if(process.memoryUsage().rss+this.upstreamMemoryReservationBytes>=this.caps.memoryMiB*1048576)
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate owner/native memory grant exhausted');
@@ -96,7 +108,7 @@ export class R2NativeSession {
    if(phase.startsWith('check-')){try{const rejected=JSON.parse(await boundedFile(stdoutPath,this.caps.maxProofBytes));if(rejected.disposition==='REJECTED'&&typeof rejected.reason==='string')reason+=':'+rejected.reason.slice(0,1024);}catch{}}
    throw new CapitalProgramV2Error(receipt.termination==='ORIGINAL_DEADLINE'?'LIMIT_EXCEEDED':'CHECK_FAILED',`R2 ${phase} rejected or stopped: ${reason}`);
   }
-  await this.heartbeat();return {stdout:await boundedFile(stdoutPath,this.caps.maxProofBytes),receipt,ref};
+  await this.heartbeat();return {stdout:await boundedFile(stdoutPath,this.caps.maxProofBytes),stdoutPath,receipt,ref};
  }
  async executeProgramme(javascript:string,histories:unknown[],maximumBytes:number){
   await this.checkpoint();
@@ -138,7 +150,21 @@ export class R2NativeSession {
     provenance:{runtimeRef:this.runtime.ref,physicalRef:raw.ref,checkerIdentity:this.runtime.checkerIdentity}};
   return {...body,ref:r2Ref('independent-check',body)};
  }
- async solve(encoding:R2Encoding,index:number):Promise<{solution:Record<string,string>|null;proofPath:string;proofSha256:string|null;modelSha256:string;proofRef:ExperimentRef|null;viprRef:ExperimentRef|null;proofError:string|null}>{
+ /** Versioned R5 adapter: the same original physical grant supervises the
+  * independent coalition checker. This is not an R2-domain acceptance receipt. */
+ async checkCoalition(original:unknown,operation:'encoding'|'proof'|'candidate'|'separate'|'tie'|'programme',extra:Record<string,unknown>){
+  const script=join(r2Repository,'finnor-os/scripts/r5/reference.py');
+  const checkerIdentity=await coalitionCheckerIdentity();
+  if(this.coalitionCheckerIdentity&&canonicalJson(this.coalitionCheckerIdentity)!==canonicalJson(checkerIdentity))refuse('Original admitted coalition checker changed');
+  this.bindCoalitionChecker(checkerIdentity);
+  const raw=await this.run(`check-r5-${operation}`,[this.runtime.python,script],JSON.stringify({...extra,original,operation}));
+  const result=JSON.parse(raw.stdout) as Record<string,unknown>;
+  if(result.disposition!=='ACCEPTED')refuse('Independent original coalition checker refused');
+  await this.checkpoint();
+  if(canonicalJson(await coalitionCheckerIdentity())!==canonicalJson(checkerIdentity))refuse('Coalition checker changed during invocation');
+  return {result,physicalRef:raw.ref,checkerIdentity,runtimeRef:this.runtime.ref,stdoutPath:raw.stdoutPath,stdoutSha256:sha(raw.stdout)};
+ }
+ async solve(encoding:RationalMILP&{schema:string;originalDigest:string},index:number):Promise<{solution:Record<string,string>|null;proofPath:string;proofSha256:string|null;modelSha256:string;proofRef:ExperimentRef|null;viprRef:ExperimentRef|null;proofError:string|null}>{
   const base=join(this.directory,`master-${index}`),modelPath=base+'.lp',rawProofPath=base+'.vipr',proofPath=base+'.complete.vipr',solutionPath=base+'.sol';
   const model=r2Lp(encoding);await writeFile(modelPath,model,{flag:'wx',mode:0o400});
   const cmds=['set exact enable TRUE','set presolving maxrounds 0','set presolving maxrestarts 0',

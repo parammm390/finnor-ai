@@ -4,6 +4,7 @@ import type {ExactContingentPolicy,JointSearchCertificate,R2CheckReceipt} from '
 import {R2_VERSION,R2_PROFILE} from '@finnor/shared-types/src/robust-programme-search';
 import {encodeR2Master,encodeR2Tie,decodeR2Policy} from '../../../epistemic-runtime/src/r2-encoding';
 import {r2Quantity as q,r2String as s,r2Divide} from '../../../epistemic-runtime/src/r2-rational';
+import {separateR2Worlds} from '../../../epistemic-runtime/src/r2-world-separation';
 import {persistEnterpriseExactControlPolicy} from '../enterprise-control';
 import {checkEnterpriseExactProgrammeResources} from '../enterprise-allocation';
 import {m3Event,m3Tx,writeM3Record,type M3QueryRow} from './v2-store';
@@ -77,10 +78,12 @@ export async function searchRobustCapitalProgram(ctx:PeMutationContext,row:M3Que
      addedWorld:null,duplicateWitnesses:[],violations:[],adverseWorld:null,disposition:'CHECKED_INFEASIBLE_COMPLETE_RELAXATION'});break;}
    if(!solved.solution){unresolved.push({claim:'FEASIBLE_INCUMBENT',reason:'Native solve supplied no independently replayable primal'});break;}
    const decoded=decodeR2Policy(encoding,solved.solution),full=await session.check(original,'policy',{policy:decoded});checks.push(full);
-   const value=full.worldValues.reduce((a,b)=>q(a.value).compare(q(b.value))<=0?a:b),candidateRef=r2Ref('original-policy-proposal',decoded,'S4');
+   const separation=separateR2Worlds(worlds,full.worldValues,full.violations);
+   if(!separation.worst)throw new CapitalProgramV2Error('CHECK_FAILED','R2 complete original world values are absent');
+   const value=separation.worst,candidateRef=r2Ref('original-policy-proposal',decoded,'S4');
    incumbent=await retain(decoded,full);
-   const violations=full.violations,adverse=violations.find(v=>!worlds.includes(v.worldId))?.worldId??(!worlds.includes(value.worldId)?value.worldId:null),gap=interval(),
-    duplicateWitnesses=[...new Set(violations.filter(v=>worlds.includes(v.worldId)).map(v=>v.worldId))];
+   const violations=full.violations,adverse=separation.adverse,gap=interval(),
+    duplicateWitnesses=separation.duplicateWitnesses;
    iterations.push({index,restrictedWorlds:[...worlds],candidateRef,candidateValue:full.feasible?full.lower:null,lower,upper,gap:gap.gap,
      addedWorld:adverse,duplicateWitnesses,violations,adverseWorld:value.worldId,disposition:full.feasible?'FULL_WORLD_FEASIBLE':'FULL_WORLD_CONSTRAINT_VIOLATION'});
    await m3Event(ctx,row.id,attemptId,'R2_FULL_WORLD_CHECKED',{index,checkerRef:full.ref,coverage:full.coverage,worldValues:full.worldValues,feasible:full.feasible,

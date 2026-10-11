@@ -19,6 +19,7 @@ import {allocationQuantity} from '../../../epistemic-runtime/src/allocation-cont
 import {readIssuedCapitalChallenge} from '../counterexample-search/service';
 import type {CurrentSlice} from '../decision-slice/service';
 import {resolveR2Owners,assertR2Current,r2SourceDependencies,type R2OwnerBinding} from './r2-owners';
+import {resolveR5Owners,assertR5Current,r5SourceDependencies,r5CurrentDependencies,type R5OwnerBinding} from './r5-owners';
 
 export interface CapitalOwnerBinding {
  work:WorkBinding;plan:{id:string;semanticHash:string;workInputId:string};
@@ -35,6 +36,7 @@ export interface CapitalOwnerBinding {
  nativeFinance:{modelRef:ExperimentRef;model:import('@finnor/underwriting').UnderwritingModelIR;
   input:import('@finnor/underwriting').UnderwritingInputSnapshot;inputDigest:string;derivations:EvidenceDerivation[]}|null;
  r2?:R2OwnerBinding;
+ r5?:R5OwnerBinding;
 }
 async function bindCanonicalPlan(ctx:PeMutationContext,work:WorkBinding,policy:ContingentPolicy){
  const previous=await activeWorkPlanRevision(ctx.auth.tenantId,work.id);
@@ -161,7 +163,8 @@ export async function resolveCapitalOwners(ctx:PeMutationContext,request:Capital
   ...model.beliefBindings.map(b=>`canonical:${b.pin.root.entityType}:${b.pin.root.entityId}`)];
  await assertDependencies(ctx,derivedDependencies);
  const dependencyMap=new Map<string,EvidenceDependency>();
- for(const dependency of [...derivedDependencies,...await revisions(ctx,keys),...(request.robust?await r2SourceDependencies(ctx,request):[])]){
+ for(const dependency of [...derivedDependencies,...await revisions(ctx,keys),...(request.robust?await r2SourceDependencies(ctx,request):[]),
+  ...(request.coalition?await r5SourceDependencies(ctx,request):[])]){
   const prior=dependencyMap.get(dependency.key);
   if(prior&&prior.revision!==dependency.revision)throw new CapitalProgramV2Error('STALE_INPUT','P4 and economic owner inputs do not share a current dependency cut');
   dependencyMap.set(dependency.key,dependency);
@@ -179,12 +182,14 @@ export async function resolveCapitalOwners(ctx:PeMutationContext,request:Capital
  const binding:CapitalOwnerBinding={work,plan,policy,model,kernel,protocols,resources,outstandingEffects,code,schemaDigest,dependencies,ownerVector,
   nativeFinance,validUntil:new Date(Math.min(Date.parse(policy.validUntil),...resources.resources.map(r=>Date.parse(r.validUntil)))).toISOString()};
  if(request.robust){binding.r2=await resolveR2Owners(ctx,request,binding);binding.ownerVector.push({key:'r2-exact-source-domain',digest:m3Hash({source:binding.r2.original.sourceRef,sourceBody:binding.r2.original.source,runtime:binding.r2.runtimeRef})});}
+ if(request.coalition){binding.r5=await resolveR5Owners(ctx,request,binding);binding.ownerVector.push({key:'r5-exact-coalition-domain',digest:m3Hash(binding.r5)});}
  return binding;
 }
 export async function recheckCapitalOwners(ctx:PeMutationContext,request:CapitalProgramV2Request,binding:CapitalOwnerBinding,
  checkedEvidence?:CurrentSlice):Promise<void>{
- m3CheckTime();await assertDependencies(ctx,binding.dependencies);
+ m3CheckTime();await assertDependencies(ctx,await r5CurrentDependencies(ctx,binding));
  await assertR2Current(ctx,request,binding);
+ await assertR5Current(ctx,request,binding);
  if(checkedEvidence&&!request.financial&&!binding.nativeFinance&&!binding.protocols.length){
   const evidence=checkedEvidence.binding,incumbent=evidence.policies.find(p=>m3Same(p.policy.ref,request.incumbentPolicyRef));
   if(evidence.tenantId!==ctx.auth.tenantId||evidence.principalId!==principal(ctx)||!m3Same(evidence.work,binding.work)||
@@ -216,7 +221,7 @@ export async function recheckCapitalOwners(ctx:PeMutationContext,request:Capital
 /** Live fence over an already fully checked same-call or frozen owner input.
  * Never replaces the full owner replay at worker publication. */
 export async function assertCapitalOwnerBinding(ctx:PeMutationContext,binding:CapitalOwnerBinding):Promise<CapitalOwnerBinding['code']>{
- m3CheckTime();await m3AuthorizePrincipal(ctx);await assertDependencies(ctx,binding.dependencies);
+ m3CheckTime();await m3AuthorizePrincipal(ctx);await assertDependencies(ctx,await r5CurrentDependencies(ctx,binding));
  const work=await resolveDecisionWork(ctx,binding.work.id),plan=await activeWorkPlanRevision(ctx.auth.tenantId,work.id);
  if(!m3Same(work,binding.work)||!plan||plan.id!==binding.plan.id||plan.semanticHash!==binding.plan.semanticHash||
   plan.workInputId!==binding.plan.workInputId||Date.now()>=Date.parse(binding.validUntil))

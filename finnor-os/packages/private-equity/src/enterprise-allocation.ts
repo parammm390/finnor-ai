@@ -18,6 +18,7 @@ import type {ExactContingentPolicy} from '@finnor/shared-types/src/robust-progra
 import {readEnterpriseExactControlPolicy} from './enterprise-control';
 import {R2NativeSession,r2Ref} from './capital-program/r2-native';
 export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
+export {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from './capital-program/r5-allocation-owner';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
