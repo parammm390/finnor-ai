@@ -768,16 +768,17 @@ async function core(identity: R6NativeIdentity): Promise<void> {
 async function main(): Promise<void> {
   const identity = await captureR6NativeIdentity({ repositoryRoot: repo, dependencyRoot: deps });
   await retain(join(evidence, "native-identity.json"), identity);
+  const sourceStatus = execFileSync("git", ["-C", repo, "status", "--short"], { encoding: "utf8" });
   await retain(join(evidence, "source-cut.json"), {
     head: execFileSync("git", ["-C", repo, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
     tree: execFileSync("git", ["-C", repo, "rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim(),
-    status: execFileSync("git", ["-C", repo, "status", "--short"], { encoding: "utf8" }),
+    status: sourceStatus,
     runnerSha256: r6Sha256(await readFile(new URL(import.meta.url))),
     failureModelSha256: r6Sha256(await readFile(join(repo, "scope-r/r6-verified-capital-compiler/failure-model.md"))),
     verificationPlanSha256: r6Sha256(await readFile(join(repo, "scope-r/r6-verified-capital-compiler/verification-plan.json"))),
     node: process.version, nodeExecutable: process.execPath,
     nodeExecutableSha256: r6Sha256(await readFile(process.execPath)),
-    ordinaryUncommittedDevelopmentCut: true,
+    ordinaryUncommittedDevelopmentCut: sourceStatus.length !== 0,
   });
   if (selected === "runtime") {
     await caseRun("actual-installed-runtime", "Actually loaded pinned native compiler/executor/Decimal module and system Python", async dir => {
