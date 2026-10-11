@@ -1,0 +1,681 @@
+{
+  "schema": "finnor.r8.adoption-map.v1",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "entries": [
+    {
+      "origin": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "leadBlob": "2fdc9bbf4afbf09f5999b8dff134f61d321d9c85",
+      "leadSha256": "532da7714087fa2346ed596e0842dfeb841abd146f1dabb550730512087f6b8c",
+      "baseBlob": "d70de82705cf3fd5c9744b19859a669517afc1b9",
+      "baseSha256": "4f2a05fdaec46bb8f304df4267fda59cafbcdc4a59950aed9f08ccc037f7ffe0",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/apps/api/next.config.mjs",
+      "leadBlob": "6fdbccee5fb7f8943df6a562259d5794dc1ce776",
+      "leadSha256": "7c9ff161cbaf8491cf1489c8e92e1345261493ceaa4ab761c240d8bece9bed14",
+      "baseBlob": "74d67794e474ea2f9a3ea97c3735604badc59b76",
+      "baseSha256": "4d0feb8b241507ee29d561bff9526001a1f340c8305c2bc8a03d8c8355fce640",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "leadBlob": "d1d3c5a76395d01d83abf24d8d26e2bb49777fb7",
+      "leadSha256": "a681e9f1655177e679cd689142eb0189ef0880419bb03c8bf3088f543ba4385f",
+      "baseBlob": "7fb2cb4a4a59e3ec1edf75678f9e5694af9cc90c",
+      "baseSha256": "faa98e45088d8e55d43284a43c5e4cd05240fcbc8d1e942786b1f1cf1ed30a88",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/apps/worker/src/index.ts",
+      "leadBlob": "41f474a2f55b8d1da6ff5ddeb7bf6d893fedc3ea",
+      "leadSha256": "62a7ae77f12651260ef81ddb145d64972345869cf5356ef4b02fab6a541703ab",
+      "baseBlob": "ba8cb16c482ff1a4cb05a547cd29a3480c85c66f",
+      "baseSha256": "504bf0fee1f15f501900b55da5e8f46e89531e7797ec902bbe734f530c3fa6bc",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/openapi.json",
+      "leadBlob": "a12877897c9435e01f5ee9c0acf41a582d77c659",
+      "leadSha256": "33d799d942292fc71fb8c81b822965f87fc94377e28a3a1739b0b217974d4bc3",
+      "baseBlob": "d6ba4fb1671d73d66f6ca9ed058ffd5cfe3790be",
+      "baseSha256": "91accf36eefe45a3500586a17b4366c2f34ac73fe7c17c49e7a443b208dba52e",
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/interface-port.ts",
+      "leadBlob": "0d42ec19d97adcbe329096671ccb1d8934f2682e",
+      "leadSha256": "fd2eefd10f09d0c5262515d3e6912521e9d05bf09552f34ee25aae986c2052c0",
+      "baseBlob": "88c839e4abab4d936abf6c019ad5bd51671f98fd",
+      "baseSha256": "79429b4ec9c44cc66d27ee7be29850bf20eb802e44d63c4f06235a79127299de",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "leadBlob": "f3fcab80b5c76261073a22a4b6cdae2cc96472cb",
+      "leadSha256": "2995a67cde967e313f94a674e77e12bda121c1bbe7b41fd371287bff04b98a3b",
+      "baseBlob": "4f538cc5353e747153cb64d7b70ef2fe56c8808a",
+      "baseSha256": "124da0d773d5d173c41ea3ea111a7a5d85714b5a688ca0ec9639902f4a9338a1",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/solver-consumer.ts",
+      "leadBlob": "6bc60329d975ec1a39b8b04decf0188776ba937d",
+      "leadSha256": "82f482684f37709d07308fa9013d944e45695c8c7d4bff4ee004a6b43d9407fb",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "finnor-os/packages/private-equity/src/r8/s8/consumer.ts",
+      "initialSha256": "82f482684f37709d07308fa9013d944e45695c8c7d4bff4ee004a6b43d9407fb"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/solver-contracts.ts",
+      "leadBlob": "4bfc1934cc9738b2452366bf59e0ecd657c9f6c5",
+      "leadSha256": "1c912f44b673440985b125bb4006e3a12833b0c134c277a9623da6b19f4fbbea",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "finnor-os/packages/private-equity/src/r8/s8/contracts.ts",
+      "initialSha256": "1c912f44b673440985b125bb4006e3a12833b0c134c277a9623da6b19f4fbbea"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/solver-port.ts",
+      "leadBlob": "9b23ee2cae08cf36fe800c8f532fbb8ed4ca41f5",
+      "leadSha256": "01a9065f2fa7d8ef845af21a6dfbf706bbb3e3a05259b6c82295227174593266",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "finnor-os/packages/private-equity/src/r8/s8/port.ts",
+      "initialSha256": "01a9065f2fa7d8ef845af21a6dfbf706bbb3e3a05259b6c82295227174593266"
+    },
+    {
+      "origin": "finnor-os/packages/capability-evolution/src/source-closure.ts",
+      "leadBlob": "748b415f6a6aaeac3c037d3f1bea3e4bb30116f6",
+      "leadSha256": "b3684c38248b4c0d5d64537fe02880e2dcdfda24d759ec8af1f8fa878051daa4",
+      "baseBlob": "fcb61c4d1353096869b90b647707496defa96ae8",
+      "baseSha256": "38bbf89349dcc93f50e6ec9ab5ace3260c31eb4d38941f1777bba1fcfa3d931c",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/db/compute-contract.ts",
+      "leadBlob": "2a13609966b5692885f2823ef2a113347005bd19",
+      "leadSha256": "2602f3db320ee3910cf1a943ab48c17f4fd1979bc5774c1f6327dc9714cb0ccf",
+      "baseBlob": "496bc49a23c847e76b836d8d88ad1a12c9b42395",
+      "baseSha256": "51a3c7415e6a1845cde3104cce03c7cef40de27cd58d37601755fa2305fda92b",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/db/migration-head.ts",
+      "leadBlob": "199a362c30ec6d6713cc603f304b02d42c87606b",
+      "leadSha256": "b3bb3c0af151d4bf0a74b2f0d154694415df43a9c37db9416b1b57d66ccdad67",
+      "baseBlob": "7ee2aca0fc67c494dd110dfae1f9c3a9ddd420a6",
+      "baseSha256": "73f1ec9211e59f1cc380c5042a0e5d61c42307ce7d6a59a44bdee877187904a8",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/db/migrations-bundle.ts",
+      "leadBlob": "920766b50a62818767a3451ef97089a8bc574416",
+      "leadSha256": "3ee110e69645915f3dc50b75f2680184b6ae329ab172e6c520dbd2440dea670d",
+      "baseBlob": "0e692e6a12a84da634c213e5c175e15e99ef4af6",
+      "baseSha256": "06e019a0a83661ba94d29e1e381d1217b4ba38e0a8a6b6168f192609a1214004",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/db/migrations/0172_r8_solver_capsules.sql",
+      "leadBlob": "53789e7940b50c5fa501a00973dfce1182799bba",
+      "leadSha256": "692f7e53800bdd3a856238b5a54c6e607d0651f070a2b2605da2d54646b01896",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "scope-r/r8-repaired-adoption/integration/solver-capsules.sql",
+      "initialSha256": "692f7e53800bdd3a856238b5a54c6e607d0651f070a2b2605da2d54646b01896"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "leadBlob": "34125f632a8f14d008ac1571922c8d3e389ee0b5",
+      "leadSha256": "1a5ba71b28499c0098267dec93c31b7233c832e2653da5b85b0de7ffc42a2f90",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "initialSha256": "1a5ba71b28499c0098267dec93c31b7233c832e2653da5b85b0de7ffc42a2f90"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/compiled/engine_rkt.dep",
+      "leadBlob": "968dbf45be2e97f8a4aa61cbdf6cfbc7f24c2180",
+      "leadSha256": "740b6e2d444edb27e59617ad51539338d37dbf2c9d46605183371656b17f1d88",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/compiled/engine_rkt.zo",
+      "leadBlob": "165a125e7b2a21b5d10d4174b48f16a2d711a148",
+      "leadSha256": "b3b84f05a1511facd34fd4d206f73daf3e63451d66f1d3aa566fbabae566ef8d",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "leadBlob": "0e08d50f4fc5709864027f8b5f7979d10448554b",
+      "leadSha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "initialSha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "leadBlob": "67e1a12d032ef5f3c1c483a06a42c2c99f4298a1",
+      "leadSha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "initialSha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "leadBlob": "d21ae581b3ebcf76062c201bc8b6ee23c6c17724",
+      "leadSha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "initialSha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "leadBlob": "e5556cb2a0198de3686492822003ab71446ab656",
+      "leadSha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "initialSha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "leadBlob": "d4897d8a37a1a1469806d376472698aee3cbd01c",
+      "leadSha256": "832dd01c1b2b891c63ef3fd62cee782a4cbd54e9c23bedc4b054d1a1eabd2355",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "initialSha256": "832dd01c1b2b891c63ef3fd62cee782a4cbd54e9c23bedc4b054d1a1eabd2355"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "leadBlob": "71e4aa2b6889f8853dd6bafdace39f1f9b6c3ca8",
+      "leadSha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "initialSha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "leadBlob": "62eb8f63a7a340b3b595588ceb49aa0591dc7b64",
+      "leadSha256": "9a16c86eeacd83041ea60a3ddb46ab3f601dc0ee7b73e0281d11dde6209f0ee9",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "initialSha256": "9a16c86eeacd83041ea60a3ddb46ab3f601dc0ee7b73e0281d11dde6209f0ee9"
+    },
+    {
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "leadBlob": "c8b51b8db86bcb4952cdc1ba5d75970928fafeb6",
+      "leadSha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "initialSha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb"
+    },
+    {
+      "origin": "finnor-os/packages/governed-execution/src/stream-executor.ts",
+      "leadBlob": "3e68ec10b13bf183c5ccd9b4f669f41fdd7882c6",
+      "leadSha256": "871f1fcefe385b2acb902b6223c0187ea14461f7e34c9fce1df313df7d4d066d",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "initialSha256": "871f1fcefe385b2acb902b6223c0187ea14461f7e34c9fce1df313df7d4d066d"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "leadBlob": "a5b67e48db308b7342ecd24cde958ae327215944",
+      "leadSha256": "2462a5c5b3f752344647588000801449b7fc200bee3bacf8ac8a6a55e6f9601b",
+      "baseBlob": "f56234e38529f2922da8ce972e41ab081c0a63cc",
+      "baseSha256": "6454b94174f01a41e721a012b75b183e2e57c897aae32906fe213c3ea7b993a3",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/program-synthesis/typescript.ts",
+      "leadBlob": "1573d65addc936d367ef795a842cc1f823093902",
+      "leadSha256": "ae91967ebdb19c5243664a81f9d9846f44bf615a2c3e373b9b588d2b1d22331b",
+      "baseBlob": "94ff6cbb5bc7810222769b359a72e97880a49e7a",
+      "baseSha256": "56006008685bafb28cd7e595bae6409ad4e974c9ea9806b976c41c67f1055ac7",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/api.ts",
+      "leadBlob": "9d198f683d957d4cf21bffd169fb1d8d77dfde9f",
+      "leadSha256": "453483e51d01b95d05335872ef81c936178f0b8346f3d38ae3656408604acd86",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/api.ts",
+      "initialSha256": "453483e51d01b95d05335872ef81c936178f0b8346f3d38ae3656408604acd86"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "leadBlob": "5ee796fff41eb8c7196947fcab803e6a208462f2",
+      "leadSha256": "c723498fd76307e80cd402a214bfdc6c360e00d5167a5319fec37fc3c1480462",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "initialSha256": "c723498fd76307e80cd402a214bfdc6c360e00d5167a5319fec37fc3c1480462"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/owners.ts",
+      "leadBlob": "12313d68a92bbf6a21a7eb1d837e95553b41818a",
+      "leadSha256": "a3b7ee743df4b7b25098524884b168ac6e59705aa97e64452cacb6d8ec8550bf",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/owners.ts",
+      "initialSha256": "a3b7ee743df4b7b25098524884b168ac6e59705aa97e64452cacb6d8ec8550bf"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/projection.ts",
+      "leadBlob": "a4a4fdb2c09b360ee07e0d0f507a22764302c669",
+      "leadSha256": "54ab1b4f72a863cd857f9eb8bb224d211702b450e0a78ebf0a1028c3c51fc571",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/projection.ts",
+      "initialSha256": "54ab1b4f72a863cd857f9eb8bb224d211702b450e0a78ebf0a1028c3c51fc571"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/selection.ts",
+      "leadBlob": "e1ada7699a97ba8a616d94b24a22c66c66c478e6",
+      "leadSha256": "54d6dc1d22d305adbe625f04e7a493d733306a81899dd9560af0ccdf64ab83b1",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/selection.ts",
+      "initialSha256": "54d6dc1d22d305adbe625f04e7a493d733306a81899dd9560af0ccdf64ab83b1"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/store.ts",
+      "leadBlob": "deae729ad1efa5df7535ced85f8fb854aee504ad",
+      "leadSha256": "b8fbf7193465e91d96151b62f99d05d2a05a88a5072f6c6d1027add4b1ea835c",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/store.ts",
+      "initialSha256": "b8fbf7193465e91d96151b62f99d05d2a05a88a5072f6c6d1027add4b1ea835c"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/r8/worker.ts",
+      "leadBlob": "a904acbfa1885af5869bb08c49307a9425fddad8",
+      "leadSha256": "4201167cbb4fa9fdd042e54f58957ce3b0416700e1006a93d54410bfea705000",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/private-equity/src/r8/worker.ts",
+      "initialSha256": "4201167cbb4fa9fdd042e54f58957ce3b0416700e1006a93d54410bfea705000"
+    },
+    {
+      "origin": "finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "leadBlob": "f211fb4b4538d432fc7f1c6d8e0cb8f65a206ee6",
+      "leadSha256": "e9c146a48cc1eb1e7306f9d273bf92baa3cff419f6af8068f3988cdbfba851c8",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "initialSha256": "e9c146a48cc1eb1e7306f9d273bf92baa3cff419f6af8068f3988cdbfba851c8"
+    },
+    {
+      "origin": "finnor-os/scripts/generate-openapi.ts",
+      "leadBlob": "748c44c43ae6b9a1ab1e88a27674cbb81ffb4023",
+      "leadSha256": "e8b9b54acb8737df46c670c2bb9e9add23908b719dbce791de6076e203d76905",
+      "baseBlob": "88d2675f039bdf97348af9cb3a6af1b0bc3ce054",
+      "baseSha256": "daa24f75ecd8a48a792febb28edf2c1431ec2da342b502e3b12a8b4fded96c95",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/scripts/p1/run-program-e2e.mts",
+      "leadBlob": "aaf52a0aaa2f28106aa1c18023a3885c114c1f1d",
+      "leadSha256": "ef5de89deccf5014cdd78bf3cc2ba77ab6b5aa638640f74eac2acf2c08bf6fe4",
+      "baseBlob": "562329203a9087934be3e15ba2579524a83b299f",
+      "baseSha256": "24a4158dc7d98fbebd5ce271995faa2c65eed6f063ca05ec76be86418436f8ce",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/browser-fixture.mts",
+      "leadBlob": "72587d9c80b9a5ada458baccd06c6dc59d1cf2da",
+      "leadSha256": "c1f90ab5a0e3476dbe4a51197aea4c027c17d80fcec462bc12a5c2b68ef7655f",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/browser-fixture.mts",
+      "initialSha256": "c1f90ab5a0e3476dbe4a51197aea4c027c17d80fcec462bc12a5c2b68ef7655f"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/package-runtime.py",
+      "leadBlob": "38fd7f667ebc89b2ff1c04b1af1855a12832cb59",
+      "leadSha256": "42bfd263d283b60ef5916ca99869e0933830ffd5c203e6cac38871e0b96efc6b",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/package-runtime.py",
+      "initialSha256": "42bfd263d283b60ef5916ca99869e0933830ffd5c203e6cac38871e0b96efc6b"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/run-capsule.mts",
+      "leadBlob": "5f2e78e4ab20cb2841cef1cbdbebe0d8ae01dd52",
+      "leadSha256": "cc75b37bd0b9a521cbbbb4fc16323707475d9c522c4bbd30d2f63c91fd9bb05f",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/run-capsule.mts",
+      "initialSha256": "cc75b37bd0b9a521cbbbb4fc16323707475d9c522c4bbd30d2f63c91fd9bb05f"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/run-local.py",
+      "leadBlob": "7d4b0160ce6482d8a504ffb6cdeedddc1973d22d",
+      "leadSha256": "01edaa3dd23ba414f9ac52fd52a24a4dfa8e600fcc67249d4a2fd58285371d41",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/run-local.py",
+      "initialSha256": "01edaa3dd23ba414f9ac52fd52a24a4dfa8e600fcc67249d4a2fd58285371d41"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/run-owner.mts",
+      "leadBlob": "874c223d9a2c1f70f8f9b530cde5ec7809a290bd",
+      "leadSha256": "ec4c0c2ff96086acd68f4e7a59bbc2d467f6f19f13690c6658d87b22fd7c1167",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/run-owner.mts",
+      "initialSha256": "ec4c0c2ff96086acd68f4e7a59bbc2d467f6f19f13690c6658d87b22fd7c1167"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/run-semantic.mts",
+      "leadBlob": "1dbd689d7d5f514dbbb5f2e1265c9796d280356c",
+      "leadSha256": "6acfb6d85fa700e391a5b0343ef36fcd0c8cdbf24913ccd7b3213209d83078ea",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/run-semantic.mts",
+      "initialSha256": "6acfb6d85fa700e391a5b0343ef36fcd0c8cdbf24913ccd7b3213209d83078ea"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/runtime-lock.json",
+      "leadBlob": "5bb66765020200cc6a378b85d9fbbc5ef5d85a48",
+      "leadSha256": "fa74bb6fd531f3f6d8a93b31324a9560380a4283b77d530583db25ce054715fd",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/runtime-lock.json",
+      "initialSha256": "fa74bb6fd531f3f6d8a93b31324a9560380a4283b77d530583db25ce054715fd"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/seal-runtime.py",
+      "leadBlob": "348f0198a7030c8d6af5decee7e2c8d31f0e94de",
+      "leadSha256": "05cac1e5d0599355d02330dee14fb1eb4ea89c585da7ce705b6a07b7998d9055",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/seal-runtime.py",
+      "initialSha256": "05cac1e5d0599355d02330dee14fb1eb4ea89c585da7ce705b6a07b7998d9055"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/solver-review.mts",
+      "leadBlob": "05858ee6237f12943015a00c85de7314904e845a",
+      "leadSha256": "3a696530b8cfaac75965529a01631f4d40edfb8749fedd6e1355c549d572387e",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/solver-review.mts",
+      "initialSha256": "3a696530b8cfaac75965529a01631f4d40edfb8749fedd6e1355c549d572387e"
+    },
+    {
+      "origin": "finnor-os/scripts/r8/worker-entry.mts",
+      "leadBlob": "1f153049f512c084d2fa2bb7e1b463b6004bf7c4",
+      "leadSha256": "fd88ab7287ca017c247a6387dd38e7b958dcaa813201dfd18144b54db3aef043",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "finnor-os/scripts/r8/worker-entry.mts",
+      "initialSha256": "fd88ab7287ca017c247a6387dd38e7b958dcaa813201dfd18144b54db3aef043"
+    },
+    {
+      "origin": "finnor-os/scripts/s8/lifecycle-fixture.mts",
+      "leadBlob": "f8505c4cb6dbc16ca0869227f87f4ae9c30a6da4",
+      "leadSha256": "b31990407dd59024eca40b00c9b303fb8b53870acba8f982aee9a59d29ea1a44",
+      "baseBlob": "f75457d7f1ec78b4637f3beb9d0e5b22a9f30172",
+      "baseSha256": "eafaacf1e4e6f6669c1584729584952c7777d6ba68602f7f162c91fa6858748a",
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "finnor-os/scripts/r8/lifecycle-fixture.mts",
+      "initialSha256": "b31990407dd59024eca40b00c9b303fb8b53870acba8f982aee9a59d29ea1a44"
+    },
+    {
+      "origin": "infra/deployment/production.contract.json",
+      "leadBlob": "b6b0235b09aac3ae3f1691899778cef324611424",
+      "leadSha256": "501d16db1e3ee8dd32429d7baae3cc7ca3f95a1dc0ca9e370c0aebc225b31cc2",
+      "baseBlob": "6f28a87a66464546da6b88642b517c2aee63c29f",
+      "baseSha256": "4faeb71ed9c73427ccad93650682092613af73c2c36a7ef71cb515b5efc2b135",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/evidence/mounted/authentication-timeout.png",
+      "leadBlob": "0f62537456184ff370cde113e34f5ab5d9c8fd47",
+      "leadSha256": "ca54e9c45fe29b6110a66f5c060636d951f10a8e4b65ee10c22ae5d89dab27b9",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/failure-model.md",
+      "leadBlob": "59b918b9c00607438ac58b394a54bff8141930c7",
+      "leadSha256": "6909e52118cf34ee8c9c19523946e9ab55dc59868f040284eec6d7b210a4525e",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/follow-up-failure-model.md",
+      "leadBlob": "560cc8d900f999a71bf9d73516b9b24e2cea7010",
+      "leadSha256": "f8b708343ffdfc9af5ab625220a3f29873a662ff52823293e322f76a20804acf",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/follow-up-verification.json",
+      "leadBlob": "402d6c94f20fdc4a4d2b0052400c2256980fafef",
+      "leadSha256": "14fa6cd70037b4af1f472332645562b73bd57d10fcc4a3f425ef71600b2cd756",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/grammar.md",
+      "leadBlob": "2aefa1fb22ac083eed0f1a0ad855cf22506f056c",
+      "leadSha256": "05056784d01fb2242de2ce8d75f801daa97da720bc7226ac06d3cb5cb8682751",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "scope-r/r8-repaired-adoption/original-grammar.md",
+      "initialSha256": "05056784d01fb2242de2ce8d75f801daa97da720bc7226ac06d3cb5cb8682751"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/handoff/draft-pr-body.md",
+      "leadBlob": "a2d5476c9dff3ff97227cbe295a14cb698f6f319",
+      "leadSha256": "7df68ca30e1578de3d9827be9cf3ee80d596d1784716b096c2aceb0ebc8e8531",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/handoff/evidence-summary.json",
+      "leadBlob": "2964568dff6cd18c7254e3ed9a0b28dee3aa979c",
+      "leadSha256": "1b4077b3e83059c895523e64b08ca480c3bb80fbc9ad15cf1fbd874f2ad2af4d",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/handoff/qualification-dependencies.json",
+      "leadBlob": "7e25704800f1e4d79b09daed4b967e514d6dad8c",
+      "leadSha256": "74463274c6c966c1681785f5357ed7a6b264d5bacdc49d85e8d8178b63773ebe",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/handoff/reconstruction.json",
+      "leadBlob": "948c248c50686b5a29e2b2d1688168bd15c42ef3",
+      "leadSha256": "f5278edf60bbf3286120960119857c619ab48a2bb81ee7107cfa2af14570d503",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/handoff/serial-ownership.json",
+      "leadBlob": "0647faf6de0455a3eb191c33b454f7231c9a5e04",
+      "leadSha256": "c6dd77c3b5472eec20675ac991b29e9e57e8e452ead4b74c92b5f70b9de441ad",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/plan.md",
+      "leadBlob": "01ca4affbeab719c3a0759db8278dbb05df9a995",
+      "leadSha256": "80465289a50c44fe39e23e95548528c6aeb2ed426047a7e89a4e321ad355de71",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/preimplementation-registration.json",
+      "leadBlob": "686c63a4a2775d7a6bbfa4c1603c15455882ca4d",
+      "leadSha256": "ea818c3d5f7151ca4c494ff9e98d29cb8d9edc72671bec6554faa0740728d733",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/preservation-argument.md",
+      "leadBlob": "250fd6b97769deb5781d8e299e0aad9299b8233c",
+      "leadSha256": "0facd4ed795e0acfbe4cee818f7cc8e4e54082bef464e4777fec94d120fe76db",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "scope-r/r8-repaired-adoption/original-preservation-argument.md",
+      "initialSha256": "0facd4ed795e0acfbe4cee818f7cc8e4e54082bef464e4777fec94d120fe76db"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/requirement-coverage.json",
+      "leadBlob": "a40be5b5653b8bec5169434013c081521e4db107",
+      "leadSha256": "dc2fc0218f2523658285e08721ed0eb2a34902d56417ef5031092ca6e1c92a8e",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/specification.md",
+      "leadBlob": "e5c675e7002720b6c7944e50b9e430c78ff6e91d",
+      "leadSha256": "655498fb8af45b710a32be67c186bbc9b9d5b50243aa1507c792e0fbfb0d6ab0",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "RELOCATE_EXCLUSIVE_OR_PROPOSAL_DATA",
+      "target": "scope-r/r8-repaired-adoption/original-specification.md",
+      "initialSha256": "655498fb8af45b710a32be67c186bbc9b9d5b50243aa1507c792e0fbfb0d6ab0"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/status.md",
+      "leadBlob": "ab1a813f10242c00ba727508274acbe37b4d5349",
+      "leadSha256": "c27b2b7f795fc187385761fa94401dc0430b2a64f23b3419ff19afb5bbf4a445",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/verification-plan.json",
+      "leadBlob": "d323899af758177a801cb430d431688335838830",
+      "leadSha256": "05c86c26ccda8e3580cc9925aa7f4cf6723bf095c6b6218d8688f66e4344a1ba",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "scripts/centropy/generate-capability-manifest.mjs",
+      "leadBlob": "a1b0142025da458e5191f63544985b0313059eb5",
+      "leadSha256": "8f9e52c8a12f9023b3e53ac4227059673f1777c02a64edbd9175ebfcbb479f34",
+      "baseBlob": "966a1179caf079d3dd8b9a0ac35570e295a71452",
+      "baseSha256": "8716bb816ebff46ea4dcf184f653f6fabf650bea505b8693c761d68a75992880",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "leadBlob": "4e4940ce88cd0df4f7233c96a7b56f0feb9a3ede",
+      "leadSha256": "3d088195e58e9d078bee07c13b11eca74d447c1ce576b195dc615eb83e787932",
+      "baseBlob": "bf43b95b608eae528f47796d5e98b0c9f75d5395",
+      "baseSha256": "5eed082e1796efb738e8d9cbe56f6c8d69873f96c36067757bd8feb272169350",
+      "disposition": "EXCLUDE_SHARED_SERIAL_INTEGRATION"
+    },
+    {
+      "origin": "src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "leadBlob": "23f87f8bdfc9557d0e5760756420ce8e93c6a63a",
+      "leadSha256": "604ddea90c05e6e4ac4416756929573dfc8c4c307f962b2a98e84ee1bee367bc",
+      "baseBlob": null,
+      "baseSha256": null,
+      "disposition": "ADOPT_LEAF",
+      "target": "src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "initialSha256": "604ddea90c05e6e4ac4416756929573dfc8c4c307f962b2a98e84ee1bee367bc"
+    },
+    {
+      "origin": "src/lib/centropy/capability-manifest.generated.json",
+      "leadBlob": "fe10f279a24f2c53b3c7c9195075e3ea054a2cb8",
+      "leadSha256": "9581a83844dbb0e16c67ca5bbbea7bda8f75ba9e1e41f29656ad8cc55de84c1e",
+      "baseBlob": "66984c87d69ea3b6300c3e46c71ba3620673fcfd",
+      "baseSha256": "31723bfd99a84fb167662078b3361d78f315f0757771512b57e72c91c95b62ca",
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "src/lib/centropy/openapi-types.ts",
+      "leadBlob": "1c35323083e2801b27136e1381d2d21763bc4343",
+      "leadSha256": "454583a67375c3e90a164c9b32473f0092bf73c51f840597b53cbff6d252d1d4",
+      "baseBlob": "5499e73233637359fd8175ba7de21797f215c249",
+      "baseSha256": "41fa277748a395a37972f2c7f373fc2a627c4d112a77083d46d161e86c43ce3e",
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    },
+    {
+      "origin": "src/lib/jarvis/openapi-types.ts",
+      "leadBlob": "1c35323083e2801b27136e1381d2d21763bc4343",
+      "leadSha256": "454583a67375c3e90a164c9b32473f0092bf73c51f840597b53cbff6d252d1d4",
+      "baseBlob": "5499e73233637359fd8175ba7de21797f215c249",
+      "baseSha256": "41fa277748a395a37972f2c7f373fc2a627c4d112a77083d46d161e86c43ce3e",
+      "disposition": "EXCLUDE_GENERATED_OR_HISTORICAL_EVIDENCE"
+    }
+  ],
+  "extractedHelpers": [
+    {
+      "origin": "finnor-os/packages/private-equity/src/program-synthesis/typescript.ts",
+      "leadSha256": "ae91967ebdb19c5243664a81f9d9846f44bf615a2c3e373b9b588d2b1d22331b",
+      "target": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "extraction": "openTypeScriptModuleBatch transport only; no shared emitter changes"
+    }
+  ]
+}

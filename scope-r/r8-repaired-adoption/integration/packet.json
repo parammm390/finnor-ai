@@ -1,0 +1,325 @@
+{
+  "schema": "finnor.r8.serial-integration-proposal.v1",
+  "preparedAt": "2026-10-11T07:40:29.188486+00:00",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "status": "PROPOSAL_ONLY_NOT_APPLIED_NOT_ASSEMBLED",
+  "finalStructuralValidation": {
+    "evidence": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04",
+    "preimages": "MATCHED_UNAPPLIED_PROPOSALS_ONLY",
+    "gitApplyCheck": "PASS_NOT_APPLIED",
+    "actualBackendFrontendFixtureTypes": "PASS",
+    "virtualUnappliedBackendFrontendTypes": "ZERO_DIAGNOSTICS",
+    "virtualNextAndCapabilityGeneratorSyntax": "PASS_NOT_EXECUTED",
+    "sharedFilesWritten": 0,
+    "retainedStructuralRed": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-backend-01.log",
+    "qualification": "STRUCTURAL_ONLY_NOT_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+  },
+  "finalScientificEvidence": {
+    "semantic": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02",
+    "custody": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03",
+    "negativeSignalRefusal": "5001.767292 ms; zero product-close events, live group and explicit forced test cleanup. Not physical-close or capacity-release proof.",
+    "sourceChangeRule": "Match final scientific source pins. A changed cumulative scientific/compiler/dependency closure requires fresh exact original-D evidence; do not inherit these receipts."
+  },
+  "patch": {
+    "path": "scope-r/r8-repaired-adoption/integration/shared-seams.patch",
+    "sha256": "b1fdf7a2b37d282b9464aa9d6cb6beff74a859d8acc466a37dcacd1dc40c75fb",
+    "targets": 10
+  },
+  "changes": [
+    {
+      "target": "finnor-os/packages/shared-types/src/index.ts",
+      "description": "Export the exclusive capsule/request contract without granting authority",
+      "baseBlob": "b0f54f8cce9f64d1f3971d09bc3dd116c406aeb9",
+      "preimageSha256": "b5924b5d431dd66ca83d76cd07d27cfcfef7b4e40b81b739c51e4d7d2e7e88f4",
+      "proposedSha256": "79b12a2aff5f1149d4565ada97619f54df28f5c5432c8ca4ba64e4676159628a",
+      "replacements": [
+        {
+          "before": "export * from './capital-program';",
+          "after": "export * from './capital-program';\nexport * from './solver-capsule';",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/packages/db/compute-contract.ts",
+      "description": "Register the HEAVY locally-idempotent fenced ordinary R8 handler",
+      "baseBlob": "496bc49a23c847e76b836d8d88ad1a12c9b42395",
+      "preimageSha256": "51a3c7415e6a1845cde3104cce03c7cef40de27cd58d37601755fa2305fda92b",
+      "proposedSha256": "1a554d1132073950d847e64c394110a1f5ee973707f4a2173502c1819a5f5140",
+      "replacements": [
+        {
+          "before": "export const PRODUCTION_JOB_CONTRACTS = {",
+          "after": "export const PRODUCTION_JOB_CONTRACTS = {\n  run_solver_synthesis_v1: tenantFixed(\"HEAVY\", \"locally_idempotent\", \"Bounded ordinary Rosette/checker/native preparation under one original Work grant; retained physical custody, no protected admission or business authority.\", {leaseRecovery:\"immediate_after_expiry\"}),",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/apps/worker/src/index.ts",
+      "description": "Add one canonical R8 handler; retain every R1/R2/R4 and existing registration",
+      "baseBlob": "ba8cb16c482ff1a4cb05a547cd29a3480c85c66f",
+      "preimageSha256": "504bf0fee1f15f501900b55da5e8f46e89531e7797ec902bbe734f530c3fa6bc",
+      "proposedSha256": "5449097253d90e5238100b44bbd65ed1d96368a810c12f3e1cbc6566ea21bd37",
+      "replacements": [
+        {
+          "before": "import {runIdentificationPlan} from '@finnor/private-equity/src/r4/worker';",
+          "after": "import {runIdentificationPlan} from '@finnor/private-equity/src/r4/worker';\nimport {runSolverSynthesisJob} from '@finnor/private-equity/src/r8/worker';",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "  const queue = new JobQueue();",
+          "after": "  const queue = new JobQueue();\n  queue.register('run_solver_synthesis_v1',runSolverSynthesisJob,PRODUCTION_JOB_CONTRACTS.run_solver_synthesis_v1);",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "description": "Delegate six strict R8 operations through unchanged real authentication/bounded request dispatch",
+      "baseBlob": "d70de82705cf3fd5c9744b19859a669517afc1b9",
+      "preimageSha256": "4f2a05fdaec46bb8f304df4267fda59cafbcdc4a59950aed9f08ccc037f7ffe0",
+      "proposedSha256": "1489c720f042f1b04bbc2c0d6f93ed0d2d88d3796013e06cf3bdf15b00497b55",
+      "replacements": [
+        {
+          "before": "import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';",
+          "after": "import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';\nimport {handleSolverOperation,R8_OPERATIONS} from '@finnor/private-equity/src/r8/api';",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "    const ctx: PeMutationContext = { auth };",
+          "after": "    const ctx: PeMutationContext = { auth };\n    if(R8_OPERATIONS.has(route.operation)){const result=await handleSolverOperation(ctx,route.operation,body);return response(result.body,result.status);}",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "description": "Expose pure resolution and route candidate production through the diagnostic seam; ordinary clearing still calls the original full producer",
+      "baseBlob": "f56234e38529f2922da8ce972e41ab081c0a63cc",
+      "preimageSha256": "6454b94174f01a41e721a012b75b183e2e57c897aae32906fe213c3ea7b993a3",
+      "proposedSha256": "d4018e588e490ff7cf8e26a70e9418c1c6ebf37ab52e3c1a0b367ea3980db377",
+      "replacements": [
+        {
+          "before": "import type { PeMutationContext } from './types';",
+          "after": "import type { PeMutationContext } from './types';\nimport {selectEnterpriseAllocationCandidate} from './r8/selection';",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>{",
+          "after": "/** Pure current S4/S5 resolution for the diagnostic R8 path. Retain R4's\n * exact quantity encoding and native rights/source/obligation guards. This\n * issues no reservation, effect authority or producer-selected matrix. */\nexport async function resolveEnterpriseAllocationProblem(ctx:PeMutationContext,input:AllocationClearingInput):Promise<CanonicalAllocationProblem>{\n const m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel);\n if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();\n if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))throw new AllocationContractError('STALE_INPUT','MANDATE_KNOWLEDGE_OR_VALIDITY_CHANGED');\n if(await unaccountedNativeEffects(ctx))throw new AllocationContractError('INVALID_REQUEST','NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING');\n const snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);\n if(input.resourceRefs.length!==snapshot.resources.length||input.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))throw new AllocationContractError('STALE_INPUT','CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED');\n const policies=await readCurrentPolicies(ctx,input.policyRefs),knowledgeAt=new Date().toISOString();\n const validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();\n const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));\n const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,\n  mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,\n  snapshotDigest:snapshot.snapshotDigest,knowledgeAt,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};\n const problem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);return problem;\n}\nexport async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>{",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "const deadlineAt=started+m.search.deadlineMs,produced=await produceAllocationCandidate(problem,deadlineAt);",
+          "after": "const deadlineAt=started+m.search.deadlineMs,produced=await selectEnterpriseAllocationCandidate(ctx,problem,deadlineAt);",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "description": "Compose the exclusive ordinary-only port into the real signed journal; protected domains remain refused",
+      "baseBlob": "4f538cc5353e747153cb64d7b70ef2fe56c8808a",
+      "preimageSha256": "124da0d773d5d173c41ea3ea111a7a5d85714b5a688ca0ec9639902f4a9338a1",
+      "proposedSha256": "4f0f028ba77e92b48fc4a3b7c6ff5d06ad828902d7b3b87f813830ab5373d1d7",
+      "replacements": [
+        {
+          "before": "import { InterfaceCapabilityPort } from './interface-port';",
+          "after": "import { InterfaceCapabilityPort } from './interface-port';\nimport {SolverCapabilityPort} from '../../private-equity/src/r8/s8/port';\nimport {assertSolverReviewSourceClosure} from '../../private-equity/src/r8/s8/source-closure';",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "validAfter: Instant, validUntil: Instant, actors: z.array(",
+          "after": "solverReview: z.object({ contract: z.literal('s8-r8-solver-module-review-v1'), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "    private interfaces: InterfaceCapabilityPort;",
+          "after": "    private interfaces: InterfaceCapabilityPort;\n    private solvers: SolverCapabilityPort;",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "        this.interfaces = new InterfaceCapabilityPort(policy);",
+          "after": "        this.interfaces = new InterfaceCapabilityPort(policy);\n        this.solvers = new SolverCapabilityPort(policy);",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "        await assertCapabilitySourceClosure(policy.sourcePins);",
+          "after": "        await assertCapabilitySourceClosure(policy.sourcePins);\n        if(policy.solverReview)await assertSolverReviewSourceClosure(policy.solverReview.sourcePins);",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "        if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }",
+          "after": "        if (entry.operation.startsWith('SOLVER_')) { this.solvers.replay(entry); return; }\n        if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "                if (input.operation === 'USE') {",
+          "after": "                if (input.operation === 'SOLVER_USE') await this.solvers.currentLease(prior.result.lease);\n                if (input.operation === 'USE') {",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "            if (input.operation.startsWith('INTERFACE_')) {",
+          "after": "            if (input.operation.startsWith('SOLVER_')) {\n                if(this.policy.solverReview)await assertSolverReviewSourceClosure(this.policy.solverReview.sourcePins);\n                const answer=await this.solvers.command(a,input.operation,b,\n                    (ref,content)=>this.commitNamedReference(ref,content));\n                if(!answer.readOnly)await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,\n                    operation:input.operation,body:b,result:answer.result});\n                return answer.result;\n            }\n            if (input.operation.startsWith('INTERFACE_')) {",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/apps/api/next.config.mjs",
+      "description": "Trace the retained Racket engine source; do not claim an installed Linux scientific runtime",
+      "baseBlob": "74d67794e474ea2f9a3ea97c3735604badc59b76",
+      "preimageSha256": "4d0feb8b241507ee29d561bff9526001a1f340c8305c2bc8a03d8c8355fce640",
+      "proposedSha256": "eecc701d334be00c409f0ba4f59b875710e15082970ba5a214ef348d367953f1",
+      "replacements": [
+        {
+          "before": "      \"../../packages/**/*.m\", \"../../packages/**/*.py\", \"../../packages/**/*.sql\",",
+          "after": "      \"../../packages/**/*.m\", \"../../packages/**/*.py\", \"../../packages/**/*.sql\", \"../../packages/**/*.rkt\",",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "finnor-os/scripts/generate-openapi.ts",
+      "description": "Generate R8 request schemas from their exact owner contracts",
+      "baseBlob": "88d2675f039bdf97348af9cb3a6af1b0bc3ce054",
+      "preimageSha256": "daa24f75ecd8a48a792febb28edf2c1431ec2da342b502e3b12a8b4fded96c95",
+      "proposedSha256": "8e76bbf5b46aa86d3c1d8f49de59fc4b589d6f7f38b985a2a938d951429fe093",
+      "replacements": [
+        {
+          "before": "import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from \"../packages/private-equity/src/r4/contracts\";",
+          "after": "import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from \"../packages/private-equity/src/r4/contracts\";\nimport {R8_OPERATIONS,SolverOperationSchemas} from \"../packages/private-equity/src/r8/api\";",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS]",
+          "after": "...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...R8_OPERATIONS]",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "  ...Object.entries(CapitalProgramV2Operations),",
+          "after": "  ...Object.entries(CapitalProgramV2Operations),...Object.entries(SolverOperationSchemas),",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "scripts/centropy/generate-capability-manifest.mjs",
+      "description": "Derive R8 operations from owner schemas; diagnostic scientific selection is not classified as a passive read",
+      "baseBlob": "966a1179caf079d3dd8b9a0ac35570e295a71452",
+      "preimageSha256": "8716bb816ebff46ea4dcf184f653f6fabf650bea505b8693c761d68a75992880",
+      "proposedSha256": "d361805a6335dd5655930774d806d0470555ff42dae3626ba9cb3532141a7ddf",
+      "replacements": [
+        {
+          "before": "const companyBrainOperations = [...new Set([",
+          "after": "const solverSource=readFileSync(join(project,\"finnor-os/packages/private-equity/src/r8/api.ts\"),\"utf8\")\nconst solverOperations=[...block(solverSource,\"export const SolverOperationSchemas={\",\"};\")\n  .matchAll(/'(solver-[a-z-]+)':/g)].map(match=>match[1])\nif(!solverOperations.length||new Set(solverOperations).size!==solverOperations.length||!companyBrainSource.includes(\"R8_OPERATIONS\"))\n  throw new Error(\"Missing or undelegated R8 owner schemas\")\nconst companyBrainOperations = [...new Set([",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "  ...capitalOperations,...m4Operations.keys(),",
+          "after": "  ...capitalOperations,...m4Operations.keys(),...solverOperations,",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "const companyBrainReads = new Set([",
+          "after": "const companyBrainReads = new Set([\n  \"solver-read\",\"solver-context\",",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)",
+          "after": "evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|solver)",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "target": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "description": "Mount the privacy-fenced leaf inside the existing Work/root caller; actual mounted proof is still mandatory",
+      "baseBlob": "bf43b95b608eae528f47796d5e98b0c9f75d5395",
+      "preimageSha256": "5eed082e1796efb738e8d9cbe56f6c8d69873f96c36067757bd8feb272169350",
+      "proposedSha256": "57dc02fe7820c3ecddb55976e387a42cf19772b3618cff52fc898e291aa8ccd5",
+      "replacements": [
+        {
+          "before": "import { ExactControlReview } from \"./ExactControlReview\"",
+          "after": "import { ExactControlReview } from \"./ExactControlReview\"\nimport {SolverCapsuleReview} from \"./SolverCapsuleReview\"",
+          "expectedOccurrences": 1
+        },
+        {
+          "before": "    <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />",
+          "after": "    <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />\n    <SolverCapsuleReview workId={workId} root={root} />",
+          "expectedOccurrences": 1
+        }
+      ]
+    }
+  ],
+  "migration": {
+    "dataPath": "scope-r/r8-repaired-adoption/integration/solver-capsules.sql",
+    "sha256": "692f7e53800bdd3a856238b5a54c6e607d0651f070a2b2605da2d54646b01896",
+    "ordinal": null,
+    "installed": false,
+    "rule": "Serial owner chooses an unused cumulative ordinal, bundles exact SQL and updates actual migration head; never install the historical 0172 name blindly.",
+    "privileges": "R8 tables retain FORCE RLS/private-principal policies, append-only records and nondecreasing grants. Existing 0171 gives finnor_worker INHERIT membership in finnor_app; verify actual current_user/rolsuper/rolbypassrls and worker RLS before accepting."
+  },
+  "capacity": {
+    "resourceKey": "provider:r8-scientific",
+    "configured": false,
+    "requiredWorkerLeaseSecondsMinimum": 630,
+    "disposableFixtureLeaseSeconds": 660,
+    "release": "Only observed physical closure permits release. Unknown predecessor groups/leases remain charged.",
+    "gap": "Joined aggregate fencing for every scientific entrypoint, including ordinary S8 review and API diagnostic reuse, remains unqualified; no aggregate hard memory meter or economic funding proof."
+  },
+  "regeneration": {
+    "migrationBundle": [
+      "npm",
+      "run",
+      "db:bundle"
+    ],
+    "openapi": [
+      "npm",
+      "run",
+      "openapi"
+    ],
+    "capabilityManifest": [
+      "node",
+      "scripts/centropy/generate-capability-manifest.mjs"
+    ],
+    "executed": false,
+    "rule": "Run only after serial source assembly. Review/stage generated diffs with all cumulative R1/R2/R4/R5/R6/R7 registrations retained."
+  },
+  "mustRetain": [
+    "R4 exact DECIMAL_OR_RATIONAL_V2 canonical allocation encoding",
+    "R1/R2/R4 production contracts and handlers",
+    "existing native S4/S5 rights, source, obligation and exact checker guards",
+    "all original owner assertions and original grants/deadlines",
+    "protected solver refusal and executionAuthorityGranted=false"
+  ],
+  "notProposedSharedReplacements": [
+    "finnor-os/packages/private-equity/src/program-synthesis/typescript.ts: R4 emitter unchanged; exclusive emitted.ts composes it",
+    "finnor-os/packages/capability-evolution/src/interface-port.ts: exclusive SolverInterfacePolicy extension only",
+    "finnor-os/packages/capability-evolution/src/source-closure.ts: exclusive review closure imported by proposed lifecycle seam",
+    "finnor-os/apps/supplier-canary/api/index.mjs: no R8 effect/canary bypass",
+    "finnor-os/scripts/p1/run-program-e2e.mts: no shared harness changes installed",
+    "infra/deployment/production.contract.json: no unsupported Linux image/runtime claim"
+  ],
+  "requiredNextProof": [
+    "fresh cumulative source/preimage review and type/build checks",
+    "real ordinary-role schema/privilege/canonical queue/API/S5/S8 owner campaign on assembled current sources",
+    "matched physical process and expired-grant/publication fault records without deadline resets",
+    "actual built authenticated Work initiation/progress/full coverage/fallback/reload/Work switch/delayed-response/revocation artifacts",
+    "supported installed-layout restoration plus independent Linux isolation/runtime image evidence if Linux is a target",
+    "separate authorized protected admission/activation, equipped-X comparison, complete metering and S7 H2 economics"
+  ],
+  "qualification": {
+    "semanticBranch": "EXACT_DOMAIN_NEW_BRANCH_EVIDENCE_SEPARATE_FROM_SHARED_ASSEMBLY",
+    "ordinaryOwner": "NOT_RUN_SHARED_SEAMS_ABSENT",
+    "protectedAdmission": "NOT_RUN_NOT_AUTHORIZED",
+    "protectedActivation": false,
+    "joinedCompatibility": "NOT_ASSEMBLED",
+    "comparativeGain": "NOT_RUN",
+    "economic": "UNKNOWN",
+    "usd": null,
+    "humanSeconds": null,
+    "aggregatePeakMemoryBytes": null
+  }
+}

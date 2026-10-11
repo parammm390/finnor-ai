@@ -1,0 +1,34 @@
+{
+  "schema": "finnor.r8.physical-close-bound-preregistration.v1",
+  "order": "Before the final scientific transport change and before its fault E2E",
+  "observedSource": {
+    "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+    "gap": "physicalClose awaited child close without a bounded wait. Its kill callback retained EPERM but could not resolve finished. A live child whose group signal is refused could therefore hold the control-plane close promise indefinitely.",
+    "evidenceKind": "DIRECT_CONTROL_FLOW_REVIEW_NOT_AN_EXECUTED_HANG_RED",
+    "existingRed": "custody-red-01 retains actual unhandled EPERM and startup leaks; it does not independently establish this later wait defect."
+  },
+  "requiredRepair": {
+    "childDeadline": "Unchanged original deadline; signal at its expiry or earlier close-grace limit",
+    "physicalObservationGraceMs": 5000,
+    "wait": "Bound both parent-close wait and descendant observation within the already registered physical observation grace",
+    "failure": "Retain signal refusal and reject PHYSICAL_GROUP_CLOSE_UNOBSERVED without emitting a product close or releasing unknown capacity",
+    "reuse": "Compose existing solver-synthesis/contracts.ts bytesHash rather than keep an identical local hashing helper"
+  },
+  "faultE2E": {
+    "driver": "finnor-os/scripts/r8/run-custody.mts",
+    "actualChild": "Fixed isolated NONREADING custody child, not a mocked scientific answer",
+    "fault": "Refuse SIGKILL only for the observed owned group; leave real existence probes intact",
+    "predicate": "Product close rejects within the 5000-ms observation grace (750-ms observer tolerance), preserves signal refusal, emits zero close events, and still observes the group alive before explicit test cleanup",
+    "artifact": "close-refusal-probe.json",
+    "cleanup": "Restore signaling, stop only the observed owned group, record forced test cleanup separately. It proves neither product physical close nor queue/lease release.",
+    "originalCases": "All five original custody assertions and their no-forced-cleanup requirement stay unchanged."
+  },
+  "finiteVerification": {
+    "custodyFinalRun": "Third and last of the registered maximum three runs",
+    "semanticFinalRun": "Second and last of the registered maximum two runs",
+    "semanticOriginalWallMs": 574739,
+    "semanticDomainAndCaps": "UNCHANGED_FULL_D",
+    "sourceChangeRequiresFreshFullD": true
+  },
+  "authority": "No shared edits, new work grant, cap increase, protected admission, release of unknown work or publication"
+}

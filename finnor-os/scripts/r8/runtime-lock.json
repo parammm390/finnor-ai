@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.r8.runtime-lock.v1",
+  "supportedDelivery": {"platform":"darwin","architecture":"arm64","isolation":"MACOS_SEATBELT_ORDINARY_SCIENTIFIC"},
+  "racket": {
+    "version": "8.16",
+    "url": "https://mirror.racket-lang.org/installers/8.16/racket-minimal-8.16-aarch64-macosx-cs.tgz",
+    "sha256": "4c4c737450853110c8eca768ab07f823898113a295e2563a7f37a1fb0b72ca3b",
+    "bytes": 42308196
+  },
+  "rosette": {"commit":"373c8c35e4a7667f38fce10cf0b74ae17de07f1d","version":"4.0"},
+  "python": {"version":"3.11.15","z3Solver":"4.13.0.0","numpy":"2.3.3","scipy":"1.16.2"},
+  "nativeFallback": {"python":"3.12.13","numpy":"2.3.3","scipy":"1.16.2","highs":"1.8.0"},
+  "node": {"version":"22.22.3","lock":"finnor-os/package-lock.json"},
+  "transitiveIdentity": "The sealed runtime manifest inventories every installed executable, library, Rosette dependency and licence byte. Package names alone are not acceptance.",
+  "linuxOci": "NOT_QUALIFIED_NO_ISOLATION_ADAPTER_OR_IMAGE_RECEIPT",
+  "protectedInstallation": "NOT_AUTHORIZED"
+}
