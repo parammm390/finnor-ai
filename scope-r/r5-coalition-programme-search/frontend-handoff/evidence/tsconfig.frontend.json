@@ -1,0 +1,21 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "baseUrl": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules",
+    "paths": {
+      "@/*": ["/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/*"],
+      "@r5-owner-contract": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/coalition-programme.ts"],
+      "@r5-allocation-contract": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/allocation.ts"]
+    },
+    "typeRoots": ["/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/@types"],
+    "types": ["node", "react", "react-dom"]
+  },
+  "files": [
+    "../../../../src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+    "../../../../src/components/centropy/canvas/coalition-programme-view.ts",
+    "./owner-contract.typecheck.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules", "finnor-os"]
+}
