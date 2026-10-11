@@ -105,6 +105,8 @@ const compatibility = new Map([
   ["identification-plans/read", "Native R4 artifact read API. The active Work panel reads the authorized work aggregate instead."],
   ["identification-plans/status", "Native R4 run status API. The active Work panel reads the authorized work aggregate instead."],
   ["identification-plans/register", "Native R4 input registration API. The active Work panel submits existing owner-resolved inputs and does not register arbitrary models."],
+  ["decision-atlases/status", "Native R7 status alias. The active Work panel rereads the authenticated build through decision-atlases/read."],
+  ["decision-atlases/continue", "Native R7 original-policy continuation API. Authenticated owner execution is checked separately; no direct CENTROPY continuation control is claimed."],
 ])
 const humanRoutes = {
   configure_ic_committee: "private-equity/ic/committee-configurations",
