@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0172_r1_certified_state_reduction.sql",
+    "requiredMigrationHead": "0173_r2_robust_programme_search.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

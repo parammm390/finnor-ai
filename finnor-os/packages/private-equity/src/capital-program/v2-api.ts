@@ -1,4 +1,10 @@
 import {randomUUID} from 'node:crypto';
+import {R2_VERSION} from '@finnor/shared-types/src/robust-programme-search';
+import {readRobustProgramme,reviewExactBranch} from './r2-api';
+import {listR2ExactSources} from './r2-owners';
+import {readSourceObject} from '../deliberation/store';
+import {readAllocationSnapshot} from '../allocation-store';
+import {activeWorkPlanRevision} from '@finnor/db';
 import {z} from 'zod';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
 import {PeDomainError} from '../types';
@@ -20,6 +26,7 @@ import {resolveCapitalOwners,recheckCapitalOwners,assertCapitalOwnerBinding} fro
 import {capitalPendingRequests} from './v2-pending';
 import {m3CheckTime,m3Remaining,inM3Episode} from './v2-budget';
 import {capitalRepairBudget} from './repair-budget';
+import {affectedClosure} from '../live-recompilation/contracts';
 import {m3Unavailable,m3Hash,m3Ref,m3Same,CapitalProgramV2Error,CapitalProgramV2Operations,CapitalProgramV2RequestSchema,
  CAPITAL_PROGRAM_V2_VERSION,type CapitalProgramV2,type CapitalProgramV2Module,type CapitalProgramV2Request,type CapitalProgramV2QueryView,
  type CapitalProgramV2BranchReview,type CapitalProgramV2AttemptCost} from './v2-contracts';
@@ -30,6 +37,7 @@ const view=(q:M3QueryRow,program:CapitalProgramV2|null=null,branchReviews:Capita
  failure:q.failure,parentQueryId:q.parent_query_id,executionAuthorityGranted:false,branchReviews,attemptCosts,
 });
 export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,parentQueryId:string|null=null){
+ const admissionStarted=performance.now(),admissionCpu=process.cpuUsage();
  const request=CapitalProgramV2RequestSchema.parse(value);await m3AuthorizePrincipal(ctx);await resolveDecisionWork(ctx,request.workId);
  if(process.env.FINNOR_M3_PROFILE!=='DISPOSABLE_NATIVE'||process.env.NODE_ENV==='production'||process.env.FINNOR_ENVIRONMENT==='production')
   throw new CapitalProgramV2Error('CONFIGURATION_REQUIRED','Capital programme requires the configured disposable native profile; protected funding/runtime/admission are not available');
@@ -44,6 +52,7 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
  if(prior){if(prior.request_digest!==digest||prior.parent_query_id!==parentQueryId)throw new CapitalProgramV2Error('CONFLICT','Idempotency key binds different economic terms, resources or immutable parent');
   return {queryId:prior.id,workId:request.workId,status:prior.status,replayed:true};}
  const binding=await resolveCapitalOwners(ctx,request,true);
+ if(binding.r2){const used=process.cpuUsage(admissionCpu);binding.r2.admissionCost={cpuMs:(used.user+used.system)/1000,wallMs:performance.now()-admissionStarted,memoryBytes:process.memoryUsage().rss,money:null};}
  if(parent){
   if(!m3Same(parent.acceptance.policy.mandate,binding.policy.mandate))
    throw new CapitalProgramV2Error('INVALID_REQUEST','Recompilation cannot change the original economic mandate, utility, horizon or risk');
@@ -71,6 +80,16 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
    });
   if(!changedDependencies.length)throw new CapitalProgramV2Error('CONFLICT','Unchanged recompilation cannot replenish the original episode grant');
   binding.recompilation={parentQueryId:parent.id,parents,changedDependencies};
+  if(parent.request.robust&&parent.result_digest){
+   const parentRef={owner:'M3' as const,id:`capital-program:${parent.result_digest}`,version:CAPITAL_PROGRAM_V2_VERSION,contentDigest:parent.result_digest},
+    previous=await readM3Record<Omit<CapitalProgramV2,'ref'>>(ctx,'programs',parentRef);
+   if(previous.body.ownerBoundGraph){
+    const graph=await readM3Record<{nodes:Array<{id:string;dependsOn:string[]}>}>(ctx,'graphs',previous.body.ownerBoundGraph),closure=affectedClosure(graph.body.nodes,['original-domain']);
+    binding.recompilation.affectedRegions=closure.affectedNodes.map(node=>node.id);
+    binding.recompilation.keptRegions=closure.keptNodes.map(node=>node.id);
+   }
+  }
+  if(parent.request.robust||request.robust)binding.repairBudget=await capitalRepairBudget(ctx,parent,request,[]);
   if(request.challengeEvidence){
    if(!parent.result_digest)throw new CapitalProgramV2Error('CHECK_FAILED','Original challenge repair lacks a published M3 parent');
    const evidence:NonNullable<typeof binding.challengeEvidence>=[];
@@ -97,7 +116,7 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
   if(existing){if(existing.request_digest!==digest||existing.parent_query_id!==parentQueryId)throw new CapitalProgramV2Error('CONFLICT','Idempotency key binds different economic terms, resources or immutable parent');
    return {queryId:existing.id,workId:request.workId,status:existing.status,replayed:true};}
   if(binding.repairBudget&&parent){
-   const fresh=await capitalRepairBudget(ctx,parent,request,binding.challengeEvidence!.map(e=>e.deadlineAt),c);
+   const fresh=await capitalRepairBudget(ctx,parent,request,(binding.challengeEvidence??[]).map(e=>e.deadlineAt),c);
    if(fresh.consumptionDigest!==binding.repairBudget.consumptionDigest)
     throw new CapitalProgramV2Error('STALE_INPUT','Original repair resource consumption changed before admission');
    binding.repairBudget=fresh;
@@ -113,11 +132,12 @@ export async function submitCapitalProgram(ctx:PeMutationContext,value:unknown,p
   const id=randomUUID();
   await c.query('INSERT INTO finnor_os.m3_queries(id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,plan_id,plan_digest,idempotency_key,request_digest,request,acceptance,parent_query_id,deadline_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13,$14)',
    [id,ctx.auth.tenantId,principal(ctx),request.workId,binding.work.inputId,binding.work.inputDigest,binding.plan.id,binding.plan.semanticHash,
-    request.idempotencyKey,digest,JSON.stringify(request),JSON.stringify(binding),parentQueryId,binding.repairBudget?.deadlineAt??null]);
+    request.idempotencyKey,digest,JSON.stringify(request),JSON.stringify(binding),parentQueryId,binding.repairBudget?.deadlineAt??(request.robust?new Date(Date.now()+Math.min(request.resource.deadlineMs,m3Remaining())).toISOString():null)]);
   for(const dependency of binding.dependencies)await c.query('INSERT INTO finnor_os.m3_dependencies(tenant_id,principal_id,query_id,key,revision) VALUES($1,$2,$3,$4,$5)',
    [ctx.auth.tenantId,principal(ctx),id,dependency.key,dependency.revision]);
-  await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority,protocol_version,retry_safety) VALUES($1,'run_capital_program_v2',$2::jsonb,$3,'interactive',0,2,'locally_idempotent')",
-   [ctx.auth.tenantId,JSON.stringify({tenantId:ctx.auth.tenantId,principalId:principal(ctx),queryId:id,generation:1}),`m3:${id}:1`]);
+  await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority,protocol_version,retry_safety) VALUES($1,$4,$2::jsonb,$3,'interactive',0,2,'locally_idempotent')",
+   [ctx.auth.tenantId,JSON.stringify({tenantId:ctx.auth.tenantId,principalId:principal(ctx),queryId:id,generation:1,
+     ...(request.robust?{semanticVersion:R2_VERSION}:{})}),`m3:${id}:1`,request.robust?'run_capital_program_r2_v1':'run_capital_program_v2']);
   return {queryId:id,workId:request.workId,status:'QUEUED',replayed:false};
  });
 }
@@ -171,6 +191,22 @@ async function readCheckedCapitalProgram(ctx:PeMutationContext,id:string,inspect
  const published=await m3Tx(ctx,async c=>(await c.query('SELECT result_digest FROM finnor_os.m3_publications WHERE tenant_id=$1 AND principal_id=$2 AND query_id=$3 AND generation=$4',
   [ctx.auth.tenantId,principal(ctx),q.id,q.generation])).rows[0],true);
  if(published?.result_digest!==q.result_digest)throw new CapitalProgramV2Error('CHECK_FAILED','Prepared programme has no exact durable publication');
+ if(q.request.robust){
+  try{
+   const exact=await readRobustProgramme(ctx,q,program);
+   const candidate=inspection?program.candidates.find(x=>inspection.kind==='MODULE'?x.moduleRef?.contentDigest===inspection.moduleDigest:x.semanticDigest===inspection.candidateDigest):null;
+   if(inspection&&!candidate)throw m3Unavailable();
+   let details:unknown=null;
+   if(inspection?.kind==='MODULE'&&candidate?.moduleRef){const module=await readM3Record(ctx,'modules',candidate.moduleRef);details={ref:candidate.moduleRef,bytes:module.bytes,sha256:module.sha256,contentType:'application/json',executionAuthorityGranted:false};}
+   else if(inspection)details={candidate,policy:null,exactPolicy:exact.policy,model:program.jointSearchCertificate!.envelope.sourceRef,kernel:null,
+    checks:program.jointSearchCertificate!.checks,evidenceSlice:null,executionAuthorityGranted:false};
+   const after=await m3Query(ctx,id);
+   return after.status===q.status&&after.generation===q.generation?result({...view(after,program),exactBranchReviews:exact.reviews},details):result(view(after));
+  }catch(error){
+   if(error instanceof CapitalProgramV2Error&&['CHECK_FAILED','UNAVAILABLE','LIMIT_EXCEEDED'].includes(error.code))throw error;
+   return result(await invalidate(ctx,q,'EXACT_WORLD_OWNER_RESOURCE_OR_METHOD_CHANGED'));
+  }
+ }
  let details:unknown=null,evidence:CurrentSlice|null=null,branchReviews:CapitalProgramV2BranchReview[]=[];
  try{
   if(!program.evidenceSlice)throw new CapitalProgramV2Error('CHECK_FAILED','Programme evidence binding unresolved');
@@ -312,6 +348,26 @@ export async function handleCapitalProgramOperation(ctx:PeMutationContext,operat
  switch(operation){
   case 'capital-program-submit':return {status:202,body:await inM3Episode(Math.min((input as CapitalProgramV2Request).resource.deadlineMs,m3Remaining()),()=>submitCapitalProgram(ctx,input))};
   case 'capital-program-read':return {status:200,body:await readCapitalProgram(ctx,(input as {queryId:string}).queryId)};
+  case 'capital-program-status':{
+   const q=await m3Query(ctx,(input as {queryId:string}).queryId);await m3AuthorizePrincipal(ctx);
+   const work=await resolveDecisionWork(ctx,q.work_id),plan=await activeWorkPlanRevision(ctx.auth.tenantId,q.work_id);
+   if(['INVALIDATED','CANCELLED','FAILED'].includes(q.status))return {status:200,body:view(q)};
+   try{
+    await assertDependencies(ctx,q.acceptance.dependencies);
+    if(!m3Same(work,q.acceptance.work)||plan?.id!==q.acceptance.plan.id||plan?.semanticHash!==q.acceptance.plan.semanticHash||Date.now()>=Date.parse(q.acceptance.validUntil))
+     throw new CapitalProgramV2Error('STALE_INPUT','Provisional Work/input/plan changed');
+    const snapshot=await readAllocationSnapshot(ctx),effects=await m3Tx(ctx,async c=>(await c.query(
+     "SELECT id::text,status,semantic_hash FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN('verified','cancelled','compensated') ORDER BY id LIMIT 257",[ctx.auth.tenantId])).rows,true);
+    if(effects.length>256||snapshot.snapshotDigest!==q.acceptance.resources.snapshotDigest||!m3Same(effects,q.acceptance.outstandingEffects))
+     throw new CapitalProgramV2Error('STALE_INPUT','Provisional resource/reservation/UNKNOWN membership changed');
+    if(q.request.robust){const source=q.request.robust.source,row=await readSourceObject(ctx,q.acceptance.model.request.roots[0]!,source.sourceId,source.versionId);
+     if(row.content_hash!==source.contentDigest)throw new CapitalProgramV2Error('STALE_INPUT','Provisional exact-source version changed');}
+   }catch(error){if(error instanceof CapitalProgramV2Error&&error.code==='UNAVAILABLE')throw error;
+    return {status:200,body:await invalidate(ctx,q,'PROVISIONAL_OWNER_OR_SOURCE_CHANGED')};}
+   // Lifecycle/progress only. This endpoint returns no policy, bound, proof,
+   // currentness/admission claim or review. Terminal consumers use full read.
+   return {status:200,body:view(q)};
+  }
   case 'capital-program-list':{
    const {workId,limit=16}=input as {workId:string;limit?:number};await m3AuthorizePrincipal(ctx);await resolveDecisionWork(ctx,workId);
    const ids=await m3Tx(ctx,async c=>(await c.query<{id:string}>('SELECT id FROM finnor_os.m3_queries WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY created_at DESC,id DESC LIMIT $4',
@@ -320,7 +376,8 @@ export async function handleCapitalProgramOperation(ctx:PeMutationContext,operat
   }
   case 'capital-program-context':{
    const {workId,root}=input as {workId:string;root:PeWorldRootRef};await m3AuthorizePrincipal(ctx);await resolveDecisionWork(ctx,workId);
-   return {status:200,body:{workId,policies:await listEnterpriseControlPolicies(ctx,root),executionAuthorityGranted:false}};
+   const policies=await listEnterpriseControlPolicies(ctx,root);
+   return {status:200,body:{workId,policies,exactSources:await listR2ExactSources(ctx,root,policies),executionAuthorityGranted:false}};
   }
   case 'capital-program-ports':{
    const {workId}=input as {workId:string};await m3AuthorizePrincipal(ctx);await resolveDecisionWork(ctx,workId);
@@ -369,7 +426,10 @@ export async function handleCapitalProgramOperation(ctx:PeMutationContext,operat
   }
   case 'capital-program-select':{
    const selected=input as {queryId:string;candidateDigest:string;idempotencyKey:string;intent:string},
-    {queryId,candidateDigest}=selected,program=await requireProgram(ctx,queryId),
+    {queryId,candidateDigest}=selected;
+   if(selected.intent==='MODEL_BRANCH_REVIEW'&&(await m3Query(ctx,queryId)).request.robust)
+    return {status:200,body:await reviewExactBranch(ctx,selected)};
+   const program=await requireProgram(ctx,queryId),
     candidate=program.candidates.find(c=>c.semanticDigest===candidateDigest);
    if(!candidate)throw m3Unavailable();
    if(selected.intent==='MODEL_BRANCH_REVIEW')return {status:200,body:await reviewNativeBranch(ctx,selected,program)};

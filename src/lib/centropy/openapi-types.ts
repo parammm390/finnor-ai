@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 4f3300fbd63508cc6daedecab6a3b66ab84c9dbaaa9597a017323a2c221d1f96.
+// Generated from finnor-os/openapi.json, SHA-256 c61f0f1b725b27e002196ffa0e266766b35475186ce4deb4a533e4dd658dc43d.
 export interface paths {
     "/api/outcome-packs/control": {
         parameters: {
@@ -15892,6 +15892,30 @@ export interface paths {
                             maxModuleBytes: number;
                             maxResultBytes: number;
                         };
+                        robust?: {
+                            /** @constant */
+                            schema: "finnor.r2.request.v1";
+                            /** @constant */
+                            domainProfile: "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE";
+                            source: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            };
+                            initialWorlds: string[];
+                            budget: {
+                                maxPaths: number;
+                                maxHistories: number;
+                                maxVariables: number;
+                                maxRows: number;
+                                maxProofBytes: number;
+                                cpuMs: number;
+                                memoryMiB: number;
+                                maxNativeCalls: number;
+                            };
+                        };
                     };
                 };
             };
@@ -15954,6 +15978,88 @@ export interface paths {
         trace?: never;
     };
     "/api/company-brain/capital-program-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        queryId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/capital-program-status": {
         parameters: {
             query?: never;
             header?: never;
@@ -16728,6 +16834,30 @@ export interface paths {
                                 maxRefinementDepth: number;
                                 maxModuleBytes: number;
                                 maxResultBytes: number;
+                            };
+                            robust?: {
+                                /** @constant */
+                                schema: "finnor.r2.request.v1";
+                                /** @constant */
+                                domainProfile: "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE";
+                                source: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                                initialWorlds: string[];
+                                budget: {
+                                    maxPaths: number;
+                                    maxHistories: number;
+                                    maxVariables: number;
+                                    maxRows: number;
+                                    maxProofBytes: number;
+                                    cpuMs: number;
+                                    memoryMiB: number;
+                                    maxNativeCalls: number;
+                                };
                             };
                         };
                     };

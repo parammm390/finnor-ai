@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r2.protected-custody-request.v1",
+  "status": "MISSING_OWNER_ASSETS",
+  "assets": [
+    "completedXManifest",
+    "independentEvaluator",
+    "frozenGenerator",
+    "frozenScoring",
+    "preregistration",
+    "actorPreparationLedger",
+    "pricebook",
+    "sealedSeedCommitments",
+    "domainAdmission"
+  ],
+  "receiptPaths": "Final handoff/external-receipts; protected owners authenticate references/signatures; no local self-admission"
+}

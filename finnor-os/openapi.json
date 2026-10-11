@@ -34185,6 +34185,116 @@
                       "maxResultBytes"
                     ],
                     "additionalProperties": false
+                  },
+                  "robust": {
+                    "type": "object",
+                    "properties": {
+                      "schema": {
+                        "type": "string",
+                        "const": "finnor.r2.request.v1"
+                      },
+                      "domainProfile": {
+                        "type": "string",
+                        "const": "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "sourceId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "sourceId",
+                          "versionId",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "initialWorlds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "minItems": 1,
+                        "maxItems": 32
+                      },
+                      "budget": {
+                        "type": "object",
+                        "properties": {
+                          "maxPaths": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50000
+                          },
+                          "maxHistories": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50000
+                          },
+                          "maxVariables": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100000
+                          },
+                          "maxRows": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 300000
+                          },
+                          "maxProofBytes": {
+                            "type": "integer",
+                            "minimum": 1024,
+                            "maximum": 8388608
+                          },
+                          "cpuMs": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30000
+                          },
+                          "memoryMiB": {
+                            "type": "integer",
+                            "minimum": 128,
+                            "maximum": 2048
+                          },
+                          "maxNativeCalls": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 128
+                          }
+                        },
+                        "required": [
+                          "maxPaths",
+                          "maxHistories",
+                          "maxVariables",
+                          "maxRows",
+                          "maxProofBytes",
+                          "cpuMs",
+                          "memoryMiB",
+                          "maxNativeCalls"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "domainProfile",
+                      "source",
+                      "initialWorlds",
+                      "budget"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -34228,6 +34338,58 @@
       }
     },
     "/api/company-brain/capital-program-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "queryId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "queryId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/capital-program-status": {
       "post": {
         "security": [
           {
@@ -35127,6 +35289,116 @@
                           "maxRefinementDepth",
                           "maxModuleBytes",
                           "maxResultBytes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "robust": {
+                        "type": "object",
+                        "properties": {
+                          "schema": {
+                            "type": "string",
+                            "const": "finnor.r2.request.v1"
+                          },
+                          "domainProfile": {
+                            "type": "string",
+                            "const": "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"
+                          },
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "sourceId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "versionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "sourceId",
+                              "versionId",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "initialWorlds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "minItems": 1,
+                            "maxItems": 32
+                          },
+                          "budget": {
+                            "type": "object",
+                            "properties": {
+                              "maxPaths": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50000
+                              },
+                              "maxHistories": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50000
+                              },
+                              "maxVariables": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 100000
+                              },
+                              "maxRows": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 300000
+                              },
+                              "maxProofBytes": {
+                                "type": "integer",
+                                "minimum": 1024,
+                                "maximum": 8388608
+                              },
+                              "cpuMs": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 30000
+                              },
+                              "memoryMiB": {
+                                "type": "integer",
+                                "minimum": 128,
+                                "maximum": 2048
+                              },
+                              "maxNativeCalls": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 128
+                              }
+                            },
+                            "required": [
+                              "maxPaths",
+                              "maxHistories",
+                              "maxVariables",
+                              "maxRows",
+                              "maxProofBytes",
+                              "cpuMs",
+                              "memoryMiB",
+                              "maxNativeCalls"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "schema",
+                          "domainProfile",
+                          "source",
+                          "initialWorlds",
+                          "budget"
                         ],
                         "additionalProperties": false
                       }

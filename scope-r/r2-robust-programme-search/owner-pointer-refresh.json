@@ -1,0 +1,21 @@
+{
+  "capturedUTC": "2026-10-09T19:32:06.245029+00:00",
+  "pointer": "/Users/paramdave/.codex/visualizations/2026/10/07/01a117e7-cd36-76c3-bcbe-e42129a08665/m5-decision-kernel/scope-pm/phase-11-m5-decision-kernel/handoff/receipt.json",
+  "pointerSHA256": "c29a430dbe84fa553727e8c5f5f0add1a19b12abe5fb358d9973e3a551c020be",
+  "pointerBody": {
+    "schema": "finnor.m5.current-local-generation.v1",
+    "generation": "artifacts/generation-8f50df369b2f5b498b0a2b8d36880bf84860a4c9",
+    "receipt": "artifacts/generation-8f50df369b2f5b498b0a2b8d36880bf84860a4c9/receipt.json",
+    "receiptSHA256": "e9e53890d7389105daaba0e94f896748f6108df7ac7eeb184ae89af49e35aaa5",
+    "release": {
+      "commit": "8f50df369b2f5b498b0a2b8d36880bf84860a4c9",
+      "tree": "7a7f3fe5c3287c844003b38bd6e298b23998cce8"
+    },
+    "qualification": "ORDINARY_CUMULATIVE_ENGINEERING_DELIVERY_NOT_ORIGINAL_GATES",
+    "independentReconstruction": "PASS"
+  },
+  "receipt": "/Users/paramdave/.codex/visualizations/2026/10/07/01a117e7-cd36-76c3-bcbe-e42129a08665/m5-decision-kernel/scope-pm/phase-11-m5-decision-kernel/handoff/artifacts/generation-8f50df369b2f5b498b0a2b8d36880bf84860a4c9/receipt.json",
+  "actualReceiptSHA256": "e9e53890d7389105daaba0e94f896748f6108df7ac7eeb184ae89af49e35aaa5",
+  "matchesPointer": true,
+  "qualification": "Read-only pointer refresh; no gate rerun; not an R2 prerequisite or completed-X proof"
+}

@@ -14,6 +14,9 @@ import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transp
 import type { PeMutationContext } from './types';
 import {recheckAllocationCapability} from '../../capability-evolution/src/consumer';
 import type {CapabilityUseLease} from '../../capability-evolution/src/lifecycle';
+import type {ExactContingentPolicy} from '@finnor/shared-types/src/robust-programme-search';
+import {readEnterpriseExactControlPolicy} from './enterprise-control';
+import {R2NativeSession,r2Ref} from './capital-program/r2-native';
 export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
@@ -39,6 +42,38 @@ export async function registerEnterpriseAllocationResource(ctx:PeMutationContext
   return putAllocationResource(ctx,resource,input.expectedRef??null);
 }
 export const listEnterpriseAllocationResources=(ctx:PeMutationContext)=>readAllocationSnapshot(ctx);
+/** Complete current canonical S5 consumption of exact original demand. It uses
+ * the existing registry/reservation owners and creates no second ledger/grant. */
+export async function checkEnterpriseExactProgrammeResources(ctx:PeMutationContext,policy:ExactContingentPolicy,session:R2NativeSession){
+ if(ctx.auth.role!=='owner'||policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx))throw denied();
+ const issued=await readEnterpriseExactControlPolicy(ctx,policy.ref),snapshot=await readAllocationSnapshot(ctx);
+ await currentPins(ctx,snapshot.resources);
+ if(snapshot.snapshotDigest!==issued.original.resources.snapshotDigest||!sameAllocationRef(snapshot.resources,issued.original.resources.resources)||
+  !sameAllocationRef(snapshot.outstanding,issued.original.resources.outstanding))throw new AllocationContractError('STALE_INPUT','Current complete S5 registry/reservations differ from exact original demand');
+ if(await unaccountedNativeEffects(ctx))throw new AllocationContractError('STALE_INPUT','S6 outstanding effects changed before exact S5 consumption');
+ const checked=await session.check(issued.original,'s5',{policy:{variant:issued.variant,decisions:issued.decisions,worldCourses:issued.worldCourses}});
+ if(!checked.feasible||checked.lower!==issued.value)throw new AllocationContractError('INVALID_CANDIDATE','Canonical exact resources/liabilities reject the proposed policy');
+ const body={schema:'finnor.s5.exact-programme-check.v1',policyRef:issued.ref,demandDigest:issued.demandDigest,snapshotDigest:snapshot.snapshotDigest,
+  resourceRefs:snapshot.resources.map(r=>r.ref),checkerRef:checked.ref,worldValues:checked.worldValues,feasible:true,current:true,
+  reservationCreated:false,executionAuthorityGranted:false,qualification:'EXACT_SUPPLIED_MODEL_CANONICAL_CURRENT_RESOURCES_NO_CLEARANCE',protectedReceipt:null};
+ const ref=r2Ref('exact-programme-check',body,'S5');
+ await persistAllocationExperience(ctx,[prepareS5Experience(issued.original.mandate,'REQUEST',issued.ref.id,{...body,ref},[issued.ref.id])]);
+ if((await readAllocationSnapshot(ctx)).snapshotDigest!==snapshot.snapshotDigest)throw new AllocationContractError('STALE_INPUT','S5 resources moved during exact consumption');
+ return {...body,ref,check:checked};
+}
+export async function readEnterpriseExactProgrammeResourceCheck(ctx:PeMutationContext,policy:ExactContingentPolicy,value:ExperimentRef){
+ const issued=await readEnterpriseExactControlPolicy(ctx,policy.ref),snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);
+ const records=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>(await c.query(
+  "SELECT body->'detail' AS detail FROM finnor_os.s5_experience WHERE tenant_id=$1 AND principal_id=$2 AND body->'detail'->'ref'->>'contentDigest'=$3 LIMIT 2",
+  [ctx.auth.tenantId,actor(ctx),value.contentDigest])).rows);
+ if(records.length!==1)throw denied();const record=records[0]!.detail as Awaited<ReturnType<typeof checkEnterpriseExactProgrammeResources>>;
+ const {ref,...body}=record;
+ if(!sameAllocationRef(ref,value)||!sameAllocationRef(ref,r2Ref('exact-programme-check',body,'S5'))||!sameAllocationRef(record.policyRef,issued.ref)||
+  record.snapshotDigest!==snapshot.snapshotDigest||snapshot.snapshotDigest!==issued.original.resources.snapshotDigest||
+  record.demandDigest!==issued.demandDigest||record.feasible!==true||record.reservationCreated!==false||record.executionAuthorityGranted!==false||await unaccountedNativeEffects(ctx))
+  throw new AllocationContractError('STALE_INPUT','Exact S5 consumption or complete current resources/liabilities differ');
+ return record;
+}
 async function unaccountedNativeEffects(ctx:PeMutationContext):Promise<number>{
   return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>{
     const rows=await c.query("SELECT count(*)::int AS n FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]);return rows.rows[0].n;
