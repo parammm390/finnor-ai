@@ -1,0 +1,86 @@
+diff --git a/finnor-os/apps/api/app/api/allocations/[operation]/route.ts b/finnor-os/apps/api/app/api/allocations/[operation]/route.ts
+index ac6e3d406fdc0ac6589b7c5051c59ea595fb4dea..d8ab1832315c4810ff34ddd21205f2a4b5aa6318 100644
+--- a/finnor-os/apps/api/app/api/allocations/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/allocations/[operation]/route.ts
+@@ -1,3 +1,5 @@
++import {readEnterpriseExactAllocation,validateEnterpriseExactAllocation,reconcileEnterpriseExactAllocation,releaseEnterpriseExactAllocation} from '../../../../../../packages/private-equity/src/r7/accounting';
++import {R7Error} from '../../../../../../packages/private-equity/src/r7/contracts';
+ import { z } from 'zod';
+ import { AllocationContractError, ControlContractError, ExperimentContractError, AllocationOperationSchemas, InterventionContractError } from '@finnor/epistemic-runtime';
+ import { PeDomainError, clearEnterprisePortfolio, consumeEnterpriseAllocation, listEnterpriseAllocationResources, readEnterpriseAllocation, reconcileEnterpriseAllocation, recordEnterpriseAllocationAssessment, registerEnterpriseAllocationResource, releaseEnterpriseAllocation, validateEnterpriseAllocation,settleEnterpriseAllocation } from '@finnor/private-equity';
+@@ -23,16 +25,17 @@
+       case 'resource':{const p=resource.parse(body);return response(await registerEnterpriseAllocationResource(ctx,{resource:p.resource,expectedRef:p.expectedRef}));}
+       case 'resources':AllocationOperationSchemas.resources.parse(body);return response(await listEnterpriseAllocationResources(ctx));
+       case 'clear':{const p=clearing.parse(body);return response(await clearEnterprisePortfolio(ctx,{...p,mandate:p.mandate,jointModel:p.jointModel}));}
+-      case 'read':return response(await readEnterpriseAllocation(ctx,reference.parse(body).allocationRef));
+-      case 'validate':return response(await validateEnterpriseAllocation(ctx,reference.parse(body).allocationRef));
++      case 'read':{const ref=reference.parse(body).allocationRef;return response(ref.version==='r7-exact-affine-v1'?await readEnterpriseExactAllocation(ctx,ref):await readEnterpriseAllocation(ctx,ref));}
++      case 'validate':{const ref=reference.parse(body).allocationRef;return response(ref.version==='r7-exact-affine-v1'?await validateEnterpriseExactAllocation(ctx,ref):await validateEnterpriseAllocation(ctx,ref));}
+       case 'consume':return response(await consumeEnterpriseAllocation(ctx,consumption.parse(body)));
+-      case 'release':return response(await releaseEnterpriseAllocation(ctx,release.parse(body)));
+-      case 'reconcile':return response(await reconcileEnterpriseAllocation(ctx,reference.parse(body)));
++      case 'release':{const p=release.parse(body);return response(p.allocationRef.version==='r7-exact-affine-v1'?await releaseEnterpriseExactAllocation(ctx,p.allocationRef):await releaseEnterpriseAllocation(ctx,p));}
++      case 'reconcile':{const p=reference.parse(body);return response(p.allocationRef.version==='r7-exact-affine-v1'?await reconcileEnterpriseExactAllocation(ctx,p.allocationRef):await reconcileEnterpriseAllocation(ctx,p));}
+       case 'settle':return response(await settleEnterpriseAllocation(ctx,AllocationOperationSchemas.settle.parse(body)));
+       case 'assessment':return response(await recordEnterpriseAllocationAssessment(ctx,assessment.parse(body)));
+       default:return response({error:'S5 operation was not found',code:'NOT_FOUND'},404);
+     }
+   }catch(e){
++    if(e instanceof R7Error)return response({code:'R7_'+e.code,requirement:e.message},e.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT'].includes(e.code)?409:e.code==='CONFIGURATION_REQUIRED'?503:422);
+     if(e instanceof z.ZodError)return response({error:'Invalid S5 request',code:'INVALID_REQUEST'},400);
+     if(e instanceof LedgerFault)return response({code:e.code},e.status);
+     if(e instanceof AllocationContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:['IDEMPOTENCY_CONFLICT','STALE_INPUT'].includes(e.code)?409:e.code==='BLOCKED_AUTHORITY'?422:400);
+diff --git a/finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts b/finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa7500f9944121eb5c096c6338d99e07aa7c0e80 100644
+--- /dev/null
++++ b/finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts
+@@ -0,0 +1,48 @@
++import { requireContext, AuthError, errorResponse } from '../../../../lib/auth';
++import type { PeMutationContext } from '../../../../../../packages/private-equity/src/types';
++import { z } from 'zod';
++import { OperationSchemas, R7Error } from '../../../../../../packages/private-equity/src/r7/contracts';
++import * as atlas from '../../../../../../packages/private-equity/src/r7/service';
++export const runtime='nodejs';
++export const dynamic='force-dynamic';
++export async function POST(req:Request,context:{params:Promise<{operation:string}>}):Promise<Response>{
++  const headers={'cache-control':'no-store'};
++  try{
++    const auth=await requireContext(req),{operation}=await context.params;
++    if(!Object.hasOwn(OperationSchemas,operation))return Response.json({code:'R7_OPERATION_UNAVAILABLE'},{status:404,headers});
++    if(!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({code:'JSON_REQUIRED'},{status:415,headers});
++    const reader=req.body?.getReader();if(!reader)return Response.json({code:'JSON_REQUIRED'},{status:400,headers});
++    const buffers:Uint8Array[]=[];let size=0;
++    try{
++      while(true){const r=await reader.read();if(r.done)break;size+=r.value.byteLength;if(size>65536)throw new R7Error('LIMIT_EXCEEDED','Bounded 64 KiB owner-reference request exceeded');buffers.push(r.value);}
++    }finally{reader.releaseLock();}
++    const value=JSON.parse(Buffer.concat(buffers).toString('utf8'));
++    const ctx:PeMutationContext={auth,provenance:{sourceSystem:'R7:authenticated-api',createdBy:auth.userId}};
++    // Explicit branches preserve runtime schema-to-operation types.
++    let result:unknown;
++    switch(operation){
++      case 'register':result=await atlas.registerR7Family(ctx,OperationSchemas.register.parse(value));break;
++      case 'context':{const b=OperationSchemas.context.parse(value);result=await atlas.r7Context(ctx,b.workId,b.root);break;}
++      case 'build':result=await atlas.submitR7Build(ctx,OperationSchemas.build.parse(value));break;
++      case 'read':{const b=OperationSchemas.read.parse(value);result=await atlas.readR7Build(ctx,b.buildId,b.eventsAfter);break;}
++      case 'status':result=await atlas.readR7Build(ctx,OperationSchemas.status.parse(value).buildId);break;
++      case 'cancel':result=await atlas.cancelR7Build(ctx,OperationSchemas.cancel.parse(value).buildId);break;
++      case 'parameters':{const b=OperationSchemas.parameters.parse(value);result=await atlas.reviseR7Parameters(ctx,b.familyRef,b.expectedRef,b.values);break;}
++      case 'query':result=await atlas.queryR7Atlas(ctx,OperationSchemas.query.parse(value));break;
++      case 'select':{const b=OperationSchemas.select.parse(value);result=await atlas.chooseEnterpriseAtlasBranch(ctx,b.buildId,b.queryRef,b.idempotencyKey);break;}
++      case 'continue':result=await atlas.continueEnterpriseAtlasBranch(ctx,OperationSchemas.continue.parse(value));break;
++    }
++    return Response.json(result,{status:operation==='build'?202:200,headers});
++  }catch(error){
++    if(error instanceof AuthError)return errorResponse(error);
++    if(error instanceof z.ZodError||error instanceof SyntaxError)return Response.json({code:'R7_INVALID_REQUEST'},{status:400,headers});
++    if(error instanceof R7Error){
++      const status=error.code==='UNAVAILABLE'?404:error.code==='STALE_INPUT'||error.code==='CONFLICT'?409:error.code==='LIMIT_EXCEEDED'?422:error.code==='CONFIGURATION_REQUIRED'?503:422;
++      return Response.json({code:'R7_'+error.code,requirement:error.message},{status,headers});
++    }
++    if(error instanceof Error&&error.message==='SOURCE_RIGHTS_MEMBERSHIP_OR_WORK_CHANGED')
++      return Response.json({code:'R7_STALE_INPUT',requirement:'Original source, rights, membership, Work or obligation interpretation changed'},{status:409,headers});
++    // Do not serialize foreign owner diagnostics or source bytes.
++    return Response.json({code:'R7_OWNER_UNAVAILABLE',requirement:'Current owner boundary could not be verified'},{status:404,headers});
++  }finally{if(req.body&&!req.body.locked)void req.body.cancel().catch(()=>undefined);}
++}

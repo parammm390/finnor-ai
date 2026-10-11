@@ -1,0 +1,131 @@
+{
+  "schema": "finnor.r4.cumulative-local-verification.v1",
+  "baselineCommit": "efe3942cca495ea77e2389e1778bca8ea4e3d049",
+  "adoptedR4Commit": "42939e7f2243c1534af5ec462fb718489ab3f0e3",
+  "migration": "0174_identification_plan_compiler.sql",
+  "migrationCount": 176,
+  "migrationSha256": "9951931566290fc0a13be4a9b84c810c076358682ec06e988811ed594de067ab",
+  "scientific": {
+    "status": "PASS",
+    "cases": 71
+  },
+  "realOwners": {
+    "status": "PASS",
+    "cases": 5
+  },
+  "faults": {
+    "status": "PASS",
+    "cases": 19,
+    "caseIds": [
+      "candidate-upgrade-restart",
+      "actual-owner-registration",
+      "http-sql-native-checked-plan",
+      "owner-consumers-accept-decline-wait",
+      "authenticated-privacy-and-bounds",
+      "registered-cost-refusal",
+      "registered-delay-refusal",
+      "cross-tenant-principal-submit-read-work",
+      "unsupported-full-coverage-and-fallback",
+      "checked-incumbent-not-current-recommendation",
+      "profile-support-graph-menu-currentness",
+      "two-works-one-original-three-attempt-grant",
+      "physical-producer-checker-cancel-worker-faults",
+      "actual-independent-checker-rejection-fallback",
+      "stale-queue-fence-and-duplicate",
+      "publication-lock-original-expiry",
+      "publication-lock-rights-revocation",
+      "work-input-resource-population-revisions",
+      "method-replacement-cold-worker-currentness"
+    ]
+  },
+  "strictBackendAndR4Types": "PASS",
+  "productionApiBuild": "PASS",
+  "productionRootTurbopackBuild": "PASS",
+  "releaseGuards": {
+    "status": "PASS",
+    "cases": 80,
+    "classifiedMechanisms": 19
+  },
+  "memory": {
+    "workerOldSpaceMiB": 384,
+    "scientificTreeCapBytes": 536870912,
+    "combinedCapBytes": 1073741824,
+    "maximumObservedSampledAggregateBytes": 655196160,
+    "allContainerPeak": "UNQUALIFIED"
+  },
+  "mounted": "BLOCKED_RETAINED_INPUT_FAILURES_AND_STALE_DESKTOP_TARGET",
+  "installedCumulativeLinuxImage": "NOT_RUN",
+  "functionalIntegrated": "INCOMPLETE_MOUNTED_AND_INSTALLED_GATES",
+  "domainAndAdmission": "UNQUALIFIED",
+  "activation": "NOT_AUTHORIZED",
+  "protectedComparativeGain": "NOT_RUN",
+  "economicGain": "NOT_RUN",
+  "privateEvidence": [
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-scientific-01/results.json",
+      "sha256": "5c9bbd79dee427d61e464ef0b168be66e8942d0fdc0c9f86a5e8286b3d8b3a3b"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-owner-01/results.json",
+      "sha256": "02035d707808f3959cfed89cc10227d8d4f6061b5eb01f935997035b05f745ba"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-faults-01/results.json",
+      "sha256": "d0333e46a9b10a0ade01c388952be4bf32d7c5acc73b54f7140d589eec7ed932"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-faults-02/results.json",
+      "sha256": "5ae7ff390234a0d2928a7a408e67eb4cc84b322443b4f6ada169a93f81112218"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-mounted-01/results.json",
+      "sha256": "f01c9da15e6a6285f409472521037a27eddcb4c03d3390d44ae6cfd27aac0d79"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-mounted-02/results.json",
+      "sha256": "d3108263dbddd0de8299aae42a760c658b3f170e7ac3c877e3773a38eda76bda"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-input-diagnostic-01/results.json",
+      "sha256": "d629caf504735eaba20647f1ecb5400d489bd71da315ab4686c5d07a0a4c37cb"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-api-build.log",
+      "sha256": "160d39cc5de59bf779bb602161403893040e8008be31ac5635e10a3dab8452db"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-release-gates.log",
+      "sha256": "75d99befb776248dfe223f7198518e256bf62d71a46754813695aa0fe91ca638"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-root-build.log",
+      "sha256": "532bcc31d0ce6eff187d0adcf95d92ed86631d11599e11a43582bddeae6b4ce4"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-root-build-02.log",
+      "sha256": "e01b9916c430d4dc8da47f235a618182be9f67312784d291fd2921f12ae129d0"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-root-build-03.log",
+      "sha256": "ea0ea11303f1ddf0f8ac943c2794854a7b407e5ded2468c5bc2a028e167cc3c5"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-secret-scan-01/policy-red.log",
+      "sha256": "3565286af3f73459d638a5874c560a3a619ee27e7e6c1a14fbde308a8ca0a12a"
+    },
+    {
+      "path": "scope-r/completion/handoff/r4-cumulative-secret-scan-01/policy-pass.json",
+      "sha256": "e5b41a857c20316e109759b7602108b0b7fc5317817b8d38a90a81bd3aee230f"
+    }
+  ],
+  "rerunFaults": "cd finnor-os && node --import=tsx scripts/r4/run-integrated.mts --faults --output <fresh-absolute-private-output>",
+  "peerChanges": "NONE",
+  "completedR3": "NOT_REIMPLEMENTED",
+  "scannerPolicy": {
+    "status": "PASS",
+    "probes": 84,
+    "historyScenarios": 4,
+    "defaultDetectorsRetained": true,
+    "exceptions": "EXACT_NON_SECRET_DETECTOR_MATCH_AND_PATH_ONLY"
+  }
+}

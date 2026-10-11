@@ -37,7 +37,7 @@ export interface ContinuationPatch extends Phase2Envelope<
 }
 
 /** Enumerate the whole graph, never return a silently truncated reuse set. */
-export function affectedClosure(graph: HarnessNode[], seeds: string[]) {
+export function affectedClosure<T extends Pick<HarnessNode,'id'|'dependsOn'>>(graph: T[], seeds: string[]) {
   if (!graph.length || graph.length > 256) throw Error('P7_GRAPH_BOUND_OR_UNAVAILABLE');
   const nodes = new Map(graph.map(node => [node.id, node]));
   if (nodes.size !== graph.length) throw Error('P7_GRAPH_DUPLICATE_MEMBER');

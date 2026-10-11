@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.r5.frontend-packet-format-failure.v1",
+  "qualification": "STAGED_PATCH_TEXT_FORMAT_ONLY_NOT_PRODUCT_BEHAVIOUR",
+  "patchSha256": "4319516057e66a67fbcdac5ab934301650229f50495872926a8fa0a1c4d0dc83",
+  "command": [
+    "git",
+    "-C",
+    "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "exitCode": 2,
+  "stdout": "scope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch:5: trailing whitespace.\n+ \nscope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch:44: trailing whitespace.\n+ \nscope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch:47: trailing whitespace.\n+ \nscope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch:87: trailing whitespace.\n+ \n",
+  "stderr": "",
+  "cause": "Four whitespace-only unified diff context lines in a tracked patch artifact.",
+  "repair": "Use Git-supported unprefixed empty context lines; no source preimage or proposed postimage changes and no whitespace-rule bypass."
+}

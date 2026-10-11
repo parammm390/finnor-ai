@@ -7,6 +7,7 @@ export * from "./compiler";
 export * from "./snapshot";
 export * from "./result";
 export * from "./returns";
+export * from "./returns-v2";
 export * from "./standard-lbo";
 export * from "./executor";
 export * from "./sensitivity";

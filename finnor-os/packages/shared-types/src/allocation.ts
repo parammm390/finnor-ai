@@ -2,7 +2,8 @@ import type { BeliefViewPin } from './enterprise-beliefs';
 import type { ContingentPolicy, EconomicMandate } from './contingent-control';
 import type { ExperimentRef } from './experiments';
 
-/** Canonical finite decimals; never a FLOAT64 feasibility tolerance. */
+/** Canonical finite decimals, or n/d under the explicit R1 exact v2 adapter.
+ * Neither representation uses a FLOAT64 feasibility tolerance. */
 export type ResourceQuantity = string;
 export type AllocationResourceClass = 'CASH' | 'BORROWING_HEADROOM' | 'COMMITTED_CAPITAL' | 'OPERATIONAL_CAPACITY' | 'HUMAN_ATTENTION' | 'COMPUTE' | 'INQUIRY_EXPOSURE' | 'COUNTERPARTY_EXPOSURE' | 'OTHER_RESTRICTED';
 export type AllocationResourceKind = 'STOCK' | 'FLOW' | 'OCCUPANCY' | 'CUMULATIVE_EXPENDITURE' | 'EXPOSURE';
@@ -38,7 +39,7 @@ export interface AllocationPolicyFunding {
   actionCostResourceId: string | null; terminalLiabilityResourceId: string | null; humanSecondsResourceId: string | null;
 }
 export interface JointAllocationModel {
-  schema: 'finnor.joint-allocation-model.v1'; ref: ExperimentRef;
+  schema: 'finnor.joint-allocation-model.v1' | 'finnor.joint-allocation-model.exact.v2'; ref: ExperimentRef;
   tenantId: string; principalId: string; mandateRef: ExperimentRef; rightsRef: string;
   sourceRefs: ExperimentRef[]; knowledgeAt: string; validUntil: string;
   qualification: 'SUPPLIED_JOINT_FINITE_SCENARIOS_UNADMITTED';
@@ -78,6 +79,7 @@ export interface CanonicalAllocationProblem {
   demandBindings: AllocationDemandBinding[]; funding: AllocationPolicyFunding[];
   outstanding: AllocationOutstandingCommitment[]; snapshotDigest: string;
   knowledgeAt: string; validUntil: string; methodVersion: 's5-joint-finite-v1';
+  quantityEncoding?: 'DECIMAL_OR_RATIONAL_V2';
 }
 export type AllocationResultState = 'FEASIBLE' | 'INFEASIBLE' | 'UNCERTAINTY_UNRESOLVED' | 'STALE_INPUT' | 'SEARCH_EXHAUSTED' | 'SOLVER_UNAVAILABLE' | 'NUMERICAL_FAILURE' | 'BLOCKED_AUTHORITY' | 'INVALID_CANDIDATE' | 'LIMIT_EXCEEDED';
 export interface AllocationCheck {

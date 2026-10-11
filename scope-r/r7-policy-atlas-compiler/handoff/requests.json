@@ -1,0 +1,110 @@
+{
+  "schema": "finnor.r7.required-followup-packets.v1",
+  "sourceFilesDigest": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+  "requests": [
+    {
+      "id": "serial-integration",
+      "owner": "Main cumulative serial integrator (R5/shared integration role)",
+      "kind": "INTERNAL_ENGINEERING_NOT_EXTERNAL_ADMISSION",
+      "asset": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+      "required": [
+        "Apply 6 exact preimage-bound patches on compatible cumulative source, preserve R1/R2/R4 and database role isolation",
+        "Assign unique R7 DDL ordinal, regenerate head/bundle/guards/clients/OpenAPI/capabilities",
+        "Finish explicit P7 typed parameter-versus-structure notification/version dispatch",
+        "Run original retained S4/S5/Capital/P7/auth/queue/migration/release checks on actual joined commit/tree"
+      ],
+      "predicate": "Actual joined original-owner behavior and retained numeric responsibility, old/new protocol/fresh-upgrade-restart compatibility; no inferred compatibility from this branch",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/serial-owner-receipt.json"
+    },
+    {
+      "id": "native-mounted",
+      "owner": "Serial Work/browser integration owner",
+      "kind": "INTERNAL_OR_HOST_OPERATIONAL_ENGINEERING",
+      "asset": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/results.json",
+      "required": [
+        "Repair actual assigned-pane focus/hit ownership without DOM activation, new target or unassigned headless browser",
+        "Rerun registered original mounted Work parameter boundary/reload/delayed Work and sign-out privacy flow on current source",
+        "Keep original source/clock/input/resource bounds and failure evidence"
+      ],
+      "predicate": "Trusted actual pointer and Enter events; actual typed immutable owner revision; correct original boundary choices/ties/worlds and durable reload/private clearing",
+      "command": "FINNOR_R7_CASE_FILTER=mounted-capital-work FINNOR_R7_BROWSER_TAB=<fresh assigned tab> FINNOR_R7_BROWSER_TARGET=<fresh assigned target> node --import=tsx scripts/r7/run-owner.mts --browser",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/native-work-receipt.json"
+    },
+    {
+      "id": "retained-s5",
+      "owner": "Canonical S3/S4/S5 serial owner",
+      "kind": "INTERNAL_RUNTIME_ENGINEERING",
+      "asset": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/retained-s5-preflight.json",
+      "required": [
+        "Provide an existing sealed NumPy/SciPy scientific runtime or separately finish authorized scientific packaging; no generic API keys",
+        "Run actual original scripts/s5/run-s5-e2e.mts on extracted canonical kernel and retained numeric consumers"
+      ],
+      "predicate": "Full original coupled/covenant/signed bound/STOCK/FLOW/UNKNOWN/concurrency/cold-owner-I/O E2E, not source equivalence or R7 cases alone",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/retained-s5-receipt.json"
+    },
+    {
+      "id": "installed-schema-jobs",
+      "owner": "Serial runtime/release engineer",
+      "kind": "INTERNAL_ENGINEERING_RELEASE_AUTHORITY_SEPARATE",
+      "asset": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+      "required": [
+        "Package actual non-root Node/checker/Python/stdlib/locks/licenses/API/worker into final image",
+        "Run registered original installed and runtime-schema-compatibility/fresh/upgrade/restart/retained old-job/future-protocol tests",
+        "Name exact joined commit/tree/image/schema/handler bytes; production refusals retained until real protected protocol"
+      ],
+      "predicate": "Original builder/checker/consumer executable behavior on final installed bytes, no builder-only dependency or unnumbered schema substitute",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/installed-release-receipt.json"
+    },
+    {
+      "id": "campaign-metering",
+      "owner": "Finite verification engineer",
+      "kind": "INTERNAL_VERIFICATION_ENGINEERING",
+      "asset": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-campaign-accounting.json",
+      "required": [
+        "Enforce absolute global registered campaign clock including preparation/inspection/repair waits and all material work, not per-driver limits alone",
+        "Preserve measured 5653.814-second overrun as incomplete; no costly reruns in this exhausted campaign",
+        "Complete original money/human/aggregate simultaneous memory/cold storage meters before resource qualification"
+      ],
+      "predicate": "All selected applicable runs within newly frozen original limits with complete measured cost scope; unknown never zero",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/campaign-meter-receipt.json"
+    },
+    {
+      "id": "family-domain-S8",
+      "owner": "S1/S3/S4 scientific family/model owner and independent S8",
+      "kind": "EXTERNAL_QUALIFICATION_AUTHORITY",
+      "asset": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+      "required": [
+        "Independently qualify exact finite original policy/model/domain/quantity/event/rights witnesses",
+        "Issue actual checker/method/domain/fallback admission refs and signed protected grants if approved"
+      ],
+      "predicate": "Independent model/family adequacy and original-input checker acceptance plus real protected admission/revocation protocol; ordinary own receipts do not grant it",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/independent-admission-receipt.json"
+    },
+    {
+      "id": "protected-comparison",
+      "owner": "Independent evaluator/custodian with completed cumulative X strongest native specialization",
+      "kind": "EXTERNAL_EVIDENCE_AND_ASSET",
+      "asset": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+      "required": [
+        "Provide sealed completed-X/M5 strongest compatible actual comparator and independent evaluation custody",
+        "Freeze paired domain/endpoints/sample-power/stopping/multiplicity/material margin/floors before outcomes",
+        "Run available matched-reuse tooling only as component diagnostic, not completed-X proof; charge all cold/preparation/check/storage/fallback/rebuild costs"
+      ],
+      "predicate": "Simultaneous 95% lower confidence bound strictly above zero and required material margin with all original floors; preserve no-gain",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/protected-comparison-receipt.json"
+    },
+    {
+      "id": "economic-S7",
+      "owner": "Independent S7 attribution/valuation/outcome authority",
+      "kind": "EXTERNAL_MATURE_FIELD_EVIDENCE",
+      "asset": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+      "required": [
+        "Preserve full frozen benchmark/reach and registered 36-month H2 owner-value estimand, all attribution/accounting/denominator/downside/ITT uncertainty rules",
+        "Collect actual qualified comparators and matched opportunities; unavailable products remain NOT RUN"
+      ],
+      "predicate": "Original 100x inequality, positive material denominator, absolute payoff and owner-value floors including separate $100m objective; no multiplied component gains or forecasts as wealth",
+      "receiptDestination": "scope-r/r7-policy-atlas-compiler/handoff/economic-S7-receipt.json"
+    }
+  ],
+  "authority": "No publication/deployment/cloud/economic effect granted; packets are required work, not receipts"
+}

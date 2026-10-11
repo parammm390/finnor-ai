@@ -1,0 +1,105 @@
+{
+  "schema": "finnor.r5.frontend-static-evidence.v1",
+  "qualification": "STATIC_SOURCE_ONLY_NOT_MOUNTED_OR_INSTALLED_BUILD",
+  "root": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+  "backend": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "sourcePins": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "sha256": "59f31d2e8a456f734608673d7b9ff01608a9a3cd6d824f9f2a3a886d19d424ae"
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "sha256": "2e064ecafb120d66f5f609344778f44ba894298c6bce42b40e169965a826ee4b"
+    }
+  ],
+  "dependencyVersions": {
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "zod": "3.25.76",
+    "typescript": "5.9.3",
+    "eslint": "9.39.5"
+  },
+  "lockSha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+  "commands": [
+    {
+      "id": "TYPECHECK",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/tsconfig.frontend.json",
+        "--pretty",
+        "false"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 1480.4944999999998,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "id": "LINT",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/eslint/bin/eslint.js",
+        "--config",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/eslint.config.mjs",
+        "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+        "src/components/centropy/canvas/coalition-programme-view.ts"
+      ],
+      "exitCode": 1,
+      "signal": null,
+      "elapsedMs": 1303.4597080000003,
+      "stdout": "\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx\n  55:14  error  Compilation Skipped: Existing memoization could not be preserved\n\nReact Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.\n\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx:55:14\n  53 |     consumptionRef: consumptionDigest ? coalitionRef(\"consumption\", consumptionDigest) : null,\n  54 |     scheduleRef: scheduleDigest ? coalitionRef(\"schedule\", scheduleDigest) : null, clearRequested: false,\n> 55 |   } : null, [selectionDigest, allocationDigest, consumptionDigest, scheduleDigest])\n     |              ^^^^^^^^^^^^^^^ This dependency may be modified later\n  56 |   const malformed = restored.kind === \"INVALID\"\n  57 |   const pointerKey = JSON.stringify([\n  58 |     pointers?.selectionRef.contentDigest, pointers?.allocationRef?.contentDigest,                                                       react-hooks/preserve-manual-memoization\n  55:31  error  Compilation Skipped: Existing memoization could not be preserved\n\nReact Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.\n\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx:55:31\n  53 |     consumptionRef: consumptionDigest ? coalitionRef(\"consumption\", consumptionDigest) : null,\n  54 |     scheduleRef: scheduleDigest ? coalitionRef(\"schedule\", scheduleDigest) : null, clearRequested: false,\n> 55 |   } : null, [selectionDigest, allocationDigest, consumptionDigest, scheduleDigest])\n     |                               ^^^^^^^^^^^^^^^^ This dependency may be modified later\n  56 |   const malformed = restored.kind === \"INVALID\"\n  57 |   const pointerKey = JSON.stringify([\n  58 |     pointers?.selectionRef.contentDigest, pointers?.allocationRef?.contentDigest,                                     react-hooks/preserve-manual-memoization\n  55:49  error  Compilation Skipped: Existing memoization could not be preserved\n\nReact Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.\n\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx:55:49\n  53 |     consumptionRef: consumptionDigest ? coalitionRef(\"consumption\", consumptionDigest) : null,\n  54 |     scheduleRef: scheduleDigest ? coalitionRef(\"schedule\", scheduleDigest) : null, clearRequested: false,\n> 55 |   } : null, [selectionDigest, allocationDigest, consumptionDigest, scheduleDigest])\n     |                                                 ^^^^^^^^^^^^^^^^^ This dependency may be modified later\n  56 |   const malformed = restored.kind === \"INVALID\"\n  57 |   const pointerKey = JSON.stringify([\n  58 |     pointers?.selectionRef.contentDigest, pointers?.allocationRef?.contentDigest,                  react-hooks/preserve-manual-memoization\n  55:68  error  Compilation Skipped: Existing memoization could not be preserved\n\nReact Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.\n\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx:55:68\n  53 |     consumptionRef: consumptionDigest ? coalitionRef(\"consumption\", consumptionDigest) : null,\n  54 |     scheduleRef: scheduleDigest ? coalitionRef(\"schedule\", scheduleDigest) : null, clearRequested: false,\n> 55 |   } : null, [selectionDigest, allocationDigest, consumptionDigest, scheduleDigest])\n     |                                                                    ^^^^^^^^^^^^^^ This dependency may be modified later\n  56 |   const malformed = restored.kind === \"INVALID\"\n  57 |   const pointerKey = JSON.stringify([\n  58 |     pointers?.selectionRef.contentDigest, pointers?.allocationRef?.contentDigest,  react-hooks/preserve-manual-memoization\n\n✖ 4 problems (4 errors, 0 warnings)\n\n",
+      "stderr": "Warning: React version was set to \"detect\" in eslint-plugin-react settings, but the \"react\" package is not installed. Assuming latest React version for linting.\n",
+      "error": null
+    },
+    {
+      "id": "DIFF_CHECK",
+      "command": [
+        "git",
+        "-C",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 33.30116700000008,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "mounted": "NOT RUN",
+  "clientTranspile": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "imports": [
+        "react",
+        "next/navigation",
+        "@/components/centropy/lib/api",
+        "@/components/centropy/lib/centropy-auth",
+        "@/components/centropy/lib/business-invalidation",
+        "./coalition-programme-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "imports": [
+        "zod",
+        "./capital-ref-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    }
+  ],
+  "elapsedMs": 2926.953291,
+  "staticChecksPassed": false
+}

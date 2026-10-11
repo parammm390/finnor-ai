@@ -1,4 +1,28 @@
-FROM node:22-bookworm-slim AS dependencies
+FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS node-runtime
+
+FROM python:3.11.15-slim-bookworm@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3 AS r4-scientific
+COPY finnor-os/scripts/r4/requirements.lock /tmp/r4-requirements.lock
+RUN /usr/local/bin/python3.11 -m venv --without-pip /opt/finnor/r4 \
+    && /usr/local/bin/python3.11 -m pip --python /opt/finnor/r4/bin/python install \
+       --no-cache-dir --require-hashes -r /tmp/r4-requirements.lock
+
+# Keep Python and its shared-library dependencies in the final runtime itself.
+# Debian's node-gyp build interpreter is not the supported scientific runtime.
+FROM python:3.12.13-slim-bookworm@sha256:4766d8b510c428e595d74b9cc5bbb2fae8e26316fffb4adc89908d79aacd58a2 AS scientific-runtime
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends libstdc++6 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 1000 finnor-runtime \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin finnor-runtime
+COPY finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt /opt/finnor-requirements/intervention.txt
+COPY finnor-os/packages/epistemic-runtime/src/requirements-s5.txt /opt/finnor-requirements/allocation.txt
+COPY finnor-os/scripts/r4/numerical-requirements.lock /opt/finnor-requirements/numerical.lock
+RUN python -m venv /opt/finnor-python \
+    && /opt/finnor-python/bin/python -m pip install --no-cache-dir --require-hashes \
+       -r /opt/finnor-requirements/numerical.lock \
+    && /opt/finnor-python/bin/python -I -c "import sys, numpy, scipy, statsmodels, arch; assert sys.version_info[:2] == (3, 12); assert (numpy.__version__, scipy.__version__, statsmodels.__version__, arch.__version__) == ('2.3.3', '1.16.2', '0.14.5', '8.0.0')"
+
+FROM node-runtime AS dependencies
 
 WORKDIR /app/finnor-os
 
@@ -11,6 +35,7 @@ RUN apt-get update \
 # available so the existing embedded orchestrator, handlers, projections, and SSE
 # gateway run from the same process without a source rewrite.
 COPY finnor-os/package.json finnor-os/package-lock.json finnor-os/tsconfig.json finnor-os/tsconfig.base.json ./
+COPY finnor-os/Dockerfile.worker ./Dockerfile.worker
 COPY finnor-os/apps ./apps
 COPY finnor-os/packages ./packages
 COPY finnor-os/scripts ./scripts
@@ -18,17 +43,68 @@ COPY finnor-os/scripts ./scripts
 # paths. Retain that layout and the root inputs instead of weakening identity.
 COPY package-lock.json /app/package-lock.json
 COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json
+# Real migration imports retain the canonical production guard and its closure.
+COPY scripts/release/production-mutation-guard.mjs scripts/release/release-policy.mjs scripts/release/worktree-state.mjs /app/scripts/release/
 
 RUN npm ci --no-audit --no-fund
+ARG FINNOR_BUILD_ID
+RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 npm run build --workspace=@finnor/api \
+    && rm -rf apps/api/.next/cache
 
-FROM node:22-bookworm-slim
+# Build the same pinned exact runtime for the image architecture. Mac binaries
+# are never copied into Linux. Protected R2 activation remains separately guarded.
+FROM node-runtime AS r2-scientific-build
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates python3 make m4 g++ cmake curl xz-utils bzip2 zlib1g-dev patchelf \
+    && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/scripts/r2/build-native.py /opt/finnor-r2-build.py
+RUN test -s /etc/ssl/certs/ca-certificates.crt \
+    && command -v m4 \
+    && python3 /opt/finnor-r2-build.py --build-root /opt/r2-build
 
+FROM scientific-runtime
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+       libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
+       libssl3 libreadline8 libncursesw6 libuuid1 procps \
+    && rm -rf /var/lib/apt/lists/*
+# Interpreter libraries and venvs are in the final stage, not just dependencies.
+# The two NumPy/SciPy stacks remain isolated.
+COPY --from=r4-scientific /usr/local/bin/python3.11 /usr/local/bin/python3.11
+COPY --from=r4-scientific /usr/local/lib/libpython3.11.so.1.0 /usr/local/lib/libpython3.11.so.1.0
+COPY --from=r4-scientific /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
 WORKDIR /app/finnor-os
+COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=dependencies /app /app
+# Existing S3/S5/S2 numerical callees use their ordinary configured interpreter.
+RUN /opt/finnor-python/bin/python -m pip freeze --all > /opt/finnor-python/installed-versions.txt
+COPY --from=r2-scientific-build /opt/r2-build/runtime /opt/finnor-r2/runtime
+# Preserve pinned GNU source archives for notices and relinking obligations.
+COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
+COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
 
-ENV NODE_ENV=production \
+ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
+    FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \
+    NODE_ENV=production \
+    NODE_OPTIONS=--max-old-space-size=384 \
+    FINNOR_R4_PYTHON=/opt/finnor/r4/bin/python \
     PORT=8090 \
-    SSE_PORT=8090
+    SSE_PORT=8090 \
+    FINNOR_R1_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S3_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S5_PYTHON=/opt/finnor-python/bin/python \
+    OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1
+
+RUN ldconfig \
+    && /opt/finnor/r4/bin/python -I -c \
+    "import sys,importlib.metadata as m;assert sys.version.split()[0]=='3.11.15';assert m.version('y0')=='0.2.11';from y0.algorithm.identify import identify_outcomes" \
+    && /opt/finnor-python/bin/python -I -c \
+    "import sys,numpy,scipy,statsmodels,arch;assert sys.version.split()[0]=='3.12.13';assert numpy.__version__=='2.3.3';assert scipy.__version__=='1.16.2';assert statsmodels.__version__=='0.14.5';assert arch.__version__=='8.0.0'" \
+    && /opt/finnor/r4/bin/python scripts/r4/package-runtime.py \
+       --python /opt/finnor/r4/bin/python --output /app/finnor-os/r4-runtime-inventory.json
 
 EXPOSE 8090
 
@@ -39,4 +115,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 # production worker entrypoint is TypeScript and retains its current signal handling.
 # Invoke the binary directly so the worker receives ECS SIGTERM as PID 1 instead
 # of placing npm/npx between the runtime and the container signal.
+USER finnor-runtime
 CMD ["node_modules/.bin/tsx", "apps/worker/src/index.ts"]

@@ -53,3 +53,4 @@ export type {ContinuationPatch,ContinuationRef} from './live-recompilation/contr
 // Ordinary P6 consumer port. Admission remains S8-owned and unavailable here.
 export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInduction,handleProcedureOperation} from './procedure-induction/api';
 export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
+export * from "./r6/verified-capital-compiler";

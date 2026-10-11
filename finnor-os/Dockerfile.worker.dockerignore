@@ -1,5 +1,10 @@
 **
 !package-lock.json
+!scripts/
+!scripts/release/
+!scripts/release/production-mutation-guard.mjs
+!scripts/release/release-policy.mjs
+!scripts/release/worktree-state.mjs
 !finnor-os/
 !finnor-os/package.json
 !finnor-os/package-lock.json

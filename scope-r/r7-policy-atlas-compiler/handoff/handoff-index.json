@@ -1,0 +1,163 @@
+{
+  "schema": "finnor.r7.sealed-handoff-document-custody.v1",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "sourcePin": "handoff/source-pin.json",
+  "sourceFilesDigest": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+  "files": [
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/acceptance.md",
+      "bytes": 4030,
+      "sha256": "278ed2139f8c3fc3ea73c587bf6d1f55f04f75fca7cad163f063b6dd1273f4c9"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/excluded-lead-paths.json",
+      "bytes": 853416,
+      "sha256": "c72d4477093d159f0e53cff6f8496f9a0d908ef273eb773e254fb2292b55073e"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/failure-model.md",
+      "bytes": 5204,
+      "sha256": "002ce57a3ba1675a703a75a714e81cfef9bc61341d76b19e166f9e69122a0e84"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/README.md",
+      "bytes": 6999,
+      "sha256": "8a4b6ca4cae0973e223546d2da02522fbd253b2d9e01eb0df38e1380fac6065e"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/adoption-status.json",
+      "bytes": 9886,
+      "sha256": "789ca2d41208a45c85579fbed971080d3edcf6acc1634edc229e87e2093497b7"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/draft-pr.md",
+      "bytes": 2560,
+      "sha256": "d8cd31f5d5563ffc13c09b34d1572a6ef25ae606a98ddc9ffd0a853f7a291457"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/evidence-index.json",
+      "bytes": 83102,
+      "sha256": "e201263417f0318bbfd328f35992155044ab1c363bb08c04181e4207729c036b"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/generated-contract-custody.json",
+      "bytes": 3531,
+      "sha256": "1c0dadc8c19fd3db7f2b181f41428ede6e6edaf51d619ef0296596e2a02c422d"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/origin-to-owned-repairs.patch",
+      "bytes": 50541,
+      "sha256": "c05a00fabca461531b9a4ae765d5b6211d5e3430afcc1f230bb2b4cf0df13648"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/010-canonical-s5-ports.patch",
+      "bytes": 3064,
+      "sha256": "4b190b06a44236e95c68b3aca1ceb3eddef7923ccac73e652c550e623db2199e"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/020-canonical-resource-kernel.patch",
+      "bytes": 13738,
+      "sha256": "6ae4432d609fee1b57ed2af9f6ed6a74d288c2b30633c77385e8a530b4068fe3"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/030-durable-job.patch",
+      "bytes": 2570,
+      "sha256": "a5cb0cbc929b264b3cf1dfe2b7158b6da31e3803a3258e9fd3d25fd7a55613a1"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/040-api-dispatch.patch",
+      "bytes": 8601,
+      "sha256": "75d7faf1670fb04ab8f5b37ae9b8cecc7c2074293949da96e4fee532bee5c3ff"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/050-capital-work-mount.patch",
+      "bytes": 1339,
+      "sha256": "9ce3785b1509b88dce879d5f81dddb8378f0a4989f44a024726b3651bba390ce"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/060-api-catalog-sources.patch",
+      "bytes": 6002,
+      "sha256": "9816bc0fb3b0bbad317e632e861aad1c5ff6a5b79a74a5b673f21f66f160ee37"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/canonical-resource-kernel.ts.txt",
+      "bytes": 6834,
+      "sha256": "5da32ba5ac8a3fa76ea9dba268c7111db595e0722b78330c6166e7a82149f3ca"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/manifest.json",
+      "bytes": 7545,
+      "sha256": "d06dc0f4cdff35fb264e2d720f7daa13176a424124d8532ed03de2c7aeba2cdc"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+      "bytes": 7351,
+      "sha256": "69e7b988a47b430705ebee1dfc9b687d29e502edf3fc3b43bff4b9ac8488a0cd"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/reconstruction.md",
+      "bytes": 4942,
+      "sha256": "5c50dfd261ce55cd881d915d232b38555c95286eb6dbffacfd40daf1bd352d65"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/release-manifest-contribution.json",
+      "bytes": 928,
+      "sha256": "aa55e286919d36f8d9210250298170667b95807edb00921c6230253b05339804"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/repair-manifest.json",
+      "bytes": 7858,
+      "sha256": "215b1ed2ef42b1c91519cf20003c25a0b80df0e386e7ac945b7d668a738625c8"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/requests.json",
+      "bytes": 7610,
+      "sha256": "f2aab6e2cd3f977d26d2184c6d92f6e5d89a6e1a726751c0f5e0e1a43724e830"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/runtime-licenses.json",
+      "bytes": 12936,
+      "sha256": "4db62673b09c147e4c2a7afa62f7b966f31821ed62c49324b9c8a79a19d08d16"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/runtime-transitives.json",
+      "bytes": 93468,
+      "sha256": "b33a6decfd9dbd6bb07f11dfbd696c546e9fb2ba4842098d825e3bef8e507671"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/handoff/source-pin.json",
+      "bytes": 11616,
+      "sha256": "96f134a6584b7c207397637b482a9a38050be7aed5081e2da375d0cfc9a0691a"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/plan.md",
+      "bytes": 2015,
+      "sha256": "c6e7dbc623df76f7d9fbe903a008d30ca9044bde753f28724d00795226110d65"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/requirement-coverage.json",
+      "bytes": 250807,
+      "sha256": "e72bb0f06936f023ccb32b8e4daa96de121725c1b72494650cebcb229a1eec0c"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/shared-seams.md",
+      "bytes": 7053,
+      "sha256": "e2b9dfb2af6023e0256cdd0ebb130be0a1de41eaef97eed50c11abd246fc30de"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/source-origin-manifest.json",
+      "bytes": 25967,
+      "sha256": "f2389903b5013968c68e7886ad55d1de9a3ca21faa8510b854e3b921e1ef0f3d"
+    },
+    {
+      "path": "scope-r/r7-policy-atlas-compiler/verification-plan.json",
+      "bytes": 13378,
+      "sha256": "d22541daa5da9d015d7e4e035f5236d881a55740008d0ecafea9eca5a7b5d525"
+    }
+  ],
+  "nonSelfReferential": "This index does not hash itself; its own blob and complete final tree are bound by the reviewed final Git commit/tree in external sealed-cut.json",
+  "latestProductBehavioralCut": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7",
+  "laterDocumentsDoNotImplyBehavioralRerun": true,
+  "fullFunctionalStatus": "PARTIAL_AND_GLOBAL_CAMPAIGN_INCOMPLETE"
+}

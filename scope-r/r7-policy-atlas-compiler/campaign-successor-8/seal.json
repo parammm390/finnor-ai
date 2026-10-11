@@ -1,0 +1,329 @@
+{
+  "schema": "finnor.r7.successor-campaign-seal.v1",
+  "sealedAt": "2026-10-11T10:42:29.945518+00:00",
+  "status": "PASS_OPERATIONAL_GLOBAL_CAMPAIGN_ONLY",
+  "campaign": "R7 bounded adoption successor-8 global campaign",
+  "registration": {
+    "repoPath": "scope-r/r7-policy-atlas-compiler/campaign-successor-8/registration.json",
+    "sha256": "b27e49ff9507e2ca5af2d8ae94c0aa5a3c6fe00f75f1a657b4e2488f370bd89f"
+  },
+  "clock": {
+    "startedAt": "2026-10-11T10:27:17.720332+00:00",
+    "deadlineAt": "2026-10-11T11:27:17.720332+00:00",
+    "capSeconds": 3600,
+    "campaignElapsedSeconds": 545.17146775,
+    "remainingSecondsAtFinish": 3031.847179889679,
+    "measuredPhaseBottleneck": {
+      "id": "retained-s5-full14",
+      "status": "PASS",
+      "guardPredicate": null,
+      "wallSeconds": 267.43967283300003,
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/retained-s5-full14/supervision.json"
+    }
+  },
+  "cases": {
+    "owner": {
+      "required": 23,
+      "passed": 23,
+      "failed": 0
+    },
+    "retainedS5": {
+      "required": 14,
+      "passed": 14,
+      "failed": 0
+    }
+  },
+  "guardE2Es": [
+    {
+      "id": "actual-global-stop",
+      "expected": "GLOBAL_DEADLINE",
+      "observed": "GLOBAL_DEADLINE",
+      "status": "PASS",
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/phases/actual-global-stop/supervision.json"
+    },
+    {
+      "id": "expired-first",
+      "expected": "GLOBAL_DEADLINE",
+      "observed": "GLOBAL_DEADLINE",
+      "status": "PASS",
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/expired-restart/phases/expired-first/supervision.json"
+    },
+    {
+      "id": "evidence-quota",
+      "expected": "EVIDENCE_QUOTA",
+      "observed": "EVIDENCE_QUOTA",
+      "status": "PASS",
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/evidence-quota/phases/evidence-quota/supervision.json"
+    },
+    {
+      "id": "rss-quota",
+      "expected": "AGGREGATE_RSS_QUOTA",
+      "observed": "AGGREGATE_RSS_QUOTA",
+      "status": "PASS",
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/rss-quota/phases/rss-quota/supervision.json"
+    },
+    {
+      "id": "disk-reserve",
+      "expected": "DISK_RESERVE",
+      "observed": "DISK_RESERVE",
+      "status": "PASS",
+      "supervision": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/disk-reserve/phases/disk-reserve/supervision.json"
+    }
+  ],
+  "scientificRuntime": {
+    "python": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/numerical/bin/python",
+    "binarySha256": "eb9d74b9c7cfdfb2c9b91614edb2c3607360ba46c5aa7fc4557b3a4a23e97cff",
+    "numpy": "2.3.3",
+    "scipy": "1.16.2",
+    "actualMilpStatus": 0,
+    "runtimeCopiedOrInstalled": false,
+    "readOnly": true
+  },
+  "globalStopReconciliation": {
+    "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/evidence/campaign-reconciliation.json",
+    "sha256": "ad15d2f323ba21dcc8152c851898741a7e6f3ed1595c230139912098f6734e1b",
+    "predicate": "GLOBAL_DEADLINE",
+    "cancelResponses": 1,
+    "livePhysical": [],
+    "workerPids": [],
+    "episodesUnchanged": true,
+    "reservationsUnchanged": true,
+    "consumptionsUnchanged": true,
+    "leasesReleased": true,
+    "financialReleaseOrSettlementAttempted": false,
+    "originalGrantAndDeadlineRenewed": false,
+    "note": "Full receipt indexed by hash; lease secret material intentionally not embedded in seal"
+  },
+  "evidenceIndex": [
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/registration.json",
+      "kind": "campaign-registration-copy",
+      "sha256": "b27e49ff9507e2ca5af2d8ae94c0aa5a3c6fe00f75f1a657b4e2488f370bd89f",
+      "bytes": 9312
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/campaign-summary.json",
+      "kind": "campaign-summary",
+      "sha256": "e00582d1be4f18498235cc3a9438f42567acd907d6850ba143205aceaf4371fc",
+      "bytes": 5681
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/campaign-state.json",
+      "kind": "campaign-journal",
+      "sha256": "5b8d182bb45adeb06087cede7390534ff26d8334cbd27227505cc2476fe097b5",
+      "bytes": 489
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/conformance-results.json",
+      "kind": "guard-conformance-results",
+      "sha256": "542f86dfc3679e3cccabf4b313dd1b437755d2f29e59213b3e86573d8ddcb1aa",
+      "bytes": 1576
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/scientific-runtime.json",
+      "kind": "scientific-runtime-binding",
+      "sha256": "dbfcf8320da5cde2431cab3e1da588bb27c1e4e0be4131af22b44e9dcb89af7a",
+      "bytes": 703
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/projection-manifest.json",
+      "kind": "hermetic-projection-manifest",
+      "sha256": "97a2c8746de56767475d6e21dc22252452ce3949a9483a91e5810944a3caed4e",
+      "bytes": 589162
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/original-red-receipt.json",
+      "kind": "predecessor-red-receipt-copy",
+      "sha256": "3ed3c9a60d19fb26df1040b505a1d58bc4f21099b4b1dc2b6ead24c4d2559c7c",
+      "bytes": 908
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/owned-typecheck/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "a0078af074339ad866d55fff20ed29a1d8b9dc1c3f8baeb07e3e928fec7e4b8e",
+      "bytes": 3072
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/owner-full23/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "3274dbfa8f464a68f504b5d439eb547d6586dcd868bff0ef12d10be3c1e6e034",
+      "bytes": 72366
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/private-overlay-preparation/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "ef8d6030546a2d8b2b8c4280801c4237ebced46cf857f912e3e382975192b843",
+      "bytes": 4005
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/retained-s5-full14/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "af5f8dac0b01bf936bc4cb1492878f64fd959aa50042fe98b69920a3cba7959c",
+      "bytes": 60262
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/scientific-runtime-preflight/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "d83d40e452fcb95cb2d53b316a9e5ba16b4be089281da45d998cb3bad8a8b02b",
+      "bytes": 3532
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/wrapper-conformance/supervision.json",
+      "kind": "phase-supervision-receipt",
+      "sha256": "2ea7d99032c94e5cabd1214ca154db868fe89524b6ad947a69ca791c82e291a3",
+      "bytes": 28780
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/owned-typecheck/control.json",
+      "kind": "phase-control",
+      "sha256": "f13b4b16ed8727c2d39b6abad4bb23cfececcb8e81c9493fc936d4d350e35c86",
+      "bytes": 245
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/owner-full23/control.json",
+      "kind": "phase-control",
+      "sha256": "690e3fd4b5b433b793ae8652356d4ba845aa9184d57b0f26de7ec256dd09655c",
+      "bytes": 242
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/private-overlay-preparation/control.json",
+      "kind": "phase-control",
+      "sha256": "c9d2ecaca8d90bdd02eb83c729f73595c4b9aa555a15d095666771cf3f5e6a2c",
+      "bytes": 257
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/retained-s5-full14/control.json",
+      "kind": "phase-control",
+      "sha256": "18a22db0c9e2afd7b740d53081e3ce7a57415ce43c4901e81908e0b9c21bc718",
+      "bytes": 248
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/scientific-runtime-preflight/control.json",
+      "kind": "phase-control",
+      "sha256": "e18d564fbd34e13b4d042916484db61f42400ec99c6ccfb1cf39b2895ae471a7",
+      "bytes": 258
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/phases/wrapper-conformance/control.json",
+      "kind": "phase-control",
+      "sha256": "3e0be8bb9455da43158ccdc00795df6c53266eae65678d2c1b13ebea1f8a99f0",
+      "bytes": 249
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/owners/results.json",
+      "kind": "owner-23-results",
+      "sha256": "dede3c4dda068e90218d2b2f507a081f5f28beeac49a443557a33eca81b05075",
+      "bytes": 41030123
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/retained-s5/results.json",
+      "kind": "retained-s5-14-results",
+      "sha256": "bda8f80846a582d2595b19e892763264c29ebf16c917436638e75694ebaccef2",
+      "bytes": 85882
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/phases/actual-global-stop/supervision.json",
+      "kind": "diagnostic-supervision-receipt",
+      "sha256": "f3b647ec6c601685c0190770dd1afa122cddb94e63e53fc2dd4ddb505af6a32a",
+      "bytes": 16574
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/disk-reserve/phases/disk-reserve/supervision.json",
+      "kind": "diagnostic-supervision-receipt",
+      "sha256": "12f76256c30add1262e65df9233bfd855c9b1997ddde6a1b22b3784619a20450",
+      "bytes": 3031
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/evidence-quota/phases/evidence-quota/supervision.json",
+      "kind": "diagnostic-supervision-receipt",
+      "sha256": "16151968e58450acfb0e57a288a6baaeadc3fb48dc847621358cd8da262f8fc6",
+      "bytes": 3659
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/expired-restart/phases/expired-first/supervision.json",
+      "kind": "diagnostic-supervision-receipt",
+      "sha256": "7e10c06db9fb6c318a99b320f574edfbe748d9d9b66ed2126c03d7646e63c8d8",
+      "bytes": 3055
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/rss-quota/phases/rss-quota/supervision.json",
+      "kind": "diagnostic-supervision-receipt",
+      "sha256": "64b8de6ea7b07713eb1c7257448cd9e4aeacb1275b85a95b3fe01725d9ca2155",
+      "bytes": 3616
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/evidence/campaign-reconciliation.json",
+      "kind": "diagnostic-reconciliation",
+      "sha256": "ad15d2f323ba21dcc8152c851898741a7e6f3ed1595c230139912098f6734e1b",
+      "bytes": 84601
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/boundary-ready.json",
+      "kind": "diagnostic-boundary-marker",
+      "sha256": "c1214d1a68fd64107e114293b9c0e0d65fa9d9664f229a9c56557d8bede0f13c",
+      "bytes": 2080
+    },
+    {
+      "path": "/tmp/finnor-r7-deadline-successor8-20261011.Hw9Qc3Jv/diagnostics/actual-global-stop/evidence/results.json",
+      "kind": "diagnostic-driver-results",
+      "sha256": "2d3a5ef9dd06361d64d52634a7b7344e22145b596e5d166c8f6c9001aeaf0a3a",
+      "bytes": 120887
+    },
+    {
+      "path": "/tmp/finnor-r7-bulk-archives/manifest.json",
+      "kind": "bulk-evidence-archive-manifest",
+      "sha256": "627daea049bf41a8f350de1a5a2b4348aa576c33b60ee2e799e9a023e3c84169",
+      "bytes": 1749
+    }
+  ],
+  "sourcePreimages": {
+    "finnor-os/scripts/r7/campaign.py": {
+      "sha256": "170e6eeba2a29f2f1866e2e4894c482275a6e9080dfa90062bcfe1b6485483f1",
+      "bytes": 16219
+    },
+    "finnor-os/scripts/r7/campaign-fixture.py": {
+      "sha256": "fa5ab8b85b75e0f9dfcbe730e8a2712b3ed676b05dccf4370483727804dc2009",
+      "bytes": 1387
+    },
+    "finnor-os/scripts/r7/run-campaign-e2e.py": {
+      "sha256": "0fe6e2bf1b59a63265d12a912e6d6a10a9a298489f371fcb4d37443a70b0d34a",
+      "bytes": 13781
+    },
+    "finnor-os/scripts/r7/run-owner.mts": {
+      "sha256": "c4ca3ed494135d2a69c5f5b4b002d762088cb891ad3caa9274abe025ca13a03c",
+      "bytes": 75462
+    },
+    "finnor-os/scripts/r7/serial-projection.mjs": {
+      "sha256": "e1f63e08d058315d0e4fa9a8c50f1b596e49e2c6d59721cb4fe108d87d8e0b7a",
+      "bytes": 8213
+    }
+  },
+  "git": {
+    "branch": "factory/r7-bounded-adoption-producer-2026-10-11",
+    "headBeforeSealCommit": "10936a311fb5c5a855660871bf625a598fff9aff",
+    "treeBeforeSealCommit": "dfea4c46a71932fe01dc9a0479fbf8c5658458e2",
+    "baseCommit": "55f0fe08f34174896646ebcb6037531329be91b0",
+    "pinnedProjectionBase": "4a90ed33ca96afa252c51f511fea279e0034cddb"
+  },
+  "qualification": {
+    "operationalGlobalCampaign": "PASS: one immutable 3600s wall+monotonic clock; 6/6 phases; 23/23 owner; 14/14 retained S5; 5/5 guard E2Es; zero residual processes on every receipt",
+    "notQualified": [
+      "P7/schema/job/installed main-owned gates",
+      "mounted native lane (browser/Canvas activation) \u2014 main must run trusted lane",
+      "protected aggregate memory proof (16GiB) \u2014 sampled operational RSS only",
+      "money/humanSeconds remain null",
+      "full functional serial join release/deployment"
+    ],
+    "money": null,
+    "humanSeconds": null
+  },
+  "predecessorChain": [
+    "original red receipt 5653.814s>3600s retained",
+    "successor-1 identity false positive",
+    "successor-2 exit-hook reconciliation race",
+    "successor-3 workspace-link hermeticity",
+    "successor-4/6 DISK_RESERVE enforcement",
+    "successor-5 .txt filter gap",
+    "successor-7 witness-scan race"
+  ]
+}

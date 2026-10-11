@@ -1,0 +1,11 @@
+{
+ "schema":"finnor.r2.finite-corpus.v1",
+ "qualification":"DEVELOPMENT_REFERENCE_ONLY_NO_PROTECTED_COMPARISON",
+ "maximumRunSeconds":300,
+ "groups":[
+  {"id":"original-policy-search","cases":["prd12.2-original-three","prd12.2-payoff-revision","observable-two-commitments","nonterminating-rational","profile-24-periods-32-worlds-8-actions-8-instruments","full-family-infeasible"],"oracle":"Independent Fraction enumeration; every accepted primary interval brackets the true optimum and exact tie stage uses original order"},
+  {"id":"semantic-mutations","cases":["quantity","currency","time","owner-share","normalization","world-membership","grammar-term","grammar-production","row-omission","bad-big-m","sign","original-digest","grammar-digest","world-digest","hidden-history","primal-utility","demand","dropped-liability","late-observation","unknown-obligation","continuation-history","malformed-rational","probabilistic-profile","construction-cap"],"oracle":"Exact named original-domain/encoding/full-W rejection, after the intended checker"},
+  {"id":"proof-responsibility","cases":["dual-corruption","partial-proof","weak-proof-without-completion","unverified-transformation","wrong-original-proof","feasible-only-unaccepted-upper","constraint-world-not-payoff-worst","fixed-world-correlation","continuation-accrual","pending-after-stop","tie-order"],"oracle":"Unchanged native VIPR plus separate original binding/policy replay; no false verified bound"}
+ ],
+ "testAudit":{"observableContract":"Accepted original policy, rational L/U, full-W feasibility and exact failing boundary","credibleRegression":"Candidate-pool upper, future observation, omitted hard row/liability, wrong sign or incomplete native proof","strongerExistingCoverageMissing":"Existing M3 descriptor and Float64 S4 tests do not exercise rational full-family certificate acceptance","testOnlyProductionSeam":false}
+}

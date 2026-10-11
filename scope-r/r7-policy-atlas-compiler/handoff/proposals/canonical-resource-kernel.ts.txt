@@ -1,0 +1,95 @@
+/** Internal canonical schedules reconstructed by a versioned original owner.
+ * This is not a user-supplied matrix, policy admission or reservation authority. */
+export interface CanonicalResourceScheduleInput {
+  horizon:CanonicalAllocationProblem['mandate']['horizon'];
+  knowledgeAt:string;
+  resources:CanonicalAllocationProblem['resources'];
+  outstanding:CanonicalAllocationProblem['outstanding'];
+  paths:Array<{id:string;increment:Map<string,ExperimentRational[]>}>;
+}
+export function verifyCanonicalResourceSchedules(input:CanonicalResourceScheduleInput):
+  Pick<AllocationCheck,'feasible'|'reasons'|'envelopes'|'witnesses'> {
+  return checkCanonicalResourceSchedules(input);
+}
+/** Prepared state is private: subset checking retains its existing one-time
+ * preparation, while the exported versioned owner entry cannot inject it. */
+function checkCanonicalResourceSchedules(input:CanonicalResourceScheduleInput,
+  prepared?:Pick<Prepared,'baseline'|'minimumBaseline'|'initialReasons'>,withWitnesses=true):
+  Pick<AllocationCheck,'feasible'|'reasons'|'envelopes'|'witnesses'> {
+  const {resources,outstanding,paths}=input,h=input.horizon.periods,
+    reasons:string[]=[...(prepared?.initialReasons??[])],witnesses:AllocationCheck['witnesses']=[];
+  if(!paths.length||paths.length>64||new Set(paths.map(p=>p.id)).size!==paths.length||
+    !resources.length||resources.length>16||new Set(resources.map(r=>r.resourceId)).size!==resources.length||
+    outstanding.length>256||!Number.isInteger(h)||h<1||h>24||!Number.isFinite(Date.parse(input.knowledgeAt)))
+    throw new AllocationContractError('LIMIT_EXCEEDED','Canonical resource-path domain is incomplete or outside its bound');
+  const baseline=prepared?.baseline??new Map(resources.map(r=>[r.resourceId,r.existingUse.map(quantity)])),
+    minimumBaseline=prepared?.minimumBaseline??new Map(resources.map(r=>[r.resourceId,r.existingUse.map(quantity)])),
+    resourceMap=new Map(resources.map(r=>[r.resourceId,r]));
+  const fail=(reason:string)=>{if(!reasons.includes(reason))reasons.push(reason);};
+  if(!prepared)for(const r of resources){
+    if(!sameAllocationRef(r.horizon,input.horizon)||r.existingUse.length!==h+1||r.availability.length!==h+1)
+      throw new AllocationContractError('INVALID_CANDIDATE','Canonical resource-path horizon differs');
+    if(r.revoked)fail(`RESOURCE_REVOKED:${r.resourceId}`);
+    if(Date.parse(r.knowledgeAt)>Date.parse(input.knowledgeAt)||Date.parse(r.validUntil)<=Date.parse(input.knowledgeAt))
+      fail(`RESOURCE_KNOWLEDGE_OR_EXPIRY:${r.resourceId}`);
+    if(r.availability.some(a=>a.amount===null||a.basis!=='REPORTED_AVAILABLE'))fail(`RESOURCE_AVAILABILITY_UNRESOLVED:${r.resourceId}`);
+  }
+  if(!prepared)for(const row of outstanding){
+    if(row.status==='RESERVED'&&row.effectRefs.length)fail('RESERVATION_EFFECT_STAGE_INCONSISTENT');
+    for(const e of row.envelopes){
+      const r=resourceMap.get(e.resourceId);
+      if(!r||r.unit!==e.unit||r.kind!==e.kind||!sameAllocationRef(r.horizon,e.horizon)||
+        e.quantities.length!==h+1||e.minimumQuantities?.length!==h+1){
+        fail('OUTSTANDING_COMMITMENT_RESOURCE_SEMANTICS_UNRESOLVED');continue;
+      }
+      const upper=e.quantities.map(quantity),lower=e.minimumQuantities.map(quantity);
+      for(let t=0;t<=h;t++){
+        if(resourceUsage(r.kind,lower,t).compare(resourceUsage(r.kind,upper,t))>0)fail('OUTSTANDING_COMMITMENT_LOWER_ENVELOPE_INVALID');
+        baseline.get(r.resourceId)![t]=baseline.get(r.resourceId)![t]!.add(upper[t]!);
+        minimumBaseline.get(r.resourceId)![t]=minimumBaseline.get(r.resourceId)![t]!.add(lower[t]!);
+      }
+    }
+  }
+  const covenants=new Map(resources.flatMap(r=>r.covenants).map(c=>[c.id,c]));
+  if(!prepared)for(const r of resources)for(const c of r.covenants){
+    if(!sameAllocationRef(c,covenants.get(c.id)))fail(`CONFLICTING_CANONICAL_COVENANT:${c.id}`);
+    if(c.periods.some(t=>t<0||t>h)||c.terms.some(term=>{
+      const named=resourceMap.get(term.resourceId);return !named||term.coefficientUnit!==`${c.unit}/${named.unit}`;
+    }))throw new AllocationContractError('INVALID_CANDIDATE','Canonical resource-path covenant unit or period differs');
+  }
+  for(const path of paths){
+    if(path.increment.size!==resources.length||[...path.increment.keys()].some(id=>!resourceMap.has(id))||
+      [...path.increment.values()].some(v=>v.length!==h+1))
+      throw new AllocationContractError('INVALID_CANDIDATE','Original path omits or adds a canonical resource schedule');
+    const total=new Map(resources.map(r=>[r.resourceId,path.increment.get(r.resourceId)!.map((q,t)=>q.add(baseline.get(r.resourceId)![t]!))]));
+    for(const r of resources)for(let t=0;t<=h;t++){
+      const used=resourceUsage(r.kind,total.get(r.resourceId)!,t),a=r.availability[t]!,
+        maximum=a.amount===null?ER_ZERO:quantity(a.amount).sub(quantity(r.safetyMargin)),margin=maximum.sub(used);
+      if(margin.n<0n)fail(`RESOURCE_LIMIT:${r.resourceId}:${path.id}:${t}`);
+      if(withWitnesses)witnesses.push({constraintId:`resource:${r.resourceId}`,scenarioId:path.id,period:t,used:decimal(used),maximum:decimal(maximum),margin:decimal(margin)});
+    }
+    for(const c of covenants.values())for(const t of c.periods){
+      let used=ER_ZERO;
+      for(const term of c.terms){
+        const r=resourceMap.get(term.resourceId)!,coefficient=quantity(term.coefficient),
+          values=coefficient.n<0n?path.increment.get(r.resourceId)!.map((q,i)=>q.add(minimumBaseline.get(r.resourceId)![i]!)):total.get(r.resourceId)!;
+        used=used.add(coefficient.mul(resourceUsage(r.kind,values,t)));
+      }
+      const maximum=quantity(c.maximum).sub(quantity(c.safetyMargin)),margin=maximum.sub(used);
+      if(margin.n<0n)fail(`COVENANT_LIMIT:${c.id}:${path.id}:${t}`);
+      if(withWitnesses)witnesses.push({constraintId:`covenant:${c.id}`,scenarioId:path.id,period:t,used:decimal(used),maximum:decimal(maximum),margin:decimal(margin)});
+    }
+  }
+  const envelopes:AllocationEnvelope[]=resources.map(r=>{
+    const quantities:Q[]=zeroes(h+1),minimumQuantities:Q[]=zeroes(h+1);let priorMaximum=ER_ZERO,priorMinimum=ER_ZERO;
+    for(let t=0;t<=h;t++){
+      const usages=paths.map(path=>resourceUsage(r.kind,path.increment.get(r.resourceId)!,t)),worst=usages.reduce(max),least=usages.reduce(min);
+      if(r.kind==='STOCK'||r.kind==='CUMULATIVE_EXPENDITURE'){
+        quantities[t]=worst.sub(priorMaximum);minimumQuantities[t]=least.sub(priorMinimum);priorMaximum=worst;priorMinimum=least;
+      }else{quantities[t]=worst;minimumQuantities[t]=least;}
+    }
+    return {resourceId:r.resourceId,unit:r.unit,kind:r.kind,horizon:r.horizon,quantities:quantities.map(decimal),minimumQuantities:minimumQuantities.map(decimal)};
+  });
+  return {feasible:reasons.length===0,reasons,envelopes,witnesses};
+}
+export {resourceUsage as allocationResourceUsage};

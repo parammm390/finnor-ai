@@ -9,6 +9,8 @@ from fractions import Fraction
 START = time.monotonic()
 MAX_BYTES = 8 * 1024 * 1024
 DECIMAL = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d{1,48})?$")
+RATIONAL = re.compile(r"^-?(?:0|[1-9]\d*)/[1-9]\d*$")
+EXACT_RATIONAL_V2 = False
 
 def unique_object(pairs):
     result = {}
@@ -19,9 +21,15 @@ def unique_object(pairs):
     return result
 
 def exact(value):
-    if not isinstance(value, str) or len(value) > 96 or not DECIMAL.fullmatch(value):
+    if EXACT_RATIONAL_V2 and isinstance(value, str) and RATIONAL.fullmatch(value):
+        numerator, denominator = value.split("/")
+        if len(numerator) > 512 or len(denominator) > 512:
+            raise ValueError("RATIONAL_INTEGER_GROWTH_BOUND")
+        result = Fraction(int(numerator), int(denominator))
+    elif not isinstance(value, str) or len(value) > 96 or not DECIMAL.fullmatch(value):
         raise ValueError("NONCANONICAL_FINITE_DECIMAL")
-    result = Fraction(value)
+    else:
+        result = Fraction(value)
     if abs(result) > 10 ** 24:
         raise ValueError("NUMERICAL_MAGNITUDE_DOMAIN")
     return result
@@ -86,7 +94,9 @@ try:
     if len(data) > MAX_BYTES:
         raise ValueError("INPUT_BYTE_LIMIT")
     p = json.loads(data, object_pairs_hook=unique_object, parse_constant=lambda _: (_ for _ in ()).throw(ValueError("NONFINITE_JSON")))
-    if set(p) != {"schema", "c", "integrality", "lowerBounds", "upperBounds", "rows", "budget"} or p["schema"] != "finnor.s5.milp.v1":
+    base_keys = {"schema", "c", "integrality", "lowerBounds", "upperBounds", "rows", "budget"}
+    EXACT_RATIONAL_V2 = p.get("schema") == "finnor.s5.milp.rational.v2" and p.get("quantityEncoding") == "DECIMAL_OR_RATIONAL_V2"
+    if not ((set(p) == base_keys and p.get("schema") == "finnor.s5.milp.v1") or (EXACT_RATIONAL_V2 and set(p) == base_keys | {"quantityEncoding"})):
         raise ValueError("INPUT_SCHEMA")
     n = len(p["c"])
     if not 1 <= n <= 1024 or any(len(p[k]) != n for k in ("integrality", "lowerBounds", "upperBounds")) or not isinstance(p["rows"], list) or len(p["rows"]) > 30000:

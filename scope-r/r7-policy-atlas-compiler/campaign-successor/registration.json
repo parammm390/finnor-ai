@@ -1,0 +1,178 @@
+{
+  "schema": "finnor.r7.successor-campaign-registration.v1",
+  "baseCommit": "55f0fe08f34174896646ebcb6037531329be91b0",
+  "baseTree": "6a84e73c9d85610775ce8376066667817738d327",
+  "registeredBeforeRepair": true,
+  "startedAt": "2026-10-11T08:35:01.566592+00:00",
+  "deadlineAt": "2026-10-11T09:35:01.566592+00:00",
+  "startedMonotonicSeconds": -246.6128408631897,
+  "deadlineMonotonicSeconds": 3353.3871608448103,
+  "limits": {
+    "campaignSeconds": 3600,
+    "ownerDriverSeconds": 1200,
+    "retainedS5DriverSeconds": 1200,
+    "wrapperConformanceSeconds": 180,
+    "structuralDriverSeconds": 600,
+    "childDeadlineMs": 30000,
+    "maxGeneratedEvidenceBytes": 268435456,
+    "minimumFreeBytes": 268435456,
+    "aggregateRssGuardBytes": 17179869184,
+    "pollSeconds": 0.1,
+    "cleanupGraceSeconds": 8,
+    "serialCostlyRuns": true
+  },
+  "timeScope": "First follow-up baseline inspection through preparation/implementation/review/waits, all child/phase work and final receipts; no new start/expiry per phase, repair or restart. Cleanup is separately measured after guard and grants no further decision work. Original overrun stays INCOMPLETE.",
+  "outputRoot": "/tmp/finnor-r7-deadline-successor-20261011.00t8pm7f",
+  "reusedMathematics": {
+    "rule": "Only unchanged exact original-input mathematics/reference/fixtures checked by hashes; reuse does not retroactively qualify the over-budget predecessor campaign",
+    "inputs": [
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/checker.py",
+        "sha256": "525110145d1d3a01549be6046da63dd78e9d9d7b89dbbcd3804aa146430c7759"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/compiler.ts",
+        "sha256": "b1922848fe70bc2d3b6f07569c0c0462fae6a940a827ca82d35edc4715cff5db"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/contracts.ts",
+        "sha256": "9722f7a005bedaffd92cd6f035fd764bf7c459fd73d7a40b93de8152182620e5"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/exact.ts",
+        "sha256": "a675dda66737dd1a00e85360e6fc7e3460dbc801d65d00903192ee6e8b5206ac"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/geometry.ts",
+        "sha256": "459cea7d112bc2fbc8c2d4a68814f934b524c9037d1ef588235ad0594fdc2426"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/model.ts",
+        "sha256": "65a10d97f9711f84f87c03ab5b594dcbca5bdec2cceb6ca0fc46d4a09e1f7e01"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/query.ts",
+        "sha256": "905069a974edec8156ef844c077d82537feee24019f0202b9828cab312f51b36"
+      },
+      {
+        "path": "finnor-os/scripts/r7/reference.py",
+        "sha256": "870ca6547cb433fc943ef8b91de6ce0b87d82a9f45dcc7fcdfc6eb12be8f2da0"
+      },
+      {
+        "path": "finnor-os/scripts/r7/corpus.json",
+        "sha256": "b8d7d4c3cafcc27b39b1ca4acb033ad52a569174f332a00a80f18773fa4ab5e3"
+      },
+      {
+        "path": "finnor-os/scripts/r7/run-exact.mts",
+        "sha256": "1e5474b32d54b3f07e07868df55d64162089a77d4cbacaec76c7da75d1d5d3be"
+      },
+      {
+        "path": "finnor-os/scripts/r7/run-information.mts",
+        "sha256": "402cbac31c7affbb4be5c056372120c9ee79eb9f004ccdc4889b91ca9962f173"
+      },
+      {
+        "path": "finnor-os/scripts/r7/fixtures.mts",
+        "sha256": "a0b96c0728e19b6116a4f9b693986a5956e55b049b24ce36f412082553713724"
+      }
+    ],
+    "receipts": [
+      {
+        "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/results.json",
+        "sha256": "b9dc85062605a88382b01271ba693738fbfb37ddd085803c2316cf35f1131093"
+      },
+      {
+        "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/results.json",
+        "sha256": "d91149d26563ff5064b09ca21aa994ddde9f4827b6c900cf64df82bacf750b06"
+      }
+    ]
+  },
+  "originalRedReceipt": {
+    "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-campaign-accounting.json",
+    "sha256": "3ed3c9a60d19fb26df1040b505a1d58bc4f21099b4b1dc2b6ead24c4d2559c7c",
+    "elapsedSeconds": 5653.814,
+    "originalLimitSeconds": 3600,
+    "qualification": "INCOMPLETE_GLOBAL_CLOCK_NOT_ENFORCED_RETAIN_FOREVER"
+  },
+  "scientificBinding": {
+    "python": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/numerical/bin/python",
+    "S3Python": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/numerical/bin/python",
+    "S5Python": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/numerical/bin/python",
+    "readOnly": true,
+    "installOrCopyRuntime": false
+  },
+  "requiredOwnerCases": [
+    "owner-full-profile",
+    "original-policy-information",
+    "authenticated-owner-runtime",
+    "typed-boundary-reuse",
+    "actual-s4-s5-intent",
+    "current-s5-and-fallback",
+    "partial-and-outside-fallback",
+    "strict-auth-private-storage",
+    "queued-cancel-original-grant",
+    "terminal-build-current-context",
+    "structural-and-work-invalidation",
+    "world-and-tie-invalidation",
+    "method-runtime-invalidation",
+    "native-obligation-invalidation",
+    "original-continuation",
+    "s5-owned-parameter-reuse",
+    "current-s5-query-publication-race",
+    "shared-work-reservation-race",
+    "physical-accepted-recovery",
+    "actual-principal-publication-race",
+    "physical-cancel-and-original-deadline",
+    "actual-compute-capacity",
+    "physical-parent-loss-watchdog"
+  ],
+  "requiredRetainedS5Cases": [
+    "coupled-choice-original-covenant-and-bound",
+    "issuer-identity-foreign-scope-and-revision",
+    "liquidity-timing-uncertain-proceeds-and-existing-breach",
+    "common-path-contingent-optionality",
+    "signed-covenant-contingent-lower-bound",
+    "flow-stock-semantic-class-scope-and-terminal-debt",
+    "multi-process-concurrent-reservation-and-replay",
+    "transaction-abort-and-resource-revision-race",
+    "actual-s4-handoff-crash-unknown-expiry-and-release",
+    "exact-margin-unavailable-solver-and-deadline",
+    "registered-coupled-stress-and-matched-reference",
+    "bounded-registry-remains-operable",
+    "cold-exact-read-keeps-owner-io-live",
+    "independent-final-accountability-readback"
+  ],
+  "requiredConformance": [
+    "actual-global-expiry-with-inflight-native-child-and-retained-UNKNOWN",
+    "expired-registration-refuses-launch-and-restart-does-not-renew",
+    "actual-evidence-quota-terminates-owned-child-tree",
+    "actual-aggregate-rss-quota-terminates-owned-child-tree",
+    "disk-reserve-refuses-launch-with-no-child",
+    "unexpected-residual-child-is-not-success"
+  ],
+  "negativeConformanceRule": "Stricter diagnostic caps / explicit originally3600s registration with artificial old start are registered fault fixtures only, must return INCOMPLETE at intended predicate. They cannot replace or omit the complete23 owner14 S5 positive sets. No clock shim in product or fake child receipt.",
+  "phaseOrder": [
+    "scientific-runtime-preflight",
+    "private-overlay-preparation",
+    "wrapper-conformance",
+    "owned-typecheck",
+    "owner-full23",
+    "retained-s5-full14",
+    "final-sanitized-custody"
+  ],
+  "sanitization": "Explicit allowlist; no ambient credentials/session/browser/DB/prod endpoints; HOME/tmp/local owner stores inside agent private root. Bind absolute supplied scientific executable, disable bytecode writes, cap numerical thread fanout; no --browser. Record only explicit nonsensitive bindings.",
+  "resourceQualification": "Aggregate owned process RSS is a100ms observed operational guard, not hardOS16GiB/protected memory proof. Money/human/unacknowledged costs and unknown liabilities remain UNKNOWN, never zero.",
+  "delegatedNotQualified": [
+    "Main P7/schema/job/installed/mounted integration; no shared browser interaction",
+    "Business/model/family adequacy and protected S8/fallback admission",
+    "Protected strongest-X comparison/gain and mature S7 economics"
+  ],
+  "implementationPaths": [
+    "finnor-os/scripts/r7/campaign.py",
+    "finnor-os/scripts/r7/run-campaign-e2e.py",
+    "finnor-os/scripts/r7/campaign-fixture.py",
+    "finnor-os/scripts/r7/run-owner.mts",
+    "finnor-os/scripts/r7/serial-projection.mjs"
+  ],
+  "ownedOnly": true,
+  "noPushDeployOrLiveEffects": true
+}

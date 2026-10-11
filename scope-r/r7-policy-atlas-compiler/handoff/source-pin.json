@@ -1,0 +1,283 @@
+{
+  "branch": "factory/r7-bounded-adoption-producer-2026-10-11",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "leadTree": "ba5062bc2adad3e47e4c8927f66bbfa2b8b1e1c2",
+  "registrationCommit": "f1a0344c224ab94bdf993ae444412ed522d87d0a",
+  "currentSourceFilesDigest": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+  "sourceFiles": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/checker.py",
+      "blob": "1c2244dbd0e6a2fc9c4a9f33e59f7a5a42dd3678",
+      "sha256": "525110145d1d3a01549be6046da63dd78e9d9d7b89dbbcd3804aa146430c7759",
+      "bytes": 41365,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/compiler.ts",
+      "blob": "75a940f95026b918fb81b75f70fdcbe9faa42d3b",
+      "sha256": "b1922848fe70bc2d3b6f07569c0c0462fae6a940a827ca82d35edc4715cff5db",
+      "bytes": 6865,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/contracts.ts",
+      "blob": "6d1181dfbe2e2513a0c8ce26a471d31203a80b97",
+      "sha256": "9722f7a005bedaffd92cd6f035fd764bf7c459fd73d7a40b93de8152182620e5",
+      "bytes": 14931,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/exact.ts",
+      "blob": "a41d9b7d6ddd79a5c5583b43c594fadf85948218",
+      "sha256": "a675dda66737dd1a00e85360e6fc7e3460dbc801d65d00903192ee6e8b5206ac",
+      "bytes": 4244,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/geometry.ts",
+      "blob": "247fcf6f654b2613c2a98a48208533a500d03bac",
+      "sha256": "459cea7d112bc2fbc8c2d4a68814f934b524c9037d1ef588235ad0594fdc2426",
+      "bytes": 6304,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/model.ts",
+      "blob": "3edbd785d7b80b38a2463c610dea824ed9408097",
+      "sha256": "65a10d97f9711f84f87c03ab5b594dcbca5bdec2cceb6ca0fc46d4a09e1f7e01",
+      "bytes": 7034,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/query.ts",
+      "blob": "676e2c498b57007730f86c082da0bd21c4becfc7",
+      "sha256": "905069a974edec8156ef844c077d82537feee24019f0202b9828cab312f51b36",
+      "bytes": 4762,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/accounting.ts",
+      "blob": "1fecd4bca35f0acd77bbad20decee549087b37df",
+      "sha256": "5005879659da87792901b64746a5f846c4f0941f86ded34409ddfc7cc7defcf5",
+      "bytes": 9983,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/allocation.ts",
+      "blob": "f7574b736bbfcc32ec2ceccacb23ce933d77839c",
+      "sha256": "1779c8fb9c04c841782fda8c686db8c79fbf371bbd19241bfbff7a547e924594",
+      "bytes": 6890,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/child-watchdog.mjs",
+      "blob": "48fbe1893bf4738c3d4457148d8d07c256a9f9d6",
+      "sha256": "ddefaca4bc97119fd919b387a17fdc8c7345f0082331803e276d62925c18943d",
+      "bytes": 470,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/continuation.ts",
+      "blob": "2788dfa1b2c7b3d583a522b905a27e4cf60bb259",
+      "sha256": "70323f4e91734a47a3e767b2e16008c0290cc507424098fd708b52855fa22a3d",
+      "bytes": 9464,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/contracts.ts",
+      "blob": "583e96f6d90538775595aeaafe3505db8b7282f5",
+      "sha256": "7178e8036d97d14be0bb2c0a1b23060492b20bbb05939c68ce000b4b462cbe4b",
+      "bytes": 5789,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/native-child.mts",
+      "blob": "497984e34d7bf5ff5010e0da85a4ca4d03152d57",
+      "sha256": "4684a5a76cae0e0a9ff452ee6623107327211ccdd3eb0cdb0e7c0593c6fe5a43",
+      "bytes": 2045,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/owners.ts",
+      "blob": "a0d9eb3f93119c3def9eef28bc8359e6c42fde6a",
+      "sha256": "98af9aa45a7ab30aee902fc4d135c24cfe1c71350cc436f7153966df1173af37",
+      "bytes": 15089,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/physical.ts",
+      "blob": "713c3e9d19dd592cce9f9c5d880dd1a93a835daf",
+      "sha256": "c1666f9cf3c251a211e62f31c50243395a1c5191b1b22ad9c6473ddec411476e",
+      "bytes": 5418,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/projection.ts",
+      "blob": "8c6cd0481045b25fa65fde446233b503c2c77015",
+      "sha256": "83258bd16559826e20787c2f4a9ebbd867ed88b6a9e34ed580041f8d5f02be9f",
+      "bytes": 2473,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/runtime.ts",
+      "blob": "cb496f37a4fc69fe58ee2a198f2c70245c3db740",
+      "sha256": "9a62f7f4e3313bcb8dd37502008013268bf8bb4a5c82503f172b97e0bf350f5b",
+      "bytes": 3117,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/selection.ts",
+      "blob": "370d723151de10b9b6844080f237a9bc6c24d3c7",
+      "sha256": "c6c72de2d5c90203bf2af284f64eeba2cdf7e9785668ee038322d4e466f66c78",
+      "bytes": 10414,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/service.ts",
+      "blob": "edcd23d80a43cf9f6972ff82200c7a864c5085e0",
+      "sha256": "518c894a213c866c71352ade0b3b642119943227b3947fc4ae8e49f5497ecc8e",
+      "bytes": 18703,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/store.ts",
+      "blob": "e32f778e8c841f5a26379e1d8b3cc8079e903394",
+      "sha256": "787ce048d2abbe22aaab37ee19a75c90f5cde4409e70da6c14e009b35787a37e",
+      "bytes": 4925,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/worker.ts",
+      "blob": "3317d53ddbad307df7e9a2d8b681276b4d126982",
+      "sha256": "70769b79fe8c08b2ed79b98b2c37de16f9116e6ace7101d9f7a368b25c4181ab",
+      "bytes": 12776,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/decision-atlas.ts",
+      "blob": "60ed07e6408452d5741b4ffce508bf0f2a50b750",
+      "sha256": "982059f15f1b0cd61f4ab8b66d158b2de8ea7b1bc51f56308a1bffc4eba3bb9e",
+      "bytes": 9384,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/browser-e2e.mjs",
+      "blob": "90386f57cfe78d3d7c9bcb34cd9baa3850e49efc",
+      "sha256": "7faf253b0fe85f75e3a8dafc4e08a5e88bfd6178a5d936fb9dfbfe6802d0c3ff",
+      "bytes": 520,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/corpus.json",
+      "blob": "670150dfd0da911e608c8ae192f46a491abba41e",
+      "sha256": "b8d7d4c3cafcc27b39b1ca4acb033ad52a569174f332a00a80f18773fa4ab5e3",
+      "bytes": 3122,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/cost.mts",
+      "blob": "08655b8fc8021acddef2455726af76062539e975",
+      "sha256": "c18ace366999b2bcf8ca614dd64fea1a94b8ab2bceb297113a1c191f890f50bd",
+      "bytes": 13117,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/fixtures.mts",
+      "blob": "d0e03be93fa1ac013f168277a9081592011582a3",
+      "sha256": "a0b96c0728e19b6116a4f9b693986a5956e55b049b24ce36f412082553713724",
+      "bytes": 9415,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/local-host.mts",
+      "blob": "fec27d20227cc07b6bfd2056c244186a3e448219",
+      "sha256": "ea8a9934d2883f601a196218c0d1c48c5e23573d643f22201ec2e258592b7ee6",
+      "bytes": 7523,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/mounted.mts",
+      "blob": "55f068f0bdb452f0239e166c15922a2eb0524349",
+      "sha256": "dd5ab9221abe65617610b5d8538badffa2baff0f50575cd3d80122e098cf7d85",
+      "bytes": 18244,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/scripts/r7/reference.py",
+      "blob": "2c1126ac58b1ad60761b749940be3f26affd07fa",
+      "sha256": "870ca6547cb433fc943ef8b91de6ce0b87d82a9f45dcc7fcdfc6eb12be8f2da0",
+      "bytes": 7665,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-cost.mts",
+      "blob": "4c0aba95d3c799c5056d1b6915763a7a1019df76",
+      "sha256": "17ce8e015dc8d6a6f535c991d39daf6e71776bfa5ee96597324e43408a41c2a5",
+      "bytes": 576,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-exact.mts",
+      "blob": "158121ba0818806d6b8860304a1a49e1dcd423f4",
+      "sha256": "1e5474b32d54b3f07e07868df55d64162089a77d4cbacaec76c7da75d1d5d3be",
+      "bytes": 7359,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-information.mts",
+      "blob": "60d6de024a5af96b698e6de1350ccdbb421344a0",
+      "sha256": "402cbac31c7affbb4be5c056372120c9ee79eb9f004ccdc4889b91ca9962f173",
+      "bytes": 3049,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-installed.mjs",
+      "blob": "24fde7c3f6621fab37de1deaa3b637e09ece8d90",
+      "sha256": "e6e6441441a282edc4c3ec9246d9443ece59dd064c250f5180927bdaa35b93f9",
+      "bytes": 9277,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-owner.mts",
+      "blob": "918a0798de9a838ad15620310077d7d84b7994d7",
+      "sha256": "7bdc806e0c699e4e54dc4f3eb8f75d430bc3d1686b372c5e48429d3e199da53d",
+      "bytes": 67307,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/scripts/r7/tsconfig.json",
+      "blob": "1572b50de7a45ddb7c842de925851ef7025f7562",
+      "sha256": "bfc93ad7dfc41be54abc288f878c3c515474bdb54b89c47e7f43be841d90f258",
+      "bytes": 4443,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "finnor-os/scripts/r7/worker-once.mts",
+      "blob": "47a2b1989692444de00f0e27ee5181e38e7c67b8",
+      "sha256": "cf6635f028dad49ba3711e882d6da2ed1ce4af9e3e002e515129990ac5de530a",
+      "bytes": 725,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+      "blob": "8e760be30b62ab78c0078f76c81d22c9ad9919e8",
+      "sha256": "ee400f9a987fcc7fa3e14eb9581ce4bab405bea9f9814c015647f1468f4e3577",
+      "bytes": 13885,
+      "status": "ORIGIN_THEN_OWNED_REPAIR"
+    },
+    {
+      "path": "src/components/centropy/canvas/decision-atlas-view.ts",
+      "blob": "51e13ac4c3d2c3a11e3b47cdf854683bfd4563cf",
+      "sha256": "32cd3eb7f5002d6c4e2243c4afc9ebee54b988a04b41456b3473525a219d64a9",
+      "bytes": 5396,
+      "status": "EXACT_ORIGIN_UNCHANGED"
+    },
+    {
+      "path": "finnor-os/scripts/r7/serial-projection.mjs",
+      "sha256": "d337c9f0aa30fd9f4d2abd3f1cf8713e9a49bc871e36d57551c535e60704473a",
+      "bytes": 6194
+    }
+  ],
+  "sealedCommitAndTree": "Read exact immutable local values from external sealed-cut.json after the final reviewed commit; no self-referential commit hash in this file"
+}

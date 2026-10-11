@@ -1,0 +1,88 @@
+{
+  "schema": "finnor.r1.retained-accounting-verification.v1",
+  "baseCommit": "24154e827ea5392e6e47e9873fa0a21d85d82f07",
+  "sourceScope": "R1 reader and additive optional projection type only; original mathematics unchanged",
+  "source": [
+    {
+      "path": "finnor-os/packages/private-equity/src/r1/api.ts",
+      "sha256": "2edfe91bb585b254fa271fbb05d8d1f5f20df3249e10ad19e00570ce0c8cd953"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r1/accounting.ts",
+      "sha256": "accc452757a8814393d402e0970327f84bae1d078c95378cf92f68c71096de10"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/certified-state-reduction.ts",
+      "sha256": "e5e195ae7b88d8175a54eeb64821869dd504abbfd84d0a72bfd4ccff4e4be5e7"
+    },
+    {
+      "path": "finnor-os/scripts/r1/run-retained-accounting.mjs",
+      "sha256": "0c164eb15f7e296125e6927b87095b4e714024c83b8979daa8d3447a2d7998cb"
+    },
+    {
+      "path": "finnor-os/scripts/r1/run-owners.mts",
+      "sha256": "e2ad1ca42a55912aa9b9e0d31caac78940ed1dffb353f87e0d941d3438f1b715"
+    }
+  ],
+  "evidenceRoot": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/scope-r/completion/handoff",
+  "evidence": [
+    {
+      "path": "r1-accounting-failure-model.md",
+      "sha256": "e1c250b18256c5fb280a1cc2b71f1c354e834bbfbd8cf52c239832f91953fa7a"
+    },
+    {
+      "path": "r1-accounting-01/results.json",
+      "sha256": "a0fb9868d088810ac4e98d5194f357d79fbfd6f4c8b32d4b7a97652256f7eea6"
+    },
+    {
+      "path": "r1-accounting-focused-typecheck-01/receipt.json",
+      "sha256": "db7ec0f8a0b1930874514e9ee8e1967a8a775e950b1cf545d7f44f23200599a1"
+    },
+    {
+      "path": "r1-accounting-typecheck-01/receipt.json",
+      "sha256": "96df1765aa09c6f3b08d8ecdaafac8fb4406e9a026087ba5f46c6d212c099545"
+    },
+    {
+      "path": "r1-accounting-typecheck-02/receipt.json",
+      "sha256": "f74cb0e2dbb235d957588924147c1b9063affb3da670f9e3f04cc5abcfe217d5"
+    },
+    {
+      "path": "r1-accounting-typecheck-03/receipt.json",
+      "sha256": "4a9aade8853a9404593c55577a3776e4130503093e93be15a3f255936e443fd5"
+    },
+    {
+      "path": "r1-owner-accounting-01/driver-receipt.json",
+      "sha256": "9086215e890e180887b03b13698dc51269bdca57da5d599e2a9ac72a4149fefc"
+    },
+    {
+      "path": "r1-owner-accounting-02/driver-receipt.json",
+      "sha256": "669d0e73bd56a34265b1f3298e4aa7ecd971e9c71ee596f3e78639010073bc62"
+    },
+    {
+      "path": "r1-owner-accounting-02/results.json",
+      "sha256": "3027aa1e83f4d7fbafd214b77259c409758bf91d430d345c335244614cb41d22"
+    },
+    {
+      "path": "r1-owner-accounting-02/positive-owner/retained-accounting-owner-acceptance.json",
+      "sha256": "d746cee3fcd1f153612128e5f70311744b8fe25f1562dacba349740873225800"
+    },
+    {
+      "path": "r1-owner-accounting-02/database-teardown.json",
+      "sha256": "4dec31eabeab47be903b1868c4f6a1bc25a5e6826529e8b1b54754fd57858433"
+    },
+    {
+      "path": "dependencies-overlay.json",
+      "sha256": "863a980f238fe1e63711962121e824a396f7a969a8d20e7bc7a159d92c78f771"
+    }
+  ],
+  "authBypass": false,
+  "ownerCase": "positive-owner-reduction",
+  "ownerStatus": "PASS_LOCAL",
+  "unselectedOwnerCases": 2,
+  "fullBackendTypecheck": "PASS",
+  "finalLinuxMountedCumulative": "NOT_RUN",
+  "protectedAdmission": false,
+  "economicQualification": false,
+  "rawEvidencePublished": false,
+  "structuralReview": "Existing canonical SQL attempts/events and source custody reused. Reader verifies attempt digests before accounting; public attempts omit bodies. Additive optional costs field preserves old writers. Child CPU excludes parent/event copies; all missing material meters remain explicit. No authority, ledger, table or speculative scientific rerun."
+}
