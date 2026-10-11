@@ -102,6 +102,13 @@ export interface R1WorkEnvelope {
 export interface R1WorkProjection {
  schema:'finnor.r1.work-projection.v1';workId:string;workRevision:string|null;
  runs:Array<{id:string;status:string;predicate:string|null;envelope:R1WorkEnvelope|null;
-  policyRef:ExperimentRef|null;beforeStates:number;afterStates:number|null;costs:{attempts:number;usd:null;unknown:number};
+  policyRef:ExperimentRef|null;beforeStates:number;afterStates:number|null;costs:{attempts:number;usd:null;unknown:number;metering?:{
+   schema:'finnor.r1.retained-costs.v1';accountingScope:'OBSERVED_DISTINCT_CHILD_USAGE_NOT_COMPLETE_EPISODE';
+   attemptUsage:Array<{attemptId:string;stage:string;status:string;receiptDigest:string;elapsedMs:number|null;cpuUserMicros:number|null;cpuSystemMicros:number|null;processMaxRssBytes:number|null;usd:null}>;
+   observedChildCpuUserMicros:number|null;observedChildCpuSystemMicros:number|null;
+   cpuCoverage:'NO_OBSERVATIONS'|'PARTIAL'|'COMPLETE_RETAINED_CHILD_OBSERVATIONS';
+   episodeElapsedMs:null;aggregateSimultaneousPeakBytes:null;humanSeconds:null;
+   commonPreparationRefs:Array<{id:string;digest:string}>;ownerProjectionRefs:Array<{id:string;digest:string}>;missingMeters:string[];
+  }};
   qualification:'SUPPLIED_MODEL_RELATIVE_UNADMITTED';fallback:string|null}>;
 }

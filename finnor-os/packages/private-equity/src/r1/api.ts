@@ -15,6 +15,7 @@ import {readEnterpriseContingentPolicy} from '../enterprise-control';
 import {readR1Eligibility,readExactControlReview} from './review';
 import {readEnterpriseAllocation} from '../enterprise-allocation';
 import {readR1Responsibility,assertR1ResponsibilityCurrent} from './responsibility';
+import {summarizeR1RetainedCosts} from './accounting';
 
 export const R1_OPERATIONS=['r1-submit','r1-read','r1-projection','r1-review','r1-cancel','r1-reconcile','r1-history','r1-record'] as const;
 const Submit=z.object({schema:z.literal('finnor.r1.run.v1'),problem_ref:ExperimentRefSchema,
@@ -59,7 +60,6 @@ export async function assertR1PolicyPublished(ctx:PeMutationContext,id:string,re
  if(!head||sha(head.body)!==head.digest||head.generation!==row.generation||epistemicHash(head.body.policy?.ref)!==epistemicHash(ref)||row.status==='COMPLETE'&&!head.body.receipt?.relationComplete||row.status!=='COMPLETE'&&head.body.fallback!=='ORIGINAL_PATH_EXECUTED')throw Error('R1_POLICY_PUBLICATION_FENCED');
  const q=await requestRow(ctx,row.program_id);await assertProgramCurrent(ctx,q);
 }
-async function costs(ctx:PeMutationContext,row:R1RunRow){return tx(ctx,async c=>{const a=(await c.query('SELECT count(*)::int attempts,count(*) FILTER(WHERE status IN(\'INTENT\',\'SUBMITTED\',\'UNKNOWN\'))::int unknown FROM finnor_os.r1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3',[row.tenant_id,row.principal_id,row.id])).rows[0];return {...a,usd:null};},true);}
 export async function readR1(ctx:PeMutationContext,id:string){
  let row=await r1Row(ctx,id),q=await requestRow(ctx,row.program_id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['QUEUED','RUNNING'].includes(row.status)&&row.decision_deadline_at.getTime()<=Date.now())row=await expireR1Decision(ctx,id);
@@ -73,15 +73,16 @@ export async function readR1(ctx:PeMutationContext,id:string){
  let head:any=null;if(row.head_id&&!['INVALIDATED','CANCELLED'].includes(row.status))head=await tx(ctx,async c=>{const h=(await c.query('SELECT body,digest,generation FROM finnor_os.r1_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3 AND id=$4 AND kind=\'HEAD\'',[row.tenant_id,row.principal_id,row.id,row.head_id])).rows[0];if(!h||sha(h.body)!==h.digest||h.generation!==row.generation)throw Error('R1_IMMUTABLE_HEAD_CHANGED');return h.body;},true);
  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  const retained=await tx(ctx,async c=>({artifacts:(await c.query('SELECT id,kind,digest FROM finnor_os.r1_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3 ORDER BY created_at,id',[row.tenant_id,row.principal_id,row.id])).rows,
-  attempts:(await c.query('SELECT id,stage,status,child_pid,digest FROM finnor_os.r1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3 ORDER BY created_at,id',[row.tenant_id,row.principal_id,row.id])).rows,
+  attempts:(await c.query('SELECT id,stage,status,child_pid,body,digest FROM finnor_os.r1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3 ORDER BY created_at,id',[row.tenant_id,row.principal_id,row.id])).rows,
   events:(await c.query('SELECT id,kind,body,digest FROM finnor_os.r1_events WHERE tenant_id=$1 AND principal_id=$2 AND run_id=$3 ORDER BY created_at,id',[row.tenant_id,row.principal_id,row.id])).rows}),true);
  if(retained.events.some(e=>sha(e.body)!==e.digest))throw Error('R1_IMMUTABLE_LIFECYCLE_CHANGED');
+ if(retained.attempts.some(a=>sha(a.body)!==a.digest))throw Error('R1_IMMUTABLE_ATTEMPT_CHANGED');
  const refs=retained.artifacts.map(a=>({owner:'R1',id:'artifact:'+a.id,version:'finnor.r1.immutable-artifact.v1',contentDigest:a.digest,kind:a.kind}));
  const eventRefs=retained.events.map(e=>({owner:'R1',id:'event:'+e.id,version:'finnor.r1.lifecycle-event.v1',contentDigest:e.digest,kind:e.kind}));
- return {schema:'finnor.r1.current-reader.v1',id:row.id,workId:row.work_id,workRevision:row.work_input_id,status:row.status,predicate:row.predicate,fallback:row.fallback,head,costs:await costs(ctx,row),
+ return {schema:'finnor.r1.current-reader.v1',id:row.id,workId:row.work_id,workRevision:row.work_input_id,status:row.status,predicate:row.predicate,fallback:row.fallback,head,costs:summarizeR1RetainedCosts(retained.attempts,retained.events),
   artifact_ref:head?refs.find(r=>r.id==='artifact:'+row.head_id)??null:null,incumbent_ref:head?.policy?.ref??null,resource_receipts:refs.filter(r=>r.kind!=='HEAD'),lifecycle_event_refs:eventRefs,
   unresolved_claims:['CAUSAL_ADEQUACY','INDEPENDENT_DOMAIN_ADMISSION','PROTECTED_GAIN','ECONOMIC_RELEASE',...(!head?.evaluation?.completeSearch?['COMPLETE_POLICY_SEARCH']:[]),...(!head?.receipt?.relationComplete?['COMPLETE_RELATION']:[])],
-  attempts:retained.attempts,originalEpisode:row.episode_id,originalDeadlineAt:row.original_deadline_at.toISOString(),decisionDeadlineAt:row.decision_deadline_at.toISOString(),originalGrant:row.request.grant,
+  attempts:retained.attempts.map(({body:attemptBody,...attempt})=>{void attemptBody;return attempt;}),originalEpisode:row.episode_id,originalDeadlineAt:row.original_deadline_at.toISOString(),decisionDeadlineAt:row.decision_deadline_at.toISOString(),originalGrant:row.request.grant,
   cancellation:{requested:row.status==='CANCELLED',generation:row.generation,ref:(()=>{const e=eventRefs.find(e=>e.kind==='CANCELLED');return e?{owner:e.owner,id:e.id,version:e.version,contentDigest:e.contentDigest}:null;})(),physicallyReleasedComputeOnly:true,unknownResponsibilitiesReleased:false},responsibility:await readR1Responsibility(ctx),qualification:'SUPPLIED_MODEL_RELATIVE_UNADMITTED',executionAuthorityGranted:false};
 }
 async function commonResult(ctx:PeMutationContext,id:string){

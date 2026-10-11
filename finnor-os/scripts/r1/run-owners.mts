@@ -157,6 +157,20 @@ try{
    assert.equal(complete.head.evaluation.selectedActions.root,'choice1');assert.deepEqual(complete.head.evaluation.values,f.baseline.exactProfile.evaluation.values);assert.deepEqual(complete.head.evaluation.optimalActions,f.baseline.exactProfile.evaluation.optimalActions);
    assert.deepEqual(sql.r1_attempts.map((a:any)=>a.stage).sort(),['CHECK','PRODUCE','S4_EVALUATE']);assert(sql.r1_attempts.every((a:any)=>a.status==='RETURNED'&&a.child_pid>0));
    assert(sql.deliveries.length===1&&sql.deliveries[0].claim_fence>0);assert.equal(sql.episodes[0].attempts_used,3);
+   const metering=complete.costs.metering;
+   assert.equal(metering.schema,'finnor.r1.retained-costs.v1');assert.equal(complete.costs.attempts,3);assert.equal(complete.costs.unknown,0);
+   assert.equal(metering.cpuCoverage,'COMPLETE_RETAINED_CHILD_OBSERVATIONS');assert.equal(metering.attemptUsage.length,3);
+   let observedUser=0,observedSystem=0;
+   for(const attempt of sql.r1_attempts){
+    const physical=attempt.stage==='CHECK'?attempt.body.receipt.physical:attempt.body.physical;
+    const usage=metering.attemptUsage.find((u:any)=>u.attemptId===attempt.id);assert(usage);assert.equal(usage.receiptDigest,attempt.digest);
+    assert.equal(usage.cpuUserMicros,physical.cpuUserMicros);assert.equal(usage.cpuSystemMicros,physical.cpuSystemMicros);
+    observedUser+=physical.cpuUserMicros;observedSystem+=physical.cpuSystemMicros;
+   }
+   assert.equal(metering.observedChildCpuUserMicros,observedUser);assert.equal(metering.observedChildCpuSystemMicros,observedSystem);
+   assert.equal(metering.aggregateSimultaneousPeakBytes,null);assert.equal(metering.episodeElapsedMs,null);assert.equal(metering.humanSeconds,null);assert.equal(complete.costs.usd,null);
+   assert(complete.attempts.every((attempt:any)=>!Object.hasOwn(attempt,'body')));
+   await f.artifact('retained-accounting-owner-acceptance.json',{metering,attemptRows:sql.r1_attempts,scope:'AUTHENTICATED_RETAINED_CHILD_USAGE_NOT_COMPLETE_EPISODE',authorityGranted:false});
    const p=ok(await http.api(f.token,'policies','read',{policyRef:complete.head.policy.ref}));
    assert.equal(p.nodes.find((n:any)=>n.id===p.rootNodeId).actionId,'choice1');assert.equal(p.demand.schema,'finnor.contingent-resource-demand.exact.v2');assert.equal(p.demand.exact.branches.find((b:any)=>b.nodeId===p.rootNodeId).total.capital.denominator,'3');
    f.policies=[p];f.labels[p.ref.id]='quotient-policy';const clearing=f.support.clearing(f,{'quotient-policy':['7']});
@@ -164,6 +178,7 @@ try{
    const decision={period:0,actionHistory:[],observations:[],knowledgeAt:new Date().toISOString(),rightsRef:p.mandate.rightsRef,obligations:p.problem.obligations,allocationRefs:[allocation.certificate.ref]};
    const choice=ok(await http.api(f.token,'policies','decide',{policyRef:p.ref,decision,allocationRef:allocation.certificate.ref}));assert.equal(choice.actionId,'choice1',JSON.stringify(choice));assert.equal(choice.status,'POLICY_AVAILABLE');assert.equal(choice.executionAuthorityGranted,false);
    const projection=ok(await http.api(f.token,'policies','r1-projection',{workId:f.work.workId,root:f.root}));assert.equal(projection.runs[0].id,submitted.runId);assert.equal(projection.runs[0].status,'COMPLETE');
+   assert.deepEqual(projection.runs[0].costs.metering,metering);
    await f.artifact('positive-consumers.json',{policy:p,decision,choice,projection});
    if(selected==='runtime'){
     const cold=await worker('RECONCILE');try{await Promise.race([cold.exited,new Promise((_,no)=>setTimeout(()=>no(Error('Runtime cold reconciliation did not terminate')),10000))]);}finally{await cold.stop();}
