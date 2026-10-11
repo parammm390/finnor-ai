@@ -109,7 +109,8 @@ try{
    const bytes=await readFile(join(repo,path));overlayBytes+=bytes.length;assert(overlayBytes<=20*1024*1024,'R1_RECONSTRUCTION_OVERLAY_BOUND');
    const target=join(evidence,'source-cut','dirty',path);await mkdir(join(target,'..'),{recursive:true});await writeFile(target,bytes);overlay.push({path,sha256:sha(bytes),bytes:bytes.length});
   }
-  const patch=spawnSync('git',['diff','--binary','HEAD'],{cwd:repo,encoding:'utf8'});assert.equal(patch.status,0,patch.stderr);await writeFile(join(evidence,'source-cut','tracked.patch'),patch.stdout);dirtyPatchDigest=sha(git(['diff','--binary']));
+  await mkdir(join(evidence,'source-cut'),{recursive:true});
+  const patch=spawnSync('git',['diff','--binary','HEAD'],{cwd:repo,encoding:'utf8'});assert.equal(patch.status,0,patch.stderr);await writeFile(join(evidence,'source-cut','tracked.patch'),patch.stdout);dirtyPatchDigest=sha(patch.stdout);
   reconstruction={parentCommit:commit,trackedPatch:'source-cut/tracked.patch',trackedPatchSha256:sha(patch.stdout),overlayRoot:'source-cut/dirty',overlay,overlayBytes};
  }
  await artifact('pre-run-freeze.json',{frozenAt:new Date().toISOString(),source:cut,commit,tree,dirtyPatchDigest,tests,reconstruction,

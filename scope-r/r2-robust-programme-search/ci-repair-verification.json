@@ -25,7 +25,7 @@
     },
     {
       "path": "finnor-os/scripts/r1/run-owners.mts",
-      "sha256": "7e514a33ff9578354ee1c98e455814393bf0c7bb3cac61214484481168d91460"
+      "sha256": "95e726012c7b2e69e56dba5ad440d75ac87eb5587fc3505d13ed45f9629075e4"
     },
     {
       "path": "finnor-os/scripts/r2/build-native.py",
@@ -104,6 +104,26 @@
     {
       "path": "scope-r/completion/handoff/ci-failure-audit-01/archive-preflight/canonical-source-receipt.json",
       "sha256": "b60549ebc0607fa5ac0dc3ca1a6d645e6c22e84e142810848b1e8b91a5de8e38"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner/results.json",
+      "sha256": "992b5aac0da9bdd75d7d896408bd83e4bbb3e87c77f5e4fa3051e304ab951e90"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/driver-receipt.json",
+      "sha256": "2b65a14c752f53380d97dc9a87660e6f9f1b6e631fccf0bd3eac6a44bad121dc"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/results.json",
+      "sha256": "c19df42015e63b65da847b09a502e0d949c6f8bcb4c3c1edbea39c4dd76e99c4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/pre-run-freeze.json",
+      "sha256": "a91dd2c42bff41b17b510b16b1fe8b06e722409cf45750641acf3fe160dd4e78"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-sealed-history.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
     }
   ],
   "verification": {
@@ -117,7 +137,8 @@
     "workflowSyntax": "PASS all seven workflows; initial yaml-module lookup failed, installed js-yaml used",
     "releaseGuards": "PASS 23 existing cases",
     "nativeArchives": "All six downloaded and digest checked; original VIPR endpoint failed 404, canonical same-byte source verified",
-    "linuxImage": "NOT_RUN locally; no local Linux container engine"
+    "linuxImage": "NOT_RUN locally; no local Linux container engine",
+    "isolatedR1CompiledOwner": "PASS_LOCAL, same original deadline, complete staged HEAD reconstruction"
   },
   "unchanged": [
     "native dependency commits and archive digests",
@@ -136,5 +157,6 @@
   ],
   "administrativeCeiling": "worker CI 45 minutes for first exact native preparation; no accepted product budget changed",
   "publication": "LOCAL_REVIEWED_NOT_PUSHED; prepare coordinated scope updates before any further publication",
-  "qualification": "No protected admission, deployment, economic gain or universal CI PASS claimed"
+  "qualification": "No protected admission, deployment, economic gain or universal CI PASS claimed",
+  "isolatedR1Candidate": "8556ea00c11fce407e267f1316c30c944c9a80f9"
 }
