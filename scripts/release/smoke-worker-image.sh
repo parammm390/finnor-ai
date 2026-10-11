@@ -203,6 +203,11 @@ if [[ -f finnor-os/scripts/r4/run-integrated.mts ]]; then
     cat "$evidence/linux-r4-runtime/runner.log"
     exit "$runtime_status"
   fi
+  # The non-root owner creates private directories. Return only this disposable
+  # evidence to the host before reading it, not just later in the EXIT trap.
+  docker run --rm --network none --user 0:0 --entrypoint chown \
+    --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+    "$image" -R "$(id -u):$(id -g)" /r4-evidence
   node - "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/owner/freeze.json" "$image_id" "$source_tree" <<'NODE'
 const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
