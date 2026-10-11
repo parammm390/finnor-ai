@@ -33,9 +33,13 @@ function interpret(row: Observation, data: Record<string, string>) {
     value: data.value, currency: data.currency, unit: data.unit, period: data.period,
     basis: data.basis, factKey: data.factkey, occurredAt: data.occurredat,
     availableAt: data.availableat, relationTarget: undefined as string | undefined,
+    effectiveFrom: undefined as string | undefined,
+    vehicleType: undefined as string | undefined,
   };
-  const registrationId = data.dealnumber ?? data.opportunitynumber ?? data.employeenumber ?? "";
-  const entityType = row.sourceClass === "crm_deals" ? "deal"
+  const registrationId = data.vehiclenumber ?? data.fundnumber
+    ?? data.dealnumber ?? data.opportunitynumber ?? data.employeenumber ?? "";
+  const entityType = row.sourceClass === "crm_deals"
+    ? data.fundnumber && !data.vehiclenumber ? "fund" : data.vehiclenumber ? "vehicle" : "deal"
     : row.sourceClass === "personnel_benefits" ? "person" : "";
   const triggerKind = row.sourceClass === "work_tracking"
     && /^\s*evidence[\s_-]+request[\s_-]+needed\s*[.!]?\s*$/i.test(data.activity ?? data.subject ?? "")
@@ -51,7 +55,10 @@ function interpret(row: Observation, data: Record<string, string>) {
       ?.toLowerCase().replace(/\s+/g, "_"),
     occurredAt: data.postedat ?? data.createdat ?? data.asof ?? data.occurredat,
     availableAt: data.availableat,
-    relationTarget: row.sourceClass === "crm_deals" ? data.counterpartynumber : undefined,
+    effectiveFrom: data.effectivefrom,
+    vehicleType: data.vehicletype,
+    relationTarget: row.sourceClass === "crm_deals"
+      ? data.vehiclenumber ? data.fundnumber : data.counterpartynumber : undefined,
   };
 }
 
@@ -112,10 +119,17 @@ export async function proposeInstitutionModel(
       sourceId: row.sourceId, recordId: row.objectId, canonicalRef: ref, registrationId });
     if (data.relationTarget && ref) {
       const related = (byRegistration.get(data.relationTarget) ?? [])
-        .filter((entity) => entity.institutionId === original.institutionId && entity.entityType === "counterparty");
-      if (related.length === 1) relations.push({ sourceId: row.sourceId, recordId: row.objectId,
-        canonicalRef: ref, registrationId, relation: "counterparty",
-        targetRef: related[0]!.ref, targetRegistrationId: data.relationTarget });
+        .filter((entity) => entity.institutionId === original.institutionId
+          && entity.entityType === (data.entityType === "vehicle" ? "fund" : "counterparty"));
+      if (related.length === 1 && (data.entityType !== "vehicle"
+          || data.effectiveFrom && Number.isFinite(Date.parse(data.effectiveFrom))
+            && data.effectiveFrom <= original.knowledgeCut
+            && ["feeder", "main"].includes(data.vehicleType ?? ""))) {
+        relations.push({ sourceId: row.sourceId, recordId: row.objectId,
+          canonicalRef: ref, registrationId, relation: data.entityType === "vehicle" ? "fund_vehicle" : "counterparty",
+          targetRef: related[0]!.ref, targetRegistrationId: data.relationTarget,
+          ...(data.entityType === "vehicle" ? { validFrom: data.effectiveFrom } : {}) });
+      } else if (related.length === 1) addUnresolved(row, "FUND_VEHICLE_VALID_FROM_MISSING", related.map((item) => item.ref));
       else addUnresolved(row, "CROSS_REFERENCE_IDENTITY_NOT_ESTABLISHED", related.map((item) => item.ref));
     }
     if (kind === "quantity") {

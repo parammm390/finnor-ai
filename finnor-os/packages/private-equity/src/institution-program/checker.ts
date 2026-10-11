@@ -13,6 +13,8 @@ type Source = {
 };
 type RawRecord = {
   id: string; kind: string; registrationId?: string; entityType?: string;
+  effectiveFrom?: string;
+  vehicleType?: string;
   factKey?: string; value?: string; currency?: string; unit?: string; period?: string; basis?: string;
   occurredAt?: string; availableAt?: string; triggerKind?: string;
   relation?: string; relationRegistrationId?: string;
@@ -38,7 +40,7 @@ export type OriginalInstitutionEvidence = {
   };
 };
 type Mapping = { sourceId: string; recordId: string; canonicalRef: string; registrationId: string };
-type Relation = Mapping & { relation: string; targetRef: string; targetRegistrationId: string };
+type Relation = Mapping & { relation: string; targetRef: string; targetRegistrationId: string; validFrom?: string };
 type Quantity = Mapping & {
   factKey: string; value: string; currency: string; unit: string; period: string; basis: string;
   occurredAt: string; availableAt: string;
@@ -272,9 +274,16 @@ export async function independentlyCheckInstitutionModel(
     return fail("IDENTITY", "Unsupported or extra material mapping");
   const relationRows = [...records].filter(([, value]) =>
     value.record.relation && value.record.relationRegistrationId
-      && canonicalRef(value.record.registrationId) && canonicalRef(value.record.relationRegistrationId));
+      && canonicalRef(value.record.registrationId) && canonicalRef(value.record.relationRegistrationId)
+      && (value.record.relation !== "fund_vehicle"
+        || (iso(value.record.effectiveFrom) && value.record.effectiveFrom! <= original.knowledgeCut
+          && ["feeder", "main"].includes(value.record.vehicleType ?? ""))));
   for (const [, { source, record }] of records) {
-    if (!record.relation || !record.relationRegistrationId || canonicalRef(record.relationRegistrationId)) continue;
+    if (!record.relation || !record.relationRegistrationId
+        || (canonicalRef(record.relationRegistrationId)
+          && (record.relation !== "fund_vehicle"
+            || (iso(record.effectiveFrom) && record.effectiveFrom! <= original.knowledgeCut
+              && ["feeder", "main"].includes(record.vehicleType ?? ""))))) continue;
     const alternatives = canonical.entities.filter((entity) => entity.institutionId === original.institutionId
       && entity.registrationId === record.relationRegistrationId).map((entity) => entity.ref);
     const gap = candidate.unresolved?.find((item) => item.witness === witness(source.id, record.id));
@@ -293,7 +302,9 @@ export async function independentlyCheckInstitutionModel(
         || proposal.canonicalRef !== canonicalRef(record.registrationId)
         || proposal.targetRef !== canonicalRef(record.relationRegistrationId)
         || proposal.relation !== record.relation
-        || proposal.targetRegistrationId !== record.relationRegistrationId) {
+        || proposal.targetRegistrationId !== record.relationRegistrationId
+        || (record.relation === "fund_vehicle" && (!iso(record.effectiveFrom)
+          || proposal.validFrom !== record.effectiveFrom))) {
       return fail("IDENTITY", `Original cross-reference does not support relation ${key}`, [key]);
     }
   }

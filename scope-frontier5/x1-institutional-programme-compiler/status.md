@@ -1,5 +1,50 @@
 # FRONTIER5.X1 status
 
+## Reconstruction and semantic admission owner slice (11 October 2026)
+
+Source-authoritative admission now exists as real code, not scaffolding.
+Migration `0172_x1_institution_source_authority.sql` (bundled, 174 migrations)
+adds versioned `x1_source_grants`, immutable `x1_source_acquisitions`,
+`x1_work_mandates`, evidence-bound `x1_subject_identity_bindings`, subject-only
+expiring `x1_subject_consents` and immutable `x1_mapping_admissions`, all under
+forced tenant RLS with least `finnor_app` grants. `source-authority.ts`
+rehydrates every authoritative input server-side from current grants, Core
+immutable bytes, Work mandates and the authority revision; caller-supplied
+`current`/`authorizedPrincipalIds`/consent strings are never authority.
+`installed-source.ts` adds the narrow real Microsoft Graph mail acquisition:
+current scope/permission/credential owner reads, exact immutable `$value` MIME
+bytes pinned by grant digest, retained once in Core with an immutable
+acquisition receipt; any drift fails closed. Other provider families remain
+unsupported rather than fake-fetchable.
+
+`owner-admission.ts` now offers `reconstructAndAdmitInstitutionSources`:
+owner-read original -> producer proposal -> physically separate pinned
+development checker -> rederived owner-current recheck -> one serializable PE
+transaction that creates checked Fund/Vehicle canonical rows (deterministic
+scoped identities, original EvidenceVersion provenance), attaches existing
+exact Deals only, persists checked `fund_vehicle` links with the native
+`effectiveFrom` valid time, joins Source Truth observation where a real
+integration binding exists, links Work, and publishes one immutable
+`x1_mapping_admissions` receipt. Identical replay returns stored receipts after
+currentness revalidation; changed digests refuse. A missing Deal prerequisite
+stays `unresolved` while independent supported mappings still admit. The
+native corpus gained independently frozen Fund/Vehicle/relation expectations
+(`creation-native-contract.md`, `creation-native-cases.mts`), which failed
+pre-implementation (`mappings: []`) and now pass.
+
+Bounded offline evidence on this cut: `--stage kernel` exit 0 (eight cases
+including `native-creation`), `--stage static` exit 0 (typecheck, runner
+syntax, both lint suites), latest roots
+`x1-control/evidence/verify-kernel-1791708675515-e4711a2b-fbf2-4997-8b4f-e580e30ac72e`
+and `verify-static-1791708660615-1e5e959a-2e1c-4e4f-9da3-c1e81a2393c1`.
+The migration has **not** been applied to a live database; no owner
+transaction, readback, installed Graph call, or protected custody has run
+(shared disk ~1.29 GB < 1.5 GiB floor). The exact deferred runbook is
+`scripts/frontier5/x1/reference/owner-live-packet.md`. S4/S5/S8
+operation/currentness hooks remain with their owning downstream features.
+This is **PARTIAL — source implemented and static-passing, runtime/owner
+proof NOT RUN**. VAL-X1-MAP-001 is not claimed.
+
 ## Native/checker finish on e933b6988 (11 October 2026)
 
 The five remaining source predicates have finite original-byte cases and

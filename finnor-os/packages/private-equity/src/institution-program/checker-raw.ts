@@ -9,6 +9,8 @@ type OriginalSource = {
 };
 type RecordRow = {
   id: string; kind: string; registrationId?: string; entityType?: string;
+  name?: string; vehicleType?: string;
+  effectiveFrom?: string;
   factKey?: string; value?: string; currency?: string; unit?: string; period?: string; basis?: string;
   occurredAt?: string; availableAt?: string; triggerKind?: string;
   relation?: string; relationRegistrationId?: string;
@@ -42,7 +44,7 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
       "taskid", "facilityid", "employeeid", "receiptid", "uid")
       ?? /^<([^@<>]+)@/.exec(string("messageid") ?? "")?.[1];
     if (!id) throw new Error("Original native object identity missing");
-    const kind = sourceClass === "crm_deals" && string("dealnumber", "opportunitynumber") ? "entity"
+    const kind = sourceClass === "crm_deals" && string("dealnumber", "opportunitynumber", "fundnumber", "vehiclenumber") ? "entity"
       : sourceClass === "personnel_benefits" && string("employeenumber") ? "entity"
       : sourceClass === "work_tracking" && /^\s*evidence[\s_-]+request[\s_-]+needed\s*[.!]?\s*$/i.test(string("activity", "subject") ?? "")
           ? "trigger" : ["financial_ledger", "expense_administration"].includes(sourceClass)
@@ -51,7 +53,10 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
     const result: RecordRow = {
       id,
       kind,
-      registrationId: string("registrationid", "dealnumber", "opportunitynumber", "employeenumber"),
+      registrationId: string("registrationid", "vehiclenumber", "fundnumber", "dealnumber", "opportunitynumber", "employeenumber"),
+      name: string("fundname", "vehiclename"),
+      vehicleType: string("vehicletype"),
+      effectiveFrom: string("effectivefrom"),
       observationKind: string("transactionid") ? "transaction" : "assertion",
       balanceRole: string("balancerole"),
       accountingRelationId: string("accountingrelationid"),
@@ -59,10 +64,11 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
       endsAt: string("endsat"),
       narrative: string("narrative", "body", "summary", "subject", "content", "description"),
     };
-    if (kind === "entity") result.entityType = sourceClass === "crm_deals" ? "deal" : "person";
-    if (sourceClass === "crm_deals" && string("counterpartynumber")) {
-      result.relation = "counterparty";
-      result.relationRegistrationId = string("counterpartynumber");
+    if (kind === "entity") result.entityType = sourceClass === "crm_deals"
+      ? string("vehiclenumber") ? "vehicle" : string("fundnumber") ? "fund" : "deal" : "person";
+    if (sourceClass === "crm_deals" && (string("counterpartynumber") || (string("vehiclenumber") && string("fundnumber")))) {
+      result.relation = string("vehiclenumber") && string("fundnumber") ? "fund_vehicle" : "counterparty";
+      result.relationRegistrationId = result.relation === "fund_vehicle" ? string("fundnumber") : string("counterpartynumber");
     }
     if (kind === "trigger") {
       result.triggerKind = "evidence_request_needed";

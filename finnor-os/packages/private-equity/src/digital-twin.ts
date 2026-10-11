@@ -101,6 +101,17 @@ export async function createFund(ctx: PeMutationContext, input: {
   });
 }
 
+/** X1 owner transaction variant: canonical row and original EvidenceVersion
+ * commit together. The caller must already have checked scoped identity. */
+export async function createFundTx(client: PeClient, ctx: PeMutationContext, input: {
+  id: string; name: string; registrationId: string;
+}): Promise<PeMutationResult> {
+  assertPeText(input.name, "Fund name");
+  assertPeText(input.registrationId, "Fund registration");
+  return createTwin(client, ctx, "pe_funds", { id: input.id, name: input.name.trim(),
+    external_id: input.registrationId, status: "forming" });
+}
+
 export async function createVehicle(ctx: PeMutationContext, input: {
   id?: string; name: string; legalName?: string;
   vehicleType: "main" | "feeder" | "parallel" | "co_invest" | "blocker" | "continuation" | "other";
@@ -112,6 +123,16 @@ export async function createVehicle(ctx: PeMutationContext, input: {
     vehicle_type: input.vehicleType, jurisdiction: input.jurisdiction?.trim() || null,
     status: input.status ?? "active", valid_from: input.validFrom ?? null, valid_to: input.validTo ?? null,
   });
+}
+
+export async function createVehicleTx(client: PeClient, ctx: PeMutationContext, input: {
+  id: string; name: string; registrationId: string;
+  vehicleType: "main" | "feeder" | "parallel" | "co_invest" | "blocker" | "continuation" | "other";
+}): Promise<PeMutationResult> {
+  assertPeText(input.name, "Vehicle name");
+  assertPeText(input.registrationId, "Vehicle registration");
+  return createTwin(client, ctx, "pe_vehicles", { id: input.id, name: input.name.trim(),
+    external_id: input.registrationId, vehicle_type: input.vehicleType, status: "forming" });
 }
 
 async function transitionIdentity(ctx: PeMutationContext, input: {
@@ -151,6 +172,17 @@ export function linkFundVehicle(ctx: PeMutationContext, input: {
   return createInTransaction(ctx, "pe_fund_vehicle_links", {
     id: input.id, fund_id: input.fundId, vehicle_id: input.vehicleId, relationship_kind: input.relationshipKind,
     ...interval(input), completeness: completeness(input.completeness), ...evidence(input.evidence),
+  });
+}
+
+export async function linkFundVehicleTx(client: PeClient, ctx: PeMutationContext, input: {
+  id: string; fundId: string; vehicleId: string; validFrom: Date;
+  relationshipKind: "feeder" | "other"; evidence: PeEvidenceRef;
+}): Promise<PeMutationResult> {
+  return createTwin(client, ctx, "pe_fund_vehicle_links", {
+    id: input.id, fund_id: input.fundId, vehicle_id: input.vehicleId,
+    relationship_kind: input.relationshipKind, ...interval({ validFrom: input.validFrom }),
+    completeness: "partial", ...evidence(input.evidence),
   });
 }
 

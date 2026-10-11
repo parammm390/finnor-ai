@@ -48,6 +48,8 @@ for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
   "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
   "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+  "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+  "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
   "finnor-os/packages/private-equity/package.json",
   "finnor-os/package-lock.json",
   "finnor-os/scripts/frontier5/x1/verify.mjs",
@@ -58,8 +60,12 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/review-cases.mts",
   "finnor-os/scripts/frontier5/x1/native-cases.mts",
   "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
   "finnor-os/scripts/frontier5/x1/transport-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/native-finish-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/creation-native-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/owner-currentness-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/owner-live-packet.md",
   "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
   "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/original-input.json",
@@ -128,6 +134,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("native-creation", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/creation-native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
@@ -146,6 +153,8 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
       "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
       "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+      "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+      "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
       "finnor-os/scripts/frontier5/x1/kernel.mts",
       "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
       "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
@@ -154,6 +163,7 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/review-cases.mts",
       "finnor-os/scripts/frontier5/x1/native-cases.mts",
       "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+      "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
       "finnor-os/scripts/frontier5/x1/transport-cases.mts",
       "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
