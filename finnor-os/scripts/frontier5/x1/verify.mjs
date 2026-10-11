@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, statfsSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -32,7 +32,7 @@ if (!destination.startsWith(privateRoot + sep) || existsSync(destination) || rea
 }
 mkdirSync(destination, { mode: 0o700 });
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const pin = (path) => ({ path: path.replace(repo + sep, ""), sha256: sha(readFileSync(path)) });
+const pin = (path) => ({ path: relative(repo, path), sha256: sha(readFileSync(path)) });
 const git = (...command) => {
   const result = spawnSync("git", ["-C", repo, ...command], { encoding: "utf8", timeout: 5000, maxBuffer: 1024 * 1024 });
   if (result.status !== 0) throw new Error(`Git read failed: ${command.join(" ")}`);
@@ -43,10 +43,18 @@ const sourcePins = changed.filter((path) => existsSync(join(repo, path))).map((p
 for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+  "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+  "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
+  "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
+  "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+  "finnor-os/packages/private-equity/package.json",
+  "finnor-os/package-lock.json",
   "finnor-os/scripts/frontier5/x1/verify.mjs",
   "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
   "finnor-os/scripts/frontier5/x1/tsconfig.oracle.json",
   "finnor-os/scripts/frontier5/x1/kernel.mts",
+  "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/original-input.json",
   "finnor-os/scripts/frontier5/x1/reference/expected-ledger.json",
   "finnor-os/scripts/frontier5/x1/reference/challenges.json",
@@ -105,10 +113,13 @@ const run = (label, binary, argv, cwd, heapMiB) => {
 };
 if (stage === "kernel" || stage === "scrutiny") {
   run("kernel", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/kernel.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("protocols", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/protocol-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
-    run("oracle-typecheck", process.execPath, ["./node_modules/typescript/bin/tsc", "-p", "scripts/frontier5/x1/tsconfig.oracle.json"], os, manifest.limits.smallCheckNodeHeapMiB);
+    run("x1-owner-typecheck", process.execPath, ["./node_modules/typescript/bin/tsc", "-p", "scripts/frontier5/x1/tsconfig.oracle.json",
+      "--noUnusedLocals", "false", "--noUnusedParameters", "false"], os, manifest.limits.smallCheckNodeHeapMiB);
     run("runner-syntax", process.execPath, ["--check", "finnor-os/scripts/frontier5/x1/verify.mjs"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
   if (!only || only === "lint") {
@@ -116,7 +127,13 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
       "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
       "finnor-os/packages/private-equity/src/institution-program/checker.ts",
-      "finnor-os/scripts/frontier5/x1/kernel.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+      "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+      "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
+      "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
+      "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+      "finnor-os/scripts/frontier5/x1/kernel.mts",
+      "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
+      "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
 }
 if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny") {

@@ -1,5 +1,40 @@
 # FRONTIER5.X1 status
 
+## Reconstruction and semantic owner source slice (11 October 2026)
+
+The checker now independently parses original CSV/TSV, paginated JSON,
+RFC822/installed email readback, iCalendar, HTML table, financial XML, text,
+text-bearing PDF, DOCX and XLSX bytes. It imports format-only OOXML/PDF
+primitives, not producer inference or rule-selection. Its 14/34 output schema
+and original acceptance guards remain development-only. The independently
+fixed original-source cases were run before the decoder changes and initially
+failed at `COVERAGE` for CSV. The producer has a separate parser, bounded
+source/observation accounting, scoped identity proposals, explicit collision
+alternatives, quantity contexts, contradictions and mandate-only duties.
+Eight system classes are not yet exercised in one authenticated environment.
+
+The new PE owner port proposes retaining original bytes through Core DocumentVersion,
+rehydrates those bytes for checking, reads an authorized PE world and canonical
+version for existing exact Deal source identities, and can attach checked
+source assertions through Core EvidenceVersion and PE evidence-link owners.
+Installed Source Truth observation is attempted only with an actual
+configured integration; file/export originals do not manufacture one.
+The interface returns meaningful owner refs, not a fabricated successful
+check. Sensitive-source retention and admission refuse until actual
+subject-bound consent and access-grant owner validation exists; a submitted
+consent string is never enough. No authenticated database transaction/owner
+reread has yet run.
+
+This feature is **PARTIAL**, not CODE_COMPLETE or E2E_DEV_VERIFIED. An actual
+acquisition adapter for every class, owner-verified sensitive consent, canonical
+creation for absent entities, relational hypotheses/links, full owner-supplied
+source/mandate/resource/operation currentness, and a physical separate checker
+process remain incomplete. Exact earlier source-only cases are not substitutes
+for `VAL-X1-MAP-001` or full `VAL-X1-CHECK-001/002`. The supported profile
+and every original limit remain unchanged; unimplemented or unverified areas
+are not relabelled external qualification. Live owner proof remains NOT RUN
+while the shared disk is below the registered 1.5 GiB floor.
+
 ## Independent checker source slice (11 October 2026)
 
 The scoped contract, separate checker and hand-authored JSON-records reference are
@@ -12,11 +47,10 @@ scoped lint run separately. Exact source/runtime/profile/oracle/corpus pins and
 raw failures are retained in each fresh private run directory. These are
 **development-only** checks, not owner admission or protected custody.
 
-Only `json_records` has an independent original-byte semantic decoder in this
-slice. Other declared protocols refuse instead of silently passing. Canonical
-persistence/readback, all owner-provided current snapshots, producer inference,
-the remaining protocol decoders, real programme lowering and all live A–H
-assertions remain pending with their assigned downstream workers. None of
+At that earlier cut only `json_records` had an independent original-byte
+semantic decoder. Its retained limitation is superseded by the source slice
+above, but canonical persistence/readback and the full currentness proof
+remain unverified. None of
 VAL-X1-OUTPUT-001, VAL-X1-CHECK-001 or VAL-X1-CHECK-002 is fully satisfied
 as an authenticated persisted/owner-bound validation assertion yet. No global
 PASS, E2E_DEV_VERIFIED, protected admission or measured benefit is claimed.

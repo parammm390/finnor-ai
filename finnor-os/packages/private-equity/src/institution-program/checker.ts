@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
+import { originalRawRecords } from "./checker-raw";
 
 type Source = {
   id: string; revision: string; sourceClass: string; protocol: string;
   tenantId: string; institutionId: string; authorizedPrincipalIds: string[];
   rightsRevision: string; rawUtf8: string;
+  rawBase64?: string;
+  integrationId?: string; provider?: string; sourceScope?: string; externalObjectType?: string;
   sensitiveConsentRef?: string;
   coverage: { expectedObjectIds: string[]; readObjectIds: string[]; complete: boolean };
 };
@@ -46,6 +49,8 @@ export type InstitutionCandidate = {
   obligations: Obligation[];
   dependencies: Record<string, unknown> & { sourceRevisions: Record<string, string> };
   limits: Record<string, number>;
+  unresolved?: { witness: string; reason: string; alternatives: string[] }[];
+  processHypotheses?: { witness: string; interpretation: string; normative: false }[];
   /** A producer cannot provide its own independently accepted check. */
   receipt: unknown;
 };
@@ -87,11 +92,11 @@ function recordKey(sourceId: string, recordId: string): string { return `${sourc
  * candidate hypothesis, producer mapping or rule-selection implementation.
  * Supplied mandate rules are normative; raw event records alone are not.
  */
-export function independentlyCheckInstitutionModel(
+export async function independentlyCheckInstitutionModel(
   original: OriginalInstitutionEvidence,
   candidate: InstitutionCandidate,
   profile: DigitalInstitutionProfile,
-): InstitutionCheck {
+): Promise<InstitutionCheck> {
   if (!original || !candidate || !profile || !Array.isArray(original.sources)
       || !Array.isArray(candidate.coverage) || !Array.isArray(candidate.mappings)
       || !Array.isArray(candidate.quantities) || !Array.isArray(candidate.obligations)
@@ -124,8 +129,10 @@ export function independentlyCheckInstitutionModel(
   if (boundKeys.some((key) => !Number.isSafeInteger(candidate.limits[key]) || candidate.limits[key]! < 0
         || candidate.limits[key]! > bounds[key]!)
       || original.sources.length > profile.bounds.sourceInstances
-      || original.sources.reduce((sum, source) => sum + Buffer.byteLength(source.rawUtf8 ?? ""), 0) > profile.bounds.rawBytes
-      || original.sources.some((source) => Buffer.byteLength(source.rawUtf8 ?? "") > profile.bounds.objectBytes)
+      || original.sources.reduce((sum, source) => sum + (source.rawBase64
+        ? Buffer.from(source.rawBase64, "base64").length : Buffer.byteLength(source.rawUtf8 ?? "")), 0) > profile.bounds.rawBytes
+      || original.sources.some((source) => (source.rawBase64
+        ? Buffer.from(source.rawBase64, "base64").length : Buffer.byteLength(source.rawUtf8 ?? "")) > profile.bounds.objectBytes)
       || candidate.obligations.length > profile.bounds.derivedObligations) {
     return fail("BOUND", "A frozen profile bound is exceeded or a measured count is invalid");
   }
@@ -136,16 +143,15 @@ export function independentlyCheckInstitutionModel(
   const records = new Map<string, { source: Source; record: RawRecord }>();
   for (const source of original.sources) {
     const declared = profile.sourceClasses.find((entry) => entry.id === source.sourceClass);
-    if (!declared || !declared.protocols.includes(source.protocol) || source.protocol !== "json_records") {
+    if (!declared || !declared.protocols.includes(source.protocol)) {
       return fail("COVERAGE", `No independent raw decoder for ${source.id}/${source.protocol}`, [source.id]);
     }
-    let parsed: unknown;
-    try { parsed = JSON.parse(source.rawUtf8); } catch { return fail("COVERAGE", `Malformed original ${source.id}`, [source.id]); }
-    if (!Array.isArray(parsed) || parsed.length > profile.bounds.tabularRowsPerObject
-        || parsed.some((item) => !item || typeof item !== "object" || typeof item.id !== "string" || typeof item.kind !== "string")) {
-      return fail("COVERAGE", `Invalid or oversized original ${source.id}`, [source.id]);
+    let rows: RawRecord[];
+    try {
+      rows = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
+    } catch (error) {
+      return fail("COVERAGE", `Invalid or unsupported original ${source.id}: ${error instanceof Error ? error.message : "parse failure"}`, [source.id]);
     }
-    const rows = parsed as RawRecord[];
     if (!source.coverage.complete || !unique(source.coverage.expectedObjectIds)
         || !unique(source.coverage.readObjectIds)
         || !same([...source.coverage.expectedObjectIds].sort(), [...source.coverage.readObjectIds].sort())
@@ -156,6 +162,17 @@ export function independentlyCheckInstitutionModel(
     for (const row of rows) records.set(recordKey(source.id, row.id), { source, record: row });
   }
   if (records.size > profile.bounds.observationReferences) return fail("BOUND", "Observation population exceeds frozen bound");
+  if (candidate.limits.sourceInstances! < original.sources.length
+      || candidate.limits.observationReferences! < records.size
+      || candidate.limits.rawBytes! < original.sources.reduce((sum, source) => sum + (source.rawBase64
+        ? Buffer.from(source.rawBase64, "base64").length : Buffer.byteLength(source.rawUtf8)), 0)
+      || candidate.limits.authorizedAcquisitionCalls! < original.sources.length
+      || candidate.limits.s1SnapshotBytes! < Buffer.byteLength(JSON.stringify(canonical))
+      || canonical.entities.length > profile.bounds.canonicalReferences
+      || canonical.entities.filter((entity) => entity.entityType === "deal").length > profile.bounds.deals
+      || canonical.entities.filter((entity) => entity.entityType === "person").length > profile.bounds.people) {
+    return fail("BOUND", "Original source/owner population or claimed measured usage violates frozen bounds");
+  }
   if (candidate.mappings.length > profile.bounds.canonicalReferences
       || candidate.obligations.length > profile.bounds.derivedObligations
       || candidate.mappings.length + candidate.quantities.length > profile.bounds.s1AssertionsPerSlice) {

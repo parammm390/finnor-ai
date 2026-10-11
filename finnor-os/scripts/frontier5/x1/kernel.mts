@@ -71,7 +71,7 @@ for (const fixture of cases.cases) {
     for (const part of parts.slice(0, -1)) target = target[part] as Record<string, unknown>;
     target[parts.at(-1)!] = fixture.value;
   }
-  const check = independentlyCheckInstitutionModel(original, candidate, profile);
+  const check = await independentlyCheckInstitutionModel(original, candidate, profile);
   const observed = check.disposition === "REJECTED" ? check.guard : "ACCEPTED";
   results.push({ id: fixture.id, expected: fixture.expected, observed, check });
   assert.equal(observed, fixture.expected, `${fixture.id} reached ${observed} instead of ${fixture.expected}`);
