@@ -1,0 +1,122 @@
+{
+  "schema": "finnor.r6.profile-and-trust.v1",
+  "version": "r6-native-ir-congruence-v1",
+  "delivery": "PARTIAL_DELIVERY_PHASE_1_UNADMITTED_LEAF_CORE",
+  "originalR6Complete": false,
+  "governingSources": {
+    "prdSha256": "5781e4fd0f2bd0ac01d643fafc682905a931ff4cb0384e9eb1527dc8d99c4d59",
+    "lockSha256": "2288bb54a3f6a91ed2673c220e7d844842ace9de5f6ee1b6674e8a48980ff415",
+    "sections": "R PRD 2, 9, 12, 13, 14; complete final S lock",
+    "issuedR6Goal": "NONE_FOUND",
+    "originalFunctionalAdmissionComparativeEconomicGates": "UNCHANGED_NOT_REDEFINED_BY_THIS_COMPONENT"
+  },
+  "mathematicalClaim": {
+    "quantifier": "For every x in the complete declared nonempty D, not a sampled subset",
+    "predicate": "Both native executions succeed and are VALID; every declared cash/liability/constraint/objective/timing projection agrees under the exact input-owner bijection; all native error CheckNodes are true",
+    "translationProof": "Independent reconstruction of actual native compiled artifacts, followed by ordered typed term congruence over the acyclic graph and every native period",
+    "validityProof": "Exact Fraction interval/lattice enclosures account for every arithmetic fold, significant and node rounding point, applicable lazy branch and normalization bound",
+    "finiteConformance": "Additional complete enumeration of frozen small domains only; never substitutes for the large-domain proof",
+    "scope": "Conditional model-relative mechanics, not source truth, financial interpretation approval or a formal refinement proof of vendor/runtime binaries"
+  },
+  "existingIR": {
+    "schema": "underwriting-model-ir.v1",
+    "engine": "finnor-underwriting-engine/1.0.0",
+    "financialIROwnership": "Existing underwriting compiler/executor remain the only executable financial IR",
+    "parallelFinancialIRIntroduced": false,
+    "originalUnderwritingFilesModified": false
+  },
+  "supportedFragment": {
+    "nodes": ["input", "constant", "expression", "series", "aggregate", "check", "output"],
+    "expressions": ["literal", "ref", "lag", "negate", "add", "sum", "subtract", "multiply", "divide", "min", "max", "numeric compare", "lazy if"],
+    "aggregations": ["sum", "min", "max", "first", "last"],
+    "calendars": ["native Gregorian annual", "native Gregorian quarterly", "native Gregorian monthly", "native fiscal labels"],
+    "calendarLimit": "All generated dates must remain in the independently checked native civil range; horizons at or beyond year 9999 are not qualified",
+    "inputDomains": "Every scalar or exact native calendar-keyed series component has inclusive fixed-scale decimal lattice bounds or a nonempty explicit boolean/text/date enumeration",
+    "decimalDomainScale": "0..34",
+    "enumerationValuesPerComponent": "1..256",
+    "fixedMetadata": "InvestmentCase, worldAt, native input metadata, status/class/provenance fixed by exact preimage digest; tenant is bound by the existing owner envelope",
+    "decimalPolicy": "Live native FinnorDecimal precision 34, ROUND_HALF_EVEN, exponent bounds +/-100, normalized/input strings at most 128 characters",
+    "currencyPolicy": "Native nodes/literals use qualified ISO-style money currencies; non-money native snapshot currency must be absent, not JSON null",
+    "stateCoverage": "Complete caller-declared reference inventory plus every actual native output and CheckNode; UNKNOWN declared liabilities veto acceptance",
+    "inventoryLimit": "Not a proof of every real-world contractual obligation or of the caller's source interpretation",
+    "proofRule": "Only checked congruence; transparent no-rounding aliases may differ; associativity, distributivity and relocated rounding are not assumed"
+  },
+  "limits": {
+    "horizonPeriods": 12,
+    "nativeNodesPerModel": 10000,
+    "modelBytes": 5242880,
+    "packetBytes": 8388608,
+    "terms": 250000,
+    "expressionDepth": 64,
+    "checkerWallMs": 30000,
+    "originalOwnerDeadlineAndCancellation": "Remain authoritative; no renewal or new grant",
+    "limitOutcome": "UNSUPPORTED, INCOMPLETE or UNKNOWN; never truncate or weaken the universal predicate"
+  },
+  "unsupportedOrUnproved": [
+    "standard_lbo_v1 imperative schedules, tolerance semantics, fixed-point behavior and bounded IRR/XIRR power/log/exp",
+    "Generic declared circular blocks",
+    "Arbitrary code/algebraic equivalence and constraint implications requiring path-refined or stronger arithmetic reasoning",
+    "Non-numeric locale-dependent comparisons",
+    "Explicit null currency fields and unqualified schema extensions",
+    "Possible division by zero, normalization length failure, decimal saturation or applicable preforecast lag",
+    "Financial/legal/reference interpretation, source truth, causal adequacy, missing real-world liabilities, unmodeled FX/tax/calendar behavior",
+    "Policy optimality, fund reservation, execution permission, S6 settlement, field loss avoidance, protected gain or economic/reach release"
+  ],
+  "trustBasis": {
+    "checker": "Independent Python/Fraction implementation; no producer/native compiler/decimal.js/expected answers imported",
+    "checkerEnrollment": "Actual loaded module's adjacent checker.py, byte digest, enrolled OS Python, real child/parent PID and executable digest",
+    "nativePremises": "Explicit original source/module/lock/version pins and live numeric configuration; immutable deployed method/runtime qualification still required",
+    "nativeSemanticCorrespondence": "Ordinary source audit and additional exact finite conformance, not independently admitted vendor/runtime refinement",
+    "checkerSoundnessAdmission": "NOT_ESTABLISHED",
+    "referenceApproval": "NOT_ESTABLISHED; supplied reference approval field must be null",
+    "proofPacketAxioms": [],
+    "proofPacketUnresolvedGoals": [],
+    "independentProtectedReview": "NOT_RUN; a separate development process does not itself confer admission"
+  },
+  "qualificationGates": {
+    "boundedMechanicalComponent": "Check actual sealed-cut evidence; conditional ACCEPTED is ordinary development evidence",
+    "originalFullFinancialFunctionalGate": "NOT_ESTABLISHED",
+    "approvedReferenceInterpretation": "NOT_ESTABLISHED",
+    "authenticatedWorkApiQueueWorkerSqlMountedWorkAndS4S5Integration": "NOT_RUN",
+    "independentCheckerQualificationAdmissionActivation": "NOT_ESTABLISHED",
+    "protectedMatchedXVsXPlusR6": "NOT_RUN",
+    "lockedEconomicReachAndOwnerValue": "NOT_RUN",
+    "reservationsExecutionSettlement": "NOT_GRANTED"
+  },
+  "economicEvidence": {
+    "observed": "Retained actual producer and child wall/CPU/process-RSS observations; original failed and cancelled attempts retained by the campaign",
+    "unobserved": ["Complete episode accounting", "Aggregate simultaneous peak memory", "USD", "Human time", "Owner field value", "Protected comparison"],
+    "leafRetentionStatus": "CALLER_OWNED_NOT_VERIFIED",
+    "proofCountsAsEconomicMultiplier": false
+  },
+  "runtimeAndLicenses": {
+    "node": {
+      "observedVersion": "v22.22.3",
+      "executableSha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c",
+      "distributionLicenseQualification": "NOT_INDEPENDENTLY_ESTABLISHED"
+    },
+    "python": {
+      "observedVersion": "3.9.6",
+      "enrolledEntry": "/usr/bin/python3",
+      "actualObservedExecutable": "/Library/Developer/CommandLineTools/usr/bin/python3",
+      "executableSha256": "e7276a0ac27acdd53135450bd3038e8a6d77aad9df9ee06b05ef311ce9955db9",
+      "distributionLicenseQualification": "NOT_INDEPENDENTLY_ESTABLISHED"
+    },
+    "dependencies": [
+      {"name": "decimal.js", "version": "10.6.0", "license": "MIT", "licenseFile": "decimal.js/LICENCE.md", "licenseSha256": "3108b546bcff5d346923a82f48b2d252ca722f9088076db6d145f6b67757ad6c", "moduleSha256": "45e6ecc0a500fee6439acdf67ee2e9322aab57e6ea0409ef52993dedbba8cf19"},
+      {"name": "tsx", "version": "4.23.13", "license": "MIT", "licenseFile": "tsx/LICENSE", "licenseSha256": "8dded67841a9261a622c739fb61c81785e93765de852828ceeb9403d20a74581"},
+      {"name": "typescript", "version": "5.9.3", "license": "Apache-2.0", "licenseFile": "typescript/LICENSE.txt", "licenseSha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"},
+      {"name": "esbuild", "version": "0.25.12", "license": "MIT", "licenseFile": "esbuild/LICENSE.md", "licenseSha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"}
+    ],
+    "lockSha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+    "backendInstallation": "NONE; Lean/lake/elan/z3/cvc5/viprchk were not found in the investigated environment",
+    "publicationAuthority": "NONE; local commits only"
+  },
+  "reuseAndCompatibility": {
+    "reused": ["Native compile/execute", "Native canonicalSerialize/semanticHash/deepFreeze", "Native snapshot sealing and policy", "Native decimal operations and live clone", "Existing R1 logical envelope field contract", "Existing PreparedRun native field types"],
+    "independentReimplementationKept": "Checker compilation/calendar/hash/type/term/Fraction helpers cannot reuse the native producer implementation without defeating independent checking",
+    "newHelpersKept": "Only proof construction/transport, live policy/currentness/domain applicability, retained finite runner and the explicit non-persisting owner adapter",
+    "legacyCompatibilityLayers": "NONE; no fallback reader/schema union for an intra-branch shape",
+    "formalOrIndependentReviewerClaim": "NONE; source self-audit is not protected independent admission"
+  }
+}

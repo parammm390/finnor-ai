@@ -1,0 +1,742 @@
+{
+  "schema": "finnor.r6.sealed-evidence-index.v1",
+  "deliveryStatus": "PARTIAL_PHASE_1_ORIGINAL_R6_INCOMPLETE",
+  "verifiedCodeCut": {
+    "head": "f22506aaa774a2cf26481d430164bf9b8872080b",
+    "tree": "6c53430b9e158161676c455fea993946a9b6030d",
+    "status": "",
+    "runnerSha256": "804a035898d90136488e4f62f4f67e43e62181b1e1698e04b71bed381d0101fa",
+    "failureModelSha256": "270f00d58ad38a7804a2586cce7750d44fa317caf9f54551f7fb10ba92e74a7f",
+    "verificationPlanSha256": "1284dbdcf4e8379ad0ce443a6210b87a4564dca3f5639cf593ffcae5f7e20452",
+    "node": "v22.22.3",
+    "nodeExecutable": "/Users/paramdave/.hermes/node/bin/node",
+    "nodeExecutableSha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c",
+    "ordinaryUncommittedDevelopmentCut": false
+  },
+  "preregistrationCommit": "cc10055f73526dba6436c9156f864df559c57d29",
+  "implementationCommit": "6bd468f38d95d88fcdb9853a28cb11bd77a040a6",
+  "sourceRecorderCommit": "f22506aaa774a2cf26481d430164bf9b8872080b",
+  "qualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED",
+  "finalCommands": {
+    "core-005": {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-005/command.json",
+      "sha256": "ff718ab0d4ac252fa7273ef2a40530963e3fc91146a46adaa20c6e3a2f2baf36",
+      "exitCode": 0,
+      "elapsedMs": 8119
+    },
+    "typecheck-005": {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-005/command.json",
+      "sha256": "482100e6893c08114be667f3aa73f7345e05fd5c84b61decb4bd496d242b9946",
+      "exitCode": 0,
+      "elapsedMs": 1029
+    },
+    "runtime-003": {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/runtime-003/command.json",
+      "sha256": "81cba7e259c1dfc992aa7ceffd18b0299ba07f1491229a50fd754a3d67d666db",
+      "exitCode": 0,
+      "elapsedMs": 422
+    }
+  },
+  "coreSummary": {
+    "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-005/summary.json",
+    "sha256": "42aa5c493427b80711dbd48b0c362001c65fb7970acdb891880e4654ee0c3b9b",
+    "status": "PASS_SELECTED_LEAF_CHECKS_ONLY",
+    "cases": 43,
+    "passed": 43,
+    "failed": 0,
+    "allInputAcceptedCases": 8,
+    "selectedMutationCases": 24,
+    "completeAdditionalSmallDomainInputs": 44,
+    "enumerationIsNotLargeDomainProof": true
+  },
+  "positiveProofs": [
+    {
+      "id": "whole-domain-cash-liability",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:31ca01dc4a5150cd3aef0859bba65cd3bb6c7e5854d315ac55fd09d13586d927",
+      "proofDigest": "sha256:cc200410ba2ff25dc0e6a4dc4badff3c7e2c7fa156f5671435e21188100754eb",
+      "domainCardinality": "10000199999999999989999900002",
+      "coverage": {
+        "nativeNodes": 20,
+        "financialStates": 4,
+        "periods": 1,
+        "terms": 9
+      },
+      "finiteConformance": null,
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "different-ordinary-code-structure",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:a2995c4a60c4dd33c20179e92c15f00e9543c686490e5c983fe4d5a522608979",
+      "proofDigest": "sha256:b0788630b91c26f74537182ad66a8ea34c6a13a401191a3752f8d06a531c19b8",
+      "domainCardinality": "10000199999999999989999900002",
+      "coverage": {
+        "nativeNodes": 21,
+        "financialStates": 4,
+        "periods": 1,
+        "terms": 9
+      },
+      "finiteConformance": null,
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "small-decimal-complete-native-conformance",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:3469066977a0c522ee76c0602a9b505b90f4174676329c52a422f8697bda8ca4",
+      "proofDigest": "sha256:e80e970f664afd73244102d7dd04784b431aec01cde7bf18a4b71c29b8f0d8de",
+      "domainCardinality": "24",
+      "coverage": {
+        "nativeNodes": 20,
+        "financialStates": 4,
+        "periods": 1,
+        "terms": 9
+      },
+      "finiteConformance": {
+        "schema": "finnor.r6.complete-finite-conformance-receipt.v1",
+        "packetDigest": "sha256:3469066977a0c522ee76c0602a9b505b90f4174676329c52a422f8697bda8ca4",
+        "checkedInputs": "24",
+        "domainCardinality": "24",
+        "coverage": "EVERY_INPUT_OF_THIS_DECLARED_SMALL_DOMAIN",
+        "notSubstituteForLargeDomainProof": true
+      },
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "twelve-period-annual",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:96b6bcfce6e3d2041ce86d3ad6f2b9c3795ca142a4e945731b66dc33bc5fcdbd",
+      "proofDigest": "sha256:3670ebcdfca0e16464b7fea5d5060b6b09f654721b65f662613e59e9c6fad3c2",
+      "domainCardinality": "4348111031997426921334983971563536874692634363761966875562401479800983803291738379246563016290097671894730319163941719830401",
+      "coverage": {
+        "nativeNodes": 40,
+        "financialStates": 9,
+        "periods": 12,
+        "terms": 78
+      },
+      "finiteConformance": null,
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "twelve-period-quarterly",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:b2d75d1dc88a13742a9e330830ed12d94a494b5232f9f5092f645e16312561b4",
+      "proofDigest": "sha256:17d8fa0c01e8e9873bb6490663dff7b0f31e9e1357fe0dc68af61ecea9eadab8",
+      "domainCardinality": "4348111031997426921334983971563536874692634363761966875562401479800983803291738379246563016290097671894730319163941719830401",
+      "coverage": {
+        "nativeNodes": 40,
+        "financialStates": 9,
+        "periods": 12,
+        "terms": 78
+      },
+      "finiteConformance": null,
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "twelve-period-monthly",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:46d68220685eedbfcf8c3cf2eed9cc60dfa46fe6b6907e4efceda62a826f9574",
+      "proofDigest": "sha256:0aa9949a3327acc10b5f4c671a302a4c4cc4df631aa8494ef83ff4180f1c2c0c",
+      "domainCardinality": "4348111031997426921334983971563536874692634363761966875562401479800983803291738379246563016290097671894730319163941719830401",
+      "coverage": {
+        "nativeNodes": 40,
+        "financialStates": 9,
+        "periods": 12,
+        "terms": 78
+      },
+      "finiteConformance": null,
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "small-series-complete-native-conformance",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:31936f72ad4c923b1fda5ab2192ba77e35fdbf8e6b975656d0633ebec6e530c5",
+      "proofDigest": "sha256:34b8645d46a5b2b5a8c5b1e1c9804afc5b7d9f30cfaf08fa04c4c372be421f9a",
+      "domainCardinality": "8",
+      "coverage": {
+        "nativeNodes": 40,
+        "financialStates": 9,
+        "periods": 3,
+        "terms": 24
+      },
+      "finiteConformance": {
+        "schema": "finnor.r6.complete-finite-conformance-receipt.v1",
+        "packetDigest": "sha256:31936f72ad4c923b1fda5ab2192ba77e35fdbf8e6b975656d0633ebec6e530c5",
+        "checkedInputs": "8",
+        "domainCardinality": "8",
+        "coverage": "EVERY_INPUT_OF_THIS_DECLARED_SMALL_DOMAIN",
+        "notSubstituteForLargeDomainProof": true
+      },
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    },
+    {
+      "id": "precision34-expression-complete-conformance",
+      "receiptDisposition": "ACCEPTED",
+      "packetDigest": "sha256:23d327a905ad9a4905c3caa5d5e19efc893b8c3952603e0f52fa2794a144a08e",
+      "proofDigest": "sha256:291f7e522e0a7f7621183e95acc7d26966c8f8aa99417550ea7c8e84ce04324f",
+      "domainCardinality": "12",
+      "coverage": {
+        "nativeNodes": 40,
+        "financialStates": 9,
+        "periods": 1,
+        "terms": 16
+      },
+      "finiteConformance": {
+        "schema": "finnor.r6.complete-finite-conformance-receipt.v1",
+        "packetDigest": "sha256:23d327a905ad9a4905c3caa5d5e19efc893b8c3952603e0f52fa2794a144a08e",
+        "checkedInputs": "12",
+        "domainCardinality": "12",
+        "coverage": "EVERY_INPUT_OF_THIS_DECLARED_SMALL_DOMAIN",
+        "notSubstituteForLargeDomainProof": true
+      },
+      "checkerQualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED"
+    }
+  ],
+  "selectedCases": [
+    {
+      "id": "whole-domain-cash-liability",
+      "status": "PASS",
+      "expected": "Independent all-input proof on an explicitly large domain; no approved-reference or authority claim",
+      "elapsedMs": 204
+    },
+    {
+      "id": "different-ordinary-code-structure",
+      "status": "PASS",
+      "expected": "No-rounding let/alias changes pass checked congruence",
+      "elapsedMs": 195
+    },
+    {
+      "id": "small-decimal-complete-native-conformance",
+      "status": "PASS",
+      "expected": "Every input of frozen 24-input D matches exact independent arithmetic, including HALF_EVEN ties",
+      "elapsedMs": 423
+    },
+    {
+      "id": "twelve-period-annual",
+      "status": "PASS",
+      "expected": "All periods/lazy lag guards/aggregates/outputs checked, not sampled; Gregorian/fiscal calendar reconstructed",
+      "elapsedMs": 217
+    },
+    {
+      "id": "twelve-period-quarterly",
+      "status": "PASS",
+      "expected": "All periods/lazy lag guards/aggregates/outputs checked, not sampled; Gregorian/fiscal calendar reconstructed",
+      "elapsedMs": 217
+    },
+    {
+      "id": "twelve-period-monthly",
+      "status": "PASS",
+      "expected": "All periods/lazy lag guards/aggregates/outputs checked, not sampled; Gregorian/fiscal calendar reconstructed",
+      "elapsedMs": 217
+    },
+    {
+      "id": "small-series-complete-native-conformance",
+      "status": "PASS",
+      "expected": "Every input of frozen eight-input D checks series/lag/sum/min/max/first/last/output semantics",
+      "elapsedMs": 451
+    },
+    {
+      "id": "precision34-expression-complete-conformance",
+      "status": "PASS",
+      "expected": "Every input of frozen twelve-input D checks native arithmetic folds and 34-significant-digit rounding",
+      "elapsedMs": 459
+    },
+    {
+      "id": "mutation-currency",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses CURRENCY_MISMATCH",
+      "elapsedMs": 194
+    },
+    {
+      "id": "mutation-rounding-placement",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses ORDERED_TERM_CONGRUENCE",
+      "elapsedMs": 194
+    },
+    {
+      "id": "mutation-missing-liability",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses COMPLETE_STATE_INVENTORY",
+      "elapsedMs": 192
+    },
+    {
+      "id": "mutation-shifted-payment-date",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses SETTLEMENT_TIMING",
+      "elapsedMs": 193
+    },
+    {
+      "id": "mutation-double-inflow",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses ORDERED_TERM_CONGRUENCE",
+      "elapsedMs": 192
+    },
+    {
+      "id": "mutation-false-branch-guard",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses ORDERED_TERM_CONGRUENCE",
+      "elapsedMs": 192
+    },
+    {
+      "id": "mutation-empty-domain-bounds",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses EMPTY_DOMAIN",
+      "elapsedMs": 210
+    },
+    {
+      "id": "mutation-empty-domain-enumeration",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses EMPTY_DOMAIN",
+      "elapsedMs": 197
+    },
+    {
+      "id": "mutation-hard-constraint-false",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses UNIVERSAL_HARD_CONSTRAINT",
+      "elapsedMs": 192
+    },
+    {
+      "id": "mutation-possible-zero-divisor",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses DIVISOR_TOTALITY",
+      "elapsedMs": 208
+    },
+    {
+      "id": "mutation-applicable-preforecast-lag",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses EXECUTION_TOTALITY",
+      "elapsedMs": 209
+    },
+    {
+      "id": "mutation-unknown-native-input",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses WITNESS_TRUTH_POLICY",
+      "elapsedMs": 215
+    },
+    {
+      "id": "mutation-unknown-owner-liability",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses UNKNOWN_LIABILITY",
+      "elapsedMs": 232
+    },
+    {
+      "id": "mutation-source-pin",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses NATIVE_SOURCE_PIN",
+      "elapsedMs": 183
+    },
+    {
+      "id": "mutation-lock-pin",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses DEPENDENCY_LOCK_PIN",
+      "elapsedMs": 183
+    },
+    {
+      "id": "mutation-domain-proof-pin",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses PROOF_BINDING_domainDigest",
+      "elapsedMs": 185
+    },
+    {
+      "id": "mutation-compiled-execution-order",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses NATIVE_COMPILED_PROGRAMME",
+      "elapsedMs": 191
+    },
+    {
+      "id": "mutation-omitted-proof-statement",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses PROOF_STATEMENT_COVERAGE",
+      "elapsedMs": 191
+    },
+    {
+      "id": "mutation-unapproved-axiom",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses UNAPPROVED_AXIOMS",
+      "elapsedMs": 183
+    },
+    {
+      "id": "mutation-unresolved-proof-goal",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses UNRESOLVED_GOALS",
+      "elapsedMs": 183
+    },
+    {
+      "id": "mutation-outside-domain-witness",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses WITNESS_DOMAIN",
+      "elapsedMs": 191
+    },
+    {
+      "id": "mutation-duplicate-input-owner",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses DUPLICATE_INPUT_OWNER",
+      "elapsedMs": 193
+    },
+    {
+      "id": "mutation-changed-fixed-owner-metadata",
+      "status": "PASS",
+      "expected": "Independent checker reaches and refuses DOMAIN_FIXED_INPUT_METADATA",
+      "elapsedMs": 191
+    },
+    {
+      "id": "mutation-live-native-numeric-policy",
+      "status": "PASS",
+      "expected": "Actual changed native Decimal clone configuration cannot produce a candidate or independent proof claim",
+      "elapsedMs": 3
+    },
+    {
+      "id": "checker-real-crash",
+      "status": "PASS",
+      "expected": "SIGKILL the actual independently checked Python child; no receipt acceptance",
+      "elapsedMs": 2
+    },
+    {
+      "id": "checker-original-deadline",
+      "status": "PASS",
+      "expected": "Original short owner deadline kills actual checker, not a new episode/grant",
+      "elapsedMs": 30
+    },
+    {
+      "id": "checker-real-cancellation",
+      "status": "PASS",
+      "expected": "Cancellation kills the actual child and grants no financial/effect claim",
+      "elapsedMs": 2
+    },
+    {
+      "id": "checker-retention-cancellation",
+      "status": "PASS",
+      "expected": "Actual independent child completes, but original cancellation during transcript retention prevents publication",
+      "elapsedMs": 190
+    },
+    {
+      "id": "checker-real-retention-failure",
+      "status": "PASS",
+      "expected": "Actual independently accepted child result cannot publish after a real filesystem transcript-sink failure",
+      "elapsedMs": 192
+    },
+    {
+      "id": "alternate-checker-forbidden",
+      "status": "PASS",
+      "expected": "A producer executable cannot replace the enrolled independent checker",
+      "elapsedMs": 1
+    },
+    {
+      "id": "checker-pin-response-fence",
+      "status": "PASS",
+      "expected": "Wrong checker identity is refused before executing a different checker",
+      "elapsedMs": 2
+    },
+    {
+      "id": "substituted-checker-entry-forbidden",
+      "status": "PASS",
+      "expected": "A supplied repository root cannot execute its producer-written checker entry",
+      "elapsedMs": 180
+    },
+    {
+      "id": "currentness-and-historical-evidence",
+      "status": "PASS",
+      "expected": "Changed Work/rights/domain/native/checker vectors invalidate only use; immutable original proof remains",
+      "elapsedMs": 1
+    },
+    {
+      "id": "actual-domain-membership-consumption",
+      "status": "PASS",
+      "expected": "Actual later native snapshots must belong to the proved D; metadata/lattice/bounds/receipt faults cannot permit a certified label",
+      "elapsedMs": 194
+    },
+    {
+      "id": "standard-lbo-not-silently-certified",
+      "status": "PASS",
+      "expected": "Actual native runtime investigated; absence of exact independent reference cannot be labeled R6 proof",
+      "elapsedMs": 37
+    }
+  ],
+  "currencyPresenceAttack": {
+    "disposition": "REJECTED",
+    "predicate": "WITNESS_INPUT_METADATA",
+    "packetDigest": "sha256:2ae70725ce3c04529e3d690852ca694c5d5e17085425fefd06e28207cff20959",
+    "actualNativeFailureAndExplicitCounterfeitTestPacketRetainedPrivately": true
+  },
+  "standardLbo": {
+    "actualNativeStatus": "SUCCEEDED",
+    "r6Status": "UNSUPPORTED",
+    "missingProof": "SPECIALIZED_RUNTIME: Native standard_lbo_v1 schedules, tolerance/fixed-point/IRR/XIRR semantics lack an independently accepted all-input reference proof"
+  },
+  "nativeIdentity": {
+    "schema": "finnor.r6.native-semantics.v1",
+    "engineVersion": "finnor-underwriting-engine/1.0.0",
+    "irSchema": "underwriting-model-ir.v1",
+    "decimalPolicy": {
+      "precision": 34,
+      "rounding": "ROUND_HALF_EVEN",
+      "maxInputCharacters": 128,
+      "maxAbsoluteExponent": 100
+    },
+    "sourcePins": [
+      {
+        "path": "finnor-os/packages/underwriting/package.json",
+        "sha256": "0223d6311820055125a0ea7ead89ce8231b4529e041f3b9aac7961a48027cab1"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/canonical.ts",
+        "sha256": "0e96266034a7f05a570b569f5d5c239e23da2c138232dc2b30d8058f876b99b0"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/compiler.ts",
+        "sha256": "3264e28a68402a99efebc7f7edf55b3990f3137bbc244b6ba71aaf220170d2a9"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/decimal.ts",
+        "sha256": "301604f5f53b92b1908db00e12d600716bc8f3ab1e5233fb7516e8630282b572"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/errors.ts",
+        "sha256": "0c5e26fdc4ecb969a47685f9a2d123a2358a5b5873e889e21a540d2a100f3fa2"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/executor.ts",
+        "sha256": "0146a271061fc0881716bcb8cc7cb3856400e53b54dd59ef44a5a036efa791fe"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/index.ts",
+        "sha256": "5f455c208b795f3e23f0e99c308c9ea39ae43360b0f4cfb9e2717c4d2e0704bb"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/periods.ts",
+        "sha256": "987ec7b6ad5cb466932fc7530b3e78ef3438dad1b59bdee46f11a25c135c91d3"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/result.ts",
+        "sha256": "0eaffc27a917987a900bed05b1be1e1726cf45d8b8b8d95c1521e2bfb98dbd17"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/snapshot.ts",
+        "sha256": "721a4e0ba82cbab9480e28601f8397ec97192a20d7cc39004ef8e9ccc1885cf6"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/standard-lbo.ts",
+        "sha256": "702f47aa8640923a4f25637a9df1ac59dbaf4c6ecef7d6e607677b8d11a32cd9"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/returns.ts",
+        "sha256": "9e82a4316ccddfaa360fc80996f572d5ad26d6401d21611c97777f72938e89de"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/types.ts",
+        "sha256": "3f348ee5defc8d629e599cce917b21acde194bde46ead15e5e265d7251494f3f"
+      }
+    ],
+    "dependencyLockDigest": "sha256:aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+    "decimalModuleDigest": "sha256:45e6ecc0a500fee6439acdf67ee2e9322aab57e6ea0409ef52993dedbba8cf19",
+    "decimalPackageVersion": "10.6.0",
+    "checkerDigest": "sha256:58ab3b567e7487c9a150feeaacd4c8b4db70bc0a81736bc26c3970d9ab3043a9",
+    "producerDigest": "sha256:550117e7d8dea77580f61370ba1f6a25e2767caf6b2d39dc98c661d7ac28316a"
+  },
+  "allRetainedCommands": [
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-001/command.json",
+      "sha256": "1fd3ab21ec04706972870e3713aacc7bc3c94b5661928cf41a9ded1df5cbfeb3",
+      "case": "core",
+      "exitCode": 1,
+      "elapsedMs": 2810,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-002/command.json",
+      "sha256": "fdc9c803e2189413fe52b5b3db9bc6264a70bd1246139e2e91e0f5b9cf7fb1c0",
+      "case": "core",
+      "exitCode": 0,
+      "elapsedMs": 8499,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-003/command.json",
+      "sha256": "e61e533f0d2929b3a7dd55730dcf1934399ac7f1399ccf4b066efcd453cc7f69",
+      "case": "core",
+      "exitCode": 0,
+      "elapsedMs": 7674,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-004/command.json",
+      "sha256": "03377ce55c202c19d3ce006c847001709e58e8b79af10b236ce6ff30d35144a0",
+      "case": "core",
+      "exitCode": 0,
+      "elapsedMs": 8081,
+      "head": "6bd468f38d95d88fcdb9853a28cb11bd77a040a6",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-005/command.json",
+      "sha256": "ff718ab0d4ac252fa7273ef2a40530963e3fc91146a46adaa20c6e3a2f2baf36",
+      "case": "core",
+      "exitCode": 0,
+      "elapsedMs": 8119,
+      "head": "f22506aaa774a2cf26481d430164bf9b8872080b",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/runtime-001/command.json",
+      "sha256": "e814e3c850c83d971da35b03fb6d4574f80abed8d99e6b165ac3c13a4a387871",
+      "case": "runtime",
+      "exitCode": 0,
+      "elapsedMs": 882,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/runtime-002/command.json",
+      "sha256": "feda8b088e768cad44f914b74abe7a9a3677da2a323a8bc4922b9177e2c3d786",
+      "case": "runtime",
+      "exitCode": 0,
+      "elapsedMs": 603,
+      "head": "6bd468f38d95d88fcdb9853a28cb11bd77a040a6",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/runtime-003/command.json",
+      "sha256": "81cba7e259c1dfc992aa7ceffd18b0299ba07f1491229a50fd754a3d67d666db",
+      "case": "runtime",
+      "exitCode": 0,
+      "elapsedMs": 422,
+      "head": "f22506aaa774a2cf26481d430164bf9b8872080b",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/seams-002/command.json",
+      "sha256": "54e44a48a5e8744c31eb14ec174ef5eb57ca2f66d8c981de4d7cc273a1f7a173",
+      "case": "seam-validation",
+      "exitCode": 0,
+      "elapsedMs": null,
+      "head": null,
+      "applied": false
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-001/command.json",
+      "sha256": "86bb7f3f3a0de74135fe04d8c00189341c064d2369b19209af0a7ef09099881d",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1071,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-002/command.json",
+      "sha256": "edcff0d281772e6a2aa9a758e142910080c7eabc91e07c48280eea9783fe33f2",
+      "case": "typecheck",
+      "exitCode": 2,
+      "elapsedMs": 5567,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-003/command.json",
+      "sha256": "251e777a36f9d59b796992498bd72b1588f04442ab07780c0ca36393b0f76bf9",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1067,
+      "head": "cc10055f73526dba6436c9156f864df559c57d29",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-004/command.json",
+      "sha256": "601375c74b798811bb3acdfbd649ddeb1752fe28868185381cbe6b1130b05a55",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1277,
+      "head": "6bd468f38d95d88fcdb9853a28cb11bd77a040a6",
+      "applied": null
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-005/command.json",
+      "sha256": "482100e6893c08114be667f3aa73f7345e05fd5c84b61decb4bd496d242b9946",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1029,
+      "head": "f22506aaa774a2cf26481d430164bf9b8872080b",
+      "applied": null
+    }
+  ],
+  "originalFailures": [
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-001",
+      "outcome": "FAIL before currency checking; internally ill-typed currency fixture; retained unchanged"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/typecheck-002",
+      "outcome": "FAIL; owned TS7053 repaired without any/strict-check bypass; transitive pg/MCP declarations unresolved by selected server graph; narrow native adapter view now used"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/seams-001",
+      "outcome": "FAIL; nonexistent fourth blank context line; original patch and actual observed error retained"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-004/source-cut.json",
+      "outcome": "43 cases PASS on clean 6bd468f38 cut, but constant uncommitted flag was stale; status/HEAD/tree remain exact; corrected recorder and fresh core-005 evidence supersede the label"
+    }
+  ],
+  "privateRetention": {
+    "committedRawEvidence": false,
+    "fileLedgerPath": "scope-r/r6-verified-capital-compiler/evidence-private/retained-file-ledger.json",
+    "fileLedgerSha256": "a16d16014b5a8d70900ce4dc4798a187839d44eacada5b86ffc53fa75e4b604a",
+    "filesBeforeLedger": 769,
+    "bytesBeforeLedger": 18351420,
+    "allOriginalAttemptsPreserved": true
+  },
+  "sharedSeam": {
+    "proposal": "scope-r/r6-verified-capital-compiler/integration-seams.patch",
+    "proposalSha256": "3483b9f1a5b0f7d2977b14d257e3a3d3b4c135aae61cb37ff6748c3d27e5df89",
+    "checkReceipt": "scope-r/r6-verified-capital-compiler/evidence-private/seams-002/command.json",
+    "checkExitCode": 0,
+    "applied": false
+  },
+  "changedFilesRelativeToBase": [
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.ts",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/contracts.ts",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/index.ts",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/membership.ts",
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/native.ts",
+    "finnor-os/packages/private-equity/src/r6/verified-capital-compiler.ts",
+    "finnor-os/packages/shared-types/src/decision-proof.ts",
+    "finnor-os/scripts/r6/run-e2e.mts",
+    "finnor-os/scripts/r6/run-local.py",
+    "scope-r/r6-verified-capital-compiler/.gitignore",
+    "scope-r/r6-verified-capital-compiler/failure-model.md",
+    "scope-r/r6-verified-capital-compiler/integration-and-approval-request.json",
+    "scope-r/r6-verified-capital-compiler/integration-seams.patch",
+    "scope-r/r6-verified-capital-compiler/profile-and-trust.json",
+    "scope-r/r6-verified-capital-compiler/verification-plan.json"
+  ],
+  "resourceQualification": {
+    "observed": "Actual per-command wall and retained per-producer/child CPU/process high-water observations",
+    "usd": null,
+    "humanSeconds": null,
+    "aggregateSimultaneousPeakBytes": null,
+    "completeEpisodeAccounting": "NOT_ESTABLISHED",
+    "protectedGain": "NOT_RUN",
+    "ownerFieldValue": "NOT_RUN",
+    "proofCountDollarMultiplier": false
+  },
+  "originalGates": {
+    "fullApprovedFinancialFunctionalGate": "NOT_ESTABLISHED",
+    "referenceApproval": "NOT_ESTABLISHED",
+    "checkerAdmission": "NOT_ESTABLISHED",
+    "apiQueueWorkerSqlMountedWorkS4S5": "NOT_RUN",
+    "protectedMatchedComparison": "NOT_RUN",
+    "lockedEconomicReachAndFieldValue": "NOT_RUN",
+    "activationReservationExecution": "NOT_GRANTED"
+  },
+  "rerun": {
+    "command": "/usr/bin/python3 finnor-os/scripts/r6/run-local.py --deps /Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/node_modules --case core --evidence <NEW absolute owned evidence-private attempt directory>",
+    "cwd": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR",
+    "typecheck": "Same command with --case typecheck and a different NEW directory",
+    "runtime": "Same command with --case runtime and a different NEW directory"
+  },
+  "documentationOnlyFollowup": "This sanitized index may be committed after the verified code cut; no executable, native semantic, checker or runner file changes are required."
+}

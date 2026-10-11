@@ -366,6 +366,12 @@ export function compileUnderwritingModel(model: UnderwritingModelIR, checkpoint?
     }
   }
   if (model.runtime?.kind === "standard_lbo_v1") {
+    if (model.runtime.returnMethod !== undefined && model.runtime.returnMethod !== "decimal34_horner_npv_v2") {
+      fail("MODEL_SCHEMA_INVALID", "Unknown versioned native return operation");
+    }
+    if (model.runtime.returnMethod && model.periodDefinition.count > 12) {
+      fail("MODEL_SCHEMA_INVALID", "Versioned native Horner return profile is bounded to twelve periods");
+    }
     if (!CURRENCY.test(model.runtime.currency)) fail("CURRENCY_MISMATCH", "Standard LBO runtime currency is invalid");
     if (model.runtime.debtTranches.length > UNDERWRITING_LIMITS.debtTranches) fail("MODEL_TOO_LARGE", "Debt tranche count exceeds the hard limit");
     const ids = new Set<string>();
