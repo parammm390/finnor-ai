@@ -1,0 +1,86 @@
+{
+  "schema": "finnor.r7.bounded-adoption-verification.v1",
+  "registeredBeforeNewCode": true,
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "oracle": "acceptance.md; separate original-input Fraction checker plus distinct determinant arrangement/direct original-family reference",
+  "limits": {
+    "campaignSeconds": 3600,
+    "exactDriverSeconds": 600,
+    "informationDriverSeconds": 180,
+    "ownerDriverSeconds": 1200,
+    "childDeadlineMs": 30000,
+    "maxGeneratedEvidenceBytes": 268435456,
+    "serialCostlyRuns": true,
+    "rule": "Operational limits never shrink the 4/32/64/12 profile or original gates; exhaustion is INCOMPLETE"
+  },
+  "cases": [
+    {
+      "id": "exact-reference-corpus",
+      "command": "cd finnor-os && FINNOR_R7_EVIDENCE_DIR=<private>/exact node --import=tsx scripts/r7/run-exact.mts",
+      "inputs": "Immutable lead corpus blob 670150dfd0da911e608c8ae192f46a491abba41e: 14 original registered cases including tractable 4/32/64/12, strict/narrow/point/line, full-horizon worlds and partial coverage",
+      "observableInvariant": "Every accepted cell has original-input whole-cell feasibility/worst-world/ranking/tie/coverage proof",
+      "credibleRegression": "Missing equality/worst-world/feasibility boundary or policy feasible away from centroid",
+      "strongerMissingCoverage": "Arbitrary maximal arrangements, real authenticated owner consumption and installed/mounted qualification remain separate",
+      "testOnlyProductSeam": false,
+      "artifact": "exact/results.json plus exact original inputs/proposals/checks"
+    },
+    {
+      "id": "certificate-mutations",
+      "command": "Same registered run-exact.mts invocation",
+      "inputs": "15 original mutations: vertices/hull/empty/coverage/family/ties/world/coefficient/policy/checker/proof basis",
+      "observableInvariant": "A false original-input certificate loses its dependent claim at the intended predicate",
+      "credibleRegression": "Producer assertions or a digest masquerade as independent verification",
+      "strongerMissingCoverage": "Malformed supplied Farkas proof is rejected as unsupported; no Farkas producer is claimed",
+      "testOnlyProductSeam": false,
+      "artifact": "exact/results.json#mutations"
+    },
+    {
+      "id": "original-information",
+      "command": "cd finnor-os && FINNOR_R7_EVIDENCE_DIR=<private>/information node --import=tsx scripts/r7/run-information.mts",
+      "inputs": "Positive two-token inquiry; unobserved-world siblings; reordered duplicate information; conflicting event tokens",
+      "observableInvariant": "Original policy uses only lawful available information, not hidden world identity",
+      "credibleRegression": "A structurally lawful tree smuggles private simulator state into selection",
+      "strongerMissingCoverage": "Actual S2/S6 continuation remains a separate owner gate",
+      "testOnlyProductSeam": false,
+      "artifact": "information/results.json and original source/proposals"
+    },
+    {
+      "id": "owned-owner-boundaries",
+      "command": "cd <private-serial-projection>/finnor-os && FINNOR_R7_EVIDENCE_DIR=<private>/owners node --import=tsx scripts/r7/run-owner.mts",
+      "inputs": "Selected original owner driver cases supported by its actual selection flags; real bearer/SQL/S1/Work/queue/children/current S5 and actual fallback",
+      "observableInvariant": "Checked covered lookup reaches original owner selection without a full optimizer; currentness and UNKNOWN commitments are retained",
+      "credibleRegression": "Mock reader, rounded rational demand, stale publication or fake fallback",
+      "strongerMissingCoverage": "This command requires exact shared serial proposals; no base-only, joined, installed or mounted PASS can be inferred",
+      "testOnlyProductSeam": false,
+      "artifact": "owners/results.json with projection manifest and exact shared preimages",
+      "initialStatus": "NOT_RUN_SHARED_PORTS_NOT_PRESENT"
+    },
+    {
+      "id": "focused-type-compatibility",
+      "command": "cd finnor-os && <borrowed-read-only-typescript>/bin/tsc -p scripts/r7/tsconfig.json --noEmit",
+      "observableInvariant": "Owned exports bind actual cumulative owner interfaces without replacing R1/R2/R4",
+      "credibleRegression": "Lead-only or guessed ports accepted through casts",
+      "strongerMissingCoverage": "Typecheck is structural evidence, never behavioral proof",
+      "testOnlyProductSeam": false,
+      "artifact": "typecheck.log"
+    }
+  ],
+  "notRunGates": [
+    "Actual combined cumulative R cut and shared integration",
+    "Original mounted Capital Work native interaction/reload/privacy",
+    "Final installed Linux/non-root builder/checker/API/worker bytes",
+    "Full release fresh/upgrade/restart migration and retained job compatibility",
+    "Independent family/model adequacy and S8 method/checker/fallback admission",
+    "Protected completed-X strongest-specialization comparison",
+    "Original reach, calibration/regret, resource and mature S7 economic gates"
+  ],
+  "costPolicy": "Do not rerun or relabel the historical OFF 174.600458365 s / ON 278.228829247 s sequence; no observed crossing or improvement. New local timings are scoped diagnostics with money/human/aggregate-peak gaps, not protected gain.",
+  "rerunTriggers": [
+    "Relevant owned source, exact shared proposal, runtime or schema change",
+    "Actual failed predicate",
+    "Concrete unresolved structural/test-value concern"
+  ],
+  "pi": "NOT_ADOPTED_INAPPLICABLE",
+  "r3": "ALREADY_DONE_NOT_ADOPTED_OR_REQUIRED"
+}
