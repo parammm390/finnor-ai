@@ -1,0 +1,127 @@
+{
+  "schema": "finnor.r6.standard-lbo-integration-requirements.v1",
+  "status": "INTERNAL_BLOCKER_FALSE_NATIVE_TOTALITY_NOT_AN_APPROVAL_GAP",
+  "originalR6Complete": false,
+  "nativeProfile": {
+    "ir": "underwriting-model-ir.v1",
+    "runtime": "standard_lbo_v1",
+    "engine": "finnor-underwriting-engine/1.0.0",
+    "numericPolicy": {
+      "precision": 34,
+      "rounding": "ROUND_HALF_EVEN",
+      "minE": -100,
+      "maxE": 100
+    },
+    "maximumHorizon": 12,
+    "nativeFinanceFilesChanged": false,
+    "requiredDomainNarrowed": false
+  },
+  "exactFailingNativeIr": {
+    "nodeId": "returns.gross_sponsor_irr",
+    "kind": "schedule",
+    "valueType": "decimal",
+    "unit": "rate",
+    "shape": "scalar",
+    "executionPath": "executeUnderwritingModel -> executeStandardLboModel -> solvePeriodicIrr -> solve -> npv(minimumRate)",
+    "expression": "total.plus(d(flows[9].amount).dividedBy(d(\"-0.999999999999\").plus(1).pow(new FinnorDecimal(\"9\"))))",
+    "source": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/returns.ts",
+    "lines": [
+      [
+        21,
+        28
+      ],
+      [
+        87,
+        98
+      ]
+    ],
+    "decimalSource": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/decimal.ts",
+    "decimalLines": [
+      15,
+      24
+    ],
+    "nativeRuntimeSource": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/standard-lbo.ts",
+    "nativeRuntimeLines": [
+      [
+        843,
+        860
+      ]
+    ]
+  },
+  "contradiction": {
+    "requiredObligation": "For every x in unchanged original D, both native executions SUCCEEDED and VALID",
+    "lowerRate": "-0.999999999999",
+    "base": "0.000000000001",
+    "flowIndex": 9,
+    "exactPower": "10^-108",
+    "nativeMinimumExponent": -100,
+    "nativePower": "0",
+    "zeroNumeratorDivision": "NaN",
+    "positiveNumeratorDivision": "Infinity",
+    "finiteLowerEndpointGuard": false,
+    "nativeFailure": "IRR_UNDEFINED",
+    "scope": "Every canonical standard-LBO run whose exit is period 9 or later must either fail earlier or fail periodic IRR. All valid future distributions are nonnegative; one sign change uses the failing finite-endpoint branch, zero sign changes fail earlier. No successful all-input proof exists for a D containing such a point."
+  },
+  "domainHandling": {
+    "originalRetainedLboDomain": "NONE_SUPPLIED: the inherited one-period refusal fixture used the generic scalar domain after swapping only the programme. Do not report that domain as an LBO reference domain.",
+    "diagnosticDomain": "Every native input component retained. Entry EV 100..101, each revenue component 50..51, each EBITDA component 20..21 on 0.01 lattices; every other quantity is fixed at the exact retained fixture value; entry date 2026-01-01; exit.period_id permits every native period, including periods 9..12. Complete native metadata fixed by digest.",
+    "claimBoundary": "Diagnostic domains are explicit disproof witnesses and whole late-exit-region certificates, not substituted required domains or approved financial references. If the actual owner-resolved required D excludes all late-exit values, the positive standard-LBO proof over that different already-required D remains internal engineering; this negative checker does not implement it or declare it external.",
+    "action": "Resolve and pin the actual complete native LBO D through existing owners, without editing its permitted values. If it contains a late exit, the current native successful-totality predicate is false."
+  },
+  "attemptedRepairs": [
+    {
+      "attempt": "Positive cash-flow scale 0.0001",
+      "outcome": "Still IRR_UNDEFINED at every late-exit probe; a zero denominator is independent of amount scale. No original finance input or D was replaced."
+    },
+    {
+      "attempt": "Keep 12 forecast periods but use exit period 1 as a control",
+      "outcome": "Native SUCCEEDED/VALID; cannot repair a domain that also permits late exits without removing required inputs. Control not adopted."
+    },
+    {
+      "attempt": "Horner/scaled-NPV diagnostic with original Decimal34, rates and minE",
+      "outcome": "Finite endpoint values 360 and -101206622049579292479249522006601200000. Changes ordered arithmetic and saturation/normalization semantics; not installed or claimed congruent."
+    }
+  ],
+  "requiredNativeOwnerDecision": {
+    "authorizedNow": false,
+    "ownerFiles": [
+      "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/returns.ts",
+      "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/standard-lbo.ts",
+      "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/underwriting/src/types.ts"
+    ],
+    "requirement": "A positive late-exit profile requires an explicitly authorized, versioned native return-solver semantic repair (for example a stable bounded NPV evaluation), followed by exact independent proof-rule/runtime correspondence and native requalification. It cannot be supplied by a checker pretending the original failing runtime succeeded. Keep Decimal34 HALF_EVEN, horizon 12, full D, liability inventory, original search/rate/tolerance bounds unless the user explicitly authorizes a versioned change.",
+    "forbiddenShortcut": "Do not increase precision/minE, lower the maximum horizon, remove late exits, omit IRR/XIRR, waive finite endpoints, add axioms or replace native outputs with diagnostic Horner results.",
+    "proposalPatchApplied": false
+  },
+  "auxiliaryInterface": {
+    "entry": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py",
+    "checkerSha256": "1c9049c51127bcdf124aa60f8bd2db7246e83c61ce0d22d46b379426f87f4471",
+    "independentCommonCheckerSha256": "58ab3b567e7487c9a150feeaacd4c8b4db70bc0a81736bc26c3970d9ab3043a9",
+    "command": "/usr/bin/python3 -I -B <entry> --repo <owned checkout> --decimal-module <verified decimal.js/decimal.mjs> --packet -",
+    "inputSchema": "finnor.r6.lbo-totality-obligation.v1",
+    "outputSchema": "finnor.r6.lbo-totality-obligation-receipt.v1",
+    "outputDispositions": [
+      "DISPROVED",
+      "REJECTED",
+      "UNKNOWN"
+    ],
+    "financialAcceptancePermitted": false,
+    "sourceDependencyPins": "Exact frozen native source, common-checker, decimal module, lock and executable bytes; supplied hashes alone are not enrolled semantics."
+  },
+  "serialIntegration": {
+    "sharedFilesEdited": false,
+    "existingBarrelProposalApplied": false,
+    "apiQueueWorkerSqlS4S5": "NOT_RUN",
+    "requirements": [
+      "Preserve the generic core integration packet unchanged; the auxiliary negative checker is not an R6 COMPLETE-producing adapter.",
+      "A negative obligation receipt must surface the exact internal infeasibility gap; it must never issue a DecisionProof financial acceptance, reservation or effect.",
+      "Before serial adoption, resolve actual tenant/Work/input/rights/model/domain commitments through the existing owners and bind auxiliary checker/native source dependencies; no synthetic evidence reference confers authority.",
+      "After any authorized native repair, current native pins and proof objects become stale; require new exact semantic proof, full unchanged D/inventory and fresh affected gates, not reused pre-repair financial receipts."
+    ]
+  },
+  "separateExternalGates": [
+    "Protected independent reference interpretation approval",
+    "Protected checker qualification/admission"
+  ],
+  "publicationOrEffectAuthority": "NONE"
+}
