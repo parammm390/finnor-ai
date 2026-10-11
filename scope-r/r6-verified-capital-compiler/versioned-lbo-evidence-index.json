@@ -1,0 +1,503 @@
+{
+  "schema": "finnor.r6.versioned-lbo-evidence-index.v1",
+  "subject": {
+    "repository": "https://github.com/parammm390/finnor-ai",
+    "sealedCommit": "479f787d80c69e85a7fad977a2527249ebf99a57",
+    "sealedTree": "98bb70c1514b3a1a763a497cc753756381cb5c69",
+    "preregistrationCommit": "96182c6606d874ca24c32e5d75d014c3dc333d6a",
+    "preregistration": "scope-r/r6-verified-capital-compiler/versioned-lbo-campaign.json",
+    "workingTreeCleanAtSeal": true
+  },
+  "warning": "ORDINARY DEVELOPMENT EVIDENCE ONLY. No shared protected comparison/reference, admission, approval, publication, install, grant, pricing, economics, business truth, settlement or authority. Mechanical specialized acceptance is DISPOSITION INCOMPLETE; all external gates remain OPEN and REQUIRED.",
+  "localEvidenceDirsUnder": "scope-r/r6-verified-capital-compiler/evidence-private",
+  "sealedRuns": {
+    "lbo-v2-native-003": {
+      "result": "PASS",
+      "summary": "6/6 opt-in v2 native runs SUCCEEDED/VALID with full traces; default v1 model/compiled/result canonically byte-compatible against retained lbo-probe-002 records; returns.ts and decimal.ts byte-identical to preregistered pins 9e82a431.../301604f5...; unknown selector rejected",
+      "compatibility": {
+        "annual-9-late-exit": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:6190cf5f424c57e59753d0815cf8bfee2204439738bd38501ee44a443fd281ae",
+          "observedV1Status": "FAILED",
+          "observedV1Failure": "IRR_UNDEFINED",
+          "originalNativeRecordSha256": "060fffb6f74ce72dff45c4e632d6fc92bf0e1760a7052e1c97098e4182e0e69b"
+        },
+        "quarterly-12-late-exit": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:6477c9167e5034ea0b6da9f17edff8192bf36b51907bb224575e8c950abdb620",
+          "observedV1Status": "FAILED",
+          "observedV1Failure": "IRR_UNDEFINED",
+          "originalNativeRecordSha256": "a16f371c769637d43d69e42fa894f0b0e87e6130def67cea1c44180509beec4d"
+        },
+        "monthly-12-late-exit": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:c161dd69fd2f7c6e8bebac1803756d22bc0af303781a3885ce2b07039137c097",
+          "observedV1Status": "FAILED",
+          "observedV1Failure": "IRR_UNDEFINED",
+          "originalNativeRecordSha256": "29dbd6cc302b5324ed97e327eeb85bb3020b7537602ca028ee3825bb0d5eb591"
+        },
+        "average-balance-12-late-exit": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:92b05716b24e057944a69586d04ab5b0136c504b3a8062b3787d421738eda75c",
+          "observedV1Status": "FAILED",
+          "observedV1Failure": "IRR_UNDEFINED",
+          "originalNativeRecordSha256": "5dd54b0a7ded3907804e7e3f40b0753ec6e077d3f43d5c0afec5deba7f603996"
+        },
+        "annual-12-late-exit": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:4a57ee44dee1568ebedcbf1cf1b92fcd088c7d40b518748fdd29182ffe313c01",
+          "observedV1Status": "FAILED",
+          "observedV1Failure": "IRR_UNDEFINED",
+          "originalNativeRecordSha256": "a4d9d020578484e8e1ef9d6ffdb25e084a3878d607ed0f738d8538840cdd6b8c"
+        },
+        "retained-original-one-period": {
+          "exactModelCompatible": true,
+          "exactCompiledCompatible": true,
+          "exactResultCompatible": true,
+          "originalResultDigest": "sha256:1338cf2f8458491ce702edd2b21b47b0f7b56aa2ef051c8d8e0212058e30d817",
+          "observedV1Status": "SUCCEEDED",
+          "observedV1Failure": null,
+          "originalNativeRecordSha256": "3d0724c403b712c54f98bd85a39dffd044933ec3bc8267c35d49cef64e86bfa5"
+        }
+      }
+    },
+    "lbo-v2-typecheck-004": {
+      "result": "PASS",
+      "summary": "strict tsc over producer, checker and harness sources"
+    },
+    "runtime-005": {
+      "result": "PASS",
+      "summary": "environment/toolchain/native-identity capture with bounded resources"
+    },
+    "core-007": {
+      "result": "PASS",
+      "cases": 43,
+      "summary": "generic non-specialized suite unchanged on the new cut"
+    },
+    "lbo-v2-e2e-003": {
+      "result": "PASS",
+      "engineeringChecks": "PASS",
+      "allInputProof": "CONDITIONAL_MECHANICS_ONLY",
+      "cases": [
+        {
+          "id": "whole-domain-retained-original-one-period",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:2526db1b7dad110ee43f72cc3747fcbce2bfed89d6b12d611292bd85de8fbd94",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 1,
+            "domainCardinality": "1030301",
+            "nativeNodes": 110,
+            "fullInventory": 110,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:13fcac42b4cbbbff890dad56dadf67c9e93bdf7e61957d1391019593a9cf7f4b"
+          }
+        },
+        {
+          "id": "whole-domain-annual-9-late-exit",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:3540ac92f131c63aee2850823ac5cfedf52bdeb445a2f82b2d9518ae9de6c6e5",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 9,
+            "domainCardinality": "1087298055399178358449974438017136407109",
+            "nativeNodes": 110,
+            "fullInventory": 110,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:843e87f3c1695a2d6404a3e9abcbbcc5ca0addc8581e43d65986e6baa76ae783"
+          }
+        },
+        {
+          "id": "whole-domain-annual-12-late-exit",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 12,
+            "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+            "nativeNodes": 110,
+            "fullInventory": 110,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:4e2acd2cf22aa26ebaa177660cdbf654a032abc6ecb83eb004cf2ff3d677e60a"
+          }
+        },
+        {
+          "id": "whole-domain-quarterly-12-late-exit",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:1ecfab705563ab968291686e31e20366d622caec60a0836befe92b651aca7e84",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 12,
+            "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+            "nativeNodes": 110,
+            "fullInventory": 110,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:31ae9a033277ef39955b56c8a09a82935156f36d842ed36707e39351b64ce6aa"
+          }
+        },
+        {
+          "id": "whole-domain-monthly-12-late-exit",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:ecbeb8ecdcdf3ee84ad1e6cff5f9dbeb655968cabc326dbab3b84ea4343c58f1",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 12,
+            "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+            "nativeNodes": 110,
+            "fullInventory": 110,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:464a53de978389176901a92a447a8e3e5ed6c07b9f2f7edb9217e7ebd21ec34f"
+          }
+        },
+        {
+          "id": "whole-domain-average-balance-12-late-exit",
+          "status": "PASS",
+          "observed": {
+            "mechanicalDisposition": "ACCEPTED",
+            "producerStatus": "INCOMPLETE",
+            "fullDomainDigest": "sha256:56b590aff3814cf6fdf134d0d070560370dfda1917ca0988ecfae6441320c6b6",
+            "unchangedOriginalDomain": true,
+            "allExitChoices": 12,
+            "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+            "nativeNodes": 124,
+            "fullInventory": 124,
+            "nativeChecks": 10,
+            "nativeOutputs": 33,
+            "packetDigest": "sha256:190f28ff3648da09be4b6ed42796458dd16370c7200d549681fb4c16facc42b6"
+          }
+        },
+        {
+          "id": "omit-required-input",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "DOMAIN_INPUT_COVERAGE"
+          }
+        },
+        {
+          "id": "widen-original-ev-lattice",
+          "status": "PASS",
+          "observed": {
+            "disposition": "UNSUPPORTED",
+            "predicate": "UNCHANGED_ORIGINAL_COMPLETE_LATTICES"
+          }
+        },
+        {
+          "id": "remove-twelfth-exit",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "WITNESS_DOMAIN"
+          }
+        },
+        {
+          "id": "reference-silently-v1",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "FULL_ORDERED_NATIVE_V2_PROGRAM_CONGRUENCE"
+          }
+        },
+        {
+          "id": "omit-liability-state",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "COMPLETE_CASH_LIABILITY_CONSTRAINT_INVENTORY"
+          }
+        },
+        {
+          "id": "misclassify-liability",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "REQUIRED_FINANCIAL_ROLE"
+          }
+        },
+        {
+          "id": "unknown-liability",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "UNKNOWN_OR_MISSING_LIABILITY"
+          }
+        },
+        {
+          "id": "unapproved-axiom",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "UNAPPROVED_AXIOMS"
+          }
+        },
+        {
+          "id": "unresolved-goal",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "UNRESOLVED_GOALS"
+          }
+        },
+        {
+          "id": "native-rounding-policy",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "NATIVE_DECIMAL_POLICY"
+          }
+        },
+        {
+          "id": "counterfeit-native-source",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "NATIVE_SOURCE_PIN"
+          }
+        },
+        {
+          "id": "missing-checker-helper-dependency",
+          "status": "PASS",
+          "observed": {
+            "disposition": "UNKNOWN",
+            "predicate": "CHECKER_DEPENDENCY_COVERAGE"
+          }
+        },
+        {
+          "id": "counterfeit-horner-partial",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_INDEPENDENT_NATIVE_RETURN_TRACES"
+          }
+        },
+        {
+          "id": "counterfeit-daily-root-power",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_INDEPENDENT_NATIVE_RETURN_TRACES"
+          }
+        },
+        {
+          "id": "counterfeit-bisection-width",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_INDEPENDENT_NATIVE_RETURN_TRACES"
+          }
+        },
+        {
+          "id": "omit-return-trace",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_INDEPENDENT_NATIVE_RETURN_TRACES"
+          }
+        },
+        {
+          "id": "counterfeit-fixed-point-diagnostic",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_NATIVE_SOLVER_CASH_FLOW_TRACES"
+          }
+        },
+        {
+          "id": "counterfeit-native-ending-cash",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "EXACT_INDEPENDENT_NATIVE_NODE_VALUE"
+          }
+        },
+        {
+          "id": "mutate-hard-check",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "ACTUAL_NATIVE_V2_HARD_CHECK_TRUE"
+          }
+        },
+        {
+          "id": "mutate-state-settlement-time",
+          "status": "PASS",
+          "observed": {
+            "disposition": "REJECTED",
+            "predicate": "SETTLEMENT_TIMING"
+          }
+        },
+        {
+          "id": "versioned-currentness-and-actual-membership",
+          "status": "PASS",
+          "observed": {
+            "oldMethodInvalidates": true,
+            "actualLaterInputOutside": true,
+            "certificationOrAuthorityGranted": false
+          }
+        },
+        {
+          "id": "original-v2-deadline",
+          "status": "PASS",
+          "observed": "CANCELLED_OR_DEADLINE"
+        },
+        {
+          "id": "original-v2-cancellation",
+          "status": "PASS",
+          "observed": "CANCELLED_OR_DEADLINE"
+        },
+        {
+          "id": "v2-retention-fails-closed",
+          "status": "PASS",
+          "observed": "CHECKER_TRANSCRIPT_RETENTION"
+        }
+      ]
+    }
+  },
+  "retainedPriorEvidence": {
+    "lbo-probe-002": "original v1 native probes (v1 failures retained unchanged)",
+    "lbo-obligation-002": "original v1 IRR_UNDEFINED whole-domain disproof bound to the pinned v1 cut",
+    "lbo-v2-e2e-001": "first retained RED attempt: harness membership reseal defect (not producer/checker); repaired and rerun",
+    "lbo-v2-typecheck-002": "first retained RED attempt: harness control-flow narrowing defect; repaired and rerun",
+    "precommit-reruns": [
+      "lbo-v2-native-002",
+      "lbo-v2-typecheck-003",
+      "runtime-004",
+      "core-006",
+      "lbo-v2-e2e-002"
+    ]
+  },
+  "v2NativeOutcomes": {
+    "retained-original-one-period": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "SUCCEEDED",
+      "domainDigest": "sha256:2526db1b7dad110ee43f72cc3747fcbce2bfed89d6b12d611292bd85de8fbd94",
+      "resultDigest": "sha256:96934d59b6cd42ecb5bb23ba1a0180a80400b2025019f467d231fbd6b2876c89"
+    },
+    "annual-9-late-exit": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "FAILED/IRR_UNDEFINED",
+      "domainDigest": "sha256:3540ac92f131c63aee2850823ac5cfedf52bdeb445a2f82b2d9518ae9de6c6e5",
+      "resultDigest": "sha256:218462ceb122023e03a7ff02069c4def6325768eddfb29cfa79567c07d5a1fc2"
+    },
+    "annual-12-late-exit": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "FAILED/IRR_UNDEFINED",
+      "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+      "resultDigest": "sha256:9aefa00abc0e4f4b81c0f1b2ba1a241f0ceea45c23dea57eb8b6ae81a6acb612"
+    },
+    "quarterly-12-late-exit": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "FAILED/IRR_UNDEFINED",
+      "domainDigest": "sha256:1ecfab705563ab968291686e31e20366d622caec60a0836befe92b651aca7e84",
+      "resultDigest": "sha256:d22f3a64257894e2ee4fdb92c6d2a93afd64312a41c19d3c087ed82ce4875f55"
+    },
+    "monthly-12-late-exit": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "FAILED/IRR_UNDEFINED",
+      "domainDigest": "sha256:ecbeb8ecdcdf3ee84ad1e6cff5f9dbeb655968cabc326dbab3b84ea4343c58f1",
+      "resultDigest": "sha256:07ea79ce44f7ac710a739bc701b4bea87efb4d2dadbe5c2f3088d372b7f86491"
+    },
+    "average-balance-12-late-exit": {
+      "v2": "SUCCEEDED/VALID",
+      "v1": "FAILED/IRR_UNDEFINED",
+      "domainDigest": "sha256:56b590aff3814cf6fdf134d0d070560370dfda1917ca0988ecfae6441320c6b6",
+      "resultDigest": "sha256:0105fb32319be148faf4a537dc0fc0b2684e3e578f99554e888f191483e9d9a2"
+    }
+  },
+  "nativeSourcePinsAtSeal": [
+    {
+      "path": "finnor-os/packages/underwriting/package.json",
+      "sha256": "0223d6311820055125a0ea7ead89ce8231b4529e041f3b9aac7961a48027cab1"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/canonical.ts",
+      "sha256": "0e96266034a7f05a570b569f5d5c239e23da2c138232dc2b30d8058f876b99b0"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/compiler.ts",
+      "sha256": "6081ce910199002bcc5a23c3e09c403a1f2a2a9c36d8c016d138ea06c968989c"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/decimal.ts",
+      "sha256": "301604f5f53b92b1908db00e12d600716bc8f3ab1e5233fb7516e8630282b572"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/errors.ts",
+      "sha256": "0c5e26fdc4ecb969a47685f9a2d123a2358a5b5873e889e21a540d2a100f3fa2"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/executor.ts",
+      "sha256": "0146a271061fc0881716bcb8cc7cb3856400e53b54dd59ef44a5a036efa791fe"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/index.ts",
+      "sha256": "90d626a09a62cf063ced2e793653d7d0d31ba406d49f5090d71a2229a65a3cda"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/periods.ts",
+      "sha256": "987ec7b6ad5cb466932fc7530b3e78ef3438dad1b59bdee46f11a25c135c91d3"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/result.ts",
+      "sha256": "57d0ccf43a5c258075f28af9004ce75d7eaab411033f07b313ec8549afdc6114"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/snapshot.ts",
+      "sha256": "721a4e0ba82cbab9480e28601f8397ec97192a20d7cc39004ef8e9ccc1885cf6"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/standard-lbo.ts",
+      "sha256": "f990b82d97adc194663eaa763d778521840ac26e8f9772d8e8e07fce9c4e33de"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/returns.ts",
+      "sha256": "9e82a4316ccddfaa360fc80996f572d5ad26d6401d21611c97777f72938e89de"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/types.ts",
+      "sha256": "8ab50ed904cbd10c6b8006f72979fd5a237b5e691576744012a1d51bf8ef506c"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/returns-v2.ts",
+      "sha256": "5325e6a13c3e2002e3fb0c881fcd0d762246961f4b850dd29fa51cb2735fee55"
+    }
+  ],
+  "enrolledCheckerAtSeal": "sha256:f48f67a47bd3953c5719e55290df2e5555d7766e584aed0e788504f3a5fd6bef",
+  "checkerDependencyPinsAtSeal": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py",
+      "sha256": "01a8f9c988b75882453077bca8277fcf051ec9a1c4be48830a93840d535cfa03"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py",
+      "sha256": "1c9049c51127bcdf124aa60f8bd2db7246e83c61ce0d22d46b379426f87f4471"
+    }
+  ],
+  "nativeReturnMethodAtSeal": "decimal34_horner_npv_v2",
+  "noSharedPushOrEffect": true
+}
