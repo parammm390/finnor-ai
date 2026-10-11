@@ -77,6 +77,9 @@ export interface R6NativeIdentity {
   decimalModuleDigest: string;
   decimalPackageVersion: string;
   checkerDigest: string;
+  /** V2 independently loaded helpers are currentness dependencies too. */
+  nativeReturnMethod?: "decimal34_horner_npv_v2";
+  checkerDependencyPins?: R6SourcePin[];
   producerDigest: string;
 }
 

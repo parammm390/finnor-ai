@@ -30,7 +30,7 @@ MAX_TERMS = 250000
 NATIVE_PATHS = ["finnor-os/packages/underwriting/package.json"] + [
     "finnor-os/packages/underwriting/src/" + name + ".ts"
     for name in ("canonical", "compiler", "decimal", "errors", "executor", "index",
-                 "periods", "result", "snapshot", "standard-lbo", "returns", "types")
+                 "periods", "result", "snapshot", "standard-lbo", "returns", "types", "returns-v2")
 ]
 CHECKER_PATH = "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py"
 PRODUCER_PATHS = [
@@ -1063,17 +1063,26 @@ def validate_states(packet, programme, reference, p_values, r_values):
     require(seen == set(by_ledger), "EXTRA_PROGRAMME_LEDGER_ITEM")
 
 
-def validate_identity(packet, args):
+def validate_identity(packet, args, enrolled_checker_path=None):
     identity = packet["nativeIdentity"]
+    specialized = enrolled_checker_path is not None and enrolled_checker_path.name == "lbo-v2-checker.py"
     exact_keys(identity, ("schema", "engineVersion", "irSchema", "decimalPolicy", "sourcePins",
                           "dependencyLockDigest", "decimalModuleDigest", "decimalPackageVersion",
-                          "checkerDigest", "producerDigest"), "NATIVE_IDENTITY")
+                          "checkerDigest", "producerDigest")
+               + (("nativeReturnMethod", "checkerDependencyPins") if specialized else ()), "NATIVE_IDENTITY")
     require(identity["schema"] == "finnor.r6.native-semantics.v1"
             and identity["engineVersion"] == "finnor-underwriting-engine/1.0.0"
             and identity["irSchema"] == "underwriting-model-ir.v1", "NATIVE_VERSION")
     require(identity["decimalPolicy"] == {"precision": 34, "rounding": "ROUND_HALF_EVEN",
                                          "maxInputCharacters": 128, "maxAbsoluteExponent": 100}, "NATIVE_DECIMAL_POLICY")
     root = args.repo.resolve()
+    if specialized:
+        dependencies = [CHECKER_PATH,
+                        "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py"]
+        require(identity["nativeReturnMethod"] == "decimal34_horner_npv_v2"
+                and identity["checkerDependencyPins"] == [
+                    {"path": path, "sha256": sha((root / path).read_bytes())} for path in dependencies],
+                "SPECIALIZED_CHECKER_DEPENDENCY_IDENTITY")
     pins = identity["sourcePins"]
     require(isinstance(pins, list) and len(pins) == len(NATIVE_PATHS)
             and {p["path"] for p in pins} == set(NATIVE_PATHS), "NATIVE_SOURCE_COVERAGE")
@@ -1090,7 +1099,8 @@ def validate_identity(packet, args):
             and package["version"] == identity["decimalPackageVersion"] == lock["packages"]["node_modules/decimal.js"]["version"],
             "DECIMAL_VERSION_PIN")
     require(identity["decimalModuleDigest"] == "sha256:" + sha(decimal_module.read_bytes()), "DECIMAL_MODULE_PIN")
-    require(identity["checkerDigest"] == "sha256:" + sha(Path(__file__).resolve().read_bytes()), "CHECKER_PIN")
+    require(identity["checkerDigest"] == "sha256:" + sha(
+        (enrolled_checker_path or Path(__file__).resolve()).read_bytes()), "CHECKER_PIN")
     producer_pins = [{"path": path, "sha256": sha((root / path).read_bytes())} for path in PRODUCER_PATHS]
     require(identity["producerDigest"] == h(producer_pins), "PRODUCER_PIN")
 
@@ -1282,7 +1292,11 @@ def main():
         "qualification": "ORDINARY_DEVELOPMENT_EVIDENCE_NOT_ADMITTED", "physical": None,
     }
     try:
-        raw = sys.stdin.buffer.read(MAX_BYTES + 1) if args.packet == "-" else Path(args.packet).read_bytes()
+        if args.packet == "-":
+            raw = sys.stdin.buffer.read(MAX_BYTES + 1)
+        else:
+            with Path(args.packet).open("rb") as source:
+                raw = source.read(MAX_BYTES + 1)
         require(len(raw) <= MAX_BYTES, "PACKET_BYTES")
         packet = json.loads(raw, object_pairs_hook=strict_pairs)
         receipt["packetDigest"] = h(packet)

@@ -39,11 +39,13 @@ export function proposeDecisionProof(problem: R6ResolvedProblem, checkpoint?: ()
     if (model.periodDefinition.count > R6_LIMITS.horizon) {
       throw new R6Unsupported("HORIZON", "The original R6 horizon bound is twelve periods");
     }
-    if (model.runtime) {
+    const specializedV2 = model.runtime?.kind === "standard_lbo_v1"
+      && model.runtime.returnMethod === "decimal34_horner_npv_v2";
+    if (model.runtime && !specializedV2) {
       throw new R6Unsupported("SPECIALIZED_RUNTIME",
         "Native standard_lbo_v1 schedules, tolerance/fixed-point/IRR/XIRR semantics lack an independently accepted all-input reference proof");
     }
-    if (model.circularBlocks.length) {
+    if (model.circularBlocks.length && !specializedV2) {
       throw new R6Unsupported("GENERIC_CIRCULAR_BLOCK",
         "Generic native execution does not implement the declared circular solver semantics; no all-input claim is made");
     }
@@ -209,7 +211,9 @@ export async function runVerifiedCapitalCompiler(request: R6RunRequest): Promise
     assumptionInventory: request.problem.reference.assumptions,
     independentCheckerReceipt: receipt, nativeIdentity: request.problem.nativeIdentity,
     excludedSemantics: [
-      "standard_lbo_v1 specialized schedules, fixed-point and IRR/XIRR all-input proof",
+      ...(request.problem.programme.runtime?.returnMethod === "decimal34_horner_npv_v2"
+        ? ["Unrepaired v1 returns and specialized native parameter/domain configurations outside the checked v2 invariant profile"]
+        : ["standard_lbo_v1 specialized schedules, fixed-point and IRR/XIRR all-input proof"]),
       "generic circular blocks, arbitrary arithmetic equivalence and unresolved interval predicates",
       "unmodeled floating-point, FX, tax, calendar or contractual behavior",
       "undeclared real-world cash/liabilities, legal/reference interpretation, source truth and causal adequacy",

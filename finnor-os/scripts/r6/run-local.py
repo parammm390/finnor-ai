@@ -22,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--deps", required=True, type=Path)
     parser.add_argument("--node", default="/Users/paramdave/.local/bin/node", type=Path)
-    parser.add_argument("--case", choices=["runtime", "core", "typecheck", "lbo-probe", "lbo-obligation"], default="core")
+    parser.add_argument("--case", choices=["runtime", "core", "typecheck", "lbo-probe", "lbo-obligation", "lbo-v2-native", "lbo-v2-e2e"], default="core")
     parser.add_argument("--source-evidence", type=Path)
     parser.add_argument("--evidence", required=True, type=Path)
     args = parser.parse_args()
@@ -93,13 +93,15 @@ def main():
                    "--project", str(type_path), "--noEmit"]
     else:
         script = {"lbo-probe": "lbo-native-probe.mts",
+                  "lbo-v2-native": "lbo-v2-native.mts",
+                  "lbo-v2-e2e": "lbo-v2-e2e.mts",
                   "lbo-obligation": "lbo-obligation-e2e.mts"}.get(args.case, "run-e2e.mts")
         command = [
             str(args.node), str(dependencies / "tsx/dist/cli.mjs"),
             "--tsconfig", str(runtime_path), str(osroot / "scripts/r6" / script),
             "--case", args.case, "--evidence", str(evidence),
         ]
-        if args.case == "lbo-obligation":
+        if args.case in ("lbo-obligation", "lbo-v2-native", "lbo-v2-e2e"):
             if args.source_evidence is None or permitted not in args.source_evidence.resolve().parents:
                 raise SystemExit("An owned retained --source-evidence native LBO probe is required")
             command.extend(["--source-evidence", str(args.source_evidence.resolve())])

@@ -12,12 +12,18 @@ import type { R6NativeIdentity } from "../../../shared-types/src/decision-proof"
 export const R6_NATIVE_PATHS = Object.freeze([
   "finnor-os/packages/underwriting/package.json",
   ...["canonical", "compiler", "decimal", "errors", "executor", "index", "periods",
-    "result", "snapshot", "standard-lbo", "returns", "types"].map(
+    "result", "snapshot", "standard-lbo", "returns", "types", "returns-v2"].map(
     name => `finnor-os/packages/underwriting/src/${name}.ts`,
   ),
 ]);
 export const R6_CHECKER_PATH =
   "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py";
+export const R6_LBO_V2_CHECKER_PATH =
+  "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-v2-checker.py";
+export const R6_LBO_V2_CHECKER_DEPENDENCIES = Object.freeze([
+  R6_CHECKER_PATH,
+  "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py",
+]);
 const PRODUCER_PATHS = [
   ...["contracts.ts", "compiler.ts", "checker.ts", "native.ts", "membership.ts", "index.ts"].map(
     name => `finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/${name}`,
@@ -49,8 +55,12 @@ export function r6Sha256(bytes: string | Buffer): string {
 export async function captureR6NativeIdentity(options: {
   repositoryRoot: string;
   dependencyRoot: string;
+  nativeReturnMethod?: "decimal34_horner_npv_v2";
 }): Promise<R6NativeIdentity> {
   const root = resolve(options.repositoryRoot);
+  if (options.nativeReturnMethod !== undefined && options.nativeReturnMethod !== "decimal34_horner_npv_v2") {
+    throw new Error("Native return method/checker selection is not enrolled");
+  }
   const deps = resolve(options.dependencyRoot);
   const actual = JSON.parse(await readFile(join(deps, "decimal.js/package.json"), "utf8")) as { version: string };
   const lockBytes = await readFile(join(root, "finnor-os/package-lock.json"));
@@ -82,7 +92,14 @@ export async function captureR6NativeIdentity(options: {
     dependencyLockDigest: `sha256:${r6Sha256(lockBytes)}`,
     decimalModuleDigest: `sha256:${r6Sha256(await readFile(modulePath))}`,
     decimalPackageVersion: actual.version,
-    checkerDigest: `sha256:${r6Sha256(await readFile(join(root, R6_CHECKER_PATH)))}`,
+    checkerDigest: `sha256:${r6Sha256(await readFile(join(root,
+      options.nativeReturnMethod ? R6_LBO_V2_CHECKER_PATH : R6_CHECKER_PATH)))}`,
+    ...(options.nativeReturnMethod ? {
+      nativeReturnMethod: options.nativeReturnMethod,
+      checkerDependencyPins: await Promise.all(R6_LBO_V2_CHECKER_DEPENDENCIES.map(async path => ({
+        path, sha256: r6Sha256(await readFile(join(root, path))),
+      }))),
+    } : {}),
     producerDigest: semanticHash(producerPins),
   };
 }

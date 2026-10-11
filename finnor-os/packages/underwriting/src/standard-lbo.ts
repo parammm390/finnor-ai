@@ -3,6 +3,7 @@ import { abs, add, cmp, d, decimal, div, max, min, mul, sub, withinTolerance, ZE
 import { UnderwritingError, fail } from "./errors";
 import { addDays, daysBetween, formatDateOnly, parseDateOnly } from "./periods";
 import { annualizePeriodicIrr, solvePeriodicIrr, solveXirr, type SponsorCashFlow } from "./returns";
+import { annualizePeriodicIrrV2, solvePeriodicIrrV2, solveXirrV2 } from "./returns-v2";
 import { finalizeRunResult } from "./result";
 import { assertSnapshotMatchesModel, sealInputSnapshot } from "./snapshot";
 import {
@@ -18,6 +19,7 @@ import {
   type InputSourceBinding,
   type InputTruthStatus,
   type ModelNode,
+  type NativeReturnTrace,
   type ModelValue,
   type NodeExecutionResult,
   type PeriodDefinition,
@@ -97,6 +99,7 @@ export interface StandardLboModelConfig {
   workingCapitalMethod: "explicit_nwc" | "percent_revenue";
   debtTranches: readonly StandardDebtTrancheDefinition[];
   solver?: SolverSettings;
+  returnMethod?: "decimal34_horner_npv_v2";
   inputBindings?: Readonly<Record<string, InputSourceBinding>>;
 }
 
@@ -227,6 +230,9 @@ const defaultSolver = (): SolverSettings => ({
 });
 
 export function createStandardLboModel(config: StandardLboModelConfig): UnderwritingModelIR {
+  if (config.returnMethod !== undefined && config.returnMethod !== "decimal34_horner_npv_v2") {
+    fail("MODEL_SCHEMA_INVALID", "Unknown versioned native return operation");
+  }
   const currency = config.currency;
   const bindings = config.inputBindings ?? {};
   const nodes: ModelNode[] = [];
@@ -418,6 +424,7 @@ export function createStandardLboModel(config: StandardLboModelConfig): Underwri
     circularBlocks: averageBalance ? [{ id: "debt_interest_cash_sweep", nodeIds: circularMembers, iterationOrder: circularMembers, settings: config.solver ?? defaultSolver() }] : [],
     runtime: {
       kind: "standard_lbo_v1",
+      ...(config.returnMethod ? { returnMethod: config.returnMethod } : {}),
       currency,
       entryValuationMethod: config.entryValuationMethod,
       revenueMethod: config.revenueMethod,
@@ -689,8 +696,12 @@ export function executeStandardLboModel(
   const outputs: Record<string, NodeExecutionResult> = {};
   const checks: CheckResult[] = [];
   const diagnostics: SolverDiagnostic[] = [];
+  const returnSolverTraces: NativeReturnTrace[] = [];
   try {
     if (!runtime || runtime.kind !== "standard_lbo_v1") fail("MODEL_SCHEMA_INVALID", "Compiled model is not the Standard LBO runtime");
+    if (runtime.returnMethod !== undefined && runtime.returnMethod !== "decimal34_horner_npv_v2") {
+      fail("MODEL_SCHEMA_INVALID", "Compiled native return operation is not registered");
+    }
     for (const tranche of runtime.debtTranches) {
       const opening = snapshot.values[debtInputId(tranche.id, "opening_principal")]?.value;
       const commitment = tranche.kind === "revolver" ? snapshot.values[debtInputId(tranche.id, "commitment")]?.value : undefined;
@@ -851,13 +862,22 @@ export function executeStandardLboModel(
     if (cmp(invested, ZERO) === 0) fail("MOIC_UNDEFINED", "Sponsor MOIC has zero invested capital");
     const distributions = sumValues(cashFlows.filter((flow) => cmp(flow.amount, ZERO) > 0).map((flow) => flow.amount));
     const moic = div(distributions, invested);
-    const periodicIrr = solvePeriodicIrr(cashFlows);
+    const periodicV2 = runtime.returnMethod ? solvePeriodicIrrV2(cashFlows) : null;
+    if (periodicV2) returnSolverTraces.push(periodicV2.trace);
+    const periodicIrr = periodicV2 ? periodicV2.rate : solvePeriodicIrr(cashFlows);
     const periodsPerYear = model.model.periodDefinition.frequency === "annual" ? 1 : model.model.periodDefinition.frequency === "quarterly" ? 4 : 12;
-    const irr = annualizePeriodicIrr(periodicIrr, periodsPerYear);
-    const xirr = solveXirr(cashFlows);
+    const irr = runtime.returnMethod
+      ? annualizePeriodicIrrV2(periodicIrr, periodsPerYear) : annualizePeriodicIrr(periodicIrr, periodsPerYear);
+    const datedV2 = runtime.returnMethod ? solveXirrV2(cashFlows) : null;
+    if (datedV2) returnSolverTraces.push(datedV2.trace);
+    const xirr = datedV2 ? datedV2.rate : solveXirr(cashFlows);
     put("returns.gross_sponsor_moic", moic, "positive sponsor distributions / absolute invested sponsor capital");
-    put("returns.gross_sponsor_irr", irr, "bounded periodic IRR annualized by declared period frequency");
-    put("returns.gross_sponsor_xirr", xirr, "bounded dated XIRR using ACT/365F");
+    put("returns.gross_sponsor_irr", irr, runtime.returnMethod
+      ? "decimal34_horner_npv_v2: bounded ordered-base periodic IRR annualized by declared frequency"
+      : "bounded periodic IRR annualized by declared period frequency");
+    put("returns.gross_sponsor_xirr", xirr, runtime.returnMethod
+      ? "decimal34_horner_npv_v2: bounded ACT/365F daily-base ordered native Horner XIRR"
+      : "bounded dated XIRR using ACT/365F");
 
     let debtRollForwardOkay = true;
     let minimumCashOkay = true;
@@ -917,11 +937,13 @@ export function executeStandardLboModel(
     return finalizeRunResult({
       status: "SUCCEEDED", validity: invalid ? "INVALID" : "VALID", modelSemanticHash: model.semanticHash,
       inputSemanticHash: snapshot.semanticHash!, scenarioSemanticHash, values, outputs, checks, solverDiagnostics: diagnostics, sponsorCashFlows: cashFlows,
+      ...(runtime.returnMethod ? { returnSolverTraces } : {}),
     });
   } catch (error) {
     return finalizeRunResult({
       status: "FAILED", validity: error instanceof UnderwritingError && error.code === "NON_CONVERGENT" ? "NON_CONVERGENT" : "INCOMPLETE", modelSemanticHash: model.semanticHash,
       inputSemanticHash: snapshot.semanticHash!, scenarioSemanticHash, values, outputs, checks, solverDiagnostics: diagnostics, failure: error,
+      ...(runtime?.returnMethod ? { returnSolverTraces } : {}),
     });
   }
 }

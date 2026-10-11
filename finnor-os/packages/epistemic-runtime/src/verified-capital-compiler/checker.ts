@@ -6,7 +6,7 @@ import { canonicalSerialize, semanticHash } from "../../../underwriting/src/cano
 import type { R6CheckerReceipt } from "../../../shared-types/src/decision-proof";
 import type { R6CheckerOptions, R6CheckerTranscript, R6ProofPacket } from "./contracts";
 import { R6_LIMITS } from "./contracts";
-import { r6Sha256 } from "./native";
+import { R6_LBO_V2_CHECKER_DEPENDENCIES, r6Sha256 } from "./native";
 
 function unknownReceipt(packet: R6ProofPacket, predicate: string, reason: string): R6CheckerReceipt {
   return {
@@ -45,8 +45,8 @@ function validateReceipt(value: unknown, packet: R6ProofPacket): R6CheckerReceip
   return r;
 }
 
-/** Fixed checker entry, no shell, no ambient credential/environment propagation.
- * No alternate checker, disabled-check flag or producer receipt is accepted. */
+/** Two fixed enrolled checker entries selected by the bound native operation;
+ * no caller path, shell, alternate checker or producer receipt is accepted. */
 export async function checkDecisionProof(
   packet: R6ProofPacket,
   options: R6CheckerOptions,
@@ -69,9 +69,21 @@ export async function checkDecisionProof(
   let checkerEntry: string;
   try {
     const moduleDirectory = typeof __dirname === "string" ? __dirname : dirname(fileURLToPath(import.meta.url));
-    checkerEntry = await realpath(join(moduleDirectory, "checker.py"));
+    const specializedV2 = packet.programme.runtime?.kind === "standard_lbo_v1"
+      && packet.programme.runtime.returnMethod === "decimal34_horner_npv_v2";
+    checkerEntry = await realpath(join(moduleDirectory, specializedV2 ? "lbo-v2-checker.py" : "checker.py"));
     if (packet.nativeIdentity.checkerDigest !== `sha256:${r6Sha256(await readFile(checkerEntry))}`) {
       return unknownReceipt(packet, "CHECKER_ENTRY_PIN", "The enrolled checker bytes differ from the proposed native identity");
+    }
+    if (specializedV2) {
+      const pins = packet.nativeIdentity.checkerDependencyPins;
+      if (packet.nativeIdentity.nativeReturnMethod !== "decimal34_horner_npv_v2"
+        || canonicalSerialize(pins?.map(pin => pin.path)) !== canonicalSerialize(R6_LBO_V2_CHECKER_DEPENDENCIES)) {
+        return unknownReceipt(packet, "CHECKER_DEPENDENCY_COVERAGE", "Every enrolled specialized helper is a required currentness dependency");
+      }
+      for (const pin of pins!) if (pin.sha256 !== r6Sha256(await readFile(join(options.repositoryRoot, pin.path)))) {
+        return unknownReceipt(packet, "CHECKER_DEPENDENCY_PIN", "The independently loaded helper bytes changed");
+      }
     }
   } catch (error) {
     return unknownReceipt(packet, "CHECKER_ENTRY_UNAVAILABLE", String(error));
