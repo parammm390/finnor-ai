@@ -1,0 +1,1808 @@
+{
+  "schema": "finnor.r7.private-evidence-custody.v1",
+  "root": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr",
+  "access": "Agent-created private temporary root; verify every hash and retain/move under authorized custody before /tmp cleanup",
+  "currentSourceFilesDigest": "2efcfc87bf19120726e51484f04b4c2d2240c8681a1cd4c571b60113b25ad298",
+  "rawEvidenceFiles": [
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/authoring-diagnostic.json",
+      "bytes": 38153,
+      "sha256": "0c4d3e6bb97a5f2196d4728971185f35c2dc1dc18b02a3d39ffeb19cf31ca22e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/competitor-feasible-off-centroid.json",
+      "bytes": 20336,
+      "sha256": "f60a0271168ae0a6810eb8f9011222a46d7fe0935bff51ad1d14e18d4afa6aaa"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/deliberately-partial.json",
+      "bytes": 22821,
+      "sha256": "50d2e1d41505763a3c5c80837da8e21f34ca4a5f00d1bd08d3723187c2c57aa0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/lower-dimensional-line.json",
+      "bytes": 39993,
+      "sha256": "053132096a72ad5b0e74be230c14db493843dcd0777cff01e2c0b27770d48830"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/named-family-infeasible.json",
+      "bytes": 16026,
+      "sha256": "8cb52c8419909044c0d562f271112e03744d42cac49bc3d806ae815c2cb1d423"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/non-minimizing-world-hard-violation.json",
+      "bytes": 14958,
+      "sha256": "4730b81374db5908d9dc6010de02b35ad889f1c1646a6758ddb2ecb2a7bc3335"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/point-and-all-ties.json",
+      "bytes": 20029,
+      "sha256": "0859410cc860fdf49e1e01241c3754fcb7957a388c3522e5af8758bb4dc095f8"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/results.json",
+      "bytes": 84672,
+      "sha256": "a86b95843750beb2dcbd46dce08d6f7d1b7aa1a9c90fd054de04913257fb3f9c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/strict-domain-and-redundant-facets.json",
+      "bytes": 38644,
+      "sha256": "5153f399490653edf58e7ff85b7b60c01463d7a7170553e7be0383a206a58a7e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/sub-epsilon-positive-cell.json",
+      "bytes": 39223,
+      "sha256": "5e8812f34b3aaca68c8818c4e859955d8ac9665e2306fc997d27a8cd6c132d30"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/tractable-full-profile.json",
+      "bytes": 13846261,
+      "sha256": "91d940420002cec7f4e0d81386e2e24bde38c7eb301f4fc3da04447d47a3d00c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/two-parameter-correlation.json",
+      "bytes": 217856,
+      "sha256": "ab3bfc063afeddadac4a67a12a6af081cff0b65ae76d475806117e4b1398dd4c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact/whole-horizon-fixed-adversary.json",
+      "bytes": 17200,
+      "sha256": "645fcabf01e19d443537b1492c71421b2057f0c082c551ac3754a9d1956361e9"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/authoring-diagnostic.json",
+      "bytes": 38153,
+      "sha256": "6b2fe7b6687a2cd28736d0cbd596f997d5c29b76732bd2a2c85898f73295c17b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/competitor-feasible-off-centroid.json",
+      "bytes": 20346,
+      "sha256": "41428c51f79a52853757b65ac27631d4618896f508d2ce3250eaef4b4b1e229f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/deliberately-partial.json",
+      "bytes": 22819,
+      "sha256": "2ae8e678072345f9663a766c2da38488bc61ad161935b8438f270b18ef9ffa35"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/lower-dimensional-line.json",
+      "bytes": 40002,
+      "sha256": "b96535bac7a554a68f4aa70f87d0e106c03d4a1cd6facf14849a67da31994265"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/named-family-infeasible.json",
+      "bytes": 16026,
+      "sha256": "bae72187af2abfb7a3b5e6321b664bc1027aedf1d5e76503a5042a9a187f1338"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/non-minimizing-world-hard-violation.json",
+      "bytes": 14958,
+      "sha256": "e7655b8e20572d3016adf46dee039984270ab34ac03b571ea0a54c87577e60b0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/point-and-all-ties.json",
+      "bytes": 20029,
+      "sha256": "852de11c7a4132e1f1f8bcbfe7018d36b9fc8aa324f3e971daca4e8932b2f39e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/results.json",
+      "bytes": 84672,
+      "sha256": "b9dc85062605a88382b01271ba693738fbfb37ddd085803c2316cf35f1131093"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/strict-domain-and-redundant-facets.json",
+      "bytes": 38632,
+      "sha256": "f086cf220bf5a5710ebc2fe67944fec059ea2e206cf604b7ab025f7ce8aa885c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/sub-epsilon-positive-cell.json",
+      "bytes": 39214,
+      "sha256": "103ffccb6f7b762214b1e2c10e431b45fef876f02cacac97828cda103ccc0e08"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/tractable-full-profile.json",
+      "bytes": 13846256,
+      "sha256": "4e669758822576114fb411e6e78135622ddc2e05edc4778212504953614b49f2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/two-parameter-correlation.json",
+      "bytes": 217856,
+      "sha256": "7ceceaabed24a3d6558a3d0466112a7f56088f2185090b86bbd1103364750cd8"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/whole-horizon-fixed-adversary.json",
+      "bytes": 17200,
+      "sha256": "b055fc35cf1f21752d825d05203622882b052fba54e5778da822c81d4edaabd0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information/conflicting.json",
+      "bytes": 66129,
+      "sha256": "cdb9ca689525693241e6a0773edcc008d17544cdf36048b1aeb34aab85a0aa53"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information/positive.json",
+      "bytes": 66043,
+      "sha256": "ee4be66008ef08a3373eada4ce276bbd18b092acd88cd7748298921d328da3be"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information/reordered.json",
+      "bytes": 65970,
+      "sha256": "6eaf3da9fcad0805f116f3abe428cf1d80bb397b5669cc1d71d982bffc8ba9aa"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information/results.json",
+      "bytes": 3409,
+      "sha256": "ad9f82f7b246298db20dbf8927f3385edcafd3a13f6d8ab2ab88b39b92bc39f8"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information/unobserved.json",
+      "bytes": 65194,
+      "sha256": "551a392120fd23039cc1c9ee2bd76f3aa87408bd51a4dd0ae591971028291f4b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/conflicting.json",
+      "bytes": 66127,
+      "sha256": "944d78bdef7ae449f94fb1c039cff172b470d73ba5c496141da9da7b7815d792"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/positive.json",
+      "bytes": 66035,
+      "sha256": "eb34d7be8cbaaef44994d5aa301edc775caa1269640b77b70dda2540852401c8"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/reordered.json",
+      "bytes": 65960,
+      "sha256": "4dd9e4c256bed1765b7f25fac4d28dbdc64a33db3face1f9034204e25eba05d7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/results.json",
+      "bytes": 3389,
+      "sha256": "d91149d26563ff5064b09ca21aa994ddde9f4827b6c900cf64df82bacf750b06"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/unobserved.json",
+      "bytes": 65185,
+      "sha256": "c15a9e419b2e2e94efcba8f35b55b6c142fc6d9cbd7f6905f1b893084b59d491"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/10d0739c-b2fa-4028-9677-dcbd3c7b283b.json",
+      "bytes": 165832,
+      "sha256": "95ebf0b1e28cc90bcd41b8031cbcf1fd243c271cae12992ba31a98e4c7c2c76e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/13c36e00-72b6-4f0b-bf9f-531b2605b799.json",
+      "bytes": 165868,
+      "sha256": "deba2ffd60ecdc531c3c62da4586d611296abc12b71f01cd912f631b099f7dba"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/17bccb39-126e-4aeb-ba1f-4a9a56434d14.json",
+      "bytes": 40799309,
+      "sha256": "b138faff5674e57d4c0fd8c6f7caaff90bef24e787248f27ba3b99bb393dc33e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/2c92609a-338a-4223-a193-ca730e5b4a9b.json",
+      "bytes": 249382,
+      "sha256": "96b8473c5b1696ffd50fbcf72b71ed397747c44f5e1ae3195bd7ca95f5c15672"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/461f8bdb-d0c9-494b-8c1f-8801a3576a24.json",
+      "bytes": 165847,
+      "sha256": "8ee6a88201fe9d36eb662ab8be04ed13e9236584b1b1e9367c5e3961c2e8d9f4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/4d7083f3-7497-4178-8d94-812c12d2dee5.json",
+      "bytes": 165842,
+      "sha256": "661568fa14a35d4e06513ab8fe1922db191de910ace8be2d473c97601e327620"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/603906d8-cd81-44c1-8fe9-b762d9c4e8a9.json",
+      "bytes": 163605,
+      "sha256": "f0926c5b79324c06a0302632100401d2c52ee7888d086ff2d9dc2238dc95333b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/6d58ce85-69fa-4e6c-9646-76cdd962bdf9.json",
+      "bytes": 90137,
+      "sha256": "d39cfe276201e8f2ffe503419528bd35db3765081a514f6ce1378b2eb01b0b70"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/782bcf83-511d-4b6b-bc21-af2c6f4f1d06.json",
+      "bytes": 165834,
+      "sha256": "8cf66baac2e319917886ca2d57f9d7ea9448550c3f5301b41b49848e1599f04a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/7c5adf93-33aa-42b7-a650-fb98b0527983.json",
+      "bytes": 269105,
+      "sha256": "08f62a5ae1d9799aa4bb70ea073aab6df222c2bd6aff0851c733a77f601d6f19"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/83a07442-3a34-44c5-b7c1-b53e767831c6.json",
+      "bytes": 163600,
+      "sha256": "f4a7ff8438a410ac12447f8f4d594b2cba81b495c3963b0c60294d41d72c13d9"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/c0682f37-3584-42ef-afae-9d782044f0ec.json",
+      "bytes": 90140,
+      "sha256": "fab11182f79d7fac042f88a56dabfa19ffb6c3b769c0e5df5044119bc8a91d36"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/d756fff0-4e1d-4bff-95c4-6c466ffb0cc7.json",
+      "bytes": 169401,
+      "sha256": "abeef82802a1dca15d0b6b943b6b6b57b669b77ed5120e8c3394bc5ebaf6bc95"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/e293bcad-5902-4b06-a670-3ce11b5f230f.json",
+      "bytes": 165872,
+      "sha256": "99cc46da250824aaf0de75a6e2af99cbe6e3df497820279b8f8615064659ad06"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/builds/e7a87b42-3ad4-4eb0-9068-a0775971ff48.json",
+      "bytes": 165857,
+      "sha256": "c57e4393438ddea6a5fcec48a4b393213e76ce02e43fd57fcc9506f9f14ce85a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/native-obligation/boundary.json",
+      "bytes": 70831,
+      "sha256": "108cd2389deb50bf80b0121ebc74aa961214ba5e9e82007491ece5823b426557"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/042dbe3c46daab0965d064b548ac7944cffbeb6cea756f8c798c7ac86e8c85d8.json",
+      "bytes": 4064,
+      "sha256": "b87b6a8e32e9a87e7215dd04d6ab893b4c3fd45ecc82de85da725d82a804fbf1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/0df2f21f13dad7a07c7e42d89829dad3a0a2499c8fd3cf71256277e1e57ffa78.json",
+      "bytes": 4064,
+      "sha256": "32e50775074a15f834d7f87eb149adff40c23b4ae97025799ce6fb62833d9693"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/0e4cb072d4b608efe04bc9831a2bed92e14a4c2d6de525c09b0398c4e7f829f8.json",
+      "bytes": 4063,
+      "sha256": "1332016bdcabb3ac0ee906d83f1aad21660e9c72c74daff452e81d2b7524693b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/20fec09ae0029a809b8d20dbaf16fd1416cd4202fbaddf071049e24bde5a78be.json",
+      "bytes": 4051,
+      "sha256": "089b148aa88c663e8fc3f8faeb4abdbbca97431cf092b872409841584d2adb2f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/3bae93797e1f7c6c2a596d093e5e2c8308eee299b93ea844b06eab28ef51f234.json",
+      "bytes": 3977,
+      "sha256": "1fd18aa0e1c2873e966923c570cd5afd480d8b597b11fb5b31b29ce5730f29e2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/480c8bfeb57456ce2dfdaff2911884f4050ce869e5b389a125a156ce64ebd6a8.json",
+      "bytes": 6090,
+      "sha256": "749c769cf7a75293bd8482eea9c533ba7d49676351bdfd235e28abb52e5a177e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/5124815465c781120d3ee5e10f8befa2b12ca3430cb7c0eb1bc250dc553ae0fc.json",
+      "bytes": 4210,
+      "sha256": "1bcc353e4a335395cb302dbccfdb51c17df7c28e9de69ad3f89a1462d8aedbca"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/5844373c38049a05308b60007bb748189819a95111286970ebc1dc08a682855a.json",
+      "bytes": 6128,
+      "sha256": "f630daf13b5510526099834ea5539ea14ce5a375d5c6a161d94eab65677644c1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/59ff5e1ac3245bd8e7f66348b5332cc943f12fbba5f554e1b4c705a238ba554c.json",
+      "bytes": 5239,
+      "sha256": "0be01e44c40a035ed587ab5ead62bcf23905c965001473ad851c38303396b874"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/5ef2b650472e67d5bcc8b098260b3bf84ebfa78124e9aca4b747ac404e2afc6f.json",
+      "bytes": 4065,
+      "sha256": "6ab49ff93774f72fc1cb50f4ea736f6d2f481122526ed72482f854db2d38a531"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/6995aba5a96a5758323d11632575c679824aa6b3513a9206e0bd1aaa728c49b6.json",
+      "bytes": 4069,
+      "sha256": "3b042967161575d8ee633d9ddee0bd89a6e08a30cccccb03b369e65d204b4a31"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/721b0f583f6c9f4585e24d69bd36a7a1ea541b5f668a332e12e81e5539115f56.json",
+      "bytes": 6079,
+      "sha256": "463513ddbdb77a26026ba02caf4cb1fe585dd3ffe1d15ddc0ed47cf4536ac10e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/7d094f6a55f5783bbf056095b6d0a2244b40f2d8c83746bdb7ad1339a1e0929a.json",
+      "bytes": 4065,
+      "sha256": "b0ffc05888d6a891d72160e4ae3df9014bb0230eed12bc6ecaae0351ddd5cd64"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/9cc4f295657f469b9d6f5343651735c223c0efea032592cdcdcdb45aab25e3b3.json",
+      "bytes": 4064,
+      "sha256": "ef10b6e38e27b52468187e32612b0b69548659608a994c55b7467216b364b1a1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/9e18635158e5e96934555d56994e2cf794eb6c55e3419084ace3a4895654e6e0.json",
+      "bytes": 6147,
+      "sha256": "7246d50e7c8e09a7c4d4f1c5fefb0c579c6ee32781fba41e074dba5327af0161"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/9ee852e1ea50d0bc9d02e524ab50178f899aff89eea75720b1924f91d7381163.json",
+      "bytes": 4078,
+      "sha256": "0e47bb06e38dfb9c29bfe7f7221156ded790c3fe6858300e54049a9f6f25074a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/b93d18e2764f7583746284620ef023b79c2acaba9bf443b7da9ed19cfd53c48a.json",
+      "bytes": 1626,
+      "sha256": "ee5b2aadf77234a712fdc1491c3eaf9c38d97e7536d624798d35887787bbcc0c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/c0f3839a9a86b7d3b76377ee5d0ae63ca8f665f2a7987787e4f546704ae7eaa7.json",
+      "bytes": 4061,
+      "sha256": "b504d2438a8cb51d64d85853ce5031fcd1252ac0de6b2ae787c3d0d61f3f32eb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/ca41dc6ce63403c9be35bc33c03c23439fde08f41963ccd874d73f3a5f6c13f0.json",
+      "bytes": 4073,
+      "sha256": "a326e02cdd6b9c2514dac9c220a9d106f9e1f1bdd178074e0928ef179f4358b3"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/e0a7d52849c650400c7022dd454517b7d622f4c7bf220e50f588d5c6554ce930.json",
+      "bytes": 4064,
+      "sha256": "dabe19935e90f44ed0c3bfd55c49b48c26ae56a08afdbaefa228641a07338787"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/e8f0e3bbb12de27c65bc8d09d07474139b4a545564518f436e223eccf4d7cf76.json",
+      "bytes": 4095,
+      "sha256": "8a425fe1be41c0c59cf11046479304d380e02ac4b93ff7f2ede70d18b5b0f108"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/e8f9334b3b48ca38d165860d79d087d6e96ab762b7b8c3e24350c7b35cec9f2e.json",
+      "bytes": 4065,
+      "sha256": "fa0e5e19dffff034875582eb89e3bd922c123f15dd3a6727810f64dca693680a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/eb480b432d5b876398ad9f87e388be3c151759337d124272ef7512627081331f.json",
+      "bytes": 4074,
+      "sha256": "b3e2780a4bab0d6c05720df4d0353ababc962d912187c6a1d8ccef864b55d2aa"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/fae3842b4acbedc57dd15402e085ef9cf79b57e9819d230a7b083b5c16cea685.json",
+      "bytes": 6083,
+      "sha256": "6023cbdbc89eed26decd1b26603303bc8f2d4cafb0fb475cc5c5d0b4f18bfe58"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/fc58ac645598873e726feed380acb77259aa275464dc5d4f1065714d013c7eae.json",
+      "bytes": 4064,
+      "sha256": "e372d87fbd42c1e3d4a866f844536e41ad80289bca71224fcdde6aa36b7debb6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/queries/fd83e4745220f16a5084ea41e73c79eaed4a5880504eaf2d650ac3cb8fd98ca2.json",
+      "bytes": 6125,
+      "sha256": "597afc34e55614c2e77bbf72dc45adc1162be8758ea124514995c17a4a38b18f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-cancel/original.json",
+      "bytes": 15948,
+      "sha256": "4f8fce40121a236b4d4789e2fdbb2d83ed3208b1573a5df49b24a8611af603b1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-continuation/original.json",
+      "bytes": 17990,
+      "sha256": "650836cb7a8efb770fe062c3d444276edf4a175d72a3770985edb703ffbb66b4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-expired/original.json",
+      "bytes": 15948,
+      "sha256": "fe361882cb65e99ccb1d6f778ea50d206fa9424d56ed7fb5e95dd3f143344069"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-foreign/original.json",
+      "bytes": 15948,
+      "sha256": "57786d96a6601c1919b8b86469f0533dc213b1bcf0f6778ba38fea8955ad963a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-inflight/original.json",
+      "bytes": 8085303,
+      "sha256": "5ab905a04235e562e9bf16078b346b18988b8e0c3f99c4bcb77b74c40a30e098"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-information-conflicting/original.json",
+      "bytes": 25763,
+      "sha256": "b1c1956258c94e5515845c00ff9ced1e75bc23b009a81e3b151778316869e811"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-information-positive/original.json",
+      "bytes": 25614,
+      "sha256": "23ec265ea763df36868a067b4d98d6639ec0247d44fe8fb281b359eb7e6e5830"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-information-reordered/original.json",
+      "bytes": 25613,
+      "sha256": "41bcae20b0a50001f33cb4728ff9150b7135334302891168bc79cc9fdd5c1682"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-information-unobserved/original.json",
+      "bytes": 24837,
+      "sha256": "0386bd50f9f6a38532d285fa2c752023ba394b044cc76db1a7a8515ce802ba5f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-invalidation-tie/original.json",
+      "bytes": 15948,
+      "sha256": "d3f0c36b3bc02e35884fdebfa615f8ea8ab89214b0b26e460227fca546f5bbdc"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-invalidation-world/original.json",
+      "bytes": 15948,
+      "sha256": "74fa67f188e901ca1cd632fc357e1e2274e62e665f55a5a212d528b206720bf6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-kill-accepted/original.json",
+      "bytes": 15948,
+      "sha256": "d84a718033027e37b06c3a3eab8951b1551ac961ce63e2ac97946629d758804c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-native-capacity/original.json",
+      "bytes": 15948,
+      "sha256": "9e563d805f58f133eb707b5868aa28c6e76627cc0caa21f2f2b435aedcffb6b1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-native-obligation/original.json",
+      "bytes": 15948,
+      "sha256": "f2a1f2209c04573a113b818ec793dc69f0117dcc1354bf63478fe17e23e81ede"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-orphan/original.json",
+      "bytes": 8085303,
+      "sha256": "5628bfc0aede09947822d7966529af5d11e44f249e6f3cab43f3b64f74200f7c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-owner-maximal/original.json",
+      "bytes": 8085303,
+      "sha256": "8bf1138da4f82bfc39a2e8dd857bb2ed88e84d55a5cec0c9ea7ca88b7e3a6ad2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-partial/original.json",
+      "bytes": 15948,
+      "sha256": "7d3bcb817554b1df4b29e619fb0c6ec74f1428c7c99d080752a92babb2537335"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-positive/original.json",
+      "bytes": 15948,
+      "sha256": "36a1a0034dc215bad66279873574ea2b40bf0517c6452aa96bb4b1f9004c1e45"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-principal-race/original.json",
+      "bytes": 15948,
+      "sha256": "0373522a31e7bc293e61feb493b02ddac3bfa184b5b092bda466c38648a896ed"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-query-resource-race/original.json",
+      "bytes": 15948,
+      "sha256": "ba2397f4dfdcccd02dcd3e12364dd054c1cee159716f4f11bc6a9f0b16bcd4f0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-s5-parameters/original.json",
+      "bytes": 18148,
+      "sha256": "b49a709f761494eb45c8d13a3d8b5a07a33ca78fa7c8070dc242716ae43be749"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-structure/original.json",
+      "bytes": 15948,
+      "sha256": "d96c2d5bd9b1a340d494e6eb07588835e0f613ce36ae16424ed631d0482b5927"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/r7-two-works/original.json",
+      "bytes": 15948,
+      "sha256": "23b99c24b04d495e307d077752c9bae7f02ec9da53882b30ce47d98fae2a76fa"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/results.json",
+      "bytes": 40586119,
+      "sha256": "7b26902a7048ff1a9ffe40af7bacd56666384a2fdaaee12c3475bb9425b115bb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/runtime.json",
+      "bytes": 23295,
+      "sha256": "8642997e0413a8b9d0766d465b37590513d41646ca18411f465d8e0cd97cd6b2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35567.json",
+      "bytes": 549,
+      "sha256": "7b4614aa7a3481f7fdc162251fc7b37363b0ec11b94199674e852fea3871978e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35642.json",
+      "bytes": 548,
+      "sha256": "79878ac53ad5b4337cd0afd6b3fb9da64936d24963261cb9b203aee5ee8c4b7b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35658.json",
+      "bytes": 548,
+      "sha256": "ea9e1ad6ed3db61e86b9cabfee8969503eb96ca5712b64d7ec2bf29facffb658"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35730.json",
+      "bytes": 548,
+      "sha256": "54bf297b692d76716c1cc494405fdcb5ac44ddb84a335814ac2d06a6b317ab4d"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35754.json",
+      "bytes": 545,
+      "sha256": "2b6348bbbcba29902146861960808b77e9e2d980a8c373178a5aa9a1ba3902ba"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35769.json",
+      "bytes": 548,
+      "sha256": "04794b80829885ad756d95563c94b307d40c5ba2a4c7d49494d2c9a29ea59d49"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35785.json",
+      "bytes": 548,
+      "sha256": "47a24785346a04d691060a2531a59e29f7ecd34f85c9d3a19228ebd7d9eb890f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35805.json",
+      "bytes": 548,
+      "sha256": "ee8ccb4fa2a1622a8ddf8a83b902e4ef53fafc7415da4e2787a9657544998bfc"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35824.json",
+      "bytes": 548,
+      "sha256": "69d010b52e9f2ed4144a3fa73dbc4450bf79cd0ed8b9dcddaf8226636dfeab72"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35842.json",
+      "bytes": 548,
+      "sha256": "77d4bfc9b4a71e46ab6b6149001ce558bb28d9654280284b516205e309de2c31"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35861.json",
+      "bytes": 548,
+      "sha256": "f9d027f6be98343449e50179caa64d089fa08245c9d4143a0f82b12063780fde"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35880.json",
+      "bytes": 548,
+      "sha256": "1e83ac8c80113ce62295e74a1855079f76e91c68355414fa01cdbd28295d34e4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35905.json",
+      "bytes": 548,
+      "sha256": "b58365b96bf2d187709f738dafa78bc84293bb3a4c9953195aa3dd1176f71b12"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35933.json",
+      "bytes": 548,
+      "sha256": "1eb27ad445ee7a1730023f2f8135981a213634355f1ffd53a78d23bbcbfefb56"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/35949.json",
+      "bytes": 548,
+      "sha256": "95e3f9e1d4716a47dcee48ca034b8303a84ec0152fedd36808ddcc9188e6ec14"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36217.json",
+      "bytes": 110,
+      "sha256": "6c0bebaec7d55acc08803310f0ec255e8f8b096dbfc452bffff2b7ffe3af760d"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36270.json",
+      "bytes": 547,
+      "sha256": "3f8d488d9083426788cc3d208bd19dd446ebb58f15659c84610b85ccae181e86"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36369.json",
+      "bytes": 608,
+      "sha256": "748c7c1e86bd3dd35dad7adcf1cfe5026cc7470788bad40cd1d110c7d162df7e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36539.json",
+      "bytes": 1078,
+      "sha256": "5d953864fb284318b6200da8eff7c2b870e07705183aee2b79c61f2a90040ce4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36690.json",
+      "bytes": 547,
+      "sha256": "6cc04781f6c08fc6a7458ed5c7efae8974ce43f48e6569694ac26c9be6c492b5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36770.json",
+      "bytes": 548,
+      "sha256": "7bfc3e0104217a8b9742c45be2888eca80b334772a12e8bce07754c0cefb0809"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-v2/workers/36979.json",
+      "bytes": 110,
+      "sha256": "78fdc69fa054d63e133024afd6fe72e19600c394cfcd5c6df6a039f9fd8f27d4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/builds/d1bbf7c1-7931-4d71-bd6b-3e164a892db2.json",
+      "bytes": 165860,
+      "sha256": "40268e2e31436f74f1436130d163e96a679c85613d0163cbade54bf14d996d78"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/queries/f212087e57d5d11698b5954c133051cc7d89054d0bce98b329cfe709bac6b7be.json",
+      "bytes": 4064,
+      "sha256": "6b8c56c8571c900e589c8dcf71cb06805ec88ea48cc9259b473c4e37c836a704"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/r7-method-drift/original.json",
+      "bytes": 15948,
+      "sha256": "483d8d2e5227840197f8f2dd541083785adb560222c08bcc84e9a6afac4559b4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/r7-positive/original.json",
+      "bytes": 15948,
+      "sha256": "a58c2b12c47514565c5d76939e9c30a3a13fa334b8b4afbfd07ec57e7a540a05"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/results.json",
+      "bytes": 173133,
+      "sha256": "1b285a7ed3002e9a6ee05ec7362821bd6db9ff7e826ba5d5944e6c7bc0a06476"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/runtime.json",
+      "bytes": 23295,
+      "sha256": "ffca3c327125d52e1ecc724d1bb06be623b3927ebe61561c70c6f82aea9d7489"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method/workers/43711.json",
+      "bytes": 548,
+      "sha256": "038095b59c581c1ae08621ec18e605646f688c16f637e9a0c5b0ecdb86385543"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/inputs.json",
+      "bytes": 16129,
+      "sha256": "471be44c7a3579d15025df88214b968daf5f26e8b4e0a7279efe4f470dfb8f9e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/results.json",
+      "bytes": 10489,
+      "sha256": "8027eec01b7fadf048679d2818e81ef89153e547321c878c7fc29d4e839cc8f6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/r7-mounted/original.json",
+      "bytes": 15948,
+      "sha256": "452c838d1fadbcc76bb0486a9902489b242c464a82fcc77438af9c09ad886051"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/r7-positive/original.json",
+      "bytes": 15948,
+      "sha256": "b4f0820d8922d63703454d66ef3a9f9549c00c2179816865acd536d1c6d25f33"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/results.json",
+      "bytes": 16521,
+      "sha256": "ad029fc4edbdf7e7e78a4fdc5bf164ae6b8f47b1f1a69c0cf05ecfc4c9c25a4d"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/runtime.json",
+      "bytes": 23295,
+      "sha256": "d9cc62a1fac0734d749caab81590b517c6bcea8746a56c28a57b7bc537a84bbc"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/builds/f80f5852-5600-4d85-8c4c-deb8d4631ccf.json",
+      "bytes": 165838,
+      "sha256": "4032f6a1a3eff3a97b6c872964c00cbd1339a80c1422662c58f7e6e94ed25885"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/queries/4abaa32755e83f85248ed2beb0606dfc9460be13f858b725fb056e45370a4fa9.json",
+      "bytes": 4064,
+      "sha256": "ecdb601677d3dfec11a4ccff2ab0a8bb8fcfa4b75c181c9a38e60c794bb1cc4b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/r7-positive/original.json",
+      "bytes": 15948,
+      "sha256": "c3d674af4eb7650d97a9da237b6cb57083f35dbe406895884fd5d9937ac3bffa"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/r7-terminal-context/original.json",
+      "bytes": 15948,
+      "sha256": "5efbd01dbd89c5928d8d2aef0ef6c48b66bed47f88edfe9e11a4e39fbe8f95b7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/results.json",
+      "bytes": 23435,
+      "sha256": "9540e7528e25b31294eaef96ebd129540921ecebaf0d917eb0d1575e4ce44ccb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/runtime.json",
+      "bytes": 23299,
+      "sha256": "2784f631299e6ef6579dadc23886e8d96640e1b53a342be6912020db15628b57"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/terminal-context/observed.json",
+      "bytes": 240215,
+      "sha256": "6999b3aa486cdf626c70aaffbd2125def71b801b18147b7759f1304305529091"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/workers/45592.json",
+      "bytes": 548,
+      "sha256": "13587f4dddaa06db811c319d0906b1a64cace7a8ec115839a4339c28c170dacd"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/04d55e8f-77d0-4560-9c08-0e11bb6db4d7.json",
+      "bytes": 165867,
+      "sha256": "106ff64015dfb6a8a6e4d357220fdf50dd7f580b1d38698838cd1d37ec3ad3c5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/0a825768-912f-4686-bf40-a63b6cfb9c42.json",
+      "bytes": 249341,
+      "sha256": "7eae2aeb6262f5238f6ed405e016a73252a5a19e9e2012728d4421377f12687e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/133dc177-17f9-4862-8fa7-74ece3b632b7.json",
+      "bytes": 165809,
+      "sha256": "40521e3a6ae0a4fe810e7a85d84cadc1767cde51de6b40429ff46c20792a6c2e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/25929580-dd7d-4c4c-9b8b-cb5afc34f92a.json",
+      "bytes": 165828,
+      "sha256": "9bea8b54463826712b3d0d09232915286b7ca4ab30aac65600ca246c882eee55"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/2972d315-033a-4a8a-b85c-bbba5cdfab6f.json",
+      "bytes": 90134,
+      "sha256": "99b4d6169d94f2ab1e68aea3ad747c494c9688d20cebb4cf7a6a03d33f5c5bf6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/40c7f018-ecbc-4bda-b2ea-086c9ac1e802.json",
+      "bytes": 90146,
+      "sha256": "b3ee88a065182e279c27fb97f7ee784704a13136a1f3575a8dd5279c52a3f451"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/68b8b442-1c99-48c0-8ecd-73174b4e0cdf.json",
+      "bytes": 165821,
+      "sha256": "1cec91df25e07701574b25fdddecfd118716bf152869b43aeca6114ab2a253c7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/69ebd87e-06f1-4942-8b98-822cf0417cbb.json",
+      "bytes": 163607,
+      "sha256": "d3180adccbf51ff0cc5730316a2ece39f94c5e3213db9e6b507fb0945b598a87"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/7793268c-36bd-48c1-bbd5-3102f42e0ea4.json",
+      "bytes": 40799232,
+      "sha256": "9c98daea48125b46215b7824ec30ef6a466ab959e3791cc8f7dffc59e3d70725"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/a02d1b4a-3e61-4a27-9ec6-6f100d58cce4.json",
+      "bytes": 165854,
+      "sha256": "e68b31d5964a0b3a8da757c7e4d60f0f3d9941c66c54ec4e8ac2a88fd5725e15"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/b9f309cf-4de5-4ea8-9d8b-441e29dda99d.json",
+      "bytes": 165855,
+      "sha256": "3dd383614b963f6439c99db714b0d2b012e73cb52162bcc49547bf2c8cba13ac"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/c627565a-396c-4550-acc1-4d26b376afa9.json",
+      "bytes": 169400,
+      "sha256": "fb8da6d6d879e014508f4abf0f64f1310b4ccebd9182c5dbfe6f7041efcbf0b6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/cc96268b-75be-44e3-b633-19f2fe3938c3.json",
+      "bytes": 165831,
+      "sha256": "ef1f1183348b8d724b66bde77f5a9b65d15e72284cccad463082ce0c78dbe6b4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/d86db45b-4e6b-49ab-8ba9-67bc8547f543.json",
+      "bytes": 269076,
+      "sha256": "dc5e7c5c456f0128ded43ed6ff4e2ab4ac6f48b2c75b5ed30537ffd0b6d456a7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/ebb6e684-c73a-4ef5-8b84-41c32fb108fe.json",
+      "bytes": 165854,
+      "sha256": "1a0c349cba8b61fa22310c191fbd1d3d3ab3505521f9351df7a77e73324ab868"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/f099c339-0644-4584-8193-3a1cacaefffd.json",
+      "bytes": 163572,
+      "sha256": "f401826c829e12cf68451d891875d1dc99260831e62eef71e54ed118aa5a30e7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/builds/f651ed54-b502-4e29-af51-b15afa84e34a.json",
+      "bytes": 165885,
+      "sha256": "8ca82e4d32106e7ebc38982c85a448072a8e21d6df7d61a379457822184cca6a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/native-obligation/boundary.json",
+      "bytes": 70830,
+      "sha256": "5617e5a2a61c27be0a22b529550728bd7564aeeef4e9d08fb49d869c9cfc9035"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/05b0dc97d36d394ad562721dcaeec385d858ce844a602d9342f6da337729a42b.json",
+      "bytes": 4065,
+      "sha256": "b025f0f6430ba872c712a2f808746cd8b056e9e08eb322c5f9c08fb607704053"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/070ede986b6aaf54686430960afa8c8932319de991d3a5f95df0648f45062f94.json",
+      "bytes": 4079,
+      "sha256": "cb1342875e8c8b3ba617bf5662f4182b81bd7b47e783104de1df5bd84cf703b8"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/116108fc448ddf7e7450013c49ed77d5a89d4c6319bbcc7d272a40d7d3bcbb2a.json",
+      "bytes": 6125,
+      "sha256": "e9f53bcacfcb10bfd2581a555da86a46068d8e0d18e6c8df40c239cc37f7b6ce"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/17af851fa3da4b3cccf33056f4dae69f5884ea3527941c96f902270af3137c6b.json",
+      "bytes": 4064,
+      "sha256": "9b48207caca69f66b3200540b6672ebd1ce30bbd368b239dbd459b882c17aca1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/1b50b44aac270039bad01547eee4024f43c68724993fc149b75ea8077072b486.json",
+      "bytes": 4072,
+      "sha256": "c7edff0a38308e598ba170c91939085a3bb9c4d8977fc7d0fa8db3cd066e9993"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/358e045fc03298ac5e2e29d3ce314a98b78ff00a5b14909a0624986a5e454a6d.json",
+      "bytes": 6089,
+      "sha256": "c0e0fee874d2e2dca9dd06ea61a3af9433acbe057c598b51357ae1b11e78f588"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/3631ad00818d5d49d50cb07b99d91780ecad48d544fa560e1d5aac9ee15e442d.json",
+      "bytes": 4211,
+      "sha256": "a9361fe470d0aff2811ef35a60d93b93ca732b292689ed4e678154ac9d791591"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/4b1cf14f8ea74d62320ad1384568b8798dab1eb8ad6e5bef8191bd8fd7454e5a.json",
+      "bytes": 4064,
+      "sha256": "489e9d5e61125f803faa0c0e998891ea48f8b8835e37b0fd07d28d4b8c15e29c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/5ec3924b7554ccd0c9cf4a708dc2bb121cc2304864029c69d699631a6e84d434.json",
+      "bytes": 4065,
+      "sha256": "4ff8afb69d792d28f178918b7a4c8e8617c4fc6677d0f86d33abc3f68a2ead00"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/6623e6c520cd2a362f60354c73e5acb147f08e1ebf94c9573d60de591bba5b07.json",
+      "bytes": 4064,
+      "sha256": "18fd4714385767507485b057add09343b19ca23baa235ba5a317e42949a4b451"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/68fe1e1734e90f09ce37126fd04e8ddbd73bbb7ecc06dab5417f4a86a427b106.json",
+      "bytes": 3978,
+      "sha256": "1086d60650d1ba10377eda677937e6548ac75c76015b989e7475e80570541d38"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/703026962857d89a6b43a29584db4e0c3fcad05bce66a582cc265aadefc47194.json",
+      "bytes": 4065,
+      "sha256": "18729f1949f6a418c89e99a169b967011410545130fe46704677191ee816b8a6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/72860bc5d5474fdf4bdd273dca4c40c0bd69aea5e3092638a1f42dfca899f1f8.json",
+      "bytes": 6080,
+      "sha256": "312478e5732f0c102c10e3736346ac7918ffa7009e3a45318c4927b87850ed62"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/896bd3919cd6e072a1cbfc6cdf9994c0b97b38191f2f3c28dc1a9fe46bb268a5.json",
+      "bytes": 6083,
+      "sha256": "842de676c9b3b80ca4b78370ac96c6f3da2d569c34c0696876a39d25541755f5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/897e9ed97ab1a7eeade169768544c5edea0414a25bcaa797f0a8c07eddc45b2b.json",
+      "bytes": 4065,
+      "sha256": "3373699701be27ec32fe0311c1b7a31d58604404ec3c1a91ed2467629ff94ffc"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/9cf139c8bfecb8d92729c4f753d2e650477a2527afd90b29b34a2a8eb419a4a1.json",
+      "bytes": 4073,
+      "sha256": "3d988f1362999cfb0fa5f1a72a99fb3685c0f89f4f00dba57468cf0bfaa980d5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/a50ea7f83a0e71738411edd7dbfcc783297c146898285a0d4a087e8e73f79c92.json",
+      "bytes": 6128,
+      "sha256": "a44b6ec1498c3079d61a37d773402672babe81c36997e6327cc7eda25e690130"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/a7241d2172ebe041d309b197af2b26ce73d453f44f6c0f1d7c89897486b80ba2.json",
+      "bytes": 1626,
+      "sha256": "106b38788ea39207fc983e57dde866cce071f78afc819f912ef816c942a96e48"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/adca71a463c991a604f74c2e7a4f8701c9577808c341a525a1301dc618159726.json",
+      "bytes": 4065,
+      "sha256": "df68dd9da41267a23a54973e3c72555ad2c2ad15d936b28e594208e2387c8df0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/ca32adb4743c683656d262af83c501721b0971e2a106d77bf05219e6d4c84fea.json",
+      "bytes": 4073,
+      "sha256": "a88d6251bf3291806cf9af4c17afce56075aa813c3eab8a36b34261c3f5a94bb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/cbc78a22b2d96c97270f904d41736e1335f4606ed3f108392e3468552eb2c6ad.json",
+      "bytes": 4095,
+      "sha256": "ff97fb972caefc9391947622c3f891e4a47737d6dec2ed0716421cd5ad3d5266"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/d034314c5ae031b05518405eebf25efff31622ec24b306fb00fff6e026fe6c46.json",
+      "bytes": 4063,
+      "sha256": "0c0afe038e0145c5c36b580d9ade5acee6a7acfa6039e56097a224f7b8991d28"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/d22ea3b1799a79a46a2774660210d7b652a32c5d13833e1ef69b679d8398a20e.json",
+      "bytes": 4064,
+      "sha256": "93b5a54df6f76f966854b5ec1e64b1a8454144b93c230f0a047a4dbae8b54d7e"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/d8650858b91c6c8698c8a8d37b9b04dbaab095930e051ec1f20fc60bfc789371.json",
+      "bytes": 6107,
+      "sha256": "27f7c84db66c4f8fae6e1a1807cc5362b13c49eb062e3963a7449c16a76e5839"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/e2ae207e2a98af6a0328da2644a6c4ba5995925bc2c6b57388bd9ab9e4ea4f6e.json",
+      "bytes": 5238,
+      "sha256": "8a0136a94a8715fe3fa793ecd782f3c483466676dc1f2c6bb440ada41c61d2bb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/efea8e3a5b69f2fbf4c0ba1f865b912b5b2189041aa775652b99d82439a6ac99.json",
+      "bytes": 4061,
+      "sha256": "2e15fb01a241b5bdc11cf2853f756c5fea97a48e58a9bf205df02302398b920f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/f64c9f44302ad917f3d32d6fcbdd8ad2324db8e2bde83d03667121c49764ccba.json",
+      "bytes": 4064,
+      "sha256": "034ee10a311712325bbb2f4dea1ab111675a33bb8a954742bbe160de101fe787"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/queries/ff41455581df2f6245532c0af7ecccfdeb9afab83919f61e9e71716832ebe720.json",
+      "bytes": 4051,
+      "sha256": "bcef687a265155b82c89f1c9456495cb443a07b3909811c23630fa8829bc8008"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-cancel/original.json",
+      "bytes": 15948,
+      "sha256": "e1dc8bbb9558dbc490ae3dd545aa53fc1dffa8902a8cc72cb8c108cbf0a069c1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-continuation/original.json",
+      "bytes": 17990,
+      "sha256": "ddb8b8895a3ed2932cdc3acbfe1757643e12859dda9c83d80ca155658d5d941d"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-expired/original.json",
+      "bytes": 15948,
+      "sha256": "e73a0c2c33db5cea0fa75bc4d8662754e2635b0efea65596c043648f03f580ad"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-foreign/original.json",
+      "bytes": 15948,
+      "sha256": "344d68d79931422bb62a2a47e0a1da01db50d0699e48e4f5e707a4569b9ba9c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-inflight/original.json",
+      "bytes": 8085303,
+      "sha256": "072632fe07f6b2b7b71527e1e47445ef5dc7994c8b70c2708311d6572b13af8b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-information-conflicting/original.json",
+      "bytes": 25763,
+      "sha256": "e0f137471c974dd08667824edd482607708c9b708fb31ca5774822f63e898ba6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-information-positive/original.json",
+      "bytes": 25614,
+      "sha256": "f7b46f9f9ae13fae0fc0b64815550db0232b1420d590321129303a9ea5e22fdd"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-information-reordered/original.json",
+      "bytes": 25613,
+      "sha256": "b4351fa0d55506fefba23f1ac5c9232e43267e35f35249e2f3cb07b1387dc558"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-information-unobserved/original.json",
+      "bytes": 24837,
+      "sha256": "db6540bd4ac4e1246501cc238157ab886a0f50029e2c4d4bc18a898d903328b0"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-invalidation-tie/original.json",
+      "bytes": 15948,
+      "sha256": "d5b2c948b7a55cc47c98d2685e30238e54ba3fc997b367b74446f990c882dadd"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-invalidation-world/original.json",
+      "bytes": 15948,
+      "sha256": "e09bdbf33c25168e4e9a8a39bb974f8ec74587bc70a70c3bd91e96f1f86ab25d"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-kill-accepted/original.json",
+      "bytes": 15948,
+      "sha256": "eff350ad5866eeb74650b3879cff402a72b92580a63a9c539b7b9be86af3dafe"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-method-drift/original.json",
+      "bytes": 15948,
+      "sha256": "6ef964a26d83517501229f6ee3a6c0c5341c2a3d4840364505204dabf7eaebe9"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-native-capacity/original.json",
+      "bytes": 15948,
+      "sha256": "8aee0d99ccccece7670f5bd69df580ab8dfcbcd9fdc9b041c872a0363154b778"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-native-obligation/original.json",
+      "bytes": 15948,
+      "sha256": "0815e673cb415d7f163842828099de5b8ec2c6462a0c44a34734bd975e97d7e4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-orphan/original.json",
+      "bytes": 8085303,
+      "sha256": "063ff313e5c6f5a01809f6cf1053dd5905223f430f0f9530822f18bccc5b3d44"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-owner-maximal/original.json",
+      "bytes": 8085303,
+      "sha256": "3b0f29017602175d150f41d6f7f84b2504269d9b96ddec90f929dfb757d05afb"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-partial/original.json",
+      "bytes": 15948,
+      "sha256": "0968120d9641a42dae1beed03e5f064bcf3e5a20026f0609232477b0640d1483"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-positive/original.json",
+      "bytes": 15948,
+      "sha256": "5bd421d7426ede028cc12f84d31343e9d4d70f559332e593a173625d53a23bec"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-principal-race/original.json",
+      "bytes": 15948,
+      "sha256": "c5932b842d1d1bf7f0ebf270e17c510881cea8c96564b3b1f349afea65d55c6a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-query-resource-race/original.json",
+      "bytes": 15948,
+      "sha256": "b5d371b71a4e9c97de159c39f161bb8c31e51ccdb961bfb3bcc95ccdd220796b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-s5-parameters/original.json",
+      "bytes": 18148,
+      "sha256": "ff662938b1328b6b509eb18d85e02c3d881548066683715875c7e639d25f2d23"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-structure/original.json",
+      "bytes": 15948,
+      "sha256": "37361f351372c2cef1489e8a5168cd1e0b7f708c9fc44a1e453124ae86203844"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-terminal-context/original.json",
+      "bytes": 15948,
+      "sha256": "b6d2bf932f448509dd3c732bf58508cd1cc631051c78d2b40f1ee3cd656efda4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/r7-two-works/original.json",
+      "bytes": 15948,
+      "sha256": "aee130965d38163baae819e2a780d993eda8dedcea8f556066fbbbbc2b231e37"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/results.json",
+      "bytes": 41029813,
+      "sha256": "45a16834356a11d743dc8ead42ec873a39381d1d7f8aac2723c710b2cab79a15"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/runtime.json",
+      "bytes": 23295,
+      "sha256": "f91da619707474ca381e708d642348ce3d31d47a74b4c46c58fc0bfd76cdc55f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/terminal-context/observed.json",
+      "bytes": 235641,
+      "sha256": "7da849a5429f344009d3355ac89641a458ca2fcf5ba25e180837de301942638a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46853.json",
+      "bytes": 549,
+      "sha256": "773467dfde3e9519203aa720165c88eb821f1baf4b06b2028d52864743ef5014"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46892.json",
+      "bytes": 548,
+      "sha256": "d76b52e0c304f6efc24eef4cecf64be934df469bf8b3573b5b0c837e40a51046"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46902.json",
+      "bytes": 548,
+      "sha256": "d396601c8d19497638493248e9251fea90a91e816f001412f431b2f722eea04f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46935.json",
+      "bytes": 548,
+      "sha256": "2f579d7492abbd91d559392711950866c552a4f879c1729e3a0b9590728386df"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46976.json",
+      "bytes": 545,
+      "sha256": "299082c8357874f388e2256dea0c21c050a8ee32c2f0ff0fc5a4b3af07343ad9"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/46981.json",
+      "bytes": 548,
+      "sha256": "e4429d46fb814fb64a90fd67ee42a94e5436a54559af8a8f25ae81e7504c1210"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47020.json",
+      "bytes": 548,
+      "sha256": "5645c0e0b9d744adf68b074ed2fb724626361fcddc7a5978ab9dd4c912275845"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47039.json",
+      "bytes": 548,
+      "sha256": "e864d605a154f69b5d62f0e0c73a12cd3bcb5d8add1188bf1b098bfd053b455a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47058.json",
+      "bytes": 548,
+      "sha256": "884160b60b0000fc07bc8e6e641656d559e6313b0f9509891cc35c1373fc5dfe"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47068.json",
+      "bytes": 548,
+      "sha256": "131cda019f1ba9727c176f5809214ec13cd33650a371c4c3023ce601b0a83f2f"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47079.json",
+      "bytes": 548,
+      "sha256": "1b5691c01788ac8f2651a6d18c72eb84036d2c3f57b64d750f2e7b995b003786"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47089.json",
+      "bytes": 548,
+      "sha256": "a48bf558ad70c6a120751713e37381c3506107a7e0717f9dbfb53707e24c693c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47101.json",
+      "bytes": 548,
+      "sha256": "ecc88869ed4d8df02456c5d9b796054d8868b80691417254ac9ed719cd7ea146"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47112.json",
+      "bytes": 548,
+      "sha256": "e9eaa7263547a469f045c386b2bd2eef463578c2ad66641d7d0aa107781219e5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47127.json",
+      "bytes": 548,
+      "sha256": "fd1a9b0463db420fdf00544703ac81a15af8838c036a5a723965204ce3e8fce3"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47143.json",
+      "bytes": 548,
+      "sha256": "b029a181ac27638e46e7d6848a61c2c63c31ad40e978a143914925253c1e3fed"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47155.json",
+      "bytes": 548,
+      "sha256": "e11ce9b5bf7858eb5428c783efc4bf9ca74560c343c88c0dc516d560e0385341"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47176.json",
+      "bytes": 110,
+      "sha256": "58c69f14f98248ab79b117353a49296900fd14351b4c7f7b3c741ed3f5156050"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47187.json",
+      "bytes": 547,
+      "sha256": "2d3329becc5b76a9f36023dd774cbef4b437cee447876c3fe731ac6d89f94447"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47206.json",
+      "bytes": 608,
+      "sha256": "4a643ede526b03529be531d5039a70fefd5641d4c83d5c6c2588f8cbdbc320a3"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47217.json",
+      "bytes": 548,
+      "sha256": "41b839bfd536aeef483bc6b9c932b5417b5a01aec0cc6de1f85cb28fbc69b71b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47225.json",
+      "bytes": 547,
+      "sha256": "239f322de82e8130efce7804664eb7ecb9aebd0efde625b3aafa4f7437500b45"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47232.json",
+      "bytes": 548,
+      "sha256": "4ac1ca291764c6ec0ae8e6bc95a7432673ec3e803eec886dfc71b2fc4c3aa00a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/workers/47256.json",
+      "bytes": 110,
+      "sha256": "79d64e988bcb2746802977a91153877f203b6935c26708489de1c7cce0ab8b7c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/base-typecheck-before.log",
+      "bytes": 12622,
+      "sha256": "fbb7fabc8081a9e6241957f2228083f14a43d3413aa9f0a39314fe073f6ca762"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/catalog-check-v7.log",
+      "bytes": 72,
+      "sha256": "df45158a92400c0796e6e542f79fb6609707f0fa13cef92ad9f39a44130b98c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/catalog-check.log",
+      "bytes": 72,
+      "sha256": "df45158a92400c0796e6e542f79fb6609707f0fa13cef92ad9f39a44130b98c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/catalog-generate-v5.log",
+      "bytes": 72,
+      "sha256": "df45158a92400c0796e6e542f79fb6609707f0fa13cef92ad9f39a44130b98c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/catalog-generate-v7.log",
+      "bytes": 72,
+      "sha256": "df45158a92400c0796e6e542f79fb6609707f0fa13cef92ad9f39a44130b98c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/catalog-generate.log",
+      "bytes": 72,
+      "sha256": "df45158a92400c0796e6e542f79fb6609707f0fa13cef92ad9f39a44130b98c2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-driver.log",
+      "bytes": 2060,
+      "sha256": "a771cd900140264c30beb5b67aff481bba520bffd1351854b4900f47686125e7"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final-driver.log",
+      "bytes": 2066,
+      "sha256": "8b7534fddb987e26cc9829a872f9af270c9b05a36c3bc777ce2644a7326f3827"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-campaign-accounting.json",
+      "bytes": 908,
+      "sha256": "3ed3c9a60d19fb26df1040b505a1d58bc4f21099b4b1dc2b6ead24c4d2559c7c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-owner-driver.log",
+      "bytes": 1214,
+      "sha256": "75b6b37e6e104cc972642f1b97a2f3b5b132823d5a6aaa7ad7a795a848a40af5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-owner-registration.json",
+      "bytes": 14078,
+      "sha256": "92e9fbbc3cf9eb2b44cdaffccca167ca300e491810d95c3cae6bc3ec015c38f4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-owner-supervision.json",
+      "bytes": 2895,
+      "sha256": "1af290495351ede4a16287e29d3b5c77393d92796327e82b9fc29b9b7a5bacfe"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-driver.log",
+      "bytes": 2497,
+      "sha256": "4a2cb04a98aa53038a4e594cfab06ae214e5709733929d8cf60a58acd5430e1c"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final-driver.log",
+      "bytes": 2483,
+      "sha256": "af1d6d038400c285df4fa9a27e7ed9c9d9f18cdbf4c2483de82f361d0bbb86c6"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method-driver.log",
+      "bytes": 893,
+      "sha256": "d99e817ef0c2c1e7a802300f2961fdb06a8804b33262e0daea0fe3545f0514c4"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method-registration.json",
+      "bytes": 10923,
+      "sha256": "7b0f834b7423fa9c70cf542ffe44b949d3aeb888a36bf4eb7d6d539727cfcd7a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method-supervision.json",
+      "bytes": 1396,
+      "sha256": "1411b9272fbb98eec29a7511797869a9ed38f605a0332671d2c84c37473b0c87"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted-driver.log",
+      "bytes": 1126,
+      "sha256": "94da3b5cd2ea4baae33adea5b4de1f78b4e46fa4be1514fe2d62266e3d1f947b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted-registration.json",
+      "bytes": 11333,
+      "sha256": "d047fe7e700be19665a75da7f53516249b90c7a973b1374c4491e687988917f5"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted-supervision.json",
+      "bytes": 1502,
+      "sha256": "d9a452725800d63addd7d536553da668eb7d355fcf08679262a87908fc4a4708"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/openapi-generate-v5.log",
+      "bytes": 57,
+      "sha256": "668cb977128b5ba17db206edf4c4b12df924823eaf21457f05e4fa94e7b61979"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/openapi-generate-v7.log",
+      "bytes": 57,
+      "sha256": "668cb977128b5ba17db206edf4c4b12df924823eaf21457f05e4fa94e7b61979"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/openapi-generate.log",
+      "bytes": 57,
+      "sha256": "668cb977128b5ba17db206edf4c4b12df924823eaf21457f05e4fa94e7b61979"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owned-cache-cleanup.json",
+      "bytes": 683,
+      "sha256": "90d3a3bfa53c8f0e3251199a2a9c0094406b40d47412f25c55197de4b9244756"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-driver-v2.log",
+      "bytes": 1105,
+      "sha256": "9b1307da80807fe6e0e6fe438fcf59e9ab2d5985b73d7ddb6d05be34ffcbb7a2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-driver.log",
+      "bytes": 962,
+      "sha256": "ff47c9ff1300b60a310da0b583dd88063f770c8bb0399e18f01a720432f5f6cf"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-registration-v2.json",
+      "bytes": 7266,
+      "sha256": "a57f77efa69fa745d6c441d984d9fae9f792a8c38e6dc288a771956f7047c952"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-registration.json",
+      "bytes": 7266,
+      "sha256": "a57f77efa69fa745d6c441d984d9fae9f792a8c38e6dc288a771956f7047c952"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-supervision-v2.json",
+      "bytes": 2451,
+      "sha256": "c5eb0d8297d29df1900cd1b53396c7f9f4a85f1aaaca596ebf86d2d21fa22aee"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-supervision.json",
+      "bytes": 2448,
+      "sha256": "a39a126c8ff6b559e2df84495ddebc70c0e22e801b0c877c0c142898443725bf"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v2.log",
+      "bytes": 230,
+      "sha256": "f429463d5a5185bad5b1d37e973aa405ac332ac383f0a281ff4d78913ab083a1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v3.log",
+      "bytes": 230,
+      "sha256": "6014fa7046dd7ff334532fc9b81cae2619cc63e2e618a895ca3323380e13a49a"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v4.log",
+      "bytes": 231,
+      "sha256": "a2f7e0a2ae265100fa7f176f1699d658c8b8c7f5ec967977c7f9531d68ee22a1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v5.log",
+      "bytes": 231,
+      "sha256": "9c1a1f79599826a5198126735f12421edca6cc37eb6030ac19c29ed5406c11c1"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v6-red.log",
+      "bytes": 239,
+      "sha256": "aa4ce77ff248e2f3b413ba247850f792aade71ac5ac31ee786f97f1bf5d2ac55"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection-v7.log",
+      "bytes": 231,
+      "sha256": "be9278a5c1abc498ee671782ae81c15aeb0103c951ba05656cb117c2dc974719"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/projection.log",
+      "bytes": 224,
+      "sha256": "47a941c6bd453c5ed14f1a8b7c983c5c5549698a5c0652875d6900eee1028a14"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/retained-s5-preflight.json",
+      "bytes": 1391,
+      "sha256": "7f41284bcd9b4b27738fad0a399c2df63ae9deadb843a81c24e51d236b029881"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck-v2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck-v3.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck-v4.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck-v5.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck-v7.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck.log",
+      "bytes": 160,
+      "sha256": "7d8bcf726913da24a8d57a3823f88093a7d42a3af256d1951fe3387963dbf21b"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red-driver.log",
+      "bytes": 896,
+      "sha256": "bbd42064eae533852f17caaea1fde9421c6d70e759b9e80157cceafd33d1d718"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red-registration.json",
+      "bytes": 12550,
+      "sha256": "f541557b43bee755ee833a5a5df2adbe8b28176608f1bc976206c262fbaabb40"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red-supervision.json",
+      "bytes": 1249,
+      "sha256": "def2a93f4bd00aa865d3ca9ea72601238ded4a803278a8eb5b6244c260498ff2"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/ui-typecheck-v7.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/ui-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut/serial-projection.json",
+      "bytes": 484980,
+      "sha256": "52e5451de5fd9b9713df91a9ea9916674e08bf69b29d4ad4b328fee995e62fdc",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v2/serial-projection.json",
+      "bytes": 499029,
+      "sha256": "8ded6b5f2f318817c75a859f53496fb68b318083d4002448dcd0ad3912cdda23",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v3/serial-projection.json",
+      "bytes": 502998,
+      "sha256": "6ce3719e22e88b7e4eb189452ddc77d6b310c5d659bee2f49a961a5b6cbd51a5",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v4/serial-projection.json",
+      "bytes": 574376,
+      "sha256": "2bee2e50bc5d7ec9b7f8d01efa1fc0592665482614563d40f9136e94dbf0fa35",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v5/serial-projection.json",
+      "bytes": 574376,
+      "sha256": "9ceb6fd79a8497d07d6a81b46e297d3f1d691bda59583e4841c56e9f4a4a215c",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v6-red/serial-projection.json",
+      "bytes": 574259,
+      "sha256": "605cf40655feac42424ea55585f8dd416ffbc28db8b39e15e3e2c676a623baa6",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/serial-projection.json",
+      "bytes": 574376,
+      "sha256": "50dc95e76bc865f79e66604b8c44c9953a9b60b71fc263abe5168dd5d62415bd",
+      "kind": "SOURCE_PROJECTION_MANIFEST_NOT_BEHAVIORAL_PROOF"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v4/ui-tsconfig.json",
+      "bytes": 415,
+      "sha256": "22bb399f3f5ce745f5923b30109ac4d1ce6b8dd29cc85ffa49488565e6afec5a",
+      "kind": "ACTUAL_FOCUSED_UI_CONFIGURATION"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/ui-tsconfig.json",
+      "bytes": 415,
+      "sha256": "856c36c39f85cc45125d444fb83327d371d0958639d5f5712aa0e8028912da58",
+      "kind": "ACTUAL_FOCUSED_UI_CONFIGURATION"
+    }
+  ],
+  "rawEvidenceBytes": 248566710,
+  "results": {
+    "exact": {
+      "classification": "DETERMINISTICALLY_VERIFIED",
+      "pass": 14,
+      "total": 14,
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/exact-final/results.json"
+    },
+    "mutations": {
+      "classification": "DETERMINISTICALLY_VERIFIED",
+      "rejected": 15,
+      "total": 15
+    },
+    "information": {
+      "classification": "DETERMINISTICALLY_VERIFIED",
+      "pass": 4,
+      "total": 4,
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/information-final/results.json"
+    },
+    "owner": {
+      "classification": "EMPIRICALLY_VERIFIED",
+      "pass": 23,
+      "total": 23,
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/results.json",
+      "cases": [
+        {
+          "id": "owner-full-profile",
+          "status": "PASS"
+        },
+        {
+          "id": "original-policy-information",
+          "status": "PASS"
+        },
+        {
+          "id": "authenticated-owner-runtime",
+          "status": "PASS"
+        },
+        {
+          "id": "typed-boundary-reuse",
+          "status": "PASS"
+        },
+        {
+          "id": "actual-s4-s5-intent",
+          "status": "PASS"
+        },
+        {
+          "id": "current-s5-and-fallback",
+          "status": "PASS"
+        },
+        {
+          "id": "partial-and-outside-fallback",
+          "status": "PASS"
+        },
+        {
+          "id": "strict-auth-private-storage",
+          "status": "PASS"
+        },
+        {
+          "id": "queued-cancel-original-grant",
+          "status": "PASS"
+        },
+        {
+          "id": "terminal-build-current-context",
+          "status": "PASS"
+        },
+        {
+          "id": "structural-and-work-invalidation",
+          "status": "PASS"
+        },
+        {
+          "id": "world-and-tie-invalidation",
+          "status": "PASS"
+        },
+        {
+          "id": "method-runtime-invalidation",
+          "status": "PASS"
+        },
+        {
+          "id": "native-obligation-invalidation",
+          "status": "PASS"
+        },
+        {
+          "id": "original-continuation",
+          "status": "PASS"
+        },
+        {
+          "id": "s5-owned-parameter-reuse",
+          "status": "PASS"
+        },
+        {
+          "id": "current-s5-query-publication-race",
+          "status": "PASS"
+        },
+        {
+          "id": "shared-work-reservation-race",
+          "status": "PASS"
+        },
+        {
+          "id": "physical-accepted-recovery",
+          "status": "PASS"
+        },
+        {
+          "id": "actual-principal-publication-race",
+          "status": "PASS"
+        },
+        {
+          "id": "physical-cancel-and-original-deadline",
+          "status": "PASS"
+        },
+        {
+          "id": "actual-compute-capacity",
+          "status": "PASS"
+        },
+        {
+          "id": "physical-parent-loss-watchdog",
+          "status": "PASS"
+        }
+      ]
+    },
+    "nativeMounted": {
+      "classification": "PARTIAL",
+      "status": "FAIL_BEFORE_CANVAS_ACTIVATION",
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/results.json",
+      "predicate": "Native target must own its actual hit point; assigned pane visible, document focus=false, no trusted input recorded"
+    },
+    "retainedNumericS5": {
+      "classification": "PARTIAL",
+      "status": "NOT_RUN_EXISTING_REQUIRED_SCIPY_INTERPRETER_NOT_FOUND",
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/retained-s5-preflight.json"
+    }
+  },
+  "preservedFailures": [
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-typecheck.log",
+      "predicate": "Missing root production-mutation-guard source in initial private projection"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-driver.log",
+      "predicate": "ENOENT legitimate artifacts/src/service.ts omitted by overbroad extraction"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/results.json",
+      "predicate": "Canceled historical recommendation returned as current; reproduced before repair"
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/results.json",
+      "predicate": "Actual assigned pane native focus/hit failure; no workaround or relabeling"
+    }
+  ],
+  "campaignAccounting": {
+    "schema": "finnor.r7.final-campaign-accounting.v1",
+    "registeredCampaignSeconds": 3600,
+    "firstActualRunStartedAt": "2026-10-11T06:25:10.534Z",
+    "finalOwnerFinishedAt": "2026-10-11T07:59:24.348Z",
+    "elapsedIncludingInspectionRepairAndWaitSeconds": 5653.814,
+    "globalCampaignClockEnforced": false,
+    "globalWallQualification": "INCOMPLETE_REGISTERED_GLOBAL_WALL_EXCEEDED",
+    "perDriverGuards": "Actual final 1200-second/disk/evidence supervision retained separately; cannot substitute for global campaign wall",
+    "finalGeneratedRawEvidenceBytes": 248566710,
+    "maximumGeneratedRawEvidenceBytes": 268435456,
+    "rawEvidenceLimitSatisfiedAtFinalRead": true,
+    "currentFreeBytes": 387170304,
+    "money": null,
+    "humanSeconds": null,
+    "aggregateSimultaneousPeakMemoryBytes": null,
+    "rule": "Do not relabel per-case PASS or null guard as complete campaign/resource qualification; no more costly runs"
+  },
+  "noRawContentAdoptedFromLead": true,
+  "noRawEvidenceInBranch": true,
+  "actualCommandCustody": [
+    {
+      "supervisionPath": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owner-supervision.json",
+      "commandBindings": {
+        "command": [
+          "/Users/paramdave/.local/bin/node",
+          "--import=tsx",
+          "scripts/r7/run-owner.mts"
+        ],
+        "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v2/finnor-os",
+        "environmentBindings": {
+          "TMPDIR": "/tmp",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v2/finnor-os/scripts/r7/tsconfig.json",
+          "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v2/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+          "FINNOR_R7_CASE_FILTER": "owner-full-profile,original-policy-information,authenticated-owner-runtime,typed-boundary-reuse,actual-s4-s5-intent,current-s5-and-fallback,partial-and-outside-fallback,strict-auth-private-storage,queued-cancel-original-grant,structural-and-work-invalidation,world-and-tie-invalidation,native-obligation-invalidation,original-continuation,s5-owned-parameter-reuse,current-s5-query-publication-race,shared-work-reservation-race,physical-accepted-recovery,actual-principal-publication-race,physical-cancel-and-original-deadline,actual-compute-capacity,physical-parent-loss-watchdog",
+          "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners"
+        }
+      },
+      "commandBindingsSha256": "60612498879b25f88c281c7a8082e04676b14f2077844313841ee3dd31a135b1",
+      "scope": "Exactly recorded non-secret explicit bindings; not a complete inherited process-environment or material-cost meter"
+    },
+    {
+      "supervisionPath": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method-supervision.json",
+      "commandBindings": {
+        "command": [
+          "/Users/paramdave/.local/bin/node",
+          "--import=tsx",
+          "scripts/r7/run-owner.mts"
+        ],
+        "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v4/finnor-os",
+        "environmentBindings": {
+          "TMPDIR": "/tmp",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v4/finnor-os/scripts/r7/tsconfig.json",
+          "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v4/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+          "FINNOR_R7_CASE_FILTER": "method-runtime-invalidation",
+          "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/method",
+          "FINNOR_R7_ALT_PYTHON": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12"
+        }
+      },
+      "commandBindingsSha256": "019ea135b49e51915d12aac7b4c74630f24f1afa3902891f28ec7ffec2fcc1ad",
+      "scope": "Exactly recorded non-secret explicit bindings; not a complete inherited process-environment or material-cost meter"
+    },
+    {
+      "supervisionPath": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted-supervision.json",
+      "commandBindings": {
+        "command": [
+          "/Users/paramdave/.local/bin/node",
+          "--import=tsx",
+          "scripts/r7/run-owner.mts",
+          "--browser"
+        ],
+        "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v5/finnor-os",
+        "environmentBindings": {
+          "TMPDIR": "/tmp",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v5/finnor-os/scripts/r7/tsconfig.json",
+          "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v5/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+          "FINNOR_R7_CASE_FILTER": "mounted-capital-work",
+          "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted",
+          "FINNOR_R7_BROWSER_TAB": "t1",
+          "FINNOR_R7_BROWSER_TARGET": "66276A19B07BCE2AD330FE079A973AD2"
+        }
+      },
+      "commandBindingsSha256": "95c3cf53391c34fd68e0595a06cc57cb0d50cf5ca42c44fa505a083be5cceb91",
+      "scope": "Exactly recorded non-secret explicit bindings; not a complete inherited process-environment or material-cost meter"
+    },
+    {
+      "supervisionPath": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red-supervision.json",
+      "commandBindings": {
+        "command": [
+          "/Users/paramdave/.local/bin/node",
+          "--import=tsx",
+          "scripts/r7/run-owner.mts"
+        ],
+        "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v6-red/finnor-os",
+        "environmentBindings": {
+          "TMPDIR": "/tmp",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v6-red/finnor-os/scripts/r7/tsconfig.json",
+          "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v6-red/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+          "FINNOR_R7_CASE_FILTER": "terminal-build-current-context",
+          "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red"
+        }
+      },
+      "commandBindingsSha256": "6a6d12886bc5e925ea659f104995e5bcf095e80cda1ea2b00ef9c7a83426771b",
+      "scope": "Exactly recorded non-secret explicit bindings; not a complete inherited process-environment or material-cost meter"
+    },
+    {
+      "supervisionPath": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/final-owner-supervision.json",
+      "commandBindings": {
+        "command": [
+          "/Users/paramdave/.local/bin/node",
+          "--import=tsx",
+          "scripts/r7/run-owner.mts"
+        ],
+        "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os",
+        "environmentBindings": {
+          "TMPDIR": "/tmp",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os/scripts/r7/tsconfig.json",
+          "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+          "FINNOR_R7_CASE_FILTER": "owner-full-profile,original-policy-information,authenticated-owner-runtime,typed-boundary-reuse,actual-s4-s5-intent,current-s5-and-fallback,partial-and-outside-fallback,strict-auth-private-storage,queued-cancel-original-grant,structural-and-work-invalidation,world-and-tie-invalidation,native-obligation-invalidation,original-continuation,s5-owned-parameter-reuse,current-s5-query-publication-race,shared-work-reservation-race,physical-accepted-recovery,actual-principal-publication-race,physical-cancel-and-original-deadline,actual-compute-capacity,physical-parent-loss-watchdog,method-runtime-invalidation,terminal-build-current-context",
+          "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final",
+          "FINNOR_R7_ALT_PYTHON": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12"
+        }
+      },
+      "commandBindingsSha256": "e84f4ba206fe7034137d67779754b7ff3c0fadbf6a973cca326b4f21cd409a59",
+      "scope": "Exactly recorded non-secret explicit bindings; not a complete inherited process-environment or material-cost meter"
+    }
+  ]
+}

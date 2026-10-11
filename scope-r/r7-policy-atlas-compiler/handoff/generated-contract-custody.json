@@ -1,0 +1,129 @@
+{
+  "schema": "finnor.r7.private-generated-contracts.v1",
+  "classification": "DETERMINISTICALLY_VERIFIED_STRUCTURAL_ONLY",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "projection": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7",
+  "preexistingCapabilities": 390,
+  "changedPreexistingCapabilities": [],
+  "atlasOperations": [
+    {
+      "routePattern": "decision-atlases/build",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/cancel",
+      "classification": "CONTROL",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/context",
+      "classification": "READ",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": []
+    },
+    {
+      "routePattern": "decision-atlases/continue",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/parameters",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/query",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/read",
+      "classification": "READ",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": []
+    },
+    {
+      "routePattern": "decision-atlases/register",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/select",
+      "classification": "MUTATION",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ]
+    },
+    {
+      "routePattern": "decision-atlases/status",
+      "classification": "READ",
+      "owner": "@finnor/private-equity",
+      "invalidationTags": []
+    }
+  ],
+  "outputs": [
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "6aa2db1883638f5d78db9fd24072fbaa764a775bcf85bc2e2824cf5d9e99ecea",
+      "bytes": 356569
+    },
+    {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os/openapi.json",
+      "sha256": "7a6db69c3bf85fd081c205f6019b20583ccf3a61374d228672aef430d7b21f68",
+      "bytes": 1651362
+    }
+  ],
+  "generatorCommands": [
+    {
+      "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7",
+      "argv": [
+        "node",
+        "scripts/centropy/generate-capability-manifest.mjs"
+      ]
+    },
+    {
+      "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7",
+      "argv": [
+        "node",
+        "scripts/centropy/generate-capability-manifest.mjs",
+        "--check"
+      ]
+    },
+    {
+      "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os",
+      "argv": [
+        "node",
+        "--import=tsx",
+        "scripts/generate-openapi.ts"
+      ]
+    }
+  ],
+  "canonicalGeneratedOutputsWritten": false
+}

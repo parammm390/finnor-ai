@@ -74,3 +74,12 @@ source/self comparisons or early unrelated refusals count as behavioral proof.
 Private artifacts retain exact inputs, commands, steps, physical observations,
 results, source/runtime pins and all reds. Rerun only affected registered checks
 after a concrete repair. Original gates and profile bounds are not reduced.
+
+## Registered connected-review regression before repair
+
+A completed checked build can be canceled through its real authenticated control
+route. Parameter and current S5 digests may remain unchanged, while its old query
+row remains immutable. Current context and presentation must not relabel that
+historical recommendation as current once the build is terminal/unpublished or
+its original deadline has passed. The new actual bearer/SQL regression is
+registered in verification-plan.json before changing the affected owner or UI.

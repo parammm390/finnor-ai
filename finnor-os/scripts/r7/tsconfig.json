@@ -1,0 +1,161 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@finnor/shared-types": [
+        "./packages/shared-types/src/index.ts"
+      ],
+      "@finnor/policy-schema": [
+        "./packages/policy-schema/src/index.ts"
+      ],
+      "@finnor/db": [
+        "./packages/db/index.ts"
+      ],
+      "@finnor/db/*": [
+        "./packages/db/*"
+      ],
+      "@finnor/authority": [
+        "./packages/authority/src/index.ts"
+      ],
+      "@finnor/computer": [
+        "./packages/computer/src/index.ts"
+      ],
+      "@finnor/data-platform": [
+        "./packages/data-platform/src/index.ts"
+      ],
+      "@finnor/import-engine": [
+        "./packages/import-engine/src/index.ts"
+      ],
+      "@finnor/workflow-runtime": [
+        "./packages/workflow-runtime/src/index.ts"
+      ],
+      "@finnor/memory": [
+        "./packages/memory/src/index.ts"
+      ],
+      "@finnor/security": [
+        "./packages/security/src/index.ts"
+      ],
+      "@finnor/tools": [
+        "./packages/tools/src/index.ts"
+      ],
+      "@finnor/tools/*": [
+        "./packages/tools/src/*.ts"
+      ],
+      "@finnor/orchestration": [
+        "./packages/orchestration/src/index.ts"
+      ],
+      "@finnor/read-models": [
+        "./packages/read-models/src/index.ts"
+      ],
+      "@finnor/private-equity": [
+        "./packages/private-equity/src/index.ts"
+      ],
+      "@finnor/underwriting": [
+        "./packages/underwriting/src/index.ts"
+      ],
+      "@finnor/epistemic-runtime": [
+        "./packages/epistemic-runtime/src/index.ts"
+      ],
+      "@finnor/plugins-shared": [
+        "./packages/domain-plugins/shared/plugin-interface.ts"
+      ],
+      "@finnor/plugin-water-test": [
+        "./packages/domain-plugins/water-test/index.ts"
+      ],
+      "@finnor/plugin-maintenance-agreement": [
+        "./packages/domain-plugins/maintenance-agreement/index.ts"
+      ],
+      "@finnor/ooxml": [
+        "./packages/ooxml/src/index.ts"
+      ],
+      "@finnor/artifacts": [
+        "./packages/artifacts/src/index.ts"
+      ],
+      "@finnor/spreadsheet-ir": [
+        "./packages/spreadsheet-ir/src/index.ts"
+      ],
+      "@finnor/document-ir": [
+        "./packages/document-ir/src/index.ts"
+      ],
+      "@finnor/presentation-ir": [
+        "./packages/presentation-ir/src/index.ts"
+      ],
+      "@finnor/shared-types/*": [
+        "./packages/shared-types/*"
+      ],
+      "@finnor/policy-schema/*": [
+        "./packages/policy-schema/*"
+      ],
+      "@finnor/authority/*": [
+        "./packages/authority/*"
+      ],
+      "@finnor/computer/*": [
+        "./packages/computer/*"
+      ],
+      "@finnor/data-platform/*": [
+        "./packages/data-platform/*"
+      ],
+      "@finnor/import-engine/*": [
+        "./packages/import-engine/*"
+      ],
+      "@finnor/workflow-runtime/*": [
+        "./packages/workflow-runtime/*"
+      ],
+      "@finnor/memory/*": [
+        "./packages/memory/*"
+      ],
+      "@finnor/security/*": [
+        "./packages/security/*"
+      ],
+      "@finnor/orchestration/*": [
+        "./packages/orchestration/*"
+      ],
+      "@finnor/read-models/*": [
+        "./packages/read-models/*"
+      ],
+      "@finnor/private-equity/*": [
+        "./packages/private-equity/*"
+      ],
+      "@finnor/underwriting/*": [
+        "./packages/underwriting/*"
+      ],
+      "@finnor/epistemic-runtime/*": [
+        "./packages/epistemic-runtime/*"
+      ],
+      "@finnor/plugins-shared/*": [
+        "./packages/domain-plugins/*"
+      ],
+      "@finnor/plugin-water-test/*": [
+        "./packages/domain-plugins/*"
+      ],
+      "@finnor/plugin-maintenance-agreement/*": [
+        "./packages/domain-plugins/*"
+      ],
+      "@finnor/ooxml/*": [
+        "./packages/ooxml/*"
+      ],
+      "@finnor/artifacts/*": [
+        "./packages/artifacts/*"
+      ],
+      "@finnor/spreadsheet-ir/*": [
+        "./packages/spreadsheet-ir/*"
+      ],
+      "@finnor/document-ir/*": [
+        "./packages/document-ir/*"
+      ],
+      "@finnor/presentation-ir/*": [
+        "./packages/presentation-ir/*"
+      ]
+    }
+  },
+  "include": [
+    "../../packages/epistemic-runtime/src/policy-atlas/**/*.ts",
+    "../../packages/private-equity/src/r7/**/*.ts",
+    "../../packages/shared-types/src/decision-atlas.ts",
+    "../../apps/api/app/api/decision-atlases/**/*.ts",
+    "./*.mts"
+  ]
+}

@@ -1,0 +1,29 @@
+diff --git a/finnor-os/packages/db/compute-contract.ts b/finnor-os/packages/db/compute-contract.ts
+index 496bc49a23c847e76b836d8d88ad1a12c9b42395..a51be6a20ea9e9c0fc9e4abb74f152536f4e8c2f 100644
+--- a/finnor-os/packages/db/compute-contract.ts
++++ b/finnor-os/packages/db/compute-contract.ts
+@@ -80,6 +80,7 @@
+ 
+ /** Exhaustive registry for every production handler registered by the worker. */
+ export const PRODUCTION_JOB_CONTRACTS = {
++  run_decision_atlas_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R7 exact named-family atlas under original episode; independent checker, retained physical costs, no effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
+   run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
+   run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
+   run_identification_plan_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R4 finite causal acquisition-menu search and independent checking under one original S4/S5 grant; no physical acquisition retry."),
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+index ba8cb16c482ff1a4cb05a547cd29a3480c85c66f..5aa1158dda7d6d54fa43674ac32728240e8ad486 100644
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -1,3 +1,4 @@
++import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+ import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
+ import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
+ import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
+@@ -52,6 +53,7 @@
+ 
+ export function createWorker(): JobQueue {
+   const queue = new JobQueue();
++  queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
+   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
+   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
+   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);

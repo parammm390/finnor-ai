@@ -1,0 +1,192 @@
+{
+  "schema": "finnor.r7.bounded-adoption-status.v1",
+  "scope": "R7 PolicyAtlasCompiler / DecisionAtlas / delivery Phase7; bounded producer, not complete integrated R7 release",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "sourcePin": "handoff/source-pin.json",
+  "sourceAdoption": {
+    "originCount": 38,
+    "originBytes": 366988,
+    "excludedLeadPaths": 1855,
+    "repairedOriginCount": 13,
+    "newOwnedSourceCount": 1,
+    "sharedCanonicalFilesModified": 0,
+    "serialPatches": 6,
+    "serialSharedPaths": 10,
+    "schemaOrdinal": null
+  },
+  "supported": {
+    "continuousRationalParameters": [
+      1,
+      4
+    ],
+    "namedOriginalPoliciesMaximum": 32,
+    "completeFixedWorldsMaximum": 64,
+    "periodsMaximum": 12,
+    "qualification": "MODEL_RELATIVE_EXACT_UNADMITTED_SUPPLIED_AFFINE_HYPOTHESES",
+    "boundary": "NEGATIVE_ZERO_POSITIVE_EXACT including strict, equality, point/line/hull faces",
+    "proof": "Independent original-input complete bounded active-basis enumeration, exact hull/common slack, full-world/full-horizon feasibility/ranking/ties/coverage",
+    "claim": "Named finite family only; no complete M3 grammar, causal truth or admission"
+  },
+  "unsupported": [
+    "Nonaffine/fitted FLOAT64 conversion",
+    "Products/variable denominators/nonlinear discounts",
+    "Approximate/interval/midpoint membership",
+    "Farkas producer/acceptance (vertex proof chosen)",
+    "Arbitrary maximal-arrangement capacity guarantee",
+    "Positive real S2 inquiry and qualified S6 effect continuation",
+    "Protected admitted fallback/activation",
+    "Final installed/numbered/joined release"
+  ],
+  "gates": {
+    "mathematicalRegisteredCorpus": "DETERMINISTICALLY_VERIFIED_14_CASES_15_MUTATIONS_4_INFORMATION",
+    "realOwnerSerialCut": "EMPIRICALLY_VERIFIED_23_OF_23",
+    "focusedOwnedAndUiTypechecks": "DETERMINISTICALLY_VERIFIED_STRUCTURAL_ONLY",
+    "registeredGlobalCampaignWall": "INCOMPLETE_5653.814_SECONDS_GLOBAL_CLOCK_NOT_ENFORCED",
+    "fullFunctionalR7Engineering": "PARTIAL_INTERNAL_NATIVE_WORK_RETAINED_NUMERIC_S5_RUNTIME_SCHEMA_PACKAGING_AND_P7_GAPS",
+    "mountedWork": "FAIL_BEFORE_NATIVE_CANVAS_ACTIVATION_REMAINDER_NOT_RUN",
+    "retainedNumericS5": "NOT_RUN_REQUIRED_EXISTING_SCIPY_RUNTIME_NOT_FOUND",
+    "installedRuntimeFreshUpgradeRestartOldJobs": "NOT_RUN_SERIAL_RELEASE_ENGINEERING",
+    "combinedRCut": "NOT_RUN",
+    "familyBusinessDomainAdequacy": "UNQUALIFIED",
+    "S8MethodCheckerFallbackAdmission": "UNQUALIFIED",
+    "protectedActivation": "NOT_GRANTED",
+    "protectedPostXGain": "NOT_RUN",
+    "economicRelease": "UNQUALIFIED_NOT_RUN"
+  },
+  "finalOwnerSupervision": {
+    "schema": "finnor.r7.owner-campaign-supervision.v1",
+    "command": [
+      "/Users/paramdave/.local/bin/node",
+      "--import=tsx",
+      "scripts/r7/run-owner.mts"
+    ],
+    "cwd": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os",
+    "environmentBindings": {
+      "TMPDIR": "/tmp",
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "TSX_TSCONFIG_PATH": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/finnor-os/scripts/r7/tsconfig.json",
+      "FINNOR_R7_SERIAL_SCHEMA": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql",
+      "FINNOR_R7_CASE_FILTER": "owner-full-profile,original-policy-information,authenticated-owner-runtime,typed-boundary-reuse,actual-s4-s5-intent,current-s5-and-fallback,partial-and-outside-fallback,strict-auth-private-storage,queued-cancel-original-grant,structural-and-work-invalidation,world-and-tie-invalidation,native-obligation-invalidation,original-continuation,s5-owned-parameter-reuse,current-s5-query-publication-race,shared-work-reservation-race,physical-accepted-recovery,actual-principal-publication-race,physical-cancel-and-original-deadline,actual-compute-capacity,physical-parent-loss-watchdog,method-runtime-invalidation,terminal-build-current-context",
+      "FINNOR_R7_EVIDENCE_DIR": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final",
+      "FINNOR_R7_ALT_PYTHON": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12"
+    },
+    "registrationSha256": "92e9fbbc3cf9eb2b44cdaffccca167ca300e491810d95c3cae6bc3ec015c38f4",
+    "selectedCases": [
+      "owner-full-profile",
+      "original-policy-information",
+      "authenticated-owner-runtime",
+      "typed-boundary-reuse",
+      "actual-s4-s5-intent",
+      "current-s5-and-fallback",
+      "partial-and-outside-fallback",
+      "strict-auth-private-storage",
+      "queued-cancel-original-grant",
+      "structural-and-work-invalidation",
+      "world-and-tie-invalidation",
+      "native-obligation-invalidation",
+      "original-continuation",
+      "s5-owned-parameter-reuse",
+      "current-s5-query-publication-race",
+      "shared-work-reservation-race",
+      "physical-accepted-recovery",
+      "actual-principal-publication-race",
+      "physical-cancel-and-original-deadline",
+      "actual-compute-capacity",
+      "physical-parent-loss-watchdog",
+      "method-runtime-invalidation",
+      "terminal-build-current-context"
+    ],
+    "limits": {
+      "seconds": 1200,
+      "minimumFreeBytes": 268435456,
+      "maximumEvidenceBytes": 268435456
+    },
+    "qualification": "PRIVATE_SERIAL_PROPOSALS_NOT_JOINED_RELEASE_INSTALLED_OR_MOUNTED",
+    "money": null,
+    "humanSeconds": null,
+    "aggregatePeakMemoryBytes": null,
+    "wallSeconds": 207.727991375,
+    "minimumFreeBytes": 466280448,
+    "maximumEvidenceBytes": 248566710,
+    "guardPredicate": null,
+    "exitCode": 0
+  },
+  "campaignAccounting": {
+    "schema": "finnor.r7.final-campaign-accounting.v1",
+    "registeredCampaignSeconds": 3600,
+    "firstActualRunStartedAt": "2026-10-11T06:25:10.534Z",
+    "finalOwnerFinishedAt": "2026-10-11T07:59:24.348Z",
+    "elapsedIncludingInspectionRepairAndWaitSeconds": 5653.814,
+    "globalCampaignClockEnforced": false,
+    "globalWallQualification": "INCOMPLETE_REGISTERED_GLOBAL_WALL_EXCEEDED",
+    "perDriverGuards": "Actual final 1200-second/disk/evidence supervision retained separately; cannot substitute for global campaign wall",
+    "finalGeneratedRawEvidenceBytes": 248566710,
+    "maximumGeneratedRawEvidenceBytes": 268435456,
+    "rawEvidenceLimitSatisfiedAtFinalRead": true,
+    "currentFreeBytes": 387170304,
+    "money": null,
+    "humanSeconds": null,
+    "aggregateSimultaneousPeakMemoryBytes": null,
+    "rule": "Do not relabel per-case PASS or null guard as complete campaign/resource qualification; no more costly runs"
+  },
+  "meterGaps": [
+    "Money",
+    "Human seconds",
+    "Aggregate simultaneous peak memory",
+    "Complete cold/preparation/storage/rebuild/economic/comparison accounting"
+  ],
+  "historicalNoGain": {
+    "offSeconds": 174.600458365,
+    "onSeconds": 278.228829247,
+    "observedCrossing": false,
+    "rerun": false,
+    "qualification": "Dated immutable lead diagnostic only; not new evidence or complete cost/wealth claim"
+  },
+  "review": {
+    "classification": "DETERMINISTICALLY_VERIFIED_AND_EMPIRICALLY_VERIFIED_WITHIN_NAMED_SCOPE",
+    "groups": [
+      "Exact source/compiler/geometry/checker/reference/query",
+      "Owner/source/policy batch, S4 projection, canonical S5 allocation/responsibility",
+      "Authenticated service/storage/worker/physical currentness and recovery",
+      "Exclusive review, original mounted driver and common serial Work/catalog/API proposals",
+      "Custody/registration/runtime/source/gates"
+    ],
+    "resolved": [
+      {
+        "priority": "P1",
+        "path": "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r7/service.ts",
+        "line": 34,
+        "trigger": "Authenticate, build/check/query, then cancel completed build without changing parameters/resources. Historical query row was still exposed as current",
+        "consequence": "Wrong current context and potentially misleading UI recommendation despite canceled atlas",
+        "remedy": "Join status/original deadline and suppress terminal/expired query; guard known terminal UI build; preserve historical rows/grant/counts",
+        "before": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/terminal-red/results.json",
+        "after": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/owners-final/results.json"
+      },
+      {
+        "priority": "P3",
+        "paths": [
+          "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r7/service.ts",
+          "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r7/selection.ts",
+          "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/policy-atlas/contracts.ts",
+          "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/policy-atlas/geometry.ts"
+        ],
+        "remedy": "Removed AST-verified unused imports only; affected exact/information/owner checks rerun"
+      }
+    ],
+    "unresolvedOperationalFinding": {
+      "path": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/mounted/browser/results.json",
+      "status": "PARTIAL_NATIVE_FOCUS_AND_HIT_POINT",
+      "noNativeInputSubstitution": true
+    },
+    "noQualityScoreOrGainInvented": true
+  },
+  "notAdopted": [
+    "R3 already done, not redone or prerequisite",
+    "R6 separate",
+    "R5/main serial integration owned elsewhere",
+    "R2 optional interfaces/dependencies not R2 algorithm adoption",
+    "M5/Pi/cddlib/pycddlib/SCIP/Gurobi not adopted"
+  ],
+  "noPublicationDeploymentLiveEffects": true
+}

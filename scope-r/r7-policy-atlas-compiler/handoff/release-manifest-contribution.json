@@ -1,0 +1,29 @@
+{
+  "schema": "finnor.r7.release-contribution.v1",
+  "scope": "R7",
+  "artifact": "DecisionAtlas",
+  "artifactSchema": "finnor.decision-atlas.v1",
+  "interfaceVersion": "r7-exact-affine-v1",
+  "finitePolicyOwnerVersion": "s4-exact-affine-v1",
+  "job": {
+    "type": "run_decision_atlas_v1",
+    "protocolVersions": [
+      1
+    ],
+    "lane": "INTERACTIVE",
+    "tenantScoped": true,
+    "retrySafety": "locally_idempotent",
+    "recovery": "immediate_after_expiry",
+    "databaseLane": "interactive"
+  },
+  "sourcePin": "source-pin.json",
+  "runtimeLicenses": "runtime-licenses.json",
+  "proposals": "proposals/manifest.json",
+  "privateEvidence": "evidence-index.json",
+  "schemaOrdinal": null,
+  "containerDigest": null,
+  "S8AdmissionRef": null,
+  "completedXComparator": null,
+  "functionalStatus": "PARTIAL_NOT_RELEASE_QUALIFIED",
+  "claims": "Only R7 contribution; no eight-output or joined-release manifest invented"
+}

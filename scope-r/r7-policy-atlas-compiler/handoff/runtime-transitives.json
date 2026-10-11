@@ -1,0 +1,1961 @@
+{
+  "schema": "finnor.r7.actual-borrowed-package-inventory.v1",
+  "kind": "PACKAGE_JSON_NOTICE_AND_DECLARED_EDGE_METADATA_ONLY_NOT_CODE_BINARY_IMAGE_CLOSURE",
+  "roots": [
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/supabase-js/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/embedded-postgres/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tsx/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/typescript/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/zod/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/supabase-js/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/next/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react-dom/package.json",
+    "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/package.json"
+  ],
+  "packages": [
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@embedded-postgres/darwin-arm64/package.json",
+      "name": "@embedded-postgres/darwin-arm64",
+      "version": "18.4.0-beta.17",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "66a6047a2180980afe388e9521130a2f88e35b50c407e5a5e35334a2f1035aed",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@embedded-postgres/darwin-arm64/LICENSE.md",
+          "bytes": 1068,
+          "sha256": "e094f576ecd150e7cad723e0bd56c13bd42ce9f4df61af14f439d852b39ad4d4"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@esbuild/darwin-arm64/package.json",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.25.12",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "79a69873b3ae6dbc47d8c3c8027b9563630f65e8fe58690183c5398a52410e7f",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/colour/package.json",
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "bc38c5097693ed53b91c32f35fb0a52569736c7854ba2eb6d080f3252071f75c",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/colour/LICENSE.md",
+          "bytes": 4433,
+          "sha256": "e2eaa4603c14cb26f301e88648c12a853fa3f0f5da6d4b0972958c666e7f2ab8"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-darwin-arm64/package.json",
+      "name": "@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "157996706c751e9a3608f35811f156238fa4ad1f367abfd4facec30883747f5e",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-darwin-arm64/LICENSE",
+          "bytes": 10273,
+          "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-darwin-arm64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-libvips-darwin-arm64/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-libvips-darwin-arm64/package.json",
+      "name": "@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "declaredLicense": "LGPL-3.0-or-later",
+      "packageJsonSha256": "394ecfe4e823ebf6ddc9f9b7155046aad1f0492300920323ddfb84cae85dbac0",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@opentelemetry/api/package.json",
+      "name": "@opentelemetry/api",
+      "version": "1.9.1",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "c0d7c72331bc8cd456dd791f2f429ddafa1d0b5b8abeb4104e6deb12f18b4a86",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@opentelemetry/api/LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/auth-js/package.json",
+      "name": "@supabase/auth-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "d925dcdfe68b331d8c307b8057dba325abb0c1fdd2d66593623a7f4f039f523e",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/auth-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/functions-js/package.json",
+      "name": "@supabase/functions-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "b05465e8d7c920c4724f7d4044d07b7d6b6a2fc09a3e0bda470bd29e3a334ecb",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/functions-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/phoenix/package.json",
+      "name": "@supabase/phoenix",
+      "version": "0.4.5",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "eaf685038bf1a69bf37ddd7c32fa5b7a55b5f8455de7590b01e77a353c185269",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/phoenix/LICENSE.md",
+          "bytes": 1071,
+          "sha256": "41a686069f0199ff369d7e5277d5267385cc54d9199f1efc960bacbe2e799255"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/postgrest-js/package.json",
+      "name": "@supabase/postgrest-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "036ea83578810e76c5428a6ea9009e328fbec57f0d5b7a2c34fdc1a0f700863a",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/postgrest-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/realtime-js/package.json",
+      "name": "@supabase/realtime-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "2d9e977c5d0b46e52b784dbf2fcca392cb314d5ddc8ddb74600d0ff35ec69640",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/realtime-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@supabase/phoenix",
+          "declared": "0.4.5",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/phoenix/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/storage-js/package.json",
+      "name": "@supabase/storage-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "276653ff4c7ec9aaa534ea7ae7c8fe812ef5b3d33495c29d56dce887f43405e6",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/storage-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "iceberg-js",
+          "declared": "^0.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/iceberg-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/supabase-js/package.json",
+      "name": "@supabase/supabase-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "860f0bffaa8ef18bd23a00d20fd10d9aaef894dbdbae72fce82ed26439d2d1b7",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/supabase-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@supabase/auth-js",
+          "declared": "2.115.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/auth-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/functions-js",
+          "declared": "2.115.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/functions-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/postgrest-js",
+          "declared": "2.115.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/postgrest-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/realtime-js",
+          "declared": "2.115.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/realtime-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/storage-js",
+          "declared": "2.115.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/storage-js/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "@opentelemetry/api",
+          "declared": ">=1.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@opentelemetry/api/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/async-exit-hook/package.json",
+      "name": "async-exit-hook",
+      "version": "2.0.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "af7721cf8bdb9108da11e206cd17695fd09b6395d6fb9abe149e6878b46c2d7a",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/async-exit-hook/license",
+          "bytes": 1119,
+          "sha256": "6fb9754611c20f6649f68805e8c990e83261f29316e29de9e6cedae607b8634c"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/caniuse-lite/package.json",
+      "name": "caniuse-lite",
+      "version": "1.0.30001810",
+      "declaredLicense": "CC-BY-4.0",
+      "packageJsonSha256": "85120c8ff297e58a955aa37713e6a843a05adf5e3a11dd37cd1aa696500feda5",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/caniuse-lite/LICENSE",
+          "bytes": 18651,
+          "sha256": "fd3a263fe19ed8faa9068b43abaebafc02c77897b0c6fc09abc04bb592e5f16e"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/client-only/package.json",
+      "name": "client-only",
+      "version": "0.0.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "4d6342705767832f299b9a59c28e4275bcf02db19472732f93f67d979441df8f",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/detect-libc/package.json",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "ee88e5b954fdf3a8480b1d01ef767d68d8ca2c6da269f58c5cf1c5550e9aa2a7",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/detect-libc/LICENSE",
+          "bytes": 11357,
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/embedded-postgres/package.json",
+      "name": "embedded-postgres",
+      "version": "18.4.0-beta.17",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "ce8355940ae8606065f2620f298d1ecbe3dbf123967cc5ed58e8e1a78076699d",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/embedded-postgres/LICENSE.md",
+          "bytes": 1068,
+          "sha256": "e094f576ecd150e7cad723e0bd56c13bd42ce9f4df61af14f439d852b39ad4d4"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "async-exit-hook",
+          "declared": "^2.0.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/async-exit-hook/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "pg",
+          "declared": "^8.7.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/darwin-arm64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@embedded-postgres/darwin-arm64/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/darwin-x64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/linux-arm",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/linux-arm64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/linux-ia32",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/linux-ppc64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/linux-x64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@embedded-postgres/windows-x64",
+          "declared": "^18.4.0-beta.17",
+          "resolvedPackageJson": null
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/esbuild/package.json",
+      "name": "esbuild",
+      "version": "0.25.12",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "cb7d5b1fe478f8cbaae566a86031b6fdf5f7d444354f35d1cb3cba9adf6d2935",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/esbuild/LICENSE.md",
+          "bytes": 1069,
+          "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/aix-ppc64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/android-arm",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/android-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/android-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/darwin-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@esbuild/darwin-arm64/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/darwin-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/freebsd-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/freebsd-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-arm",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-ia32",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-loong64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-mips64el",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-ppc64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-riscv64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-s390x",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/linux-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/netbsd-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/netbsd-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/openbsd-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/openbsd-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/openharmony-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/sunos-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/win32-arm64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/win32-ia32",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@esbuild/win32-x64",
+          "declared": "0.25.12",
+          "resolvedPackageJson": null
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/fsevents/package.json",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "500839fcc76f6c5efcb454e6614b23c26775e75e1140619fff9ca64c291aec2b",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/fsevents/LICENSE",
+          "bytes": 1133,
+          "sha256": "2a8a5d6197bb97a018b8a190dd3ed853d750ca87c8e80c17aad41d6c6ff448e1"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/iceberg-js/package.json",
+      "name": "iceberg-js",
+      "version": "0.8.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "0976ea84c41c49a5d853da05066c343ac735329301cf9c9c81c01848e0988c35",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/iceberg-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "e6e972dba808fb9d80863fe90ca222a47710cb850f6e6e2af95cdc0d022f79bd"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/js-tokens/package.json",
+      "name": "js-tokens",
+      "version": "4.0.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "47345931827b3e26db9fe690abb81f856a0d040cbca8af1e69711a64cd58ce0d",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/js-tokens/LICENSE",
+          "bytes": 1103,
+          "sha256": "2213d91c606205c71eb051a199478cdc2adde945893404d7f1421436dd6d5cc1"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/loose-envify/package.json",
+      "name": "loose-envify",
+      "version": "1.4.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "8c2e27dae366396ced36fe0f7c6d35d71a1440fd8e82df5f2005a5297888a0d4",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/loose-envify/LICENSE",
+          "bytes": 1100,
+          "sha256": "4eb7543b08d955a6d23fcc224601d43ff566e775be918805e26210d7f6eb4893"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "js-tokens",
+          "declared": "^3.0.0 || ^4.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/js-tokens/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/nanoid/package.json",
+      "name": "nanoid",
+      "version": "3.3.18",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "18673eb0d7ed43dd871d59dc22a5670303f5d4eb9b17783b1f698f5840ce1fff",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/nanoid/LICENSE",
+          "bytes": 1095,
+          "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-cloudflare/package.json",
+      "name": "pg-cloudflare",
+      "version": "1.4.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "26a5017fe5fa14bb2eaa90fb87a2c54becc2666516ef79ee591694bcb9533531",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-cloudflare/LICENSE",
+          "bytes": 1077,
+          "sha256": "192b8f5c96900f04a1271dec39688655d7416c1c6ea84a508e18b50d2b6751f3"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-connection-string/package.json",
+      "name": "pg-connection-string",
+      "version": "2.14.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "5e07e70c64af1e8695a91f9371b713106eeed3b52a1d6b7f7238a33f01dd3f20",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-connection-string/LICENSE",
+          "bytes": 1082,
+          "sha256": "2244b5486c4427001b6756a87b9a297d427c111dcc3ba64a097492a8979c23d0"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-int8/package.json",
+      "name": "pg-int8",
+      "version": "1.0.1",
+      "declaredLicense": "ISC",
+      "packageJsonSha256": "147155887a41bb6f69ff98b3dde827b7e6a8214c3a71938da4babf8e12adff2e",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-int8/LICENSE",
+          "bytes": 750,
+          "sha256": "4e8e87ccdfc7e4b47fd89015f78468aa53b6bf43ab6e6e12d43e8f55294911de"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-pool/package.json",
+      "name": "pg-pool",
+      "version": "3.14.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "0a9924def9e06f791b09a44eaefb227f323a39199887f6ce17b44cb5a9193134",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-pool/LICENSE",
+          "bytes": 1073,
+          "sha256": "4f15ee7fc2a72082859d7e0d12dfa4bcdd70b1c744ad3850d07780730ac08557"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "peerDependencies",
+          "name": "pg",
+          "declared": ">=8.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-protocol/package.json",
+      "name": "pg-protocol",
+      "version": "1.16.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "4ee6a91e60a002e828e64dfab04c232bba566db233a905a1a15e475a0336c73d",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-protocol/LICENSE",
+          "bytes": 1077,
+          "sha256": "192b8f5c96900f04a1271dec39688655d7416c1c6ea84a508e18b50d2b6751f3"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-types/package.json",
+      "name": "pg-types",
+      "version": "2.2.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "3ec0293cb38cc8d9475e3eb32ac5f19d195bf9fccc8b19a0714e6ecd6e7c2cf0",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "pg-int8",
+          "declared": "1.0.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-int8/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "postgres-array",
+          "declared": "~2.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-array/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "postgres-bytea",
+          "declared": "~1.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-bytea/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "postgres-date",
+          "declared": "~1.0.4",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-date/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "postgres-interval",
+          "declared": "^1.1.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-interval/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/package.json",
+      "name": "pg",
+      "version": "8.23.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "e42dd36cba6e9dd8dbb6f773a2f7be8a8c3c273e18b155e42e75961a4cb8bc28",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/LICENSE",
+          "bytes": 1077,
+          "sha256": "192b8f5c96900f04a1271dec39688655d7416c1c6ea84a508e18b50d2b6751f3"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "pg-connection-string",
+          "declared": "^2.14.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-connection-string/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "pg-pool",
+          "declared": "^3.14.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-pool/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "pg-protocol",
+          "declared": "^1.16.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-protocol/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "pg-types",
+          "declared": "2.2.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-types/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "pgpass",
+          "declared": "1.0.5",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pgpass/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "pg-cloudflare",
+          "declared": "^1.4.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg-cloudflare/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "pg-native",
+          "declared": ">=3.0.1",
+          "resolvedPackageJson": null
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pgpass/package.json",
+      "name": "pgpass",
+      "version": "1.0.5",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "d75240eb4fe759c10db9f903838275348676a8bdc1f329e20a833713cd7c99bd",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "split2",
+          "declared": "^4.1.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/split2/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/picocolors/package.json",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "declaredLicense": "ISC",
+      "packageJsonSha256": "ef2ac226c4811d312e12c64214c453878653e834482125ae475f27cea60de737",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/picocolors/LICENSE",
+          "bytes": 787,
+          "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postcss/package.json",
+      "name": "postcss",
+      "version": "8.5.23",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "df43e035f054943454c49556c89cea8a288d91f5d4b1a6f4e56d48b85c7ebd75",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postcss/LICENSE",
+          "bytes": 1095,
+          "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "nanoid",
+          "declared": "^3.3.16",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/nanoid/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "picocolors",
+          "declared": "^1.1.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/picocolors/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "source-map-js",
+          "declared": "^1.2.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/source-map-js/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-array/package.json",
+      "name": "postgres-array",
+      "version": "2.0.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "dcd6a505fcbc032b409ee2838ab2c776dea3a9cfe02b736364b6cb82a946665f",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-array/license",
+          "bytes": 1111,
+          "sha256": "f057f36739d53d228a746de4440c1e0c644ecde06d6beab45337d39c9d12a393"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-bytea/package.json",
+      "name": "postgres-bytea",
+      "version": "1.0.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "9125568c5fb51a65b8f11adb0080c2775b99ee82822d73bff8b56b2a9d47d7aa",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-bytea/license",
+          "bytes": 1111,
+          "sha256": "f057f36739d53d228a746de4440c1e0c644ecde06d6beab45337d39c9d12a393"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-date/package.json",
+      "name": "postgres-date",
+      "version": "1.0.7",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "03f9edefa96697072075e02df045cc61ed4ca2f8dfffb1ff87f4070bc3404151",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-date/license",
+          "bytes": 1111,
+          "sha256": "f057f36739d53d228a746de4440c1e0c644ecde06d6beab45337d39c9d12a393"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-interval/package.json",
+      "name": "postgres-interval",
+      "version": "1.2.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "cc3056db105e66c9128cb8a387cda782d5f1ae9281be90de0b8d26a90af89c57",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postgres-interval/license",
+          "bytes": 1111,
+          "sha256": "f057f36739d53d228a746de4440c1e0c644ecde06d6beab45337d39c9d12a393"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "xtend",
+          "declared": "^4.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/xtend/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/react/package.json",
+      "name": "react",
+      "version": "18.3.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "d4e68a5c96babb20cad1daafea8b78822eae45b341552cf5418d06a5304fa64c",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/react/LICENSE",
+          "bytes": 1086,
+          "sha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "loose-envify",
+          "declared": "^1.1.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/loose-envify/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/semver/package.json",
+      "name": "semver",
+      "version": "7.8.5",
+      "declaredLicense": "ISC",
+      "packageJsonSha256": "7c94cb7f2a53c27b20d76386ec144c062894dbcc909cfabd0f728c37874b1776",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/semver/LICENSE",
+          "bytes": 765,
+          "sha256": "4ec3d4c66cd87f5c8d8ad911b10f99bf27cb00cdfcff82621956e379186b016b"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/sharp/package.json",
+      "name": "sharp",
+      "version": "0.35.5",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "ad4a2535d72eb638053a38867b1abf43c328cd1c1dbae5cf4172d498365a8b97",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/sharp/LICENSE",
+          "bytes": 10273,
+          "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@img/colour",
+          "declared": "^1.1.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/colour/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "detect-libc",
+          "declared": "^2.1.2",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/detect-libc/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "semver",
+          "declared": "^7.8.5",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/semver/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-darwin-arm64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-darwin-arm64/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-darwin-x64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-freebsd-wasm32",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-darwin-arm64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@img/sharp-libvips-darwin-arm64/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-darwin-x64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-arm",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-arm64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-ppc64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-riscv64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-s390x",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linux-x64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linuxmusl-arm64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-libvips-linuxmusl-x64",
+          "declared": "1.3.4",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-arm",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-arm64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-ppc64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-riscv64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-s390x",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linux-x64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linuxmusl-arm64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-linuxmusl-x64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-webcontainers-wasm32",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-win32-arm64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-win32-ia32",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@img/sharp-win32-x64",
+          "declared": "0.35.5",
+          "resolvedPackageJson": null
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/source-map-js/package.json",
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "declaredLicense": "BSD-3-Clause",
+      "packageJsonSha256": "9f1ea63b1661d0f6e5fcd50b625d86cddd77de870a0019b23262360987b487f5",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/source-map-js/LICENSE",
+          "bytes": 1526,
+          "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/split2/package.json",
+      "name": "split2",
+      "version": "4.2.0",
+      "declaredLicense": "ISC",
+      "packageJsonSha256": "87b734c3087c8d9ed5d76d1bff00db30f960831ba8705dd18d73b180d08d2140",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/split2/LICENSE",
+          "bytes": 764,
+          "sha256": "c372ef2fa1dfcb124ed807609751e75e3a009f108c5724916b489288fcb88a0c"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/styled-jsx/package.json",
+      "name": "styled-jsx",
+      "version": "5.1.6",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "0a11b14d7bbeab650019db18883a14cb67daa3615f498a5a625d45828be7eef9",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/styled-jsx/license.md",
+          "bytes": 1077,
+          "sha256": "24d4a4580df855c345705b3016404f0c9da7e7674dc3b21a3ce7d0e5d0c37e2d"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "client-only",
+          "declared": "0.0.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/client-only/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "react",
+          "declared": ">= 16.8.0 || 17.x.x || ^18.0.0-0 || ^19.0.0-0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/react/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json",
+      "name": "tslib",
+      "version": "2.8.1",
+      "declaredLicense": "0BSD",
+      "packageJsonSha256": "f02b4851df316f29bdfcd404aa1eb41e4e216b5859015f81fcd3e91caf8be931",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/LICENSE.txt",
+          "bytes": 655,
+          "sha256": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tsx/package.json",
+      "name": "tsx",
+      "version": "4.23.13",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "3ace2493a0acd26fc72a8433a38113ee04d5a1976910a3f40815f9e779d5c426",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tsx/LICENSE",
+          "bytes": 1088,
+          "sha256": "8dded67841a9261a622c739fb61c81785e93765de852828ceeb9403d20a74581"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "esbuild",
+          "declared": "~0.28.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/esbuild/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "fsevents",
+          "declared": "~2.3.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/fsevents/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/typescript/package.json",
+      "name": "typescript",
+      "version": "5.9.3",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/typescript/LICENSE.txt",
+          "bytes": 9197,
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/undici-types/package.json",
+      "name": "undici-types",
+      "version": "6.21.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "11f873b423b96a5ad444a099685ca6b9de1379dcd83fd8d368e757ddb53658e4",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/undici-types/LICENSE",
+          "bytes": 1090,
+          "sha256": "a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/xtend/package.json",
+      "name": "xtend",
+      "version": "4.0.2",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "b02ffef8cda96c5c3ee00a00390e63f608362c2ddfb3ed754e181d013a45d48a",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/xtend/LICENSE",
+          "bytes": 1078,
+          "sha256": "82e67379203d5794e7c44549847d8d64ae6904591381682360470898bd306821"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/zod/package.json",
+      "name": "zod",
+      "version": "3.25.76",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/zod/LICENSE",
+          "bytes": 1072,
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@next/env/package.json",
+      "name": "@next/env",
+      "version": "16.3.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "225932e843b7307bee980b1a63c1474c468f72107a801fd6d1db0457302da4ed",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@next/swc-darwin-arm64/package.json",
+      "name": "@next/swc-darwin-arm64",
+      "version": "16.3.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "14c3acf279bfe8c5f6e1cbacc4dfb17584bf6c01ccb9499bd293ecefe3b72c03",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@playwright/test/package.json",
+      "name": "@playwright/test",
+      "version": "1.61.1",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "9d8556509e073169efec663b7f71c13f17d7002b307d00d48bf88ee91c387f3e",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@playwright/test/LICENSE",
+          "bytes": 11601,
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@playwright/test/NOTICE",
+          "bytes": 254,
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "playwright",
+          "declared": "1.61.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/auth-js/package.json",
+      "name": "@supabase/auth-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "8d67e6769760913c33218aa2384adaa3d665af0582276968dc4a4347b24253ad",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/auth-js/LICENSE",
+          "bytes": 1065,
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/functions-js/package.json",
+      "name": "@supabase/functions-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "cc73492c8ee522f196c46efb293d5163c57f74a6d8afccdcca03f9be623f521e",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/postgrest-js/package.json",
+      "name": "@supabase/postgrest-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "9d8e041492e02f77754e0968574a3e8572a2ee9a4618e87f741d2f4adc07bda5",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/realtime-js/package.json",
+      "name": "@supabase/realtime-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "4d45eab8432b8ddad9731fb4b149a18693d0ac28339a7221bbedcd1a294456ca",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@types/phoenix",
+          "declared": "^1.6.6",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/phoenix/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@types/ws",
+          "declared": "^8.18.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/ws/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "ws",
+          "declared": "^8.18.2",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/ws/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/storage-js/package.json",
+      "name": "@supabase/storage-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "8d1f0ed42c80674730a0be57d4669a06811706fef74e57f695557b140a7fd3a3",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "iceberg-js",
+          "declared": "^0.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/iceberg-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "2.8.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/supabase-js/package.json",
+      "name": "@supabase/supabase-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "8e674ed6692f5af1a4b4ea788cef63ce088b030d96b8750e7d450ebbca061262",
+      "noticeFiles": [],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@supabase/auth-js",
+          "declared": "2.99.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/auth-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/functions-js",
+          "declared": "2.99.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/functions-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/postgrest-js",
+          "declared": "2.99.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/postgrest-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/realtime-js",
+          "declared": "2.99.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/realtime-js/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@supabase/storage-js",
+          "declared": "2.99.3",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@supabase/storage-js/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@swc/helpers/package.json",
+      "name": "@swc/helpers",
+      "version": "0.5.23",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "10ee79b75759afbf8cfa2b8e5a2eff946c487143e935fc31b2433aa68be84596",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@swc/helpers/LICENSE",
+          "bytes": 10836,
+          "sha256": "d96eba1f1881334d50ffc144276dfa98e147a415e7c591ecdfcb81680361dc91"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "tslib",
+          "declared": "^2.8.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tslib/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/node/package.json",
+      "name": "@types/node",
+      "version": "20.19.37",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "02929be4094207be9495fcf6b988214e604e0fb2024df5dbf3f58c3ef611c71a",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/node/LICENSE",
+          "bytes": 1141,
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "undici-types",
+          "declared": "~6.21.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/undici-types/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/phoenix/package.json",
+      "name": "@types/phoenix",
+      "version": "1.6.7",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "2ca17202108c3a2c2c967a4e86e50694014830bd347094c281223f76d4768bee",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/phoenix/LICENSE",
+          "bytes": 1141,
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/ws/package.json",
+      "name": "@types/ws",
+      "version": "8.18.1",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "92f0a87117b71231a0864f7bb7c6a84b7fc91dbdd7d33379fc23d655980ad083",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/ws/LICENSE",
+          "bytes": 1141,
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@types/node",
+          "declared": "*",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@types/node/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/baseline-browser-mapping/package.json",
+      "name": "baseline-browser-mapping",
+      "version": "2.11.21",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "b59fb501b29b3baf899d822683b9819f6454e2602315f33482f2feb640dca3f1",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/baseline-browser-mapping/LICENSE.txt",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/next/package.json",
+      "name": "next",
+      "version": "16.3.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "6da8fc4823b66b8f2906d150002618e3f3e0d2446ebf3823b2a2f7efe73a46a4",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/next/license.md",
+          "bytes": 1079,
+          "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "@next/env",
+          "declared": "16.3.8",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@next/env/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "@swc/helpers",
+          "declared": "0.5.23",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@swc/helpers/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "baseline-browser-mapping",
+          "declared": "^2.9.19",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/baseline-browser-mapping/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "caniuse-lite",
+          "declared": "^1.0.30001579",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/caniuse-lite/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "postcss",
+          "declared": "8.5.23",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/postcss/package.json"
+        },
+        {
+          "kind": "dependencies",
+          "name": "styled-jsx",
+          "declared": "5.1.6",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/styled-jsx/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-darwin-arm64",
+          "declared": "16.3.8",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@next/swc-darwin-arm64/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-darwin-x64",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-linux-arm64-gnu",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-linux-arm64-musl",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-linux-x64-gnu",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-linux-x64-musl",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-win32-arm64-msvc",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "@next/swc-win32-x64-msvc",
+          "declared": "16.3.8",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "sharp",
+          "declared": "^0.35.4",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/sharp/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "@opentelemetry/api",
+          "declared": "^1.1.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@opentelemetry/api/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "@playwright/test",
+          "declared": "^1.51.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/@playwright/test/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "babel-plugin-react-compiler",
+          "declared": "*",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "react",
+          "declared": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "react-dom",
+          "declared": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react-dom/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "sass",
+          "declared": "^1.3.0",
+          "resolvedPackageJson": null
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright-core/package.json",
+      "name": "playwright-core",
+      "version": "1.61.1",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "759e376f995bf39edd4810d699b99469bab1d7428b6fbc78d41912f367df7ba9",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright-core/LICENSE",
+          "bytes": 11601,
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright-core/NOTICE",
+          "bytes": 254,
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/node_modules/fsevents/package.json",
+      "name": "fsevents",
+      "version": "2.3.2",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "80914b12dba592ca926d9e6aae0bf6fdc35d871f756a9b34804b98944fac4506",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/node_modules/fsevents/LICENSE",
+          "bytes": 1133,
+          "sha256": "2a8a5d6197bb97a018b8a190dd3ed853d750ca87c8e80c17aad41d6c6ff448e1"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/package.json",
+      "name": "playwright",
+      "version": "1.61.1",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "6b840268612656f0639fb7d68782e8353bdf11518589d30ddf66f283c2670ed5",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/LICENSE",
+          "bytes": 11601,
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/NOTICE",
+          "bytes": 254,
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "playwright-core",
+          "declared": "1.61.1",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright-core/package.json"
+        },
+        {
+          "kind": "optionalDependencies",
+          "name": "fsevents",
+          "declared": "2.3.2",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/playwright/node_modules/fsevents/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react-dom/package.json",
+      "name": "react-dom",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "7c82f0967114d4b5d38b1f07e543af87c9919e8d3243f9604004819319cb2200",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react-dom/LICENSE",
+          "bytes": 1088,
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "dependencies",
+          "name": "scheduler",
+          "declared": "^0.27.0",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/scheduler/package.json"
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "react",
+          "declared": "^19.2.8",
+          "resolvedPackageJson": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/package.json"
+        }
+      ]
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/package.json",
+      "name": "react",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "e40c3ed9b633c9ecf188e09a4be309780a1ea0a9c068278a30ff6a27e7b2dbb6",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/LICENSE",
+          "bytes": 1088,
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/scheduler/package.json",
+      "name": "scheduler",
+      "version": "0.27.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "393bb96b7e481bf50189a1a02c7e0e7f4d01acba5abc6fbe7d214638624462fc",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/scheduler/LICENSE",
+          "bytes": 1088,
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": []
+    },
+    {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/ws/package.json",
+      "name": "ws",
+      "version": "8.21.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "a56a3fd55945a3ce177e3ca165dafae6f7eb03b7aefd58c092ac723d5741a6fb",
+      "noticeFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/ws/LICENSE",
+          "bytes": 1183,
+          "sha256": "2b29dcfe0d6471f7e8c92c5fb38c9f93edee10330937055440192f1832b1ecef"
+        }
+      ],
+      "declaredEdgesWithActualPresentNearestNodeModulesResolution": [
+        {
+          "kind": "peerDependencies",
+          "name": "bufferutil",
+          "declared": "^4.0.1",
+          "resolvedPackageJson": null
+        },
+        {
+          "kind": "peerDependencies",
+          "name": "utf-8-validate",
+          "declared": ">=5.0.2",
+          "resolvedPackageJson": null
+        }
+      ]
+    }
+  ],
+  "requiredDeclaredEdgesNotPresent": [],
+  "versionLockSource": "runtime-licenses.json unchanged cumulative locks; actual installed graph is separately borrowed",
+  "qualification": "Read-only installed metadata nearest-node_modules inventory, including present optional/peer metadata. This is not dynamic exports/platform/runtime execution reachability or licence approval. Missing optional/peer platform packages are not installed/adopted; final image/stdlib/native binary closure remains NOT QUALIFIED",
+  "newInstallOrDependencyChanges": false
+}
