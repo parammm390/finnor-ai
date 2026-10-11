@@ -2,12 +2,15 @@ import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
 import {m3Query,m3Tx,type M3QueryRow} from './v2-store';
 import {m3Hash,CapitalProgramV2Error,type CapitalProgramV2Request} from './v2-contracts';
+import type {R2Request} from '@finnor/shared-types/src/robust-programme-search';
 
 export interface CapitalRepairBudget {
  rootQueryId:string;deadlineAt:string;consumptionDigest:string;
  remaining:CapitalProgramV2Request['resource'];
  spent:{attempted:number;generated:number;refinementSteps:number;expansions:number;unknownExpansions:boolean};
  qualification:'ATTENUATED_ORIGINAL_LOGICAL_EPISODE_NOT_NEW_FINANCIAL_OR_PHYSICAL_GRANT';
+ r2Budget?:R2Request['budget'];
+ physicalSpent?:{cpuMs:number;nativeCalls:number;unknown:boolean;basis:'ORIGINAL_ADMISSION_PLUS_TERMINAL_PARENT_PLUS_DISTINCT_CHILD_RECEIPTS_ONCE'};
 }
 /** Completed original parent and all linked descendants, including failures.
  * Locks prevent sibling repairs from spending the same remaining allowance. */
@@ -17,6 +20,8 @@ export async function capitalRepairBudget(ctx:PeMutationContext,parent:M3QueryRo
   const root=await m3Query(ctx,parent.acceptance.repairBudget?.rootQueryId??parent.id,c,true);
   if(root.work_id!==parent.work_id||!root.deadline_at)
    throw new CapitalProgramV2Error('CHECK_FAILED','Repair lacks its original started Work episode');
+  if(Boolean(root.request.robust)!==Boolean(request.robust)||['CANCELLED','FAILED'].includes(parent.status))
+   throw new CapitalProgramV2Error('CONFLICT','A terminal or incompatible original episode cannot receive a renewed R2 grant');
   const deadlineAt=new Date(Math.min(root.deadline_at.getTime(),...challengeDeadlines.map(Date.parse))).toISOString();
   if(Date.parse(deadlineAt)<=Date.now())
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original M3/challenge repair deadline exhausted');
@@ -36,7 +41,7 @@ export async function capitalRepairBudget(ctx:PeMutationContext,parent:M3QueryRo
   if(rows.some(q=>['QUEUED','RUNNING'].includes(q.status)))
    throw new CapitalProgramV2Error('CONFLICT','An original M3 repair episode still has active construction');
   const events=(await c.query<{query_id:string;attempt_id:string;kind:string;body:Record<string,any>}>(
-   "SELECT query_id,attempt_id,kind,body FROM finnor_os.m3_events WHERE tenant_id=$1 AND principal_id=$2 AND query_id=ANY($3::uuid[]) AND kind IN('CANDIDATE','CHECK','FAILED','FENCED') ORDER BY created_at,id LIMIT 8193",
+   "SELECT query_id,attempt_id,kind,body FROM finnor_os.m3_events WHERE tenant_id=$1 AND principal_id=$2 AND query_id=ANY($3::uuid[]) AND kind IN('CANDIDATE','CHECK','FAILED','FENCED','STARTED','FINISHED','R2_PHYSICAL_CHILD') ORDER BY created_at,id LIMIT 8193",
    [ctx.auth.tenantId,ctx.auth.employeeId??ctx.auth.userId,rows.map(q=>q.id)])).rows;
   if(events.length>8192)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original M3 repair event accounting exceeds its complete bounded view');
   const pending=new Set<string>();
@@ -65,9 +70,37 @@ export async function capitalRepairBudget(ctx:PeMutationContext,parent:M3QueryRo
   remaining.maxExpansions=unknownExpansions?0:Math.max(0,Math.min(remaining.maxExpansions,limits.maxExpansions-expansions));
   if(remaining.maxAttempts<1||remaining.maxGenerated<1)
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original M3 repair construction allowance exhausted');
+  let r2Budget:R2Request['budget']|undefined,physicalSpent:CapitalRepairBudget['physicalSpent'];
+  if(root.request.robust&&request.robust){
+   const begun=new Set<string>(),terminal=new Set<string>(),children=new Map<string,number|null>();
+   let cpuMs=rows.reduce((n,row)=>n+(row.acceptance.r2?.admissionCost?.cpuMs??0),0),unknown=false;
+   for(const event of events){const attempt=event.query_id+':'+event.attempt_id;
+    if(event.kind==='STARTED')begun.add(attempt);
+    if(['FINISHED','FAILED','FENCED'].includes(event.kind)&&!terminal.has(attempt)){
+     terminal.add(attempt);const cost=event.body.attemptCost;
+     if(event.body.unknownPhysicalCost||!cost||!Number.isFinite(cost.cpuUserMicros)||!Number.isFinite(cost.cpuSystemMicros))unknown=true;
+     else cpuMs+=(cost.cpuUserMicros+cost.cpuSystemMicros)/1000;
+    }
+    if(event.kind==='R2_PHYSICAL_CHILD'){
+     const id=attempt+':'+event.body.invocationId;
+     if(!children.has(id))children.set(id,null);
+     if(event.body.state==='EXITED'&&event.body.receipt?.physicalExitObserved&&Number.isFinite(event.body.receipt.cpuMs))children.set(id,event.body.receipt.cpuMs);
+     if(event.body.state==='UNKNOWN')unknown=true;
+    }
+   }
+   unknown||=[...begun].some(id=>!terminal.has(id))||[...children.values()].some(value=>value===null);
+   cpuMs+=[...children.values()].reduce<number>((n,value)=>n+(value??0),0);
+   physicalSpent={cpuMs,nativeCalls:children.size,unknown,basis:'ORIGINAL_ADMISSION_PLUS_TERMINAL_PARENT_PLUS_DISTINCT_CHILD_RECEIPTS_ONCE'};
+   if(unknown)throw new CapitalProgramV2Error('CHECK_FAILED','Original R2 physical consumption is UNKNOWN; no continuation grant is justified');
+   r2Budget={...request.robust.budget};
+   for(const key of Object.keys(r2Budget) as Array<keyof R2Request['budget']>)r2Budget[key]=Math.min(r2Budget[key],root.request.robust.budget[key]);
+   r2Budget.cpuMs=Math.max(0,Math.floor(Math.min(r2Budget.cpuMs,root.request.robust.budget.cpuMs-cpuMs)));
+   r2Budget.maxNativeCalls=Math.max(0,Math.min(r2Budget.maxNativeCalls,root.request.robust.budget.maxNativeCalls-children.size));
+   if(r2Budget.cpuMs<1||r2Budget.maxNativeCalls<1)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original R2 aggregate CPU/call grant is exhausted');
+  }
   return {rootQueryId:root.id,deadlineAt,remaining,spent,consumptionDigest:m3Hash({root:root.id,spent,
    rows:rows.map(q=>({id:q.id,status:q.status,attempted:q.attempted,generated:q.generated,refinementSteps:q.refinement_steps})),events}),
-   qualification:'ATTENUATED_ORIGINAL_LOGICAL_EPISODE_NOT_NEW_FINANCIAL_OR_PHYSICAL_GRANT' as const};
+   qualification:'ATTENUATED_ORIGINAL_LOGICAL_EPISODE_NOT_NEW_FINANCIAL_OR_PHYSICAL_GRANT' as const,r2Budget,physicalSpent};
  };
  return client?read(client):m3Tx(ctx,read);
 }

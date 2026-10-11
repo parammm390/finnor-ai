@@ -185,3 +185,34 @@ export async function recordEnterpriseInterventionAssessment(ctx: PeMutationCont
     suppliedAuthenticatedAssertionNotScientificTruth: true, changesModelOrIdentification: false, protectedHumanOverrideAuthority: 'UNVERIFIED' });
   await saveEvents(ctx, [event]); return { event, receipt: null, appendAuthorityGranted: false };
 }
+
+/** Versioned S3-owned supplied exact table; learned dynamics retain their domain. */
+export {prepareExactControlSource as prepareEnterpriseExactControlModel,resolveExactControlSource as resolveEnterpriseExactControlModel} from './r1/source';
+
+/** Explicit owner-accepted graph representation, never inferred from fitted coefficients. */
+export async function registerEnterpriseIdentificationProfile(ctx: PeMutationContext, input: {
+  modelRef: unknown; problem: unknown;
+}) {
+  if (ctx.auth.role !== "owner") throw unavailable();
+  const model = await resolveEnterpriseInterventionModelForControl(ctx, input.modelRef);
+  const profile = (await import("./r4/owner-adapters")).identificationProfile(model, input.problem);
+  await immutableFile(ctx, "identification-profiles", profile.ref.contentDigest, profile);
+  await resolveEnterpriseInterventionModelForControl(ctx, model.ref);
+  const { ref, ...content } = profile;
+  await enqueueNativeReferences(ctx, [{ ...ref, content }], model.beliefBindings.map(b => b.rightsRef));
+  return profile;
+}
+export async function assessEnterpriseIdentificationPlan(ctx: PeMutationContext, input: {
+  modelRef: unknown; problem: import("../../shared-types/src/identification-plan").IdentificationProblem;
+  plan: import("../../shared-types/src/identification-plan").IdentificationPlan;
+  profileRef: ExperimentRef; checkerRef: ExperimentRef;
+}) {
+  const model = await resolveEnterpriseInterventionModelForControl(ctx, input.modelRef);
+  const assessment = (await import("./r4/owner-adapters")).identificationAssessment(
+    model, input.problem, input.plan, input.profileRef, input.checkerRef);
+  await immutableFile(ctx, "identification-assessments", assessment.ref.contentDigest, assessment);
+  await resolveEnterpriseInterventionModelForControl(ctx, model.ref);
+  const { ref, ...content } = assessment;
+  await enqueueNativeReferences(ctx, [{ ...ref, content }], model.beliefBindings.map(b => b.rightsRef));
+  return assessment;
+}

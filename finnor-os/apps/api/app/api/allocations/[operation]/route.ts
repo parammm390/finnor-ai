@@ -3,6 +3,11 @@ import { AllocationContractError, ControlContractError, ExperimentContractError,
 import { PeDomainError, clearEnterprisePortfolio, consumeEnterpriseAllocation, listEnterpriseAllocationResources, readEnterpriseAllocation, reconcileEnterpriseAllocation, recordEnterpriseAllocationAssessment, registerEnterpriseAllocationResource, releaseEnterpriseAllocation, validateEnterpriseAllocation,settleEnterpriseAllocation } from '@finnor/private-equity';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 import {LedgerFault} from '../../../../../../packages/governed-execution/src/protocol';
+import {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from '../../../../../../packages/private-equity/src/enterprise-allocation';
+import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+const coalitionClear=z.object({selectionRef:ExperimentRefSchema,idempotencyKey:z.string().min(1).max(256)}).strict();
+const coalitionRead=z.object({allocationRef:ExperimentRefSchema}).strict();
+const coalitionConsume=coalitionRead.extend({idempotencyKey:z.string().min(1).max(256)}).strict();
 
 export const runtime='nodejs';
 const {resource,clear:clearing,read:reference,consume:consumption,release,assessment}=AllocationOperationSchemas;
@@ -20,6 +25,10 @@ async function boundedJson(req:Request):Promise<unknown> {
 export async function POST(req:Request,{params}:{params:Promise<{operation:string}>}):Promise<Response> {
   try {const [auth,route]=await Promise.all([requireContext(req),params]),ctx={auth},body=await boundedJson(req);
     switch(route.operation){
+      case 'coalition-clear':return response(await clearEnterpriseCoalitionAllocation(ctx,coalitionClear.parse(body)));
+      case 'coalition-read':return response(await readEnterpriseCoalitionAllocation(ctx,coalitionRead.parse(body).allocationRef));
+      case 'coalition-consume':return response(await consumeEnterpriseCoalitionAllocation(ctx,coalitionConsume.parse(body)));
+      case 'coalition-release':return response(await releaseEnterpriseCoalitionAllocation(ctx,coalitionConsume.parse(body)));
       case 'resource':{const p=resource.parse(body);return response(await registerEnterpriseAllocationResource(ctx,{resource:p.resource,expectedRef:p.expectedRef}));}
       case 'resources':AllocationOperationSchemas.resources.parse(body);return response(await listEnterpriseAllocationResources(ctx));
       case 'clear':{const p=clearing.parse(body);return response(await clearEnterprisePortfolio(ctx,{...p,mandate:p.mandate,jointModel:p.jointModel}));}

@@ -1,0 +1,24 @@
+diff --git a/finnor-os/packages/shared-types/src/index.ts b/finnor-os/packages/shared-types/src/index.ts
+--- a/finnor-os/packages/shared-types/src/index.ts
++++ b/finnor-os/packages/shared-types/src/index.ts
+@@ -400,3 +400,4 @@
+ export * from './evidence-execution';
+ export * from './capital-program';
+ export * from './certified-state-reduction';
++export * from "./decision-proof";
+diff --git a/finnor-os/packages/epistemic-runtime/src/index.ts b/finnor-os/packages/epistemic-runtime/src/index.ts
+--- a/finnor-os/packages/epistemic-runtime/src/index.ts
++++ b/finnor-os/packages/epistemic-runtime/src/index.ts
+@@ -44,3 +44,4 @@
+ export * from "./economic-attribution";
+ export * from './certified-state-reduction';
+ export * from './exact-control-policy';
++export * from "./verified-capital-compiler";
+diff --git a/finnor-os/packages/private-equity/src/index.ts b/finnor-os/packages/private-equity/src/index.ts
+--- a/finnor-os/packages/private-equity/src/index.ts
++++ b/finnor-os/packages/private-equity/src/index.ts
+@@ -53,3 +53,4 @@
+ // Ordinary P6 consumer port. Admission remains S8-owned and unavailable here.
+ export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInduction,handleProcedureOperation} from './procedure-induction/api';
+ export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
++export * from "./r6/verified-capital-compiler";

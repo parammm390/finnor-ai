@@ -1,0 +1,880 @@
+{
+  "schema": "finnor.r6.standard-lbo-engineering-evidence-index.v1",
+  "result": "BLOCKED_FALSE_NATIVE_TOTALITY_OBLIGATION_FOR_ANY_REQUIRED_DOMAIN_CONTAINING_LATE_EXITS",
+  "originalStandardLboPositiveProfileImplemented": false,
+  "originalR6Complete": false,
+  "internalNotExternalGap": true,
+  "preregistrationCommit": "816a90e3d7fe38b32cb2ceb042304133ff60a8ba",
+  "verifiedCodeCut": {
+    "head": "fd76cfce5e060ae9e297bd272ace32f3be8f9955",
+    "tree": "8f681789023fc51bcf2704a637105d9cf0c320b9",
+    "gitStatus": ""
+  },
+  "sourcePins": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py",
+      "sha256": "1c9049c51127bcdf124aa60f8bd2db7246e83c61ce0d22d46b379426f87f4471"
+    },
+    {
+      "path": "finnor-os/scripts/r6/lbo-native-probe.mts",
+      "sha256": "8b3a43d23431561f601616eb4357001cd06beec4fd7c3d631d49797c54a8eaca"
+    },
+    {
+      "path": "finnor-os/scripts/r6/lbo-obligation-e2e.mts",
+      "sha256": "9dadf3fe49ec11a870019d55fa1464ff766ae7f508784d408a7bc8cf01b260fb"
+    },
+    {
+      "path": "finnor-os/scripts/r6/run-local.py",
+      "sha256": "191010a4ac8a997f4466f89071cfcec9ca909492c7c6849201bc710d19288fa0"
+    }
+  ],
+  "nativeIdentity": {
+    "schema": "finnor.r6.native-semantics.v1",
+    "engineVersion": "finnor-underwriting-engine/1.0.0",
+    "irSchema": "underwriting-model-ir.v1",
+    "decimalPolicy": {
+      "precision": 34,
+      "rounding": "ROUND_HALF_EVEN",
+      "maxInputCharacters": 128,
+      "maxAbsoluteExponent": 100
+    },
+    "sourcePins": [
+      {
+        "path": "finnor-os/packages/underwriting/package.json",
+        "sha256": "0223d6311820055125a0ea7ead89ce8231b4529e041f3b9aac7961a48027cab1"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/canonical.ts",
+        "sha256": "0e96266034a7f05a570b569f5d5c239e23da2c138232dc2b30d8058f876b99b0"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/compiler.ts",
+        "sha256": "3264e28a68402a99efebc7f7edf55b3990f3137bbc244b6ba71aaf220170d2a9"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/decimal.ts",
+        "sha256": "301604f5f53b92b1908db00e12d600716bc8f3ab1e5233fb7516e8630282b572"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/errors.ts",
+        "sha256": "0c5e26fdc4ecb969a47685f9a2d123a2358a5b5873e889e21a540d2a100f3fa2"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/executor.ts",
+        "sha256": "0146a271061fc0881716bcb8cc7cb3856400e53b54dd59ef44a5a036efa791fe"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/index.ts",
+        "sha256": "5f455c208b795f3e23f0e99c308c9ea39ae43360b0f4cfb9e2717c4d2e0704bb"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/periods.ts",
+        "sha256": "987ec7b6ad5cb466932fc7530b3e78ef3438dad1b59bdee46f11a25c135c91d3"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/result.ts",
+        "sha256": "0eaffc27a917987a900bed05b1be1e1726cf45d8b8b8d95c1521e2bfb98dbd17"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/snapshot.ts",
+        "sha256": "721a4e0ba82cbab9480e28601f8397ec97192a20d7cc39004ef8e9ccc1885cf6"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/standard-lbo.ts",
+        "sha256": "702f47aa8640923a4f25637a9df1ac59dbaf4c6ecef7d6e607677b8d11a32cd9"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/returns.ts",
+        "sha256": "9e82a4316ccddfaa360fc80996f572d5ad26d6401d21611c97777f72938e89de"
+      },
+      {
+        "path": "finnor-os/packages/underwriting/src/types.ts",
+        "sha256": "3f348ee5defc8d629e599cce917b21acde194bde46ead15e5e265d7251494f3f"
+      }
+    ],
+    "dependencyLockDigest": "sha256:aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+    "decimalModuleDigest": "sha256:45e6ecc0a500fee6439acdf67ee2e9322aab57e6ea0409ef52993dedbba8cf19",
+    "decimalPackageVersion": "10.6.0",
+    "checkerDigest": "sha256:58ab3b567e7487c9a150feeaacd4c8b4db70bc0a81736bc26c3970d9ab3043a9",
+    "producerDigest": "sha256:550117e7d8dea77580f61370ba1f6a25e2767caf6b2d39dc98c661d7ac28316a"
+  },
+  "campaignManifest": {
+    "path": "scope-r/r6-verified-capital-compiler/standard-lbo-campaign.json",
+    "sha256": "3644cccee1d664ffc870852d2bd7d14428b6a015689dd3a662e7d1cddc6a3f0b"
+  },
+  "integrationRequirements": {
+    "path": "scope-r/r6-verified-capital-compiler/standard-lbo-integration-requirements.json",
+    "sha256": "7693b19cae90da3b358be278fc57e37be897227ce91b906889dfd16f6251a2c3"
+  },
+  "nativeProbe": {
+    "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/summary.json",
+    "sha256": "8e97059891700ff54580e6fcffcce17fcdce0839cded52987ddbfea5fcefff52",
+    "engineeringChecks": "PASS_REGISTERED_OBSERVATIONS",
+    "actualNativeCases": 13,
+    "actualNativeSucceededValid": 6,
+    "actualNativeFailedIncompleteIrrUndefined": 7,
+    "cases": [
+      {
+        "id": "retained-original-one-period",
+        "frequency": "annual",
+        "horizon": 1,
+        "exitOrdinal": 1,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "annual-8-late-exit",
+        "frequency": "annual",
+        "horizon": 8,
+        "exitOrdinal": 8,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "annual-9-late-exit",
+        "frequency": "annual",
+        "horizon": 9,
+        "exitOrdinal": 9,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "annual-12-late-exit",
+        "frequency": "annual",
+        "horizon": 12,
+        "exitOrdinal": 12,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "quarterly-8-late-exit",
+        "frequency": "quarterly",
+        "horizon": 8,
+        "exitOrdinal": 8,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "quarterly-9-late-exit",
+        "frequency": "quarterly",
+        "horizon": 9,
+        "exitOrdinal": 9,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "quarterly-12-late-exit",
+        "frequency": "quarterly",
+        "horizon": 12,
+        "exitOrdinal": 12,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "monthly-8-late-exit",
+        "frequency": "monthly",
+        "horizon": 8,
+        "exitOrdinal": 8,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "monthly-9-late-exit",
+        "frequency": "monthly",
+        "horizon": 9,
+        "exitOrdinal": 9,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "monthly-12-late-exit",
+        "frequency": "monthly",
+        "horizon": 12,
+        "exitOrdinal": 12,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "annual-12-earlier-exit-control",
+        "frequency": "annual",
+        "horizon": 12,
+        "exitOrdinal": 1,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": false,
+        "nodes": 110,
+        "inventory": 110,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "average-balance-8-late-exit",
+        "frequency": "annual",
+        "horizon": 8,
+        "exitOrdinal": 8,
+        "nativeStatus": "SUCCEEDED",
+        "nativeValidity": "VALID",
+        "failureCode": null,
+        "periodicIrrStatus": "SUCCEEDED",
+        "averageDebt": true,
+        "nodes": 124,
+        "inventory": 124,
+        "completeNativeInventoryRetained": true
+      },
+      {
+        "id": "average-balance-12-late-exit",
+        "frequency": "annual",
+        "horizon": 12,
+        "exitOrdinal": 12,
+        "nativeStatus": "FAILED",
+        "nativeValidity": "INCOMPLETE",
+        "failureCode": "IRR_UNDEFINED",
+        "periodicIrrStatus": "FAILED",
+        "averageDebt": true,
+        "nodes": 124,
+        "inventory": 124,
+        "completeNativeInventoryRetained": true
+      }
+    ]
+  },
+  "independentObligationChecks": {
+    "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/summary.json",
+    "sha256": "d2158c16145d755d21ebd11f2b813d89e30a832ca19047383561529400b89c2f",
+    "engineeringChecks": "PASS_NEGATIVE_OBLIGATION_CHECKS_ONLY",
+    "cases": 21,
+    "negativeObligationsDisproved": 7,
+    "noncounterexampleControlsRejected": 2,
+    "mutationsRejected": 12,
+    "financialPositiveProofsIssued": 0,
+    "receipts": [
+      {
+        "id": "negative-annual-9-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-annual-9-late-exit/receipt.json",
+        "sha256": "f044f93664e324e4f78be2d3ab6349077b3eaee0b0fc3145baa046fd51f71b27",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:b59e925b235e0acd772d8f4f907acc6f9ce23df5f2d7dfb11a28eb397c548947",
+        "domainDigest": "sha256:3540ac92f131c63aee2850823ac5cfedf52bdeb445a2f82b2d9518ae9de6c6e5",
+        "domainCardinality": "1087298055399178358449974438017136407109",
+        "nativeModelDigest": "sha256:b5a934120447bb218f07ea713884b79786e83f4c72c62334d10311b917d157a2",
+        "counterexampleInputDigest": "sha256:3edbcd871a18d38f7ea119bf75aa389e1007eb49e56b1c4d3680c6da32a4a1db",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2034-01-01:2034-12-31"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 9,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-annual-12-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-annual-12-late-exit/receipt.json",
+        "sha256": "9a9742e2c501fcf4a236f0d4b58b0a0a0b1c52cac80049c8505f3ea201850816",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:170f4fbec6fe6a97147427e2d4a6108b191dc29f477dbf94a542061729daa79b",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": "sha256:a621dcc8a19af16a1d49898eb1743576b684fa516e0bda3e485cfe691cc17f54",
+        "counterexampleInputDigest": "sha256:92f424d16623453236d8d41bf6adde385b457ebaf1b23fe35bbaf1e1f4d38775",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2034-01-01:2034-12-31",
+          "P010:2035-01-01:2035-12-31",
+          "P011:2036-01-01:2036-12-31",
+          "P012:2037-01-01:2037-12-31"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 12,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-quarterly-9-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-quarterly-9-late-exit/receipt.json",
+        "sha256": "d32de5b7f83edf3d8bfc658c325c13e2cef20c566887e6148fe205213a07a289",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:d4791d31872d183baac8080f0d82eeda8e866de2ec18eae19b1f7076bd61fc2f",
+        "domainDigest": "sha256:e6474915f2f8b3d0fd8fa3e6920f1d02ecd28bb388461fdd8ff59acd601714ce",
+        "domainCardinality": "1087298055399178358449974438017136407109",
+        "nativeModelDigest": "sha256:6819c94dbfdeea1775f74dfaf41b177ec6e82bcafd316806882a9aeac39db85b",
+        "counterexampleInputDigest": "sha256:3d32724d318a24ebd3260d678c4aa0d5c3e38a05e9fed661d41d47f18a2db77f",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2028-01-01:2028-03-31"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 9,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-quarterly-12-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-quarterly-12-late-exit/receipt.json",
+        "sha256": "97d39f48f5db2a378fb57dd5abfd71e91defde6b67daf7fca3b9f27b6dc77b08",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:4eebdc81fc060e2d4e298eb27b493bae5687e059b71aaf1e9088e05ebc80adc7",
+        "domainDigest": "sha256:1ecfab705563ab968291686e31e20366d622caec60a0836befe92b651aca7e84",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": "sha256:87c734a292ae0fe9c20187358214438fec862115ff90b04faebf8f5de316677d",
+        "counterexampleInputDigest": "sha256:fa61242416288ed86c3c30332ab7d4246aeeefc63124294a240bcf78425a2082",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2028-01-01:2028-03-31",
+          "P010:2028-04-01:2028-06-30",
+          "P011:2028-07-01:2028-09-30",
+          "P012:2028-10-01:2028-12-31"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 12,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-monthly-9-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-monthly-9-late-exit/receipt.json",
+        "sha256": "c5b817c0bb7b936fdcfe75b6c568fbc5af46c8c8455912e2b1022ae7b7e59f82",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:9b835d5fa3bc1421b7e40f88b2c653b932e8ee3d12421604772ad43d9d287f8c",
+        "domainDigest": "sha256:16497f4fcf8bef53a26bfc8199ca2630c8e2ce589d465a15a188547f82983782",
+        "domainCardinality": "1087298055399178358449974438017136407109",
+        "nativeModelDigest": "sha256:6bd361a61fd56861aca69a5cf450673d020d6d67a7f6f206f3be731c93eb194a",
+        "counterexampleInputDigest": "sha256:e9b48aff385719cc0117220187decfe4d8de65f5d3b5510999e43b3bf5c4d8f5",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2026-09-01:2026-09-30"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 9,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-monthly-12-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-monthly-12-late-exit/receipt.json",
+        "sha256": "c11a4ff105d0bd594bc105c950436dba588224831d49a3503ab1add12f1f00b5",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:23ee231f188294904fc2f62039631606cf636a34a8ed2a6fe0d06b07a19ad758",
+        "domainDigest": "sha256:ecbeb8ecdcdf3ee84ad1e6cff5f9dbeb655968cabc326dbab3b84ea4343c58f1",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": "sha256:c983cf914f43816dddcd9849b5eeb4e86986c95ac6f9f242da148814de5e13be",
+        "counterexampleInputDigest": "sha256:83ea1a28e6f51120267849c359a2bb9a6f506930b2a270b5e2909d100c58e51a",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2026-09-01:2026-09-30",
+          "P010:2026-10-01:2026-10-31",
+          "P011:2026-11-01:2026-11-30",
+          "P012:2026-12-01:2026-12-31"
+        ],
+        "coverage": {
+          "nativeNodes": 110,
+          "inventory": 110,
+          "inputs": 24,
+          "periods": 12,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "negative-average-balance-12-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/negative-average-balance-12-late-exit/receipt.json",
+        "sha256": "8eeb5bc1e6c4ce9dab937449a59dc018e263d777f195db3ed843be2faff90090",
+        "disposition": "DISPROVED",
+        "predicate": "NATIVE_PERIODIC_IRR_LOWER_NPV_UNDERFLOW",
+        "packetDigest": "sha256:5c57d8da3f79bb526fb1bf0a374b7a053d9d09efb29ab522e59930aedb45b7ff",
+        "domainDigest": "sha256:56b590aff3814cf6fdf134d0d070560370dfda1917ca0988ecfae6441320c6b6",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": "sha256:526dd082d71c77eb3068b755283c66abb47f8a929c097008fe57ad977d26d84a",
+        "counterexampleInputDigest": "sha256:1bd416dba507425eda7bf16af189a4b09ebdec55bc91a7006b791b748e9b8ce7",
+        "certifiedLateExitSetInUnchangedDomain": [
+          "P009:2034-01-01:2034-12-31",
+          "P010:2035-01-01:2035-12-31",
+          "P011:2036-01-01:2036-12-31",
+          "P012:2037-01-01:2037-12-31"
+        ],
+        "coverage": {
+          "nativeNodes": 124,
+          "inventory": 124,
+          "inputs": 30,
+          "periods": 12,
+          "checks": 10,
+          "outputs": 33
+        }
+      },
+      {
+        "id": "noncounterexample-annual-8-late-exit",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/noncounterexample-annual-8-late-exit/receipt.json",
+        "sha256": "14b50910b9e9fad6bb9af160d300173c292cb3e1c7534a3433485c5d01c20b58",
+        "disposition": "REJECTED",
+        "predicate": "ACTUAL_NATIVE_FAILURE_REQUIRED",
+        "packetDigest": "sha256:6dc3503b494c6e07dd836728841ac69fcc6ba46f0483bf9d4b8afc0e8a3d8db7",
+        "domainDigest": "sha256:faa76390b79d5399afe17ed669d6588f3ca7f65bcd9122a9c63157a0b88cd03f",
+        "domainCardinality": "94744354509834840457904949450893608",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "noncounterexample-annual-12-earlier-exit-control",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/noncounterexample-annual-12-earlier-exit-control/receipt.json",
+        "sha256": "8e1423400b2e73bee74b89e36454586df6dc4bb9648d503a0c14163401538ab2",
+        "disposition": "REJECTED",
+        "predicate": "ACTUAL_NATIVE_FAILURE_REQUIRED",
+        "packetDigest": "sha256:0f497f1fe3fe5595b8798fc9d12ce768c368189f229a3adce1328ba61be11ecd",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-fabricated-native-success",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-fabricated-native-success/receipt.json",
+        "sha256": "2d0befbf4fb2013a7b7eb58e3db4b2cd1340c195be6547bf72e1a1c0c483f027",
+        "disposition": "REJECTED",
+        "predicate": "ACTUAL_NATIVE_FAILURE_REQUIRED",
+        "packetDigest": "sha256:84105684883e40e57ec9cd1eb0a9848b54633f3f76cfbef4d45db7477126b0eb",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-changed-lower-endpoint",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-changed-lower-endpoint/receipt.json",
+        "sha256": "72f058e8b58dd8c04b8ae6ec55bb9a2633bf0f581e09b60a4b5c2da6ed162d6e",
+        "disposition": "REJECTED",
+        "predicate": "EXACT_NEGATIVE_PROOF_CLAIM",
+        "packetDigest": "sha256:6b188b83cdd8c8f2a27ffccb6a5f05a196df808b69f17f6bb8268e0666d28948",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-wrong-exponent",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-wrong-exponent/receipt.json",
+        "sha256": "f4f23ba946734bcbbe00762080bf83325ff5613e3d4e5a85d70633e979cf2cce",
+        "disposition": "REJECTED",
+        "predicate": "EXACT_NEGATIVE_PROOF_CLAIM",
+        "packetDigest": "sha256:0c0c8c46ff2b9300e982fa747f1afb8a3fba28c7f9ca0a119eb53445264b0d20",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-changed-live-exponent-range",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-changed-live-exponent-range/receipt.json",
+        "sha256": "f1f59ab3868aad7cc8b32e4b7f2b95599926330f01bfbf60e4002e45aab7aac2",
+        "disposition": "REJECTED",
+        "predicate": "LIVE_NATIVE_POLICY",
+        "packetDigest": "sha256:065a1c6bae0e64e495a678c2da8f5dad1270552f68bd5f9d76d0d7852efd0513",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-narrowed-original-domain",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-narrowed-original-domain/receipt.json",
+        "sha256": "6790b7f80e31ce78ea440095ba6931638a5c7eddc8ea357d3525f5f06077b90b",
+        "disposition": "REJECTED",
+        "predicate": "WITNESS_DOMAIN",
+        "packetDigest": "sha256:b8dee1023cc08d2fed13c0f16b86249d5f78732c8ea99cd3863d0264d84f5841",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-missing-native-liability",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-missing-native-liability/receipt.json",
+        "sha256": "45e70ed401f4f9cb130469961c232faf41aac1cf44f06488165130dfcb92d945",
+        "disposition": "REJECTED",
+        "predicate": "COMPLETE_CASH_LIABILITY_CONSTRAINT_INVENTORY",
+        "packetDigest": "sha256:a8b57345160efc58db59b6182a93a70e2e02b6dd68430233eb4b2fbb6ec10cb7",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-missing-irr-objective",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-missing-irr-objective/receipt.json",
+        "sha256": "dacaf8f293dc40bf40b05fcd7597a013e4d24dc2284d1d540f8937ef1b6a1e16",
+        "disposition": "REJECTED",
+        "predicate": "COMPLETE_CASH_LIABILITY_CONSTRAINT_INVENTORY",
+        "packetDigest": "sha256:b29a1f3be45967c3ace08c447444ca2e5dd2bc5096d5c122bae1d6165a57a16e",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-shifted-native-period",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-shifted-native-period/receipt.json",
+        "sha256": "4165a02b39db744d5dc841b15b3e8dfb2a5542583b6f0b166ba7e25b7985d9aa",
+        "disposition": "REJECTED",
+        "predicate": "INDEPENDENT_NATIVE_CALENDAR",
+        "packetDigest": "sha256:454527b78b088ac18d84add2328304b5cf7d9d5b3d961494fe880579be216019",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-unapproved-axiom",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-unapproved-axiom/receipt.json",
+        "sha256": "6f55a54f56d30066cca93840359522a61228216a39e20e40e926ca70224c3160",
+        "disposition": "REJECTED",
+        "predicate": "EXACT_NEGATIVE_PROOF_CLAIM",
+        "packetDigest": "sha256:a34cc2e7a4806826132d635bbef30b02c44aceb7ed3c761250979bc046fde609",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-unresolved-goal",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-unresolved-goal/receipt.json",
+        "sha256": "edc5452a1ec0a2c1ad3784404c5c3a319cf721c5472849891b2cb1a866e86820",
+        "disposition": "REJECTED",
+        "predicate": "EXACT_NEGATIVE_PROOF_CLAIM",
+        "packetDigest": "sha256:346edddae77425351e71371e08741b95e53a227a0b6cd15323815964e4f18034",
+        "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+        "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-wrong-native-source-pin",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-wrong-native-source-pin/receipt.json",
+        "sha256": "bcc96cd1c577cca28609e4b202926e682f37007fc606b6aa85f8785808c60976",
+        "disposition": "REJECTED",
+        "predicate": "FROZEN_NATIVE_SOURCE_CUT",
+        "packetDigest": "sha256:c246f1f669c51ef645c8c9cc6975a9cd23125c5009a32cc3434f5d3269971db6",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      },
+      {
+        "id": "mutation-duplicate-native-input-owner",
+        "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/mutation-duplicate-native-input-owner/receipt.json",
+        "sha256": "b338bc2b7793fdcd361e1f4256789ab065484f2c3db065199d2b92bdafac5d2a",
+        "disposition": "REJECTED",
+        "predicate": "DUPLICATE_INPUT_OWNER",
+        "packetDigest": "sha256:2b0b053dc89e55a6909b20514c7e6cdcba61d4d3cc210df87bcc89cd3d3c0f0f",
+        "domainDigest": null,
+        "domainCardinality": null,
+        "nativeModelDigest": null,
+        "counterexampleInputDigest": null,
+        "certifiedLateExitSetInUnchangedDomain": null,
+        "coverage": null
+      }
+    ]
+  },
+  "exactFailingExample": {
+    "nativeNode": "returns.gross_sponsor_irr",
+    "inputDomain": "Complete preregistered diagnostic input domain, unchanged, with all 12 exit IDs permitted. This is not an invented original owner-resolved domain. Entry EV 100..101, each of 12 revenue components 50..51 and each of 12 EBITDA components 20..21 on 0.01 lattices; all other native input quantities fixed to source fixture; every required node/role/timing included.",
+    "domainCardinality": "1538918394020680336311302435158067971590807636030012",
+    "wholeLateExitRegionCardinality": "512972798006893445437100811719355990530269212010004",
+    "domainDigest": "sha256:157aa78b30980c087d729b824e11fd731cd04f0fd1bd07e9ead565de8bad6ae5",
+    "nativeModelDigest": "sha256:a621dcc8a19af16a1d49898eb1743576b684fa516e0bda3e485cfe691cc17f54",
+    "counterexampleInputDigest": "sha256:92f424d16623453236d8d41bf6adde385b457ebaf1b23fe35bbaf1e1f4d38775",
+    "completeNodesAndInventory": 110,
+    "requiredChecks": 10,
+    "requiredOutputs": 33,
+    "sourceNativeRecord": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/annual-12-late-exit/native.json",
+    "sourceNativeRecordSha256": "a4d9d020578484e8e1ef9d6ffdb25e084a3878d607ed0f738d8538840cdd6b8c",
+    "sourceOrderedReturnTerms": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/annual-12-late-exit/return-boundary.json",
+    "sourceOrderedReturnTermsSha256": "b61d424d3a0e4bbdfecadba766f976c42127d04d960f825324670377d0ea38e9",
+    "minimumRate": "-0.999999999999",
+    "flowIndex": 9,
+    "base": "10^-12",
+    "exactMathematicalPower": "10^-108",
+    "minE": -100,
+    "actualNativeDenominator": "0",
+    "actualNativeFlow9Amount": "0",
+    "actualNativeTerm": "0/0 = NaN",
+    "actualNativeLowerNpv": "NaN",
+    "actualNativeFailure": "IRR_UNDEFINED",
+    "requiredObligation": "forall x in the unchanged required D: actual native.status==SUCCEEDED and native.validity==VALID",
+    "noSamplingArgument": "A native member counterexample refutes a universal predicate; the independent power/saturation lemma also covers every nonnegative-flow late-exit point, not sampled equality."
+  },
+  "originalDomainQualification": "No actual owner-resolved standard-LBO D was supplied in the inherited one-period case. Diagnostic D is a counterexample, never a replacement approved reference/domain. A required D without late exits does not have this particular contradiction; its positive specialized proof remains unimplemented internal engineering, not an external approval gap.",
+  "repairEvidence": {
+    "positiveAmountScaling": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/annual-12-late-exit/return-boundary.json",
+    "earlierExitControl": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/annual-12-earlier-exit-control/native.json",
+    "nonNativeHornerDiagnostic": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/diagnostic-polynomial-repair.json",
+    "nonNativeHornerDiagnosticSha256": "62fe5e1b0c6259573cdc7f8cbc0c993cce1efdf9279554215cb37d6b1f775957",
+    "allRepairsDistinguishedFromOriginalSemantics": true,
+    "noNativeOrDomainRepairApplied": true
+  },
+  "boundedTransport": {
+    "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-transport-001/summary.json",
+    "sha256": "dc56f01fd65ef9b87896bcf9b8a7c3ffae91c7ca3a350ace915e08e0d778feec",
+    "cases": 3,
+    "result": "PASS_BOUNDED_TRANSPORT_ONLY",
+    "oversizedRawInputBytesRetained": 8388609
+  },
+  "original43CaseEvidence": {
+    "path": "scope-r/r6-verified-capital-compiler/evidence-private/core-005/summary.json",
+    "sha256": "42aa5c493427b80711dbd48b0c362001c65fb7970acdb891880e4654ee0c3b9b",
+    "cases": 43,
+    "status": "UNCHANGED_RETAINED_NOT_RERUN",
+    "reason": "Original producer, native policy/compiler/executor, independent positive checker, owner adapter, shared type and original run-e2e.mts bytes/dependencies are unchanged. New auxiliary checker is not imported by the original positive producer.",
+    "unchangedSourcePins": [
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py",
+        "sha256": "58ab3b567e7487c9a150feeaacd4c8b4db70bc0a81736bc26c3970d9ab3043a9"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.ts",
+        "sha256": "c5b49d541fc59e9e4093d49f46bcbebfd7a79f481f15124494e8d66f6702069d"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+        "sha256": "bc33469b35eb5f1eb42de6ca220e071688ddb0842287aeabbb202f59bbf470dd"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/contracts.ts",
+        "sha256": "3286a7898761e2f522f82be07599b2478e4fd4885c787394b9521209a7b987f7"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/membership.ts",
+        "sha256": "743ea3b4841948f5d18795075699338926d7381260d2a0beee27a5bce52821fd"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/native.ts",
+        "sha256": "4391a759bcd538b7d8aeb7b78ea0746e44f905ff370f959f27c862e97bc88ed3"
+      },
+      {
+        "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/index.ts",
+        "sha256": "ecaa9e441f632df7bf9af201a0d1bd751c8a069d76db65e94f13414023a95269"
+      },
+      {
+        "path": "finnor-os/scripts/r6/run-e2e.mts",
+        "sha256": "804a035898d90136488e4f62f4f67e43e62181b1e1698e04b71bed381d0101fa"
+      },
+      {
+        "path": "finnor-os/packages/private-equity/src/r6/verified-capital-compiler.ts",
+        "sha256": "354b98c34fcc8d36138ee937c807889cfc8e3b95a48cc6a984a58f771a88d711"
+      },
+      {
+        "path": "finnor-os/packages/shared-types/src/decision-proof.ts",
+        "sha256": "a0071bf1eb7568a6b990e050ceb5682bd58ba95f5467a36fd01b9e060f746a0b"
+      }
+    ]
+  },
+  "allRetainedFollowupCommands": [
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-001/command.json",
+      "sha256": "6aa64bb07e727797632e408d32bab527e631e2f63242e8839e032a5f1dc2774d",
+      "case": "lbo-obligation",
+      "exitCode": 0,
+      "elapsedMs": 5149,
+      "head": "816a90e3d7fe38b32cb2ceb042304133ff60a8ba"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002/command.json",
+      "sha256": "f274d7cfc8777cab6e2675a2c057d09385a65dfb69f7c36ad72e01960bb8f601",
+      "case": "lbo-obligation",
+      "exitCode": 0,
+      "elapsedMs": 7875,
+      "head": "fd76cfce5e060ae9e297bd272ace32f3be8f9955"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-001/command.json",
+      "sha256": "8b05b3a3a909e11fd14413056ee371eae0035f66ad608227ebf785871a8d2d8d",
+      "case": "lbo-probe",
+      "exitCode": 0,
+      "elapsedMs": 2404,
+      "head": "816a90e3d7fe38b32cb2ceb042304133ff60a8ba"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002/command.json",
+      "sha256": "afd908d9806d0af1c535549c0e48b80a3b716abc43a33cbff870c37b534e8c98",
+      "case": "lbo-probe",
+      "exitCode": 0,
+      "elapsedMs": 1134,
+      "head": "fd76cfce5e060ae9e297bd272ace32f3be8f9955"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-typecheck-001/command.json",
+      "sha256": "c9fbdeb9f2d25b52ccf81bf5a79fca64497046c41eb219f0e672aa5e7ab8cd54",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 4626,
+      "head": "816a90e3d7fe38b32cb2ceb042304133ff60a8ba"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-typecheck-002/command.json",
+      "sha256": "a118f0d7c0b855418b5b83675e6950ce8a5ec46f02661b15a7d803ac03f95fda",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1046,
+      "head": "816a90e3d7fe38b32cb2ceb042304133ff60a8ba"
+    },
+    {
+      "path": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-typecheck-003/command.json",
+      "sha256": "99c8f79ac71243a443b3e3db6192d6425ac38596ef24286ad57c2fcaf2d5a5fc",
+      "case": "typecheck",
+      "exitCode": 0,
+      "elapsedMs": 1452,
+      "head": "fd76cfce5e060ae9e297bd272ace32f3be8f9955"
+    }
+  ],
+  "privateRetention": {
+    "fileLedgerPath": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-retained-file-ledger.json",
+    "fileLedgerSha256": "ed19ce80779a8ae8c721102851ce157956703367655f19601439f5cb048332a4",
+    "rawFilesBeforeLedger": 228,
+    "newCampaignBytesIncludingLedger": 32701347,
+    "registeredMaximumBytes": 33554432,
+    "rawEvidenceCommitted": false,
+    "allOriginalAttemptsRetained": true
+  },
+  "review": {
+    "comparisonBase": "710393710c3b8aa34f1669d5e6b876550d38483e",
+    "completeFollowupCodeReview": "Source self-audit of committed preregistration and all four staged/committed code files; no peer writes.",
+    "threeTaskReviewers": "NOT_RUN: Task/subagent tool is not available in this session; no protected or independent reviewer claim.",
+    "reuseDispositions": {
+      "nativeFixtureCompilerExecutorSnapshotDecimal": "REUSE original underwriting functions; no new executable finance IR.",
+      "canonicalCalendarDomainSnapshotBoundHelpers": "REUSE frozen independent checker.py via its exact adjacent byte pin; never import producer/native code into independent math.",
+      "compiledLboGraphAndNodeInventory": "KEEP specialized independent native bookkeeping/complete negative-obligation inventory; generic compile_independently intentionally rejects this runtime and cannot silently be reused as a positive specialized compiler.",
+      "requiredNodeAndRoleClassification": "KEEP scoped to canonical standard-LBO diagnostic inventory; do not broaden owner/shared classifiers.",
+      "negativeProtocolTypes": "KEEP distinct DISPROVED protocol; not a financial receipt version or legacy adapter.",
+      "processTransport": "KEEP bounded end-to-end auxiliary-process transport: fixed interpreter/entry, code/executable digests and child/parent PID; original positive checker transport is not exported and validates a different acceptance schema.",
+      "retentionHelpers": "KEEP bounded fresh wx evidence writes in each standalone campaign script; no global recorder, overwritten attempt or compatibility reader.",
+      "diagnosticNpvHorner": "KEEP explicitly non-native and non-accepting repair evidence; not installed as a proof rule.",
+      "runnerDispatch": "REUSE existing verified read-only config/dependency/runtime runner; two explicit owned cases and source-evidence argument only."
+    },
+    "compatibilityLayers": [],
+    "verifiedFix": "Bounded direct-file read now stops at MAX_BYTES+1, like stdin; actual oversized file/pipe cases rejected.",
+    "protectedAdmission": "NOT_ESTABLISHED"
+  },
+  "rerun": {
+    "cwd": "/Users/paramdave/.factory/worktrees/r6-verified-capital-producer-2026-10-11/FINNOR",
+    "native": "/usr/bin/python3 finnor-os/scripts/r6/run-local.py --deps /Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/finnor-os/node_modules --case lbo-probe --evidence <NEW owned private directory>",
+    "independent": "Same runner with --case lbo-obligation --source-evidence <retained native probe> --evidence <different NEW owned private directory>",
+    "typecheck": "Same runner with --case typecheck --evidence <different NEW owned private directory>"
+  },
+  "externalGates": {
+    "referenceApproval": "NOT_ESTABLISHED",
+    "checkerAdmission": "NOT_ESTABLISHED"
+  },
+  "resourceQualification": {
+    "usd": null,
+    "humanSeconds": null,
+    "aggregateSimultaneousPeakBytes": null,
+    "protectedGain": "NOT_RUN",
+    "financialEffectGranted": false,
+    "runtimeInstalls": 0
+  },
+  "documentationOnlyFollowup": "The final sanitized index and integration requirements may follow the verified code cut; no executable/native/checker byte changes."
+}

@@ -75,6 +75,54 @@ paths = ['''(^|/)finnor-os/packages/private-equity/src/capital-program/v2-owners
 regexTarget = "match"
 regexes = ['''^candidateKey:'m3-nonconsequential-proposal'$''']
 
+# This literal belongs to a local synthetic Auth server, not a usable token.
+# Keep every other refresh-token value and every other path fully scanned,
+# including the complete history of side parents and merge resolutions.
+[[rules.allowlists]]
+description = "Exact synthetic R2 local Auth refresh-token placeholder"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r2/run-owner\.mts$''']
+regexTarget = "match"
+regexes = ['''^refresh_token:'r2-disposable'$''']
+
+# This exact static underwriting model name is public synthetic metadata.
+# Other model names, credential fields and paths remain fully scanned.
+[[rules.allowlists]]
+description = "Exact authored R6 synthetic underwriting model identifier"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r6/run-e2e\.mts$''']
+regexTarget = "match"
+regexes = ['''^modelKey: "r6-synthetic-mechanics"$''']
+
+# Static request identity for the disposable publication-revocation fixture.
+# Neither runtime idempotency values nor other fields on this path are exempt.
+[[rules.allowlists]]
+description = "Exact authored R8 publication-fault request identifier"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r8/run-owner\.mts$''']
+regexTarget = "match"
+regexes = ['''^idempotencyKey:'r8-publish-fault'$''']
+
+# This is the checked SHA-256 of y0's public identification API source.
+# Only its exact detector match on these two R4 method files is metadata.
+[[rules.allowlists]]
+description = "Exact verified public y0 identification API source pin"
+condition = "AND"
+paths = [
+  '''(^|/)finnor-os/packages/epistemic-runtime/src/identification-plan/producer\.py$''',
+  '''(^|/)finnor-os/packages/epistemic-runtime/src/identification-plan/checker\.py$''',
+]
+regexTarget = "match"
+regexes = ['''^api\.py": "ad107d01a61c9ba1df2c71ca8e128851c6f3b1fee3f9377d5159c34d6b0e50c4"$''']
+
+# A fixed mode enum records the disposable authentication boundary, not a token.
+[[rules.allowlists]]
+description = "Exact R4 disposable authentication-boundary mode enum"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r4/browser\.mts$''']
+regexTarget = "match"
+regexes = ['''^authentication: "DISPOSABLE_RS256_NO_BYPASS"$''']
+
 # Each value is the verified SHA-256 of the named public migration, not a key.
 [[rules.allowlists]]
 description = "Four exact public SQL source pins in this release allocation"

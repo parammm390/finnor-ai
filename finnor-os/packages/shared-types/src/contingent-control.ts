@@ -40,10 +40,13 @@ export interface ControlObligation {
 /** S2 owns instrument meaning. This temporal coarsening does not assert IID or
  * calibrate an error distribution. Private state is not an observation. */
 export interface ControlObservationInstrument {
-  schema: 'finnor.s2.control-observation.v1'; id: string; sourceRef: ExperimentRef;
+  schema: 'finnor.s2.control-observation.v1' | 'finnor.s2.control-observation.exact.v2'; id: string; sourceRef: ExperimentRef;
   variableId: string; unit: string; delayPeriods: number; afterActionIds: string[];
   bins: Array<{ category: string; lowerInclusive: number; upperExclusive: number }>;
-  qualification: 'SUPPLIED_DETERMINISTIC_COARSENING_UNVERIFIED';
+  qualification: 'SUPPLIED_DETERMINISTIC_COARSENING_UNVERIFIED' | 'SUPPLIED_EXACT_INFORMATION_TOKENS_UNVERIFIED';
+  /** v2 categories are the original table's tokens, not invented numeric bins.
+   * Numeric bins, if present, only display the original S2 coarsening. */
+  exact?: {tokens:string[];measurement:import('./certified-state-reduction').ExactInformationModel['observationInstruments'][number]['measurement']|null;numericProjection:'PRESENTATION_ONLY'};
 }
 export interface ControlAction {
   id: string; kind: 'INQUIRE' | 'INTERVENE' | 'WAIT' | 'STOP'; cost: number; costUnit: string;
@@ -54,9 +57,10 @@ export interface ControlAction {
   precondition?: { afterActionIds: string[]; observations: Array<{ instrumentId: string; tokens: string[] }> };
 }
 export interface ControlProblem {
-  schema: 'finnor.control-problem.v1'; id: string; episodeId: string; modelRef: ExperimentRef;
+  schema: 'finnor.control-problem.v1' | 'finnor.control-problem.exact.v2'; id: string; episodeId: string; modelRef: ExperimentRef;
   context: string; regime: string; baselineExposures: Record<string, number[]>;
   actions: ControlAction[]; observations: ControlObservationInstrument[]; obligations: ControlObligation[]; validUntil: string;
+  exactSource?: {modelDigest:string;sourceRef:ExperimentRef;quantityEncoding:'NORMALIZED_RATIONAL_PAIRS';numericProjection:'PRESENTATION_ONLY'};
   continuation?: { elapsedPeriods: number; actionHistory: string[];
     observations: Array<ControlObservation & { knowledgeAt: string; sourceRef: ExperimentRef }>;
     accruedUtility: { value: number; unit: string; sourceRef: ExperimentRef };
@@ -86,12 +90,21 @@ export interface PolicyNode {
   alternatives: Array<{ actionId: string; status: PolicyResultState; valueBounds: [number, number] | null; reasons: string[] }>;
 }
 export interface ContingentResourceDemand {
-  schema: 'finnor.contingent-resource-demand.v1'; semanticOwner: 'S4'; contentDigest: string;
+  schema: 'finnor.contingent-resource-demand.v1' | 'finnor.contingent-resource-demand.exact.v2'; semanticOwner: 'S4'; contentDigest: string;
   mandateRef: ExperimentRef; rightsRef: string; existingObligations: ControlObligation[];
   dimensions: EconomicMandate['resources']['dimensions']; couplings: EconomicMandate['resources']['couplings'];
   branches: Array<{ nodeId: string; parentNodeId: string | null; actionId: string; period: number;
     total: Record<string, number>; occupancy: Record<string, number>; occupationPeriods: number; mutuallyExclusiveSiblings: string[] }>;
   reservationGranted: false; portfolioFeasibilityEstablished: false;
+  exact?: {modelDigest:string;sourceRef:ExperimentRef;quantityEncoding:'NORMALIZED_RATIONAL_PAIRS';numericProjection:'PRESENTATION_ONLY';
+    units:import('./certified-state-reduction').ExactInformationModel['units'];
+    discountFactors:import('./certified-state-reduction').ControlRational[];
+    existingObligations:import('./certified-state-reduction').ExactControlSemantics['obligations'];
+    branches:Array<{nodeId:string;parentNodeId:string|null;actionId:string;period:number;
+      total:import('./certified-state-reduction').ExactResourceVector;occupancy:import('./certified-state-reduction').ExactResourceVector;
+      occupationPeriods:number;cost:import('./certified-state-reduction').ControlRational;
+      humanSeconds:import('./certified-state-reduction').ControlRational;terminalLiability:import('./certified-state-reduction').ControlRational;
+      exposures:Record<string,import('./certified-state-reduction').ControlRational[]>;mutuallyExclusiveSiblings:string[]}>};
 }
 export interface S4ExperienceEvent {
   schema: 'finnor.s4.experience.v1'; semanticOwner: 'S4'; eventId: string; episodeId: string;
@@ -105,7 +118,7 @@ export interface S4ComputeInvocation {
   schema: 'finnor.model-compute-invocation.v1'; semanticOwner: 'S4'; id: string;
   tenantId: string; principalId: string; rightsRef: string; inputRef: string; outputRefs: string[];
   requestedRoute: 'LOCAL_FIXED_SCENARIO_SEARCH'; actualRoute: 'LOCAL_FIXED_SCENARIO_SEARCH'; fallbacks: string[];
-  backend: { name: 'finnor-nonanticipative-scenario-search'; version: 's4-finite-contingent-v1';
+  backend: { name: 'finnor-nonanticipative-scenario-search'; version: 's4-finite-contingent-v1' | 's4-finite-contingent-exact-v2';
     sourceDigests: Array<{ path: string; sha256: string }>; nodeVersion: string; deterministicReplayClaimed: false };
   attempts: Array<{ startedAt: string; finishedAt: string; status: PolicyResultState }>;
   usage: { elapsedMs: number; cpuUserMicros: number; cpuSystemMicros: number; rssBeforeBytes: number; rssAfterBytes: number;
@@ -114,16 +127,17 @@ export interface S4ComputeInvocation {
   upstreamComputeRefs: string[]; admission: { status: 'BLOCKED_EXTERNAL'; receipt: null };
 }
 export interface ContingentPolicy {
-  schema: 'finnor.contingent-policy.v1'; semanticOwner: 'S4'; version: 's4-finite-contingent-v1'; ref: ExperimentRef;
+  schema: 'finnor.contingent-policy.v1' | 'finnor.contingent-policy.exact.v2'; semanticOwner: 'S4'; version: 's4-finite-contingent-v1' | 's4-finite-contingent-exact-v2'; ref: ExperimentRef;
   tenantId: string; principalId: string; episodeId: string; knowledgeAt: string; validUntil: string;
   mandateRef: ExperimentRef; mandate: EconomicMandate; problem: ControlProblem; priorPolicyRef: ExperimentRef | null; resultState: PolicyResultState;
   bindings: { modelRef: ExperimentRef; dynamicsRef: ExperimentRef; rightsRef: string; beliefPins: BeliefViewPin[];
-    protocolRefs: ExperimentRef[]; inputArtifactRef: ExperimentRef | null; methodVersion: 's4-finite-contingent-v1'; obligationsDigest: string; allocationRefs: ExperimentRef[] };
+    protocolRefs: ExperimentRef[]; inputArtifactRef: ExperimentRef | null; methodVersion: 's4-finite-contingent-v1' | 's4-finite-contingent-exact-v2'; obligationsDigest: string; allocationRefs: ExperimentRef[] };
   rootNodeId: string; nodes: PolicyNode[]; demand: ContingentResourceDemand;
-  certificate: { basis: 'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64'; ambiguity: 'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES';
+  certificate: { basis: 'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64' | 'MODEL_RELATIVE_EXACT_INFORMATION_TABLE'; ambiguity: 'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES';
     valueBounds: [number, number]; optimalBounds: [number, number | null]; normalizedRegretBounds: [number, number | null]; completeSearch: boolean;
     finiteScenarioGapOnly: true; distributionAndIdentificationGap: 'UNKNOWN'; numericalTolerance: number;
     feasibleIncumbentChecked: boolean; worlds: number; riskSemantics: EconomicMandate['risk'] };
+  exactProfile?: import('./certified-state-reduction').ExactControlPolicyProfile;
   compute: S4ComputeInvocation; limitations: string[];
   admission: { status: 'BLOCKED_EXTERNAL'; executionAuthorityGranted: false; appendAuthorityGranted: false; methodAdmitted: false; receipt: null };
 }
@@ -133,7 +147,7 @@ export interface ControlDecisionInput {
   rightsRef: string; obligations: ControlObligation[]; allocationRefs: ExperimentRef[];
 }
 export interface ControlDecision {
-  schema: 'finnor.s4.branch-choice.v1'; ref: ExperimentRef; policyRef: ExperimentRef; status: PolicyResultState;
+  schema: 'finnor.s4.branch-choice.v1' | 'finnor.s4.branch-choice.exact.v2'; ref: ExperimentRef; policyRef: ExperimentRef; status: PolicyResultState;
   nodeId: string | null; actionId: string | null; contextDigest: string; reasons: string[]; executionAuthorityGranted: false;
 }
 /** Resolved by the S5 owner, never issued by S4 or trusted from request JSON. */
@@ -149,6 +163,6 @@ export interface ContingentChoiceHandoff {
   /** Ordinary immutable S4 preparation, persisted before S5 intent; no receipt or authority. */
   preparationRef?: ExperimentRef | null;
   consumptionRef?: ExperimentRef | null;
-  requiredContracts: Array<{ owner: 'BUSINESS_OWNER' | 'S5' | 'S6' | 'S7' | 'S8'; requirement: string }>;
+  requiredContracts: Array<{ owner: 'BUSINESS_OWNER' | 'S3' | 'S5' | 'S6' | 'S7' | 'S8'; requirement: string }>;
   executionAuthorityGranted: false; effectRef: null; settlementRef: null; attributionGranted: false; protectedReceipt: null;
 }

@@ -1,8 +1,10 @@
+import {exactPolicyActionQuantity} from './exact-allocation-adapter';
 import type { AllocationCertificate, AllocationDualProposal, AllocationLagrangianProof, AllocationCheck, AllocationEnvelope, AllocationOptimizationCertificate, CanonicalAllocationProblem } from '@finnor/shared-types';
 import { epistemicHash } from './source-precedence';
 import { immutableControl } from './control-contracts';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
 import { ALLOCATION_ADMISSION, allocationRef, AllocationContractError, allocationDecimal as decimal, allocationNumber as number, allocationDerivedQuantity as quantity, allocationQuantity, allocationRatioUpper, assertAllocationProblem, sameAllocationRef } from './allocation-contracts';
+import {prepareAllocationResourceBasis,checkAllocationResourcePath,allocationResourceEnvelopes} from './allocation-resource-check';
 
 type Q = ExperimentRational;
 type Schedule = Map<string,Q[]>;
@@ -24,21 +26,10 @@ function schedule(problem:CanonicalAllocationProblem):Schedule {
 }
 function prepare(problem:CanonicalAllocationProblem):Prepared {
   assertAllocationProblem(problem);
-  const p=problem,h=p.mandate.horizon.periods,baseline=schedule(p),minimumBaseline=schedule(p),initialReasons:string[]=[];
-  for(const r of p.resources){baseline.set(r.resourceId,r.existingUse.map(quantity));minimumBaseline.set(r.resourceId,r.existingUse.map(quantity));
-    if(r.revoked)initialReasons.push(`RESOURCE_REVOKED:${r.resourceId}`);
-    if(Date.parse(r.knowledgeAt)>Date.parse(p.knowledgeAt)||Date.parse(r.validUntil)<=Date.parse(p.knowledgeAt))initialReasons.push(`RESOURCE_KNOWLEDGE_OR_EXPIRY:${r.resourceId}`);
-    if(r.availability.some(a=>a.basis!=='REPORTED_AVAILABLE'||a.amount===null))initialReasons.push(`RESOURCE_AVAILABILITY_UNRESOLVED:${r.resourceId}`);
-  }
-  if(Date.parse(p.jointModel.knowledgeAt)>Date.parse(p.knowledgeAt)||Date.parse(p.jointModel.validUntil)<=Date.parse(p.knowledgeAt)||p.policies.some(policy=>Date.parse(policy.knowledgeAt)>Date.parse(p.knowledgeAt)||Date.parse(policy.validUntil)<=Date.parse(p.knowledgeAt)))initialReasons.push('POLICY_OR_JOINT_MODEL_KNOWLEDGE_OR_EXPIRY');
-  for(const outstanding of p.outstanding){if(outstanding.status==='RESERVED'&&outstanding.effectRefs.length)initialReasons.push('RESERVATION_EFFECT_STAGE_INCONSISTENT');
-    for(const envelope of outstanding.envelopes){const r=p.resources.find(r=>r.resourceId===envelope.resourceId);
-      if(!r||r.unit!==envelope.unit||r.kind!==envelope.kind||!sameAllocationRef(r.horizon,envelope.horizon)||envelope.quantities.length!==h+1||envelope.minimumQuantities?.length!==h+1){initialReasons.push('OUTSTANDING_COMMITMENT_RESOURCE_SEMANTICS_UNRESOLVED');continue;}
-      const raw=baseline.get(r.resourceId)!,lower=minimumBaseline.get(r.resourceId)!;
-      for(let t=0;t<=h;t++){raw[t]=raw[t]!.add(quantity(envelope.quantities[t]!));lower[t]=lower[t]!.add(quantity(envelope.minimumQuantities[t]!));
-        if(resourceUsage(r.kind,envelope.minimumQuantities.map(quantity),t).compare(resourceUsage(r.kind,envelope.quantities.map(quantity),t))>0)initialReasons.push('OUTSTANDING_COMMITMENT_LOWER_ENVELOPE_INVALID');}
-    }
-  }
+  const p=problem,h=p.mandate.horizon.periods;
+  const temporal=Date.parse(p.jointModel.knowledgeAt)>Date.parse(p.knowledgeAt)||Date.parse(p.jointModel.validUntil)<=Date.parse(p.knowledgeAt)||p.policies.some(policy=>Date.parse(policy.knowledgeAt)>Date.parse(p.knowledgeAt)||Date.parse(policy.validUntil)<=Date.parse(p.knowledgeAt));
+  const {baseline,minimumBaseline,initialReasons}=prepareAllocationResourceBasis(p.resources,p.outstanding,h,p.knowledgeAt,
+    temporal?['POLICY_OR_JOINT_MODEL_KNOWLEDGE_OR_EXPIRY']:[]);
   if(p.mandate.utility.tail.terminalLiability!==0){const ids=new Set(p.funding.map(f=>f.terminalLiabilityResourceId));
     if(ids.size!==1||ids.has(null))initialReasons.push('MANDATE_TERMINAL_LIABILITY_FUNDING_UNRESOLVED');}
   const paths:Prepared['paths']=[];
@@ -48,12 +39,12 @@ function prepare(problem:CanonicalAllocationProblem):Prepared {
     for(const policy of p.policies){const raw=schedule(p),path=scenario.policyPaths.find(s=>s.policyRef.id===policy.ref.id)!,funding=p.funding.find(f=>f.policyRef.id===policy.ref.id)!;
       for(const nodeId of path.nodeIds){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;
         for(const binding of p.demandBindings.filter(b=>b.policyRef.id===policy.ref.id)){const amounts=raw.get(binding.resourceId)!;
-          if(binding.component==='TOTAL')amounts[node.period]=amounts[node.period]!.add(number(action.resources[binding.dimensionId]!));
-          else for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)amounts[t]=amounts[t]!.add(number(action.occupancy[binding.dimensionId]!));
+          if(binding.component==='TOTAL')amounts[node.period]=amounts[node.period]!.add((exactPolicyActionQuantity(policy,action,'resources',binding.dimensionId)??number(action.resources[binding.dimensionId]!)));
+          else for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)amounts[t]=amounts[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',binding.dimensionId)??number(action.occupancy[binding.dimensionId]!)));
         }
-        if(funding.actionCostResourceId){const v=raw.get(funding.actionCostResourceId)!;v[node.period]=v[node.period]!.add(number(action.cost));}
-        if(funding.humanSecondsResourceId){const v=raw.get(funding.humanSecondsResourceId)!;v[node.period]=v[node.period]!.add(number(action.humanSeconds));}
-        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add(number(action.tailLiability));}
+        if(funding.actionCostResourceId){const v=raw.get(funding.actionCostResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'cost')??number(action.cost)));}
+        if(funding.humanSecondsResourceId){const v=raw.get(funding.humanSecondsResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds)));}
+        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add((exactPolicyActionQuantity(policy,action,'tailLiability')??number(action.tailLiability)));}
       }demands.set(policy.ref.id,raw);
     }paths.push({id:scenario.id,demands});
   }
@@ -65,31 +56,22 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
   if(p.outstanding.some(o=>o.policyRefs.some(policy=>chosen.has(policy.id))))reasons.push('POLICY_ALREADY_DURABLY_COMMITTED');
   const witnesses:AllocationCheck['witnesses']=[],scenarioValues:AllocationCheck['scenarioValues']=[],increments:Schedule[]=[];
   for(const constraint of p.jointModel.choiceConstraints){const count=constraint.policyIds.filter(id=>chosen.has(id)).length;if(count<constraint.minimum||count>constraint.maximum)reasons.push(`JOINT_CHOICE_CONSTRAINT:${constraint.id}`);}
-  for(const path of paths){const incremental=schedule(p),total=schedule(p);
+  for(const path of paths){const incremental=schedule(p);
     // Mandate-wide terminal debt is part of the NEW durable envelope, even if
     // selection is empty. Future clears must see it in outstanding commitments.
     if(p.mandate.utility.tail.terminalLiability!==0&&!prepared.initialReasons.includes('MANDATE_TERMINAL_LIABILITY_FUNDING_UNRESOLVED')){
       incremental.get(p.funding[0]!.terminalLiabilityResourceId!)![h]=number(p.mandate.utility.tail.terminalLiability);}
     for(const r of p.resources){const raw=incremental.get(r.resourceId)!;
       for(const id of chosen){const demand=path.demands.get(id)?.get(r.resourceId);if(demand)for(let t=0;t<=h;t++)raw[t]=raw[t]!.add(demand[t]!);}
-      total.set(r.resourceId,raw.map((v,t)=>v.add(baseline.get(r.resourceId)![t]!)));
-      for(let t=0;t<=h;t++){const used=resourceUsage(r.kind,total.get(r.resourceId)!,t),a=r.availability[t]!,maximum=a.amount===null?ER_ZERO:quantity(a.amount).sub(quantity(r.safetyMargin)),margin=maximum.sub(used);
-        if(margin.n<0n)reasons.push(`RESOURCE_LIMIT:${r.resourceId}:${path.id}:${t}`);
-        if(withWitnesses)witnesses.push({constraintId:`resource:${r.resourceId}`,scenarioId:path.id,period:t,used:decimal(used),maximum:decimal(maximum),margin:decimal(margin)});
-      }
     }
-    const covenants=new Map(p.resources.flatMap(r=>r.covenants).map(c=>[c.id,c]));
-    for(const c of covenants.values())for(const t of c.periods){let used=ER_ZERO;
-      for(const term of c.terms){const r=p.resources.find(r=>r.resourceId===term.resourceId)!,coefficient=quantity(term.coefficient),values=coefficient.n<0n?incremental.get(r.resourceId)!.map((v,i)=>v.add(minimumBaseline.get(r.resourceId)![i]!)):total.get(r.resourceId)!;used=used.add(coefficient.mul(resourceUsage(r.kind,values,t)));}
-      const maximum=quantity(c.maximum).sub(quantity(c.safetyMargin)),margin=maximum.sub(used);if(margin.n<0n)reasons.push(`COVENANT_LIMIT:${c.id}:${path.id}:${t}`);
-      if(withWitnesses)witnesses.push({constraintId:`covenant:${c.id}`,scenarioId:path.id,period:t,used:decimal(used),maximum:decimal(maximum),margin:decimal(margin)});
-    }
+    const resourceCheck=checkAllocationResourcePath(p.resources,incremental,prepared,path.id,h,withWitnesses);
+    reasons.push(...resourceCheck.reasons);witnesses.push(...resourceCheck.witnesses);
     // The authorized S4 envelope is also a portfolio constraint. It is never
     // widened because a separate resource registry permits a larger amount.
     const dimensions=new Map(p.mandate.resources.dimensions.map(d=>[d.id,{spent:ER_ZERO,occupied:zeroes(h+1)}]));let humanSeconds=ER_ZERO;
     for(const id of chosen){const policy=p.policies.find(policy=>policy.ref.id===id);if(!policy)continue;const nodes=p.jointModel.scenarios.find(s=>s.id===path.id)!.policyPaths.find(q=>q.policyRef.id===id)!.nodeIds;
-      for(const nodeId of nodes){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;humanSeconds=humanSeconds.add(number(action.humanSeconds));
-        for(const d of p.mandate.resources.dimensions){const usage=dimensions.get(d.id)!;usage.spent=usage.spent.add(number(action.resources[d.id]!));for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)usage.occupied[t]=usage.occupied[t]!.add(number(action.occupancy[d.id]!));}}
+      for(const nodeId of nodes){const node=policy.nodes.find(n=>n.id===nodeId)!,action=policy.problem.actions.find(a=>a.id===node.actionId)!;humanSeconds=humanSeconds.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds)));
+        for(const d of p.mandate.resources.dimensions){const usage=dimensions.get(d.id)!;usage.spent=usage.spent.add((exactPolicyActionQuantity(policy,action,'resources',d.id)??number(action.resources[d.id]!)));for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)usage.occupied[t]=usage.occupied[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',d.id)??number(action.occupancy[d.id]!)));}}
     }
     for(const d of p.mandate.resources.dimensions){const v=dimensions.get(d.id)!;if(v.spent.compare(number(d.totalLimit))>0||v.occupied.some(q=>q.compare(number(d.capacity))>0))reasons.push(`MANDATE_RESOURCE_ENVELOPE:${d.id}:${path.id}`);}
     if(humanSeconds.compare(number(p.mandate.search.maxHumanSeconds))>0)reasons.push(`MANDATE_HUMAN_BUDGET:${path.id}`);
@@ -98,12 +80,7 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
     const value=scenario.terms.reduce((v,term)=>term.policyIds.every(id=>chosen.has(id))?v.add(quantity(term.value)):v,quantity(scenario.baseValue));
     scenarioValues.push({scenarioId:path.id,value:decimal(value)});if(value.compare(number(p.mandate.risk.minimumUtility))<0)reasons.push(`FULL_HORIZON_RISK_FLOOR:${path.id}`);increments.push(incremental);
   }
-  const envelopes:AllocationEnvelope[]=p.resources.map(r=>{
-    const quantities:Q[]=zeroes(h+1),minimumQuantities:Q[]=zeroes(h+1);let priorMaximum=ER_ZERO,priorMinimum=ER_ZERO;
-    for(let t=0;t<=h;t++){const usages=increments.map(raw=>resourceUsage(r.kind,raw.get(r.resourceId)!,t)),worst=usages.reduce(max),least=usages.reduce(min);
-      if(r.kind==='STOCK'||r.kind==='CUMULATIVE_EXPENDITURE'){quantities[t]=worst.sub(priorMaximum);minimumQuantities[t]=least.sub(priorMinimum);priorMaximum=worst;priorMinimum=least;}else{quantities[t]=worst;minimumQuantities[t]=least;}}
-    return {resourceId:r.resourceId,unit:r.unit,kind:r.kind,horizon:r.horizon,quantities:quantities.map(decimal),minimumQuantities:minimumQuantities.map(decimal)};
-  });
+  const envelopes:AllocationEnvelope[]=allocationResourceEnvelopes(p.resources,increments,h);
   const feasible=reasons.length===0,objective=feasible?decimal(scenarioValues.map(s=>quantity(s.value)).reduce(min)):null;
   return {schema:'finnor.allocation-check.v1',problemRef:p.ref,selectedPolicyIds:[...selected].sort(),feasible,reasons:[...new Set(reasons)],objective,scenarioValues,envelopes,witnesses,numericalSemantics:'EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE',executionAuthorityGranted:false};
 }
@@ -145,8 +122,8 @@ function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualPropo
     const totals=new Map<string,Map<string,Q>>(),occupied=new Map<string,Map<string,Q[]>>();const human=coeff(()=>ER_ZERO);
     for(const d of p.mandate.resources.dimensions){totals.set(d.id,coeff(()=>ER_ZERO));occupied.set(d.id,new Map(ids.map(id=>[id,zeroes(h+1)])));}
     for(const policy of p.policies)for(const nodeId of s.policyPaths.find(q=>q.policyRef.id===policy.ref.id)!.nodeIds){const node=policy.nodes.find(q=>q.id===nodeId)!,action=policy.problem.actions.find(q=>q.id===node.actionId)!,id=policy.ref.id;
-      human.set(`x:${id}`,human.get(`x:${id}`)!.add(number(action.humanSeconds)));
-      for(const d of p.mandate.resources.dimensions){const a=totals.get(d.id)!;a.set(`x:${id}`,a.get(`x:${id}`)!.add(number(action.resources[d.id]!)));const v=occupied.get(d.id)!.get(id)!;for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)v[t]=v[t]!.add(number(action.occupancy[d.id]!));}
+      human.set(`x:${id}`,human.get(`x:${id}`)!.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds))));
+      for(const d of p.mandate.resources.dimensions){const a=totals.get(d.id)!;a.set(`x:${id}`,a.get(`x:${id}`)!.add((exactPolicyActionQuantity(policy,action,'resources',d.id)??number(action.resources[d.id]!))));const v=occupied.get(d.id)!.get(id)!;for(let t=node.period;t<Math.min(h+1,node.period+action.occupationPeriods);t++)v[t]=v[t]!.add((exactPolicyActionQuantity(policy,action,'occupancy',d.id)??number(action.occupancy[d.id]!)));}
     }
     for(const d of p.mandate.resources.dimensions){add(`mandate-total:${d.id}:${s.id}`,totals.get(d.id)!,number(d.totalLimit));for(let t=0;t<=h;t++)add(`mandate-occupancy:${d.id}:${s.id}:${t}`,coeff(id=>occupied.get(d.id)!.get(id)![t]!),number(d.capacity));}
     for(const c of p.mandate.resources.couplings)for(let t=0;t<=h;t++)add(`mandate-coupling:${c.id}:${s.id}:${t}`,coeff(id=>sum(Object.entries(c.weights).map(([d,w])=>number(w).mul(occupied.get(d)!.get(id)![t]!)))),number(c.maxPerPeriod));

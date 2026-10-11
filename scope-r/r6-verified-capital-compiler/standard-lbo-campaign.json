@@ -1,0 +1,100 @@
+{
+  "schema": "finnor.r6.standard-lbo-engineering-campaign.v1",
+  "registeredBeforeNewProducerCheckerOracleFixtureCode": true,
+  "baseCommit": "710393710c3b8aa34f1669d5e6b876550d38483e",
+  "baseTree": "e26f01e1290f03216a4a2f415e61ff745d4ad0df",
+  "request": "Finish the independently achievable original standard_lbo_v1 native financial proof profile without changing Decimal34 HALF_EVEN, horizon <= 12, required input domains or required inventories. No shared-owner writes, installs, live effects or self-approval.",
+  "originalEvidence": {
+    "core": "scope-r/r6-verified-capital-compiler/evidence-private/core-005",
+    "cases": 43,
+    "alterOrDiscard": false,
+    "standardLboCase": "standard-lbo-not-silently-certified",
+    "observedLimitation": "The retained one-period native LBO case supplies no standard-LBO input domain or complete LBO state bindings: it swaps the programme into the generic scalar problem before the early specialized-runtime refusal. Do not call the generic scalar domain an original LBO domain.",
+    "requiredDomainPolicy": "Preserve every caller-supplied domain component unchanged. Never remove a late exit, liability, solver branch, objective, input or native CheckNode to get acceptance. Explicit diagnostic domains are not invented approved references or a replacement for a missing supplied domain."
+  },
+  "acceptancePredicate": {
+    "quantifier": "Every x in the complete original supplied nonempty D",
+    "requirements": [
+      "Both actual native executions SUCCEEDED and VALID",
+      "Every native schedule/input/output/check and every declared cash/liability/timing/constraint/objective inventory item preserved",
+      "Actual Decimal34 HALF_EVEN folds, normalized lengths, minE=-100 and maxE=100 preserved",
+      "All forecast periods, all applicable maturity/draw/sweep/fixed-point branches and exact original return algorithms covered",
+      "No unresolved goals, unapproved axioms, sampled equality, enumerated substitute, narrowed domain or invented admission"
+    ],
+    "counterexamplePolicy": "A separately checked native-valid input whose actual native execution fails refutes successful universal validity. A failing point is a disproof, not a sampled proof. If such a contradiction is confirmed, report the exact native expression, complete domain and input, obligation and retained repair attempts; do not implement a fake positive proof.",
+    "externalGates": ["Protected reference interpretation approval", "Protected independent checker qualification/admission"],
+    "internalGate": "Unimplemented or contradicted standard-LBO semantics is internal engineering, never an external approval gap."
+  },
+  "failureModelAndOracles": [
+    {
+      "failure": "Native specialized schedule graph differs from the generic interpreter",
+      "oracle": "Actual native ModelIR/compiled artifact and full node/check/output/input inventory retained; independent compiler/hash/calendar reconstruction if a positive extension proceeds."
+    },
+    {
+      "failure": "The required native runtime itself cannot execute a permitted late-exit point",
+      "sourceHypothesis": "returns.ts:21-28,87-98 computes npv at minimumRate=-0.999999999999. Decimal minE=-100 might turn (1+rate)^9 through (1+rate)^12 into zero; division by that base power could produce a nonfinite lower NPV, defeating the actual finite-endpoint branch before bisection.",
+      "oracle": "Actual installed FinnorDecimal primitives, actual solvePeriodicIrr and actual executeUnderwritingModel compared with independent exact Fraction exponent/underflow reasoning. Test the actual boundary 8/9 and maximum 12 without changing native policy."
+    },
+    {
+      "failure": "A mathematical rearrangement hides native rounding or saturation",
+      "oracle": "Diagnostic-only Horner/scaled-NPV reasoning may show a finite root but must be compared with actual ordered native NPV. It may not be installed as a congruent native proof or an approved native repair."
+    },
+    {
+      "failure": "A reduced horizon or earlier exit silently changes D",
+      "oracle": "Original late-exit point and original horizon retained. Earlier-exit and 8-period controls may diagnose the defect, never replace the failed domain."
+    },
+    {
+      "failure": "Changing amount scale, precision, exponent bounds, search endpoint or returns objective is presented as a repair",
+      "oracle": "Permitted diagnostic transformations are separately labeled non-native or still-failing. No production/native finance source or policy is changed."
+    },
+    {
+      "failure": "Fixed-point, debt tolerance, maturity, revolver capacity, debt roll-forward or cash-sweep checks are omitted",
+      "oracle": "At least one actual nontrivial average-balance debt case with original tolerance and every actual schedule/check/output retained; if positive proof is possible, all its applicable branches need exact independent proof."
+    },
+    {
+      "failure": "An auxiliary checker accepts fabricated native success, missing inventory, stale policy, changed domain or a wrong lower-rate/exponent certificate",
+      "oracle": "Selected finite negative mutations through the real independent process must reject altered commitment, input/domain membership, source/policy, term, exponent and inventory records."
+    },
+    {
+      "failure": "Old evidence is relabeled or retained failures are lost",
+      "oracle": "Append-only fresh evidence attempts and old core-005 hash; no deletion/overwrite. Final index distinguishes passing harness checks from actual financial failures and full-profile completion."
+    }
+  ],
+  "finiteBounds": {
+    "campaignWallSeconds": 1800,
+    "checkerWallMs": 30000,
+    "maximumHorizonPeriods": 12,
+    "nativeNodesPerModel": 10000,
+    "nativeDebtTranches": 32,
+    "packetBytes": 8388608,
+    "proofTerms": 250000,
+    "maximumNativeProbeCases": 18,
+    "maximumPositiveProofCasesIfFeasible": 8,
+    "maximumNegativeMutationCases": 12,
+    "maximumAdditionalSmallDomainConformanceInputs": 256,
+    "maximumAttemptsBeforeConcreteDiagnosis": 2,
+    "newPrivateEvidenceBytes": 33554432,
+    "minimumFreeDiskBytesBeforeAttempt": 268435456,
+    "environment": "Existing verified Node v22.22.3, tsx 4.23.13, decimal.js 10.6.0, TypeScript 5.9.3 and /usr/bin/python3 3.9.6; no install or large runtime."
+  },
+  "orderedCampaign": [
+    "Run a preregistered owned end-to-end native feasibility probe: retained original one-period values, horizons 8, 9 and 12, annual/quarterly/monthly calendars, late and earlier exits, and an actual average-balance debt control.",
+    "If native totality is feasible, implement the exact specialized compiler/schedule/solver/return proof leaf and separate Fraction checker over the unchanged supplied D. Arithmetic congruence and sound whole-domain validity are the positive oracle.",
+    "If the actual original native runtime contradicts successful universal validity, implement and run the exact independent counterexample/obligation checker; retain every original native failure and finite diagnosed repair attempt. Do not issue a successful LBO proof.",
+    "Run narrow strict typecheck and only affected end-to-end boundaries. Old 43-case artifacts remain sealed; unchanged code/dependencies are not recertified merely to increase counts.",
+    "Seal a clean scoped successor and sanitized source/evidence pins. Provide exact unapplied native/shared integration requirements and distinguish internal blocker from external approval/admission."
+  ],
+  "allowedWrites": [
+    "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/**",
+    "finnor-os/packages/private-equity/src/r6/**",
+    "finnor-os/scripts/r6/**",
+    "scope-r/r6-verified-capital-compiler/**"
+  ],
+  "forbiddenWrites": [
+    "Existing underwriting native finance implementation",
+    "Shared-types or shared package barrels",
+    "API/SQL/queue/worker or another owner/worktree",
+    "Dependency lock, installed runtime or protected evaluator",
+    "Any remote publication, grant, signer, browser or live effect"
+  ]
+}

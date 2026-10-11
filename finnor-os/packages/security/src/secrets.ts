@@ -1,3 +1,4 @@
+import {env as runtimeEnvironment} from 'node:process';
 import { SecretsManagerClient, CreateSecretCommand, GetSecretValueCommand, PutSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
 type Provider = "env" | "aws-secrets-manager";
@@ -124,12 +125,12 @@ export async function ensureSecretsLoaded(): Promise<void> {
     // production configuration error rather than relying on a future parser to
     // interpret "0" or another non-empty value safely. API routes and the worker both
     // call this at their entry boundary, so neither can start under this posture.
-    if (process.env.NODE_ENV === "production" && Object.hasOwn(process.env, "AUTH_DEV_BYPASS")) {
+    if (runtimeEnvironment.NODE_ENV === "production" && Object.hasOwn(process.env, "AUTH_DEV_BYPASS")) {
       console.error("[security] production refused: AUTH_DEV_BYPASS must be unset");
       throw new Error("Production refuses to boot while AUTH_DEV_BYPASS is configured");
     }
     if (provider() === "env") {
-      if (process.env.NODE_ENV === "production" && process.env.ALLOW_PLAINTEXT_ENV_SECRETS !== "1") {
+      if (runtimeEnvironment.NODE_ENV === "production" && process.env.ALLOW_PLAINTEXT_ENV_SECRETS !== "1") {
         // The only env-provider production path is a deliberate, noisy emergency
         // override. Normal production boot must prove its managed provider instead.
         console.error("[security] production refused: SECRETS_PROVIDER=aws-secrets-manager is required (set ALLOW_PLAINTEXT_ENV_SECRETS=1 only for an emergency override)");

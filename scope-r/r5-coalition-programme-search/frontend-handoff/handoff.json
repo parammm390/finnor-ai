@@ -1,0 +1,160 @@
+{
+  "schema": "finnor.r5.frontend-leaf-handoff.v1",
+  "status": "IMPLEMENTED_STATICALLY_VERIFIED_NOT_MOUNTED_OR_JOINED",
+  "ownedRoot": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+  "branch": "factory/r5-work-child-2026-10-11",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "preregistrationCommit": "195ed483e6c343c368dc0f50c80fee813a483948",
+  "implementationCommit": "1c68e660b9c5d3128d35064eca473bfd7a672905",
+  "implementationTree": "f562e6195374385d7c21fa7f03e32932bcf212eb",
+  "deliveryTip": "The subsequent handoff-only commit contains this packet; resolve the branch tip and its tree rather than embedding a self-referential commit hash.",
+  "ownedSources": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "sha256": "24d6a19b96b4ee1d33d9bbe8acd1b57f398cde103b462c4abeac71530e1e7064"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/coalition-programme-view.ts",
+      "sha256": "f89f840134ce8ecc6a06909ca463ad5a26a1e7dfbe9ab2e2cc85aa5455c97795"
+    }
+  ],
+  "ownedDocumentationAndEvidence": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff",
+  "entryPoint": {
+    "status": "PROPOSED_NOT_MOUNTED",
+    "currentSharedCaller": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/src/components/centropy/canvas/CapitalProgramPanel.tsx",
+    "mount": "<CoalitionProgrammeReview programme={program?.coalitionProgramme ?? null} scope={scope} authorized={authorized} workId={workId} root={root} />",
+    "placement": "Always mounted beside ExactControlReview, outside current programme and INVALIDATED conditionals.",
+    "revisionRule": "Optional workRevision is only for independently current stable Work metadata, not a disappearing M3 producer inputId or invented inputDigest."
+  },
+  "implemented": [
+    "Frontend-only Zod projections and actual owner type assignments; exact signed quantities remain strings.",
+    "Fresh owner Work/root authorization before canonical S4/S5/S6/history reads; role/session/epoch/scope/visibility fencing.",
+    "Read-only polling at 10 seconds and validity expiry clearing; explicit deterministic S5 clearance and consumption request identities.",
+    "Synchronous Next-supported scoped URL recovery marker before S5 writes, then actual returned owner refs; no private artifact/report bodies or bearer persistence.",
+    "Model-relative proposed members, outside options, programmes, grants, observable signed payments, assumptions, witnesses, checker provenance, gaps and unqualified costs.",
+    "Retained canonical S5/S6 responsibility is separate from the immutable M3 producer; M3 invalidation is not patched away.",
+    "Ordinary S6 report history never becomes independent consent, invitation, admission, signature, effect or settlement."
+  ],
+  "explicitOwnerRequests": [
+    {
+      "path": "allocations/coalition-clear",
+      "idempotencyKey": "r5-work-clear:<selectionRef.contentDigest>"
+    },
+    {
+      "path": "allocations/coalition-consume",
+      "idempotencyKey": "r5-work-consume:<allocation.certificate.ref.contentDigest>"
+    },
+    {
+      "path": "obligations/coalition-prepare",
+      "binding": "actual allocationRef plus retained consumptionRef; S6 resolves and checks the real joins"
+    }
+  ],
+  "review": {
+    "method": "Focused source/caller/owner-seam and test-value review, not browser or functional execution.",
+    "repaired": [
+      "Asynchronous URL pinning could lose the recovery marker before own S5 invalidation; Next documented native history replacement is synchronous.",
+      "S4 false executable flag must not be confused with absence of the new separate P1 owner module; original P1 refs are named without claiming current qualification or handoff.",
+      "Notices now require the current epoch; generic UNKNOWN_OUTCOME/RECONCILED or non-null effect consumption responses are not accepted as this ordinary handoff intention.",
+      "Owner scope guards no longer use fake empty user IDs or an unused currentness flag; actual S4 revision/validity checks remain in reauthorized reads.",
+      "A new epoch could share this leaf's earlier in-flight Centropy read; refreshes now serialize until the old generation drains. F08 delayed real HTTP remains NOT RUN."
+    ],
+    "sharedIntegrationFindings": [
+      "Current frontend Zod projections strip coalitionProgramme and request.coalition; the attached proposal preserves those actual owner fields.",
+      "Current generated route catalogue does not expose these literal coalition POST operations. Exact read classifications and work/company-brain mutation invalidations are required.",
+      "The child must survive producer disappearance without remount or artificial revision change, or acknowledged owner refs can be fenced out.",
+      "Legacy unilateral challenge/value rendering must not describe a coalition producer; proposal suppresses that branch for coalitionProgramme."
+    ],
+    "reuse": "Existing authenticated Centropy transport/auth/invalidation and Capital Work styling. No backend import, financial evaluator, ledger, primary surface or authority mechanism.",
+    "testValue": "Preregistered type/lint/transpile/import/diff predicates verify static source only. Failed receipts are retained. No post-code unit, mock DOM or headless tests were added. The staged patch-context whitespace failure was also retained; normalization changes no proposed shared source postimages."
+  },
+  "evidence": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/failure-model.md",
+      "sha256": "35fd7794034cd46404c27ee76dad300ba9a466cef2653b9bc1af60f9c861c4d0"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/verification-plan.json",
+      "sha256": "413540d3ce37b620b554b42745ddde0aa19af49420348ba4e43ec9b0854ed965"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/static-checks.json",
+      "sha256": "3772ce65f299a85fb18ca673e97dbf1990a4834939919d8c35b03a19ea074acf"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/static-checks-initial-red.json",
+      "sha256": "890b0ccdbecd25b49ac5f6406818ce2df719cb46d785d88be6828fde8bd29e52"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/static-checks-types-green-lint-red.json",
+      "sha256": "c5ac84b94e941dffa6d258014c496e1f79c47a04b678ba2142c69dccdbec9deb"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/shared-proposal-checks.json",
+      "sha256": "91782e5208da1cd66f3561da0d358cd721ec6fedc1a0ddf04e46a2f17944cf2b"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/shared-proposal-diff-red.json",
+      "sha256": "418f58db472a356270b95dd7d980a239924ffbc20c50b445e6aa3cbded533368"
+    }
+  ],
+  "staticResult": {
+    "TYPECHECK": "PASS",
+    "LINT": "PASS",
+    "CLIENT_TRANSPILE_IMPORT_INSPECTION": "PASS",
+    "DIFF_CHECK": "PASS",
+    "SOURCE_CUT_STABILITY": "PASS",
+    "elapsedMs": 3877.5282500000003,
+    "warning": "ESLint React auto-detection warns because this isolated checkout has no local node_modules; the lint command exits 0."
+  },
+  "rerun": {
+    "workingDirectory": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+    "command": "node --max-old-space-size=768 /Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/verify-frontend.mjs",
+    "scope": "The declared absolute leaf/backend dependency paths only. Rebase tsconfig @/* paths before reuse in any other checkout; do not count this local receipt as joined qualification.",
+    "limits": {
+      "commandWallSeconds": 180,
+      "campaignWallSeconds": 600,
+      "javascriptHeapMiB": 768
+    }
+  },
+  "sharedProposal": {
+    "patch": {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch",
+      "sha256": "2433d73fda9d71cad4dbc61746c42df5807949deffdf6a3bf8770a4be73ced38"
+    },
+    "preimages": {
+      "path": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/shared-preimages.json",
+      "sha256": "980085095c3597019b65018cbde4f25bcd7869b6aee6ba7ad028751eec71ceb4"
+    },
+    "status": "PROPOSED_NOT_APPLIED",
+    "dryRun": "PASS_APPLICABILITY_ONLY",
+    "serialRegenerationCommandsRunFrom": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR"
+  },
+  "gatesNotRun": [
+    "Trusted mounted Work auth/root/user/tenant/role/token/currentness and delayed-response cases F01/F02/F08/F09/F11/F14.",
+    "Real URL reload, ambiguous-write/double-click recovery and actual own-S5 M3 invalidation/retained-responsibility cases F03/F04/F06.",
+    "Mounted exact fractions/events/accounting, ordinary consent history/refusal and large-family/keyboard cases F05/F07/F10/F12.",
+    "Joined schema/catalogue regeneration, installed Next client bundle/build and cumulative compatibility.",
+    "New native/worker/SQL/fault/fallback proofs, P1 owner invocation, S8 admission/activation, protected comparison and field economics."
+  ],
+  "limitations": [
+    "Only independently reauthorized S4 selection values are displayed; absent/expired/unavailable S4 yields no current mathematical proposal claim.",
+    "The new separate P1 module is only shown through a matching immutable producer ref. This leaf does not invoke or qualify it.",
+    "URL refs are untrusted hints, not canonical consumption or settlement receipts. S6 validates the actual consumption/selection/reservation joins.",
+    "The shared mount/schema/catalogue patch is not applied and no shared generated products were modified.",
+    "Read-only lock-compatible existing dependencies were reused. No install, symlink, browser interaction, live owner write, push, merge or deployment was performed.",
+    "Backend qualification described by the parent is inherited context, not fresh leaf evidence."
+  ],
+  "nextDependencies": [
+    "Serial integrator consumes preregistration 195ed483e6c343c368dc0f50c80fee813a483948, implementation 8a17c815122167f621e8e273dc29b3fddf7204ee, read-fence repair 1c68e660b9c5d3128d35064eca473bfd7a672905 and the handoff-only tip, in that order.",
+    "Recheck exact shared preimages, review/apply the attached bounded proposal or rebase it explicitly if peer bytes changed.",
+    "Regenerate manifest/client/forms/coverage serially on the actual joined owner tree; reconcile any separately added P1 operation classifications.",
+    "Qualify installed joined Work and the preregistered real mounted cases using current ordinary owners; do not substitute fixtures or label unfinished engineering an external gate.",
+    "Preserve immutable M3 gaps and actual retained S5/S6 responsibility; no protected effect or economic claim follows from this leaf cut."
+  ],
+  "frontierDelta": "A sealed scope-owned frontend review cut and precise integration proposal now exist. No new full R5, executable/admitted effect, acceptance, settlement or economic qualification is claimed.",
+  "implementationCommits": [
+    "8a17c815122167f621e8e273dc29b3fddf7204ee",
+    "1c68e660b9c5d3128d35064eca473bfd7a672905"
+  ]
+}

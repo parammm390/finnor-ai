@@ -1,0 +1,169 @@
+{
+  "schema": "finnor.cumulative-ci-repair.v1",
+  "parent": "b8afec973ef063ce903a98a8d90059bfa8e69a2f",
+  "r3": "EXCLUDED",
+  "sourceFiles": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "1642933036567383687b566b6ddf9a735b1e94c5254b8636b4c49d897201e1e4"
+    },
+    {
+      "path": ".github/workflows/production-release.yml",
+      "sha256": "faad064cdb15bed71960ca7e5ba7439e480209b7d41573460d66803aa2776563"
+    },
+    {
+      "path": ".github/workflows/security.yml",
+      "sha256": "c6748920140cb46c655db3f91c1183bcd8636c6fb989a55741716059bbbaa8f5"
+    },
+    {
+      "path": ".gitleaks.toml",
+      "sha256": "1ee2b8d27f67a0ba6847ede42bab234eb44d6926f9216961d135b8b54ad3ff6d"
+    },
+    {
+      "path": "finnor-os/Dockerfile.worker",
+      "sha256": "9371ced32f31c2b558e6255b00f10450609e3101774e689285e2383b17df6114"
+    },
+    {
+      "path": "finnor-os/scripts/r1/run-owners.mts",
+      "sha256": "95e726012c7b2e69e56dba5ad440d75ac87eb5587fc3505d13ed45f9629075e4"
+    },
+    {
+      "path": "finnor-os/scripts/r2/build-native.py",
+      "sha256": "59ddbcaa8a5318c6369b5dd7a97a506453c4b2bd5142fdc52b9fb5f258faccde"
+    },
+    {
+      "path": "scripts/centropy/verify-secret-scan-policy.mjs",
+      "sha256": "60aefa28d4089c3e7699a6ee21dce96a352b726418080c6210df3f93bbf6b12f"
+    },
+    {
+      "path": "scripts/release/smoke-worker-image.sh",
+      "sha256": "e35631b350a2c03fab09a0a8c599f43fd1ba3ffd4e2cf2a4b25299caed6b6006"
+    }
+  ],
+  "privateEvidence": [
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-worker.log",
+      "sha256": "57ddf8e500fb29f88f4a0fbcc9cc7bff5be0b0f75001c89f5c7ba1e86155147d"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r2-worker.log",
+      "sha256": "585bde6a085f03c81b1311de7a5ea9709a6a15f5d47c9957457b000e0fa3688e"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r2-gitleaks.log",
+      "sha256": "de98fed18ce6d16e55b9ad5a9d03bf751fb6e7eb1d992c054740b67badd13589"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/pre-repair-policy.log",
+      "sha256": "9b782ac9a859d46f29c8ddd5ce33e785b6e68281e64a1b49b2dd62ed8b0989a5"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-policy-proof-02.json",
+      "sha256": "a273267f9f915d88b93a98651f9c5a06051b4ea6783cf0d8e3c997cfaf798521"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-history-proof.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-worker-layout/worker-image-layout.json",
+      "sha256": "16ed9b911b6259d3466856813769171b684573c4d144c682f1049b28b4f67ff7"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner/results.json",
+      "sha256": "2ba319dfa46faf7f776d28856f856880fc8efb27e567681234d248e14772f5c2"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/driver-receipt.json",
+      "sha256": "40d93255048ab909ec953addb0f28fd45b148f525f52301f2018ed7b266b7646"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/results.json",
+      "sha256": "55b2ab8ba10cdafc7e2c746b69f1ab3d740ae759337bfb06da881f7c6ab519c4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/migration-upgrade-replay.json",
+      "sha256": "4b3eea2489b2b43a76c56461bd322f49f7268ff3f12d132dbf151804d48ca3da"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/old-worker-new-job-refusal.json",
+      "sha256": "4831e8f8415e08aa8f788e3585f579a2f8e0ce91249668956cd886f843f632ae"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/cold-restart-and-protocol-compatibility.json",
+      "sha256": "0f694c241b288dff9bb8402dd7ad662084e2a01bb9135244d8f70fa85c6442e4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/repaired-compiled-owner-02/database-teardown.json",
+      "sha256": "68de5c10e755ec2fdff267ee01d2768c6410814415eb51ab4b3182362908b3a6"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/archive-preflight/receipt.json",
+      "sha256": "2311daebe8857a3854c61b3f96e7842e02d37c6e6fd040a200a1cba9535f598f"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/archive-preflight/canonical-source-receipt.json",
+      "sha256": "b60549ebc0607fa5ac0dc3ca1a6d645e6c22e84e142810848b1e8b91a5de8e38"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner/results.json",
+      "sha256": "992b5aac0da9bdd75d7d896408bd83e4bbb3e87c77f5e4fa3051e304ab951e90"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/driver-receipt.json",
+      "sha256": "2b65a14c752f53380d97dc9a87660e6f9f1b6e631fccf0bd3eac6a44bad121dc"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/results.json",
+      "sha256": "c19df42015e63b65da847b09a502e0d949c6f8bcb4c3c1edbea39c4dd76e99c4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/pre-run-freeze.json",
+      "sha256": "a91dd2c42bff41b17b510b16b1fe8b06e722409cf45750641acf3fe160dd4e78"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-sealed-history.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/native-prerequisites.json",
+      "sha256": "166fb1c7c8ceb41904c968cf33e22a3b529eb444b48bf813ddeb5235f113492c"
+    }
+  ],
+  "verification": {
+    "compiledApiBuild": "PASS",
+    "compiledR1Owner": "PASS_LOCAL on cumulative R1+R2; original 30-second accepted deadline unchanged",
+    "migrationPrefixSuccessorsAndReplay": "PASS 175 files; original historical prefix retained",
+    "oldAndNewJobCompatibility": "PASS real workers and durable claims",
+    "scannerPolicy": "PASS 63 exact metadata/credential probes and 4 complete-history scenarios",
+    "existingPublishedFullHistory": "PASS zero findings using narrowly repaired policy",
+    "relocatedSourceCustody": "PASS",
+    "workflowSyntax": "PASS all seven workflows; initial yaml-module lookup failed, installed js-yaml used",
+    "releaseGuards": "PASS 23 existing cases",
+    "nativeArchives": "All six downloaded and digest checked; original VIPR endpoint failed 404, canonical same-byte source verified",
+    "linuxImage": "NOT_RUN locally; no local Linux container engine",
+    "isolatedR1CompiledOwner": "PASS_LOCAL, same original deadline, complete staged HEAD reconstruction",
+    "nativePreparationPrerequisites": "PASS source preflight against pinned configure/CMake files; trust store, m4 and selected compiler/archive/library tools installed explicitly"
+  },
+  "unchanged": [
+    "native dependency commits and archive digests",
+    "mathematical/checker semantics",
+    "product deadlines, grants and assertions",
+    "all required CI jobs",
+    "production mutation and admission guards"
+  ],
+  "buildChanges": [
+    "CA trust store, TLS-only source downloads",
+    "correct pinned VIPR repository and stable MPFR URL",
+    "native build independent of changing API/npm stage",
+    "verified commit-pinned Buildx/build actions, GitHub build cache, no image registry push",
+    "prebuilt image requires actual build output ID and exact source/build labels",
+    "early Docker check and retained compiler/redacted scan diagnostics"
+  ],
+  "administrativeCeiling": "worker CI 45 minutes for first exact native preparation; no accepted product budget changed",
+  "publication": "LOCAL_REVIEWED_NOT_PUSHED; prepare coordinated scope updates before any further publication",
+  "qualification": "No protected admission, deployment, economic gain or universal CI PASS claimed",
+  "isolatedR1Candidate": "8556ea00c11fce407e267f1316c30c944c9a80f9",
+  "publicationCandidateParent": "20e15133744bb4baf8cb7bbf346a5f68f67777c2",
+  "unfinishedLinuxIsolationIncluded": false
+}

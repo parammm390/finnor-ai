@@ -9,8 +9,11 @@ import { DecisionWitnessViewSchema, type DecisionWitnessView } from "./decision-
 import {
   CapitalAcceptedViewSchema, CapitalBranchReviewViewSchema, CapitalContextViewSchema, CapitalModuleViewSchema, CapitalQueryViewSchema,
   CapitalWitnessViewSchema, type CapitalPolicyView, type CapitalQueryView, type CapitalWitnessView,
+  type CapitalExactSourceView,
 } from "./capital-program-view"
 import { OriginalChallengePanel } from "./OriginalChallengePanel"
+import { ExactControlReview } from "./ExactControlReview"
+import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
 import "./capital-program.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -30,6 +33,7 @@ export function CapitalProgramPanel({ workId, root }: {
   const authorized = Boolean(auth.session && auth.role === "owner" && !auth.roleError && !auth.loading && !auth.roleLoading)
   const queryParameter = search.get("capitalQuery")
   const [policies, setPolicies] = useState<Scoped<CapitalPolicyView[]> | null>(null)
+  const [exactSources, setExactSources] = useState<Scoped<CapitalExactSourceView[]> | null>(null), [exactSourceId, setExactSourceId] = useState("")
   const [policyId, setPolicyId] = useState(""), [actionId, setActionId] = useState(""), [exposureId, setExposureId] = useState("")
   const [unit, setUnit] = useState(""), [terms, setTerms] = useState(""), [starts, setStarts] = useState("0")
   const [waitStop, setWaitStop] = useState(true)
@@ -54,6 +58,11 @@ export function CapitalProgramPanel({ workId, root }: {
   const program = current?.program && Date.now() < Date.parse(current.program.envelope.validUntil) ? current.program : null
   const available = authorized && policies?.scope === scope ? policies.value : []
   const policy = available.find(item => item.ref.id === policyId)
+  const exactAvailable = authorized && exactSources?.scope === scope && policy
+    ? exactSources.value.filter(item => item.policyRef.contentDigest === policy.ref.contentDigest) : []
+  const exactSource = exactAvailable.find(item => item.sourceId === exactSourceId)
+  const certificate = program?.jointSearchCertificate
+  const reviews = current ? [...current.branchReviews, ...current.exactBranchReviews] : []
   const actions = policy?.problem.actions.filter(item => item.kind === "INTERVENE") ?? []
   const selectedAction = actions.find(item => item.id === actionId)
   const observations = policy?.problem.observations.filter(item => item.afterActionIds.includes(actionId)) ?? []
@@ -64,9 +73,9 @@ export function CapitalProgramPanel({ workId, root }: {
   const clear = useCallback(() => { setQuery(null); setWitness(null); setSourceWitness(null) }, [])
   const active = (epoch: number) => generation.current === epoch && scopeRef.current === scope && document.visibilityState === "visible"
 
-  const refresh = useCallback(async (id: string, epoch: number) => {
+  const refresh = useCallback(async (id: string, epoch: number, lifecycleOnly = false) => {
     try {
-      const next = CapitalQueryViewSchema.parse(await jarvisPost("company-brain/capital-program-read", { queryId: id }))
+      const next = CapitalQueryViewSchema.parse(await jarvisPost(lifecycleOnly ? "company-brain/capital-program-status" : "company-brain/capital-program-read", { queryId: id }))
       if (epoch !== generation.current || scopeRef.current !== scope || document.visibilityState !== "visible") return
       if (next.workId !== workId || next.program && next.program.envelope.work.id !== workId) throw Error("Work binding differs.")
       setQuery({ scope, value: next })
@@ -85,6 +94,7 @@ export function CapitalProgramPanel({ workId, root }: {
 
   useEffect(() => {
     generation.current++; clear(); setPolicies(null); setPolicyId(""); setActionId(""); setExposureId("")
+    setExactSources(null); setExactSourceId("")
     setUnit(""); setTerms(""); setBusy(false); writing.current = null; setError(null)
     setObservable(false); setInstrumentId(""); setTokens([]); setInquiry(false); setInquiryActionId("")
     setFinancial(false); setInvestmentCaseId(""); setModelVersionId(""); setFacilityId(""); setInstrument(""); setDerivedInputs([])
@@ -101,7 +111,8 @@ export function CapitalProgramPanel({ workId, root }: {
       if (document.visibilityState === "visible" && writing.current === null && !reading) {
         reading = true
         try {
-          const next = await refresh(queryParameter, generation.current)
+          const status = await refresh(queryParameter, generation.current, true)
+          const next = status && !["QUEUED", "RUNNING"].includes(status.status) ? await refresh(queryParameter, generation.current) : status
           delay = next?.program ? 10000 : next && ["QUEUED", "RUNNING"].includes(next.status) ? 1000 : 4000
         } finally { reading = false }
       }
@@ -128,7 +139,7 @@ export function CapitalProgramPanel({ workId, root }: {
     const expiry = Date.parse(current.program.envelope.validUntil) - Date.now()
     const timer = setTimeout(() => {
       generation.current++; setWitness(null); setSourceWitness(null)
-      setQuery(previous => previous?.scope === scope ? { scope, value: { ...previous.value, program: null, branchReviews: [] } } : previous)
+      setQuery(previous => previous?.scope === scope ? { scope, value: { ...previous.value, program: null, branchReviews: [], exactBranchReviews: [] } } : previous)
       setNotice("The modeled arrangements expired. Values cleared. Recheck or recompile the current Work.")
     }, Math.max(0, expiry))
     return () => clearTimeout(timer)
@@ -167,6 +178,7 @@ export function CapitalProgramPanel({ workId, root }: {
       if (context.workId !== workId) throw Error("Owner returned a different Work.")
       if (!active(epoch)) return
       const eligible = context.policies.filter(item => item.resultState === "POLICY_AVAILABLE")
+      setExactSources({ scope, value: context.exactSources }); setExactSourceId("")
       setPolicies({ scope, value: eligible }); setNotice(eligible.length ? "Choose an arrangement and its permitted parameter domain." : "No current owner arrangement is available for this Work and company.")
     })
   }
@@ -181,6 +193,8 @@ export function CapitalProgramPanel({ workId, root }: {
       if (periodText.some(item => !/^\d+$/.test(item)) || periods.some(item => item < 0 || item >= policy.mandate.horizon.periods)) throw Error("Start periods must lie within the original owner horizon.")
       if (observable && (!observation || !tokens.length)) throw Error("Choose a registered observable milestone and its received release tokens.")
       if (inquiry && !inquiries.some(item => item.id === inquiryActionId)) throw Error("Choose an existing current owner inquiry and protocol.")
+      if (exactSourceId && !exactSource) throw Error("The declared world source is no longer current for this arrangement. Reload it.")
+      if (exactSource && financial) throw Error("This declared-world profile requires the original utility model. Its financial adapter is not qualified.")
       if (financial && (!uuid.test(investmentCaseId) || !uuid.test(modelVersionId) || !instrument.trim() ||
         financialKind.startsWith("debt_input.") && !/^[A-Za-z0-9_-]+$/.test(facilityId))) throw Error("Link exact existing financial model and instrument identifiers.")
       if (financial && (derivedInputs.some(item => !item.nodeId.trim() || !uuid.test(item.derivationId) || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(item.output)) ||
@@ -191,6 +205,9 @@ export function CapitalProgramPanel({ workId, root }: {
       const accepted = CapitalAcceptedViewSchema.parse(await jarvisPost("company-brain/capital-program-submit", {
         schema: "finnor.capital-program-request.v2", workId, idempotencyKey: crypto.randomUUID(),
         incumbentPolicyRef: policy.ref, purpose,
+        ...(exactSource ? { robust: { schema: "finnor.r2.request.v1", domainProfile: "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE",
+          source: { sourceId: exactSource.sourceId, versionId: exactSource.versionId, contentDigest: exactSource.contentDigest }, initialWorlds: [exactSource.worldIds[0]],
+          budget: { maxPaths: 50000, maxHistories: 50000, maxVariables: 100000, maxRows: 300000, maxProofBytes: 8388608, cpuMs: 30000, memoryMiB: 2048, maxNativeCalls: 128 } } } : {}),
         permitted: { actionId, exposureId, unit: unit.trim(), terms: allowedTerms, startPeriods: periods,
           structures, stageFractions: staged || observable ? [stageFraction] : [], resourceRule: "SCALE_REGISTERED_ACTION_LINEAR", agreement,
           ...(observable ? { milestone: { instrumentId, tokens } } : {}), ...(inquiry ? { inquiryActionId } : {}) },
@@ -280,11 +297,16 @@ export function CapitalProgramPanel({ workId, root }: {
     ? DecisionWitnessVariables(proof.evidenceSlice) : []
 
   return <section className="ct-capital-program" aria-label="Economic arrangements" aria-busy={busy}>
+    <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
+    <CoalitionProgrammeReview programme={program?.coalitionProgramme ?? null}
+      scope={scope} authorized={authorized} workId={workId} root={root} />
     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>
     <form onSubmit={submit}>
-      <label>Incumbent arrangement<select required value={policyId} onChange={event => { setPolicyId(event.target.value); setActionId(""); setExposureId(""); setInstrumentId(""); setTokens([]); setInquiryActionId("") }}><option value="">Choose a current arrangement</option>{available.map(item => <option key={item.ref.id} value={item.ref.id}>{item.ref.id.slice(-12)} · {item.mandate.horizon.periods} periods</option>)}</select></label>
+      <label>Incumbent arrangement<select required value={policyId} onChange={event => { setPolicyId(event.target.value); setExactSourceId(""); setActionId(""); setExposureId(""); setInstrumentId(""); setTokens([]); setInquiryActionId("") }}><option value="">Choose a current arrangement</option>{available.map(item => <option key={item.ref.id} value={item.ref.id}>{item.ref.id.slice(-12)} · {item.mandate.horizon.periods} periods</option>)}</select></label>
+      {exactAvailable.length ? <label>Declared adverse worlds<select value={exactSourceId} onChange={event => setExactSourceId(event.target.value)}><option value="">Use the existing owner search</option>{exactAvailable.map(item => <option key={item.sourceId} value={item.sourceId}>{item.worldIds.length} declared worlds · {item.contentDigest.slice(0, 12)}</option>)}</select></label> : null}
+      {exactSource ? <p>Search the complete permitted policy family against these declared worlds. Exact bounds apply to the supplied model; missing real-world mechanisms remain unknown.</p> : null}
       <label>Commitment<select required value={actionId} onChange={event => { setActionId(event.target.value); setExposureId(""); setInstrumentId(""); setTokens([]) }}><option value="">Choose a registered action</option>{actions.map(item => <option key={item.id} value={item.id}>{item.id}</option>)}</select></label>
       <label>Economic parameter<select required value={exposureId} onChange={event => setExposureId(event.target.value)}><option value="">Choose an exposure</option>{Object.keys(selectedAction?.exposures ?? {}).map(id => <option key={id}>{id}</option>)}</select></label>
       <label>Exact owner unit<input required value={unit} maxLength={128} onChange={event => setUnit(event.target.value)} placeholder="Unit recorded by the response model" /></label>
@@ -330,15 +352,21 @@ export function CapitalProgramPanel({ workId, root }: {
     <p role="status" aria-live="polite">{notice}</p>
     {error ? <p role="alert">{error}</p> : null}
     {current ? <div className="ct-capital-program__actions"><span>{label(current.status)} · {current.progress.attempted}/{current.progress.generated} attempted</span><button type="button" disabled={busy} onClick={() => { clear(); void refresh(current.queryId, ++generation.current) }}>Recheck current sources</button><button type="button" disabled={busy || !pending(current)} onClick={() => control("cancel")}>Cancel search</button><button type="button" disabled={busy} onClick={() => control("resume")}>Resume original grant</button><button type="button" disabled={busy} onClick={() => control("recompile")}>Recompile current Work</button></div> : null}
-    {program ? <>
-      <OriginalChallengePanel query={current!} onRepair={repairedChallenge} onUnavailable={unavailableChallenge} />
+    {program && !program.coalitionProgramme ? <>
+      {!certificate ? <OriginalChallengePanel query={current!} onRepair={repairedChallenge} onUnavailable={unavailableChallenge} /> : null}
       <h4>Modeled arrangements, not agreed transactions</h4>
-      <p>Worst retained joint-world value, with no scenario probabilities. Upper bound, identification and unsampled-model gaps remain unknown.</p>
+      {certificate ? <section aria-label="Declared-world search certificate">
+        <h4>Declared-world value bounds</h4>
+        <p>Checked feasible value {certificate.lower ?? "unknown"}; accepted upper bound {certificate.upper ?? "unknown"} {program.valueUnit}. Gap {certificate.gap ?? "unknown"}; normalized gap {certificate.normalizedGap ?? "unknown"} against range {certificate.normalization.range}.</p>
+        <p>{label(certificate.status)} · {certificate.exactOptimalityClaimed ? "Exact optimum in the declared model" : label(certificate.checkingBasis)}. {certificate.iterations.length} master iterations. Current S5 resource check: {certificate.consumer.s5?.current && certificate.consumer.s5.feasible ? "checked" : "unresolved"}.</p>
+        <p>{certificate.costs.nativeCalls} metered native calls; {Math.round(certificate.costs.cpuMs)} ms native and supervisor CPU. Money unmetered. Independent admission, decision coverage and effects require their owners.</p>
+        <details><summary>Declared-model assumptions and unresolved claims</summary><ul>{certificate.envelope.assumptions.map(item => <li key={item}>{item}</li>)}</ul><ul>{certificate.unresolvedClaims.map((item, index) => <li key={index}>{item.claim}: {item.reason}</li>)}</ul><p>Fallback: {label(certificate.fallback.status)}. {certificate.fallback.reason}</p></details>
+      </section> : <p>Worst retained joint-world value, with no scenario probabilities. Upper bound, identification and unsampled-model gaps remain unknown.</p>}
       <p>{program.incumbentAndSearchGap.remainingDescriptors} unvisited arrangements. Measured search {Math.round(program.costs.wallMs)} ms; money unmetered. Failed and unknown attempts are retained.</p>
       <div className="ct-capital-program__candidates">{program.candidates.map(item => <article key={item.semanticDigest}>
         <h5>{label(item.structure)}{item.semanticDigest === program.incumbentAndSearchGap.selectedDigest ? " · modeled incumbent" : ""}</h5>
         <p>{item.terms.length ? item.terms.map(term => `${term.exposureId}: ${term.before} → ${term.after} ${term.unit}, period ${term.period}`).join("; ") : "Original owner policy or wait/stop course."}</p>
-        <p>{label(item.disposition)}{item.valueBounds ? ` · modeled value [${item.valueBounds.join(", ")}] ${program.valueUnit}` : " · no qualified value"}</p>
+        <p>{label(item.disposition)}{certificate?.incumbent && certificate.incumbent.ref.contentDigest === item.policyRef?.contentDigest ? ` · checked feasible value ${certificate.incumbent.value} ${program.valueUnit}` : item.valueBounds ? ` · modeled value [${item.valueBounds.join(", ")}] ${program.valueUnit}` : " · no qualified value"}</p>
         <p>Agreement: proposed, not received. {item.reason ? label(item.reason) : ""}</p>
         <ul>{item.blockers.map((item, index) => <li key={index}>{item.requirement}</li>)}</ul>
         {item.nativeFinance ? <details><summary>Native financial consequences, not agreed funding</summary><pre tabIndex={0}>{JSON.stringify(item.nativeFinance.result, null, 2)}</pre></details> : null}
@@ -349,7 +377,7 @@ export function CapitalProgramPanel({ workId, root }: {
           void perform("Checking current owner selection requirements…", async () => { await jarvisPost("company-brain/capital-program-select", { queryId: id, candidateDigest: item.semanticDigest, idempotencyKey: crypto.randomUUID() }) })
         }}>Check owner selection</button></div>
       </article>)}</div>
-      {current!.branchReviews.length ? <section aria-label="Native model branch reviews"><h4>Reviewed native model branches</h4><p>Reference-model choices only. No decision coverage, capital reservation, agreement or effect authority.</p><ul>{current!.branchReviews.map(item => <li key={item.ref.contentDigest}>Period {item.decision.period}: {item.choice.actionId}, reviewed {item.decision.knowledgeAt}.</li>)}</ul></section> : null}
+      {reviews.length ? <section aria-label="Native model branch reviews"><h4>Reviewed native model branches</h4><p>Reference-model choices only. No decision coverage, capital reservation, agreement or effect authority.</p><ul>{reviews.map(item => <li key={item.ref.contentDigest}>Period {item.decision.period}: {item.choice.actionId}, reviewed {item.decision.knowledgeAt}.</li>)}</ul></section> : null}
       <details><summary>Unresolved decision premises and costs</summary><ul>{program.blockers.map((item, index) => <li key={index}>{item.owner}: {item.requirement}</li>)}</ul><p>{program.costs.refinementSteps} refinement steps, {program.costs.expansions} expansions; {program.costs.unknownAttemptIds.length} attempts with unknown physical cost.</p><ul>{program.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul></details>
       {program.envelope.recompilation ? <details><summary>Immutable revised Work dependencies</summary><ul>{program.envelope.recompilation.changedDependencies.map(item => <li key={item.key}>{item.key}: {item.previousDigest?.slice(0, 12) ?? "absent"} → {item.currentDigest?.slice(0, 12) ?? "absent"}</li>)}</ul></details> : null}
     </> : current?.status === "INVALIDATED" ? <p>Work, source, model, resources or access changed. Earlier values are historical. Recompile the current Work.</p> : null}
@@ -361,6 +389,9 @@ export function CapitalProgramPanel({ workId, root }: {
         return <li key={node.id}>Period {node.period}: {action?.kind.toLowerCase()} {action?.id}. Cost {action?.cost} {action?.costUnit}. Resources {JSON.stringify(action?.resources)}. Occupation {JSON.stringify(action?.occupancy)} for {action?.occupationPeriods} periods. Tail liability {action?.tailLiability}. Human attention {action?.humanSeconds} seconds. {node.observations.length} received observations.
           {action?.precondition ? <p>Requires prior commitments {action.precondition.afterActionIds.join(", ") || "none"}; received tokens {action.precondition.observations.map(item => `${item.instrumentId}: ${item.tokens.join(" or ")}`).join("; ") || "none"}. Never private or future state.</p> : null}
         </li>
+      })}</ol> : proof.exactPolicy ? <ol>{proof.exactPolicy.decisions.map(node => {
+        const action = proof.exactPolicy!.variant.actions.find(item => item.id === node.actionId)
+        return <li key={node.key}>Period {node.period}: {node.actionId}. Cost {action?.cost} {action?.costUnit}. Resources {JSON.stringify(action?.resources)}. Occupation {JSON.stringify(action?.occupancy)} for {action?.occupationPeriods} periods. Tail liability {action?.tailLiability}. {node.observations.length} received observations.</li>
       })}</ol> : <p>No owner-supported policy for this arrangement.</p>}
       <h5>Current decision witnesses</h5>
       <ul>{evidence.map(item => <li key={item.id}>{item.nativeId}<button type="button" aria-label={`Inspect source witness for ${item.nativeId}`} onClick={() => inspectSource(item.id)}>Inspect source witness</button></li>)}</ul>

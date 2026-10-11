@@ -1,0 +1,89 @@
+{
+  "schema": "finnor.r6.integration-and-approval-request.v1",
+  "status": "PROPOSAL_ONLY_NOT_INSTALLED_NOT_APPROVED",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "producerInterface": {
+    "entry": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/index.ts",
+    "exports": [
+      "captureR6NativeIdentity", "assertR6NativeNumericPolicy", "proposeDecisionProof",
+      "checkDecisionProof", "runVerifiedCapitalCompiler",
+      "r6FixedInputMetadataDigest", "r6OwnerEnvelopeCommitmentsDigest",
+      "checkDecisionProofCurrentness", "checkDecisionProofDomainMembership"
+    ],
+    "signature": "runVerifiedCapitalCompiler(request: R6RunRequest): Promise<R6RunResponse>",
+    "commonOwnerInputs": ["envelope_inputs", "problem_ref", "existing_work_revision", "domain_profile_ref", "budget_grant_ref", "cancellation_ref"],
+    "mathInputs": "Existing native programme and reference IR, complete reference inventory/interpretation assumptions, explicit D, programme-state bindings, actual native witness, actual native identity",
+    "outputs": ["artifact_ref", "status", "incumbent_ref", "unresolved_claim_refs", "resource_receipt_refs", "proof", "packet", "receipt", "reason"],
+    "currentImplementationAuthority": "artifact_ref/incumbent_ref always null; admission/reference unresolved; no COMPLETE, reservation, settlement or execution grant"
+  },
+  "existingOwnerAdapter": {
+    "entry": "finnor-os/packages/private-equity/src/r6/verified-capital-compiler.ts",
+    "signature": "runPreparedVerifiedCapitalCompiler(prepared: { compiled: CompiledUnderwritingModel; effectiveSnapshot: Readonly<UnderwritingInputSnapshot> }, request: R6PreparedRunRequest): Promise<R6RunResponse>",
+    "requiredExistingCaller": "prepareUnderwritingRun(ctx, input) in finnor-os/packages/private-equity/src/underwriting-repository.ts",
+    "invocation": "const prepared = await prepareUnderwritingRun(ctx, input); const candidate = await runPreparedVerifiedCapitalCompiler(prepared, independentlyOwnerResolvedR6Request);",
+    "requestPortQualification": "independentlyOwnerResolvedR6Request names a REQUIRED FUTURE OWNER RESOLVER, not an implemented resolver or an HTTP body",
+    "bindings": "Programme is exactly prepared.compiled.model; witness is sealed prepared.effectiveSnapshot; returned proof compilation must exactly match prepared.compiled",
+    "preservation": "Existing owner still resolves authenticated tenant, ModelVersion, Evidence/rights, worldAt and Scenario. No replacement owner, mock PeMutationContext, SQL writes or persistence occurs in this adapter.",
+    "fallback": "For every current non-COMPLETE R6 result retain the unchanged native underwriting/S4/S5 route and its existing safety/authority checks. Never relabel its output as R6-certified."
+  },
+  "exactBarrelPatch": {
+    "file": "scope-r/r6-verified-capital-compiler/integration-seams.patch",
+    "applied": false,
+    "preimages": [
+      {"path": "finnor-os/packages/shared-types/src/index.ts", "sha256": "b5924b5d431dd66ca83d76cd07d27cfcfef7b4e40b81b739c51e4d7d2e7e88f4"},
+      {"path": "finnor-os/packages/epistemic-runtime/src/index.ts", "sha256": "b4bdc88a7a69a045c3d8f3b906d7ac9d85b9a35effd7d7274804273e806eb346"},
+      {"path": "finnor-os/packages/private-equity/src/index.ts", "sha256": "61ace113aaae5b89069afed3ce07b8e934eaa7b04639ac51ef2a9dc70d65cda7"}
+    ],
+    "rule": "Serial integrator checks fresh preimages and shared exports, then applies or adapts; do not overwrite concurrent owner work",
+    "packaging": "Ship checker.py adjacent to the actual loaded checker module with its exact digest and a qualified interpreter. Missing packaging yields UNKNOWN, not a disabled checker."
+  },
+  "serialOwnerSeamsStillRequired": [
+    {
+      "owner": "Existing private-equity/underwriting and S1/S2 source owners",
+      "required": "Resolve real authenticated PreparedRun and complete current source/rights/input references; preserve native snapshot/status/class/as-of semantics",
+      "notDone": "No real SQL/API/tenant/evidence pipeline E2E has run"
+    },
+    {
+      "owner": "Existing S6 financial obligation/reference interpretation owner",
+      "required": "Independently approve the applicable native reference specification, complete real owner cash/liability/constraint inventory and clause interpretations; UNKNOWN obligations remain outstanding",
+      "notDone": "No approval receipt resolver or approved reference supplied; ordinary caller objects cannot manufacture approval"
+    },
+    {
+      "owner": "Existing S8 independent checker/producer admission owner",
+      "required": "Independent kernel/semantic-correspondence qualification, native/vendor/runtime provenance, immutable packaging, applicable profile and protected receipts before admission/activation",
+      "notDone": "No signer, admission, alternative executable, disabled-check path or fabricated receipt installed"
+    },
+    {
+      "owner": "Existing Work/API/queue/worker/artifact and RR/C0 owners",
+      "required": "Bind authenticated Work/tenant/revision, baseline/code/lock, canonical input and dependency refs and original grant; retain immutable candidate/receipt/failed-prefix evidence; run under original deadline/cancellation and complete accounting",
+      "notDone": "No registry/dispatcher/worker/API/UI/SQL/migration edited; complete host dependency resolution and typecheck remain owner-owned"
+    },
+    {
+      "owner": "Existing S3/S4/S5 consumption owners",
+      "required": "Resolve immutable accepted artifact and independently current owner-envelope/bindings/Work/reference/domain/native/checker/rights vectors; check actual snapshot membership; separately enforce approved-reference, checker-admission and existing S5 fund/effect authority",
+      "notDone": "No feasibility frontier, reservation or effect route consumes this candidate; helper CURRENT/INSIDE never grants a certified label"
+    },
+    {
+      "owner": "Existing S7/economic/protected comparison owners",
+      "required": "Run matched protected X versus X+R6 including preparation, compilation, independent checking, failed/cancelled attempts and consumption; evaluate unchanged locked economic/reach thresholds and owner field value",
+      "notDone": "No gain/economic/reach/field loss-avoidance result exists; proof counts are not a dollar multiplier"
+    }
+  ],
+  "approvalPacket": {
+    "referenceRequest": "Review actual canonical owner reference, inventory, clause interpretations, units/currencies/valuation/time/share assumptions and unknown obligations; supply owner-issued current approval, never a self-issued file flag",
+    "checkerRequest": "Review independent reconstruction and ordered-term proof rule; prove/admit rounding/range/interval/lattice/branch laws and native semantic correspondence; assess adversarial inputs, process/identity/retention faults and immutable runtime pins",
+    "qualificationSource": "scope-r/r6-verified-capital-compiler/profile-and-trust.json",
+    "evidenceSource": "Retained original preregistration and private exact packets/transcripts/source cuts; sanitized final evidence index will bind the executed sealed cut",
+    "authorityEffect": "NONE",
+    "strongerClaimsUntilOwnersResolve": "NOT_ESTABLISHED or UNKNOWN; never replace a required gate with a conditional development receipt"
+  },
+  "ownershipChecks": {
+    "existingFinancialSemanticsModified": false,
+    "sharedFilesModified": false,
+    "canonicalPublicRouteOrWorkerRegistered": false,
+    "migrationOrdinalClaimed": false,
+    "newSignerOrGrant": false,
+    "publicationDeployEffects": false
+  }
+}

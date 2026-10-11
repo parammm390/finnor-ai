@@ -80,8 +80,13 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
+  run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
+  run_identification_plan_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R4 finite causal acquisition-menu search and independent checking under one original S4/S5 grant; no physical acquisition retry."),
   run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_capital_program_r2_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R2 complete exact finite programme search; original deadline, shared serial native grant, no effect or admission authority.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_coalition_programme_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R5 complete joint coalition/programme/grant/division search under the original shared serial native permit; no effect, consent or admission authority.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
   run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
   run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
   run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),

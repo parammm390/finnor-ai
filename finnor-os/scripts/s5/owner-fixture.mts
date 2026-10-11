@@ -13,13 +13,15 @@ const ref=(id:string,owner='SUPPLIED')=>({owner,id,version:'fixture-v1',contentD
 const freezeRef=(body:any,owner:string,prefix:string,version:string)=>({...body,ref:allocationRef(owner,prefix,body,version)});
 function successful(r:any){if(r.status!==200)throw new Error('OWNER_REQUEST_FAILED:'+JSON.stringify(r));return r.body;}
 function decision(f:any,allocation:any):any{return {knowledgeAt:new Date().toISOString(),period:0,actionHistory:[],observations:[],rightsRef:f.mandate.rightsRef,obligations:[],allocationRefs:[allocation]};}
-async function fixture(name:string,horizon:number,dimensions:any[],options:{nonlinear?:boolean;deadlineMs?:number;expiryMs?:number;additionalExposure?:boolean}={}){
-  const f:any={name,tenant:randomUUID(),principal:randomUUID(),root:{entityType:'external_organization',entityId:randomUUID()},policies:[],labels:{},resources:[]};
+async function fixture(name:string,horizon:number,dimensions:any[],options:{nonlinear?:boolean;deadlineMs?:number;expiryMs?:number;additionalExposure?:boolean;identity?:{tenant:string;principal:string}}={}){
+  const f:any={name,tenant:options.identity?.tenant??randomUUID(),principal:options.identity?.principal??randomUUID(),root:{entityType:'external_organization',entityId:randomUUID()},policies:[],labels:{},resources:[]};
   f.ctx={auth:{tenantId:f.tenant,userId:f.principal,employeeId:f.principal,role:'owner'}} as PeMutationContext;
+  if(!options.identity){
   await context.admin().query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,$3)",[f.tenant,randomUUID(),name]);
   await context.admin().query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[f.principal,f.tenant,`${name}@s5.example.test`]);
+  }
   await context.admin().query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')",[f.root.entityId,f.tenant,name]);
-  await configureTenantVertical({tenantId:f.tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:f.principal,sourceSystem:'s5:e2e'});
+  if(!options.identity)await configureTenantVertical({tenantId:f.tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:f.principal,sourceSystem:'s5:e2e'});
   const source=(await createEvidenceSource(f.tenant,{sourceKey:`s5:${name}:${randomUUID()}`,sourceType:'pe_document_claim',title:'Generated qualification observations'})).id,version=randomUUID();
   await context.admin().query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,'Generated observations, no field identification',$5::jsonb,$6,clock_timestamp(),clock_timestamp())",[version,source,f.tenant,ref(name).contentDigest,JSON.stringify({worldRoot:f.root,claims:[{propositionId:'s5-input',predicate:'reported',value:'Generated hypothetical H1 data'}]}),begin]);
   const rows=structuredClone(generatedRows);

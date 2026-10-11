@@ -1,0 +1,35 @@
+{
+  "schema": "finnor.r5.frontend-leaf-verification.v1",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "registeredBeforeProductCode": true,
+  "ownedSources": [
+    "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+    "src/components/centropy/canvas/coalition-programme-view.ts"
+  ],
+  "readOnlyBackend": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "runner": "node scope-r/r5-coalition-programme-search/frontend-handoff/evidence/verify-frontend.mjs",
+  "limits": {
+    "commandWallSeconds": 180,
+    "campaignWallSeconds": 600,
+    "javascriptHeapMiB": 768,
+    "installs": 0,
+    "liveWrites": 0,
+    "browserInteractions": 0
+  },
+  "checks": [
+    { "id": "TYPECHECK", "predicate": "No TypeScript diagnostics in owned files and actual owner projection assignments", "evidenceClass": "DETERMINISTICALLY_VERIFIED", "case": "F13" },
+    { "id": "LINT", "predicate": "Installed repository lint rules pass on the two owned files", "evidenceClass": "DETERMINISTICALLY_VERIFIED", "case": "F12" },
+    { "id": "CLIENT_TRANSPILE", "predicate": "TypeScript transpilation succeeds without backend or Node imports in the owned client graph", "evidenceClass": "DETERMINISTICALLY_VERIFIED", "case": "F13" },
+    { "id": "DIFF_CHECK", "predicate": "git diff --check is clean", "evidenceClass": "DETERMINISTICALLY_VERIFIED" }
+  ],
+  "mountedCases": ["F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10", "F11", "F12", "F14"],
+  "mountedStatus": "NOT RUN",
+  "notRun": [
+    "Trusted mounted Capital Work and real reload/switch/visibility qualification",
+    "Installed joined Next client bundle/build",
+    "New authenticated API/SQL/queue/worker/native/fault/fallback evidence",
+    "S8 admission, activation, protected comparison or field economics"
+  ],
+  "rerunRule": "Rerun only checks affected by a concrete repair; never replace mounted qualification with a DOM/headless proxy"
+}

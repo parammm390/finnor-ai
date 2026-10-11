@@ -1,0 +1,86 @@
+{
+  "schema": "finnor.r6.versioned-native-lbo-campaign.v1",
+  "registeredBeforeNewNativeProducerCheckerOracleCode": true,
+  "baseCommit": "4acb14f3399858b1cdf707479e0975bf3afc763a",
+  "baseTree": "d32a033a943dd0a7f850bd293b153b34aae3714a",
+  "authorization": "Necessary ordinary versioned native underwriting adapters may be implemented ONLY in this owned R6 worktree. No main/peer writes, publication, installs, grants or effects.",
+  "originalResults": {
+    "negativeV1Proof": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-obligation-002",
+    "nativeV1Results": "scope-r/r6-verified-capital-compiler/evidence-private/lbo-probe-002",
+    "generic43Cases": "scope-r/r6-verified-capital-compiler/evidence-private/core-005",
+    "preserveAllOriginalFailuresAndBytes": true,
+    "nativeReturnV1Module": "finnor-os/packages/underwriting/src/returns.ts",
+    "nativeReturnV1Sha256": "9e82a4316ccddfaa360fc80996f572d5ad26d6401d21611c97777f72938e89de",
+    "decimalModule": "finnor-os/packages/underwriting/src/decimal.ts",
+    "decimalModuleSha256": "301604f5f53b92b1908db00e12d600716bc8f3ab1e5233fb7516e8630282b572"
+  },
+  "newExplicitNativeSemantics": {
+    "selection": "Optional native StandardLboRuntimeDefinition.returnMethod == decimal34_horner_npv_v2. Missing selector keeps the original v1 construction, semantic hash, return calculation labels and behavior; unknown selectors refuse.",
+    "modelIdentity": "The explicit selector is included in the existing native semanticModel/runtime hash. It is not a process flag or replacement of v1.",
+    "periodic": "Horner numerator NPV, left-to-right native Decimal34 HALF_EVEN multiply/add, original numeric rate endpoints, tolerances and maximum 200 iterations. Bisection over the positive base, returning base minus one, is an explicitly new ordered operation.",
+    "dated": "ACT/365F daily-base Horner. Compute bounded positive daily-base endpoint brackets by native Decimal34 bisection of the 365th power. Horner gaps are exact civil day counts; report the 365th power of the fitted daily base minus one, and retain the original annual-rate limits. This explicitly versioned operation avoids non-integer vendor pow/ln/exp axioms.",
+    "naturalPower": "Versioned square-and-multiply using actual Decimal34 multiplication at each step, with exact natural exponents and a fixed native date/exponent bound. This is not claimed equal to the old vendor pow operation.",
+    "trace": "For opt-in v2 only, actual native run results retain bounded return-method/root/bisection/Horner traces, linked into the existing result semantic hash. All native nodes, outputs and checks stay unchanged.",
+    "numericPolicy": "Original FinnorDecimal precision 34, HALF_EVEN, minE=-100, maxE=100 and normalized length limits unchanged. Saturation to zero is modeled where the new Horner operation intentionally encounters it.",
+    "noParallelFinancialIR": true
+  },
+  "unchangedRequiredDomainAndInventory": {
+    "domainSource": "Exact retained annual-12-late-exit and average-balance-12-late-exit domains in lbo-probe-002; only the native opt-in method/model semantic identity changes.",
+    "inputChangesPermitted": false,
+    "allExitChoices": 12,
+    "allNativeNodes": [110, 124],
+    "allNativeChecks": 10,
+    "allNativeOutputs": 33,
+    "horizonMaximum": 12,
+    "moneyBounds": "Retain every original input component, inclusive lattice/enumeration bounds and fixed metadata digest verbatim. Never remove early/late exits or change cash, liability, rate, tolerance, principal, input truth or ownership to repair a failure.",
+    "domainNotApprovedReference": "The retained synthetic domains are not invented independently approved business references. Approval and admission remain separate external gates."
+  },
+  "positiveIndependentObligations": [
+    "Reconstruct the actual native compiled graph, calendars, source/version/method identity, exact input correspondence and complete cash/liability/timing/constraint/objective inventory.",
+    "Translation congruence binds the same explicitly selected deterministic native operation and complete input/state projections. Never identify old v1 NPV or vendor pow with the new ordered native operation.",
+    "Check actual revised native witness traces with independent Fraction Decimal34 HALF_EVEN/saturation arithmetic: every natural-power, root bracket, Horner fold, bisection branch, termination predicate and reported return.",
+    "Prove whole-domain successful finance schedules and every hard check over the unchanged complete lattices and all 12 exit choices. Interval/lattice or checked specialized invariant/contraction rules must include exact rounding-error bounds and applicable branches.",
+    "For the nontrivial average-balance debt profile, prove bounded fixed-point convergence under original solver tolerances and maximum iterations; no sampled iteration evidence is a universal proof.",
+    "Prove full return bracket/finite arithmetic/normalization safety and bisection termination for every input and every permitted exit/date; original endpoints and annual-rate guards remain binding.",
+    "No positive acceptance with a missing liability/check/output, unapproved axiom, unresolved native rule, narrowed domain, changed selector or stale method/dependency/currentness binding."
+  ],
+  "failureModelAndOracles": [
+    {"failure": "Default v1 silently changes", "oracle": "Compare actual default v1 models/compiled hashes/results to retained original records; preserve returns.ts and decimal.ts bytes; reproduce late-exit IRR_UNDEFINED."},
+    {"failure": "Opt-in method lacks native model identity or compiler guard", "oracle": "Selector must change native semantic hash; missing/default remains v1; unknown selector is rejected; shared adoption proposal binds exact preimages."},
+    {"failure": "Horner result is called an old-operation proof", "oracle": "Independent checker refuses v1/v2 mismatch and records new ordered semantics; old negative receipts remain historical and valid for their pinned v1 cut."},
+    {"failure": "Dated return repair hides a transcendental approximation axiom", "oracle": "Only exact natural exponent square/multiply and explicit daily-root Decimal34 traces/rules are accepted. No imported decimal.js, producer results or solver-supplied expected numeric answers in the independent checker."},
+    {"failure": "A native constraint or return bracket is actually false", "oracle": "Retain the exact native member counterexample and actual expression/guard; never shrink D or remove the failing exit. In particular investigate an early monthly debt exit under the unchanged maximum annual rate."},
+    {"failure": "Independent finance/solver bound is too coarse or unsound", "oracle": "Return INCOMPLETE with the exact failed expression/domain/invariant, retain the attempt, diagnose and use only checked stronger rules; no sample-based acceptance."},
+    {"failure": "Trace/model/proof/selector/domain/inventory/rounding/output mutation", "oracle": "Selected negative end-to-end mutations through the actual independent process reject; every old failure remains retained."},
+    {"failure": "Packet/traces exhaust deadline, bytes or disk", "oracle": "Explicit refusal, no truncation. Fresh ignored evidence directories; original deadlines/cancellation remain authoritative; no large runtime or installation."}
+  ],
+  "finiteBounds": {
+    "campaignWallSeconds": 1800,
+    "perCheckerWallMs": 30000,
+    "maximumHorizon": 12,
+    "maximumNaturalExponent": 5000,
+    "maximumNativeNodes": 10000,
+    "maximumNativeReturnIterations": 200,
+    "maximumPacketBytes": 8388608,
+    "maximumNativeResultBytes": 10485760,
+    "maximumProofTerms": 250000,
+    "maximumNativeCases": 16,
+    "maximumPositiveProofCases": 8,
+    "maximumSelectedMutationCases": 24,
+    "maximumAdditionalCompleteSmallDomainInputs": 256,
+    "maximumAttemptsBeforeDiagnosis": 2,
+    "maximumNewPrivateEvidenceBytes": 67108864,
+    "minimumFreeDiskBytesBeforeAttempt": 167772160,
+    "newRuntimeInstalls": 0
+  },
+  "orderedCampaign": [
+    "Seal this preregistration before new code.",
+    "Implement the opt-in native versioned adapter and actual trace identity; preserve default v1 path and exact original inputs.",
+    "Run actual default-v1 compatibility and revised native whole-inventory witness cases, including the original maximum horizon and all exit choices without substituting their enumeration for proof.",
+    "Implement the independent revised-native trace and universal-rule checker and attempt the required positive specialized proof over the full retained domains.",
+    "Diagnose retained native or independent failures and repair only affected native/proof boundaries; if a universal statement is false, report the exact unchanged-domain counterexample.",
+    "Recheck affected producer/checker/currentness/refusal/type boundaries only; retain old 43-case evidence and original v1 negative results unchanged.",
+    "Seal a clean scoped successor with exact code/model/semantic pins, sanitized evidence index and preimage-bound unapplied shared adoption proposal."
+  ],
+  "externalGatesUnchanged": ["Protected independent financial reference approval", "Protected independent checker qualification/admission", "Serial owner integration", "Protected comparison and economic qualification"]
+}

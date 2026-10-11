@@ -1,0 +1,29 @@
+# Cumulative CI failure model, before repairs
+
+The required verdict calls backend deployment truth, production artifacts, worker image, backend tests/P7, root lint/type/build/browser and full-history security gates. Neither strict types nor an ordinary source-route owner replaces the image gate.
+
+Retained failures: runs 38101361151 (R1) and 38102608438 (R2), task-private `scope-r/completion/handoff/ci-failure-audit-01`.
+
+1. R1 image build and all four genuine worker classes/shutdowns passed. The installed positive owner exhausted its unchanged 30-second accepted decision clock. The harness started an unrelated cold legacy worker after accepting the positive run. It then completed all three native stages but could not publish before expiry. Prepare that real legacy worker before positive admission, keep it alive across the new enqueue, prove it refuses the new job, then stop it. Keep preparation costs, original clocks and every existing consumer assertion.
+2. R1 upgrade rehearsal currently removes only its migration and incorrectly includes successors in the supposed old prefix. Rehearse the actual ordered prefix before 0172; apply every successor in order, preserve old rows and prove replay.
+3. R2 native builder's slim stage lacks CA certificates; curl exits 77. Install the ordinary trust store, never disable TLS. Verify the trust store before source downloads. Keep every archive digest and exact build flag.
+4. Native build currently inherits the complete changing API/dependency stage and has no cross-run build cache. Isolate its declared source/build inputs; use commit-pinned Buildx/build actions with bounded GitHub cache and `push:false`. First exact build remains real preparation work. The CI build ceiling is administrative, not a larger accepted product deadline or grant.
+5. Full `-m base..head` history scanning detects the exact synthetic refresh-token placeholder on the R2 local-auth fixture in two commits. Do not rewrite published history or ignore a file/commit/field. Permit only that exact path/detector match and preserve default rules, wrong-path, altered-value, same-path and same-line credential negatives. Execute the actual pinned scanner plus existing independent policy/history probes before publication.
+
+The decisive regression boundaries are the original image smoke and original backend/root/security workflows. Cheap shell/context/migration/source-custody/secret-history preflight runs before expensive image work. A unavailable local Linux image is NOT RUN, not PASS. No workflow bypass, test deletion, reduced original assertion, provider deployment or protected admission is authorized.
+
+The first local compiled-owner repair rerun failed before any product request at the existing 20 MiB reconstruction cap: newly downloaded private CI artifacts and scanner tooling were being copied as untracked source. Keep this task's exact generated audit directory outside the source overlay, with raw evidence retained privately and indexed separately. Do not increase the source cap or conceal source changes.
+
+The pre-push source-archive audit found another real build failure hidden behind the CA failure: the VIPR URL names the wrong repository and returns 404. The governing source record identifies `scipopt/vipr`. Its same pinned commit archive was downloaded and verified against the unchanged expected SHA-256. All other archives were downloaded and checked too. MPFR's version-specific endpoint also matches the unchanged digest; use that stable endpoint instead of the moving `mpfr-current` alias. No dependency version, native proof semantics or archive digest changes.
+
+The first unpublished repair commit's full-history scan caught the verifier's own inline synthetic placeholder. Assemble that non-secret fixture value from components, as the verifier already does for its credential negatives. The generated fixture bytes and exact detector policy remain unchanged. Preserve the red finding, rerun the policy proof and scan the amended, still-unpublished candidate. Do not expand the scanner exception to the verifier.
+
+The isolated R1 branch exposed a staged-only reconstruction defect: `git ls-files --modified` reports no files when changes are already staged, so the overlay loop never creates `source-cut` and writing the full HEAD patch fails. Create the patch directory unconditionally and bind the full HEAD patch digest, including staged edits. Keep the actual clean/staged branch regression artifact. This is a source-custody fix, not a deadline increase or product-path bypass.
+
+The pinned GMP 6.3.0 configure script requires working `m4`; the slim native
+stage does not install it. Its earlier TLS failure masked this next preparation
+failure. Install `m4` explicitly and check its presence before download/build.
+Selected SCIP/SoPlex options require no LAPACK/IPOPT/ZIMPL/Papilo packages;
+those optional branches remain disabled, rather than changing exact semantics.
+SCIP's shared-mode executable embeds its source objects, so do not invent a
+missing `libscip` dependency or copy unrelated libraries.

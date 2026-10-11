@@ -1,0 +1,8 @@
+{"schema":"finnor.r2.owner-responsibility-plan.v1","frozenBeforeFaultRuns":true,"maximumSeconds":600,"cases":[
+ {"id":"duplicate-and-stale-delivery","expected":"Terminal original query is unchanged; actual stale delivery is acknowledged without native child or new grant."},
+ {"id":"cancel-accepted-native-child","expected":"Original generation is cancelled; actual child exits before shared permit release; no publication or grant renewal."},
+ {"id":"checker-sigkill-after-accepted-bound","expected":"Actual checker dies after a genuine primary upper proof; upper remains, lower is absent, exact optimality false and missing admitted fallback explicit."},
+ {"id":"shared-native-grant-two-works","expected":"Second physical worker cannot acquire occupied serial native permit. First retains its original deadline. Both create zero capital reservations or effects."},
+ {"id":"worker-sigkill-and-expired-claim","expected":"Native supervisor detects owner death and reaps child; expired real claim recovers with original deadline, abandoned cost UNKNOWN and no new native episode."},
+ {"id":"source-resource-rights-currentness","expected":"New S1 world bytes/current S5 resource revision invalidate old bounds; historical immutable result is retained. Suspended principal receives no private output."}
+],"oracle":"Actual authenticated HTTP, ordinary restricted worker, durable claims/events/leases/publications and physical process exit. No supplied checker receipts or production test seam."}

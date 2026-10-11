@@ -7,6 +7,7 @@ import {
   type NodeExecutionResult,
   type SolverDiagnostic,
   type SponsorCashFlow,
+  type NativeReturnTrace,
   type UnderwritingRunValidity,
   type UnderwritingRunResult,
 } from "./types";
@@ -22,6 +23,7 @@ interface FinalizeResultInput {
   checks?: CheckResult[];
   solverDiagnostics?: SolverDiagnostic[];
   sponsorCashFlows?: SponsorCashFlow[];
+  returnSolverTraces?: NativeReturnTrace[];
   failure?: unknown;
 }
 
@@ -43,6 +45,7 @@ export function finalizeRunResult(input: FinalizeResultInput): Readonly<Underwri
     checks: input.checks ?? [],
     solverDiagnostics: input.solverDiagnostics ?? [],
     ...(input.sponsorCashFlows ? { sponsorCashFlows: input.sponsorCashFlows } : {}),
+    ...(input.returnSolverTraces ? { returnSolverTraces: input.returnSolverTraces } : {}),
     ...(input.failure ? { failure: asUnderwritingFailure(input.failure) } : {}),
   };
   const bytes = Buffer.byteLength(canonicalSerialize(body));

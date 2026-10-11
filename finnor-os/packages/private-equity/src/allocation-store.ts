@@ -185,6 +185,12 @@ export async function retainAllocationReconciliation(ctx:PeMutationContext,ref:E
 }
 export async function persistAllocationExperience(ctx:PeMutationContext,events:S5ExperienceEvent[]):Promise<void>{await locked(ctx,c=>appendExperience(ctx,c,events));}
 
+/** Versioned owner adapters share the canonical lock/snapshot/history, not
+ * another allocation ledger. Their own schema validators remain mandatory. */
+export const withAllocationPortfolio=locked;
+export const allocationSnapshotInTransaction=snapshot;
+export const appendAllocationExperienceInTransaction=appendExperience;
+
 /** Consume authenticated S6 evidence under S5's existing portfolio lock. Costs and
  * released capacity are different claims: unmetered settlement retains occupation. */
 export async function applyProtectedAllocationSettlement(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;obligation:any;event:Record<string,any>;receipt:Record<string,any>}){

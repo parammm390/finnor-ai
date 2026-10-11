@@ -24,6 +24,24 @@ cleanup() {
     docker logs "$container_id" > "$evidence/container-failure.log" 2>&1 || true
     docker rm -f "$container_id" >/dev/null 2>&1 || true
   fi
+  # Owner stores intentionally use private/read-only modes. Give the disposable
+  # evidence back to its host owner without weakening those production modes.
+  if [[ -d "$evidence/linux-r1-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-r1-runtime,target=/r1-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /r1-evidence; then
+      echo "::error::failed to return disposable runtime evidence to its host owner"
+      status=1
+    fi
+  fi
+  if [[ -d "$evidence/linux-r4-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /r4-evidence; then
+      echo "::error::failed to return disposable R4 evidence to its host owner"
+      status=1
+    fi
+  fi
   FINNOR_SMOKE_EXIT="$status" FINNOR_SMOKE_EVIDENCE="$evidence" node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -31,29 +49,43 @@ const crypto = require("node:crypto");
 const directory = process.env.FINNOR_SMOKE_EVIDENCE;
 const classes = ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"];
 const successfulClasses = classes.filter(c => fs.existsSync(path.join(directory, `${c}-shutdown.json`)));
+const r4Required = fs.existsSync("finnor-os/scripts/r4/run-integrated.mts");
+const r4Passed = !r4Required || fs.existsSync(path.join(directory, "linux-r4-runtime", "results.json"));
 fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   schema: "finnor.worker-image-smoke.v1",
-  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 ? "PASS" : "FAIL",
+  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && r4Passed ? "PASS" : "FAIL",
   commitSha: process.env.FINNOR_COMMIT_SHA,
   buildId: process.env.FINNOR_BUILD_ID,
   version: process.env.FINNOR_VERSION,
   dockerfileSha256: crypto.createHash("sha256").update(fs.readFileSync("finnor-os/Dockerfile.worker")).digest("hex"),
   successfulClasses,
-  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero"],
+  r4Required,
+  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image", ...(r4Required ? ["Run the separate installed R4 scientific runtime and authenticated migration / worker / checker / S4 / S5 owner flow with exact image identity"] : [])],
   rerun: "bash scripts/release/smoke-worker-image.sh",
   providerDeploymentProof: false,
 }, null, 2) + "\n");
 NODE
-  return "$status"
+
+  exit "$status"
 }
 trap cleanup EXIT
 
-docker build --file finnor-os/Dockerfile.worker --tag "$image" .
+if [[ -n "${FINNOR_WORKER_PREBUILT_IMAGE_ID:-}" ]]; then
+  # CI supplies the immutable ID returned by its actual cached BuildKit build,
+  # not a boolean skip or an assumed tag. Local reruns still build by default.
+  [[ "$FINNOR_WORKER_PREBUILT_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]
+  [[ "$(docker image inspect --format '{{.Id}}' "$image")" == "$FINNOR_WORKER_PREBUILT_IMAGE_ID" ]]
+  [[ "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" == "$FINNOR_COMMIT_SHA" ]]
+  [[ "$(docker image inspect --format '{{index .Config.Labels "ai.finnor.build-id"}}' "$image")" == "$FINNOR_BUILD_ID" ]]
+else
+  docker build --file finnor-os/Dockerfile.worker --tag "$image" . --build-arg "FINNOR_BUILD_ID=$FINNOR_BUILD_ID"
+fi
 docker image inspect --format '{{.Id}}' "$image" > "$evidence/image-id.txt"
 for attempt in $(seq 1 30); do
   pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break
   sleep 2
 done
+
 pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
 supabase_url="$(node -p "require('./infra/deployment/production.contract.json').topology.database.supabaseUrl")"
 
@@ -117,3 +149,73 @@ NODE
   docker rm "$container_id" >/dev/null
   container_id=""
 done
+
+# The same final image, including its Python environment and compiled API, must
+# execute the owning flow. This is isolated ordinary development, with no network
+# access to external providers or production DB and no protected admission flag.
+mkdir -p "$evidence/linux-r1-runtime"
+chmod 2770 "$evidence/linux-r1-runtime"
+image_id="$(cat "$evidence/image-id.txt")"
+source_tree="$(git rev-parse 'HEAD^{tree}')"
+if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+  --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+  --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
+  --env FINNOR_M1_PROFILE=DISPOSABLE_NATIVE --env P3_GOVERNORS=1 \
+  --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+  --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" --env FINNOR_VERSION="$FINNOR_VERSION" \
+  --env FINNOR_RELEASE_SOURCE=ordinary-image-verification \
+  --env FINNOR_R1_PACKAGED_SOURCE=1 --env FINNOR_R1_IMAGE_ID="$image_id" \
+  --env FINNOR_R1_SOURCE_TREE="$source_tree" --env FINNOR_R1_EVIDENCE_DIR=/r1-evidence \
+  --mount "type=bind,source=$evidence/linux-r1-runtime,target=/r1-evidence" \
+  "$image" node --import=tsx scripts/r1/run-owners.mts runtime \
+  > "$evidence/linux-r1-runtime/runner.log" 2>&1; then
+  :
+else
+  runtime_status=$?
+  cat "$evidence/linux-r1-runtime/runner.log"
+  exit "$runtime_status"
+fi
+node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
+const fs = require("node:fs");
+const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") process.exit(1);
+NODE
+
+# R4 must execute its installed separate runtime and real owners too. Its
+# absence on the isolated R1 cut is not permission to skip it on joined cuts.
+if [[ -f finnor-os/scripts/r4/run-integrated.mts ]]; then
+  mkdir -p "$evidence/linux-r4-runtime"
+  chmod 2770 "$evidence/linux-r4-runtime"
+  if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+    --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+    --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
+    --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+    --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" --env FINNOR_VERSION="$FINNOR_VERSION" \
+    --env FINNOR_RELEASE_SOURCE=ordinary-image-verification \
+    --env FINNOR_R4_PACKAGED_SOURCE=1 --env FINNOR_R4_IMAGE_ID="$image_id" \
+    --env FINNOR_R4_SOURCE_TREE="$source_tree" \
+    --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+    "$image" node --import=tsx scripts/r4/run-integrated.mts --output /r4-evidence/owner \
+    > "$evidence/linux-r4-runtime/runner.log" 2>&1; then
+    :
+  else
+    runtime_status=$?
+    cat "$evidence/linux-r4-runtime/runner.log"
+    exit "$runtime_status"
+  fi
+  # The non-root owner creates private directories. Return only this disposable
+  # evidence to the host before reading it, not just later in the EXIT trap.
+  docker run --rm --network none --user 0:0 --entrypoint chown \
+    --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+    "$image" -R "$(id -u):$(id -g)" /r4-evidence
+  node - "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/owner/freeze.json" "$image_id" "$source_tree" <<'NODE'
+const fs = require("node:fs");
+const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const freeze = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+if (receipt.results.length !== 5 || receipt.results.some(r => r.status !== "PASS") ||
+    freeze.packagedSource !== true || freeze.head !== process.env.FINNOR_COMMIT_SHA ||
+    freeze.imageId !== process.argv[4] || freeze.tree !== process.argv[5] ||
+    !/^sha256:[0-9a-f]{64}$/.test(freeze.imageId)) process.exit(1);
+NODE
+  cp "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/results.json"
+fi

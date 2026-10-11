@@ -1,0 +1,164 @@
+{
+  "schema": "finnor.r2.cumulative-integration.v1",
+  "immutableParents": {
+    "r1": "288ae56fc313e18c06ecf2d1c161bee49e3599eb",
+    "r2": "5c874720c473aedc9d6545e748ecbf2d55afcddf"
+  },
+  "r3": "EXCLUDED_NOT_ADOPTED",
+  "sharedResolutions": [
+    {
+      "path": "finnor-os/Dockerfile.worker",
+      "postimageSha256": "e861377ed96842e4957ae80bcae5d91686fab46682396459796596984bfa9785",
+      "preimages": {
+        "r1": "38755004d5d6fc59bea524d8399586e4b7c19210ca2a10060b712ba5a5ec3617",
+        "r2": "4740e60f0208f971170533532c4321c70a126c5b5191a119f73db081f5b3ed3d"
+      }
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "postimageSha256": "b68a879250a5a1e76625990a1600c7cd1f49e1c5e0b0ace97db9922f4da8e54c",
+      "preimages": {
+        "r1": "826a5ec0fee5cb4a40acd65bbeca8b97fc60d2acf25d721f233f5e88418a32ef",
+        "r2": "97ca7738115b5b566f03935b9c8ef3a29c75cacac58d286ffab336290f27089a"
+      }
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "postimageSha256": "15a3fe15dc98b120a6ada04e889a1a9515f9db4a3fc86af926ee34a3f3649330",
+      "preimages": {
+        "r1": "090a767f5493c60b54fc7b2ad6bdf7876f974bf94be2f8aa241dca2ea8bf813f",
+        "r2": "a608d93671b1921f972f366e69a3a7396ab7102ac87307ad228bcb45dfbea56a"
+      }
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "postimageSha256": "304208369cdd11466dd79d072765082ee4a27e1febcb56693c0546bcf4d21a90",
+      "preimages": {
+        "r1": "68e6e4b1f4684c34d8f75c258d381ec1874a1c8200afbc307e5108df19d45a2b",
+        "r2": "e398c69549fbbc84d01047f09c2e1e09238ec944e3a02feec0e7c939b755a306"
+      }
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "postimageSha256": "7a6f2136bca555c30eaaf22044399e4f9a7a66d9be8c37f45f2467100081692c",
+      "preimages": {
+        "r1": "9ac6caf9bb074597f2fad38eacd1aee4838875b9e7533eaf8fb39df66afe73a7",
+        "r2": "595fbe2202e35cc0316329087060bcc035d7980cb4e09f30de58608de9ed853c"
+      }
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "postimageSha256": "6454b94174f01a41e721a012b75b183e2e57c897aae32906fe213c3ea7b993a3",
+      "preimages": {
+        "r1": "c0b6d2f498e4ebddba2a19471943725252651dbf6e85e731de2945a94de6eeb1",
+        "r2": "261cb3281a6219aa0f42a225d4823dd9ae17f25657421f91763fbd60efe50249"
+      }
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "postimageSha256": "419d32144bc13e87395366d3eb2c2c8cf898dc8f08427922c5e21c4dc0d3d9b0",
+      "preimages": {
+        "r1": "c36232b3cfdbb23b014f842e6d190047b54b522521a41ec984f3e8692e1717a6",
+        "r2": "9ee733cea06460ca6686717dfafa08da44f69ae932865867e2160945e138014f"
+      }
+    },
+    {
+      "path": "finnor-os/scripts/r2/run-owner.mts",
+      "postimageSha256": "1ca2165a6cf8b7732804673736d65fe9fcfe0aaba567bed92bacc15fcd791432",
+      "preimages": {
+        "r1": null,
+        "r2": "c99e7e486d3179c99d1fe9ac33b42320422bb7397b6dd55156a35416201a4796"
+      }
+    },
+    {
+      "path": "finnor-os/scripts/r2/run-owner-local.py",
+      "postimageSha256": "dafdea701d8348e86f77f77845cd2f3d2e6016a877224522565edb732bcf097b",
+      "preimages": {
+        "r1": null,
+        "r2": "63079cd85ae05dbd0ac9c798bf659aca0d06855cadc70ae26bd44ddbfedfe9b3"
+      }
+    }
+  ],
+  "migration": {
+    "r1": "0172_r1_certified_state_reduction.sql",
+    "r2": "0173_r2_robust_programme_search.sql",
+    "r2SqlSha256": "38bab92c326b6cf4b341662ea8662f463aff666cbe2029a721097856d85d5f02",
+    "r2SqlUnchanged": true,
+    "count": 175
+  },
+  "evidence": [
+    {
+      "path": "scope-r/completion/handoff/r1-owner-accounting-03/driver-receipt.json",
+      "sha256": "5b4088dd0f3072afb6b7486a03079736b43f6a563e73bf19b5c2f300e4a98ff7"
+    },
+    {
+      "path": "scope-r/completion/handoff/r1-owner-accounting-03/results.json",
+      "sha256": "5000c4b39fbd83a3084e3b1d1b193e540398687b6e36ab51d882a94e8a6b0ff5"
+    },
+    {
+      "path": "scope-r/completion/handoff/r1-owner-accounting-03/pre-run-freeze.json",
+      "sha256": "cad599984ea2718ad7fe6f0fc7bc2550e6e17b48a85d821bcd53bac61bcec491"
+    },
+    {
+      "path": "scope-r/completion/handoff/r1-owner-accounting-03/database-teardown.json",
+      "sha256": "ac18562521135bebda1aac4653b9d90d81b89352c1dc51913c4d663ea187f7ff"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-owner-01/driver-receipt.json",
+      "sha256": "e93a03c651f26bc47f91cf016f84e3c3c5c453ea8a33da7393a36fcc288118ea"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-interpreter-preflight.json",
+      "sha256": "7a33e314b28e807978d9f9375369e1cc79ce51180869a1c459834f6e62c49503"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-owner-02/driver-receipt.json",
+      "sha256": "854358d6e03b7f6dd760695e9344521870f5e806ae867133de1ea307b1fe95eb"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-owner-02/results.json",
+      "sha256": "b9d91be2662c3d1605b205235237cc46fc59c4b0a5c94154a0c1d0ce23e4f3d1"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-compatibility-01/driver-receipt.json",
+      "sha256": "5b8573993506b0f378efdffca5dff4cebabbcd2cacedd71ebe6813a6b721f24a"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-compatibility-01/results.json",
+      "sha256": "db65cefb16d477f1e2ab4b8e6007990ec5c81a1f6d131be7882e6828808ec94f"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-typecheck-01/receipt.json",
+      "sha256": "291fd954ce5289857db828c90135a2699048876916c1e1a8dcd89c341cdec760"
+    },
+    {
+      "path": "scope-r/completion/handoff/r2-cumulative-typecheck-01/runner.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "generatedCorrespondence": {
+    "capabilityManifest": "PASS 314 HTTP routes / 68 planner operations",
+    "openapiClient": "PASS c61f0f1b725b27e002196ffa0e266766b35475186ce4deb4a533e4dd658dc43d",
+    "humanForms": "PASS 91 forms / 27 Digital Twin variants"
+  },
+  "qualification": {
+    "ordinaryMacOwners": "PASS_LOCAL",
+    "strictBackend": "PASS",
+    "migrationUpgradeAndRestart": "PASS",
+    "legacyAndNewJobCompatibility": "PASS",
+    "linuxInstalled": "NOT_RUN",
+    "linuxP1Isolation": "UNIMPLEMENTED",
+    "mountedBrowser": "NOT_RUN",
+    "protectedAdmission": false,
+    "comparativeGain": false,
+    "economicQualification": false
+  },
+  "rawEvidenceCustody": "Task-owned private scope-r/completion/handoff; original failed evidence preserved",
+  "unknownMeters": [
+    "whole-service memory/CPU and wall",
+    "dollars",
+    "human time",
+    "build/cache/storage"
+  ],
+  "publicationAuthority": "Current user authorized drafts only; no merge, deployment or protected activation"
+}

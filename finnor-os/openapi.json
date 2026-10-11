@@ -14037,6 +14037,2166 @@
         }
       }
     },
+    "/api/identification-plans/register": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "workInputId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "estimandId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "targetRecordId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "policyRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "allocationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "problem": {
+                    "type": "object",
+                    "properties": {
+                      "schema": {
+                        "type": "string",
+                        "const": "finnor.identification-problem.v1"
+                      },
+                      "profile": {
+                        "type": "string",
+                        "const": "R4_OBSERVATIONAL_ADMG_ID_IDC_V1"
+                      },
+                      "query": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          },
+                          "outcomes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                            },
+                            "minItems": 1,
+                            "maxItems": 12
+                          },
+                          "treatments": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                            },
+                            "maxItems": 12
+                          },
+                          "conditions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                            },
+                            "maxItems": 12
+                          },
+                          "scope": {
+                            "type": "object",
+                            "properties": {
+                              "population": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 160,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                              },
+                              "intervention": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 160,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                              },
+                              "time": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "end": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "start",
+                                  "end"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "units": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
+                                }
+                              }
+                            },
+                            "required": [
+                              "population",
+                              "intervention",
+                              "time",
+                              "units"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "estimandRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "outcomes",
+                          "treatments",
+                          "conditions",
+                          "scope",
+                          "estimandRef"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "variables": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1,
+                        "maxItems": 64
+                      },
+                      "graphs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                            },
+                            "nodes": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64,
+                                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 12
+                            },
+                            "directed": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64,
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64,
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                                  }
+                                ]
+                              },
+                              "maxItems": 132
+                            },
+                            "bidirected": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64,
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64,
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                                  }
+                                ]
+                              },
+                              "maxItems": 66
+                            },
+                            "observedNodes": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64,
+                                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 12
+                            },
+                            "projection": {
+                              "type": "string",
+                              "enum": [
+                                "NONE",
+                                "UNQUALIFIED_INDUCED_SUBGRAPH"
+                              ]
+                            },
+                            "assumptionBasis": {
+                              "type": "string",
+                              "const": "OWNER_DECLARED_UNADMITTED"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nodes",
+                            "directed",
+                            "bidirected",
+                            "observedNodes",
+                            "projection",
+                            "assumptionBasis"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1,
+                        "maxItems": 8
+                      },
+                      "baseline": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "OBSERVATIONAL_JOINT",
+                                "EXPERIMENTAL",
+                                "TRANSPORT",
+                                "SELECTED"
+                              ]
+                            },
+                            "variables": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64,
+                                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 12
+                            },
+                            "scope": {
+                              "type": "object",
+                              "properties": {
+                                "population": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 160,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                },
+                                "intervention": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 160,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                },
+                                "time": {
+                                  "type": "object",
+                                  "properties": {
+                                    "start": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "end": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "start",
+                                    "end"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "units": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64
+                                  }
+                                }
+                              },
+                              "required": [
+                                "population",
+                                "intervention",
+                                "time",
+                                "units"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "premises": {
+                              "type": "object",
+                              "properties": {
+                                "positivity": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "denominator": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "selection": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "missingness": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "measurement": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "linkage": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SATISFIED",
+                                        "UNKNOWN",
+                                        "CONTRADICTED",
+                                        "UNSUPPORTED"
+                                      ]
+                                    },
+                                    "basis": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "basis",
+                                    "reason"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "positivity",
+                                "denominator",
+                                "selection",
+                                "missingness",
+                                "measurement",
+                                "linkage"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "sourceRefs": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 160,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 32
+                            },
+                            "rowLinkage": {
+                              "type": "string",
+                              "enum": [
+                                "SINGLE_COHORT_JOINT",
+                                "WITNESSED_MARGINAL",
+                                "UNKNOWN"
+                              ]
+                            },
+                            "availability": {
+                              "type": "string",
+                              "enum": [
+                                "OBSERVED",
+                                "PROSPECTIVE"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "variables",
+                            "scope",
+                            "premises",
+                            "sourceRefs",
+                            "rowLinkage",
+                            "availability"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 32
+                      },
+                      "bundles": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                            },
+                            "laws": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 160,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "OBSERVATIONAL_JOINT",
+                                      "EXPERIMENTAL",
+                                      "TRANSPORT",
+                                      "SELECTED"
+                                    ]
+                                  },
+                                  "variables": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 64,
+                                      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 12
+                                  },
+                                  "scope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "population": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 160,
+                                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                      },
+                                      "intervention": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 160,
+                                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                      },
+                                      "time": {
+                                        "type": "object",
+                                        "properties": {
+                                          "start": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                          },
+                                          "end": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                          }
+                                        },
+                                        "required": [
+                                          "start",
+                                          "end"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "units": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 64
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "population",
+                                      "intervention",
+                                      "time",
+                                      "units"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "premises": {
+                                    "type": "object",
+                                    "properties": {
+                                      "positivity": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "denominator": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "selection": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "missingness": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "measurement": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "linkage": {
+                                        "type": "object",
+                                        "properties": {
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "SATISFIED",
+                                              "UNKNOWN",
+                                              "CONTRADICTED",
+                                              "UNSUPPORTED"
+                                            ]
+                                          },
+                                          "basis": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          },
+                                          "reason": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 2000
+                                          }
+                                        },
+                                        "required": [
+                                          "status",
+                                          "basis",
+                                          "reason"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "positivity",
+                                      "denominator",
+                                      "selection",
+                                      "missingness",
+                                      "measurement",
+                                      "linkage"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "sourceRefs": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 160,
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 32
+                                  },
+                                  "rowLinkage": {
+                                    "type": "string",
+                                    "enum": [
+                                      "SINGLE_COHORT_JOINT",
+                                      "WITNESSED_MARGINAL",
+                                      "UNKNOWN"
+                                    ]
+                                  },
+                                  "availability": {
+                                    "type": "string",
+                                    "enum": [
+                                      "OBSERVED",
+                                      "PROSPECTIVE"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "kind",
+                                  "variables",
+                                  "scope",
+                                  "premises",
+                                  "sourceRefs",
+                                  "rowLinkage",
+                                  "availability"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 1,
+                              "maxItems": 32
+                            },
+                            "costItemIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 160,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                              },
+                              "maxItems": 64
+                            },
+                            "admissibility": {
+                              "type": "object",
+                              "properties": {
+                                "rights": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PERMITTED",
+                                    "REJECTED",
+                                    "UNKNOWN"
+                                  ]
+                                },
+                                "s2": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PERMITTED",
+                                    "REJECTED",
+                                    "UNKNOWN"
+                                  ]
+                                },
+                                "privacy": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PERMITTED",
+                                    "REJECTED",
+                                    "UNKNOWN"
+                                  ]
+                                },
+                                "staffing": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PERMITTED",
+                                    "REJECTED",
+                                    "UNKNOWN"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "rights",
+                                "s2",
+                                "privacy",
+                                "staffing"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "schedule": {
+                              "type": "object",
+                              "properties": {
+                                "after": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 160,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                  },
+                                  "maxItems": 8
+                                },
+                                "earliestStart": {
+                                  "type": "object",
+                                  "properties": {
+                                    "numerator": {
+                                      "type": "string",
+                                      "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                    },
+                                    "denominator": {
+                                      "type": "string",
+                                      "pattern": "^[1-9][0-9]{0,255}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "numerator",
+                                    "denominator"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "duration": {
+                                  "type": "object",
+                                  "properties": {
+                                    "numerator": {
+                                      "type": "string",
+                                      "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                    },
+                                    "denominator": {
+                                      "type": "string",
+                                      "pattern": "^[1-9][0-9]{0,255}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "numerator",
+                                    "denominator"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "after",
+                                "earliestStart",
+                                "duration"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "resources": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 160,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                  },
+                                  "quantity": {
+                                    "type": "object",
+                                    "properties": {
+                                      "numerator": {
+                                        "type": "string",
+                                        "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                      },
+                                      "denominator": {
+                                        "type": "string",
+                                        "pattern": "^[1-9][0-9]{0,255}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "numerator",
+                                      "denominator"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "quantity"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "maxItems": 64
+                            },
+                            "exposure": {
+                              "type": "object",
+                              "properties": {
+                                "numerator": {
+                                  "type": "string",
+                                  "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                },
+                                "denominator": {
+                                  "type": "string",
+                                  "pattern": "^[1-9][0-9]{0,255}$"
+                                }
+                              },
+                              "required": [
+                                "numerator",
+                                "denominator"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "laws",
+                            "costItemIds",
+                            "admissibility",
+                            "schedule",
+                            "resources",
+                            "exposure"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 8
+                      },
+                      "costItems": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                            },
+                            "amount": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "numerator": {
+                                      "type": "string",
+                                      "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                    },
+                                    "denominator": {
+                                      "type": "string",
+                                      "pattern": "^[1-9][0-9]{0,255}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "numerator",
+                                    "denominator"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "basis": {
+                              "type": "object",
+                              "properties": {
+                                "currency": {
+                                  "type": "string",
+                                  "pattern": "^[A-Z]{3}$"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
+                                },
+                                "valuationAt": {
+                                  "type": "string",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                                },
+                                "ownerShare": {
+                                  "type": "object",
+                                  "properties": {
+                                    "numerator": {
+                                      "type": "string",
+                                      "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                    },
+                                    "denominator": {
+                                      "type": "string",
+                                      "pattern": "^[1-9][0-9]{0,255}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "numerator",
+                                    "denominator"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "horizon": {
+                                  "type": "object",
+                                  "properties": {
+                                    "start": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "end": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "start",
+                                    "end"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "discount": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2000
+                                }
+                              },
+                              "required": [
+                                "currency",
+                                "unit",
+                                "valuationAt",
+                                "ownerShare",
+                                "horizon",
+                                "discount"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "amount",
+                            "basis"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 64
+                      },
+                      "constraints": {
+                        "type": "object",
+                        "properties": {
+                          "costBasis": {
+                            "type": "object",
+                            "properties": {
+                              "currency": {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              },
+                              "valuationAt": {
+                                "type": "string",
+                                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                              },
+                              "ownerShare": {
+                                "type": "object",
+                                "properties": {
+                                  "numerator": {
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                  },
+                                  "denominator": {
+                                    "type": "string",
+                                    "pattern": "^[1-9][0-9]{0,255}$"
+                                  }
+                                },
+                                "required": [
+                                  "numerator",
+                                  "denominator"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "horizon": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "end": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "start",
+                                  "end"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "discount": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2000
+                              }
+                            },
+                            "required": [
+                              "currency",
+                              "unit",
+                              "valuationAt",
+                              "ownerShare",
+                              "horizon",
+                              "discount"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "scheduleUnit": {
+                            "type": "string",
+                            "const": "second"
+                          },
+                          "resourceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                            },
+                            "maxItems": 64
+                          },
+                          "resources": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 160,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
+                                },
+                                "capacity": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "numerator": {
+                                          "type": "string",
+                                          "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                        },
+                                        "denominator": {
+                                          "type": "string",
+                                          "pattern": "^[1-9][0-9]{0,255}$"
+                                        }
+                                      },
+                                      "required": [
+                                        "numerator",
+                                        "denominator"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "unit",
+                                "capacity"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "maxItems": 64
+                          },
+                          "exposureLimit": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "numerator": {
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]{0,255})$"
+                                  },
+                                  "denominator": {
+                                    "type": "string",
+                                    "pattern": "^[1-9][0-9]{0,255}$"
+                                  }
+                                },
+                                "required": [
+                                  "numerator",
+                                  "denominator"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "collectBy": {
+                            "type": "object",
+                            "properties": {
+                              "numerator": {
+                                "type": "string",
+                                "pattern": "^(0|[1-9][0-9]{0,255})$"
+                              },
+                              "denominator": {
+                                "type": "string",
+                                "pattern": "^[1-9][0-9]{0,255}$"
+                              }
+                            },
+                            "required": [
+                              "numerator",
+                              "denominator"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "costBasis",
+                          "scheduleUnit",
+                          "resourceOrder",
+                          "resources",
+                          "exposureLimit",
+                          "collectBy"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "identities": {
+                        "type": "object",
+                        "properties": {
+                          "domain": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          },
+                          "owners": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          },
+                          "method": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          },
+                          "checker": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+                          }
+                        },
+                        "required": [
+                          "domain",
+                          "owners",
+                          "method",
+                          "checker"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "profile",
+                      "query",
+                      "variables",
+                      "graphs",
+                      "baseline",
+                      "bundles",
+                      "costItems",
+                      "constraints",
+                      "identities"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "priorProfileId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId",
+                  "workInputId",
+                  "modelRef",
+                  "estimandId",
+                  "targetRecordId",
+                  "policyRef",
+                  "allocationRef",
+                  "problem",
+                  "priorProfileId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "schema": {
+                    "type": "string",
+                    "const": "finnor.r4.run-request.v1"
+                  },
+                  "envelope_inputs": {
+                    "type": "object",
+                    "properties": {
+                      "profileId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "profileId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "problem_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "existing_work_revision": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "domain_profile_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "budget_grant_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "cancellation_ref": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  }
+                },
+                "required": [
+                  "schema",
+                  "envelope_inputs",
+                  "problem_ref",
+                  "existing_work_revision",
+                  "domain_profile_ref",
+                  "budget_grant_ref",
+                  "cancellation_ref",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/work": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "runId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/status": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "runId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/history": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "runId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "runId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
+    "/api/identification-plans/consume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "disposition": {
+                    "type": "string",
+                    "enum": [
+                      "PROPOSE",
+                      "DECLINE",
+                      "WAIT"
+                    ]
+                  }
+                },
+                "required": [
+                  "runId",
+                  "disposition"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority."
+          },
+          "202": {
+            "description": "Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking."
+          },
+          "400": {
+            "description": "Strict bounded request or exact owner/scientific premise rejected."
+          },
+          "401": {
+            "description": "Authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private reference."
+          },
+          "409": {
+            "description": "Original Work, profile, source, method, grant or idempotency preimage revised."
+          },
+          "413": {
+            "description": "Registered request byte bound exceeded; no silent truncation."
+          }
+        }
+      }
+    },
     "/api/company-brain/compute-search-submit": {
       "post": {
         "security": [
@@ -34185,6 +36345,116 @@
                       "maxResultBytes"
                     ],
                     "additionalProperties": false
+                  },
+                  "robust": {
+                    "type": "object",
+                    "properties": {
+                      "schema": {
+                        "type": "string",
+                        "const": "finnor.r2.request.v1"
+                      },
+                      "domainProfile": {
+                        "type": "string",
+                        "const": "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "sourceId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "sourceId",
+                          "versionId",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "initialWorlds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "minItems": 1,
+                        "maxItems": 32
+                      },
+                      "budget": {
+                        "type": "object",
+                        "properties": {
+                          "maxPaths": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50000
+                          },
+                          "maxHistories": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50000
+                          },
+                          "maxVariables": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100000
+                          },
+                          "maxRows": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 300000
+                          },
+                          "maxProofBytes": {
+                            "type": "integer",
+                            "minimum": 1024,
+                            "maximum": 8388608
+                          },
+                          "cpuMs": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30000
+                          },
+                          "memoryMiB": {
+                            "type": "integer",
+                            "minimum": 128,
+                            "maximum": 2048
+                          },
+                          "maxNativeCalls": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 128
+                          }
+                        },
+                        "required": [
+                          "maxPaths",
+                          "maxHistories",
+                          "maxVariables",
+                          "maxRows",
+                          "maxProofBytes",
+                          "cpuMs",
+                          "memoryMiB",
+                          "maxNativeCalls"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "domainProfile",
+                      "source",
+                      "initialWorlds",
+                      "budget"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -34228,6 +36498,58 @@
       }
     },
     "/api/company-brain/capital-program-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "queryId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "queryId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/capital-program-status": {
       "post": {
         "security": [
           {
@@ -35127,6 +37449,116 @@
                           "maxRefinementDepth",
                           "maxModuleBytes",
                           "maxResultBytes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "robust": {
+                        "type": "object",
+                        "properties": {
+                          "schema": {
+                            "type": "string",
+                            "const": "finnor.r2.request.v1"
+                          },
+                          "domainProfile": {
+                            "type": "string",
+                            "const": "S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"
+                          },
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "sourceId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "versionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "sourceId",
+                              "versionId",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "initialWorlds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "minItems": 1,
+                            "maxItems": 32
+                          },
+                          "budget": {
+                            "type": "object",
+                            "properties": {
+                              "maxPaths": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50000
+                              },
+                              "maxHistories": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50000
+                              },
+                              "maxVariables": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 100000
+                              },
+                              "maxRows": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 300000
+                              },
+                              "maxProofBytes": {
+                                "type": "integer",
+                                "minimum": 1024,
+                                "maximum": 8388608
+                              },
+                              "cpuMs": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 30000
+                              },
+                              "memoryMiB": {
+                                "type": "integer",
+                                "minimum": 128,
+                                "maximum": 2048
+                              },
+                              "maxNativeCalls": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 128
+                              }
+                            },
+                            "required": [
+                              "maxPaths",
+                              "maxHistories",
+                              "maxVariables",
+                              "maxRows",
+                              "maxProofBytes",
+                              "cpuMs",
+                              "memoryMiB",
+                              "maxNativeCalls"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "schema",
+                          "domainProfile",
+                          "source",
+                          "initialWorlds",
+                          "budget"
                         ],
                         "additionalProperties": false
                       }
