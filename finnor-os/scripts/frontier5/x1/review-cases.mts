@@ -29,9 +29,9 @@ const cases: Record<string, ReturnType<typeof copy>> = {};
   test.original.mandate.rules[0]!.id = "rule";
   test.original.mandate.rules.push({ ...test.original.mandate.rules[0]!, id: "extra#rule" });
   test.candidate.obligations = [
-    { ...base.obligations[0]!, trigger: "work-1/request-A#extra", ruleId: "extra#rule" },
-    { ...base.obligations[1]!, trigger: "work-1/request-A", ruleId: "rule" },
-    { ...base.obligations[1]!, trigger: "work-1/request-A", ruleId: "extra#rule" },
+    { ...base.obligations[0]!, trigger: "work-1/request-A#extra", recordId: "request-A#extra", ruleId: "extra#rule" },
+    { ...base.obligations[1]!, trigger: "work-1/request-A", recordId: "request-A", ruleId: "rule" },
+    { ...base.obligations[1]!, trigger: "work-1/request-A", recordId: "request-A", ruleId: "extra#rule" },
   ];
   cases.triggerRuleCollisionWithFourthDutyOmitted = test;
 }

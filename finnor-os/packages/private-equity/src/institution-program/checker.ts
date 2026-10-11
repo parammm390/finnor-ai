@@ -46,7 +46,8 @@ type Quantity = Mapping & {
   occurredAt: string; availableAt: string;
 };
 type Obligation = {
-  trigger: string; subjectRef: string; ruleId: string; deadlineAt: string; principalId: string;
+  trigger: string; sourceId: string; recordId: string; occurredAt: string; availableAt: string;
+  subjectRef: string; ruleId: string; deadlineAt: string; principalId: string;
   operation: string; materiality: string; postconditionRef: string; observerRef: string;
 };
 export type InstitutionCandidate = {
@@ -55,12 +56,15 @@ export type InstitutionCandidate = {
   mappings: Mapping[]; quantities: Quantity[];
   relations?: Relation[];
   temporalLinks?: { sourceId: string; recordId: string; startsAt: string; endsAt: string; kind: "scheduled" }[];
-  contradictions: { left: string; right: string; disposition: "unresolved" | "superseded" }[];
+  contradictions: { left: string; right: string; leftRef: { sourceId: string; recordId: string };
+    rightRef: { sourceId: string; recordId: string }; disposition: "unresolved" | "superseded" }[];
   obligations: Obligation[];
   dependencies: Record<string, unknown> & { sourceRevisions: Record<string, string> };
   limits: Record<string, number | null>;
-  unresolved?: { witness: string; reason: string; alternatives: string[] }[];
-  processHypotheses?: { witness: string; interpretation: string; normative: false }[];
+  unresolved?: { witness: string; sourceId?: string; recordId?: string;
+    accountingContext?: string[]; recordRefs?: { sourceId: string; recordId: string }[];
+    reason: string; alternatives: string[] }[];
+  processHypotheses?: { witness: string; sourceId: string; recordId: string; interpretation: string; normative: false }[];
   /** A producer cannot provide its own independently accepted check. */
   receipt: unknown;
 };
@@ -107,7 +111,8 @@ function equalDecimal(a: unknown, b: unknown): boolean {
 function unique(items: string[]): boolean { return new Set(items).size === items.length; }
 function recordKey(sourceId: string, recordId: string): string { return JSON.stringify([sourceId, recordId]); }
 const witness = (sourceId: string, recordId: string): string => `${sourceId}/${recordId}`;
-const obligationKey = (trigger: string, ruleId: string): string => JSON.stringify([trigger, ruleId]);
+const obligationKey = (sourceId: string, recordId: string, ruleId: string): string =>
+  JSON.stringify([sourceId, recordId, ruleId]);
 const quantityContext = (item: RawRecord | Quantity): boolean =>
   typeof item.factKey === "string" && item.factKey.length > 0 && item.factKey.length <= 128
   && typeof item.currency === "string" && /^[A-Z]{3}$/.test(item.currency)
@@ -203,6 +208,14 @@ export async function independentlyCheckInstitutionModel(
   if (!unique([...records.values()].map(({ source, record }) => witness(source.id, record.id)))) {
     return fail("COVERAGE", "Original object witness is ambiguous across sources");
   }
+  if (candidate.processHypotheses?.some((item) =>
+    !records.has(recordKey(item.sourceId, item.recordId))
+      || item.witness !== witness(item.sourceId, item.recordId))
+      || candidate.unresolved?.some((item) => item.sourceId !== undefined
+        && (!records.has(recordKey(item.sourceId, item.recordId ?? ""))
+          || item.witness !== witness(item.sourceId, item.recordId ?? "")))) {
+    return fail("COVERAGE", "Descriptive or unresolved reference lacks a typed original identity");
+  }
   if (Buffer.byteLength(JSON.stringify(canonical)) > profile.bounds.s1SnapshotBytes
       || canonical.entities.length > profile.bounds.canonicalReferences
       || canonical.entities.filter((entity) => entity.entityType === "deal").length > profile.bounds.deals
@@ -233,10 +246,11 @@ export async function independentlyCheckInstitutionModel(
     const matches = canonicalByRegistration.get(registrationId ?? "") ?? [];
     return matches.length === 1 && matches[0]!.institutionId === original.institutionId ? matches[0]!.ref : null;
   };
-  const unresolvedFor = (key: string, record: RawRecord, options: string[]): InstitutionCheck | null => {
-    const basis = candidate.unresolved?.find((item) => item.witness === key);
+  const unresolvedFor = (sourceId: string, record: RawRecord, options: string[]): InstitutionCheck | null => {
+    const key = witness(sourceId, record.id);
+    const basis = candidate.unresolved?.find((item) => item.sourceId === sourceId && item.recordId === record.id);
     if (!basis || typeof basis.reason !== "string" || !basis.reason
-        || !Array.isArray(basis.alternatives)) return fail("COVERAGE", `Unresolved original omitted ${key}`, [key]);
+        || basis.witness !== key || !Array.isArray(basis.alternatives)) return fail("COVERAGE", `Unresolved original omitted ${key}`, [recordKey(sourceId, record.id)]);
     if (options.length > profile.bounds.alternativesPerInterpretation
         || !unique(basis.alternatives) || !same([...basis.alternatives].sort(), [...options].sort())) {
       return fail("IDENTITY", `Original alternatives differ ${key}`, [key]);
@@ -250,7 +264,7 @@ export async function independentlyCheckInstitutionModel(
         || (entity.registrationId.length >= 3 && record.narrative?.includes(entity.registrationId))))
     .map((entity) => entity.ref);
   for (const [, { source, record }] of unknowns) {
-    const key = witness(source.id, record.id), invalid = unresolvedFor(key, record, optionsFor(record));
+    const invalid = unresolvedFor(source.id, record, optionsFor(record));
     if (invalid) return invalid;
   }
   const mapByKey = new Map(candidate.mappings.map((item) => [recordKey(item.sourceId, item.recordId), item]));
@@ -259,7 +273,7 @@ export async function independentlyCheckInstitutionModel(
     const proposal = mapByKey.get(key), ref = canonicalRef(record.registrationId);
     if (!ref) {
       const [source] = JSON.parse(key) as string[];
-      const invalid = unresolvedFor(witness(source!, record.id), record, optionsFor(record));
+      const invalid = unresolvedFor(source!, record, optionsFor(record));
       if (invalid) return invalid;
       if (proposal) return fail("IDENTITY", `Ambiguous original cannot support mapping ${key}`, [key]);
       continue;
@@ -286,7 +300,8 @@ export async function independentlyCheckInstitutionModel(
               && ["feeder", "main"].includes(record.vehicleType ?? ""))))) continue;
     const alternatives = canonical.entities.filter((entity) => entity.institutionId === original.institutionId
       && entity.registrationId === record.relationRegistrationId).map((entity) => entity.ref);
-    const gap = candidate.unresolved?.find((item) => item.witness === witness(source.id, record.id));
+    const gap = candidate.unresolved?.find((item) => item.sourceId === source.id && item.recordId === record.id
+      && item.witness === witness(source.id, record.id));
     if (!gap || alternatives.length > profile.bounds.alternativesPerInterpretation
         || !same([...alternatives].sort(), [...gap.alternatives].sort())) {
       return fail("IDENTITY", `Cross-reference alternatives differ ${source.id}/${record.id}`);
@@ -337,7 +352,7 @@ export async function independentlyCheckInstitutionModel(
     if (!ref || !quantityContext(record) || !decimal(record.value)
         || !iso(record.occurredAt) || !iso(record.availableAt)) {
       const [source] = JSON.parse(key) as string[];
-      const invalid = unresolvedFor(witness(source!, record.id), record, optionsFor(record));
+      const invalid = unresolvedFor(source!, record, optionsFor(record));
       if (invalid) return invalid;
       if (proposal) return fail("QUANTITY", `Unsupported original quantity proposed as exact ${key}`, [key]);
       continue;
@@ -365,30 +380,35 @@ export async function independentlyCheckInstitutionModel(
       && iso(record.occurredAt) && iso(record.availableAt)).length) {
     return fail("QUANTITY", "Supported quantity omitted or unsupported quantity claimed");
   }
-  const accountingGroups = new Map<string, Map<string, RawRecord>>();
-  for (const [key, { record }] of quantityRows) {
+  const accountingGroups = new Map<string, Map<string, { sourceId: string; record: RawRecord }>>();
+  for (const [key, { source, record }] of quantityRows) {
     if (!record.accountingRelationId && !record.balanceRole) continue;
     if (!record.accountingRelationId || !["opening", "movement", "closing"].includes(record.balanceRole ?? "")
         || !quantityContext(record) || !decimal(record.value)) return fail("QUANTITY", `Invalid accounting relation ${key}`, [key]);
     const group = JSON.stringify([record.accountingRelationId, record.registrationId, record.factKey,
       record.currency, record.unit, record.period, record.basis]);
-    const roles = accountingGroups.get(group) ?? new Map<string, RawRecord>();
+    const roles = accountingGroups.get(group) ?? new Map<string, { sourceId: string; record: RawRecord }>();
     if (roles.has(record.balanceRole!)) return fail("QUANTITY", `Repeated accounting role ${key}`, [key]);
-    roles.set(record.balanceRole!, record); accountingGroups.set(group, roles);
+    roles.set(record.balanceRole!, { sourceId: source.id, record }); accountingGroups.set(group, roles);
   }
   for (const [group, roles] of accountingGroups) {
     if (roles.size !== 3) {
       const [id] = JSON.parse(group) as string[];
       const missing = ["opening", "movement", "closing"].filter((role) => !roles.has(role));
-      const gap = candidate.unresolved?.find((item) => item.witness === `accounting:${id}`);
+      const context = JSON.parse(group) as string[];
+      const refs = [...roles.values()].map(({sourceId,record})=>({sourceId,recordId:record.id}));
+      const gap = candidate.unresolved?.find((item) => item.witness === `accounting:${id}`
+        && same(item.accountingContext, context)
+        && same([...item.recordRefs ?? []].map(ref=>recordKey(ref.sourceId,ref.recordId)).sort(),
+          refs.map(ref=>recordKey(ref.sourceId,ref.recordId)).sort()));
       if (!gap || !missing.every((role) => gap.reason.includes(role)) || gap.alternatives.length) {
         return fail("QUANTITY", `Partial accounting relationship not disclosed ${group}`, [group]);
       }
       continue; // Missing equation evidence is unresolved, not an assumed zero.
     }
-    const opening = decimal(roles.get("opening")!.value)!;
-    const movement = decimal(roles.get("movement")!.value)!;
-    const closing = decimal(roles.get("closing")!.value)!;
+    const opening = decimal(roles.get("opening")!.record.value)!;
+    const movement = decimal(roles.get("movement")!.record.value)!;
+    const closing = decimal(roles.get("closing")!.record.value)!;
     const scale = Math.max(opening.scale, movement.scale, closing.scale);
     const units = (item: typeof opening) => item.coefficient * 10n ** BigInt(scale - item.scale);
     if (units(opening) + units(movement) !== units(closing)) return fail("QUANTITY", `Original accounting conservation fails ${group}`, [group]);
@@ -403,14 +423,13 @@ export async function independentlyCheckInstitutionModel(
       && a.record.period === b.record.period && a.record.basis === b.record.basis
       && !equalDecimal(a.record.value, b.record.value)) conflictPairs.add(JSON.stringify([aKey, bKey].sort()));
   }
-  const declaredConflicts = candidate.contradictions.map((entry) => JSON.stringify([entry.left, entry.right].sort()));
-  const readableConflicts = [...conflictPairs].map((entry) => JSON.parse(entry) as string[]);
-  const conflictWitnesses = readableConflicts.map(([a, b]) => {
-    const first = records.get(a!)!, second = records.get(b!)!;
-    return [witness(first.source.id, first.record.id), witness(second.source.id, second.record.id)].sort();
-  });
-  const declaredReadable = candidate.contradictions.map((entry) => [entry.left, entry.right].sort());
-  if (!unique(declaredConflicts) || !same(declaredReadable.sort(), conflictWitnesses.sort())
+  const declaredConflicts = candidate.contradictions.map((entry) =>
+    JSON.stringify([recordKey(entry.leftRef?.sourceId ?? "", entry.leftRef?.recordId ?? ""),
+      recordKey(entry.rightRef?.sourceId ?? "", entry.rightRef?.recordId ?? "")].sort()));
+  if (!unique(declaredConflicts) || !same(declaredConflicts.sort(), [...conflictPairs].sort())
+      || candidate.contradictions.some((entry) =>
+        entry.left !== witness(entry.leftRef?.sourceId ?? "", entry.leftRef?.recordId ?? "")
+          || entry.right !== witness(entry.rightRef?.sourceId ?? "", entry.rightRef?.recordId ?? ""))
       || candidate.contradictions.some((entry) => entry.disposition !== "unresolved")) {
     return fail("CONTRADICTION", "Original competing assertions lack preserved unresolved disposition", [...conflictPairs]);
   }
@@ -426,7 +445,7 @@ export async function independentlyCheckInstitutionModel(
         && !same(candidate.dependencies[key], (current as unknown as Record<string, unknown>)[key]))) {
     return fail("CURRENTNESS", "Checker/source/mandate/owner/runtime dependency revision is stale");
   }
-  const obligations = new Map(candidate.obligations.map((item) => [obligationKey(item.trigger, item.ruleId), item]));
+  const obligations = new Map(candidate.obligations.map((item) => [obligationKey(item.sourceId, item.recordId, item.ruleId), item]));
   if (obligations.size !== candidate.obligations.length) return fail("OBLIGATION", "Duplicate trigger obligation");
   const expected = new Map<string, Obligation>();
   for (const [key, { source, record }] of triggers) {
@@ -434,7 +453,7 @@ export async function independentlyCheckInstitutionModel(
         || record.availableAt > original.knowledgeCut) return fail("CHRONOLOGY", `Trigger not available ${key}`, [key]);
     const ref = canonicalRef(record.registrationId);
     if (!ref) {
-      const invalid = unresolvedFor(witness(source.id, record.id), record, optionsFor(record));
+      const invalid = unresolvedFor(source.id, record, optionsFor(record));
       if (invalid) return invalid;
       continue;
     }
@@ -443,19 +462,20 @@ export async function independentlyCheckInstitutionModel(
         return fail("CHRONOLOGY", `Mandate deadline precedes trigger ${key}`, [key]);
       }
       const trigger = witness(source.id, record.id);
-      const identity = obligationKey(trigger, rule.id);
-      expected.set(identity, { trigger, subjectRef: ref, ruleId: rule.id,
+      const identity = obligationKey(source.id, record.id, rule.id);
+      expected.set(identity, { trigger, sourceId: source.id, recordId: record.id,
+        occurredAt: record.occurredAt, availableAt: record.availableAt, subjectRef: ref, ruleId: rule.id,
         deadlineAt: rule.deadlineAt, principalId: rule.principalId, operation: rule.operation,
         materiality: rule.materiality, postconditionRef: rule.postconditionRef, observerRef: rule.observerRef });
     }
   }
   for (const actual of candidate.obligations) {
-    const trigger = [...records.values()].find(({ source, record }) => witness(source.id, record.id) === actual.trigger)?.record;
+    const trigger = records.get(recordKey(actual.sourceId, actual.recordId))?.record;
     const matchingRules = mandate.rules.filter((rule) => rule.triggerKind === trigger?.triggerKind);
     if (!matchingRules.some((rule) => rule.id === actual.ruleId)) return fail("RULE", `No current explicit normative rule for ${actual.trigger}`, [actual.trigger]);
     if (!current.authorizedOperations.includes(actual.operation)
       || !profile.ordinaryOperations.includes(actual.operation)) return fail("AUTHORITY", `Operation is not currently authorized: ${actual.operation}`, [actual.trigger]);
-    const basis = expected.get(obligationKey(actual.trigger, actual.ruleId));
+    const basis = expected.get(obligationKey(actual.sourceId, actual.recordId, actual.ruleId));
     if (!basis || !same(actual, basis)) return fail("OBLIGATION", `Mandate trigger/principal/deadline/postcondition differs ${actual.trigger}`, [actual.trigger]);
   }
   if (candidate.obligations.length !== expected.size

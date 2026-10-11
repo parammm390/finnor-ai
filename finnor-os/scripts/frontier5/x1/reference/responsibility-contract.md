@@ -20,7 +20,8 @@ The fixture basis is the independently frozen `original-input.json` +
    class, preconditions, frozen structural postcondition, independent observer
    ref, and a discriminated effect binding (`ordinary` | `none`).
 3. Stable obligation identity is `x1-obligation:` + SHA-256 of a versioned,
-   injective tuple (tenant, institution, mandate id, rule id, canonical subject,
+   injective tuple (tenant, institution, mandate id, rule id, canonical subject
+   identity without its mutable entity version,
    trigger sourceId, trigger recordId, trigger occurrence). The slash witness
    is display-only and must not be parsed or joined across cuts. Derivation
    revision additionally binds the
@@ -58,6 +59,26 @@ The fixture basis is the independently frozen `original-input.json` +
    the demand's programme refuses `X1_CHARGE_RESPONSIBILITY_FOREIGN`.
 10. The parent deadline is the earliest mandate rule deadline; no caller or
     retry can extend it.
+11. The S5 owner adapter reserves only against currently registered
+    `COMPUTE/request` and `HUMAN_ATTENTION/seconds` cumulative resources. Its
+    tenant-wide `s5-portfolio` lock serializes institution and finite-policy
+    reservations. Institution reservations appear in the ordinary S5 snapshot
+    as outstanding commitments so legacy finite clearing sees the same
+    occupation; existing finite commitments are included in the institution
+    capacity check. A separate X1/P1 allowance cannot satisfy this predicate.
+12. S5 consumption is an intent/retained exposure, not a completed provider
+    effect or monetary billing. Semantic replay keeps the same original
+    reservation, charge key and deadline. Release is allowed only when no
+    consumption/charge/possible effect exists. Resource revision, rights or
+    expiry fences new use while retaining the old liability.
+13. A native action node needs a frozen, checker-bound ordinary action payload
+    from the mandate and established canonical target/related refs. The sparse
+    original fixture has no such payload: it can prove derivation, but must not
+    manufacture a Request/workstream/finding or claim native completion. The
+    P1 owner may bind an actual PlanGraph/ObjectiveLoop only after an exact
+    payload, current Work/input/principal, S5 reservation and current operation
+    authority are established. The independent canonical observer, not a P1
+    proposal, decides completion.
 
 ## Credible regressions covered
 

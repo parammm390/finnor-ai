@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { attachWorkEntityTx, withTenantTransaction } from "@finnor/db";
+import { attachWorkEntityTx, CURRENT_MIGRATION_HEAD, withTenantTransaction } from "@finnor/db";
 import { employeeAuthoritySnapshot, canExerciseAuthority } from "@finnor/authority";
 import { loadDocumentVersion, materializeSourceRecord } from "@finnor/data-platform";
 import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory";
@@ -10,6 +10,7 @@ import { authorizeBeliefResources, authorizeBeliefCandidateCut } from "../enterp
 import { loadPrivateEquityWorldState } from "../world-state";
 import { mapPrivateEquitySourceObservation } from "../source-mapping";
 import { createFundTx, createVehicleTx, linkFundVehicleTx } from "../digital-twin";
+import { readAllocationSnapshot } from "../allocation-store";
 import type { PeMutationContext } from "../types";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
 import { checkInstitutionInSeparateProcess } from "./checker-process";
@@ -90,6 +91,7 @@ export async function loadInstitutionAdmissionOriginal(
       workId, risk: "low",
     })) allowed.push(operation);
   }
+  const s5 = await readAllocationSnapshot(ctx);
   // The knowledge cut binds to the server-side retention facts (Core version
   // or acquisition receipt), so an identical owner state replays to an
   // identical digest and a caller can never supply or shift the cut.
@@ -103,7 +105,7 @@ export async function loadInstitutionAdmissionOriginal(
       sourceRevisions: Object.fromEntries(retained.map((source) => [source.id, source.revision])),
       sourceDigests: Object.fromEntries(retained.map((source) => [source.id, source.originalSha256])),
       mandateRevision: mandate.revision, canonicalRevision: "", rightsRevision,
-      resourceRevision: "S5_OWNER_CURRENTNESS_PENDING",
+      resourceRevision: s5.snapshotDigest,
       methodRevision: "S8_OWNER_CURRENTNESS_PENDING",
       operationRevision: sha(JSON.stringify([rightsRevision, allowed])),
       checkerRevision: sha(Buffer.concat([readFileSync(checkerPath), readFileSync(checkerRawPath)])),
@@ -117,7 +119,7 @@ export async function loadInstitutionAdmissionOriginal(
       authorizedOperations: allowed,
     },
   };
-  if (original.current.schemaRevision !== "0172_x1_institution_source_authority.sql") {
+  if (original.current.schemaRevision !== CURRENT_MIGRATION_HEAD) {
     throw new Error("X1_AUTHORITY_SCHEMA_NOT_INSTALLED");
   }
   const owner = await loadInstitutionCanonicalOwnerSnapshot(ctx, original, profile);

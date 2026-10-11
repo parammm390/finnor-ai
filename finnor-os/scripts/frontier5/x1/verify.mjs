@@ -48,6 +48,14 @@ for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
   "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
   "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+  "finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+  "finnor-os/packages/private-equity/src/institution-program/resource-demand.ts",
+  "finnor-os/packages/private-equity/src/allocation-store.ts",
+  "finnor-os/packages/db/migrations/0173_x1_institution_s5_reservations.sql",
+  "finnor-os/packages/db/migration-head.ts",
+  "finnor-os/scripts/frontier5/x1/responsibility-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-expectations.json",
   "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
   "finnor-os/packages/private-equity/src/index.ts",
@@ -142,6 +150,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("native-creation", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/creation-native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("admission-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/admission-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("responsibility", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/responsibility-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
@@ -159,11 +168,15 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
       "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
       "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+      "finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+      "finnor-os/packages/private-equity/src/institution-program/resource-demand.ts",
+      "finnor-os/packages/private-equity/src/allocation-store.ts",
       "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
       "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
       "finnor-os/scripts/frontier5/x1/kernel.mts",
       "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
-      "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+      "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
+      "finnor-os/scripts/frontier5/x1/responsibility-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
     run("checker-command-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
       "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
       "finnor-os/scripts/frontier5/x1/review-cases.mts",

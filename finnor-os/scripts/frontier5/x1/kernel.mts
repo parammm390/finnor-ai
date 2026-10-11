@@ -21,8 +21,8 @@ assert.equal(expected.contradictions.length, 1);
 assert.deepEqual(base.mappings.map(({ sourceId, recordId, canonicalRef, registrationId }) => ({ sourceId, recordId, canonicalRef, registrationId })), expected.materialMappings);
 assert.deepEqual(base.quantities.map(({ sourceId, recordId, canonicalRef, value, currency, unit, period, basis }) =>
   ({ sourceId, recordId, canonicalRef, value, currency, unit, period, basis })), expected.materialQuantities);
-assert.deepEqual(base.obligations.map(({ trigger, subjectRef, ruleId, deadlineAt, principalId, operation }) =>
-  ({ trigger, subjectRef, ruleId, deadlineAt, principalId, operation })), expected.supportedObligations);
+assert.deepEqual(base.obligations.map(({ trigger, sourceId, recordId, subjectRef, ruleId, deadlineAt, principalId, operation }) =>
+  ({ trigger, sourceId, recordId, subjectRef, ruleId, deadlineAt, principalId, operation })), expected.supportedObligations);
 assert.deepEqual(base.contradictions, expected.contradictions);
 
 // Explicit 14/34-field schemas reject missing/extra fields and undocumented nulls.

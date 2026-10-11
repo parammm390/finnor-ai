@@ -87,12 +87,13 @@ export async function proposeInstitutionModel(
         || unresolved.length >= bounds.unresolvedInterpretations) {
       throw new Error("X1_RECONSTRUCTION_BOUND: unresolved/alternative limit exceeded");
     }
-    const existing = unresolved.find((item) => item.witness === key(row.sourceId, row.objectId));
+    const existing = unresolved.find((item) => item.sourceId === row.sourceId && item.recordId === row.objectId);
     if (existing) {
       existing.reason += `;${reason}`;
       existing.alternatives = [...new Set([...existing.alternatives, ...alternatives])];
       if (existing.alternatives.length > bounds.alternativesPerInterpretation) throw new Error("X1_RECONSTRUCTION_BOUND: alternatives exceeded");
-    } else unresolved.push({ witness: key(row.sourceId, row.objectId), reason, alternatives });
+    } else unresolved.push({ witness: key(row.sourceId, row.objectId),
+      sourceId: row.sourceId, recordId: row.objectId, reason, alternatives });
   };
   for (const row of decoded.observations) {
     const raw = fields(row), data = interpret(row, raw), { kind, registrationId, entityType } = data;
@@ -157,6 +158,7 @@ export async function proposeInstitutionModel(
     if (["work_tracking", "approval_records", "email", "calendar", "document_dms"].includes(row.sourceClass)) {
       const participants = [raw.from, raw.to, raw.organizer, raw.attendee].filter(Boolean).join(" → ");
       processHypotheses.push({ witness: key(row.sourceId, row.objectId),
+        sourceId: row.sourceId, recordId: row.objectId,
         interpretation: `${row.sourceClass}: observed ${(raw.state ?? raw.subject ?? raw.summary ?? raw.status ?? "record").slice(0, 256)}`
           + `${participants ? `; participants ${participants.slice(0, 256)}` : ""}; no inferred rule or permission`,
         normative: false });
@@ -165,18 +167,26 @@ export async function proposeInstitutionModel(
   }
   const contradictions: InstitutionCandidate["contradictions"] = [];
   const values = claimed.filter((item) => item.kind === "quantity");
-  const accounting = new Map<string, Set<string>>();
+  const accounting = new Map<string, { context: string[]; roles: Set<string>;
+    recordRefs: { sourceId: string; recordId: string }[] }>();
   for (const item of values) {
     const data = fields(item.row), id = data.accountingrelationid, role = data.balancerole;
     if (!id || !role) continue;
-    const roles = accounting.get(id) ?? new Set<string>();
-    roles.add(role); accounting.set(id, roles);
+    const context = [id,item.data.registrationId,item.data.factKey ?? "",item.data.currency ?? "",
+      item.data.unit ?? "",item.data.period ?? "",item.data.basis ?? ""];
+    const key = JSON.stringify(context);
+    const entry = accounting.get(key) ?? { context, roles: new Set<string>(),
+      recordRefs: [] as { sourceId: string; recordId: string }[] };
+    entry.roles.add(role);
+    entry.recordRefs.push({ sourceId: item.row.sourceId, recordId: item.row.objectId });
+    accounting.set(key, entry);
   }
-  for (const [id, roles] of accounting) {
+  for (const { context, roles, recordRefs } of accounting.values()) {
     const missing = ["opening", "movement", "closing"].filter((role) => !roles.has(role));
     if (missing.length) {
       if (unresolved.length >= bounds.unresolvedInterpretations) throw new Error("X1_RECONSTRUCTION_BOUND: accounting gaps");
-      unresolved.push({ witness: `accounting:${id}`, reason: `ACCOUNTING_${missing.join("_")}_MISSING`, alternatives: [] });
+      unresolved.push({ witness: `accounting:${context[0]}`, accountingContext: context, recordRefs,
+        reason: `ACCOUNTING_${missing.join("_")}_MISSING`, alternatives: [] });
     }
   }
   for (let i = 0; i < values.length; i++) for (let j = i + 1; j < values.length; j++) {
@@ -189,13 +199,17 @@ export async function proposeInstitutionModel(
       && !fields(a.row).balancerole && !fields(b.row).balancerole
       && !equalAmount(a.data.value, b.data.value)) {
       const [left, right] = [key(a.row.sourceId, a.row.objectId), key(b.row.sourceId, b.row.objectId)].sort();
-      contradictions.push({ left: left!, right: right!, disposition: "unresolved" });
+      contradictions.push({ left: left!, right: right!,
+        leftRef: { sourceId: a.row.sourceId, recordId: a.row.objectId },
+        rightRef: { sourceId: b.row.sourceId, recordId: b.row.objectId }, disposition: "unresolved" });
     }
   }
   for (const item of claimed.filter((record) => record.kind === "trigger" && record.ref)) {
     const triggerKind = item.data.triggerKind;
     for (const rule of original.mandate.rules.filter((entry) => entry.triggerKind === triggerKind)) {
-      obligations.push({ trigger: key(item.row.sourceId, item.row.objectId), subjectRef: item.ref!,
+      obligations.push({ trigger: key(item.row.sourceId, item.row.objectId),
+        sourceId: item.row.sourceId, recordId: item.row.objectId, subjectRef: item.ref!,
+        occurredAt: item.data.occurredAt!, availableAt: item.data.availableAt!,
         ruleId: rule.id, deadlineAt: rule.deadlineAt, principalId: rule.principalId,
         operation: rule.operation, materiality: rule.materiality,
         postconditionRef: rule.postconditionRef, observerRef: rule.observerRef });

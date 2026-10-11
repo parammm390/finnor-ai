@@ -9,10 +9,10 @@
     {"sourceId":"ledger-1","recordId":"amount-A","canonicalRef":"pe_deal:deal-100@v2","registrationId":"FIRM-100","factKey":"facility_balance","value":"20.00","currency":"USD","unit":"units","period":"2026-09","basis":"outstanding","occurredAt":"2026-09-30T00:00:00.000Z","availableAt":"2026-10-01T00:00:00.000Z"},
     {"sourceId":"ledger-1","recordId":"amount-B","canonicalRef":"pe_deal:deal-100@v2","registrationId":"FIRM-100","factKey":"facility_balance","value":"25.00","currency":"USD","unit":"units","period":"2026-09","basis":"outstanding","occurredAt":"2026-09-30T00:00:00.000Z","availableAt":"2026-10-02T00:00:00.000Z"}
   ],
-  "contradictions":[{"left":"ledger-1/amount-A","right":"ledger-1/amount-B","disposition":"unresolved"}],
+  "contradictions":[{"left":"ledger-1/amount-A","right":"ledger-1/amount-B","leftRef":{"sourceId":"ledger-1","recordId":"amount-A"},"rightRef":{"sourceId":"ledger-1","recordId":"amount-B"},"disposition":"unresolved"}],
   "obligations":[
-    {"trigger":"work-1/request-A","subjectRef":"pe_deal:deal-100@v2","ruleId":"rule-request","deadlineAt":"2026-10-15T17:00:00.000Z","principalId":"principal-operations","operation":"create_deal_request","materiality":"material","postconditionRef":"request-created-v1","observerRef":"canonical-request-readback-v1"},
-    {"trigger":"work-1/request-B","subjectRef":"pe_deal:deal-200@v1","ruleId":"rule-request","deadlineAt":"2026-10-15T17:00:00.000Z","principalId":"principal-operations","operation":"create_deal_request","materiality":"material","postconditionRef":"request-created-v1","observerRef":"canonical-request-readback-v1"}
+    {"trigger":"work-1/request-A","sourceId":"work-1","recordId":"request-A","occurredAt":"2026-10-10T08:00:00.000Z","availableAt":"2026-10-10T09:00:00.000Z","subjectRef":"pe_deal:deal-100@v2","ruleId":"rule-request","deadlineAt":"2026-10-15T17:00:00.000Z","principalId":"principal-operations","operation":"create_deal_request","materiality":"material","postconditionRef":"request-created-v1","observerRef":"canonical-request-readback-v1"},
+    {"trigger":"work-1/request-B","sourceId":"work-1","recordId":"request-B","occurredAt":"2026-10-10T09:00:00.000Z","availableAt":"2026-10-10T09:30:00.000Z","subjectRef":"pe_deal:deal-200@v1","ruleId":"rule-request","deadlineAt":"2026-10-15T17:00:00.000Z","principalId":"principal-operations","operation":"create_deal_request","materiality":"material","postconditionRef":"request-created-v1","observerRef":"canonical-request-readback-v1"}
   ],
   "dependencies":{
     "sourceRevisions":{"crm-1":"r1","ledger-1":"r3","work-1":"r2"},

@@ -1,5 +1,44 @@
 # FRONTIER5.X1 status
 
+## Responsibility identity and typed S5 source cut (11 October 2026)
+
+The inherited pre-code responsibility contract, expectations and cases were
+repaired for the two independently reviewed defects and committed first at
+`1ce372974`. The original rights-only fixture now refuses at SOURCE_AUTHORITY;
+the positive cut refreshes authorized source rights bindings. Two independent
+accepted source/record cuts with one identical display witness now derive
+distinct stable duty identities; a revised same tuple retains identity and
+changes derivation revision. The within-input witness collision guard remains.
+Checker/producer obligations, unknowns, hypotheses and contradictions now
+carry typed source/record keys rather than joining by slash text. Accounting
+unknowns also carry a full typed context and record pair refs.
+
+`institution-responsibility-v1` now derives full checked trigger/rule/priority/
+deadline/principal/operation/precondition/postcondition/observer bindings as a
+deterministic S4/P1-owned *proposal*. An unadmitted subject or lost operation
+authority remains unresolved. The original fixture has no exact native
+Request action payload (workstream, counterparty, owner, text and times), so
+this source cut **does not** bind or progress a native PlanGraph/ObjectiveLoop
+and cannot claim VAL-X1-PROGRAM-001.
+
+S5 now has an additive typed institution demand and a `0173` resource
+reservation/charge migration. The adapter serializes through the original
+`s5-portfolio` lock, reads actual S5 cumulative compute/human resources,
+checks existing finite and institution occupancy, and exposes its reservations
+in the normal S5 snapshot so old finite clearing sees contention. It binds
+charges to the original parent/deadline and retains exposure; replay never
+re-funds a deadline. The S5 currentness sentinel in admission was replaced
+with the owner snapshot digest. No DB was migrated and no concurrent owner
+reservation/consumption or physical release was observed, so
+VAL-X1-RESOURCE-001 remains **unverified**. A limited no-covenant typed demand
+refuses resource classes requiring unimplemented covenant arithmetic.
+
+Offline kernel/static checks passed on this cut, with exact private evidence
+roots recorded in the feature handoff. Disk was 1,511,052 KiB free (less than
+the registered 1,572,864 KiB live floor); no service, migration, build or
+browser campaign was started. The full owner/runtime proof remains NOT RUN,
+not a waiver or a protected qualification claim.
+
 ## Owner-admission finish repairs on 24e5aa64c (11 October 2026)
 
 The six repairs from the independent read-only review (mission library
