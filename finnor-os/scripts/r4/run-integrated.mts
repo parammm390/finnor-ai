@@ -39,7 +39,7 @@ const dirtyPaths = packaged
      "finnor-os/packages/epistemic-runtime/src/identification-plan/checker.py",
      "finnor-os/packages/epistemic-runtime/src/identification-plan/supervisor.py"]
   : execFileSync("git", ["-C", repo, "status", "--porcelain=v1", "--untracked-files=all"],
-      {encoding: "utf8"}).trimEnd().split("\n").filter(Boolean).map(s => s.slice(3));
+      {encoding: "utf8", maxBuffer: 16 * 1024 * 1024}).trimEnd().split("\n").filter(Boolean).map(s => s.slice(3));
 const sourceIdentity = await Promise.all(dirtyPaths.map(async path => ({
   path, sha256: packaged ? sha(await readFile(join(repo, path)))
     : await readFile(join(repo, path)).then(sha).catch(() => null),
@@ -239,16 +239,25 @@ try {
   if (!retained) await postgres.createDatabase("r4_owner");
   const adminUrl = `postgres://finnor:finnor@127.0.0.1:${port}/r4_owner`;
   admin = new pg.Client({ connectionString: adminUrl }); await admin.connect();
-  if (!retained) await story("candidate-upgrade-restart", "Committed R1/R2 prefix installs first, additive R4 candidate installs exactly once", async () => {
-    const names = (await readdir(join(repo, "finnor-os/packages/db/migrations"))).filter(p => p.endsWith(".sql")).sort();
+  if (!retained) await story("candidate-upgrade-restart", "Committed R1/R2 prefix, additive R4 and cumulative successors each install exactly once", async () => {
+    const migrationsDirectory = join(repo, "finnor-os/packages/db/migrations");
+    const names = (await readdir(migrationsDirectory)).filter(p => p.endsWith(".sql")).sort();
     const base = await Promise.all(names.filter(n => n < "0174").map(async name => ({ name,
-      sql: await readFile(join(repo, "finnor-os/packages/db/migrations", name), "utf8") })));
+      sql: await readFile(join(migrationsDirectory, name), "utf8") })));
     const installedBase = await migrate(adminUrl, base);
-    const upgrade = await migrate(adminUrl), restart = await migrate(adminUrl);
+    const candidate = { name: "0174_identification_plan_compiler.sql",
+      sql: await readFile(join(migrationsDirectory, "0174_identification_plan_compiler.sql"), "utf8") };
+    const upgrade = await migrate(adminUrl, [candidate]);
     assert.equal(installedBase.at(-1), "0173_r2_robust_programme_search.sql");
-    assert.deepEqual(upgrade, ["0174_identification_plan_compiler.sql"]); assert.equal(restart.length, 0);
-    const observed = { installedBase, upgrade, restart,
-      tracker: (await admin!.query("SELECT name FROM finnor_os._migrations ORDER BY name")).rows };
+    assert.deepEqual(upgrade, ["0174_identification_plan_compiler.sql"]);
+    const candidateRestart = await migrate(adminUrl, [candidate]);
+    assert.deepEqual(candidateRestart, []);
+    const cumulativeUpgrade = await migrate(adminUrl), restart = await migrate(adminUrl);
+    assert.deepEqual(cumulativeUpgrade, names.filter(n => n >= "0174" && n !== candidate.name));
+    assert.deepEqual(restart, []);
+    const tracker = (await admin!.query("SELECT name FROM finnor_os._migrations ORDER BY name")).rows;
+    assert.deepEqual(tracker.map(row => row.name), names);
+    const observed = { installedBase, upgrade, candidateRestart, cumulativeUpgrade, restart, tracker };
     await artifact("migration.json", observed); return observed;
   });
   if (retained) {
