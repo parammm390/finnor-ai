@@ -6,7 +6,7 @@
   "sourcePins": [
     {
       "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
-      "sha256": "9e017767968c6dff8dcc6880850f0aed4a7389db64426c8420aab3e9670cce4f"
+      "sha256": "24d6a19b96b4ee1d33d9bbe8acd1b57f398cde103b462c4abeac71530e1e7064"
     },
     {
       "path": "src/components/centropy/canvas/coalition-programme-view.ts",
@@ -16,7 +16,7 @@
   "backendTypePins": [
     {
       "path": "finnor-os/packages/shared-types/src/coalition-programme.ts",
-      "sha256": "eba8cb154fdac418c578ee2625d2d553deb7a84125e3ac420885a96d2d86e012"
+      "sha256": "e23c7581a20a0f16713447fa3f38cc284c2372ef17f72258760d7e2f1a001a1c"
     },
     {
       "path": "finnor-os/packages/shared-types/src/allocation.ts",
@@ -59,7 +59,7 @@
       ],
       "exitCode": 0,
       "signal": null,
-      "elapsedMs": 1595.5230000000001,
+      "elapsedMs": 1568.03825,
       "stdout": "",
       "stderr": "",
       "error": null
@@ -77,7 +77,7 @@
       ],
       "exitCode": 0,
       "signal": null,
-      "elapsedMs": 2160.261291,
+      "elapsedMs": 2162.824667,
       "stdout": "",
       "stderr": "Warning: React version was set to \"detect\" in eslint-plugin-react settings, but the \"react\" package is not installed. Assuming latest React version for linting.\n",
       "error": null
@@ -93,7 +93,7 @@
       ],
       "exitCode": 0,
       "signal": null,
-      "elapsedMs": 52.050624999999854,
+      "elapsedMs": 34.43333399999983,
       "stdout": "",
       "stderr": "",
       "error": null
@@ -125,6 +125,6 @@
     }
   ],
   "sourceCutStable": true,
-  "elapsedMs": 3920.808541,
+  "elapsedMs": 3877.5282500000003,
   "staticChecksPassed": true
 }

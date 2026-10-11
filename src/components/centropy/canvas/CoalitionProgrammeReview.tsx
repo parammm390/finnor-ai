@@ -74,7 +74,9 @@ export function CoalitionProgrammeReview({ programme, scope, authorized, workId,
     programme.checker?.candidateDigest === selection.checker.candidateDigest ? programme : null
 
   const refresh = useCallback(async (generation: number) => {
-    if (!active(generation) || reading.current === generation) return
+    // Centropy shares pending reads within a session. Drain the old generation
+    // before reauthorizing, rather than accepting its promise under a new epoch.
+    if (!active(generation) || reading.current !== null) return
     reading.current = generation
     try {
       const access = CoalitionWorkAccessViewSchema.parse(await centropyPost("company-brain/capital-program-context",
