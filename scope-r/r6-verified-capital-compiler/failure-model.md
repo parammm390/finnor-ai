@@ -131,3 +131,119 @@ inputs, full packets, process transcripts, native execution observations,
 independent receipts and expected predicates in ignored private evidence.
 Never delete or overwrite a failed attempt; repairs append a new attempt.
 No post-code unit tests or unrelated inherited recertification.
+
+## Pre-verification domain and process clarification
+
+Before the first verification execution, D is made explicit as varying native
+quantities/enum values with all other native InputSnapshot metadata fixed to a
+hashed preimage. As-of, InvestmentCase, status/class and provenance are not
+assumed constant implicitly. Changed metadata is outside that D and must be
+owner-resolved/recompiled. A KNOWN witness does not prove that a later UNKNOWN
+source is known. Consumption must check the actual snapshot against this basis.
+
+The process wrapper enrolls only the existing `/usr/bin/python3` interpreter.
+An alternate executable or producer-written fake checker is forbidden. The
+owner may observe the real child PID for metering and controlled crash tests;
+that observer cannot replace the checker or change its predicate. A SIGKILL,
+deadline kill or cancellation leaves UNKNOWN with the physical transcript.
+
+## First retained execution and affected repairs
+
+`runtime-001` and `typecheck-001` passed. `core-001` passed its eight initial
+whole-domain/conformance cases, then failed before currency checking: the
+mutation changed node/input currencies but not expression-literal currencies.
+The native compiler correctly refused that ill-typed fixture. The repair
+changes the entire programme's declared currencies, leaving the reference
+unchanged, so the actual checker can observe the intended valid-native
+cross-programme currency mismatch. The original red artifacts are retained.
+
+A source audit also found that checker-enrollment I/O and the abort-listener
+registration window needed the original absolute deadline/cancellation fence.
+Receipt validation must not turn a post-deadline/post-cancellation result into
+ACCEPTED. This changes the producer wrapper's pinned digest, so subsequent
+proof packets require the repaired current source cut.
+
+## Consumer and packaging fences registered before their implementation
+
+The finite repaired campaign `core-002` passed all 38 selected cases. It is
+ordinary development evidence, not original R6 completion.
+
+The subsequent source audit identified three affected boundaries to close:
+
+- Fixed Python enrollment alone does not enroll the checker entry point.
+  A different repository root must not execute a producer-written checker.
+  Enroll the actual loaded module's adjacent checker, check its bytes, and bind
+  its receipt to the real child and parent PIDs. An owner-provided root remains
+  only the source-pin verification root. Test an actual substituted entry.
+- The existing exported `FinnorDecimal` clone has mutable numeric settings.
+  Check its live precision/rounding/exponent configuration before compilation
+  and witness execution, rather than treating a policy constant as live state.
+  A controlled runtime-configuration fault is the 24th selected mutation.
+- A current dependency vector alone does not establish that the later actual
+  InputSnapshot belongs to D. A pure domain-membership fence must use the
+  existing native snapshot sealing/policy and decimal functions; check bounds,
+  lattice and exact series/enum coverage; reject changed fixed owner metadata.
+  Its output never implies proof admission, rights, reservations or execution.
+
+Also retain the original deadline/cancellation through transcript retention
+and candidate publication. Exercise cancellation during actual child-result
+retention, without inventing a new grant or replacing the checker.
+
+The narrow private-equity adapter will consume the existing `PreparedRun`
+returned by `prepareUnderwritingRun`, bind its compiled ModelVersion and
+effective native InputSnapshot, and call the leaf producer. It will neither
+create a mock owner context nor persist, reserve or execute effects. Its
+authenticated SQL/API/worker adoption remains NOT RUN and owned by the serial
+integrator. Reuse the existing R1 logical artifact-envelope field contract,
+changing only the R6 family schema/kind, rather than forking dependency/tenant
+metadata. These are consumption/packaging fences, not a reduced R6 goal.
+
+`core-003` passed all 42 selected cases, including the live-policy fault and
+actual consumer/entry/retention fences. `typecheck-002` retained a real owned
+TS7053 error: the scalar/series component union lacked a string index signature.
+The fix makes the container `Record<string, unknown>` and retains runtime scalar
+type narrowing, rather than adding `any` or disabling strict checking.
+
+The same command also pulled the entire server-owner graph through a type-only
+`PreparedRun` import. The selected read-only dependency layout does not resolve
+that graph's `pg` declarations and MCP client modules. No inherited SQL/API/
+MCP source is edited or silently qualified. The adapter now accepts precisely
+the existing PreparedRun's two needed native fields, using their actual native
+types. The structural shape was checked against the fresh owner declaration;
+authenticated owner/API/SQL integration and its complete dependency graph
+remain a separate NOT RUN gate. This is not a replacement owner or a mock.
+
+The later package inquiry found `@types/pg` present in the actual symlink
+target. The retained red is therefore a declaration-resolution failure, not
+evidence that that package is absent. MCP client resolution and complete
+host-owner typing remain unqualified here; no dependency is installed or
+stubbed to manufacture a PASS.
+
+The final retention audit also found an unjustified unconditional
+`failedAndCancelledRetained: true` flag. The leaf cannot independently verify
+the caller's complete evidence history. Replace it with explicit
+`CALLER_OWNED_NOT_VERIFIED`, and make a real transcript-sink filesystem error
+return UNKNOWN rather than either claiming retention or publishing a candidate.
+The already registered checker-fault boundary will exercise this actual child
+completion -> failed filesystem sink -> no publication path.
+
+The final consumption review found that Work revision alone must not stand in
+for Work identity/tenant/grant. Bind the existing envelope's owner commitments
+(Work, tenant, baseline, producer, inputs, domain, assumptions, grammar, original
+grant) and the exact programme-state bindings in the currentness vector. The
+already registered currentness E2E will mutate each of these commitments while
+keeping the mathematical programme unchanged. Original history stays immutable.
+InputSnapshot itself has no tenant field; its fixed metadata binds InvestmentCase
+and as-of/source policy. Tenant remains an existing owner-envelope commitment,
+not an invented snapshot field.
+
+One concrete independent-checker fidelity issue was found before sealing:
+Python `dict.get("currency")` conflated an absent currency with JSON null,
+while native snapshot policy uses strict `input.currency !== node.currency`.
+A non-money input with explicit null can therefore fail actual execution.
+Check field presence and actual string currency syntax, not just the conflated
+metadata tuple. The existing actual-domain-consumption E2E will submit an
+explicitly counterfeit SUCCEEDED witness for this actual failing native
+snapshot; the independent checker must reject the input metadata before
+trusting that claimed result. Explicit null literals/nodes are conservatively
+outside this qualified fragment. This is a source-fidelity repair, not a new IR.
