@@ -1,0 +1,31 @@
+diff --git a/finnor-os/packages/private-equity/src/allocation-store.ts b/finnor-os/packages/private-equity/src/allocation-store.ts
+index abed6106566c86931a6416552f99a8b998f81c3a..95b8293e6ed790c8dd5291ce4d3576aa25746e13 100644
+--- a/finnor-os/packages/private-equity/src/allocation-store.ts
++++ b/finnor-os/packages/private-equity/src/allocation-store.ts
+@@ -290,3 +290,12 @@
+   return {charge,semanticReplay:false};
+  });
+ }
++
++/** Versioned original owners use the canonical portfolio lock and SQL snapshot. */
++export async function withCanonicalAllocationSnapshot<T>(ctx:PeMutationContext,fn:(client:pg.PoolClient,value:AllocationSnapshot)=>Promise<T>):Promise<T>{
++ return locked(ctx,async c=>fn(c,await snapshot(c,ctx.auth.tenantId)));
++}
++/** Same transaction and immutable canonical S5 event/outbox; no shadow ledger. */
++export async function appendCanonicalAllocationExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5ExperienceEvent[]):Promise<void>{
++ await authorize(ctx,c);await appendExperience(ctx,c,events);
++}
+diff --git a/finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts b/finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts
+index e03d77b1a45f7232865848255e76b76a93e37ef6..36aca7ea6ff541e4543aa3bddda94e89ee7d29fe 100644
+--- a/finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts
++++ b/finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts
+@@ -161,7 +161,8 @@
+   if(p.policies.some(policy=>!joint.sourceRefs.some(ref=>sameAllocationRef(ref,policy.bindings.modelRef))))throw new AllocationContractError('INVALID_REQUEST','Joint model omits qualified S3 policy model references');
+   for(const r of p.resources)for(const c of r.covenants)for(const other of p.resources.flatMap(x=>x.covenants).filter(o=>o.id===c.id))if(!sameAllocationRef(c,other))throw new AllocationContractError('INVALID_REQUEST','Conflicting canonical shared covenant definitions');
+ }
+-export function prepareS5Experience(m:EconomicMandate,type:S5ExperienceEvent['type'],revisionRef:string,detail:Record<string,unknown>,parents:string[]=[],horizon:'H0'|'H1'='H1'):S5ExperienceEvent {
++export type S5ExperienceContext=Pick<EconomicMandate,'episodeId'|'tenantId'|'principalId'|'rightsRef'|'ref'|'utilityRef'|'horizon'>;
++export function prepareS5Experience(m:S5ExperienceContext,type:S5ExperienceEvent['type'],revisionRef:string,detail:Record<string,unknown>,parents:string[]=[],horizon:'H0'|'H1'='H1'):S5ExperienceEvent {
+   const body={schema:'finnor.s5.experience.v1' as const,semanticOwner:'S5' as const,episodeId:m.episodeId,type,tenantId:m.tenantId,principalId:m.principalId,rightsRef:m.rightsRef,revisionRef,contentDigest:epistemicHash(detail),knowledgeAt:new Date().toISOString(),validAt:m.horizon.startAt,preparedParentRefs:parents,causalParents:[] as [],dependencyRefs:[m.ref.id,m.utilityRef.id],horizon,uncertainty:'MODEL_CONDITIONAL_UNADMITTED' as const,detail,protectedReceipt:null,appendAuthorityGranted:false as const};
+   return immutableControl({...body,eventId:`s5-event:${epistemicHash(body)}`});
+ }

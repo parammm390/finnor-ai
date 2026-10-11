@@ -5,6 +5,8 @@ import { immutableControl } from './control-contracts';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
 import { ALLOCATION_ADMISSION, allocationRef, AllocationContractError, allocationDecimal as decimal, allocationNumber as number, allocationDerivedQuantity as quantity, allocationQuantity, allocationRatioUpper, assertAllocationProblem, sameAllocationRef } from './allocation-contracts';
 import {prepareAllocationResourceBasis,checkAllocationResourcePath,allocationResourceEnvelopes} from './allocation-resource-check';
+export {canonicalResourceUsage as allocationResourceUsage,verifyCanonicalResourceSchedules} from './allocation-resource-check';
+export type {CanonicalResourceScheduleInput} from './allocation-resource-check';
 
 type Q = ExperimentRational;
 type Schedule = Map<string,Q[]>;

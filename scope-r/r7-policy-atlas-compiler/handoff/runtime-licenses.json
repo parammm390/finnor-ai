@@ -1,0 +1,295 @@
+{
+  "schema": "finnor.r7.runtime-license-custody.v1",
+  "runtime": {
+    "node": "v22.22.3",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "components": [
+    {
+      "workspace": "finnor-os",
+      "name": "zod",
+      "version": "3.25.76",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "dependencies": {},
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/zod/LICENSE",
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8",
+          "bytes": 1072
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "finnor-os",
+      "name": "pg",
+      "version": "8.23.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "e42dd36cba6e9dd8dbb6f773a2f7be8a8c3c273e18b155e42e75961a4cb8bc28",
+      "dependencies": {
+        "pg-connection-string": "^2.14.0",
+        "pg-pool": "^3.14.0",
+        "pg-protocol": "^1.16.0",
+        "pg-types": "2.2.0",
+        "pgpass": "1.0.5"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/pg/LICENSE",
+          "sha256": "192b8f5c96900f04a1271dec39688655d7416c1c6ea84a508e18b50d2b6751f3",
+          "bytes": 1077
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "finnor-os",
+      "name": "tsx",
+      "version": "4.23.13",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "3ace2493a0acd26fc72a8433a38113ee04d5a1976910a3f40815f9e779d5c426",
+      "dependencies": {
+        "esbuild": "~0.28.0"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/tsx/LICENSE",
+          "sha256": "8dded67841a9261a622c739fb61c81785e93765de852828ceeb9403d20a74581",
+          "bytes": 1088
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "finnor-os",
+      "name": "typescript",
+      "version": "5.9.3",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6",
+      "dependencies": {},
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/typescript/LICENSE.txt",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+          "bytes": 9197
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "finnor-os",
+      "name": "embedded-postgres",
+      "version": "18.4.0-beta.17",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "ce8355940ae8606065f2620f298d1ecbe3dbf123967cc5ed58e8e1a78076699d",
+      "dependencies": {
+        "async-exit-hook": "^2.0.1",
+        "pg": "^8.7.3"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/embedded-postgres/LICENSE.md",
+          "sha256": "e094f576ecd150e7cad723e0bd56c13bd42ce9f4df61af14f439d852b39ad4d4",
+          "bytes": 1068
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "finnor-os",
+      "name": "@supabase/supabase-js",
+      "version": "2.115.0",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "860f0bffaa8ef18bd23a00d20fd10d9aaef894dbdbae72fce82ed26439d2d1b7",
+      "dependencies": {
+        "@supabase/auth-js": "2.115.0",
+        "@supabase/postgrest-js": "2.115.0",
+        "@supabase/storage-js": "2.115.0",
+        "@supabase/realtime-js": "2.115.0",
+        "@supabase/functions-js": "2.115.0"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/finnor-os/node_modules/@supabase/supabase-js/LICENSE",
+          "sha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936",
+          "bytes": 1065
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "root",
+      "name": "next",
+      "version": "16.3.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "6da8fc4823b66b8f2906d150002618e3f3e0d2446ebf3823b2a2f7efe73a46a4",
+      "dependencies": {
+        "@next/env": "16.3.8",
+        "@swc/helpers": "0.5.23",
+        "baseline-browser-mapping": "^2.9.19",
+        "caniuse-lite": "^1.0.30001579",
+        "postcss": "8.5.23",
+        "styled-jsx": "5.1.6"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/next/license.md",
+          "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224",
+          "bytes": 1079
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "root",
+      "name": "react",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "e40c3ed9b633c9ecf188e09a4be309780a1ea0a9c068278a30ff6a27e7b2dbb6",
+      "dependencies": {},
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "root",
+      "name": "react-dom",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "7c82f0967114d4b5d38b1f07e543af87c9919e8d3243f9604004819319cb2200",
+      "dependencies": {
+        "scheduler": "^0.27.0"
+      },
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/react-dom/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "root",
+      "name": "typescript",
+      "version": "5.9.3",
+      "declaredLicense": "Apache-2.0",
+      "packageJsonSha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6",
+      "dependencies": {},
+      "licenseFiles": [
+        {
+          "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/source/node_modules/typescript/LICENSE.txt",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+          "bytes": 9197
+        }
+      ],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "workspace": "root",
+      "name": "@supabase/supabase-js",
+      "version": "2.99.3",
+      "declaredLicense": "MIT",
+      "packageJsonSha256": "8e674ed6692f5af1a4b4ea788cef63ce088b030d96b8750e7d450ebbca061262",
+      "dependencies": {
+        "@supabase/auth-js": "2.99.3",
+        "@supabase/functions-js": "2.99.3",
+        "@supabase/postgrest-js": "2.99.3",
+        "@supabase/realtime-js": "2.99.3",
+        "@supabase/storage-js": "2.99.3"
+      },
+      "licenseFiles": [],
+      "scope": "BORROWED_READ_ONLY_NOT_VENDORED_OR_NEWLY_INSTALLED"
+    },
+    {
+      "executable": "/Users/paramdave/.local/bin/node",
+      "resolvedPath": "/Users/paramdave/.hermes/node/bin/node",
+      "sha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c",
+      "version": "v22.22.3",
+      "licenseQualification": "Existing environment asset; final installed complete binary/stdlib/transitive notice inventory is NOT qualified here"
+    },
+    {
+      "executable": "/usr/bin/python3",
+      "resolvedPath": "/usr/bin/python3",
+      "sha256": "b8763cf250e607a778bb4603cecb5b90338814d0a3dfcba0d57b1de242f610e9",
+      "version": "Python 3.9.6",
+      "licenseQualification": "Existing environment asset; final installed complete binary/stdlib/transitive notice inventory is NOT qualified here"
+    },
+    {
+      "executable": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12",
+      "resolvedPath": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12",
+      "sha256": "2498a31965647f1507a53e391842b23c29d96f0ef4550475f34a1d2b30c23ddb",
+      "version": "Python 3.12.14",
+      "licenseQualification": "Existing environment asset; final installed complete binary/stdlib/transitive notice inventory is NOT qualified here"
+    }
+  ],
+  "locks": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/package-lock.json",
+      "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+      "bytes": 364668,
+      "role": "Unchanged cumulative full lock including declared transitive versions/licenses; installed tree is separately borrowed"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/finnor-os/package-lock.json",
+      "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+      "bytes": 259503,
+      "role": "Unchanged cumulative full lock including declared transitive versions/licenses; installed tree is separately borrowed"
+    }
+  ],
+  "substrate": "Native BigInt/rationals plus independent Python stdlib Fraction; no cddlib/pycddlib/GMP/SCIP/Gurobi/Pi/M5 source or new solver dependency adopted",
+  "firstPartySource": "38 source leaves adopted from immutable same-repository lead; no repository-wide licence invented; existing THIRD_PARTY_NOTICES.md preserved",
+  "existingNotices": {
+    "path": "/Users/paramdave/.factory/worktrees/r7-bounded-adoption-producer-2026-10-11/FINNOR/THIRD_PARTY_NOTICES.md",
+    "sha256": "5c52ce9d5b351fc296dc9b694590db244ddc00c313442b8903167dd2a7bbd91d"
+  },
+  "transitiveQualification": "Unchanged full cumulative lock inventory is pinned. Borrowed installed tree may differ from declarations; no installed release or blanket transitive licence clearance claimed. Serial release owner must seal actual image/interpreter/stdlib/all resolved native packages and their notices",
+  "scientificRuntimePreflight": {
+    "schema": "finnor.r7.retained-s5-preflight.v1",
+    "status": "NOT_RUN_EXISTING_NUMPY_SCIPY_INTERPRETER_NOT_FOUND",
+    "inspectedCandidates": [
+      {
+        "path": "/tmp/finnor-s3-python/bin/python",
+        "present": false
+      },
+      {
+        "path": "/usr/bin/python3",
+        "present": true,
+        "exitCode": 0,
+        "sha256": "b8763cf250e607a778bb4603cecb5b90338814d0a3dfcba0d57b1de242f610e9",
+        "version": "3.9.6 (default, Aug  8 2025, 19:06:38) \n[Clang 17.0.0 (clang-1700.3.19.1)]",
+        "numpyAvailable": true,
+        "scipyAvailable": false
+      },
+      {
+        "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a121d2-7d60-77d2-8611-b4712a5bb84f/r2-package-final/python/bin/python3.12",
+        "present": true,
+        "exitCode": 0,
+        "sha256": "2498a31965647f1507a53e391842b23c29d96f0ef4550475f34a1d2b30c23ddb",
+        "version": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+        "numpyAvailable": false,
+        "scipyAvailable": false
+      }
+    ],
+    "installationAttempted": false,
+    "solverAdopted": false,
+    "requiredOriginalCommand": "cd <serial-cut>/finnor-os && FINNOR_S5_EVIDENCE_DIR=<private>/s5 FINNOR_S3_PYTHON=<existing-scientific-interpreter> FINNOR_S5_PYTHON=<same> node --import=tsx scripts/s5/run-s5-e2e.mts",
+    "qualification": "R7 current S5 cases and structural kernel equivalence DO NOT replace retained numerical S3/S4/S5 owner E2E"
+  },
+  "newDependencyOrLockChanges": false,
+  "installedImageDigest": null,
+  "actualBorrowedTransitiveInventory": {
+    "path": "runtime-transitives.json",
+    "sha256": "b33a6decfd9dbd6bb07f11dfbd696c546e9fb2ba4842098d825e3bef8e507671",
+    "presentMetadataPackages": 72,
+    "requiredDeclaredEdgesNotPresent": 0,
+    "qualification": "PACKAGE_JSON_NOTICE_AND_DECLARED_EDGE_METADATA_ONLY_NOT_CODE_BINARY_IMAGE_CLOSURE"
+  }
+}

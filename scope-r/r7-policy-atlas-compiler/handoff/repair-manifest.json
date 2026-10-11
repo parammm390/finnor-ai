@@ -1,0 +1,143 @@
+{
+  "schema": "finnor.r7.owned-repair-custody.v1",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "sourceOriginManifestSha256": "f2389903b5013968c68e7886ad55d1de9a3ca21faa8510b854e3b921e1ef0f3d",
+  "repairedOrigins": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/contracts.ts",
+      "originBlob": "eeaaecf50e8bdb806e1f0b9bf60f91b3373202cb",
+      "originSha256": "eb1d42edae4ad0b220c153ee558e6f2e475683309d34414fa56131fb28c9a3fe",
+      "postBlob": "6d1181dfbe2e2513a0c8ce26a471d31203a80b97",
+      "postSha256": "9722f7a005bedaffd92cd6f035fd764bf7c459fd73d7a40b93de8152182620e5",
+      "postBytes": 14931,
+      "reason": "Remove verified unused exact constant import"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/policy-atlas/geometry.ts",
+      "originBlob": "b9a554c42deb57f3801160280c4b706c02f42905",
+      "originSha256": "b65c1a956b8c606addc7b1ad9a03c5d133ca05378395bf965362e30a0dba8286",
+      "postBlob": "247fcf6f654b2613c2a98a48208533a500d03bac",
+      "postSha256": "459cea7d112bc2fbc8c2d4a68814f934b524c9037d1ef588235ad0594fdc2426",
+      "postBytes": 6304,
+      "reason": "Remove verified unused exact addition import"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/allocation.ts",
+      "originBlob": "ae1909240cfccc8920e58801fc938336391c8478",
+      "originSha256": "b248b2e1522bb5617888df93ec1ef7333ea24b8af5d0d960f49cd514af155dde",
+      "postBlob": "f7574b736bbfcc32ec2ceccacb23ce933d77839c",
+      "postSha256": "1779c8fb9c04c841782fda8c686db8c79fbf371bbd19241bfbff7a547e924594",
+      "postBytes": 6890,
+      "reason": "Replace independent R7 resource arithmetic with original-owner reconstruction plus proposed canonical S5 kernel"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/owners.ts",
+      "originBlob": "5805acc6474d965c7daab8852c500c7c063522ca",
+      "originSha256": "391b70d22aaf1234d1defd8acddb71ca9310d448f2a454a4a9d2d63a3614018f",
+      "postBlob": "a0d9eb3f93119c3def9eef28bc8359e6c42fde6a",
+      "postSha256": "98af9aa45a7ab30aee902fc4d135c24cfe1c71350cc436f7153966df1173af37",
+      "postBytes": 15089,
+      "reason": "Add versioned coherent 1-16-member immutable SQL source-policy batches, all 32-member delivery and final vector recheck"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/runtime.ts",
+      "originBlob": "d1bbd9ff22fb41cf28c8a161d17dcb9c3b56b510",
+      "originSha256": "cfa0fa2132479e660d8bcdafc12051214c36f358950e924c13605cda81069087",
+      "postBlob": "cb496f37a4fc69fe58ee2a198f2c70245c3db740",
+      "postSha256": "9a62f7f4e3313bcb8dd37502008013268bf8bb4a5c82503f172b97e0bf350f5b",
+      "postBytes": 3117,
+      "reason": "Pin actual cumulative base and loaded Node/Python/owner/checker bytes, not original lead tree or guessed migration"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/selection.ts",
+      "originBlob": "c21648fa5e87f29ba0335813e057d9446f578be8",
+      "originSha256": "d4a1524e985bbebbae4c795de6ab21ad53a0e7922251315e7183e3b938b820dc",
+      "postBlob": "370d723151de10b9b6844080f237a9bc6c24d3c7",
+      "postSha256": "c6c72de2d5c90203bf2af284f64eeba2cdf7e9785668ee038322d4e466f66c78",
+      "postBytes": 10414,
+      "reason": "Remove verified unused type import"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/service.ts",
+      "originBlob": "410622069d76b49622c9ee562e4a1001c2402783",
+      "originSha256": "3f28f4a131890f60fffc9668b63e376c2f022f2c68519c2f718b245573e96730",
+      "postBlob": "edcd23d80a43cf9f6972ff82200c7a864c5085e0",
+      "postSha256": "518c894a213c866c71352ade0b3b642119943227b3947fc4ae8e49f5497ecc8e",
+      "postBytes": 18703,
+      "reason": "Join current build status/deadline and suppress canceled/failed/invalidated/expired historical current-context queries; remove unused imports"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r7/worker.ts",
+      "originBlob": "73ceafac9374c4da06abb6bc576de82fc6b7f725",
+      "originSha256": "b2fd52d5295c7271cd5888154f3d09c056b9aa7d30fd722983262d657eaacca7",
+      "postBlob": "3317d53ddbad307df7e9a2d8b681276b4d126982",
+      "postSha256": "70769b79fe8c08b2ed79b98b2c37de16f9116e6ace7101d9f7a368b25c4181ab",
+      "postBytes": 12776,
+      "reason": "Use actual cumulative adoption baseline in ordinary result provenance"
+    },
+    {
+      "path": "finnor-os/scripts/r7/mounted.mts",
+      "originBlob": "70ca997731d0a103cb49b84d9ff45783b596e769",
+      "originSha256": "b757768a45e31d644738e62e2fa0c1db9eb3bf3c064575f7c8ff57a82c2fbc64",
+      "postBlob": "55f068f0bdb452f0239e166c15922a2eb0524349",
+      "postSha256": "dd5ab9221abe65617610b5d8538badffa2baff0f50575cd3d80122e098cf7d85",
+      "postBytes": 18244,
+      "reason": "Explicit fresh assigned pane identity and sticky binding before navigation/input; no historical target guess or headless substitution"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-installed.mjs",
+      "originBlob": "7608bbad9dbc33df0504d8aaeb256cafed97105f",
+      "originSha256": "5b0a635b99229db3be25637adad4ad27e1c594e542d6d50b6cd1340e912aaac1",
+      "postBlob": "24fde7c3f6621fab37de1deaa3b637e09ece8d90",
+      "postSha256": "e6e6441441a282edc4c3ec9246d9443ece59dd064c250f5180927bdaa35b93f9",
+      "postBytes": 9277,
+      "reason": "External private installed evidence path; no installed qualification performed"
+    },
+    {
+      "path": "finnor-os/scripts/r7/run-owner.mts",
+      "originBlob": "30359d2d3e8e7769b4061d441585008d6755d857",
+      "originSha256": "e23e10eadd2fbc84f4a91214b08c886199c01f44e94003aa683248a2d5b878eb",
+      "postBlob": "918a0798de9a838ad15620310077d7d84b7994d7",
+      "postSha256": "7bdc806e0c699e4e54dc4f3eb8f75d430bc3d1686b372c5e48429d3e199da53d",
+      "postBytes": 67307,
+      "reason": "External raw evidence, actual migration selection, explicitly distinct interpreter, preregistered original cancellation/current-context E2E"
+    },
+    {
+      "path": "finnor-os/scripts/r7/tsconfig.json",
+      "originBlob": "50348e5b142428a1f921deb96422da6d0224ef84",
+      "originSha256": "8c346b17abf4f31afb94665af79ee40f1d8c7b299a66513f1108fd0679753ff6",
+      "postBlob": "1572b50de7a45ddb7c842de925851ef7025f7562",
+      "postSha256": "bfc93ad7dfc41be54abc288f878c3c515474bdb54b89c47e7f43be841d90f258",
+      "postBytes": 4443,
+      "reason": "Local cumulative wildcard aliases, not borrowed sealed-workspace package sources"
+    },
+    {
+      "path": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+      "originBlob": "7557bdad80bd40a4ca911f40110068de9858f436",
+      "originSha256": "52ef0214ffaa1c2a43f42a78b74af0f6319f4a2329145d2e54db9bbd1f08f440",
+      "postBlob": "8e760be30b62ab78c0078f76c81d22c9ad9919e8",
+      "postSha256": "ee400f9a987fcc7fa3e14eb9581ce4bab405bea9f9814c015647f1468f4e3577",
+      "postBytes": 13885,
+      "reason": "Drop historical recommendation for known canceled/failed/invalidated build in presentation"
+    }
+  ],
+  "newOwnedSource": [
+    {
+      "path": "finnor-os/scripts/r7/serial-projection.mjs",
+      "basePreimage": null,
+      "origin": "NEW_OWNED_RECONSTRUCTION_HELPER",
+      "postBlob": "bc23e3b360f13750021f40b4b93ba1082ab2b1aa",
+      "postSha256": "d337c9f0aa30fd9f4d2abd3f1cf8713e9a49bc871e36d57551c535e60704473a",
+      "bytes": 6194,
+      "purpose": "Fresh private /tmp source cut only; exact shared pre/postimage checks; never canonical writes or runtime/evidence import"
+    }
+  ],
+  "repairPatch": {
+    "path": "origin-to-owned-repairs.patch",
+    "sha256": "c05a00fabca461531b9a4ae765d5b6211d5e3430afcc1f230bb2b4cf0df13648"
+  },
+  "all38PostimagesMatchFinalVerifiedCut": true,
+  "finalVerifiedCut": "/tmp/finnor-r7-bounded-adoption-20261011.KAtOCr/serial-cut-v7",
+  "noCommonSourceModified": true
+}

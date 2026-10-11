@@ -1,8 +1,48 @@
-import type {AllocationCheck,AllocationEnvelope,AllocationOutstandingCommitment,AllocationResource} from "@finnor/shared-types";
+import type {AllocationCheck,AllocationEnvelope,AllocationOutstandingCommitment,AllocationResource,CanonicalAllocationProblem} from "@finnor/shared-types";
 import {ExperimentRational,ER_ZERO} from "./experiment-numerics";
-import {allocationDerivedQuantity as quantity,allocationDecimal as decimal,sameAllocationRef} from "./allocation-contracts";
+import {allocationDerivedQuantity as quantity,allocationDecimal as decimal,sameAllocationRef,AllocationContractError} from "./allocation-contracts";
 
 export type AllocationSchedule=Map<string,ExperimentRational[]>;
+export interface CanonicalResourceScheduleInput {
+ horizon:CanonicalAllocationProblem["mandate"]["horizon"];
+ knowledgeAt:string;
+ resources:CanonicalAllocationProblem["resources"];
+ outstanding:CanonicalAllocationProblem["outstanding"];
+ paths:Array<{id:string;increment:AllocationSchedule}>;
+}
+/** Versioned owners reuse the same original S5 checks, never a solver matrix. */
+export function verifyCanonicalResourceSchedules(input:CanonicalResourceScheduleInput):
+ Pick<AllocationCheck,"feasible"|"reasons"|"envelopes"|"witnesses">{
+ const {resources,outstanding,paths}=input,h=input.horizon.periods;
+ if(!paths.length||paths.length>64||new Set(paths.map(path=>path.id)).size!==paths.length||
+  !resources.length||resources.length>16||new Set(resources.map(resource=>resource.resourceId)).size!==resources.length||
+  outstanding.length>256||!Number.isInteger(h)||h<1||h>24||!Number.isFinite(Date.parse(input.knowledgeAt)))
+  throw new AllocationContractError("LIMIT_EXCEEDED","Canonical resource-path domain is incomplete or outside its bound");
+ const named=new Map(resources.map(resource=>[resource.resourceId,resource]));
+ const covenants=new Map(resources.flatMap(resource=>resource.covenants).map(covenant=>[covenant.id,covenant]));
+ const extra:string[]=[];
+ for(const resource of resources){
+  if(!sameAllocationRef(resource.horizon,input.horizon)||resource.existingUse.length!==h+1||resource.availability.length!==h+1)
+   throw new AllocationContractError("INVALID_CANDIDATE","Canonical resource-path horizon differs");
+  for(const covenant of resource.covenants){
+   if(!sameAllocationRef(covenant,covenants.get(covenant.id)))extra.push(`CONFLICTING_CANONICAL_COVENANT:${covenant.id}`);
+   if(covenant.periods.some(period=>period<0||period>h)||covenant.terms.some(term=>{
+    const resource=named.get(term.resourceId);return !resource||term.coefficientUnit!==`${covenant.unit}/${resource.unit}`;
+   }))throw new AllocationContractError("INVALID_CANDIDATE","Canonical resource-path covenant unit or period differs");
+  }
+ }
+ for(const path of paths)if(path.increment.size!==resources.length||[...path.increment.keys()].some(id=>!named.has(id))||
+  [...path.increment.values()].some(values=>values.length!==h+1))
+  throw new AllocationContractError("INVALID_CANDIDATE","Original path omits or adds a canonical resource schedule");
+ const basis=prepareAllocationResourceBasis(resources,outstanding,h,input.knowledgeAt,extra);
+ const reasons=[...basis.initialReasons],witnesses:AllocationCheck["witnesses"]=[];
+ for(const path of paths){
+  const checked=checkAllocationResourcePath(resources,path.increment,basis,path.id,h);
+  reasons.push(...checked.reasons);witnesses.push(...checked.witnesses);
+ }
+ return {feasible:reasons.length===0,reasons:[...new Set(reasons)],witnesses,
+  envelopes:allocationResourceEnvelopes(resources,paths.map(path=>path.increment),h)};
+}
 const zeroes=(n:number)=>Array.from({length:n},()=>ER_ZERO);
 const sum=(values:ExperimentRational[])=>values.reduce((a,b)=>a.add(b),ER_ZERO);
 export function canonicalResourceUsage(kind:string,values:ExperimentRational[],period:number):ExperimentRational{

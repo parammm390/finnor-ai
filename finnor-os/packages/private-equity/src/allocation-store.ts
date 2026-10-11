@@ -296,3 +296,12 @@ export async function recordS5GovernedResourceUnits(ctx:PeMutationContext,obliga
   return {charge,semanticReplay:false};
  });
 }
+
+/** Versioned original owners use the canonical portfolio lock and SQL snapshot. */
+export async function withCanonicalAllocationSnapshot<T>(ctx:PeMutationContext,fn:(client:pg.PoolClient,value:AllocationSnapshot)=>Promise<T>):Promise<T>{
+ return locked(ctx,async c=>fn(c,await snapshot(c,ctx.auth.tenantId)));
+}
+/** Same transaction and immutable canonical S5 event/outbox; no shadow ledger. */
+export async function appendCanonicalAllocationExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5ExperienceEvent[]):Promise<void>{
+ await authorize(ctx,c);await appendExperience(ctx,c,events);
+}

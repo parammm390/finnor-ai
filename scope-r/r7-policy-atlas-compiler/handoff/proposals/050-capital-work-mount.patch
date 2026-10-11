@@ -1,0 +1,20 @@
+diff --git a/src/components/centropy/canvas/CapitalProgramPanel.tsx b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+index bf43b95b608eae528f47796d5e98b0c9f75d5395..7241f16dad8f1dcb49d61c3b04a593d26d7e13ab 100644
+--- a/src/components/centropy/canvas/CapitalProgramPanel.tsx
++++ b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+@@ -13,6 +13,7 @@
+ } from "./capital-program-view"
+ import { OriginalChallengePanel } from "./OriginalChallengePanel"
+ import { ExactControlReview } from "./ExactControlReview"
++import { DecisionAtlasReview } from "./DecisionAtlasReview"
+ import "./capital-program.css"
+ 
+ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+@@ -297,6 +298,7 @@
+ 
+   return <section className="ct-capital-program" aria-label="Economic arrangements" aria-busy={busy}>
+     <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
++    <DecisionAtlasReview workId={workId} root={root} />
+     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
+     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
+     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>

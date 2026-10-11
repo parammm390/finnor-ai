@@ -161,7 +161,8 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   if(p.policies.some(policy=>!joint.sourceRefs.some(ref=>sameAllocationRef(ref,policy.bindings.modelRef))))throw new AllocationContractError('INVALID_REQUEST','Joint model omits qualified S3 policy model references');
   for(const r of p.resources)for(const c of r.covenants)for(const other of p.resources.flatMap(x=>x.covenants).filter(o=>o.id===c.id))if(!sameAllocationRef(c,other))throw new AllocationContractError('INVALID_REQUEST','Conflicting canonical shared covenant definitions');
 }
-export function prepareS5Experience(m:EconomicMandate,type:S5ExperienceEvent['type'],revisionRef:string,detail:Record<string,unknown>,parents:string[]=[],horizon:'H0'|'H1'='H1'):S5ExperienceEvent {
+export type S5ExperienceContext=Pick<EconomicMandate,'episodeId'|'tenantId'|'principalId'|'rightsRef'|'ref'|'utilityRef'|'horizon'>;
+export function prepareS5Experience(m:S5ExperienceContext,type:S5ExperienceEvent['type'],revisionRef:string,detail:Record<string,unknown>,parents:string[]=[],horizon:'H0'|'H1'='H1'):S5ExperienceEvent {
   const body={schema:'finnor.s5.experience.v1' as const,semanticOwner:'S5' as const,episodeId:m.episodeId,type,tenantId:m.tenantId,principalId:m.principalId,rightsRef:m.rightsRef,revisionRef,contentDigest:epistemicHash(detail),knowledgeAt:new Date().toISOString(),validAt:m.horizon.startAt,preparedParentRefs:parents,causalParents:[] as [],dependencyRefs:[m.ref.id,m.utilityRef.id],horizon,uncertainty:'MODEL_CONDITIONAL_UNADMITTED' as const,detail,protectedReceipt:null,appendAuthorityGranted:false as const};
   return immutableControl({...body,eventId:`s5-event:${epistemicHash(body)}`});
 }
