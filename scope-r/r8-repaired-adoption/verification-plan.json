@@ -1,0 +1,71 @@
+{
+  "schema": "finnor.r8.repaired-adoption.verification.v1",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "domain": {
+    "profile": "r8-three-optional-projects-integer-v1",
+    "inputOrder": ["c1", "c2", "c3", "v1", "v2", "v3"],
+    "coordinateRangeInclusive": [0, 7],
+    "inputs": 262144,
+    "subsetsPerInput": 8,
+    "pairs": 2097152,
+    "chunks": 64,
+    "chunkSize": 4096,
+    "capacity": 7,
+    "tie": "MINIMUM_CANONICAL_MASK",
+    "utility": "SUM_SUPPLIED_UTILITIES_NO_COST_REDEDUCTION"
+  },
+  "caps": {
+    "campaignOriginalWallMs": 3600000,
+    "ownerDriverObserverMs": 2400000,
+    "cegisCandidates": 16,
+    "durableAttempts": 3,
+    "queryMs": 45000,
+    "solverMs": 40000,
+    "verificationMs": 600000,
+    "witnessMs": 60000,
+    "grammarNodes": 512,
+    "grammarDepth": 24,
+    "locals": 32,
+    "astBytes": 16384,
+    "loops": 1,
+    "loopIterations": 7,
+    "fuel": 1024,
+    "integerMagnitude": 63,
+    "p1Registers": 256,
+    "p1CompiledBytes": 65536,
+    "processFrameBytes": 262144,
+    "physicalCloseGraceMs": 5000
+  },
+  "campaigns": [
+    {
+      "id": "custody-red-green",
+      "driver": "finnor-os/scripts/r8/run-custody.mts",
+      "cases": ["witness-startup-custody", "full-domain-startup-custody", "backpressure-original-deadline", "pre-aborted-no-child", "normal-supervised-physical-close"],
+      "runsMaximum": 3,
+      "proof": "Actual isolated subprocesses; forced test cleanup never satisfies product close"
+    },
+    {
+      "id": "semantic-fresh-full-D",
+      "driver": "finnor-os/scripts/r8/run-semantic.mts",
+      "runsMaximum": 2,
+      "cases": ["actual-cegis-and-full-original-domain", "semantic-mutations-reach-original-oracle", "grammar-arithmetic-termination-and-domain-mutations", "lowering-compiler-emitted-and-coverage-substitution"],
+      "proof": "Separate Python operational interpreter and all-subset oracle versus real registered P1 emitted bytes"
+    },
+    {
+      "id": "original-owner-affected",
+      "driver": "finnor-os/scripts/r8/run-owner.mts",
+      "runsMaximum": 2,
+      "selected": ["current-native-owner-projection", "durable-whole-domain-owner-worker", "native-fallback-original-grant", "private-scope-grant-and-compute-contention", "verifier-death-and-budget-fallback", "source-resource-invalidation", "locked-principal-publication-revocation", "separated-s8-full-review-reuse-revoke", "two-work-capital-and-unknown-responsibility", "mounted-built-authenticated-work"],
+      "requires": "Integrator-installed schema, privileges, canonical queue/API/S5/S8 and mounted caller seams",
+      "noMockPass": true
+    }
+  ],
+  "abortPolicy": "Record the exact gap, retain incurred evidence, stop only owned children, never reset original grants/deadlines or broaden a scientific proof",
+  "protectedAdmission": "NOT_AUTHORIZED",
+  "protectedActivation": false,
+  "joinedCompatibility": "NOT_ASSEMBLED",
+  "money": "UNKNOWN",
+  "humanSeconds": "UNKNOWN",
+  "aggregatePeakMemoryBytes": "UNKNOWN"
+}

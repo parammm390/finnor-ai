@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r8.repair-preregistration.v1",
+  "at": "2026-10-11T06:51:00.389493+00:00",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "files": [
+    {
+      "path": "scope-r/r8-repaired-adoption/plan.md",
+      "sha256": "b2575ab8777ef2bc70b7afd6456f5288aa9305c3d46798a2a0e916ab7d7c2e01"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/failure-model.md",
+      "sha256": "c4d737d73860f485a2409a1ff0a01aa922793b64301605e962d21f5b0c096871"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/verification-plan.json",
+      "sha256": "7d49e08888597377a29226188e7e11f84e4edacb0d10a63edfeb8edcf5b57268"
+    }
+  ]
+}

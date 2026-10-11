@@ -1,0 +1,270 @@
+diff --git a/finnor-os/packages/shared-types/src/index.ts b/finnor-os/packages/shared-types/src/index.ts
+--- a/finnor-os/packages/shared-types/src/index.ts
++++ b/finnor-os/packages/shared-types/src/index.ts
+@@ -399,4 +399,5 @@
+ export * from "./economic-attribution";
+ export * from './evidence-execution';
+ export * from './capital-program';
++export * from './solver-capsule';
+ export * from './certified-state-reduction';
+diff --git a/finnor-os/packages/db/compute-contract.ts b/finnor-os/packages/db/compute-contract.ts
+--- a/finnor-os/packages/db/compute-contract.ts
++++ b/finnor-os/packages/db/compute-contract.ts
+@@ -80,6 +80,7 @@
+ 
+ /** Exhaustive registry for every production handler registered by the worker. */
+ export const PRODUCTION_JOB_CONTRACTS = {
++  run_solver_synthesis_v1: tenantFixed("HEAVY", "locally_idempotent", "Bounded ordinary Rosette/checker/native preparation under one original Work grant; retained physical custody, no protected admission or business authority.", {leaseRecovery:"immediate_after_expiry"}),
+   run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
+   run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
+   run_identification_plan_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R4 finite causal acquisition-menu search and independent checking under one original S4/S5 grant; no physical acquisition retry."),
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -7,6 +7,7 @@
+ import {runCapitalProgramJob,runRobustCapitalProgramJob} from '@finnor/private-equity/src/capital-program/worker';
+ import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
+ import {runIdentificationPlan} from '@finnor/private-equity/src/r4/worker';
++import {runSolverSynthesisJob} from '@finnor/private-equity/src/r8/worker';
+ // Worker service (§16): one process, multiple job-type handlers registered by string key.
+ 
+ import "dotenv/config";
+@@ -52,6 +53,7 @@
+ 
+ export function createWorker(): JobQueue {
+   const queue = new JobQueue();
++  queue.register('run_solver_synthesis_v1',runSolverSynthesisJob,PRODUCTION_JOB_CONTRACTS.run_solver_synthesis_v1);
+   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
+   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
+   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
+diff --git a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+--- a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+@@ -34,6 +34,7 @@
+ import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
+ import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
+ import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
++import {handleSolverOperation,R8_OPERATIONS} from '@finnor/private-equity/src/r8/api';
+ import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
+ import {handleCapitalProgramOperation,CAPITAL_PROGRAM_V2_OPERATIONS,capitalProgramResponseError} from '@finnor/private-equity/src/capital-program/v2-api';
+ import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity/src/capital-program/v2-budget';
+@@ -213,6 +214,7 @@
+     const prepared=await Promise.allSettled([requireContext(req),json(req)]);const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
+     const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
+     const ctx: PeMutationContext = { auth };
++    if(R8_OPERATIONS.has(route.operation)){const result=await handleSolverOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
+     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
+diff --git a/finnor-os/packages/private-equity/src/enterprise-allocation.ts b/finnor-os/packages/private-equity/src/enterprise-allocation.ts
+--- a/finnor-os/packages/private-equity/src/enterprise-allocation.ts
++++ b/finnor-os/packages/private-equity/src/enterprise-allocation.ts
+@@ -12,6 +12,7 @@
+ import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt } from './allocation-store';
+ import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transport';
+ import type { PeMutationContext } from './types';
++import {selectEnterpriseAllocationCandidate} from './r8/selection';
+ import {recheckAllocationCapability} from '../../capability-evolution/src/consumer';
+ import type {CapabilityUseLease} from '../../capability-evolution/src/lifecycle';
+ import type {ExactContingentPolicy} from '@finnor/shared-types/src/robust-programme-search';
+@@ -78,6 +79,24 @@
+   return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>{
+     const rows=await c.query("SELECT count(*)::int AS n FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]);return rows.rows[0].n;
+   });
++}
++/** Pure current S4/S5 resolution for the diagnostic R8 path. Retain R4's
++ * exact quantity encoding and native rights/source/obligation guards. This
++ * issues no reservation, effect authority or producer-selected matrix. */
++export async function resolveEnterpriseAllocationProblem(ctx:PeMutationContext,input:AllocationClearingInput):Promise<CanonicalAllocationProblem>{
++ const m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel);
++ if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();
++ if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))throw new AllocationContractError('STALE_INPUT','MANDATE_KNOWLEDGE_OR_VALIDITY_CHANGED');
++ if(await unaccountedNativeEffects(ctx))throw new AllocationContractError('INVALID_REQUEST','NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING');
++ const snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);
++ if(input.resourceRefs.length!==snapshot.resources.length||input.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))throw new AllocationContractError('STALE_INPUT','CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED');
++ const policies=await readCurrentPolicies(ctx,input.policyRefs),knowledgeAt=new Date().toISOString();
++ const validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
++ const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
++ const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,
++  mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,
++  snapshotDigest:snapshot.snapshotDigest,knowledgeAt,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
++ const problem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);return problem;
+ }
+ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>{
+   const started=performance.now(),m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel);
+@@ -105,7 +124,7 @@
+   // portfolio never conceals a resource/covenant breach requiring owner recovery.
+   const empty=verifyCanonicalAllocation(problem,[]);
+   if(empty.reasons.some(reason=>/RESOURCE_LIMIT|COVENANT_LIMIT|OUTSTANDING_COMMITMENT|RESOURCE_KNOWLEDGE/.test(reason)))return failure('INFEASIBLE',['EXISTING_OBLIGATIONS_ALREADY_VIOLATE_CANONICAL_LIMITS',...empty.reasons]);
+-  const deadlineAt=started+m.search.deadlineMs,produced=await produceAllocationCandidate(problem,deadlineAt);
++  const deadlineAt=started+m.search.deadlineMs,produced=await selectEnterpriseAllocationCandidate(ctx,problem,deadlineAt);
+   if(produced.selectedPolicyIds===null)return failure(produced.status,produced.reasons,produced.compute);
+   let checked;try{checked=await certifyAllocationOptimizationAsync(problem,produced.selectedPolicyIds,{deadlineAt,searchTermination:produced.compute.usage.backend.termination as string??produced.status,solverUpperBoundEstimate:produced.solverUpperBoundEstimate,dualProposal:produced.dualProposal});}
+   catch(e){if(e instanceof AllocationContractError&&e.code==='INVALID_CANDIDATE')return failure('INVALID_CANDIDATE',[e.message,'CANONICAL_EXACT_CHECK_REJECTED_NUMERICAL_PRODUCER'],produced.compute);if(e instanceof AllocationContractError&&e.code==='LIMIT_EXCEEDED')return failure('SEARCH_EXHAUSTED',[e.message],produced.compute);throw e;}
+diff --git a/finnor-os/packages/capability-evolution/src/lifecycle.ts b/finnor-os/packages/capability-evolution/src/lifecycle.ts
+--- a/finnor-os/packages/capability-evolution/src/lifecycle.ts
++++ b/finnor-os/packages/capability-evolution/src/lifecycle.ts
+@@ -15,10 +15,12 @@
+ import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
+ import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
+ import { InterfaceCapabilityPort } from './interface-port';
++import {SolverCapabilityPort} from '../../private-equity/src/r8/s8/port';
++import {assertSolverReviewSourceClosure} from '../../private-equity/src/r8/s8/source-closure';
+ import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
+ const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
+ const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
+-const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict();
++const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), solverReview: z.object({ contract: z.literal('s8-r8-solver-module-review-v1'), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict();
+ type Policy = z.infer<typeof PolicySchema>;
+ type Actor = Policy['actors'][number];
+ interface Config {
+@@ -55,6 +57,7 @@
+ }
+ export class CapabilityEvolution {
+     private interfaces: InterfaceCapabilityPort;
++    private solvers: SolverCapabilityPort;
+     private states = new Map<string, RevisionState>();
+     private active: string | null = null;
+     private generation = 0;
+@@ -73,6 +76,7 @@
+     private inheritedHandoff: any = null;
+     private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
+         this.interfaces = new InterfaceCapabilityPort(policy);
++        this.solvers = new SolverCapabilityPort(policy);
+         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
+         for (const e of journal.entries)
+             this.replay(e);
+@@ -83,6 +87,7 @@
+         if (policy.domain === 'REVIEWED_PROTECTED_DOMAIN' && !policy.protectedEvents)
+             fault('S8_PROTECTED_EVENT_CONTRACT_REQUIRED', 503);
+         await assertCapabilitySourceClosure(policy.sourcePins);
++        if(policy.solverReview)await assertSolverReviewSourceClosure(policy.solverReview.sourcePins);
+         assertSignature(cfg.signedPolicy, [{ id: cfg.signedPolicy.keyId, principalId: 'RELEASE_ROOT', publicKey: root, validAfter: policy.validAfter, validUntil: policy.validUntil, revoked: false }]);
+         if (new Set(policy.actors.map(a => a.id)).size !== policy.actors.length || [policy.evaluatorKeys, policy.promotionKeys].some(keys => new Set(keys.map(k => k.id)).size !== keys.length))
+             fault('S8_AMBIGUOUS_AUTHORITY_IDENTITY', 503);
+@@ -399,6 +404,7 @@
+         return row;
+     }
+     private replay(entry: JournalEntry) {
++        if (entry.operation.startsWith('SOLVER_')) { this.solvers.replay(entry); return; }
+         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
+         const b = entry.body, r = entry.result;
+         if (entry.operation === 'JOURNAL_RECOVERY' && r.responsibilityImport === true) {
+@@ -506,6 +512,7 @@
+                 // replayed from a cached admission. Every serve checks current use.
+                 if (input.operation.startsWith('INTERFACE_'))
+                     await CapabilityEvolution.sources(this.policy.sourcePins);
++                if (input.operation === 'SOLVER_USE') await this.solvers.currentLease(prior.result.lease);
+                 if (input.operation === 'USE') {
+                     const use = this.uses.get(prior.result.lease.useId);
+                     if (!use)
+@@ -520,6 +527,14 @@
+             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
+             const b = input.body;
+             let result: any, journalOperation = input.operation;
++            if (input.operation.startsWith('SOLVER_')) {
++                if(this.policy.solverReview)await assertSolverReviewSourceClosure(this.policy.solverReview.sourcePins);
++                const answer=await this.solvers.command(a,input.operation,b,
++                    (ref,content)=>this.commitNamedReference(ref,content));
++                if(!answer.readOnly)await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,
++                    operation:input.operation,body:b,result:answer.result});
++                return answer.result;
++            }
+             if (input.operation.startsWith('INTERFACE_')) {
+                 const answer = await this.interfaces.command(a, input.operation, b,
+                     (ref, content) => this.commitNamedReference(ref, content));
+diff --git a/finnor-os/apps/api/next.config.mjs b/finnor-os/apps/api/next.config.mjs
+--- a/finnor-os/apps/api/next.config.mjs
++++ b/finnor-os/apps/api/next.config.mjs
+@@ -73,7 +73,7 @@
+       "../../../package-lock.json", "../../../infra/deployment/production.contract.json",
+       "../../tsconfig.json", "../../tsconfig.base.json",
+       "../../package-lock.json", "../../packages/**/*.ts", "../../packages/**/*.mts",
+-      "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql",
++      "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql", "../../packages/**/*.rkt",
+       "../../packages/**/*.mjs", "../../packages/**/*.cjs",
+       "../../packages/**/package.json", "../../packages/source-custody/index.cjs",
+       "../../packages/**/fixtures/*.json", "../../scripts/p3/**/*.{ts,mts,cjs,mjs}",
+diff --git a/finnor-os/scripts/generate-openapi.ts b/finnor-os/scripts/generate-openapi.ts
+--- a/finnor-os/scripts/generate-openapi.ts
++++ b/finnor-os/scripts/generate-openapi.ts
+@@ -71,6 +71,7 @@
+ import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
+ import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
+ import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
++import {R8_OPERATIONS,SolverOperationSchemas} from "../packages/private-equity/src/r8/api";
+ import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
+ 
+ const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
+@@ -365,7 +366,7 @@
+   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
+   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
+   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
+-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
++  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...R8_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
+   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
+   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
+@@ -724,7 +725,7 @@
+ 
+ for (const [operation,schema] of [
+   ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),
+-  ...Object.entries(CapitalProgramV2Operations),
++  ...Object.entries(CapitalProgramV2Operations),...Object.entries(SolverOperationSchemas),
+ ]) {
+   Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+     security:secured,requestBody:json(schema),responses:{
+diff --git a/scripts/centropy/generate-capability-manifest.mjs b/scripts/centropy/generate-capability-manifest.mjs
+--- a/scripts/centropy/generate-capability-manifest.mjs
++++ b/scripts/centropy/generate-capability-manifest.mjs
+@@ -60,8 +60,13 @@
+ if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
+   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
+   throw new Error("Completed owner operation registries must be present and actually delegated")
++const solverSource=readFileSync(join(project,"finnor-os/packages/private-equity/src/r8/api.ts"),"utf8")
++const solverOperations=[...block(solverSource,"export const SolverOperationSchemas={","};")
++  .matchAll(/'(solver-[a-z-]+)':/g)].map(match=>match[1])
++if(!solverOperations.length||new Set(solverOperations).size!==solverOperations.length||!companyBrainSource.includes("R8_OPERATIONS"))
++  throw new Error("Missing or undelegated R8 owner schemas")
+ const companyBrainOperations = [...new Set([
+-  ...capitalOperations,...m4Operations.keys(),
++  ...capitalOperations,...m4Operations.keys(),...solverOperations,
+   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
+   ...delegatedRegistries.flatMap(([name, file]) => {
+     if (!companyBrainSource.includes(name)) throw new Error(`Undelegated operation registry ${name}`)
+@@ -69,6 +74,7 @@
+   }),
+ ])]
+ const companyBrainReads = new Set([
++  "solver-read","solver-context",
+   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
+   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
+   "evidence-handles", "evidence-read", "evidence-witness",
+@@ -174,7 +180,7 @@
+   const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
+   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&r1)) ||
+     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
+-  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
++  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|solver)-(?:cancel|resume|reconcile)$/.test(path)
+   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
+   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
+   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
+diff --git a/src/components/centropy/canvas/CapitalProgramPanel.tsx b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+--- a/src/components/centropy/canvas/CapitalProgramPanel.tsx
++++ b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+@@ -13,6 +13,7 @@
+ } from "./capital-program-view"
+ import { OriginalChallengePanel } from "./OriginalChallengePanel"
+ import { ExactControlReview } from "./ExactControlReview"
++import {SolverCapsuleReview} from "./SolverCapsuleReview"
+ import "./capital-program.css"
+ 
+ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+@@ -297,6 +298,7 @@
+ 
+   return <section className="ct-capital-program" aria-label="Economic arrangements" aria-busy={busy}>
+     <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
++    <SolverCapsuleReview workId={workId} root={root} />
+     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
+     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
+     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>

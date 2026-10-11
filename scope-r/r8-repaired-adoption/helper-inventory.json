@@ -1,0 +1,1536 @@
+{
+  "schema": "finnor.r8.complete-intended-manual-review.v1",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "comparison": "Empty committed/staged diff at sealed R4 plus 52 explicitly task-edited untracked files and 10 unapplied shared postimages",
+  "manualPerspectives": [
+    "reuse_and_composition",
+    "quality_and_compatibility_provenance",
+    "efficiency_and_bounded_cleanup"
+  ],
+  "parallelReviewAgents": {
+    "required": 3,
+    "completed": 0,
+    "status": "UNAVAILABLE_TASK_TOOL_NOT_EXPOSED",
+    "followup": "Independent parallel review remains a handoff gate; manual review is not three independent agents."
+  },
+  "cleanClaim": false,
+  "qualification": "MANUAL_CROSS_FILE_REVIEW_WITH_INDEPENDENCE_AND_OWNER_EXECUTION_GAPS",
+  "reviewManifest": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/review-01/manifest.json",
+  "entries": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "Witness"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "canonicalChunkInputDigest"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "ChunkReply"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "openReference"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "query"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "checkCounterexample"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "assertCoverage"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "verifyCompleteDomain"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "prior"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "disposition": "KEEP: Compose JsonProcess, registered P1 batching and independent Python. Bijection/coverage/correspondence collation is specific to full D, not supplied by generic S5 checks.",
+      "currentSha256": "87c390993931729d2909edfe66f19c146b1316176374e0806e581fddae4caf38"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "hash"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "bytesHash"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "IntegerExpr"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "BooleanExpr"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Expr"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Statement"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "IntegerProgram"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "Choices"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SourcePin"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "RuntimeIdentity"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "Counterexample"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "Trial"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "CoverageChunk"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SemanticReceipt"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "coordinates"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "disposition": "KEEP/COMPOSE: Reuse governed-execution canonical and Node crypto. New finite AST/receipt/runtime types are explicit R8 requirements. Do not introduce capability-owner imports outside the pinned scientific closure just to replace tiny hashing wrappers.",
+      "currentSha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "quote"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "openTypeScriptModuleBatch"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "execute"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "close"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "disposition": "KEEP/COMPOSE: Reuse unchanged R4 compileTypeScriptModule, P1 limits and evidence sha/stable. Base emitter caches declaration libraries; R8 adds fresh-byte guarding and bounded persistent/reset-per-row transport, not another compiler.",
+      "currentSha256": "90211790a03de20b840aff4c54b21dba328bf19cb9b8d96d3eb922048d4372ef"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "symbols": [
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Bound"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "keys"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "validateProgram"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "tick"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "name"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "expression"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "statements"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "programForChoices"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "literal"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "local"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "sum"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "enabled"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "disposition": "KEEP: Explicit integer DSL, lazy branches, one seven-iteration loop, 63 magnitude and 1024 fuel. Generic P1 schemas do not implement these predicates. Do not merge TS validation with independent Python validation.",
+      "currentSha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "symbols": [
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Value"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "lowerProgram"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "literal"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "register"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "id"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "branch"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "expression"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "statements"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "assertLowering"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "disposition": "KEEP/COMPOSE: Domain AST/SSA/lazy-branch traversal composes existing P1 registration/emission. No opcode, register or compiled-byte broadening; actual correspondence is checked.",
+      "currentSha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "ScientificProcessObserver"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "ProcessClose"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "withScientificProcessObserver"
+        },
+        {
+          "kind": "ClassDeclaration",
+          "name": "JsonProcess"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.open"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "JsonProcess.q"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.fail"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.kill"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.request"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.close"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "JsonProcess.physicalClose"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "JsonProcess.unobserved"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "observeProcessGroupClosed"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "runScientific"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "killer"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "disposition": "KEEP/COMPOSE: Exclusive scrubbed/no-network original-wall JSON transport uses Node fs/process/AsyncLocalStorage and existing R8 bytesHash. The identical local hashing helper was removed. Real custody faults/physical-close observation are not generic effect execution.",
+      "currentSha256": "49d7570df82b3e4c29da6b386c044579ca3d13439be242452589fb0a9965b4e2"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SynthesisHooks"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "synthesizeSolver"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "query"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "accept"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "cost"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SynthesisResult"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "earlierAlternative"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "original"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "loop"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "difference"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "disposition": "KEEP: Actual Rosette CEGIS, retained/replayed counterexamples and separately full-D-checked cost alternative implement the explicit requirement. Original native S5 production cannot supply this loop; no fresh grant or global-cheapest claim.",
+      "currentSha256": "4ccef81680857be65701e63f02abae7b6489e04b8d0f02d8cd1f3e1fa71580ab"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "scientificPath"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "sourceIdentity"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "assertSourceIdentity"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "loadRuntime"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "runtimeReadPaths"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "disposition": "KEEP: Actual executable/transitive/source bytes and options are explicit identity requirements; 16-file concurrency is bounded. Re-reading each acceptance/use is deliberate current-byte fencing, not hidden warm reuse.",
+      "currentSha256": "05fdb23397f7e90b7bee5712bbb345b3fde3f1d2fb621a1f1eb4905dcc93fe15"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/api.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "instant"
+        },
+        {
+          "kind": "NewExpression",
+          "name": "R8_OPERATIONS"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "originalGrant"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "read"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "create"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "read"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "cancel"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "handleSolverOperation"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/api.ts",
+      "disposition": "KEEP/COMPOSE: Reuse Work/principal, S4/S5 snapshots, evidence dependencies/transactions and strict shared request schemas. Six ordinary operations and immutable original grants are new scope operations, not arbitrary code/receipt inputs.",
+      "currentSha256": "453483e51d01b95d05335872ef81c936178f0b8346f3d38ae3656408604acd86"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "solverRef"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "validateCapsule"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "runSolverSynthesis"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "disposition": "KEEP/COMPOSE: Reuse shared types, lowering and full-coverage checks. New AST/IR/emitted/runtime/owner mapping preimage is an explicit generated payload, not an S5 matrix or protected admission.",
+      "currentSha256": "c723498fd76307e80cd402a214bfdc6c360e00d5167a5319fec37fc3c1480462"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/owners.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "ownerSourceIdentity"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "ownerSourcesCurrent"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverOwnerBinding"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "resolveSolverOwners"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Resolver"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "assertSolverOwnersCurrent"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "paths"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "roots"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "ownerInputs"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/owners.ts",
+      "disposition": "KEEP/COMPOSE: Call actual resolveDecisionWork and proposed pure S5 resolver. Missing-export guard is a closed integration seam, not legacy compatibility. Owner and semantic current-byte fences intentionally have different closures/order and remain distinct observations.",
+      "currentSha256": "372a5502a5d65479f20e43589bdb61ee46808c090d7f89b40fe9a34410567ebb"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/projection.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverProjection"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "integer"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "exactInput"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "projectSolverProblem"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "reject"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "policies"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "path"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "binding"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "funding"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "term"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "action"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "selected"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "cost"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "value"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/projection.ts",
+      "disposition": "KEEP/COMPOSE: Canonical exact arithmetic/checker are reused. Recognize only the supplied lossless three-policy capacity-seven utility profile and independently verify every mask with original IDs; do not coerce other owner problems into D.",
+      "currentSha256": "54ab1b4f72a863cd857f9eb8bb224d211702b450e0a78ebf0a1028c3c51fc571"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/consumer.ts",
+      "symbols": [
+        {
+          "kind": "CallExpression",
+          "name": "PolicySchema"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Policy"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "LeaseSchema"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "policy"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "command"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "acquireSolverCapability"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "recheckSolverCapability"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/consumer.ts",
+      "disposition": "KEEP/COMPOSE: Shared S8 signature/ref/canonical primitives underpin a new exact-capsule ordinary diagnostic lease. Tenant/principal/rights/deadline are checked; protected domains are refused, not adapted.",
+      "currentSha256": "39868d2b1a7182d858b4768f788f8ec582b1d04a1580949d0e61a5c0e72bd173"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/contracts.ts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "solverPortRef"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverDomainSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverCandidateSchema"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SolverCandidate"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "parseSolverCandidate"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverReviewSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverEvaluationSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverAdmissionSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverActivationSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverRevocationSchema"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "SolverUseSchema"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverUseLease"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/contracts.ts",
+      "disposition": "KEEP_NEW_NARROW_S8_CONTRACTS: Reuse RefSchema/digest/capsule validation. Generated-module version/review/diagnostic lease are explicit requirements; base makeRef uses a different fixed S8 method version. No protected/ordinary union or legacy generated shape is accepted.",
+      "currentSha256": "802ce86475721ebe329e93b4a87d4200d2b016fd6b79a7f1a7ca6827eb75ea91"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/port.ts",
+      "symbols": [
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Actor"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Review"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SolverInterfacePolicy"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "State"
+        },
+        {
+          "kind": "ClassDeclaration",
+          "name": "SolverCapabilityPort"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.replay"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.state"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.scope"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.dependencies"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.current"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.currentLease"
+        },
+        {
+          "kind": "MethodDeclaration",
+          "name": "SolverCapabilityPort.command"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/port.ts",
+      "disposition": "KEEP/COMPOSE: Existing journal/signature/fault mechanics compose a generated-module port with its own complete checker. Narrow SolverInterfacePolicy is an explicit extension. Real ordinary lifecycle execution remains NOT_RUN on unassembled seams.",
+      "currentSha256": "55a0f72246debee5acc893138c85b5cc35718006b9633fa3ce01c037d1864aa0"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/source-closure.ts",
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "solverReviewDependencies"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "assertSolverReviewSourceClosure"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/source-closure.ts",
+      "disposition": "KEEP/COMPOSE: Reuse SourcePin, byteDigest and fault. Proposed lifecycle still calls core assertCapabilitySourceClosure; its hardcoded 59-source loaded closure cannot validate the separate 26-source fresh review minimum. Shared collation joins 81 unique pins and refuses conflicting hashes.",
+      "currentSha256": "809b9030f71af2ffa1c87e43fb4a3eb2f7363ed78f662b68348c30abf0bcdd29"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/selection.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverSelectionOptions"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "selectEnterpriseAllocationCandidate"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "diagnosticSolverSelection"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "selectedPolicyIds"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/selection.ts",
+      "disposition": "KEEP_EXISTING_BASE_ROUTE: Normal S5 calls use unchanged base allocation-producer; diagnostic reuse additionally needs signed S8 lease, actual emitted result, independent S5 check and current-owner rechecks. Required fallback has base R4 provenance and only remaining original time.",
+      "currentSha256": "fbf58d04f7b27bb7fea580e5b92685fb05c456215486292e390ea5444c447ff0"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/store.ts",
+      "symbols": [
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverRow"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "solverRow"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "read"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "record"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "write"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "currentSolverRow"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "readCapsule"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "enqueueSolver"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "write"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/store.ts",
+      "disposition": "KEEP/COMPOSE: Reuse tenant/principal evidence transactions and dependency guards. Specific append-only R8 records/grants and canonical enqueue are new data operations, not a second queue or installed schema.",
+      "currentSha256": "b8fbf7193465e91d96151b62f99d05d2a05a88a5072f6c6d1027add4b1ea835c"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/worker.ts",
+      "symbols": [
+        {
+          "kind": "CallExpression",
+          "name": "payloadSchema"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "principalFence"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "jobFence"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "runSolverSynthesisJob"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "current"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "retain"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "timer"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "retainedTrials"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "candidates"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "retainedCandidate"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "receipts"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "acceptedTrials"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "acceptedTrial"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/worker.ts",
+      "disposition": "KEEP/COMPOSE: Actual JobQueue/compute governor/current owner fences retain original debits, attempts, trials, groups and unknown liability. No synthetic production contract is substituted when the shared registration is absent.",
+      "currentSha256": "0930ba9e0a62a9c42e8722009813962f69cd597a00d17b6eb1d638a894fb55d0"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "symbols": [
+        {
+          "kind": "CallExpression",
+          "name": "SolverRequestSchema"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SolverRequest"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SolverStatus"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "SolverRuntimePin"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverCapsule"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverRunInputs"
+        },
+        {
+          "kind": "InterfaceDeclaration",
+          "name": "SolverRunResult"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "disposition": "KEEP_NEW_REQUIREMENT: Existing allocation/ref/native types are reused; explicit new request/run/capsule contracts preserve full D and no-effect flags. No deprecated reader or intra-branch schema adapter remains.",
+      "currentSha256": "e9c146a48cc1eb1e7306f9d273bf92baa3cff419f6af8068f3988cdbfba851c8"
+    },
+    {
+      "path": "finnor-os/scripts/r8/browser-fixture.mts",
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "mountedSolverFixture"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "issue"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "encode"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "verify"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "start"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "url"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "auth"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "control"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "timer"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/browser-fixture.mts",
+      "disposition": "KEEP_REAL_E2E: Actual built app/API and disposable authenticated identity tooling cover explicit initiation/reload/switch/late-response/revocation predicates. No mocked browser result; execution remains NOT_RUN.",
+      "currentSha256": "c1f90ab5a0e3476dbe4a51197aea4c027c17d80fcec462bc12a5c2b68ef7655f"
+    },
+    {
+      "path": "finnor-os/scripts/r8/custody-child.mjs",
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/custody-child.mjs",
+      "disposition": "KEEP_FIXED_FAULT_CHILD: ECHO/NONREADING exercise real OS transport; not a candidate answer, owner authority or arbitrary caller executable.",
+      "currentSha256": "7d2bc5acf7cff968c6f4a8f0821b05398c201eb923c6b6858e87f3b549b2a03e"
+    },
+    {
+      "path": "finnor-os/scripts/r8/lifecycle-fixture.mts",
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "createCapabilityLifecycle"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "pub"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "signed"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "redact"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "snapshot"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "start"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "stop"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "timer"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/lifecycle-fixture.mts",
+      "disposition": "KEEP_REAL_DISPOSABLE_OWNER: Shared canonical/signature and actual lifecycle server, separate keys/tokens and bounded redacted exit/stderr snapshots diagnose transport. Not protected custody/economics or a substitute dispatcher.",
+      "currentSha256": "41df4523251554b4cf10d393e4fb719f933dc21a1a626d6aea711a3a8e008b6c"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-capsule.mts",
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-capsule.mts",
+      "disposition": "KEEP_ORIGINAL_MUTATION_DRIVER: Adopted typed owner/semantic preimage assertions call real validation. No post-implementation unit suite or mock owner route was added.",
+      "currentSha256": "cc75b37bd0b9a521cbbbb4fc16323707475d9c522c4bbd30d2f63c91fd9bb05f"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-custody.mts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "delay"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Custody"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "challenge"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "onUnhandled"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "pending"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-custody.mts",
+      "disposition": "KEEP_REGISTERED_OS_E2E: Original five assertions retain no forced cleanup. Separate preregistered owned-group signal refusal proves bounded rejection with zero close events; forced cleanup is retained and is not product close or lease release. Three-run maximum exhausted.",
+      "currentSha256": "b142852f656b4aebea43bfdc8812c20130d76ac9537e090e610930a46676a573"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-owner.mts",
+      "symbols": [
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Termination"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "save"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "delay"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "requestedDeadlineMs"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "results"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "challenge"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "api"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "ok"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "workerCustody"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "stopWorker"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "wait"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "mounted"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "launchWorker"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "census"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "timer"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "child"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "readback"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "successful"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "missing"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "total"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "policy"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-owner.mts",
+      "disposition": "KEEP_REAL_OWNER_OR_FAIL: Actual API/worker/owner/S8/S7 fixtures, bounded finally worker stop/census and strict S5 preimage/readback/original-grant assertions. Empty/unmatched selections and final cleanup failures affect exit; no fake owner or shared harness modification.",
+      "currentSha256": "2b900f9ed7fb8b1a89276c7d4b5bca80cb5d3726d68b3502e287155d42757cfb"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-semantic.mts",
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "save"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "challenge"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-semantic.mts",
+      "disposition": "KEEP_FULL_D_E2E: Actual CEGIS/registered P1/independent oracle, original semantic/grammar/correspondence mutations, two candidate-keyed full acceptance preimages under fixed 574739 ms. Two-run maximum exhausted.",
+      "currentSha256": "160a2b71257999ee3becd9d3cf6b6d646064f035dac065d52ebe1204725dd9ba"
+    },
+    {
+      "path": "finnor-os/scripts/r8/solver-review.mts",
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "reviewSolver"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "pins"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "call"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "success"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "refused"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "consumer"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/solver-review.mts",
+      "disposition": "KEEP_SEPARATE_OWNER_PROTOCOL: Real signed owner and disposable S7 continuity ledger; reuse source collation in proposer and owner. Clamp to original deadline and record one-level fetch causes/child history. Historical transport cause and real repaired owner execution remain open.",
+      "currentSha256": "a118d1724a42176ff9e759d6fe679a51fa12dcea4322701447cc18c71773f74a"
+    },
+    {
+      "path": "finnor-os/scripts/r8/worker-entry.mts",
+      "symbols": [
+        {
+          "kind": "ArrowFunction",
+          "name": "recoverExpired"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/worker-entry.mts",
+      "disposition": "KEEP_CANONICAL_PREREQUISITE: Actual JobQueue/production registry must exist. No local fallback contract; expired attempt recovery still requires physical group observation.",
+      "currentSha256": "ae20ee2b3c7eaafd7a0b4de56ef095d7ced94a244ae10412ef9bc5b9dae0f9d6"
+    },
+    {
+      "path": "src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "symbols": [
+        {
+          "kind": "CallExpression",
+          "name": "reviewSchema"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Review"
+        },
+        {
+          "kind": "TypeAliasDeclaration",
+          "name": "Scoped"
+        },
+        {
+          "kind": "CallExpression",
+          "name": "contextSchema"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "SolverCapsuleReview"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "tick"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "invalidate"
+        },
+        {
+          "kind": "ArrowFunction",
+          "name": "visible"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "perform"
+        },
+        {
+          "kind": "FunctionDeclaration",
+          "name": "submit"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "notify"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "working"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "active"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "clear"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "refresh"
+        },
+        {
+          "kind": "WrappedFunction",
+          "name": "unsubscribe"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "disposition": "KEEP/COMPOSE: Reuse centropy auth/API/business invalidation and CapitalRefViewSchema. Base src has no exported Scoped/useScoped helper; local scope binding is required for render privacy. Token-version/principal/Work/root/URL/access plus epoch/returned-ID fencing stay. Timer clearing reuses base CapitalProgramPanel behavior; mounted proof is open.",
+      "currentSha256": "b70b07b14ca64f2155eac11b12bd547f5d71ec6c5a9680949c0f0b6e13319ddb"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/index.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/db/compute-contract.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/apps/worker/src/index.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "unappliedProposal": true,
+      "symbols": [
+        {
+          "kind": "FunctionDeclaration",
+          "name": "resolveEnterpriseAllocationProblem"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "disposition": "KEEP_UNAPPLIED_PROPOSAL: Pure resolver mirrors actual R4 construction including DECIMAL_OR_RATIONAL_V2 and native guards. Small construction duplication is confined to data to avoid rewriting native clearing behavior without owner runtime evidence; serial S5 owner can extract it with joined proof."
+    },
+    {
+      "path": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/apps/api/next.config.mjs",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/generate-openapi.ts",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scripts/centropy/generate-capability-manifest.mjs",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "unappliedProposal": true,
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "disposition": "KEEP_MINIMAL_UNAPPLIED_SEAM: Literal byte-bound delegation/addition preserves cumulative owner/registrations. Virtual type/syntax checks are structural; apply/regenerate/real joined checks remain serial work."
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "symbols": [
+        {
+          "kind": "FunctionDef",
+          "name": "canonical"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "digest"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "require"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "fields"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "integer"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "decode"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "oracle"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "validate"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "interpret"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "inspect"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "operation"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "count"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "name"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "expression"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "statements"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "tick"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "expression"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "statements"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "disposition": "KEEP_INDEPENDENT: Python canonical/digest, grammar vetting, radix decoding, operational semantics and eight-subset oracle must not call the TS producer or consume its answers. Repetition is required independence, exercised by original mutations.",
+      "currentSha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "symbols": [
+        {
+          "kind": "FunctionDef",
+          "name": "kill_group"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "guard"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "disposition": "KEEP: Concrete Python OS/subprocess/resource parent-death, original-wall and group reaping are scientific supervision, not a business-effect adapter. Measurements are not a full aggregate or economic meter.",
+      "currentSha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb"
+    },
+    {
+      "path": "finnor-os/scripts/r8/package-runtime.py",
+      "symbols": [
+        {
+          "kind": "FunctionDef",
+          "name": "sha"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "canonical"
+        },
+        {
+          "kind": "FunctionDef",
+          "name": "run"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/package-runtime.py",
+      "disposition": "KEEP_EXPLICIT_RECONSTRUCTION: Python stdlib hash/canonical/tar/subprocess implement required archive recipe, not a legacy archive reader or dependency installer. Packaging/clean-host restoration were not rerun; disk-constrained runtime borrowing is separate evidence.",
+      "currentSha256": "42bfd263d283b60ef5916ca99869e0933830ffd5c203e6cac38871e0b96efc6b"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-local.py",
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-local.py",
+      "disposition": "KEEP_REAL_DISPOSABLE_SETUP: Real private PostgreSQL/migrations/ordinary-role API/worker orchestration, private external output and exact selection matching. Requires installed serial seams; no production reset/provisioning was performed.",
+      "currentSha256": "4b7ef7dd270344582f009b0411b6ab46357378d6add16132e0a7726993b39167"
+    },
+    {
+      "path": "finnor-os/scripts/r8/seal-runtime.py",
+      "symbols": [],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/seal-runtime.py",
+      "disposition": "KEEP_PINNED_RECIPE: Python stdlib and original runtime-lock seal actual executable/transitive/license bytes. No large copy/install; identity hash is not installed-layout/Linux proof.",
+      "currentSha256": "05cac1e5d0599355d02330dee14fb1eb4ea89c585da7ce705b6a07b7998d9055"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/integration/check-preimages.py",
+      "symbols": [
+        {
+          "kind": "FunctionDef",
+          "name": "inside"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/check-preimages.py",
+      "disposition": "KEEP_READ_ONLY_GUARD: pathlib/hashlib/Git ancestry bind literal anchors and postimages. Existing generators write state and cannot replace this serial read-only rebase check. Resolved target paths must remain inside checkout.",
+      "currentSha256": "885bda58c548cc428506d9b337f8f7a669f35b8689257a703476da552ab0565d"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "symbols": [
+        {
+          "kind": "RacketDefineFunction",
+          "name": "member?"
+        },
+        {
+          "kind": "RacketDefineFunction",
+          "name": "sum3"
+        },
+        {
+          "kind": "RacketDefineFunction",
+          "name": "run"
+        },
+        {
+          "kind": "RacketDefineFunction",
+          "name": "scan"
+        },
+        {
+          "kind": "RacketDefineFunction",
+          "name": "expected"
+        },
+        {
+          "kind": "RacketDefineFunction",
+          "name": "scan"
+        }
+      ],
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "disposition": "KEEP: Fixed Rosette symbolic run/expected/scan and concrete JSON transport are distinct from the mandatory Python operational interpreter/oracle. Symbolic UNSAT is explicitly not acceptance; no producer oracle replaces the independent full-D gate.",
+      "currentSha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9"
+    }
+  ],
+  "verifiedFixes": [
+    "startup cleanup boundary",
+    "backpressure rejection handling",
+    "signal refusal retained rather than callback crash",
+    "bounded parent-close wait within registered observation grace",
+    "original-budget independently checked cost alternative",
+    "relocated S8 minimum-source export",
+    "81-pin conflict-refusing collation",
+    "existing SourcePin and bytesHash reuse",
+    "render-time privacy/late-response fences",
+    "single polling chain",
+    "finally worker custody and strict S5 resource mutation/restoration"
+  ],
+  "compatibility": [
+    {
+      "construct": "Original full S5 fallback",
+      "evidence": "Base R4 allocation-producer.ts and enterprise-allocation.ts callsite",
+      "disposition": "RETAIN_EXISTING_EXTERNAL_OWNER_ROUTE_NO_FRESH_GRANT"
+    },
+    {
+      "construct": "DECIMAL_OR_RATIONAL_V2",
+      "evidence": "Base R4 enterprise-allocation.ts exactEncoding construction",
+      "disposition": "PRESERVE_EXISTING_BASE_SHAPE"
+    },
+    {
+      "construct": "R8 v1/SolverInterfacePolicy/missing-export guards",
+      "evidence": "Explicit generated-module scope and exclusive-leaf/no-shared-write assignment",
+      "disposition": "NEW_REQUIREMENT_OR_CLOSED_SEAM_NOT_LEGACY_COMPATIBILITY"
+    }
+  ],
+  "boundedTraversal": "Grammar depth/nodes/fuel, frames/source/coverage arrays are bounded; fetch cause diagnostics inspect one level, not a linked recursive traversal.",
+  "remainingGates": [
+    "real assembled ordinary owner/S8/privileges/queue",
+    "mounted built authenticated Work",
+    "independent review agents",
+    "all-entrypoint aggregate fencing",
+    "installed-layout restoration/Linux target",
+    "authorized protected admission/activation",
+    "equipped-X comparison/full S7 H2 metering/economics"
+  ]
+}

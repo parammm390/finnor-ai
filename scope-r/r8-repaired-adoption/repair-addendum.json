@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r8.pre-repair-observed-addendum.v1",
+  "registrationOrder": "After adoption/custody-red-01 and before product repair",
+  "custodyRed": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-red-01/results.json",
+  "observedRed": {
+    "witnessStartup": "FAIL: one close event for two actual groups; forced checker cleanup retained",
+    "fullDomainStartup": "FAIL: one close event for two actual groups; forced checker cleanup retained",
+    "laterCase": "Process exited 1 on unhandled kill EPERM; no completed five-case claim",
+    "residueCensus": "No matching custody/checker/native fixture processes remained after the crash"
+  },
+  "additionalFailurePredicate": "Signal refusal must not throw from an event/timer callback; retain it and refuse physical-close/release unless actual group disappearance is observed. Recheck cancellation and original deadline after asynchronous setup, before spawning.",
+  "historicalOwnerInputs": "/Users/paramdave/.cache/finnor-r8-runtime/evidence/final-owner-03/bootstrap-repaired/observed-bootstrap/inputs.json",
+  "historicalOriginalDeadlineMs": 574739,
+  "costSchedulingDefect": "600000 ms remaining was required before a new alternative could start, so this original request could never reach the registered alternative even at time zero.",
+  "repairPredicate": "Attempt one bounded alternative with positive remaining original time and a remaining candidate debit. Full-D independent acceptance is still mandatory; timeout preserves the incumbent and records INCOMPLETE, never COMPLETE for the alternative.",
+  "semanticCampaignOriginalWallMs": 574739,
+  "semanticAcceptanceEvidence": "Retain both accepted trial/receipt preimages and candidate-keyed chunks; require optimization COMPLETE and selected, with no global-cheapest claim, inside this fixed shorter original budget.",
+  "ownerSchedulingConstraint": "API submission enqueues immediately. Do not fabricate deferred jobs/grants to pre-create a fault fixture. Run faults before slow unrelated S8/mounted cases; preserve each original grant and the fixed absolute cap. If insufficient, retain NOT_REACHED/FAIL.",
+  "authority": "No additional effects, caps, admission, deployment or shared writes"
+}

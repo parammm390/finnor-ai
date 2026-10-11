@@ -1,0 +1,53 @@
+{
+  "schema": "finnor.r8.relocation-repair-addendum.v1",
+  "phase": "AFTER_SEMANTIC_GREEN_BEFORE_ASSEMBLED_OWNER_EXECUTION",
+  "preserved": {
+    "originalRegistration": "registration.json",
+    "semanticDomainAndCaps": "UNCHANGED",
+    "sharedTrackedPaths": "UNCHANGED",
+    "ownerAndMountedQualification": "NOT_RUN_ON_REPAIRED_ASSEMBLY"
+  },
+  "observations": [
+    {
+      "id": "missing-review-closure-export",
+      "evidence": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-backend-01.log",
+      "observed": "Virtual proposed lifecycle postimage imports assertSolverReviewSourceClosure; the exclusive relocated leaf initially exported only its required path list. TS2305, one diagnostic.",
+      "repair": "Implement the required minimum-current-byte closure check in the exclusive R8 leaf using existing shared byteDigest and fault primitives; retain strict duplicate refusal."
+    },
+    {
+      "id": "overlapping-source-closures",
+      "observed": {
+        "corePaths": 59,
+        "reviewPaths": 26,
+        "identicalPathOverlap": [
+          "finnor-os/package-lock.json",
+          "finnor-os/packages/governed-execution/src/protocol.ts",
+          "finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+          "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts"
+        ],
+        "naiveConcatenatedPins": 85,
+        "uniquePins": 81
+      },
+      "predictedFailure": "The retained solver candidate parser rejects duplicate dependency paths. Naive concatenation would refuse a genuine proposal; this is not an observed assembled-owner failure and is not asserted to explain the historical S8 transport failure.",
+      "repair": "Use one shared exclusive composition helper in both the real owner port and its proposer fixture. Deduplicate only identical path/hash pins, reject conflicting hashes, retain first-occurrence order, and keep the candidate duplicate assertion unchanged.",
+      "acceptance": "Virtual types and fixture types must pass. Real signed-owner propose/register/evaluate/admit/use/revoke remains required after serial assembly; structural checks do not discharge it."
+    },
+    {
+      "id": "single-polling-chain",
+      "observed": "A business invalidation or visibility restart could call tick while an earlier scheduled timeout remained pending, then overwrite its handle and leave multiple polling chains.",
+      "repair": "Clear the prior timeout before each tick, matching the existing CapitalProgramPanel polling primitive. Keep reading, epoch, scope, visibility and returned-identity fences unchanged.",
+      "acceptance": "Fresh frontend and virtual-proposal structural checks are required; the mounted invalidation/visibility behavior remains NOT_RUN until real serial assembly."
+    },
+    {
+      "id": "resource-preimage-wording-correction",
+      "observed": "The original failure-model ref/expectedRef wording was imprecise. The actual strict S5 resource input excludes persisted ref, revision and priorRef. expectedRef belongs in the mutation wrapper.",
+      "repair": "The exclusive fixture strips persisted-only metadata, sends the original current ref as expectedRef, verifies readback and unchanged original grants, and restores as a new revision. Preserve the immutable preregistration and all original stale-predicate assertions."
+    }
+  ],
+  "qualification": {
+    "ordinarySourceInventory": "OBSERVED",
+    "assembledOwner": "NOT_RUN",
+    "protectedAdmission": "NOT_RUN_NOT_AUTHORIZED",
+    "protectedActivation": false
+  }
+}
