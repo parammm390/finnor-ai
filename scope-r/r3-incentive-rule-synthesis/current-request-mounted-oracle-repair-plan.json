@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.r3.current-request-mounted-oracle-repair.v1",
+  "registeredAt": "2026-10-10T18:44:47.413887+00:00",
+  "causalEvidence": "repair-prepublication-work-02: mounted 243 cells passed and real UI candidate request was accepted; the new proposal correctly superseded the old request, so reloading the old request cannot prove durable current-rule reload. Worker read later refused expired M3 publication before accepting a new child.",
+  "failureModel": [
+    "New UI request legitimately invalidates prior R3 request but oracle still uses its id/rule",
+    "Delayed reply tests the superseded request instead of current checked request",
+    "Preference revision oracle sees old supersession rather than actual new current invalidation",
+    "Operator delay consumes original M1 validity; never extend or resume expired grants"
+  ],
+  "repair": "The candidate-bound callback returns actual independently checked current rule/request id and explicit supersession readback. The tool oracle then uses that new id/rule for reload/delayed/tenant/revision steps, verifies the actual new request is invalidated by preference revision, and retains the original historical supersession/deadline separately. Execute UI steps promptly within original M1 bound. No product/currentness/TTL edits.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "preparationSeconds": 240,
+  "maxBrowserSeconds": 600,
+  "actualBrowserCutClampedToOriginalM1": true,
+  "originalGrantsExtended": false
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.finite-final-image-probe.v1",
+  "registeredAt": "2026-10-10T15:56:20.717412+00:00",
+  "observation": "Import exits ENOSPC but API final manifest is present in engine registry; registration is not installed execution. Test the actual immutable manifest once without product mounts.",
+  "apiManifest": "sha256:164baddfc6d4b0bdc8481f76fc50af46ee73ff83857cfdb9652b0050dfd2750e",
+  "bound": {
+    "runs": 1,
+    "wallSeconds": 180,
+    "memoryLimitBytes": 2147483648,
+    "cpus": 2
+  },
+  "predicate": "Actual image starts nonroot, current installed source matches pinned vector and installed check-runtime produces complete PASS. On fail preserve and stop this probe; owner run only after successful execution under separately recorded original episode envelope.",
+  "sourceMounts": false,
+  "protectedAdmission": false,
+  "originalEpisodeFloorsUnchanged": true
+}

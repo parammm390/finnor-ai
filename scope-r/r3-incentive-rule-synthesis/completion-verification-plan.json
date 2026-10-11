@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r3.completion-verification.v1",
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "importedCommit": "3113d354f6b70369ee2f1b72b96820353d56f99f",
+  "registeredBeforeCompletionCodeAndRuns": true,
+  "purpose": "Audit the committed equivalent R3 implementation and close its internal installed Linux API/worker gate; preserve every prior failure and separate protected gates.",
+  "limits": {"campaignWallSeconds": 7200, "runWallSeconds": 3600, "builderMemoryBytes": 6442450944, "runtimeMemoryBytes": 4294967296, "maximumSimultaneousMemoryBytes": 17179869184, "taskDiskBytes": 12884901888, "acquisitionBytes": 1073741824, "maximumBuildRepairs": 3, "nativeChildSeconds": 25, "initialResponseSeconds": 30},
+  "originalEpisodeLimitsUnchanged": true,
+  "cases": [
+    {"id":"native-original-reference", "entry":"scripts/r3/run-native.py", "oracle":"separate Fraction checker and independently enumerated grid reference", "artifact":"native/results.json", "expected":"81 profiles, 648 deviations, 324 participation comparisons; meaningful mutations and honest optimization gaps"},
+    {"id":"installed-api-worker", "entry":"Dockerfile.worker api and worker targets; scripts/r3/check-runtime.mts", "oracle":"actual non-root installed executable/source/lock/license readback plus complete original rule checking", "artifact":"linux-runtime/results.json", "expected":"both final images execute the producer, independent checker and retained original/new handlers"},
+    {"id":"installed-owner-delivery", "entry":"bounded signed HTTP -> built Next API -> durable restricted SQL worker -> S3/S4/S5/S6", "oracle":"original preference/table and actual owner/queue/attempt/reservation/event readbacks", "artifact":"linux-owners/results.json", "expected":"positive full mechanism; reports distinct from acceptance; exact rational original-owner use; old/new jobs and physical restart"},
+    {"id":"installed-responsibility", "entry":"existing real worker SIGKILL, principal row lock, shared grant and P7 E2E stories", "oracle":"durable original deadline/attempt/lease and independent SQL observations", "artifact":"linux-faults/results.json", "expected":"safe recovery, retained charges/liabilities, fenced stale publication and no duplicated grant"},
+    {"id":"mounted-existing-work", "entry":"actual mounted Capital Work and ElicitationProtocolReview", "oracle":"authenticated browser readback, exact 81 rows, reload and identity/revision clearing", "artifact":"mounted/proof.json", "expected":"current durable output; delayed and foreign responses cannot restore private data"},
+    {"id":"reconstruction-and-contract-audit", "entry":"standalone Git bundle and ordered owned/shared patch replay", "oracle":"independent reconstruction of final exact tree plus clause-level evidence map", "artifact":"handoff/release.json", "expected":"clean reproducible two-group R3 delta; all gaps and prior failures retained"}
+  ],
+  "rerunPolicy": "Only rerun an affected case after a relevant repair, changed source/runtime/schema, failure or unresolved evidence concern. Seal each cut before execution; stop after the finite selected mandatory proof.",
+  "notRunGates": ["COMBINED_R_CUT_CHECKED", "S3_BEHAVIORAL_QUALIFICATION", "S8_ADMISSION", "PROTECTED_ACTIVATION", "POST_X_GAIN", "S7_H2_ECONOMICS"],
+  "costBasis": "Retain wall/CPU/observed process memory/physical invocation and grant receipts including failed work; monetary, human and aggregate meters stay UNKNOWN where unobserved. Software preparation limits are not protected comparison qualification."
+}

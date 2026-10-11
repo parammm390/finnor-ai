@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.r3.installed-current-owner-cut.v1",
+  "registeredAt": "2026-10-10T18:02:16.444468+00:00",
+  "runs": 1,
+  "outerSeconds": 1800,
+  "cpus": 3,
+  "memoryBytes": 4294967296,
+  "sourceVector": "1477bdc724e5c444fb4bcab4349c8f6d42959fea52d2ff7d3e5bc0bafa25585a",
+  "apiManifest": "sha256:f0f67774398116af92e8cfe86d109729a5401d1c89269edb35f765c7961e6f63",
+  "predicate": "All 1716 installed source hashes match sealed image; actual compiled API handles signed owner requests; actual installed worker dispatches original/new jobs through physical PostgreSQL upgrade/restart and selected responsibility/currentness/schedule/ledger/S6 owner stories. No product/dependency/QA mounts. Missing cases or failure is not PASS.",
+  "originalRequestDeadlinesAndGrantsUnchanged": true,
+  "protectedAdmission": false,
+  "cases": "queued-original-and-r3-physical-restart,authenticated-owner-positive,report-correction-close,separate-acceptance-exact-choice-consumption,actual-fallback-matched-off-on,decline-no-response,rational-original-owner-compatibility,shared-grant-concurrency,cancel-and-partial,sigkill-after-child-acceptance,publication-row-lock-race,currentness-and-p7,native-experience-delivery,s6-supported-recovery"
+}

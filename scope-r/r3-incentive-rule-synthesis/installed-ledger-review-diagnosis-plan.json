@@ -1,0 +1,37 @@
+{
+  "schema": "finnor.r3.installed-ledger-review-diagnosis.v1",
+  "registeredAt": "2026-10-10T20:41:51.359502+00:00",
+  "observed": "Final v6 SIGKILL/publication/P7 pass; native ledger submit+worker COMPLETE then review504 at original initial bound. Actual SQL waits not blocked; compiled API cold-restarted for real transport bindings. No ledger delivery requests yet.",
+  "purpose": "Single isolated installed same-source native ledger/S6 cut with actual node CPU profile; retain prior fullFAIL and fourPASS scopes.",
+  "cases": [
+    "native-experience-delivery",
+    "s6-supported-recovery"
+  ],
+  "originalResponseSeconds": 30,
+  "grantAndDeadlineExtended": false,
+  "productSourceChanges": false,
+  "profileOnlyQAEnvironment": true,
+  "runSeconds": 1800,
+  "acceptance": "Actual compiled signed review/reservation/schedule, original ledger independently delivered/read back and supported S6 physical recovery under original 2s/5s bounds; no CLI projection or timeout waiver.",
+  "diagnosisCut": {
+    "cut": "installed-current-v6-ledger-s6-01",
+    "status": "FAIL_RETAINED",
+    "observed": "Isolated review504 at29138ms; actual newly restarted API profile includes repeated canonical owner encoding, crypto and async original-owner reads. CPU profile is retained, not assumed to prove a unique bottleneck."
+  },
+  "qaSequenceRepair": {
+    "registeredAt": "2026-10-10T20:46:47.785700+00:00",
+    "purpose": "Match actual mounted Work: real signed current protocol read and independent full checked-table assertion before a proposed-use reservation. No effect, grant, validity, request/lease timeout or product validator weakened.",
+    "cases": [
+      "native-experience-delivery",
+      "s6-supported-recovery"
+    ],
+    "runSeconds": 1800,
+    "productSourceChanged": false,
+    "failureModel": [
+      "Missing or invalid current complete protocol must refuse before review",
+      "No synthetic currentness/caller acceptance or response injection",
+      "Original read/review timers and original grant/deadline remain separately enforced",
+      "Read has no new effect or reservation authority"
+    ]
+  }
+}

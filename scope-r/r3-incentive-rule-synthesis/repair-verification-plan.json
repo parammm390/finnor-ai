@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.r3.internal-repair-verification.v1",
+  "registeredAt": "2026-10-10T04:28:42.177031+00:00",
+  "predecessorCommit": "370264ae3eb6a56fa98b677a9f857d60e98f53e6",
+  "predecessorTree": "c5cce108e0150bd7a11ae3f32da1be51f161f4ce",
+  "continuationAuthority": "Active original goal continues; this is a separately declared finite repair envelope for observed internal failures, not a reset or PASS for the exceeded prior campaign.",
+  "originalFunctionalPredicatesAndEpisodeLimitsUnchanged": true,
+  "limits": {
+    "campaignWallSeconds": 3600,
+    "imageBuilds": 2,
+    "hostOwnerRunSeconds": 900,
+    "installedOwnerRunSeconds": 1800,
+    "builderMemoryBytes": 4294967296,
+    "runtimeMemoryBytes": 4294967296,
+    "aggregateTaskMemoryLimitBytes": 17179869184,
+    "incrementalPreparationDiskBytes": 6442450944,
+    "nativeInitialResponseSeconds": 30,
+    "ledgerRequestMilliseconds": 2000,
+    "ledgerLeaseMilliseconds": 5000
+  },
+  "cases": [
+    {
+      "id": "ledger-transport-failure-diagnosis",
+      "entry": "existing native-experience-delivery E2E with fixture-only Undici error/timing observations",
+      "oracle": "actual original signed receiver, exact reference/event content and receipts; no increased timeout/retry/oracle weakening",
+      "artifact": "repair-ledger-01/receiver-diagnostics.json",
+      "expected": "Either complete original readback PASS or precise retained actual transport error/latency identifying repair boundary"
+    },
+    {
+      "id": "installed-current-compiled-api-worker",
+      "entry": "final current Docker API/worker installed native imports and queued-original-and-r3-physical-restart,authenticated-owner-positive",
+      "oracle": "real bounded signed HTTP, restricted SQL claims/owner readbacks and original/current installed source identities",
+      "artifact": "repair-linux-owners/results.json",
+      "expected": "81/648/324 checked rule, actual M3 candidate binding, original/R3 queued dispatch and physical migration restart; product-source mounts do not count"
+    },
+    {
+      "id": "linux-original-m3-isolation",
+      "entry": "original M3 refinement/executor caller and existing pinned Linux substrate; bounded runtime capability probe first",
+      "oracle": "ordinary isolation permissions/egress/files/fork refusal and exact original lowering oracle",
+      "artifact": "repair-linux-isolation/diagnosis.json",
+      "expected": "Supported actual isolation preserving original protected refusal; unsupported substrate remains internal incomplete, never silently bypassed"
+    },
+    {
+      "id": "remaining-s6-and-candidate-work",
+      "entry": "existing s6-supported-recovery and affected mounted candidate-selection flow",
+      "oracle": "one physical supported JSON mutation/UNKNOWN readback and actual selected programme/policy digest binding plus existing Work identity fences",
+      "artifact": "repair-owner-work/results.json",
+      "expected": "Actual current source evidence, no banking or live consent claim"
+    }
+  ],
+  "stopPolicy": "Only targeted causal repairs/runs, at most two image builds. Preserve every predecessor and new failure/cost. If substrate/resources prevent closure, retain engineering incomplete and exact remaining cases."
+}

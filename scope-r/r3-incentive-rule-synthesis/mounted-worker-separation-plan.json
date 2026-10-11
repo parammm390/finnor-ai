@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.r3.mounted-worker-separation-repair.v1",
+  "registeredAt": "2026-10-10T06:10:16.504029+00:00",
+  "trigger": "UI-selected exact target and checked publication succeeded, then original M3 invalidated during live polling; global fixture DATABASE_URL switches API to worker role.",
+  "scope": "Existing physical restricted worker child for continuation; retain original M3 failure/publication before teardown; never relax programme currentness",
+  "limits": {
+    "mountedRuns": 1,
+    "ownerRunSeconds": 900,
+    "browserSeconds": 600,
+    "workerSeconds": 120,
+    "additionalImageBuilds": 0,
+    "originalInitialResponseSeconds": 30,
+    "originalLedgerRequestMilliseconds": 2000
+  },
+  "previousFailuresAndCostsRetained": true,
+  "causeStatus": "PROCESS_SEPARATION_DEFECT_IN_SOURCE_OBSERVED_INVALIDATION_CAUSALITY_UNPROVED",
+  "qualification": "ORDINARY_ENGINEERING_NOT_PROTECTED_OR_COMBINED_R"
+}

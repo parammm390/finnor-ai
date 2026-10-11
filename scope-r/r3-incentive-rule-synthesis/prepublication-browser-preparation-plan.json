@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r3.prepublication-browser-preparation.v1",
+  "registeredAt": "2026-10-10T18:22:35.486199+00:00",
+  "causalEvidence": "repair-mounted-m3-catch-03/m3-catch/exception-1.json: actual M1 validity expired; native M3 currentness guard correct. No owner/source/TTL defect established.",
+  "failureModel": [
+    "Frontend cold compilation consumes original M1 validity after publication",
+    "SDK/browser transport setup consumes validity while attempts remain bound",
+    "Retried expired episode is incorrectly treated as fresh",
+    "Preparation response or warmed cache is treated as functional evidence",
+    "Delayed old reply is exposed across Work/tenant switch"
+  ],
+  "repair": "Prepare existing frontend server and real authenticated Work view before publishing the M3 candidate/R3 request. Record original source/input/commands and preparation costs. Same server is reused for the mandatory actual UI candidate-bound, table, reload, delayed reply, tenant and original preference-revision story. No TTL/accepted deadline/grant extension.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "preparationSeconds": 240,
+  "functionalBrowserSeconds": 600,
+  "preparationFunctionalPass": false,
+  "productHooks": false,
+  "originalFloorsUnchanged": true
+}

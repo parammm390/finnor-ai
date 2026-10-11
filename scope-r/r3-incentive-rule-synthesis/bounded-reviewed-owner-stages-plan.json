@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.r3.bounded-reviewed-owner-stages.v1",
+  "registeredAt": "2026-10-10T22:02:45.775933+00:00",
+  "observed": "Correct duplicate elimination withfinalcurrentness/ref fence still review50429096ms. CombinedS4/S5/S6 synchronous work does not fit original29s callback.",
+  "contractRevision": "finnor.r3.review-stage.v2; new reserve/schedules requestId operations; existing original owner routes retained",
+  "behavior": "Authenticated review PROPOSE_USE createsdurableS4review receipt only, truthful S4_REVIEWED_PENDING_RESERVATION; reserve delegates actual existingS5clear; schedules delegates complete originalS6schedule preparation/admissionpacket. Work onebutton awaits all3 and verifiesepoch/identity aftereach; partialdurableownerstates retained and resumable throughsameidempotent owner paths.",
+  "failureModel": [
+    "S4review alone must not claim reserved resources or completedS6",
+    "Currentness/funding must be revalidated byactual originalS5/S6 at their respective stages",
+    "No shadowreservation ledger,newgrant,consent,newfinancialoperation or unqualified stage invented",
+    "Source/identity/Work change between replies must stop later dispatch and clearprivatevalues",
+    "OriginalR3absolute deadline/grant/M1 validity must not reset acrossstages",
+    "Retryafterpartial failure must reuse actual committedrefs without duplicatingreservation/schedule or erasingpossibleliability",
+    "Everystage remains original29s callback/30s wirebound; overall episode600s original bound stays fixed"
+  ],
+  "acceptance": "Actual signedHTTPstage receipts+SQL/readback match same request/policy/canonicalS5reservation/81completeS6branches324members; exactpacketref; allcurrent owner/rational/fallback/fault/P7/Work/runtime/reconstruction checks before completion.",
+  "unitTestsAdded": false,
+  "computeAndPreparationChargesRetained": true,
+  "sourceScope": "R3ownedAPI/schema/services/WorkchildandexistingprimaryE2E; regenerateintegrated outputs",
+  "changedMathOrOriginalOwnerSemantics": false,
+  "newJobTypesOrMigrations": false,
+  "originalFloorsReset": false,
+  "runSeconds": 1800,
+  "cpus": 3,
+  "memoryBytes": 4294967296
+}

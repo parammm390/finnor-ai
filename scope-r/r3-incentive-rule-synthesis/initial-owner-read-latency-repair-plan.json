@@ -1,0 +1,19 @@
+{
+  "schema": "finnor.r3.initial-owner-read-latency-repair.v1",
+  "registeredAt": "2026-10-10T19:03:17.589473+00:00",
+  "evidence": "current-candidate-workflow-01: actual submit refused R3_INITIAL_RESPONSE_DEADLINE_EXHAUSTED at 29861 ms, no request admitted. CPU profile has 14031 ms idle plus repeated native world/belief/JSON reads; concurrent mounted views contribute to the same authenticated API process.",
+  "failureModel": [
+    "Sequential independent source/pin/runtime/schema reads consume original deadline",
+    "Repeated identical resource belief pin is replayed independently for each resource",
+    "Parallelization skips a distinct pin or source/rights check",
+    "Concurrent operations return before required checks finish",
+    "Changed source/resource/rights metadata escapes final publication fences",
+    "A longer timeout hides the original response failure"
+  ],
+  "repair": "R3 leaf only: validate every distinct exact resource belief pin once within the invocation, concurrently; retain all per-resource semantic/obligation checks. Resolve each original party source concurrently and still compare exact full meaning/bytes. Resolve independent runtime/code/schema checks concurrently. Preserve original owner APIs, grant validation, complete domains and final currentness/publication fences. No cache across calls, no caller currentness flags, no deadline increase.",
+  "acceptance": "Existing authenticated-owner positive/currentness/grant/rational/fault cases and current mounted candidate flow on actual repaired source, followed by final installed API/worker owners. Source revisions must still refuse; no unit tests.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "initialResponseSeconds": 30,
+  "originalFloorsUnchanged": true
+}

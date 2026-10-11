@@ -1,0 +1,30 @@
+{
+  "schema": "finnor.r3.physical-worker-observer-repair.v1",
+  "registeredBeforeCode": true,
+  "observedFailure": "Installed current API accepted producer/checker and blocked actual protocol insert; spawnSync /bin/ps returned null status because that executable is absent. The whole cut remains FAIL.",
+  "failureModel": [
+    "A child handle alone does not independently establish an extant physical OS process",
+    "A missing ps binary must not become a passing physical fault receipt",
+    "PID reuse, zombie, foreign parent or wrong UID must refuse the fault oracle",
+    "The original SIGKILL, publication blocker, native charges, attempt/deadline, lease recovery and no-replay predicates must remain unchanged"
+  ],
+  "repairScope": "QA_ONLY_LINUX_PROCFS_OBSERVATION_WITH_ORIGINAL_DARWIN_PS_RETAINED",
+  "acceptance": "Read real /proc/PID stat/status/cmdline before SIGKILL; verify PID, actual coordinator parent, UID and non-zombie state; retain raw receipt. Then execute unchanged original kill/recovery and original SQL/currentness checks.",
+  "rerunCases": [
+    "sigkill-after-child-acceptance",
+    "publication-row-lock-race",
+    "currentness-and-p7",
+    "native-experience-delivery",
+    "s6-supported-recovery"
+  ],
+  "reuse": "Prior ten successful installed checks and mounted proofs retained against identical product/dependency/compiled bytes; new final image vector differs only in this QA observer.",
+  "newGrantsOrDeadlines": false,
+  "reducedDomain": false,
+  "runSeconds": 1800,
+  "originalFloorsReset": false,
+  "preImportSourceAuditFoundSameAssumption": "Existing S6 cold/reaped-process observers also call ps; extend the same QA-only actual procfs observation before final import.",
+  "affectedQaPaths": [
+    "finnor-os/scripts/r3/run-owner-e2e.mts",
+    "finnor-os/scripts/s6/governed-dispatch-proof.mts"
+  ]
+}

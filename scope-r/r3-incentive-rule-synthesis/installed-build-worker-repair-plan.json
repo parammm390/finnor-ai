@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.installed-build-worker-repair.v1",
+  "registeredAt": "2026-10-10T14:41:49.714286+00:00",
+  "trigger": "Actual Linux JS compilation succeeds, then typechecking worker SIGKILL in 2 GiB compiler; exact installed source vector passes",
+  "repair": "Enable documented Next 15 webpackBuildWorker so compilation runs separately and retained webpack heap does not overlap typechecking; preserve all type/security/owner checks",
+  "primarySource": "https://nextjs.org/docs/15/app/guides/memory-usage",
+  "limits": {
+    "additionalCompilationAttempts": 1,
+    "compilationSeconds": 900,
+    "compilerMemoryBytes": 2147483648,
+    "nodeOldSpaceMiB": 1536,
+    "additionalImageAssemblies": 0
+  },
+  "oldFailurePreserved": true,
+  "qualification": "BUILD_ENGINEERING_ONLY_NO_ORIGINAL_EPISODE_LIMIT_CHANGE"
+}

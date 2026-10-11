@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.r3.causal-m3-full-read-diagnosis.v1",
+  "registeredAt": "2026-10-10T17:56:59.022946+00:00",
+  "runs": 1,
+  "outerSeconds": 900,
+  "priorEvidence": "repair-m3-currentness-diagnosis-01: original M1/recheck/ownerVector CURRENT at all three stages",
+  "failureModel": [
+    "S5 candidate snapshot or validity differs despite original owner vector",
+    "Checked policy list differs from immutable allocation candidate policies",
+    "Immutable candidate module bytes/readback fails",
+    "Later repeated binding or actual signed HTTP read changes status",
+    "Actual transport budget or context differs from direct owner probes"
+  ],
+  "acceptance": "Retain exact S5 candidate owner read exception/preimages and candidate module reads at the same three staged boundaries; execute the real signed M3 full read after foreign fixture. Diagnostic has no product hook or functional PASS. Do not revive invalidated query, alter grant, or relax currentness.",
+  "originalFloorsUnchanged": true,
+  "browserStarted": false
+}

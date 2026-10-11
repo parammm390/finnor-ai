@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.r3.mounted-context-repair.v1",
+  "registeredAt": "2026-10-10T05:51:56.052775+00:00",
+  "trigger": "Actual signed Canvas context has zero declarations/policies; declared organisation context has both and both parse. First mounted candidate case reached finite limit without completing.",
+  "predecessorFailuresRetained": true,
+  "scope": "Only actual context root selection, versioned context response, actual UI selection/submission and existing mounted privacy checks",
+  "limits": {
+    "ownerRunSeconds": 900,
+    "browserControlSeconds": 600,
+    "preparationSeconds": 120,
+    "initialResponseSeconds": 30,
+    "episodeDeadlineSeconds": 3600,
+    "additionalImageBuilds": 0,
+    "maximumMountedRuns": 1
+  },
+  "oracle": "Real signed HTTP current M3 target and original S4 belief root; actual UI chooses and submits, restricted worker publishes exact target in checked rule, followed by original cells/reload/identity/currentness proof",
+  "qualification": "ORDINARY_ENGINEERING_ONLY_NO_RESET_OR_PASS_FOR_PREVIOUS_CAMPAIGNS"
+}

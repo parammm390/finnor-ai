@@ -1,0 +1,2175 @@
+{
+  "schema": "finnor.r3.repair-progress.v1",
+  "functionalDelivery": "COMPLETE_R3_ON_PINNED_BASE",
+  "predecessor": "370264ae3eb6a56fa98b677a9f857d60e98f53e6",
+  "currentSource": "FINAL_INSTALLED_VECTOR_AND_RELEASE_JSON",
+  "runs": [
+    {
+      "run": "repair-ledger-01",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "message": null,
+          "elapsedMs": 8999.213124999998
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "message": "Native owner dependencies did not reach accepted delivery in the registered observation bound",
+          "elapsedMs": 177182.717208
+        }
+      ],
+      "sourceFrozen": null
+    },
+    {
+      "run": "repair-ledger-02",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "message": null,
+          "elapsedMs": 14051.715583000001
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "message": "Native owner dependencies did not reach accepted delivery in the registered observation bound",
+          "elapsedMs": 439209.842084
+        }
+      ],
+      "sourceFrozen": true
+    },
+    {
+      "run": "repair-ledger-03",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "message": null,
+          "elapsedMs": 15435.529708000002
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "message": "{\"status\":504,\"body\":{\"code\":\"R3_INITIAL_RESPONSE_DEADLINE_EXHAUSTED\",\"error\":\"R3_INITIAL_RESPONSE_DEADLINE_EXHAUSTED\",\"executionAuthorityGranted\":false},\"elapsedMs\":29039.63741699999}\n\n504 !== 200\n",
+          "elapsedMs": 115707.31175
+        }
+      ],
+      "sourceFrozen": true
+    }
+  ],
+  "firstImageBuild": "FAILED_PINNED_LINUX_ARM64_PYSCIPOPT_WHEEL_UNAVAILABLE",
+  "secondImageBuild": "FAILED_ACTUAL_NEXT_API_AMBIENT_NODE_ENV_TYPE_MISMATCH_FIXED_AND_API_TYPECHECK_PASS",
+  "originalDeadlinesUnchanged": true,
+  "qualification": "NO_PROTECTED_ADMISSION_OR_ACTIVATION",
+  "updatedAt": "2026-10-11T03:41:14.682020+00:00",
+  "thirdImageBuild": "FAILED_RUNTIME_COPY_READ_ONLY_FILESYSTEM_HOST_NO_SPACE_NO_FINAL_CURRENT_IMAGE",
+  "ledger": {
+    "status": "PASS",
+    "source": "evidence/repair-ledger-04/native-ledger/boundaries.json",
+    "records": 203,
+    "actualReceiverRequests": 699,
+    "maxObservedRequestMs": 191.10616700000537,
+    "aborts": 0,
+    "requestTimeoutMs": 2000,
+    "leaseMs": 5000,
+    "wholeRunStatus": "FAIL_SUBSEQUENT_S6_CASE"
+  },
+  "ledgerStorage": {
+    "status": "PASS",
+    "source": "evidence/repair-ledger-storage-02/results.json",
+    "physicalRestart": true,
+    "unrelatedContentMutationRefusedReadAndAppend": true,
+    "restoredExactBytesAndNoReplayCommitment": true
+  },
+  "s6Supported": {
+    "status": "PASS",
+    "source": "evidence/repair-s6-01/results.json",
+    "actualPhysicalJsonMutation": 1,
+    "bankPayment": false
+  },
+  "mountedCandidate": {
+    "status": "PASS_ALL_REQUIRED_NAMED_ORACLES",
+    "evidence": {
+      "rootId": "completion",
+      "path": "final-staged-mounted-custody.json",
+      "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+    }
+  },
+  "engineOwnership": "SHARED_GLOBAL_SERVICE_FOREIGN_R7_CONTAINER_OBSERVED_AND_UNTOUCHED",
+  "retainedHistoricalStateBeforeFinalDelivery": {
+    "functionalDelivery": "COMPLETE_R3_ON_PINNED_BASE",
+    "currentSource": "FINAL_INSTALLED_VECTOR_AND_RELEASE_JSON",
+    "mountedCandidate": {
+      "status": "PASS_ALL_REQUIRED_NAMED_ORACLES",
+      "evidence": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-custody.json",
+        "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+      }
+    }
+  },
+  "finalApi": {
+    "status": "PASS",
+    "evidenceClass": "EMPIRICALLY_VERIFIED",
+    "role": "api",
+    "manifestDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+    "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+    "command": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/run-command.json",
+      "sha256": "d541845c3eb0a6b44039f9906a7161c49fea8ae212a15181d8596847ceb37151"
+    },
+    "results": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/results.json",
+      "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+    },
+    "installedSourceReadback": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/installed-source-readback.json",
+      "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+    },
+    "upstreamBytecode": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/upstream-bytecode-readback.json",
+      "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+    },
+    "systemTLS": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/system-tls-readback.json",
+      "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+    },
+    "compiledAPI": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/compiled-api-readback.json",
+      "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+    },
+    "runtime": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/runtime/results.json",
+      "sha256": "e7fae8d57492f9f621d0bd0af2965163ac4065927e05364ad9a00ba512c6577d"
+    },
+    "permissions": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/permissions-readback.json",
+      "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+    },
+    "cases": {
+      "base-local-migration-upgrade-restart": "PASS",
+      "s6-supported-recovery": "PASS"
+    },
+    "defaultServiceCmdStartupClaimed": false,
+    "proofDriverOverridesImageCommand": true,
+    "actualPhysicalRegisteredWorkerDispatchVerified": false,
+    "allCurrentFunctionalCasesAcrossFinalRoles": {
+      "base-local-migration-upgrade-restart": "PASS",
+      "s6-supported-recovery": "PASS",
+      "queued-original-and-r3-physical-restart": "PASS",
+      "authenticated-owner-positive": "PASS",
+      "report-correction-close": "PASS",
+      "separate-acceptance-exact-choice-consumption": "PASS",
+      "actual-fallback-matched-off-on": "PASS",
+      "decline-no-response": "PASS",
+      "rational-original-owner-compatibility": "PASS",
+      "shared-grant-concurrency": "PASS",
+      "cancel-and-partial": "PASS",
+      "sigkill-after-child-acceptance": "PASS",
+      "publication-row-lock-race": "PASS",
+      "currentness-and-p7": "PASS",
+      "native-experience-delivery": "PASS"
+    }
+  },
+  "finalWorker": {
+    "status": "PASS_CURRENT_NAMED_CASE_CUSTODY",
+    "evidenceClass": "EMPIRICALLY_VERIFIED",
+    "role": "worker",
+    "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+    "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+    "command": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/run-command.json",
+      "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+    },
+    "results": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/results.json",
+      "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+    },
+    "installedSourceReadback": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+      "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+    },
+    "upstreamBytecode": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+      "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+    },
+    "systemTLS": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+      "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+    },
+    "compiledAPI": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+      "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+    },
+    "runtime": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+      "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+    },
+    "permissions": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+      "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+    },
+    "cases": {
+      "base-local-migration-upgrade-restart": "PASS",
+      "queued-original-and-r3-physical-restart": "PASS",
+      "authenticated-owner-positive": "PASS",
+      "report-correction-close": "PASS",
+      "separate-acceptance-exact-choice-consumption": "PASS",
+      "actual-fallback-matched-off-on": "PASS",
+      "decline-no-response": "PASS",
+      "rational-original-owner-compatibility": "PASS",
+      "shared-grant-concurrency": "PASS",
+      "cancel-and-partial": "PASS",
+      "sigkill-after-child-acceptance": "PASS",
+      "publication-row-lock-race": "PASS",
+      "currentness-and-p7": "PASS",
+      "native-experience-delivery": "PASS"
+    },
+    "defaultServiceCmdStartupClaimed": false,
+    "proofDriverOverridesImageCommand": true,
+    "actualPhysicalRegisteredWorkerDispatchVerified": true,
+    "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+    "wholeRunPromotedToPass": false,
+    "processExitCode": null,
+    "terminalObservation": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+      "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+    },
+    "scope": "All required worker named cases on identical final source, compiled API, runtime and image bytes: thirteen complete named cases from the interrupted storage run plus the complete terminal ledger rerun. No single whole worker story is promoted to PASS.",
+    "completedNamedCaseRun": {
+      "status": "PASS_NAMED_CASES_IN_INTERRUPTED_RUN",
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "role": "worker",
+      "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+      "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/run-command.json",
+        "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+      },
+      "results": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/results.json",
+        "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+      },
+      "installedSourceReadback": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+        "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+      },
+      "upstreamBytecode": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+        "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+      },
+      "systemTLS": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      },
+      "compiledAPI": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+        "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+      },
+      "runtime": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+        "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+      },
+      "permissions": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+        "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+      },
+      "cases": {
+        "base-local-migration-upgrade-restart": "PASS",
+        "queued-original-and-r3-physical-restart": "PASS",
+        "authenticated-owner-positive": "PASS",
+        "report-correction-close": "PASS",
+        "separate-acceptance-exact-choice-consumption": "PASS",
+        "actual-fallback-matched-off-on": "PASS",
+        "decline-no-response": "PASS",
+        "rational-original-owner-compatibility": "PASS",
+        "shared-grant-concurrency": "PASS",
+        "cancel-and-partial": "PASS",
+        "sigkill-after-child-acceptance": "PASS",
+        "publication-row-lock-race": "PASS",
+        "currentness-and-p7": "PASS"
+      },
+      "defaultServiceCmdStartupClaimed": false,
+      "proofDriverOverridesImageCommand": true,
+      "actualPhysicalRegisteredWorkerDispatchVerified": true,
+      "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+      "wholeRunPromotedToPass": false,
+      "processExitCode": null,
+      "terminalObservation": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+        "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+      },
+      "scope": "Only the thirteen fully recorded named case assertions; the interrupted whole run is not PASS."
+    },
+    "ledgerCompletionRun": {
+      "status": "PASS",
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "role": "worker",
+      "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+      "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/run-command.json",
+        "sha256": "90d829902ed13ccbe05515701dfb1a8d5313a9f74f049a8f399d8502ba2d7340"
+      },
+      "results": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/results.json",
+        "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+      },
+      "installedSourceReadback": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/installed-source-readback.json",
+        "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+      },
+      "upstreamBytecode": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/upstream-bytecode-readback.json",
+        "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+      },
+      "systemTLS": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      },
+      "compiledAPI": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/compiled-api-readback.json",
+        "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+      },
+      "runtime": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/runtime/results.json",
+        "sha256": "e3494cb92d905ae4f6fc69c4dbe14caaa6193946fbf32201d75bc3a8b1311943"
+      },
+      "permissions": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/permissions-readback.json",
+        "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+      },
+      "cases": {
+        "base-local-migration-upgrade-restart": "PASS",
+        "native-experience-delivery": "PASS"
+      },
+      "defaultServiceCmdStartupClaimed": false,
+      "proofDriverOverridesImageCommand": true,
+      "actualPhysicalRegisteredWorkerDispatchVerified": false
+    },
+    "decisiveResultReceipts": [
+      {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/results.json",
+        "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+      },
+      {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/results.json",
+        "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+      }
+    ],
+    "nativeLedgerBoundary": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-ledger-03/native-ledger/boundaries.json",
+      "sha256": "30a404381790286b8a8f75973b55d202b1b406eb77570d5c2ca15ecb1262fb6d"
+    },
+    "nativeLedgerCounts": {
+      "origins": 187,
+      "journal": 187,
+      "events": 13,
+      "references": 6
+    }
+  },
+  "finalSourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+  "finalHistoricalFailures": [
+    {
+      "cut": "bounded-stages-host-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "bounded-stages-host-ledger-s6-01/results.json",
+        "sha256": "cae6fd86dc8a4ad5a657061b23feaf005bd3a2bd5a4fcbe086fd103cb8fe87c4"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "bounded-stages-host-ledger-s6-01/failure.json",
+        "sha256": "9ffaf1be91e867adb63fdfa38be321235c9ad925e1ba7b5e66a4a8e44e9b0760"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "bounded-stages-host-ledger-s6-01/run-command.json",
+        "sha256": "ea812929575ef704f7c1c892f334197130f43f3d6c9d969074c7798cba9ea695"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "current-candidate-workflow-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "current-candidate-workflow-01/results.json",
+        "sha256": "d1a2b7be5d59ecb431a95adeae7e186b267e27cef549c5059f9fb010f1e03072"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "current-candidate-workflow-01/failure.json",
+        "sha256": "d3c8302cc05f210e9b12f723546e98084f935f68994c74e59dfd8c48ee64dd42"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "current-candidate-workflow-01/run-command.json",
+        "sha256": "1cb79deb3cb73f5a59473d2b78d67d147b9e3a6abc4de0bb7e53cfc79444f003"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "currentness-final-mounted-01-run",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "currentness-final-mounted-01-run/results.json",
+        "sha256": "d79d97a0f415bd8a836ad82c992bf1faebf3cdab4bc490f3d59b50a2ecc20d95"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "currentness-final-mounted-01-run/failure.json",
+        "sha256": "a8365b4be8da5ad9e4bf8b3b0052690c2ff26cdb33778ceaa50daa8c00885e0c"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "currentness-final-mounted-01-run/run-command.json",
+        "sha256": "7cdb26db8648249f02fb04f0bff6b3f1986c5ab7f189119a681ef14b9f9506b6"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-metadata-seal-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "final-metadata-seal-01/command.json",
+        "sha256": "4733befca96096170c892019217aa5ef6a83487c7904b4dd40d8d30dac1e3cd4"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-metadata-seal-02",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "final-metadata-seal-02/command.json",
+        "sha256": "9bc55432e122b5e7e12286775a7e91522857fb021a1992a0b4eba7b95033f864"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-metadata-seal-03",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "final-metadata-seal-03/command.json",
+        "sha256": "276726d7f192e7b1b6605ca2069ecf0c5b7a0ffde364f2912a907631960e468a"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-staged-mounted-01-run",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-01-run/results.json",
+        "sha256": "8f129e866b3dfda3489ad28c51e56f5bb4195bfba25b6d51c84348204a499f4e"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-01-run/failure.json",
+        "sha256": "4012dc7f02c16b8b65d08e5969fd2e46ac6dbec326bd9dd0143fd10dbe464573"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-01-run/run-command.json",
+        "sha256": "0e1314dc1f68c90c2a30bedeca2393a9f2279f974ce03d16f3ffe3472bf75df6"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-staged-mounted-02-run",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-02-run/results.json",
+        "sha256": "61190305f4a8615ebe99f80a251e387e64b92c9b775ea7829b95d7f184dacd58"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-02-run/failure.json",
+        "sha256": "c4d8618ef43a73ef3d2c6cbd26624701a4c9d8202387ac4118d240f1fd7d8318"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-02-run/run-command.json",
+        "sha256": "635b539ec9075cdcc51ce589c89964798222fdb3c807128d2fc921c47ccdc2cd"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-staged-mounted-03-run",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-03-run/results.json",
+        "sha256": "1dcc5f456b133a00e1921a2fe21663e0f493ecfb964d38b58c1c496360b05834"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-03-run/failure.json",
+        "sha256": "312a3310a9704794680ba58ca54f54ecbda94f30263b328f5e7f0eda17706ebe"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-03-run/run-command.json",
+        "sha256": "1ac3e35a2ac084dd0354ac8d1e0835fb945788cc650fe85a42def520430b74aa"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-staged-mounted-04-primary",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-04-primary/results.json",
+        "sha256": "af0c76b9897d565f3996740467ced97de78938681e1b5f52e4abf7441fcaa398"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-04-primary/failure.json",
+        "sha256": "ca1f571831e4b0f1cb55e52bf953ce38fd2c38c9172794f6799829f2cd3ede6f"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-04-primary/run-command.json",
+        "sha256": "86dc404595232226be0217d14134cc46a36298b82ed17e71bd631bafa3e347aa"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-staged-mounted-06-tail",
+      "status": "INTERRUPTED_INCOMPLETE",
+      "cases": [],
+      "interruptionObservation": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-06-tail/resumption-observation.json",
+        "sha256": "eeac728dfefa3409a252ae690a8d477adf03c50f339b794c442b2e74380e7c44"
+      },
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-06-tail/results.json",
+        "sha256": "04f6a27aff24540a22e93491a86610d4db7db0f2d93a4b89bf9e640550566ff7"
+      },
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-06-tail/run-command.json",
+        "sha256": "3422fc1db7ee075f0e78c15506a025730dd9b7c0679a4c8455614ce165a7d8f9"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "final-v19-api-import-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "final-v19-api-import-01/command.json",
+        "sha256": "e081184a18b57ba45a4ae8d6bd7bc9dd9741d0ebfeb032a525e23dbf8291eb9d"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-01/results.json",
+        "sha256": "d04d68637e22564ea3283d7c2d73a3a1db861b9c041e84b1e6928e5cb2e48f6b"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-01/failure.json",
+        "sha256": "4c9e52fffa6fc621ef6a51e20e8e79d9a72e667cbb104eca361995b8dbbf41d0"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-01/run-command.json",
+        "sha256": "1f96b6cb4ce1981f61258a804260de61247a714fe0a4445bd289bab13e96402d"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-02/results.json",
+        "sha256": "1bacaeaea59b8bfeed611a6a38a80262129e588e60587608aac2893186121a77"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-02/failure.json",
+        "sha256": "69962e4561be0b88b08add82a3711478ae847b3211a97779aaaadd7c7338ff0a"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-02/run-command.json",
+        "sha256": "8ef302106cfe987006ada68f5dcff454e308421f323b9d3c14abb2576e008d38"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-03",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-03/results.json",
+        "sha256": "01a538b51e183fc0694d294632a24b66444bbe6d06f6a43061e7bf2c67bba58d"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-03/failure.json",
+        "sha256": "e0b7668096df7a190991cecd1b34639d11d51472abdc0d70d75be2a79d045545"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-03/run-command.json",
+        "sha256": "8b240af98f37102d0d8500e0558c0a24afc0d7b98edbc497db5284d7503e051c"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-04",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-04/results.json",
+        "sha256": "2a6009944a24769b7c809d0af3429f8c017aaffefc5cd60d5d81e9eb5a643601"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-04/failure.json",
+        "sha256": "a4b97dee3d50c853b2b7d1b87140eb0f2a66da635831ca68b92833ad91f3a8e5"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-04/run-command.json",
+        "sha256": "d87ce43c6d86573cf5fb25602ebfeb2d1a63ef8d451c80c5eb87f7555e3c9806"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-05",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-05/results.json",
+        "sha256": "d3277843f2c95691c9ceb8c08b7d89260daa892965d008104c3a3b2a9473435e"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-05/failure.json",
+        "sha256": "256cb2cde7f7eb0a1e46bf34f5b8db245b13e7a6cbf06442a21f43b590d26219"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-05/run-command.json",
+        "sha256": "466fd78440678936b8720025a6f057b22e4fbc93903f83bfc231b97fabf7e2b0"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-06",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-06/results.json",
+        "sha256": "81902406d3fc9174f947deb16427610d208bec5009dddb6faf38340fe6943374"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-06/failure.json",
+        "sha256": "ec3bc45c9f2b0d913b42b565103127b6530f9e68e4c601d7663dc989088cf1af"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-06/run-command.json",
+        "sha256": "7ec7f5cc4947d2896565cb3431f3df05531cbfab5ac8ceb4831c5bd9b2f93b96"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-07",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "decline-no-response",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-07/results.json",
+        "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-07/failure.json",
+        "sha256": "abe6a97b4802c82dc0e2f16195f261bbdd4ab7427d5c7130343dd418c5faf3d0"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-07/run-command.json",
+        "sha256": "0ca361524ce87f8bab58266876efa183cd296435c5e32b6d049745ca199abe74"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "host-final-owners-08",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "host-final-owners-08/results.json",
+        "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-08/failure.json",
+        "sha256": "5cdbba19458f98d60e9f31861a34b9b3247286ef84b55f19e11fa05e4416b8ec"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "host-final-owners-08/run-command.json",
+        "sha256": "c7aa33084ea54ea06b38ae5a9e9dcdf374c4851f298e7abd27b34c26ba68aec0"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-context-v2-owners-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "actual-fallback-matched-off-on",
+        "cancel-and-partial",
+        "currentness-and-p7",
+        "decline-no-response",
+        "native-experience-delivery",
+        "publication-row-lock-race",
+        "rational-original-owner-compatibility",
+        "report-correction-close",
+        "s6-supported-recovery",
+        "separate-acceptance-exact-choice-consumption",
+        "shared-grant-concurrency",
+        "sigkill-after-child-acceptance"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-context-v2-owners-01/results.json",
+        "sha256": "46135fdd6c0258c7a6aba231e849decc6f6f62f618f1c3fb4b18705b90736f12"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-context-v2-owners-01/failure.json",
+        "sha256": "9c8b9837d1e5f121dbc7bd53d60d0d1e7b157107ed504648b2c7170aef0266f1"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-context-v2-owners-01/run-command.json",
+        "sha256": "76857048259677ddd8fbf6667b8af6a5fb88721be037904d9baaed6a57df1166"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v10-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "native-experience-delivery",
+        "s6-supported-recovery"
+      ],
+      "result": null,
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v10-ledger-s6-01/failure.json",
+        "sha256": "35c0dcd2fcd2fe03cd369c271672846a93d4b17ba3beacdd8945243d5a16df8b"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v10-ledger-s6-01/run-command.json",
+        "sha256": "6993b9c924199c626a72d32e24e8da6ae28f6cb03a540e7876b54a8362669033"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v10-ledger-s6-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v10-ledger-s6-02/results.json",
+        "sha256": "6851a33f76f9044d9b2c1f504b2f3b8c54a405d90426247597904cb38a147f94"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v10-ledger-s6-02/failure.json",
+        "sha256": "fc3ab01d5b1b2bdc1b2273c0850289c90a888c8e43e5388e694cd84b084f3baf"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v10-ledger-s6-02/run-command.json",
+        "sha256": "e426a65c2b1ad9015354e25f4e2a86f1701c9d053ff94e6be276c3436af22415"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v11-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v11-ledger-s6-01/results.json",
+        "sha256": "dc0759231658d527b1a2c76c414387d316303f272c751236628675a95a4e9ab9"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v11-ledger-s6-01/failure.json",
+        "sha256": "99e71aec841f97c5db3d6d6e1b33b75b9d915deccb4ade7b63573bc2411366fb"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v11-ledger-s6-01/run-command.json",
+        "sha256": "2522f2e49a94080cfd427d9a37a1249296f1dcd832f8c3f6b66a9ff570840c9d"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v12-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v12-ledger-s6-01/results.json",
+        "sha256": "94cd1b883da19d7db3014f233778b7ecb099891f11abcb3e93e1385e7f92aa1f"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v12-ledger-s6-01/failure.json",
+        "sha256": "3785ebc1dc8d37430c1e55a1079a8ba6d220face416187d0d35af278afa101f5"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v12-ledger-s6-01/run-command.json",
+        "sha256": "710b82037ebe1cad3baeb4be7c83d171831a9f62fc369bf3c21da41f47e027c0"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v14-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v14-ledger-s6-01/results.json",
+        "sha256": "9e778f605e5c1d453f1490bdf949ba927e5694eb779ebcdbd90b14612114da69"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v14-ledger-s6-01/failure.json",
+        "sha256": "957e175e8cd6653ec30b8a04969885271a5d4d9fafd7dd81fd472d2992ecb5af"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v14-ledger-s6-01/run-command.json",
+        "sha256": "6fde297f39a953d03ded0bac0614f19c6c47e8efce6a2ff3de1be3cfa0c66cb9"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v4-api-owners-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "sigkill-after-child-acceptance",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "currentness-and-p7",
+        "native-experience-delivery",
+        "publication-row-lock-race",
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v4-api-owners-01/results.json",
+        "sha256": "dcced017b8c39699d48d047531b48118bd8ea6aca46b61a62c84ea5be2eefed9"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v4-api-owners-01/failure.json",
+        "sha256": "2a7762bbe6a6a8f5a3402421493932f7835b183f88077f3f7ad91f3d51f3236b"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v4-api-owners-01/run-command.json",
+        "sha256": "488483118740e239eac0795d14c055635a540421c98a63b5c202431b73d72655"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v6-api-faults-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v6-api-faults-01/results.json",
+        "sha256": "643216f15bdb2d0e7e0a17e179bf3548b0db25ef5fe3729848a0a368079bb285"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v6-api-faults-01/failure.json",
+        "sha256": "260bca2e23744ea344391191615db748b3662a89dd0c47dd0df5646dd0abbb00"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v6-api-faults-01/run-command.json",
+        "sha256": "cd982ce942b2be781a715b0b5bbd4da29e8561a59f8ccaa0c905606df658a300"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v6-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v6-ledger-s6-01/results.json",
+        "sha256": "d3cd5392153575db1df8439c029ce314d29ffe3fc017f59f467b8df196eefb41"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v6-ledger-s6-01/failure.json",
+        "sha256": "ff055d65679295ea197662e5228e5fbca326460b7303019158878de11f551814"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v6-ledger-s6-01/run-command.json",
+        "sha256": "610da0ca357c15fd3dc2e2694e907d4e88b30ecc340743b5a9a56d5beaee2355"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v7-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v7-ledger-s6-01/results.json",
+        "sha256": "df01a96278c56ed53eeff0d02fd0faa519166d4fb78037847088ef73f2f1726e"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v7-ledger-s6-01/failure.json",
+        "sha256": "6b5d6c50d9b987b58746e6a93754b1edcc8bab5742050ff62d12b51c8e0002fa"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v7-ledger-s6-01/run-command.json",
+        "sha256": "60f2ef9b22e6e380d905fbe0c17dc68884ed85f8343bf2bb0d1fea758b6031ea"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-current-v9-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-current-v9-ledger-s6-01/results.json",
+        "sha256": "b29911547a520a29e639349f09db3c5c5b515879dce8d6b2b88509649ca6d026"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-current-v9-ledger-s6-01/failure.json",
+        "sha256": "7bd0150f486f9119d507ea207350fcedd45f164b9a32606d5b4bf3fcc346056a"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-current-v9-ledger-s6-01/run-command.json",
+        "sha256": "6dd2ae3160ad9645ca29f155da4bb4f6257cdad9a893207173acc9757a7132a3"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-registration-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-registration-01/command.json",
+        "sha256": "70d5da42b24701122a3b01b3290c50461a545fc08d235bf2116f4f301cc221fb"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v16-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v16-ledger-s6-01/results.json",
+        "sha256": "d061910c8a36b3bebe86d12d13b177691e9b51ac298128c951b7bf541ba43a49"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-final-v16-ledger-s6-01/failure.json",
+        "sha256": "098cc8cb2e72d7fa4d7125c1357dd690e4f4cc4dd11fb795f5d4eb6821705293"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v16-ledger-s6-01/run-command.json",
+        "sha256": "5366d8ce7dbb714c9fd566c575f91cf80ac1e4a5d3a9ffa7dafcc7183c5af497"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v17-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "native-experience-delivery",
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v17-ledger-s6-01/results.json",
+        "sha256": "648918bc0568c49d3c1d4cf1f63d8b12efcb52491842e4c49a566e21ae91e5e6"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-final-v17-ledger-s6-01/failure.json",
+        "sha256": "0b8f25a8de5b8581f65fc406736202d7560cb08bf95bef13c4d32c778c2f84c4"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v17-ledger-s6-01/run-command.json",
+        "sha256": "85a0c7612f755e51fb202a1d73bc74fd8e2b40b78c65f5c481e489796bd28b32"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v18-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v18-ledger-s6-01/results.json",
+        "sha256": "019f79f2783407bef2a376dd261df5c47874bd829f8774193eaae20f07cf40e9"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-final-v18-ledger-s6-01/failure.json",
+        "sha256": "a94d93ce076236077ea50d0cf24e5a510c9c561c755d216d8763bfddc79a0900"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v18-ledger-s6-01/run-command.json",
+        "sha256": "bd7718801892c736b8ff1e5ea221d845242b48ae0e668c286fc0138b472d26a7"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v19-ledger-s6-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "s6-supported-recovery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v19-ledger-s6-01/results.json",
+        "sha256": "57b48136b47019fb67a8d359cb765574eaff8f02112ce14cf446ffd8800405f8"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-final-v19-ledger-s6-01/failure.json",
+        "sha256": "eb9c7a8ec3ee2971545b709b5dd6fa910992355e2661f749e15127f1aee06097"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v19-ledger-s6-01/run-command.json",
+        "sha256": "50b2811cb7e0e5a905348f6c124c54f2378fcde8dd5e4880ef65c010e15371c2"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v20-s6-recovery-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "s6-supported-recovery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v20-s6-recovery-01/results.json",
+        "sha256": "6a493a49539e92ac5f1d74bd47628642e594796e5fb6acf7c5629ecbf948f6ca"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-final-v20-s6-recovery-01/failure.json",
+        "sha256": "cda3284d49fb22fa12efb57e3ce54775d9d0df09c4a78360cfc1cf66fb6042a4"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v20-s6-recovery-01/run-command.json",
+        "sha256": "657c0c869ac4770651cf9ea875963799a97a6fd64933a8698da12e6668130195"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v21-worker-ledger-02",
+      "status": "INTERRUPTED_INCOMPLETE",
+      "cases": [],
+      "interruptionObservation": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-02/resumption-observation.json",
+        "sha256": "edaf3dc70d240065d4178fd71a5597651ce4e895848dd08d317c4a09b5f04942"
+      },
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-02/results.json",
+        "sha256": "aae4a8f1ff94ecdc4a513ce879725a8cafd3a06f18d73ae79c3ed5786b54f699"
+      },
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-02/run-command.json",
+        "sha256": "ba1c38a48f51a871efd18d14103b09b4eee4aedded06ba6709150315d73119f8"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-final-v21-worker-owners-01",
+      "status": "INTERRUPTED_INCOMPLETE",
+      "cases": [],
+      "interruptionObservation": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+        "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+      },
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/results.json",
+        "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+      },
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/run-command.json",
+        "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-v17-readiness-diagnostic-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "installed-v17-readiness-diagnostic-01/command.json",
+        "sha256": "eeed3d043ffb45a8efee0b5a00a468ccbadc33394d1b1e65859ca093e4931d54"
+      },
+      "diagnosticObservation": {
+        "rootId": "completion",
+        "path": "installed-v17-readiness-diagnostic-01/observation.json",
+        "sha256": "bd5b3a8a6fe084fd42a45a7b6ef88cc21fc838f87b546436dc2bd2cdf62e7c45"
+      },
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-v17-readiness-diagnostic-02",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "installed-v17-readiness-diagnostic-02/command.json",
+        "sha256": "e30e0bd4fc222ba06c2d82054e3e42a60bf1218c4166b6648a5f67b62cc39eb9"
+      },
+      "diagnosticObservation": {
+        "rootId": "completion",
+        "path": "installed-v17-readiness-diagnostic-02/observation.json",
+        "sha256": "b70132a43ffc866622647af6cb753280124d9d9cd5c13be8269197c7ca46915d"
+      },
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "installed-v18-submit-profile-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "installed-v18-submit-profile-02/results.json",
+        "sha256": "c933d601cbfec88fddcca93d6560944c11022ca2111e2e3b9c554c6c3792db88"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "installed-v18-submit-profile-02/failure.json",
+        "sha256": "8539af495fb68cfd2ef9f94d30792c46394b4894868b0162a46adf84ad45bda9"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "installed-v18-submit-profile-02/run-command.json",
+        "sha256": "df0b49df61eeef07a1b46dc132662f902c3cbae8dd98b3181bb64f4f3315d55a"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "latency-current-workflow-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "latency-current-workflow-01/results.json",
+        "sha256": "0e16beaa26c6c9d0018c97386477e5601171879540e0c9884c682cf1acbd215e"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "latency-current-workflow-01/failure.json",
+        "sha256": "7c789fcf42186c51f21398f7f76283b3e5193a5cc90c2113d66a6f8cc56174f3"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "latency-current-workflow-01/run-command.json",
+        "sha256": "3abe939053a6d8f37b0f3e46fc760f26ab2ad255a9a5110663b05f6db509cc6f"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "mounted-completion-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "mounted-completion-01/results.json",
+        "sha256": "9e4c504f56bc16a39cb2f77957c8fe65ad8dab5d5d62c8e58746875f8b0b66c7"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "mounted-completion-01/failure.json",
+        "sha256": "63f80f6aa3366582170b7c373026df984573e720fd9852a8e6d40c5d039bf0e1"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "mounted-completion-01/run-command.json",
+        "sha256": "e82befd9af058a2f0129e4ea7aae44d74131bda4e865f49f70b7de26e0ccf77e"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "mounted-completion-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "mounted-completion-02/results.json",
+        "sha256": "15a2c5457d8cbc28e0f744ae7801115e1848495074b4cd3292382d1c88a70af2"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "mounted-completion-02/failure.json",
+        "sha256": "1aa06583c925ce9d81fdd954f121aa7d6d73c7037ba99396fb7e8a4813290479"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "mounted-completion-02/run-command.json",
+        "sha256": "070968fc054e972fb802c7073085a9579e11ef3fd511a1eb7c9310032620b7fd"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "mounted-completion-05",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "mounted-completion-05/results.json",
+        "sha256": "aa8d526b21e8a6b385b512aa66060e4fe1ee2b9a2256940c9c71f13398134468"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "mounted-completion-05/failure.json",
+        "sha256": "459bfc33abf538ebd669b314893e2faf9a59b80b9b7205be1383b5f52126ae8e"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "mounted-completion-05/run-command.json",
+        "sha256": "e26ff44f569536a5993a741729900c13df0ab737b2cee3c5c455acd718956610"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "openssl-supplier-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "openssl-supplier-01/command.json",
+        "sha256": "c423b6f8e2ca658f3e6c504850dda1927add302c8817e2b3c92c862b6838f1c2"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-candidate-work-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-01/results.json",
+        "sha256": "bc5874e68c8ade69683eaf4a11d794a6727a8c512518a07818ce46529a261785"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-01/failure.json",
+        "sha256": "4684acd1a6fe0668acdaf2c743ae95e518d1b724f1473735f8a5e43f7b5a9e26"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-01/run-command.json",
+        "sha256": "adba58e1007933debc0f5593fba53c1aece2bc2de8652bc4181b76988f6b0c44"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-candidate-work-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-02/results.json",
+        "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-02/failure.json",
+        "sha256": "912e645a20fa0f5f4c396549386268b17efe20554d88e0a04219112c056a8d1a"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-02/run-command.json",
+        "sha256": "23457ab9f71b65607e9388f584c5bf15405c9919ef488248b8d76e0a2179f200"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-candidate-work-03",
+      "status": "INTERRUPTED_INCOMPLETE",
+      "cases": [],
+      "interruptionObservation": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-03/resumption-observation.json",
+        "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+      },
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-03/results.json",
+        "sha256": "38671687a858e5a4ac5c00bf35e9715a50aa9e0e30d46c24d9c87413404162df"
+      },
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-03/run-command.json",
+        "sha256": "7a906d7179534837ba4886e6346271fc2f0b1cecc438695b05f97fc672fcae70"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-candidate-work-04",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-04/results.json",
+        "sha256": "b2ebcd4b3cc09b65647658e6bbc614bc863d40b3e0a0b5e73190ede5a0fb1956"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-04/failure.json",
+        "sha256": "be265d302dae07f8c5fc09546bba63069d833ea0ade48f7811afebb9723fe97d"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-04/run-command.json",
+        "sha256": "11bafd4bbedde8b71a0f028e03c23e4839f17bd78e9ff6406b7c2be8ddffbaec"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-context-diagnosis-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-context-diagnosis-01/results.json",
+        "sha256": "fd577fe1bc45936103819214df9d59b941b1f19395531dfb366e5f104363feaa"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-context-diagnosis-01/failure.json",
+        "sha256": "d80d30b66433a61b30bba2464e676290476fb88ae454f1ad8f3c73bb34347d59"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-context-diagnosis-01/run-command.json",
+        "sha256": "96708a54a17087ad0b794989a8bcb2e1a2290ea821e80d854e6bba6cc4ae4979"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-ledger-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-ledger-01/results.json",
+        "sha256": "fb552d8fac5bd04dada3be1e2b8bd980e116b7bbf2ad3b090acc9fb47b5b31e8"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-ledger-01/failure.json",
+        "sha256": "3ab2c730f858f27b9c40951cf53b5137d5c39dca6e04e16839ae941029809187"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-ledger-01/run-command.json",
+        "sha256": "184b280f9acd3c9d41094177d8b7aaa736e5fd2a607d7dbf2fbdf71d7755229f"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-ledger-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-ledger-02/results.json",
+        "sha256": "82c3f1733b9d4b3b27d787d82c47fdc6d562cf2c7b21f9970b393412ca9990ea"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-ledger-02/failure.json",
+        "sha256": "9ada26270e4f60734c17581c864ed70f25d8c9f864cb0874a9dd39ef425f0db6"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-ledger-02/run-command.json",
+        "sha256": "db6c1e1fdce38c073d95c5f7f10cf3e9b829958d6721f88cf85a67a33bd23701"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-ledger-03",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "s6-supported-recovery"
+      ],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-ledger-03/results.json",
+        "sha256": "40fe1eb7167c30be99db910ae42b69fdac6df57d0ca7430d90c6caa1fb7a9c53"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-ledger-03/failure.json",
+        "sha256": "8f57f6d46c20d10bc79f8e8378da01e5e9b2eca66dfb28fcbe89db11d1ee9a60"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-ledger-03/run-command.json",
+        "sha256": "10685f913e142e5171af6023d453622715f34b617a6f6b26c0a4663feb2a87a0"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-ledger-04",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "s6-supported-recovery",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-ledger-04/results.json",
+        "sha256": "5746656904f07768199d2da01c743658e37fb08d5413b8d25d9e689b3563914b"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-ledger-04/failure.json",
+        "sha256": "bcffc767878eef84869c109f0b65e2b55cef095e859e6fb4eff620be5fd5e732"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-ledger-04/run-command.json",
+        "sha256": "d496dba730fbf1bfa6048173b2b614dc22e9b499f7f06ed8d6696a25f2ebe7ea"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-ledger-storage-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-ledger-storage-01/results.json",
+        "sha256": "cbeec26831cfa22fd5b068806d327d00426ca38f88ef5c19159b1bfea3c76a3b"
+      },
+      "failure": null,
+      "command": null,
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-m3-currentness-diagnosis-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-m3-currentness-diagnosis-01/results.json",
+        "sha256": "69db72f4daa283548654e5a8112b41cfeddf8e640c17ccd6a74cf26a86774936"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-m3-currentness-diagnosis-01/failure.json",
+        "sha256": "1e7cff755bed56deb83d3c5b5d9cdcf4718bf53073166d0e61fffa8e034bcb02"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-m3-currentness-diagnosis-01/run-command.json",
+        "sha256": "242a6ae9925a0656e466c5cddfe470164af205f9284ce824b63b5c8cab152539"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-m3-full-read-diagnosis-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-m3-full-read-diagnosis-02/results.json",
+        "sha256": "fb31e0424d928131afcc03fe5fa2ab0265dbc33dd3ffc2c2d1f57c2344ad95ad"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-m3-full-read-diagnosis-02/failure.json",
+        "sha256": "a0a35ac27102c9dfda9627823624361e4f9f23a7da82b60fbfdd5a43dbf2bbdc"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-m3-full-read-diagnosis-02/run-command.json",
+        "sha256": "aa2042309975817388bf993adec9a577dd4fe6a3ea1ac8269941832b6b47baf8"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-mounted-m3-catch-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "mounted-work-reload-switch"
+      ],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "repair-mounted-m3-catch-01/run-command.json",
+        "sha256": "fd9ec9fa87d093fd0e8bec734f471fd5e00d672cee74118a2385bd80edc8cccc"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-mounted-m3-catch-02",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "mounted-work-reload-switch"
+      ],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "repair-mounted-m3-catch-02/run-command.json",
+        "sha256": "2a561c98a225b27f7e68b897f65580575e2b1fcf9327e4134a535307539b35c4"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-mounted-m3-catch-03",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-mounted-m3-catch-03/results.json",
+        "sha256": "6a0d382db63725ce4d1871a500ab7772f2859d1730b018f7f6c75c18c14b860d"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-mounted-m3-catch-03/failure.json",
+        "sha256": "808d3765dcad54b126068d9e9562d50dd1b430a50f3ec1e5df5cffcec0c19fb0"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-mounted-m3-catch-03/run-command.json",
+        "sha256": "cad41848e018b66413df29deea00ec1f3e40a2808edbaa581f654b4c3808e23d"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-prepublication-work-01",
+      "status": "FAIL",
+      "cases": [],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [
+        "mounted-work-reload-switch"
+      ],
+      "result": null,
+      "failure": null,
+      "command": {
+        "rootId": "completion",
+        "path": "repair-prepublication-work-01/run-command.json",
+        "sha256": "25558075006eac077b96fc2517c2f922ac2024381293e06d049b43ec5d5885c8"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "repair-prepublication-work-02",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "repair-prepublication-work-02/results.json",
+        "sha256": "3c74b68ac50c9fb0be1b8dc7ef6764fd00616c4bac8927572dab66695fb2d95c"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-prepublication-work-02/failure.json",
+        "sha256": "64b7888cb536cd3b0a4287cc18ed5be3e93b885c00b67bcbf20b7981562f85d1"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "repair-prepublication-work-02/run-command.json",
+        "sha256": "2ebc169134a34d5e163c59da61dd04b0591668b09ffb973a67febc694de1a974"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    },
+    {
+      "cut": "worker-prepared-current-workflow-01",
+      "status": "FAIL",
+      "cases": [
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL"
+        }
+      ],
+      "interruptionObservation": null,
+      "notRunRequestedCases": [],
+      "result": {
+        "rootId": "completion",
+        "path": "worker-prepared-current-workflow-01/results.json",
+        "sha256": "9901d94812f78ed497fe4d77328f6868d11cc89e13703eee62b09026fdeb4d9a"
+      },
+      "failure": {
+        "rootId": "completion",
+        "path": "worker-prepared-current-workflow-01/failure.json",
+        "sha256": "261f7818cc3151379be4ea870356d3759e7aa6b83c8c261a9366b9064b7a6f13"
+      },
+      "command": {
+        "rootId": "completion",
+        "path": "worker-prepared-current-workflow-01/run-command.json",
+        "sha256": "fe2c3e9cd1c1dd66f7e753d365df5a735ff08d93d2a3a9285ec1964ba267df58"
+      },
+      "diagnosticObservation": null,
+      "preAdmissionReadinessFailure": null
+    }
+  ],
+  "protectedAndCombinedQualificationInherited": false
+}

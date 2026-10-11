@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.disposable-startup-observation-repair.v1",
+  "registeredAt": "2026-10-10T18:29:08.585667+00:00",
+  "observedFailure": "repair-prepublication-work-01 terminated before its first case: pg Client emitted Connection terminated unexpectedly. Actual PostgreSQL cause not retained because onLog discarded output. Recent storage exhaustion is a hypothesis, not a proved cause.",
+  "failureModel": [
+    "PostgreSQL startup/restart exits and unhandled client error erases source/log evidence",
+    "Storage shortage during migrate/checkpoint shuts down original fixture",
+    "Normal intentional admin.end is mistaken for an unexpected event",
+    "A failed admin channel is silently accepted as PASS"
+  ],
+  "repair": "Retain original PostgreSQL output and unexpected admin client events; refuse any story PASS after an unexpected connection error. No retry, grant/deadline or owner behavior change.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "prepublicationPreparationSeconds": 240,
+  "originalFloorsUnchanged": true
+}
