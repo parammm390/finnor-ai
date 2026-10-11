@@ -1,0 +1,97 @@
+{
+  "schema": "finnor.r1.binding-integration-coverage.v1",
+  "bindings": [
+    {
+      "id": "4A.A",
+      "contract": "Actual S4 exact evaluation reuse, original aliases and S5 rational quantity boundary",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/exact-continuation.ts",
+        "finnor-os/packages/epistemic-runtime/src/exact-control-policy.ts",
+        "finnor-os/packages/epistemic-runtime/src/exact-allocation-adapter.ts",
+        "finnor-os/packages/private-equity/src/enterprise-control.ts",
+        "finnor-os/packages/private-equity/src/enterprise-allocation.ts"
+      ],
+      "requiredChecks": [
+        "exact-reference",
+        "authenticated-durable-owners",
+        "affected-s4-s5-p7"
+      ],
+      "status": "PASS_SELECTED_LOCAL"
+    },
+    {
+      "id": "4A.B",
+      "contract": "Canonical roots/information histories, full fixed-world support and metered complete source construction",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r1/source.ts",
+        "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/model.ts",
+        "finnor-os/packages/private-equity/src/r1/worker.ts"
+      ],
+      "requiredChecks": [
+        "exact-reference",
+        "authenticated-durable-owners",
+        "lifecycle-security"
+      ],
+      "status": "PASS_SELECTED_LOCAL"
+    },
+    {
+      "id": "4A.C",
+      "contract": "Independent original-byte complete relation predicate and backward preservation argument",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/checker.py",
+        "preservation-argument.md"
+      ],
+      "requiredChecks": [
+        "exact-reference",
+        "authenticated-durable-owners"
+      ],
+      "status": "PASS_SELECTED_LOCAL"
+    },
+    {
+      "id": "4A.D",
+      "contract": "Global original current/later ties and lawful historical projection",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/exact-continuation.ts",
+        "finnor-os/scripts/r1/reference.py"
+      ],
+      "requiredChecks": [
+        "exact-reference",
+        "authenticated-durable-owners",
+        "mounted-capital-work"
+      ],
+      "status": "PASS_SELECTED_LOCAL"
+    },
+    {
+      "id": "4A.E",
+      "contract": "Positive authenticated S3/S4/S5 durable Work and measured original fallback",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r1/worker.ts",
+        "finnor-os/packages/private-equity/src/r1/review.ts",
+        "src/components/centropy/canvas/ExactControlReview.tsx"
+      ],
+      "requiredChecks": [
+        "authenticated-durable-owners",
+        "lifecycle-security",
+        "mounted-capital-work"
+      ],
+      "status": "PASS_SELECTED_LOCAL"
+    },
+    {
+      "id": "4A.F",
+      "contract": "Finite selected proof, original checks, exact built bytes, reconstruction and draft publication",
+      "implementation": [
+        "verification-plan.json",
+        "finnor-os/scripts/r1/run-gates.py",
+        "handoff/comparison-package.json",
+        "handoff/owner-request-packets.json"
+      ],
+      "requiredChecks": [
+        "runtime-migration",
+        "release-static",
+        "sealed-handoff"
+      ],
+      "status": "LOCAL_CHECKS_PASS_HANDOFF_PREPARED_SEAL_AND_PUBLICATION_PENDING"
+    }
+  ],
+  "requestSource": "handoff/source-pins.json",
+  "externalGates": "handoff/owner-request-packets.json"
+}

@@ -41,6 +41,12 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Keep cache in memory so local and release builds do not consume a second
+  // artifact-sized disk tree beside their actual server/client output.
+  webpack(config) {
+    config.cache = { type: "memory", maxGenerations: 1 }
+    return config
+  },
   allowedDevOrigins: ["127.0.0.1"],
   // Release builds provide a commit-derived value. Keeping the Next build ID
   // deterministic makes the runtime release record independently checkable.

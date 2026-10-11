@@ -1,0 +1,464 @@
+{
+  "capturedUTC": "2026-10-09T19:54:50.572240+00:00",
+  "prompt": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/issued/R4-IdentificationPlanCompiler-goal.md",
+  "sha256": "3c5363064f2c44446e50917ca914f16d24638f23213fd06720c30ff513cc39f0",
+  "basis": "Retained dependency-scoped scientific/owner/fault/DOM evidence; original failures preserved",
+  "rows": [
+    {
+      "clause": "R4.1.query",
+      "requirement": "Query/population/intervention/outcome/timing/units/owners",
+      "section": "5.A",
+      "locatedText": "target population",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.1.profile",
+      "requirement": "\u22648 bundles/\u22648 ADMG/all256 subsets; qualified observed graph/joint law",
+      "section": "5.A",
+      "locatedText": "at most eight bundles and eight",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.1.backend",
+      "requirement": "Actual supported y0 ID/IDC; experimental/transport separate",
+      "section": "4",
+      "locatedText": "Plain ID/IDC",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.enumeration",
+      "requirement": "Complete permitted subset search",
+      "section": "5.B",
+      "locatedText": "Enumerate every subset",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.graphproblem",
+      "requirement": "Qualified per-plan/per-graph data construction and supported identification",
+      "section": "5.B",
+      "locatedText": "each retained approved graph",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.trace",
+      "requirement": "Derivation/failure/distribution/support witnesses",
+      "section": "4/5.B",
+      "locatedText": "trace-producing adapter",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.rejection",
+      "requirement": "Distribution/population/positivity/admissibility rejection",
+      "section": "5.A/B",
+      "locatedText": "positivity basis",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.ranking",
+      "requirement": "Exact registered cost and declared deterministic delay/resource tie",
+      "section": "5.B",
+      "locatedText": "declared deterministic delay/resource tie",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.minimality",
+      "requirement": "Finite menu only, independent rejection/competitor evidence",
+      "section": "5.B",
+      "locatedText": "every cheaper or tie-preferred",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.family",
+      "requirement": "Per-graph identified is not common effect; independent equivalence",
+      "section": "5.B",
+      "locatedText": "Identification in each graph does not",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.2.prospective",
+      "requirement": "Future acquisition conditional not collected evidence",
+      "section": "5.A",
+      "locatedText": "Prospective bundles",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "scientific",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.3.output",
+      "requirement": "Target/bundles/cost/delay/per-graph/support/status/rejected/minimality",
+      "section": "5.C",
+      "locatedText": "IdentificationPlan contains",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "owners-and-durable-work",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.3.owners",
+      "requirement": "S2/S3/S4/S6/S7 responsibility plus S5 checks",
+      "section": "5.C",
+      "locatedText": "S2 retains acquisition",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "owners-and-durable-work",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.4.functional",
+      "requirement": "Independent corpus identifiable/confounded/unavailable/support/contradictory",
+      "section": "7",
+      "locatedText": "Required scientific corpus",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "R4.4.comparative",
+      "requirement": "Same menus/graphs/deadlines; useful queries/cost/delay/shortfall actual collection",
+      "section": "7/8",
+      "locatedText": "actual evidence costs/delays",
+      "status": "NOT_RUN_PROTECTED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/scope-r/r4-identification-plan-compiler/external-request-packets.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json"
+      ]
+    },
+    {
+      "clause": "R4.5.failure",
+      "requirement": "UNIDENTIFIED/UNKNOWN exact condition, S4 wait/stop/no point estimate",
+      "section": "6",
+      "locatedText": "missing identification never licenses",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.2.envelope",
+      "requirement": "Canonical quantities/input/claim basis/currentness/lifecycle/status/unknown",
+      "section": "5.C",
+      "locatedText": "full PRD artifact envelope",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.3.Pi",
+      "requirement": "Optional Pi identity/quota/method/restart/authority",
+      "section": "4",
+      "locatedText": "Pi is optional",
+      "status": "NOT_APPLICABLE_PI_NOT_ADOPTED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.12",
+      "requirement": "One product path/ordinary producers/no forced R chain",
+      "section": "opening/5/6",
+      "locatedText": "No separate identification app",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.12.1",
+      "requirement": "Revocation/concurrent grants/payment/method/partial stream",
+      "section": "7",
+      "locatedText": "PRD12.1 common effect tests",
+      "status": "PARTIAL_S6_RECEIPT_CUSTODY_UNVERIFIED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.13.1",
+      "requirement": "Separate functional/comparative/economic; protected protocol95% margin",
+      "section": "8",
+      "locatedText": "Post-X gain requires",
+      "status": "NOT_RUN_PROTECTED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/scope-r/r4-identification-plan-compiler/external-request-packets.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json"
+      ]
+    },
+    {
+      "clause": "common.13.2",
+      "requirement": "Frozen original benchmark/floors/budgets/generator/reach/H2",
+      "section": "8",
+      "locatedText": "Original generator assets",
+      "status": "NOT_RUN_PROTECTED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/scope-r/r4-identification-plan-compiler/external-request-packets.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json"
+      ]
+    },
+    {
+      "clause": "common.13.3",
+      "requirement": "Complete compute+collection cost and aggregate resources",
+      "section": "6/8",
+      "locatedText": "eventual collection in comparisons",
+      "status": "INCOMPLETE_MATERIAL_METERS",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "common.13.4",
+      "requirement": "Owner-accounting/exact100x/material denominator/downside/absolute goals",
+      "section": "8",
+      "locatedText": "Economic100\u00d7",
+      "status": "NOT_RUN_PROTECTED",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/scope-r/r4-identification-plan-compiler/external-request-packets.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json"
+      ]
+    },
+    {
+      "clause": "common.14",
+      "requirement": "R4phase4/no unfinished R1 dependency/release contribution",
+      "section": "opening/9",
+      "locatedText": "Contribute only R4",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "current.R1.inspect",
+      "requirement": "Actual active checkout/head/tree/94paths/hash/no dirty copy",
+      "section": "1/3",
+      "locatedText": "read-only inventory recorded94",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "current.ownership",
+      "requirement": "Scope-exclusive and shared commit groups; concrete conflict obligations",
+      "section": "3",
+      "locatedText": "Shared integration obligations are concrete",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "current.noR1dependency",
+      "requirement": "No unfinished R1 imports or dirty files; start from committed main",
+      "section": "opening/3",
+      "locatedText": "with no imports from",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "current.migration",
+      "requirement": "Observed0171 collision; serial number allocation/replay",
+      "section": "1/3",
+      "locatedText": "numeric collision",
+      "status": "PARTIAL_SELECTED_CUMULATIVE_CASES_NOT_FULL_COMPATIBILITY",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json"
+      ]
+    },
+    {
+      "clause": "current.combined",
+      "requirement": "Separate local vs combined actual integrated cut; seal pending owner packet",
+      "section": "3/9",
+      "locatedText": "R1_PLUS_R4_INTEGRATED",
+      "status": "PARTIAL_SELECTED_CUMULATIVE_CASES_NOT_FULL_COMPATIBILITY",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json"
+      ]
+    },
+    {
+      "clause": "current.R2",
+      "requirement": "R2prompt bytes preserved",
+      "section": "opening/9",
+      "locatedText": "Keep R2\u2019s issued prompt byte-identical",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "blueprint.independence",
+      "requirement": "Independent validator/rule/projection/failure/equivalence/minimality",
+      "section": "4/7",
+      "locatedText": "Specify the independent verifier",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "blueprint.delivery",
+      "requirement": "Real API/queue/worker/SQL/owners/mountedWork/runtime",
+      "section": "6/7",
+      "locatedText": "real HTTP\u2192SQL claim",
+      "status": "INCOMPLETE_FINAL_IMAGE_BUILT_API_RUNTIME",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "blueprint.finite",
+      "requirement": "Frozen campaign/oracles/reruns/finite handoff",
+      "section": "7/9",
+      "locatedText": "maximum expensive passes",
+      "status": "DOCUMENTED_LOCAL_COMMITTED_GROUPS",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    },
+    {
+      "clause": "blueprint.authorization",
+      "requirement": "No invented publication/effect/peer messaging authority",
+      "section": "1/9",
+      "locatedText": "Read-only peer inspection does not authorize messaging",
+      "status": "PASS_SELECTED_DEVELOPMENT",
+      "boundary": "verification-and-handoff",
+      "evidence": [
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+        "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json"
+      ]
+    }
+  ],
+  "schema": "finnor.r4.implementation-coverage.v1",
+  "overallFunctionalGate": "INCOMPLETE_FINAL_PACKAGE_GATE",
+  "limitations": [
+    "Final worker image not built/executed; no Docker/Podman/Lima/Colima",
+    "Built API runtime proof not complete",
+    "Sustained controller RSS exceeded fixed 1 GiB guard in serial campaign",
+    "Native desktop input remains PARTIAL",
+    "Complete monetary/build/container/human meters unavailable",
+    "Full cumulative R1 compatibility is incomplete despite selected 5 R4 and 42 R1 passes",
+    "Inherited S6 interruption receipt not in verified custody"
+  ]
+}

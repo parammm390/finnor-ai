@@ -1,0 +1,218 @@
+{
+  "schema": "finnor.r4.private-evidence-index.v1",
+  "updatedUTC": "2026-10-09T19:54:50.572240+00:00",
+  "scientificSourceMatches": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/packages/epistemic-runtime/src/identification-plan/producer.py",
+      "expected": "3090dcd0c1696186f60abb90d55c84176b19015ead26757b26fefdde8a2ebe93",
+      "current": "3090dcd0c1696186f60abb90d55c84176b19015ead26757b26fefdde8a2ebe93",
+      "matches": true
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/packages/epistemic-runtime/src/identification-plan/checker.py",
+      "expected": "2ef58984755a95a1fcef5b1ab74959aa59c391971ff2cdcc2ffa8cc598152414",
+      "current": "2ef58984755a95a1fcef5b1ab74959aa59c391971ff2cdcc2ffa8cc598152414",
+      "matches": true
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/scripts/r4/run-scientific.py",
+      "expected": "975f0d1d37aee94a0f63d11dfa9962f912e7352d7b688dd88e9df66bf5a9dcb8",
+      "current": "975f0d1d37aee94a0f63d11dfa9962f912e7352d7b688dd88e9df66bf5a9dcb8",
+      "matches": true
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/scripts/r4/corpus.py",
+      "expected": "5a2bb9454019739d8a0f8c920ea6c29490f5a4b528ce91cd739449795da5d474",
+      "current": "5a2bb9454019739d8a0f8c920ea6c29490f5a4b528ce91cd739449795da5d474",
+      "matches": true
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os/scripts/r4/requirements.lock",
+      "expected": "07bfa4a7d88c01198a9346185484fb83faa137ea7250c881dc688fb2000eba69",
+      "current": "07bfa4a7d88c01198a9346185484fb83faa137ea7250c881dc688fb2000eba69",
+      "matches": true
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/scope-r/r4-identification-plan-compiler/verification-plan.json",
+      "expected": "24de0deabc7f10e688b043b17d6f7ab7fa737d572cfbec1fe1b22aec10429e21",
+      "current": "24de0deabc7f10e688b043b17d6f7ab7fa737d572cfbec1fe1b22aec10429e21",
+      "matches": true
+    }
+  ],
+  "records": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/results.json",
+      "sha256": "d777977e0f779380d72feba6466626adc3539816a12c4b394291209e7e54df97",
+      "bytes": 101049
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific-4/comparison.json",
+      "sha256": "69c7a3a76276927e1ec8621a0ee3f3845ee04ba5d28f9dfd01f151f4bf782214",
+      "bytes": 1689
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/results.json",
+      "sha256": "6a956bdb0671dc127016bed1e3c4c805c0817184722fffa94d3c7c8af27b40f5",
+      "bytes": 781479
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/freeze.json",
+      "sha256": "b8d2d4a8a91745e1f4de12f6ef5e435d3891571f1c5b1a7c8301687c95288e09",
+      "bytes": 10345
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/final-sql.json",
+      "sha256": "4b30e1fc8ab7ecd22dda34c248efdfd0db76f404562d05ee81e21ae70dc62ab7",
+      "bytes": 400139
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/results.json",
+      "sha256": "26389f8cd75937abaf0895bb3c67b69b995d39e934f65958e1f6a0b2cb0568b3",
+      "bytes": 330249
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/freeze.json",
+      "sha256": "63f3e2447f6e71415f4fb4cbf2b0c4936204e3a28e25b1e7af1568250e9a6365",
+      "bytes": 10811
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/final-sql.json",
+      "sha256": "ba99e44b57132104ad70e6034f9449312386f11cd3c5416e61e8d3190542e55d",
+      "bytes": 167058
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/results.json",
+      "sha256": "67bee9be9ded563fb7988fd4de99d2369038a3f0ab5a3d9256e3d785d0fe338b",
+      "bytes": 424451
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/freeze.json",
+      "sha256": "f9b8c915d57ef9c3743078041767eeab5c84a6808e7c85e2e663f34742ac9aa1",
+      "bytes": 10959
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-3/final-sql.json",
+      "sha256": "988408424bffbfcaa3a17b3baab9990359ba83f553d356af8b0378633c9f388b",
+      "bytes": 171094
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/results.json",
+      "sha256": "dcf9a8442c73fc9dd8f5fb6897c99078b659724a34b7f4aea9fcc75cb27ea258",
+      "bytes": 283929
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/freeze.json",
+      "sha256": "e7867120f79b824a86e46614f98fe41314f3388ec630ac0d7778450e33034b03",
+      "bytes": 10959
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/final-sql.json",
+      "sha256": "15e1202daea2255c9f366209ec6f06b33581a1a6bbac7d918b0fa5d2982fcd1a",
+      "bytes": 148307
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/faults/producer-kill.json",
+      "sha256": "086826304db8233fd91f80058db3a0b54f7e837e82794c447ec27a5842f3138f",
+      "bytes": 46167
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-1/faults/checker-kill.json",
+      "sha256": "b930bd105314f438c123e5905d6174f3c3eb52ceea928c9352e9881744520a3c",
+      "bytes": 49571
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/faults/cancellation.json",
+      "sha256": "7e2a757cdbb346318036b0a2b12e5a34816f908d0ef33fc787acc8ca8981c217",
+      "bytes": 3199
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/faults/worker-restart.json",
+      "sha256": "3bb226742e176e2e38e8712772e043083e730b7322808a9dfedf63056dab01c3",
+      "bytes": 4549
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-2/faults/publication-rights.json",
+      "sha256": "8cd44ea75b25a846f6a1b9020a58c3b910ee2c7f8e831e2363f34b4e712f927c",
+      "bytes": 8045
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/owner-faults-4/faults/publication-expiry.json",
+      "sha256": "6df5fca594c8175de94d1c7f74429e83cc503d6bd8830c54976d1901a715f17f",
+      "bytes": 8127
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/mounted-dom-boundary-8/results.json",
+      "sha256": "2124c0150a40fd2500c4bc80ce5299bc86b1c43a3deacea5c7953a3cc3e0c081",
+      "bytes": 1468
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/mounted-dom-boundary-9/results.json",
+      "sha256": "62666c4bdcbf76fb2b999ec3535684dd9634be7df7e04ec4c4528d6300b6b87c",
+      "bytes": 919
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/mounted-remaining-10/results.json",
+      "sha256": "47d40c083183244f91fb4a7da08044bf36160e53456a075357c6a98f3cca5767",
+      "bytes": 1254643
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/api-build.log",
+      "sha256": "42471d0bac9e22dcc0dd3b228aabc10421a1c809056c2e1e2bc7cb814994e3cd",
+      "bytes": 20370
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/work-build.log",
+      "sha256": "d55c30364d8c9779087feccfa838c73f1503fb581796e425ac6d3c3e2436dc69",
+      "bytes": 2785
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/scientific-runtime.json",
+      "sha256": "6c4587dd17b01a90865626a9de54117b77aa4fadd1ab6d9a48361c27328c3b2f",
+      "bytes": 114158
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/affected-release-guards.log",
+      "sha256": "c069cc324ef30a2de498c6e975885fb80d38e46c4a000d32d0132dd9dddfaa92",
+      "bytes": 2800
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/r4-script-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/final-local-checks/os-types.log",
+      "sha256": "220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7",
+      "bytes": 53
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/results.json",
+      "sha256": "d41316ec7b772807d37d5c61d997f9ab1c67dbb54eb2c8447f931c11bb14d68b",
+      "bytes": 258794
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/freeze.json",
+      "sha256": "5f6e7713ecb54c06e028f03594c4525c21139639190ab7c44ff2f0232a45ab90",
+      "bytes": 789
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/migration.json",
+      "sha256": "ca01354d6a8127c4a05a20be4736f808fc582f7fe077a156040f510c00298402",
+      "bytes": 18883
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r4-1/worker-ready.json",
+      "sha256": "9add5ba2da5fa669b491a3b85e109d6ebb8d543afe329377b46b9a16c92be5d8",
+      "bytes": 1450
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/serial-r1-mathematical-1/mathematical-results.json",
+      "sha256": "bbfc432eb25a293eac4f5e0e0a9c8b14e7f4ad46801b17d91154bb918177b708",
+      "bytes": 10622
+    }
+  ],
+  "qualification": "Hashes locate private retained evidence, not admission or one fresh all-predicate campaign",
+  "notRetainedPhysically": [
+    "Original integrated-7, mounted-1 and mounted-2 temporary runtime directories"
+  ]
+}

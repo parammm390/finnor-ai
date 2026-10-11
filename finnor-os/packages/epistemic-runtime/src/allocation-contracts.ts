@@ -13,12 +13,13 @@ export class AllocationContractError extends Error {
 export const S5_VERSION = 's5-joint-finite-v1' as const;
 export const ALLOCATION_ADMISSION = Object.freeze({executionAuthorityGranted:false as const, appendAuthorityGranted:false as const, protectedReceipt:null, methodAdmitted:false as const});
 const text = z.string().min(1).max(256), time = z.string().datetime({offset:true});
-const quantity = z.string().max(48).regex(/^-?(?:0|[1-9]\d*)(?:\.\d{1,18})?$/);
-const nonnegative = quantity.refine(s => !s.startsWith('-'), 'Negative resource quantity');
+const quantity = z.string().max(258).regex(/^-?(?:0|[1-9]\d*)(?:(?:\.\d{1,18})|(?:\/[1-9]\d{0,127}))?$/);
+const resourceQuantity=quantity.refine(s=>!s.includes('/'),'Legacy resource v1 requires its registered decimal encoding');
+const nonnegative = resourceQuantity.refine(s => !s.startsWith('-'), 'Negative resource quantity');
 const horizon = z.object({startAt:time,periodMs:z.number().int().positive().max(31536000000),periods:z.number().int().min(1).max(24)}).strict();
 const pin = z.object({tenantId:z.string().uuid(),principalId:z.string().uuid(),root:z.object({entityType:text,entityId:text}).strict(),validAt:time,knowledgeAt:time,dependencyDigest:text,rightsRevision:z.number().int().nonnegative(),interpretationVersion:text}).strict();
 const covenant = z.object({id:text,sourceRef:ExperimentRefSchema,rightsRef:text,unit:text,
-  terms:z.array(z.object({resourceId:text,coefficient:quantity,coefficientUnit:text}).strict()).min(1).max(16),periods:z.array(z.number().int().min(0).max(24)).min(1).max(25),
+  terms:z.array(z.object({resourceId:text,coefficient:resourceQuantity,coefficientUnit:text}).strict()).min(1).max(16),periods:z.array(z.number().int().min(0).max(24)).min(1).max(25),
   maximum:nonnegative,safetyMargin:nonnegative,basis:z.literal('CANONICAL_RESOURCE_USAGE')}).strict();
 export const AllocationResourceInputSchema = z.object({schema:z.literal('finnor.allocation-resource.v1'),resourceId:z.string().min(1).max(80).regex(/^[A-Za-z0-9:_-]+$/),tenantId:z.string().uuid(),
   ownerRef:ExperimentRefSchema,legalEntityRef:ExperimentRefSchema,scopeRef:ExperimentRefSchema,permittedRoots:z.array(z.object({entityType:text,entityId:text}).strict()).min(1).max(32),rightsRef:text,unit:text,currency:z.string().regex(/^[A-Z]{3}$/).nullable(),kind:z.enum(['STOCK','FLOW','OCCUPANCY','CUMULATIVE_EXPENDITURE','EXPOSURE']),resourceClass:z.enum(['CASH','BORROWING_HEADROOM','COMMITTED_CAPITAL','OPERATIONAL_CAPACITY','HUMAN_ATTENTION','COMPUTE','INQUIRY_EXPOSURE','COUNTERPARTY_EXPOSURE','OTHER_RESTRICTED']),
@@ -27,7 +28,7 @@ export const AllocationResourceInputSchema = z.object({schema:z.literal('finnor.
   existingUse:z.array(nonnegative).min(2).max(25),safetyMargin:nonnegative,covenants:z.array(covenant).max(32),revoked:z.boolean(),qualification:z.literal('AUTHENTICATED_OWNER_ASSERTION_UNADMITTED')}).strict();
 export const AllocationDemandBindingSchema = z.object({policyRef:ExperimentRefSchema,dimensionId:text,component:z.enum(['TOTAL','OCCUPANCY']),resourceId:text,conversion:z.literal('IDENTICAL_UNIT_NO_CONVERSION')}).strict();
 export const AllocationFundingSchema = z.object({policyRef:ExperimentRefSchema,actionCostResourceId:text.nullable(),terminalLiabilityResourceId:text.nullable(),humanSecondsResourceId:text.nullable()}).strict();
-const jointModelSchema = z.object({schema:z.literal('finnor.joint-allocation-model.v1'),ref:ExperimentRefSchema,tenantId:z.string().uuid(),principalId:z.string().uuid(),mandateRef:ExperimentRefSchema,rightsRef:text,
+const jointModelSchema = z.object({schema:z.enum(['finnor.joint-allocation-model.v1','finnor.joint-allocation-model.exact.v2']),ref:ExperimentRefSchema,tenantId:z.string().uuid(),principalId:z.string().uuid(),mandateRef:ExperimentRefSchema,rightsRef:text,
   sourceRefs:z.array(ExperimentRefSchema).min(1).max(128),knowledgeAt:time,validUntil:time,qualification:z.literal('SUPPLIED_JOINT_FINITE_SCENARIOS_UNADMITTED'),ambiguity:z.literal('FIXED_COMPLETE_JOINT_PATHS_NO_PROBABILITIES'),
   completeness:z.literal('ALL_MATERIAL_INTERFERENCE_AND_COMPATIBILITY_DECLARED'),assumptions:z.array(z.string().min(1).max(2048)).min(1).max(64),omittedModelGap:z.literal('UNKNOWN'),identificationGap:z.literal('UNKNOWN'),
   scenarios:z.array(z.object({id:text,sharedMechanismRef:ExperimentRefSchema,policyPaths:z.array(z.object({policyRef:ExperimentRefSchema,nodeIds:z.array(text).min(1).max(24)}).strict()).min(1).max(32),
@@ -41,20 +42,22 @@ export function allocationRef(owner:string,prefix:string,body:unknown,version:st
 }
 export function allocationQuantity(s:string):ExperimentRational {
   if(!quantity.safeParse(s).success)throw new AllocationContractError('INVALID_REQUEST','Unsupported exact finite quantity');
+  if(s.includes('/')){const [n,d]=s.split('/');const value=new ExperimentRational(BigInt(n!),BigInt(d!));if((value.n<0n?-value.n:value.n)>1000000000000n*value.d)throw new AllocationContractError('LIMIT_EXCEEDED','Quantity magnitude exceeds registered domain');return value;}
   const negative=s.startsWith('-'),[w,f='']=s.replace('-','').split('.');
   const v=new ExperimentRational((negative?-1n:1n)*BigInt(w!+f),10n**BigInt(f.length));
   if((v.n<0n?-v.n:v.n)>1000000000000n*v.d)throw new AllocationContractError('LIMIT_EXCEEDED','Quantity magnitude exceeds registered domain');return v;
 }
 /** Derived sums/products keep separate limits from external supplied quantities. */
 export function allocationDerivedQuantity(s:string):ExperimentRational {
-  if(typeof s!=='string'||s.length>96||!/^[-]?(?:0|[1-9]\d*)(?:\.\d{1,48})?$/.test(s))throw new AllocationContractError('INVALID_CANDIDATE','Unsupported derived exact quantity');
+  if(typeof s!=='string'||s.length>1026||!/^[-]?(?:0|[1-9]\d*)(?:(?:\.\d{1,48})|(?:\/[1-9]\d{0,511}))?$/.test(s))throw new AllocationContractError('INVALID_CANDIDATE','Unsupported derived exact quantity');
+  if(s.includes('/')){const [n,d]=s.split('/');const v=new ExperimentRational(BigInt(n!),BigInt(d!));if((v.n<0n?-v.n:v.n)>10n**30n*v.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return v;}
   const negative=s.startsWith('-'),[whole,fraction='']=s.replace('-','').split('.');const q=new ExperimentRational((negative?-1n:1n)*BigInt(whole!+fraction),10n**BigInt(fraction.length));
   if((q.n<0n?-q.n:q.n)>10n**30n*q.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return q;
 }
 export function allocationDecimal(v:ExperimentRational):string {
   let d=v.d,two=0,five=0;while(d%2n===0n){d/=2n;two++;}while(d%5n===0n){d/=5n;five++;}
-  if(d!==1n)throw new AllocationContractError('INVALID_CANDIDATE','Nonterminating accounting quantity');
-  const digits=Math.max(two,five);if(digits>48)throw new AllocationContractError('LIMIT_EXCEEDED','Accounting precision exceeds bounded checker');
+  const digits=Math.max(two,five);
+  if(d!==1n||digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
   const scale=10n**BigInt(digits),n=(v.n<0n?-v.n:v.n)*(scale/v.d),s=n.toString().padStart(digits+1,'0');
   const f=digits?s.slice(-digits).replace(/0+$/,''):'';return `${v.n<0n&&n?'-':''}${digits?s.slice(0,-digits):s}${f?`.${f}`:''}`;
 }
@@ -88,7 +91,8 @@ export function parseAllocationResource(value:unknown):AllocationResourceInput {
 }
 export function parseJointAllocationModel(value:unknown):JointAllocationModel {
   const m=parsed<JointAllocationModel>(jointModelSchema,value),{ref,...body}=m;
-  if(!sameAllocationRef(ref,allocationRef('BUSINESS_OWNER','joint-allocation-model',body,'s5-joint-model-v1')))throw new AllocationContractError('INVALID_REQUEST','Joint model exact supplied unadmitted commitment differs');
+  if(body.schema==='finnor.joint-allocation-model.v1'&&body.scenarios.some(s=>[s.baseValue,...s.terms.map(t=>t.value)].some(v=>v.includes('/'))))throw new AllocationContractError('INVALID_REQUEST','Rational supplied joint values require the versioned exact joint model');
+  if(!sameAllocationRef(ref,allocationRef('BUSINESS_OWNER','joint-allocation-model',body,body.schema==='finnor.joint-allocation-model.exact.v2'?'s5-joint-model-exact-v2':'s5-joint-model-v1')))throw new AllocationContractError('INVALID_REQUEST','Joint model exact supplied unadmitted commitment differs');
   unique(m.scenarios.map(s=>s.id),'Duplicate joint scenario');unique(m.choiceConstraints.map(c=>c.id),'Duplicate joint choice constraint');
   for(const s of m.scenarios){unique(s.policyPaths.map(p=>p.policyRef.id),'Duplicate scenario policy');allocationQuantity(s.baseValue);
     unique(s.terms.map(t=>[...t.policyIds].sort().join('|')),'Duplicate joint value monomial');for(const t of s.terms){unique(t.policyIds,'Duplicate joint term policy');allocationQuantity(t.value);}}
@@ -98,6 +102,8 @@ export function parseJointAllocationModel(value:unknown):JointAllocationModel {
 export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   const {ref,...body}=p;if(p.schema!=='finnor.allocation-problem.v1'||p.methodVersion!==S5_VERSION||!sameAllocationRef(ref,allocationRef('S5','allocation-problem',body)))throw new AllocationContractError('INVALID_REQUEST','Canonical problem commitment differs');
   const m=parseEconomicMandate(p.mandate),joint=parseJointAllocationModel(p.jointModel);
+  const needsExact=p.policies.some(policy=>policy.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||p.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
+  if(needsExact&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2'||p.quantityEncoding!==undefined&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2')throw new AllocationContractError('INVALID_REQUEST','Canonical exact quantities require the versioned rational encoding binding');
   if(p.snapshotDigest!==epistemicHash({resources:p.resources,outstanding:p.outstanding})||!Number.isFinite(Date.parse(p.knowledgeAt))||!Number.isFinite(Date.parse(p.validUntil))||Date.parse(p.knowledgeAt)<Date.parse(m.knowledgeAt)||Date.parse(p.validUntil)>Date.parse(m.validUntil))throw new AllocationContractError('INVALID_REQUEST','Original resource snapshot or mandate knowledge cut differs');
   if(p.tenantId!==m.tenantId||p.principalId!==m.principalId||p.episodeId!==m.episodeId||!sameAllocationRef(joint.mandateRef,m.ref)||joint.tenantId!==p.tenantId||joint.principalId!==p.principalId||joint.rightsRef!==m.rightsRef||m.ambiguity.kind!=='ROBUST_FIXED_JOINT_SCENARIOS')throw new AllocationContractError('INVALID_REQUEST','Joint mandate, identity or uncertainty semantics differ');
   if(!p.policies.length||p.policies.length>32||!p.resources.length||p.resources.length>16||p.outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','Canonical clearing cardinality exceeded');
@@ -121,7 +127,7 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
       if(node.period<action.earliestPeriod||node.period>action.lastPeriod||node.period>=m.horizon.periods)throw new AllocationContractError('INVALID_REQUEST','Policy action outside exact authorized time');
       for(const observation of node.observations){const instrument=policy.problem.observations.find(i=>i.id===observation.instrumentId),inquiry=policy.problem.actions.find(a=>a.protocolRef?.id===observation.instrumentId);
         const delay=instrument?.delayPeriods??inquiry?.informationDelayPeriods;
-        if(delay===undefined||observation.availablePeriod<delay||!node.actionHistory[observation.availablePeriod-delay]||instrument&&(!instrument.afterActionIds.includes(node.actionHistory[observation.availablePeriod-delay]!)||!instrument.bins.some(b=>b.category===observation.token))||inquiry&&node.actionHistory[observation.availablePeriod-delay]!==inquiry.id)throw new AllocationContractError('INVALID_REQUEST','Policy contingency sees unregistered or premature private information');}
+        if(delay===undefined||observation.availablePeriod<delay||!node.actionHistory[observation.availablePeriod-delay]||instrument&&(!instrument.afterActionIds.includes(node.actionHistory[observation.availablePeriod-delay]!)||!(instrument.exact?.tokens.includes(observation.token)??instrument.bins.some(b=>b.category===observation.token)))||inquiry&&node.actionHistory[observation.availablePeriod-delay]!==inquiry.id)throw new AllocationContractError('INVALID_REQUEST','Policy contingency sees unregistered or premature private information');}
       for(const branch of node.branches){const child=policy.nodes.find(n=>n.id===branch.childId);parentCounts.set(branch.childId,(parentCounts.get(branch.childId)??0)+1);
         if(!child||child.period!==node.period+1||!sameAllocationRef(child.actionHistory,[...node.actionHistory,node.actionId])||!observationKeyMatches(branch.observationKey,child.observations)||!child.observations.every(o=>o.availablePeriod<=child.period)||!policy.demand.branches.some(d=>d.nodeId===child.id&&d.parentNodeId===node.id))throw new AllocationContractError('INVALID_REQUEST','Policy branch uses unsupported history or topology');}
       if((node.period===m.horizon.periods-1)!==(node.branches.length===0))throw new AllocationContractError('INVALID_REQUEST','Policy omits a full consequence horizon');

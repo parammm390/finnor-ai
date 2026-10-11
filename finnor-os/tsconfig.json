@@ -5,6 +5,7 @@
   },
   "include": [
     "packages/**/*.ts",
+    "packages/private-equity/src/r1/native-child.mts",
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "tests/**/*.ts",

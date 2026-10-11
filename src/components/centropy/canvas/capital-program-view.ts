@@ -2,10 +2,31 @@ import { z } from "zod"
 
 import { CapitalRefViewSchema } from "./capital-ref-view"
 import { CapitalRequestViewSchema } from "./capital-request-view"
+import { CoalitionProgrammeViewSchema } from "./coalition-programme-view"
 export { CapitalRefViewSchema } from "./capital-ref-view"
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
 const blocker = z.object({ code: z.string(), owner: z.string(), requirement: z.string() })
 const amounts = z.record(z.number().finite())
+const rational = z.string().max(1025).regex(/^-?(?:0|[1-9]\d*)(?:\.\d+|\/[1-9]\d*)?$/)
+const exactSource = z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(), contentDigest: digest,
+  policyRef: CapitalRefViewSchema, worldIds: z.array(z.string()).min(1).max(32), qualification: z.literal("SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED") })
+const exactPolicy = z.object({ ref: CapitalRefViewSchema, value: rational,
+  variant: z.object({ structure: z.string(), actions: z.array(z.object({ id: z.string(), kind: z.string(), cost: rational,
+    costUnit: z.string(), resources: z.record(rational), occupancy: z.record(rational), occupationPeriods: z.number().int(),
+    tailLiability: rational, humanSeconds: rational })).max(8) }),
+  decisions: z.array(z.object({ key: z.string(), period: z.number().int(), actionId: z.string(), actionHistory: z.array(z.string()), observations: z.array(z.unknown()) })).max(50000),
+  worldCourses: z.array(z.object({ worldId: z.string(), utility: rational, terminalLiability: rational, resourceUse: z.record(z.array(rational)) })).max(32),
+})
+const jointCertificate = z.object({ ref: CapitalRefViewSchema, status: z.enum(["COMPLETE", "INCOMPLETE", "INFEASIBLE", "UNSUPPORTED", "INVALIDATED", "UNKNOWN"]),
+  checkingBasis: z.string(), lower: rational.nullable(), upper: rational.nullable(), gap: rational.nullable(), normalizedGap: rational.nullable(), exactOptimalityClaimed: z.boolean(),
+  normalization: z.object({ range: rational, threshold: rational, basis: z.literal("ORIGINAL_OWNER_SCORING_FROZEN_BEFORE_SEARCH") }),
+  incumbent: exactPolicy.nullable(), iterations: z.array(z.object({ index: z.number().int(), restrictedWorlds: z.array(z.string()), addedWorld: z.string().nullable(), disposition: z.string() })).max(16),
+  unresolvedClaims: z.array(z.object({ claim: z.string(), reason: z.string() })),
+  envelope: z.object({ assumptions: z.array(z.string()), worldDigest: digest, grammarDigest: digest, domainProfile: z.string() }),
+  consumer: z.object({ s4PolicyRef: CapitalRefViewSchema.nullable(), s5: z.object({ ref: CapitalRefViewSchema, feasible: z.boolean(), current: z.boolean(), reservationCreated: z.literal(false) }).nullable(), m1DecisionCoverage: z.literal("NOT_GRANTED"), executionAuthorityGranted: z.literal(false) }),
+  fallback: z.object({ status: z.string(), reason: z.string().nullable() }),
+  costs: z.object({ cpuMs: z.number().finite(), peakMemoryBytes: z.number().finite(), nativeCalls: z.number().int(), money: z.null(), moneyStatus: z.literal("UNMETERED") }),
+})
 const action = z.object({
   id: z.string(), kind: z.enum(["INTERVENE", "INQUIRE", "WAIT", "STOP"]),
   earliestPeriod: z.number().int(), lastPeriod: z.number().int(), cost: z.number().finite(),
@@ -29,6 +50,7 @@ export const CapitalPolicyViewSchema = z.object({
 })
 export const CapitalContextViewSchema = z.object({
   workId: z.string().uuid(), policies: z.array(CapitalPolicyViewSchema).max(256),
+  exactSources: z.array(exactSource).max(32).optional().default([]),
   executionAuthorityGranted: z.literal(false),
 })
 const candidate = z.object({
@@ -60,17 +82,19 @@ export const CapitalProgramViewSchema = z.object({
   incumbentAndSearchGap: z.object({
     incumbentDigest: digest, selectedDigest: digest.nullable(), valueBounds: z.tuple([z.number().finite(), z.number().finite()]).nullable(),
     remainingDescriptors: z.number().int().nonnegative(), finiteDomainComplete: z.boolean(),
-    upperBound: z.null(), globalOptimalityClaimed: z.literal(false), modeledImprovement: z.number().finite().nullable(),
+    upperBound: rational.nullable(), globalOptimalityClaimed: z.boolean(), modeledImprovement: z.number().finite().nullable(),
     unsampledModelGap: z.literal("UNKNOWN"), identificationGap: z.literal("UNKNOWN"),
   }),
   blockers: z.array(blocker), limitations: z.array(z.string()),
+  jointSearchCertificate: jointCertificate.optional(),
+  coalitionProgramme: CoalitionProgrammeViewSchema.optional(),
   costs: z.object({
     money: z.null(), status: z.literal("UNMETERED"), wallMs: z.number().finite(),
     generated: z.number().int(), attempted: z.number().int(), refinementSteps: z.number().int(),
     expansions: z.number().int(), unknownAttemptIds: z.array(z.string()),
   }),
 })
-export const CapitalBranchReviewViewSchema = z.object({
+const ordinaryBranchReview = z.object({
   schema: z.literal("finnor.m3.native-branch-review.v2"), ref: CapitalRefViewSchema,
   status: z.literal("MODEL_BRANCH_REVIEWED"), queryId: z.string().uuid(), programRef: CapitalRefViewSchema,
   candidateDigest: digest, policyRef: CapitalRefViewSchema,
@@ -78,6 +102,13 @@ export const CapitalBranchReviewViewSchema = z.object({
   choice: z.object({ ref: CapitalRefViewSchema, status: z.string(), nodeId: z.string().nullable(), actionId: z.string().nullable() }),
   executionAuthorityGranted: z.literal(false), decisionCoverageGranted: z.literal(false), reservationCreated: z.literal(false), effectRef: z.null(),
 })
+const exactBranchReview = z.object({ schema: z.literal("finnor.m3.exact-branch-review.v1"), ref: CapitalRefViewSchema,
+  queryId: z.string().uuid(), programRef: CapitalRefViewSchema, candidateDigest: digest, policyRef: CapitalRefViewSchema,
+  decision: z.object({ knowledgeAt: z.string(), period: z.number().int() }),
+  choice: z.object({ ref: CapitalRefViewSchema, status: z.string(), nodeId: z.string().nullable(), actionId: z.string().nullable() }),
+  executionAuthorityGranted: z.literal(false), reservationCreated: z.literal(false), effectRef: z.null(),
+})
+export const CapitalBranchReviewViewSchema = z.union([ordinaryBranchReview, exactBranchReview])
 export const CapitalQueryViewSchema = z.object({
   queryId: z.string().uuid(), workId: z.string().uuid(),
   request: CapitalRequestViewSchema, deadlineAt: z.string().datetime().nullable(),
@@ -87,6 +118,7 @@ export const CapitalQueryViewSchema = z.object({
   failure: z.object({ code: z.string(), requirement: z.string() }).nullable(),
   executionAuthorityGranted: z.literal(false),
   branchReviews: z.array(CapitalBranchReviewViewSchema).max(16),
+  exactBranchReviews: z.array(exactBranchReview).max(16).optional().default([]),
   attemptCosts: z.array(z.object({
     attemptId: z.string().uuid(), state: z.enum(["RUNNING", "FINISHED", "FAILED", "FENCED"]),
     startedAt: z.string(), finishedAt: z.string().nullable(), deadlineAt: z.string(),
@@ -105,6 +137,7 @@ export const CapitalWitnessViewSchema = z.object({
     observations: z.array(z.unknown()),
   })) }).nullable(),
   model: z.unknown(), kernel: z.unknown(), checks: z.array(z.unknown()),
+  exactPolicy: exactPolicy.nullable().optional(),
   evidenceSlice: z.unknown(), executionAuthorityGranted: z.literal(false),
 })
 export const CapitalModuleViewSchema = z.object({
@@ -114,3 +147,4 @@ export const CapitalModuleViewSchema = z.object({
 export type CapitalQueryView = z.infer<typeof CapitalQueryViewSchema>
 export type CapitalPolicyView = z.infer<typeof CapitalPolicyViewSchema>
 export type CapitalWitnessView = z.infer<typeof CapitalWitnessViewSchema>
+export type CapitalExactSourceView = z.infer<typeof exactSource>

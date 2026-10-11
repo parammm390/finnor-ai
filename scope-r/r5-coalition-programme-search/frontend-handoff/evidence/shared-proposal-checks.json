@@ -1,0 +1,36 @@
+{
+  "schema": "finnor.r5.frontend-shared-proposal-checks.v1",
+  "qualification": "PROPOSAL_APPLICABILITY_AND_GENERATOR_SYNTAX_ONLY",
+  "patchSha256": "2433d73fda9d71cad4dbc61746c42df5807949deffdf6a3bf8770a4be73ced38",
+  "preimagePinsMatched": true,
+  "postimagePinsReconstructed": true,
+  "applyCheck": {
+    "command": [
+      "git",
+      "-C",
+      "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+      "apply",
+      "--check",
+      "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "generatorSyntax": {
+    "command": [
+      "/Users/paramdave/.hermes/node/bin/node",
+      "--input-type=module",
+      "--check"
+    ],
+    "inputSha256": "1680406e03fdb030177600f9684a7e139c59780868e7612c8c68f8c577de3de8",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "peerSourcesUnchanged": true,
+  "sharedPatchApplied": false,
+  "sharedProductsRegenerated": false,
+  "joinedBuildMountedQualification": "NOT RUN",
+  "packetWhitespaceRepair": "Four blank context prefixes only; source postimage pins are unchanged."
+}

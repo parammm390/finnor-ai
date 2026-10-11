@@ -1,0 +1,520 @@
+{
+  "capturedUTC": "2026-10-09T14:13:28.781566+00:00",
+  "commit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "tree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+  "objectRepository": "/Users/paramdave/.factory/worktrees/completed-release-2026-10-08/FINNOR",
+  "records": [
+    {
+      "repoPath": "AGENTS.md",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/AGENTS.md",
+      "sha256": "8c15fcfa390820ac1581032f0407a5e0b06ab5a1073b5bad958de96f50b11f0b",
+      "bytes": 6985
+    },
+    {
+      "repoPath": "finnor-os/Dockerfile.worker",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/Dockerfile.worker",
+      "sha256": "f0674e675e08b231556d8bd71dc71d6431b49798f0bd1ddec9c64b3163766109",
+      "bytes": 1757
+    },
+    {
+      "repoPath": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "sha256": "a1b55c0305ac264be29d4a08bcedf7e213229b12fb0d3a9f5ed4ded04e1d4613",
+      "bytes": 7069
+    },
+    {
+      "repoPath": "finnor-os/apps/api/app/api/experiments/[operation]/route.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/api/app/api/experiments/[operation]/route.ts",
+      "sha256": "354f8adbdf7e97c3176d0f85ae4120e54eead14e8c70c7c687d7c45d11bcee2d",
+      "bytes": 3729
+    },
+    {
+      "repoPath": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
+      "sha256": "57ef31900194135c9f2ca691b2b00cca17b8202d0c06382b35119bcafbe96c96",
+      "bytes": 4696
+    },
+    {
+      "repoPath": "finnor-os/apps/worker/src/index.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/worker/src/index.ts",
+      "sha256": "b296d14ed4afc261cc6cac9b6a12b911df25a96546a688f30361b4e43d763ba0",
+      "bytes": 16130
+    },
+    {
+      "repoPath": "finnor-os/apps/worker/src/job-contracts.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/worker/src/job-contracts.ts",
+      "sha256": "db1a79dc1b3d170e05fc3085ae4af8cb4a36f28a437f1515e7a39c8c5ff7ddc2",
+      "bytes": 274
+    },
+    {
+      "repoPath": "finnor-os/apps/worker/src/queue.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/apps/worker/src/queue.ts",
+      "sha256": "f01397b7044fd132b97fca2975a6930f5ae625cb574bda4ab09c0a745e475287",
+      "bytes": 34265
+    },
+    {
+      "repoPath": "finnor-os/package-lock.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/package-lock.json",
+      "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+      "bytes": 259503
+    },
+    {
+      "repoPath": "finnor-os/package.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/package.json",
+      "sha256": "53b87960046f70e7382a3c088c2d500aa824cde2d977e0cd77e5f0cbd07449de",
+      "bytes": 5254
+    },
+    {
+      "repoPath": "finnor-os/packages/db/compute-contract.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/db/compute-contract.ts",
+      "sha256": "cb47275d73a580828473dfc67df01ae0bfd499f6565fe2f23ec2f910267bb151",
+      "bytes": 12668
+    },
+    {
+      "repoPath": "finnor-os/packages/db/migration-head.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/db/migration-head.ts",
+      "sha256": "5e9c6f73fe7012e23d67aa6486921127ebd73e637bd6f3952dfa12ffb4c60cd2",
+      "bytes": 285
+    },
+    {
+      "repoPath": "finnor-os/packages/db/migrations-bundle.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/db/migrations-bundle.ts",
+      "sha256": "313ca6baef9a44b219ae042b3524bce69d181f844868948ac771ad00353cb633",
+      "bytes": 1603088
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/economic-attribution.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/economic-attribution.ts",
+      "sha256": "5bebab4fa8f45f239fef942d68469afec6dd37de378eb673b27423672d10691f",
+      "bytes": 47400
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/experiment-numerics.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/experiment-numerics.ts",
+      "sha256": "7ad3c704d23a6f0d2976217f2302d5f5dbd45e3ccd2436266fed55a488a78941",
+      "bytes": 10671
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/experiment-realization.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/experiment-realization.ts",
+      "sha256": "e8560d51e06cb0f4c7f181766bc1fe8826d3baddee4dd0024924968ef4514959",
+      "bytes": 27999
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/experiments.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/experiments.ts",
+      "sha256": "eff523599bcfbf0150fec8c551ed7b5a390002462590ea02ec4d62a623740482",
+      "bytes": 21137
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/intervention-backend.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/intervention-backend.ts",
+      "sha256": "b0b74b8a53de617d3d55fa4c1f7741e0550fc8424765a759153b9d5d78a8ddac",
+      "bytes": 7836
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/intervention-control.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/intervention-control.ts",
+      "sha256": "a86c509e03fcc68d748c0de197fa5f117b1dc91e7a1636752e9e085f72be2e4d",
+      "bytes": 7207
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "sha256": "53d5982d6ad2dfca91b8479cc8f0a58d4d5c380a0828ebd5880a316aaa55979f",
+      "bytes": 18592
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+      "sha256": "a80b57d7c6bdabec985f97d36b41e27d2bd497a8eba9e709a6fc88a91a2a9fe3",
+      "bytes": 171
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/interventions.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/interventions.ts",
+      "sha256": "99b1fe50325e469e00f345c155035dc6e28b69e5ab627aa257796842bdd5de9a",
+      "bytes": 30217
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/admission.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/admission.ts",
+      "sha256": "ce9fc1f4d7adaaabb44ea110077922eb84aaf8025a7d2f3980dc9bfd31611610",
+      "bytes": 8871
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/api.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/api.ts",
+      "sha256": "b8b0f24e31b39018e36182ffa0cadaf415631cba063064c64e45f091c83be1c4",
+      "bytes": 15115
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/calibration.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/calibration.ts",
+      "sha256": "cfddcc5c6de81da82bf9f634d95690fccebc565a72f28a31fa7c879e298fd514",
+      "bytes": 5837
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/contracts.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/contracts.ts",
+      "sha256": "a41dcaabf67062fa358f31050bf441f7a5e4dfe24cbbfd78fcb5733dfa0cb34a",
+      "bytes": 4174
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/controller.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/controller.ts",
+      "sha256": "618b1e759ec0414fc9830a37aca02183b4b537602a2f109e21cae26d3c04f99b",
+      "bytes": 16907
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/endpoints.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/endpoints.ts",
+      "sha256": "bcc24cb92dd48c204e545a8615f6166d4ee27ad76ce4e21c72c93f48a06436d9",
+      "bytes": 3389
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/owners.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/owners.ts",
+      "sha256": "c7da86c37b54afc899327106d0d778800f56348557e434be1d1f5576c1d67a9d",
+      "bytes": 5546
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/store.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/store.ts",
+      "sha256": "ef65439f50df4090b52ece182b2f596c4a8173aaf23d26d24ec4a42fce6f1214",
+      "bytes": 10068
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/compute-search/worker.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/compute-search/worker.ts",
+      "sha256": "3432f74bb12bd5997a7ccf851e035b252028bda5b895963fbc0f7e4a1de87bfe",
+      "bytes": 20611
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "sha256": "64a584dcfe61d7666f15966cebec2572d0a51e4db4c06c975f6f306e1eba7138",
+      "bytes": 34710
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "1ad8e4afe110b39cdeb5c7d1bc3d6568b3d3da3a7cfbce71c176e0ab051efab6",
+      "bytes": 40370
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "sha256": "6a946794726ee1deb9777ebd35b411bcea8871187b11a535b47e3080fae77da8",
+      "bytes": 10155
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "sha256": "75a8e46c8543ae494268b28fb65240d5d6b6420fd024183a0782d4a4774c63f3",
+      "bytes": 17056
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "sha256": "dc2b3142f64524fcd435428e3618b8e42d414c845c6e1060d05bd94a24374c42",
+      "bytes": 19394
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
+      "sha256": "da7b6b1841f2ffba2d4d0b2a7d930477a3e664eb2d8bf9e2c9ac04db03f64b9b",
+      "bytes": 3082
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+      "sha256": "c60acd918fca93a4f6a63fe6c0e5153d9e476aec063e461dd5403fee0ed95914",
+      "bytes": 11413
+    },
+    {
+      "repoPath": "finnor-os/scripts/s2/reference.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s2/reference.py",
+      "sha256": "5ab2c2a269c51057aa26f867757337e5bdfd6c602f9c0c02222a5e1c69d936e1",
+      "bytes": 5454
+    },
+    {
+      "repoPath": "finnor-os/scripts/s2/run-local.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s2/run-local.py",
+      "sha256": "99369ac671da3d4f7fe37dab5ca6a732d74780411e91a5a5f224d7efe62418ab",
+      "bytes": 1408
+    },
+    {
+      "repoPath": "finnor-os/scripts/s2/run-s2-cold.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s2/run-s2-cold.mts",
+      "sha256": "ca7c8660c43232e77ceca4f6319962f32e4e320d23d7e342282d62e0e5359ebe",
+      "bytes": 694
+    },
+    {
+      "repoPath": "finnor-os/scripts/s2/run-s2-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s2/run-s2-e2e.mts",
+      "sha256": "3754593e9deca96fa53c4a7ea5bbc69843c018de798fc7743e1278c95582f148",
+      "bytes": 34412
+    },
+    {
+      "repoPath": "finnor-os/scripts/s2/tsconfig.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s2/tsconfig.json",
+      "sha256": "89241062b787ce5a9f704a416e506f36362597292a0a44238bbf93143495d370",
+      "bytes": 286
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/instrument-design.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/instrument-design.json",
+      "sha256": "1e16aba499584558432b9217452580ad4a9b874adf5ccede0f22e2187c15dcb6",
+      "bytes": 7272
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/qualify-numerics.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/qualify-numerics.py",
+      "sha256": "c81ef14a8e2d90118ba6cddbd860e92fe0239eee6366d0da5db9de15aeb60438",
+      "bytes": 6844
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/reference.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/reference.py",
+      "sha256": "a495acac761b118c7ca1c7569b6c9ed196c94749c347fdc7e5e700191044f4bf",
+      "bytes": 5103
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/run-local.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/run-local.py",
+      "sha256": "89bd3fa3f9a71e08759989d8a55c418848ce0e704ae047561659f688e47be523",
+      "bytes": 1432
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/run-s3-cold.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/run-s3-cold.mts",
+      "sha256": "30a33a00f1c4668625162b3abeb8353a9ed65c360b41eef3fa298f89655fc820",
+      "bytes": 950
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/run-s3-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/run-s3-e2e.mts",
+      "sha256": "4d20b1ebe604cd8efc559cd4165feb95a0397af31e25111166362ca1d2d7480b",
+      "bytes": 38176
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/run-upstream.py",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/run-upstream.py",
+      "sha256": "e9d7a1bcc1c25165131baec88a948c55345c890d9df4e4dbdd0af6eb1a0f3ed7",
+      "bytes": 1906
+    },
+    {
+      "repoPath": "finnor-os/scripts/s3/tsconfig.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s3/tsconfig.json",
+      "sha256": "1a06a58609ad3d84b0a9d488e6d486f3463db3f536ca775c443bc4bbf56e0632",
+      "bytes": 125
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/economic-fixtures.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/economic-fixtures.mts",
+      "sha256": "d88428be794e3e29c5ee0ded5bfbcb50350eccf67f0e887cf5fe3d5089b719b9",
+      "bytes": 6176
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/ledger-fixture.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/ledger-fixture.mts",
+      "sha256": "d1b63f5c064e9be99884a37f2cb98085a75c55b43bb079fa5a47f6358bacdbf5",
+      "bytes": 9604
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/run-integrated-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/run-integrated-e2e.mts",
+      "sha256": "2f435cb9ffc0eb0d8d6e7c7150049671618dad929dc03c8e55929e7b7eb1b53a",
+      "bytes": 25310
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/run-maturity-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/run-maturity-e2e.mts",
+      "sha256": "b76f701a94c2f37d04aebd6a7283b75154cbeb3b39c48a3bebb53e827b63602c",
+      "bytes": 2122
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/run-owner-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/run-owner-e2e.mts",
+      "sha256": "21bdd6d5e39b5d06110d71f90f0dda3fa9537a4463718fd184217f78af6b2a3a",
+      "bytes": 11938
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/run-protected-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/run-protected-e2e.mts",
+      "sha256": "4154da6cdcfc2996f2777c2b72dc5f03b52654cdbd0e8505a8bf634b25c943bf",
+      "bytes": 8853
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/run-statistical-e2e.mts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/run-statistical-e2e.mts",
+      "sha256": "279a0fcc0f97c23deaede2ba109518422092e0ccdb0ecda97d639e4b702fd484",
+      "bytes": 11059
+    },
+    {
+      "repoPath": "finnor-os/scripts/s7/tsconfig.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/scripts/s7/tsconfig.json",
+      "sha256": "410d41db636dc73848536eaa42c0848b2c7f5710d59ad66b9a72bd519620b219",
+      "bytes": 305
+    },
+    {
+      "repoPath": "package-lock.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/package-lock.json",
+      "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+      "bytes": 364668
+    },
+    {
+      "repoPath": "package.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/package.json",
+      "sha256": "17e3e997d6e4a4751cebe200f9fb24575864078531d36a1387f0060ea7caf28a",
+      "bytes": 3520
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "sha256": "e2b4f5d03b2ed1705807c2f2f81fb2c5ca09daec08c1c592ce100ad1ee91370e",
+      "bytes": 37022
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/CausalReplayPanel.tsx",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/CausalReplayPanel.tsx",
+      "sha256": "99741d7d4217748af3b074f396c7defc5d899371a43679c20c39fd8d10588308",
+      "bytes": 6103
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/EvidenceWorkbench.tsx",
+      "sha256": "86c20aabee26234c9372e8d291b531dc2542cb802c85d1bdd7dbd3033848ccfd",
+      "bytes": 13149
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/canvas-compose.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/canvas-compose.ts",
+      "sha256": "9296c190076cbd1ed2ec3483df2f08ceee08751475419ab814485696d4ef410c",
+      "bytes": 18692
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/canvas-contract.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/canvas-contract.ts",
+      "sha256": "053cb840773d2c728c3b51db3cc50ee7eaf36364d49a722d10923a3548caf5fd",
+      "bytes": 7694
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/canvas-layout.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/canvas-layout.ts",
+      "sha256": "569386eb5140d7e24f64769e5b3b3f84299256945b75d2ff16c0c1ad5bf49cfd",
+      "bytes": 785
+    },
+    {
+      "repoPath": "src/lib/centropy/capability-manifest.generated.json",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "60d1cbc34d4d5a928ee88274452a404b2f96f636d40087e4edc4891e7333ff52",
+      "bytes": 332732
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/contingent-control.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/contingent-control.ts",
+      "sha256": "308fff66f0e38c8c4cac760b7f6618199276a3aa8a3fe9ed9c800ff88ed6cfd5",
+      "bytes": 30387
+    },
+    {
+      "repoPath": "finnor-os/packages/epistemic-runtime/src/control-contracts.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/epistemic-runtime/src/control-contracts.ts",
+      "sha256": "300ebc6ba0e3b4a9218b0ff0d95e6e5ea5b86cb698a625574dbca371b968a329",
+      "bytes": 11505
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/decision-slice/adapters.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/decision-slice/adapters.ts",
+      "sha256": "194759e83d89cda8c99bac7383fec158d07613c54222ba5bcb4127b3afc848ce",
+      "bytes": 24803
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "sha256": "5f9a594dbbf376b22a4aab63c7cd5d38d7bd1b4a87da84f325e7b2ec58f11f60",
+      "bytes": 14594
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-economic-assignments.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-economic-assignments.ts",
+      "sha256": "4df1802b495a84dabe227c4607d8923fd58ccd15aae4a8d1848e12e85146403e",
+      "bytes": 14788
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "sha256": "25ecec3156542ccee9817784cfb2b6f07da317ea97e349073a534990086803d6",
+      "bytes": 34122
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/enterprise-economic-consumers.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/enterprise-economic-consumers.ts",
+      "sha256": "4aab994241d1b4e9a21bc118ae3ef8d7569b81f89465bd44912da5231de99df4",
+      "bytes": 7466
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+      "sha256": "3a37e611f6af7373e10255c0603a5de19209a1d828e0055e401ecf718377f83f",
+      "bytes": 9861
+    },
+    {
+      "repoPath": "finnor-os/packages/private-equity/src/native-experience-transport.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/private-equity/src/native-experience-transport.ts",
+      "sha256": "7ca59e3a7ce6734d8d0d020a56397b1efbfa0b4ef4aee8f0d2bd125d58a235be",
+      "bytes": 10373
+    },
+    {
+      "repoPath": "finnor-os/packages/shared-types/src/economic-attribution.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/shared-types/src/economic-attribution.ts",
+      "sha256": "0db198753dd84518af0e10e3c668fd3a954ea2696b577d45f88fe8473eb91670",
+      "bytes": 13712
+    },
+    {
+      "repoPath": "finnor-os/packages/shared-types/src/experiments.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/shared-types/src/experiments.ts",
+      "sha256": "308d6be50377fd9e88e1abbc21c1f080cfb4d6ca7df0aa3269d5d31e126f15f6",
+      "bytes": 12020
+    },
+    {
+      "repoPath": "finnor-os/packages/shared-types/src/interventions.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/shared-types/src/interventions.ts",
+      "sha256": "8918f8bb7ac439cccc6911ee98ef83d88e97ae7969ad809a9d035a5131a62578",
+      "bytes": 10900
+    },
+    {
+      "repoPath": "scripts/centropy/generate-capability-manifest.mjs",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "3e0b0d6a791a4662a63e423a288d6b99dff2b573cc0cac497ad2e01117eab842",
+      "bytes": 17686
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/ContinuationPanel.tsx",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/ContinuationPanel.tsx",
+      "sha256": "a15a01b911d30c3a9e28aa97adfd708a3b1f9c2a0b556fbae9c8515c9ba6a284",
+      "bytes": 5306
+    },
+    {
+      "repoPath": "src/components/centropy/canvas/CanvasDocument.tsx",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/src/components/centropy/canvas/CanvasDocument.tsx",
+      "sha256": "ac49dd3490c3628d533337015b52ff1620e99aa9bb27bf647b6057821a7dc402",
+      "bytes": 31656
+    },
+    {
+      "repoPath": "finnor-os/packages/db/migrate.ts",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/db/migrate.ts",
+      "sha256": "a80dea390378c0bc666dd3d8e486864c798f0a8b327a85868ca60d0098eff53e",
+      "bytes": 8026
+    },
+    {
+      "repoPath": "finnor-os/packages/db/migrations/0171_runtime_database_role_isolation.sql",
+      "snapshot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r4-authoring/source/finnor-os/packages/db/migrations/0171_runtime_database_role_isolation.sql",
+      "sha256": "ef3733e3c571b78936e9a7d23e67a18aa0953bfaa999dc051601b5ba6d7df566",
+      "bytes": 3910
+    }
+  ],
+  "executionBase": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR",
+  "verification": "All relevant production snapshots verified against committed base before implementation; peer dirty content excluded"
+}

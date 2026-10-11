@@ -18,6 +18,7 @@ import {brokerPrivateFile,brokerSourceDigests} from '../../governed-execution/sr
 import {canonical} from '../../governed-execution/src/protocol';
 import {s6AdapterContract} from '../../governed-execution/src/adapter-contract';
 import {readS5GovernedBudgets,recordS5GovernedResourceUnits} from './allocation-store';
+export {prepareEnterpriseCoalitionSchedule,readEnterpriseCoalitionSchedule,recordEnterpriseCoalitionConsent,readEnterpriseCoalitionConsentHistory} from './capital-program/r5-obligations';
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S6 obligation context is unavailable');
 const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);

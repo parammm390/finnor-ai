@@ -1,0 +1,58 @@
+{
+  "schema": "finnor.r5.frontend-shared-preimages.v1",
+  "status": "PROPOSED_NOT_APPLIED",
+  "targetRoot": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "targetHeadAtCapture": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "binding": "Exact working bytes, not an assertion that the integrator working tree is sealed",
+  "patch": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/shared-integration.patch",
+  "patchSha256": "2433d73fda9d71cad4dbc61746c42df5807949deffdf6a3bf8770a4be73ced38",
+  "files": [
+    {
+      "path": "src/components/centropy/canvas/capital-program-view.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/src/components/centropy/canvas/capital-program-view.ts",
+      "preimageSha256": "4bc760e659e8199ea56453c8633956e80083dafed3a58bc43d85c3f443d1b33c",
+      "proposedPostimageSha256": "9eeda89406b83b899c133f2d4b73b52bb3ea74af6601265be3546959a7ad391c"
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-request-view.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/src/components/centropy/canvas/capital-request-view.ts",
+      "preimageSha256": "1f2e185075b6ecac01b0efdf5b1aa1cfc0a20122920b607e7426e4b674e6b7d9",
+      "proposedPostimageSha256": "8169669b6d3f82c50145584a2aa099ee0a330112973a8af162d6488f9935bc31"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "preimageSha256": "5eed082e1796efb738e8d9cbe56f6c8d69873f96c36067757bd8feb272169350",
+      "proposedPostimageSha256": "3301ff5f9e2b3ed035edafaf58e359c830004fcd41ad2636e42ae0f8a9f9f103"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/scripts/centropy/generate-capability-manifest.mjs",
+      "preimageSha256": "8716bb816ebff46ea4dcf184f653f6fabf650bea505b8693c761d68a75992880",
+      "proposedPostimageSha256": "1680406e03fdb030177600f9684a7e139c59780868e7612c8c68f8c577de3de8"
+    }
+  ],
+  "rules": [
+    "Cherry-pick the registered leaf commits before applying this shared proposal, or imports will be unresolved.",
+    "Verify every preimage SHA-256 and use git apply --check. Do not force or fuzz a changed shared preimage.",
+    "Keep the review child mounted outside program/current/INVALIDATED branches; do not key it by producer availability.",
+    "Do not derive optional workRevision from a producer that disappears on own S5 invalidation. Pass it only from independently current stable Work metadata.",
+    "Preserve r5 URL parameters in other Work URL writers; URL refs are untrusted hints and never release retained S5 responsibility.",
+    "Suppress legacy unilateral challenge/value rendering for coalitionProgramme. Do not relabel or revive M3.",
+    "The four coalition POST reads must be READ with no invalidation tags; the three explicit mutations use work/company-brain tags.",
+    "This proposal does not add coalition release, consent-report submission, P1 invocation, admission, invitation or effect routes.",
+    "Regenerate shared products serially on the joined backend/frontend source. Source applicability is not mounted or installed qualification."
+  ],
+  "serialRegeneration": [
+    "npm run centropy:manifest",
+    "npm run centropy:client",
+    "npm run centropy:forms",
+    "node scripts/centropy/audit-capability-coverage.mjs",
+    "npm run centropy:manifest:check",
+    "npm run centropy:client:check",
+    "npm run centropy:forms:check"
+  ],
+  "regenerationStatus": "NOT RUN",
+  "joinedTypecheckBuildMountedStatus": "NOT RUN",
+  "patchFormat": "Git-supported empty context lines have no whitespace prefix; actual four proposed postimages are unchanged."
+}
