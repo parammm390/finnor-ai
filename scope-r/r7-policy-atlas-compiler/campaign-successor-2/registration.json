@@ -6,19 +6,7 @@
   "deadlineAt": "2026-10-11T10:07:37.436255+00:00",
   "startedMonotonicSeconds": 0.022321791,
   "deadlineMonotonicSeconds": 3600.022321791,
-  "campaignSeconds": 3600,
   "outputRoot": "/tmp/finnor-r7-deadline-successor2-20261011.9X2Kq7Lm",
-  "ownerDriverSeconds": 1200,
-  "retainedS5DriverSeconds": 1200,
-  "wrapperConformanceSeconds": 180,
-  "structuralDriverSeconds": 600,
-  "childDeadlineMs": 30000,
-  "maxGeneratedEvidenceBytes": 268435456,
-  "minimumFreeBytes": 268435456,
-  "aggregateRssGuardBytes": 17179869184,
-  "pollSeconds": 0.1,
-  "cleanupGraceSeconds": 8,
-  "serialCostlyRuns": true,
   "requiredOwnerCases": [
     "owner-full-profile",
     "original-policy-information",
@@ -156,5 +144,19 @@
   },
   "noBrowserInteraction": true,
   "noPushNoDeployNoLiveEffects": true,
-  "diagnosticOnly": false
+  "diagnosticOnly": false,
+  "limits": {
+    "campaignSeconds": 3600,
+    "ownerDriverSeconds": 1200,
+    "retainedS5DriverSeconds": 1200,
+    "wrapperConformanceSeconds": 180,
+    "structuralDriverSeconds": 600,
+    "childDeadlineMs": 30000,
+    "maxGeneratedEvidenceBytes": 268435456,
+    "minimumFreeBytes": 268435456,
+    "aggregateRssGuardBytes": 17179869184,
+    "pollSeconds": 0.1,
+    "cleanupGraceSeconds": 8,
+    "serialCostlyRuns": true
+  }
 }
