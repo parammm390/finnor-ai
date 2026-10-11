@@ -246,7 +246,84 @@ END $$;
 
 -- Revalidate X1 at the canonical mutation, in the same transaction as the
 -- effect. Locked source/mandate/rights/Work rows fence concurrent revocation.
-CREATE FUNCTION finnor_os.x1_assert_effect_current(p_action uuid)
+CREATE FUNCTION finnor_os.x1_assert_canonical_owner_cut(p_cut jsonb,p_lock boolean DEFAULT false)
+ RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE t uuid:=finnor_os.request_tenant_id(); binding jsonb; parts text[]; tab text;
+ predicate text; query_text text; owner_row jsonb; owner_count integer;
+ lock_suffix text:=CASE WHEN p_lock THEN ' FOR SHARE' ELSE '' END;
+BEGIN
+ IF t IS NULL OR p_cut IS NULL OR jsonb_typeof(p_cut)<>'array' OR jsonb_array_length(p_cut)>1000
+ THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_CUT_REQUIRED'; END IF;
+ FOR binding IN SELECT value FROM jsonb_array_elements(p_cut) LOOP
+  parts:=regexp_match(binding->>'ref','^([a-z_]+):([a-f0-9-]{36})@(v[1-9][0-9]*|s[a-f0-9]{64})$');
+  IF parts IS NULL OR coalesce(binding->>'registrationId','')='' OR coalesce(binding->>'institutionId','')=''
+  THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_CUT_INVALID'; END IF;
+  tab:=NULL; predicate:=NULL;
+  CASE parts[1]
+   WHEN 'pe_deal' THEN tab:='pe_deals';predicate:='archived_at IS NULL AND status=''active''';
+   WHEN 'pe_fund' THEN tab:='pe_funds';predicate:='status<>''liquidated''';
+   WHEN 'pe_vehicle' THEN tab:='pe_vehicles';predicate:='status<>''liquidated''';
+   WHEN 'pe_investment_case' THEN tab:='pe_investment_cases';predicate:='archived_at IS NULL AND superseded_at IS NULL';
+   WHEN 'pe_debt_facility' THEN tab:='pe_debt_facilities';predicate:='superseded_at IS NULL AND valid_to IS NULL AND status NOT IN(''cancelled'',''repaid'')';
+   WHEN 'pe_metric_series' THEN tab:='pe_metric_series';predicate:='active';
+   WHEN 'pe_request' THEN tab:='pe_requests';predicate:='archived_at IS NULL';
+   WHEN 'pe_finding' THEN tab:='pe_findings';predicate:='archived_at IS NULL AND superseded_at IS NULL';
+   WHEN 'pe_decision' THEN tab:='pe_decisions';predicate:='superseded_at IS NULL';
+   WHEN 'pe_fund_vehicle_link' THEN tab:='pe_fund_vehicle_links';predicate:='superseded_at IS NULL AND valid_to IS NULL';
+   WHEN 'pe_company_party_role' THEN tab:='pe_company_party_roles';predicate:='superseded_at IS NULL AND valid_to IS NULL';
+   WHEN 'pe_debt_facility_lender' THEN tab:='pe_debt_facility_lenders';predicate:='superseded_at IS NULL AND valid_to IS NULL';
+   WHEN 'pe_dependency' THEN tab:='pe_dependencies';predicate:='removed_at IS NULL';
+   ELSE NULL;
+  END CASE;
+  IF tab IS NOT NULL THEN
+   query_text:='SELECT to_jsonb(o) FROM finnor_os.'||quote_ident(tab)||' o WHERE tenant_id=$1 AND id=$2
+    AND external_id=$3 AND source_system=''x1:''||$4 AND '||predicate||lock_suffix;
+   EXECUTE query_text INTO owner_row USING t,parts[2]::uuid,binding->>'registrationId',binding->>'institutionId';
+   IF owner_row IS NULL OR parts[3] IS DISTINCT FROM 'v'||(owner_row->>'version')
+   THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_CHANGED'; END IF;
+  ELSE
+   IF left(parts[3],1)<>'s' OR jsonb_typeof(binding->'ownerWitness') IS DISTINCT FROM 'object'
+   THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_WITNESS_REQUIRED'; END IF;
+   CASE parts[1]
+    WHEN 'user' THEN query_text:='SELECT jsonb_build_object(''bindingId'',b.id,''sourceId'',b.source_id,
+      ''registrationId'',b.registration_id,''revision'',b.revision,''subjectId'',b.subject_user_id)
+      FROM finnor_os.x1_subject_identity_bindings b JOIN finnor_os.users u
+       ON u.tenant_id=b.tenant_id AND u.id=b.subject_user_id
+      WHERE b.tenant_id=$1 AND b.registration_id=$3 AND b.institution_id=$4 AND b.source_id=$5
+       AND b.revoked_at IS NULL AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()
+       AND u.status=''active'''||CASE WHEN p_lock THEN ' FOR SHARE OF b,u' ELSE '' END;
+    WHEN 'external_organization' THEN query_text:='SELECT jsonb_build_object(''organizationKey'',organization_key,''active'',active)
+      FROM finnor_os.external_organizations WHERE tenant_id=$1 AND id=$2 AND organization_key=$3 AND active'||lock_suffix;
+    WHEN 'document' THEN query_text:='SELECT jsonb_build_object(''id'',d.id,''externalId'',d.external_id,''sourceSystem'',d.source_system,
+       ''heads'',coalesce((SELECT jsonb_agg(jsonb_build_object(''kind'',h.kind,''headKey'',h.head_key,
+        ''versionId'',h.version_id,''sha256'',v.byte_sha256) ORDER BY h.kind,h.head_key)
+        FROM finnor_os.document_version_heads h JOIN finnor_os.document_versions v
+         ON v.tenant_id=h.tenant_id AND v.id=h.version_id AND v.document_id=h.document_id
+        WHERE h.tenant_id=d.tenant_id AND h.document_id=d.id),''[]''::jsonb))
+      FROM finnor_os.documents d WHERE d.tenant_id=$1 AND d.id=$2 AND d.archived_at IS NULL
+       AND (d.id::text=$3 OR (d.source_system=''x1:''||$4 AND d.external_id=$3))'||lock_suffix;
+    WHEN 'work' THEN query_text:='SELECT jsonb_build_object(''id'',id,''principalId'',created_by)
+      FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND id::text=$3
+       AND created_by=nullif(current_setting(''app.user_id'',true),'''')::uuid'||lock_suffix;
+    ELSE RAISE EXCEPTION 'X1_CANONICAL_OWNER_TYPE_UNSUPPORTED';
+   END CASE;
+   owner_count:=0;
+   FOR owner_row IN EXECUTE query_text USING t,parts[2]::uuid,binding->>'registrationId',binding->>'institutionId',binding->>'sourceId' LOOP
+    owner_count:=owner_count+1;
+    IF (parts[1]='user' AND owner_row->>'subjectId' IS DISTINCT FROM parts[2])
+     OR (owner_row-'subjectId') IS DISTINCT FROM binding->'ownerWitness'
+    THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_CHANGED'; END IF;
+   END LOOP;
+   IF owner_count<>1 THEN RAISE EXCEPTION 'X1_CANONICAL_OWNER_CHANGED_OR_AMBIGUOUS'; END IF;
+  END IF;
+ END LOOP;
+END $$;
+REVOKE ALL ON FUNCTION finnor_os.x1_assert_canonical_owner_cut(jsonb,boolean) FROM PUBLIC;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='finnor_app') THEN
+ GRANT EXECUTE ON FUNCTION finnor_os.x1_assert_canonical_owner_cut(jsonb,boolean) TO finnor_app;
+END IF; END $$;
+
+CREATE FUNCTION finnor_os.x1_assert_effect_current(p_action uuid,p_method text DEFAULT NULL)
  RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE t uuid:=finnor_os.request_tenant_id(); u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  a record; p record; x record; e record; node jsonb; grant_row record; rights text; subject jsonb; subject_count integer;
@@ -289,7 +366,9 @@ BEGIN
   IF x IS NULL OR x.status NOT IN('RUNNING','WAITING','PARTIAL')
    OR x.work_input_id<>p.work_input_id
    OR x.input_manifest->'current'->>'rightsRevision' IS DISTINCT FROM rights
+   OR p_method IS NULL OR x.input_manifest->'current'->>'methodRevision' IS DISTINCT FROM p_method
    OR x.admission_id IS NULL THEN RAISE EXCEPTION 'X1 compiler continuation was fenced'; END IF;
+  PERFORM finnor_os.x1_assert_canonical_owner_cut(x.input_manifest->'current'->'canonicalOwners',true);
   SELECT * INTO e FROM finnor_os.x1_compiler_episodes WHERE tenant_id=t AND principal_id=u AND id=x.episode_id FOR SHARE;
   IF e IS NULL OR e.wall_deadline<=clock_timestamp()
    OR e.parent_reservation IS DISTINCT FROM p.request->'institution'->'reservationRef'
@@ -328,7 +407,7 @@ BEGIN
    AND o.body->>'rightsRevision'=rights FOR SHARE OF r,o;
  IF NOT FOUND THEN RAISE EXCEPTION 'X1 original S5 reservation changed before canonical mutation'; END IF;
 END $$;
-REVOKE ALL ON FUNCTION finnor_os.x1_assert_effect_current(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.x1_assert_effect_current(uuid,text) FROM PUBLIC;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='finnor_app') THEN
- GRANT EXECUTE ON FUNCTION finnor_os.x1_assert_effect_current(uuid) TO finnor_app;
+ GRANT EXECUTE ON FUNCTION finnor_os.x1_assert_effect_current(uuid,text) TO finnor_app;
 END IF; END $$;

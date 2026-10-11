@@ -8,6 +8,7 @@ const sha = (value: Buffer | string) => createHash("sha256").update(value).diges
 const files = [fileURLToPath(import.meta.url),
   fileURLToPath(new URL("../../../packages/private-equity/src/institution-program/checker.ts", import.meta.url)),
   fileURLToPath(new URL("../../../packages/private-equity/src/institution-program/checker-raw.ts", import.meta.url)),
+  fileURLToPath(new URL("../../../packages/private-equity/src/institution-program/canonical-json.ts", import.meta.url)),
   fileURLToPath(new URL("../../../node_modules/tsx/dist/cli.mjs", import.meta.url)),
   fileURLToPath(new URL("../../../package-lock.json", import.meta.url))];
 const pins = Object.fromEntries(files.map((file) => [file, sha(readFileSync(file))]));

@@ -173,7 +173,9 @@ function isInstitutionRow(q:Awaited<ReturnType<typeof nativeRequestRow>>):q is I
 }
 
 export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:InstitutionProgramRow,execution:Readonly<JobExecutionContext>){
- if(q.status==='WAITING'&&q.head_id)return continueInstitutionProgram(ctx,q,execution);
+ // A published head is durable progress even if the previous claimant died
+ // after setting RUNNING. Recovery must never clone the initial proposal.
+ if(q.head_id)return continueInstitutionProgram(ctx,q,execution);
  let current=q;
  await assertProgramCurrent(ctx,q);
  const valid=await validateInstitutionDemand(ctx,q.proposed.reservationRef);

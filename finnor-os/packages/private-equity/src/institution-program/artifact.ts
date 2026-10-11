@@ -10,7 +10,7 @@ type OwnerRef = { owner: string; id: string; version: string; contentDigest: str
 /** A complete immutable projection. Every known binding has an actual owner
  * input/receipt. A requested contract or unavailable receipt stays unknown. */
 export function buildInstitutionArtifact(input: {
-  id: string; revision: string; original: OriginalInstitutionEvidence; candidate: InstitutionCandidate;
+  id: string; revision: string; workInput: {id:string;digest:string}; original: OriginalInstitutionEvidence; candidate: InstitutionCandidate;
   check: InstitutionCheck; mappings: AcceptedInstitutionMappingRef[]; lowered: Lowered | null;
   admissionId: string | null; programme: { id: string; revision: string; digest: string } | null;
   reservation: OwnerRef | null; producer: { digest: string; files: unknown[]; node: string };
@@ -124,7 +124,7 @@ export function buildInstitutionArtifact(input: {
   const envelope = {
     artifact_id: input.id, kind: "InstitutionProgram", schema_revision: "finnor.institution-program.v1",
     tenant_ref: known("Work", "authenticated_tenant", o.tenantId, o.current.rightsRevision, hash(o.tenantId)),
-    work_ref: known("Work", "exact_work_revision", o.workId, input.revision, hash([o.workId, input.revision])),
+    work_ref: known("Work", "exact_work_revision", o.workId, input.workInput.id, input.workInput.digest),
     institutional_program_ref: known("S4_P1", "immutable_institution_projection", input.id, input.revision, semanticDigest),
     parent_artifact_refs: input.parents,
     producer_revision: known("runtime", "loaded_code_identity", "InstitutionalProgrammeCompiler", input.producer.digest, input.producer.digest),

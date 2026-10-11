@@ -12,7 +12,7 @@ import { mapPrivateEquitySourceObservation } from "../source-mapping";
 import { createFundTx, createVehicleTx, linkFundVehicleTx } from "../digital-twin";
 import { readAllocationSnapshot } from "../allocation-store";
 import { deriveInstitutionResponsibilities, verifyInstitutionDutyPopulation } from "./responsibility";
-import type { PeMutationContext } from "../types";
+import { PE_ENTITY_TYPES, type PeMutationContext, type PeEntityType } from "../types";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
 import { checkInstitutionInSeparateProcessAsync } from "./checker-process";
 import { originalRawRecords } from "./checker-raw";
@@ -20,6 +20,8 @@ import { proposeInstitutionModel } from "./reconstruction";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { acquireInstitutionOriginal, readInstitutionMandate, type OwnerOriginal } from "./source-authority";
 import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
+import { readAdditionalInstitutionOwners,parseInstitutionOwnerRef,lockAdditionalInstitutionOwner } from "./canonical-owners";
+import { institutionOwnerCutDigest } from "./canonical-json";
 
 type Source = OriginalInstitutionEvidence["sources"][number];
 export type RetainedOriginalSource = OwnerOriginal;
@@ -27,6 +29,7 @@ const sha = (value: Buffer | string) => createHash("sha256").update(value).diges
 const profilePath = fileURLToPath(new URL("../../../../../scope-frontier5/x1-institutional-programme-compiler/profile.json", import.meta.url));
 const checkerPath = fileURLToPath(new URL("./checker.ts", import.meta.url));
 const checkerRawPath = fileURLToPath(new URL("./checker-raw.ts", import.meta.url));
+const canonicalJsonPath = fileURLToPath(new URL("./canonical-json.ts", import.meta.url));
 function checkedDutyDigest(original: OriginalInstitutionEvidence, candidate: InstitutionCandidate,
   check: InstitutionCheck, profile: DigitalInstitutionProfile): string {
   const lowered = deriveInstitutionResponsibilities({
@@ -123,7 +126,7 @@ export async function loadInstitutionAdmissionOriginal(
       resourceRevision: s5.snapshotDigest,
       methodRevision: method.ref.contentDigest,
       operationRevision: sha(JSON.stringify([rightsRevision, allowed])),
-      checkerRevision: sha(Buffer.concat([readFileSync(checkerPath), readFileSync(checkerRawPath)])),
+      checkerRevision: sha(Buffer.concat([readFileSync(checkerPath), readFileSync(checkerRawPath),readFileSync(canonicalJsonPath)])),
       profileRevision: profile.revision, schemaRevision: await withTenantTransaction(ctx.auth.tenantId,
         { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
           const rows = await client.query<{ name: string }>(
@@ -140,6 +143,7 @@ export async function loadInstitutionAdmissionOriginal(
   const owner = await loadInstitutionCanonicalOwnerSnapshot(ctx, original, profile);
   original.canonical = owner.canonical;
   original.current.canonicalRevision = owner.canonical.revision;
+  original.current.canonicalOwners = owner.canonical.entities;
   if (owner.rightsRevision !== rightsRevision) throw new Error("X1_CANONICAL_RIGHTS_CHANGED");
   return { original, retained };
 }
@@ -153,16 +157,17 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }]);
   await authorizeBeliefCandidateCut(ctx);
   const identifiers = new Set<string>();
-  const prospective = new Map<string, { entityType: "fund" | "vehicle"; registrationId: string; id: string; name: string }>();
+  const prospective = new Map<string, { entityType: "fund" | "vehicle"; registrationId: string; id: string; name: string; ambiguousName?:boolean }>();
   for (const source of original.sources) {
     const rows = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
     for (const row of rows) {
       if (row.registrationId) identifiers.add(row.registrationId);
+      if (row.relationRegistrationId) identifiers.add(row.relationRegistrationId);
       if ((row.entityType === "fund" || row.entityType === "vehicle") && row.registrationId
           && row.name && row.name.length <= 256) {
         const key = JSON.stringify([row.entityType, row.registrationId]);
         const prior = prospective.get(key);
-        if (prior && prior.name !== row.name) throw new Error("X1_CONFLICTING_NATIVE_ENTITY_NAME");
+        if(prior){if(prior.name!==row.name)prior.ambiguousName=true;continue;}
         prospective.set(key, { entityType: row.entityType, registrationId: row.registrationId,
           id: canonicalId(ctx.auth.tenantId, original.institutionId, row.entityType, row.registrationId), name: row.name });
       }
@@ -173,14 +178,13 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
     const result = await client.query<{ id: string; external_id: string }>(
       `SELECT id::text,external_id FROM finnor_os.pe_deals
-        WHERE tenant_id=$1 AND source_system=$4 AND external_id=ANY($2::text[]) AND archived_at IS NULL
+        WHERE tenant_id=$1 AND source_system=$4 AND external_id=ANY($2::text[]) AND archived_at IS NULL AND status='active'
         ORDER BY external_id,id LIMIT $3`,
       [ctx.auth.tenantId, [...identifiers], profile.bounds.deals + 1, `x1:${original.institutionId}`]);
     return result.rows;
   });
   if (matches.length > profile.bounds.deals) throw new Error("X1_DEAL_BOUND");
   const entities: OriginalInstitutionEvidence["canonical"]["entities"] = [];
-  const revisions: string[] = [];
   let rightsRevision = "";
   for (const deal of matches) {
     const world = await loadPrivateEquityWorldState(ctx, { entityType: "pe_deal", entityId: deal.id });
@@ -191,7 +195,6 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
     const rights = String(world.beliefView.rights.revision);
     if (rightsRevision && rightsRevision !== rights) throw new Error("X1_RIGHTS_CHANGED_DURING_CANONICAL_READ");
     rightsRevision = rights;
-    revisions.push(`${owner.entityId}:${owner.entityVersion}:${owner.snapshotHash}`);
     entities.push({ ref: `pe_deal:${deal.id}@v${owner.entityVersion}`, entityType: "deal",
       registrationId: deal.external_id, institutionId: original.institutionId });
   }
@@ -205,19 +208,31 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
           WHERE tenant_id=$1 AND source_system=$2 AND external_id=$3 AND status<>'liquidated' LIMIT 1`,
         [ctx.auth.tenantId, `x1:${original.institutionId}`, entry.registrationId]);
       const found = row.rows[0];
-      if (found && (found.id !== entry.id || found.name !== entry.name)) {
-        throw new Error("X1_CANONICAL_TWIN_IDENTITY_CONFLICT");
-      }
-      refs.push({ kind: entry.entityType, id: entry.id, registration: entry.registrationId,
-        name: entry.name, version: found?.version ?? 0 });
+      if(!found&&entry.ambiguousName)continue;
+      // Existing owners supply their actual ID. A display-label correction is
+      // an assertion difference, not a new identity or permission to rename.
+      refs.push({ kind: entry.entityType, id: found?.id??entry.id, registration: entry.registrationId,
+        name: found?.name??entry.name, version: found?.version ?? 0 });
+    }
+    for(const kind of ["fund","vehicle"] as const){
+      const table=kind==="fund"?"pe_funds":"pe_vehicles";
+      const rows=(await client.query<{id:string;name:string;external_id:string;version:number}>(
+        `SELECT id::text,name,external_id,version FROM finnor_os.${table}
+          WHERE tenant_id=$1 AND source_system=$2 AND external_id=ANY($3::text[])
+            AND status<>'liquidated' ORDER BY external_id,id LIMIT $4`,
+        [ctx.auth.tenantId,`x1:${original.institutionId}`,[...identifiers],profile.bounds.canonicalReferences+1])).rows;
+      if(rows.length>profile.bounds.canonicalReferences)throw Error("X1_CANONICAL_REFERENCE_BOUND");
+      for(const row of rows)if(!refs.some(ref=>ref.kind===kind&&ref.id===row.id))
+        refs.push({kind,id:row.id,registration:row.external_id,name:row.name,version:row.version});
     }
     return refs;
   });
   for (const entry of currentTwins) {
-    revisions.push(`${entry.kind}:${entry.id}:${entry.version}:${sha(entry.name)}`);
     entities.push({ ref: `pe_${entry.kind}:${entry.id}@v${entry.version || 1}`,
       entityType: entry.kind, registrationId: entry.registration, institutionId: original.institutionId });
   }
+  const additional=await readAdditionalInstitutionOwners(ctx,original,[...identifiers],profile);
+  for(const entity of additional)entities.push(entity);
   if (entities.length > profile.bounds.canonicalReferences
       || currentTwins.length + matches.length > profile.bounds.canonicalReferences) {
     throw new Error("X1_CANONICAL_REFERENCE_BOUND");
@@ -225,7 +240,7 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   if (!rightsRevision) {
     rightsRevision = String((await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }])).revision);
   }
-  return { canonical: { tenantId: ctx.auth.tenantId, revision: sha(revisions.sort().join("|")), entities },
+  return { canonical: { tenantId: ctx.auth.tenantId, revision: institutionOwnerCutDigest(entities), entities },
     rightsRevision };
 }
 
@@ -235,6 +250,8 @@ export interface AcceptedInstitutionMappingRef {
   sourceTruthLinkId: string | null;
   relationId?: string;
   disposition: "SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH";
+  evidenceAttachmentKind?:"PE_EVIDENCE_LINK"|"CORE_EVIDENCE_ENTITY_REF";
+  workAttachmentKind?:"CANONICAL_WORK_LINK"|"MEMORY_ENTITY_REF_ONLY";
 }
 
 /** Authenticated source handles are the only input to the production proposal.
@@ -307,15 +324,25 @@ async function admitCheckedInstitutionMappings(
         if (!current.original.canonical.entities.some((entity) => entity.ref === receipt.canonicalRef)) {
           throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
         }
-        const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v\d+$/.exec(receipt.canonicalRef);
+        const entity = parseInstitutionOwnerRef(receipt.canonicalRef);
         if (!entity) throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
-        const evidence = await client.query(
+        const evidence = receipt.evidenceAttachmentKind === "CORE_EVIDENCE_ENTITY_REF"
+          ? await client.query(
+            `SELECT 1 FROM finnor_os.evidence_source_versions v
+               JOIN finnor_os.evidence_chunks ch ON ch.tenant_id=v.tenant_id
+                 AND ch.source_id=v.source_id AND ch.version_id=v.id
+              WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3 AND v.id=$4
+                AND ch.entity_refs @> $5::jsonb`,
+            [ctx.auth.tenantId,receipt.evidenceVersionId,receipt.evidenceSourceId,receipt.evidenceLinkId,
+              JSON.stringify([{type:entity.entityType,id:entity.entityId}])])
+          : await client.query(
           `SELECT 1 FROM finnor_os.evidence_source_versions v
              JOIN finnor_os.pe_evidence_links l ON l.tenant_id=v.tenant_id
                AND l.evidence_source_id=v.source_id AND l.evidence_version_id=v.id
             WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3
-              AND l.id=$4 AND l.archived_at IS NULL`,
-          [ctx.auth.tenantId, receipt.evidenceVersionId, receipt.evidenceSourceId, receipt.evidenceLinkId],
+              AND l.id=$4 AND l.entity_type=$5 AND l.entity_id=$6 AND l.archived_at IS NULL`,
+          [ctx.auth.tenantId, receipt.evidenceVersionId, receipt.evidenceSourceId, receipt.evidenceLinkId,
+            entity.entityType,entity.entityId],
         );
         if (!evidence.rows[0]) throw new Error("X1_ADMISSION_REPLAY_EVIDENCE_CHANGED");
         // Readback also re-verifies the Source Truth link: a later re-map or
@@ -326,7 +353,7 @@ async function admitCheckedInstitutionMappings(
               WHERE tenant_id=$1 AND id=$2 AND entity=$3
                 AND (internal_id=$4::uuid OR candidate_canonical_ids @> ARRAY[$4::uuid])
                 AND mapping_status<>'tombstoned' AND tombstoned_at IS NULL`,
-            [ctx.auth.tenantId, receipt.sourceTruthLinkId, `pe_${entity[1]}`, entity[2]],
+            [ctx.auth.tenantId, receipt.sourceTruthLinkId, entity.entityType, entity.entityId],
           );
           if (!truth.rows[0]) throw new Error("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED");
         }
@@ -344,7 +371,7 @@ async function admitCheckedInstitutionMappings(
   const independent: OriginalInstitutionEvidence = {
     ...currentOwner.original, sources, mandate, canonical: owner.canonical,
     current: { ...currentOwner.original.current, sourceRevisions, sourceDigests, mandateRevision: mandate.revision,
-      canonicalRevision: owner.canonical.revision, rightsRevision: owner.rightsRevision },
+      canonicalRevision: owner.canonical.revision, canonicalOwners:owner.canonical.entities, rightsRevision: owner.rightsRevision },
   };
   if (sha(JSON.stringify(independent)) !== sha(JSON.stringify(original))) {
     throw new Error("X1_ORIGINAL_OR_CURRENT_OWNER_CUT_MISMATCH");
@@ -363,8 +390,8 @@ async function admitCheckedInstitutionMappings(
   for (const mapping of candidate.mappings) {
     const source = sources.find((item) => item.id === mapping.sourceId);
     const exact = owner.canonical.entities.find((item) => item.ref === mapping.canonicalRef
-      && item.registrationId === mapping.registrationId);
-    const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v\d+$/.exec(mapping.canonicalRef);
+      && item.registrationId === mapping.registrationId && (!item.sourceId || item.sourceId===mapping.sourceId));
+    const entity = parseInstitutionOwnerRef(mapping.canonicalRef);
     if (!source || !exact || !entity) throw new Error("X1_MAPPING_NO_CANONICAL_OWNER_TARGET");
     const integration = [source.integrationId, source.provider, source.sourceScope, source.externalObjectType];
     if (integration.some(Boolean) && !integration.every(Boolean)) throw new Error("X1_PARTIAL_SOURCE_TRUTH_BINDING");
@@ -391,20 +418,22 @@ async function admitCheckedInstitutionMappings(
       return rank(a.canonicalRef) - rank(b.canonicalRef);
     })) {
       const source = sources.find((item) => item.id === mapping.sourceId)!;
-      const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v(\d+)$/.exec(mapping.canonicalRef);
+      const entity = parseInstitutionOwnerRef(mapping.canonicalRef);
       if (!entity) throw new Error("X1_MAPPING_NO_CANONICAL_OWNER_TARGET");
-      const [, kind, entityId, expectedVersion] = entity;
+      const entityId=entity.entityId,entityType=entity.entityType;
+      const kind=entityType==="pe_deal"?"deal":entityType==="pe_fund"?"fund":entityType==="pe_vehicle"?"vehicle":null;
+      let dealId:string|null=null;
+      if(kind){
       let row: { id: string; external_id: string; version: number; source_system: string };
       if (kind === "deal") {
         const deal = await lockPeDeal(client, ctx.auth.tenantId, entityId!);
         requireActivePeDeal(deal);
         row = deal as typeof row;
+        dealId=entityId;
       } else {
         const records = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
         const native = records.find((item) => item.id === mapping.recordId);
-        if (!native || native.entityType !== kind || native.registrationId !== mapping.registrationId
-            || !native.name || native.name.length > 256
-            || canonicalId(ctx.auth.tenantId, original.institutionId, kind!, mapping.registrationId) !== entityId) {
+        if (!native || native.entityType !== kind || native.registrationId !== mapping.registrationId) {
           throw new Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
         }
         const table = kind === "fund" ? "pe_funds" : "pe_vehicles";
@@ -414,6 +443,9 @@ async function admitCheckedInstitutionMappings(
           [ctx.auth.tenantId, `x1:${original.institutionId}`, mapping.registrationId],
         );
         if (!current.rows[0]) {
+          if(!native.name||native.name.length>256)throw Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
+          if(canonicalId(ctx.auth.tenantId,original.institutionId,kind,mapping.registrationId)!==entityId)
+            throw Error("X1_NATIVE_CANONICAL_CREATION_IDENTITY_CHANGED");
           const creation = { ...ctx, provenance: { sourceSystem: `x1:${original.institutionId}`,
             externalId: mapping.registrationId, createdBy: ctx.auth.userId,
             observedAt: new Date(original.knowledgeCut) } };
@@ -427,9 +459,14 @@ async function admitCheckedInstitutionMappings(
         } else row = current.rows[0];
       }
       if (row.id !== entityId || row.external_id !== mapping.registrationId
-          || Number(row.version) !== Number(expectedVersion)
+          || entity.revision !== `v${row.version}`
           || row.source_system !== `x1:${original.institutionId}`) {
         throw new Error("X1_CANONICAL_ENTITY_CHANGED_DURING_ADMISSION");
+      }
+      }else{
+        const locked=await lockAdditionalInstitutionOwner(client,ctx,original,mapping.canonicalRef,
+          mapping.registrationId,mapping.sourceId);
+        dealId=locked.dealId;
       }
       const version = await loadDocumentVersion(db, ctx.auth.tenantId, source.coreDocumentId, source.coreVersionId);
       if (!version || sha(version.bytes) !== source.originalSha256) throw new Error("X1_ORIGINAL_CHANGED_DURING_PUBLICATION");
@@ -488,8 +525,8 @@ async function admitCheckedInstitutionMappings(
         }) : {
           tenantId: ctx.auth.tenantId, integrationId: source.integrationId, provider: source.provider,
           sourceScope: source.sourceScope, externalObjectType: source.externalObjectType,
-          externalId: mapping.recordId, canonicalEntity: `pe_${kind}`, candidateCanonicalIds: [entityId!],
-          identityKey: JSON.stringify([original.institutionId,kind,mapping.registrationId]),
+          externalId: mapping.recordId, canonicalEntity: entityType, candidateCanonicalIds: [entityId],
+          identityKey: JSON.stringify([original.institutionId,entityType,mapping.registrationId]),
           sourceVersion: source.revision, observedAt: original.knowledgeCut,
           data: { schema: "finnor.x1.checked-identity.v1", registrationId: mapping.registrationId,
             originalSha256: source.originalSha256, originalDocumentVersionId: source.coreVersionId },
@@ -517,17 +554,21 @@ async function admitCheckedInstitutionMappings(
           originalSha256: source.originalSha256, canonicalCandidate: mapping.canonicalRef,
           disposition: "source_assertion_not_settled_truth" },
         asOf: new Date(original.knowledgeCut), retrievedAt: new Date(),
-        entityRefs: [{ type: `pe_${kind}`, id: entityId! }],
+        entityRefs: [{ type: entityType, id: entityId }],
       });
-      const link = await attachEvidenceTx(client, ctx, {
-        dealId: kind === "deal" ? entityId! : null,
-        ...(kind === "deal" ? {} : { worldRoot: { entityType: kind === "fund" ? "pe_fund" as const : "pe_vehicle" as const,
-          entityId: entityId! } }),
-        entity: { entityType: `pe_${kind}` as "pe_deal" | "pe_fund" | "pe_vehicle", entityId: entityId! },
-        evidenceSourceId: evidence.id, evidenceVersionId: evidenceVersion.versionId, relationship: "supports",
-      });
-      await attachWorkEntityTx(db, { tenantId: ctx.auth.tenantId, workId: original.workId,
-        entity: { entityType: `pe_${kind}`, entityId: entityId!, relationship: "about", source: "x1-checked-source" } });
+      const peEntity=PE_ENTITY_TYPES.find(type=>type===entityType) as PeEntityType|undefined;
+      const link = peEntity && (dealId || kind==="fund" || kind==="vehicle")
+        ? await attachEvidenceTx(client,ctx,{
+          dealId,...(dealId?{}:{worldRoot:{entityType:kind==="fund"?"pe_fund" as const:"pe_vehicle" as const,entityId}}),
+          entity:{entityType:peEntity,entityId},evidenceSourceId:evidence.id,
+          evidenceVersionId:evidenceVersion.versionId,relationship:"supports"}) : null;
+      // The canonical registry owns Work attachability. Relation-only owners
+      // remain Memory assertions when their native owner disallows Work links.
+      const attachable=(await client.query<{available:boolean}>(
+        "SELECT finnor_os.canonical_entity_work_attachable($1,$2) available",
+        [ctx.auth.tenantId,entityType])).rows[0]?.available===true;
+      if(attachable)await attachWorkEntityTx(db, { tenantId: ctx.auth.tenantId, workId: original.workId,
+        entity: { entityType, entityId, relationship: "about", source: "x1-checked-source" } });
       const relation = (candidate.relations ?? []).find((item) => item.sourceId === mapping.sourceId
         && item.recordId === mapping.recordId && item.relation === "fund_vehicle");
       let relationId: string | undefined;
@@ -565,7 +606,9 @@ async function admitCheckedInstitutionMappings(
       }
       receipts.push({ sourceId: source.id, recordId: mapping.recordId, canonicalRef: mapping.canonicalRef,
         originalDocumentVersionId: source.coreVersionId, evidenceSourceId: evidence.id,
-        evidenceVersionId: evidenceVersion.versionId, evidenceLinkId: String(link.row.id),
+        evidenceVersionId: evidenceVersion.versionId, evidenceLinkId: link?String(link.row.id):evidenceVersion.versionId,
+        evidenceAttachmentKind:link?"PE_EVIDENCE_LINK":"CORE_EVIDENCE_ENTITY_REF",
+        workAttachmentKind:attachable?"CANONICAL_WORK_LINK":"MEMORY_ENTITY_REF_ONLY",
         sourceTruthLinkId, ...(relationId ? { relationId } : {}),
         disposition: "SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH" });
     }

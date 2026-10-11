@@ -12,7 +12,8 @@ const root = dirname(fileURLToPath(new URL("../../../../package.json", import.me
 const command = fileURLToPath(new URL("../../../../scripts/frontier5/x1/checker-command.mts", import.meta.url));
 const tsx = join(root, "node_modules/tsx/dist/cli.mjs");
 const files = [command, fileURLToPath(new URL("./checker.ts", import.meta.url)),
-  fileURLToPath(new URL("./checker-raw.ts", import.meta.url)), tsx, join(root, "package-lock.json")];
+  fileURLToPath(new URL("./checker-raw.ts", import.meta.url)),
+  fileURLToPath(new URL("./canonical-json.ts", import.meta.url)), tsx, join(root, "package-lock.json")];
 // 32 MiB raw can expand through base64 and JSON escaping in the same request
 // as an 8 MiB canonical snapshot. This is a transport limit, not a profile cut.
 const transportLimit = 384 * 1024 * 1024;

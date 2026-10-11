@@ -27,10 +27,10 @@ export async function runHarnessProgramJob(payload:Record<string,unknown>,execut
  if(!execution||execution.protocolVersion!==1||typeof payload.tenantId!=='string'||typeof payload.principalId!=='string'||typeof payload.programId!=='string'||execution.tenantId!==payload.tenantId)throw Error('ACTUAL_DURABLE_HARNESS_JOB_CLAIM_REQUIRED');
  const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'P1:bounded-native-worker',createdBy:payload.principalId}};
  const incoming=await nativeRequestRow(ctx,payload.programId);
- if(incoming.generation!==payload.generation||['TESTED','CANCELLED','INVALIDATED'].includes(incoming.status))return;
+ if(incoming.generation!==payload.generation||['TESTED','OBSERVED','CANCELLED','INVALIDATED'].includes(incoming.status))return;
  if(typeof payload.stage==='string'&&payload.stage.startsWith('native-wait-deadline:')&&incoming.status!=='WAITING')return;
  if(isInstitutionRequest(incoming.request)){
-  if(incoming.status==='WAITING'&&incoming.head_id){
+  if(incoming.head_id){
    await enqueueProgram(ctx,incoming,'old-job-observe-'+execution.jobId);
    return;
   }

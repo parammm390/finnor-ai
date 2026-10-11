@@ -110,7 +110,8 @@ export async function proposeInstitutionModel(
       else addUnresolved(row, "CALENDAR_TIMEZONE_OR_CHRONOLOGY_UNRESOLVED");
     }
     const options = (byRegistration.get(registrationId) ?? [])
-      .filter((entity) => entity.institutionId === original.institutionId && (!entityType || entity.entityType === entityType));
+      .filter((entity) => entity.institutionId === original.institutionId && (!entityType || entity.entityType === entityType)
+        &&(!entity.sourceId||entity.sourceId===row.sourceId));
     const ref = options.length === 1 ? options[0]!.ref : null;
     if (!ref && (registrationId || kind !== "unknown")) {
       addUnresolved(row, options.length > 1 ? "AMBIGUOUS_CANONICAL_IDENTITY" : "CANONICAL_IDENTITY_NOT_ESTABLISHED",
@@ -121,6 +122,7 @@ export async function proposeInstitutionModel(
     if (data.relationTarget && ref) {
       const related = (byRegistration.get(data.relationTarget) ?? [])
         .filter((entity) => entity.institutionId === original.institutionId
+          &&(!entity.sourceId||entity.sourceId===row.sourceId)
           && entity.entityType === (data.entityType === "vehicle" ? "fund" : "counterparty"));
       if (related.length === 1 && (data.entityType !== "vehicle"
           || data.effectiveFrom && Number.isFinite(Date.parse(data.effectiveFrom))
@@ -150,6 +152,7 @@ export async function proposeInstitutionModel(
         .filter((item): item is string => !!item).join("\n");
       const mentioned = original.canonical.entities.filter((entity) =>
         entity.institutionId === original.institutionId
+          &&(!entity.sourceId||entity.sourceId===row.sourceId)
           && entity.registrationId.length >= 3 && narrative.includes(entity.registrationId))
         .map((entity) => entity.ref);
       addUnresolved(row, "DESCRIPTIVE_CROSS_REFERENCE_NOT_IDENTITY_OR_NORM",

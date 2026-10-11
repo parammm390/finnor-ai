@@ -9,6 +9,8 @@ import { DigitalInstitutionProfile } from "./contracts";
 import { readInstitutionMandate } from "./source-authority";
 import type { InstitutionResourceDemand } from "./resource-demand";
 import type { OriginalInstitutionEvidence } from "./checker";
+import { institutionOwnerCutDigest } from "./canonical-json";
+import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
 
 export const loadInstitutionProfile = () => DigitalInstitutionProfile.parse(JSON.parse(readFileSync(
   fileURLToPath(new URL("../../../../../scope-frontier5/x1-institutional-programme-compiler/profile.json", import.meta.url)), "utf8")));
@@ -150,9 +152,17 @@ export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
 }
 
 export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q: CompilerRequestRow,
-  manifest?: Pick<OriginalInstitutionEvidence["current"],"sourceRevisions"|"rightsRevision"|"mandateRevision"|"sensitiveSubjects">,
+  manifest?: OriginalInstitutionEvidence["current"],
   c?: PoolClient, lock = false) {
   await authorizeInstitutionWork(ctx, q.work_id, c);
+  if(manifest){
+    if(!manifest.canonicalOwners || institutionOwnerCutDigest(manifest.canonicalOwners)!==manifest.canonicalRevision)
+      throw Error("X1_CANONICAL_OWNER_CUT_REQUIRED");
+    if((await installedInstitutionCompilerIdentity()).ref.contentDigest!==manifest.methodRevision)
+      throw Error("X1_INSTALLED_COMPILER_METHOD_CHANGED");
+    if(manifest.operationRevision!==sha([manifest.rightsRevision,manifest.authorizedOperations]))
+      throw Error("X1_OPERATION_REVISION_BINDING_CHANGED");
+  }
   const read = async (client: PoolClient) => {
     if (lock) await client.query("SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE", [q.tenant_id, q.work_id]);
     const latest = (await client.query<{ id: string; body: unknown }>(`SELECT id::text,to_jsonb(w) body
@@ -172,6 +182,8 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
       ${lock ? "FOR SHARE OF g" : ""}`, [q.tenant_id, q.principal_id, q.work_id, q.grant_ids])).rows;
     if (grants.length !== q.grant_ids.length) throw Error("X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED");
     if (manifest) {
+      await client.query("SELECT finnor_os.x1_assert_canonical_owner_cut($1::jsonb,$2)",
+        [stable(manifest.canonicalOwners),lock]);
       if (grants.some(g => manifest.sourceRevisions[g.source_id] !== g.revision)) throw Error("X1_SOURCE_REVISION_CHANGED");
       const rights = (await client.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [q.tenant_id])).rows[0];
       const mandates = (await client.query<{ revision: string }>(`SELECT revision FROM finnor_os.x1_work_mandates

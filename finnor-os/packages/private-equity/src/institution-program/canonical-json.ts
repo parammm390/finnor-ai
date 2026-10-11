@@ -10,3 +10,6 @@ export function canonicalInstitutionJson(value: unknown): string {
 }
 export const institutionDigest = (value: unknown) => createHash("sha256")
   .update(canonicalInstitutionJson(value)).digest("hex");
+export const institutionOwnerCutDigest = (entities: Array<{ref:string;registrationId:string;sourceId?:string}>) =>
+  institutionDigest([...entities].sort((a,b)=>JSON.stringify([a.ref,a.registrationId,a.sourceId??""])
+    .localeCompare(JSON.stringify([b.ref,b.registrationId,b.sourceId??""]))));

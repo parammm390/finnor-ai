@@ -149,7 +149,12 @@ async function scopedPeTransaction<T>(
         // mutation. The same transaction holds its source/Work/mandate locks;
         // compiler/check receipts cannot substitute for current permission.
         if (!options.readOnly && source.externalId && UUID.test(source.externalId)) {
-          await client.query("SELECT finnor_os.x1_assert_effect_current($1::uuid)", [source.externalId]);
+          const institution=(await client.query<{kind:string|null}>(
+            "SELECT authority_context->>'kind' kind FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2",
+            [ctx.auth.tenantId,source.externalId])).rows[0]?.kind==="institution_duty";
+          const method=institution?(await (await import("../../capability-evolution/src/institution-port"))
+            .installedInstitutionCompilerIdentity()).ref.contentDigest:null;
+          await client.query("SELECT finnor_os.x1_assert_effect_current($1::uuid,$2::text)", [source.externalId,method]);
         }
         return fn(client);
       });

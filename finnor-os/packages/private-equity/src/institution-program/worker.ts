@@ -172,7 +172,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       phase:"COMPILE",status:accepted?(native?"CHECKED_AND_NATIVE_SUBMITTED":"CHECKED_WITH_GAPS"):"CHECK_REJECTED",observedAcquisitionAttempts:sourceAttempts,
       observedCheckerAttempts:checkerAttempts});
     const code = await codeIdentity(), artifactId = randomUUID();
-    const artifact = buildInstitutionArtifact({ id: artifactId, revision: String(q.revision), ...result,
+    const artifact = buildInstitutionArtifact({ id: artifactId, revision: String(q.revision),
+      workInput:{id:q.work_input_id,digest:q.work_input_digest}, ...result,
       lowered, admissionId, programme: native ? { id: native.programId, revision: native.workRevision,
         digest: sha(lowered!.programme) } : null, reservation: parentRef, producer: code,
       lockDigest: sha(readFileSync(fileURLToPath(new URL("../../../../package-lock.json", import.meta.url)))),
@@ -203,18 +204,20 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
     });
   } catch (error) {
     const predicate = safePredicate(error);
+    let meterGap:string|null=null;
     try {
       const parent=await compilerEpisode(ctx,q.episode_id),rights=await employeeAuthoritySnapshot(ctx.auth);
       await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
         jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parent.parent_reservation,
         rightsRevision:String(rights.revision),startedAt,elapsedMs:performance.now()-started,
         phase:"COMPILE",status:predicate,observedAcquisitionAttempts:sourceAttempts,observedCheckerAttempts:checkerAttempts});
-    } catch { /* Physical queue and compiler attempt evidence retain this meter gap. */ }
+    } catch (meterError) { meterGap=safePredicate(meterError); }
     await tx(ctx, async c => {
       const current = await compilerRow(ctx, q.id, c, true);
       await compilerEvent(ctx, current, "COMPILER_FAILED_OR_FENCED", { predicate,
         jobId: execution.jobId, claimFence: execution.claimFence, elapsedMs: performance.now() - started,
-        originalEpisode: q.episode_id, possibleAdmissionsOrEffectsRetained: true, monetaryCost: null }, c);
+        originalEpisode: q.episode_id, possibleAdmissionsOrEffectsRetained: true, monetaryCost: null,
+        physicalComputeAttribution:meterGap?"METER_GAP":"S7_ATTEMPT_RECORDED",meterGap }, c);
       if (current.generation === q.generation && current.status === "RUNNING"
           && current.claim_token === execution.claimToken) await c.query(`UPDATE finnor_os.x1_compiler_requests
         SET status=$4,failure=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { originalRawRecords } from "./checker-raw";
+import { institutionOwnerCutDigest,canonicalInstitutionJson } from "./canonical-json";
 
 type Source = {
   id: string; revision: string; sourceClass: string; protocol: string;
@@ -30,13 +31,14 @@ export type OriginalInstitutionEvidence = {
   tenantId: string; institutionId: string; workId: string; principalId: string; knowledgeCut: string;
   sources: Source[];
   mandate: { id: string; revision: string; tenantId: string; institutionId: string; workId: string; rules: Rule[] };
-  canonical: { tenantId: string; revision: string; entities: { ref: string; entityType: string; registrationId: string; institutionId: string }[] };
+  canonical: { tenantId: string; revision: string; entities: { ref: string; entityType: string; registrationId: string; institutionId: string; sourceId?:string; ownerWitness?:Record<string,unknown> }[] };
   current: {
     sourceRevisions: Record<string, string>; mandateRevision: string; canonicalRevision: string;
     rightsRevision: string; resourceRevision: string; methodRevision: string; operationRevision: string;
     checkerRevision: string; profileRevision: number; schemaRevision: string; runtimeRevision: string;
     authorizedOperations: string[];
     sourceDigests?: Record<string, string>;
+    canonicalOwners?: OriginalInstitutionEvidence["canonical"]["entities"];
     sensitiveSubjects?: Array<{sourceId:string;institutionId:string;sourceClass:string;purpose:string;registrations:string[]}>;
   };
 };
@@ -220,9 +222,12 @@ export async function independentlyCheckInstitutionModel(
   if (Buffer.byteLength(JSON.stringify(canonical)) > profile.bounds.s1SnapshotBytes
       || canonical.entities.length > profile.bounds.canonicalReferences
       || canonical.entities.filter((entity) => entity.entityType === "deal").length > profile.bounds.deals
-      || canonical.entities.filter((entity) => entity.entityType === "person").length > profile.bounds.people) {
+      || new Set(canonical.entities.filter((entity) => entity.entityType === "person").map(e=>e.ref.split("@")[0])).size > profile.bounds.people) {
     return fail("BOUND", "Measured original/owner population violates frozen bounds");
   }
+  if(original.current.canonicalOwners && (canonicalInstitutionJson(original.current.canonicalOwners)!==canonicalInstitutionJson(canonical.entities)
+    ||institutionOwnerCutDigest(canonical.entities)!==original.current.canonicalRevision))
+    return fail("CURRENTNESS","Canonical owner witnesses differ from the recorded cut");
   if (candidate.mappings.length + (candidate.relations?.length ?? 0) > profile.bounds.canonicalReferences
       || candidate.obligations.length > profile.bounds.derivedObligations
       || candidate.mappings.length + candidate.quantities.length + (candidate.relations?.length ?? 0) > profile.bounds.s1AssertionsPerSlice) {
@@ -243,8 +248,9 @@ export async function independentlyCheckInstitutionModel(
     const matches = canonicalByRegistration.get(entity.registrationId) ?? [];
     matches.push(entity); canonicalByRegistration.set(entity.registrationId, matches);
   }
-  const canonicalRef = (registrationId: string | undefined): string | null => {
-    const matches = canonicalByRegistration.get(registrationId ?? "") ?? [];
+  const canonicalRef = (registrationId: string | undefined,entityType?:string,sourceId?:string): string | null => {
+    const matches = (canonicalByRegistration.get(registrationId ?? "") ?? []).filter(entity=>
+      (!entityType||entity.entityType===entityType)&&(!entity.sourceId||entity.sourceId===sourceId));
     return matches.length === 1 && matches[0]!.institutionId === original.institutionId ? matches[0]!.ref : null;
   };
   const unresolvedFor = (sourceId: string, record: RawRecord, options: string[]): InstitutionCheck | null => {
@@ -259,22 +265,22 @@ export async function independentlyCheckInstitutionModel(
     void record;
     return null;
   };
-  const optionsFor = (record: RawRecord): string[] => canonical.entities.filter((entity) =>
+  const optionsFor = (record: RawRecord,sourceId?:string): string[] => canonical.entities.filter((entity) =>
     entity.institutionId === original.institutionId
+      &&(!entity.sourceId||entity.sourceId===sourceId)&&(!record.entityType||entity.entityType===record.entityType)
       && (entity.registrationId === record.registrationId
         || (entity.registrationId.length >= 3 && record.narrative?.includes(entity.registrationId))))
     .map((entity) => entity.ref);
   for (const [, { source, record }] of unknowns) {
-    const invalid = unresolvedFor(source.id, record, optionsFor(record));
+    const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
     if (invalid) return invalid;
   }
   const mapByKey = new Map(candidate.mappings.map((item) => [recordKey(item.sourceId, item.recordId), item]));
   if (mapByKey.size !== candidate.mappings.length) return fail("IDENTITY", "Duplicate candidate mapping");
-  for (const [key, { record }] of entities) {
-    const proposal = mapByKey.get(key), ref = canonicalRef(record.registrationId);
+  for (const [key, { source, record }] of entities) {
+    const proposal = mapByKey.get(key), ref = canonicalRef(record.registrationId,record.entityType,source.id);
     if (!ref) {
-      const [source] = JSON.parse(key) as string[];
-      const invalid = unresolvedFor(source!, record, optionsFor(record));
+      const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
       if (invalid) return invalid;
       if (proposal) return fail("IDENTITY", `Ambiguous original cannot support mapping ${key}`, [key]);
       continue;
@@ -285,21 +291,23 @@ export async function independentlyCheckInstitutionModel(
       return fail("IDENTITY", `Original scoped identity does not support ${key}`, [key]);
     }
   }
-  if (mapByKey.size !== entities.filter(([, { record }]) => canonicalRef(record.registrationId)).length)
+  if (mapByKey.size !== entities.filter(([, { source, record }]) => canonicalRef(record.registrationId,record.entityType,source.id)).length)
     return fail("IDENTITY", "Unsupported or extra material mapping");
   const relationRows = [...records].filter(([, value]) =>
     value.record.relation && value.record.relationRegistrationId
-      && canonicalRef(value.record.registrationId) && canonicalRef(value.record.relationRegistrationId)
+      && canonicalRef(value.record.registrationId,value.record.entityType,value.source.id) && canonicalRef(value.record.relationRegistrationId,value.record.relation==="fund_vehicle"?"fund":"counterparty",value.source.id)
       && (value.record.relation !== "fund_vehicle"
         || (iso(value.record.effectiveFrom) && value.record.effectiveFrom! <= original.knowledgeCut
           && ["feeder", "main"].includes(value.record.vehicleType ?? ""))));
   for (const [, { source, record }] of records) {
     if (!record.relation || !record.relationRegistrationId
-        || (canonicalRef(record.relationRegistrationId)
+        || (canonicalRef(record.relationRegistrationId,record.relation==="fund_vehicle"?"fund":"counterparty",source.id)
           && (record.relation !== "fund_vehicle"
             || (iso(record.effectiveFrom) && record.effectiveFrom! <= original.knowledgeCut
               && ["feeder", "main"].includes(record.vehicleType ?? ""))))) continue;
     const alternatives = canonical.entities.filter((entity) => entity.institutionId === original.institutionId
+      &&(!entity.sourceId||entity.sourceId===source.id)
+      &&entity.entityType===(record.relation==="fund_vehicle"?"fund":"counterparty")
       && entity.registrationId === record.relationRegistrationId).map((entity) => entity.ref);
     const gap = candidate.unresolved?.find((item) => item.sourceId === source.id && item.recordId === record.id
       && item.witness === witness(source.id, record.id));
@@ -312,11 +320,11 @@ export async function independentlyCheckInstitutionModel(
   if (relationByKey.size !== (candidate.relations ?? []).length || relationByKey.size !== relationRows.length) {
     return fail("IDENTITY", "Material relation denominator differs");
   }
-  for (const [key, { record }] of relationRows) {
+  for (const [key, { source, record }] of relationRows) {
     const proposal = relationByKey.get(key);
     if (!proposal || recordKey(proposal.sourceId, proposal.recordId) !== key
-        || proposal.canonicalRef !== canonicalRef(record.registrationId)
-        || proposal.targetRef !== canonicalRef(record.relationRegistrationId)
+        || proposal.canonicalRef !== canonicalRef(record.registrationId,record.entityType,source.id)
+        || proposal.targetRef !== canonicalRef(record.relationRegistrationId,record.relation==="fund_vehicle"?"fund":"counterparty",source.id)
         || proposal.relation !== record.relation
         || proposal.targetRegistrationId !== record.relationRegistrationId
         || (record.relation === "fund_vehicle" && (!iso(record.effectiveFrom)
@@ -343,8 +351,8 @@ export async function independentlyCheckInstitutionModel(
   if (quantityByKey.size !== candidate.quantities.length) {
     return fail("QUANTITY", "Material quantity denominator differs");
   }
-  for (const [key, { record }] of quantityRows) {
-    const proposal = quantityByKey.get(key), ref = canonicalRef(record.registrationId);
+  for (const [key, { source, record }] of quantityRows) {
+    const proposal = quantityByKey.get(key), ref = canonicalRef(record.registrationId,record.entityType,source.id);
     if (["factKey", "value", "currency", "unit", "period", "basis", "occurredAt", "availableAt"]
       .some((field) => record[field as keyof RawRecord] !== undefined
         && typeof record[field as keyof RawRecord] !== "string")) {
@@ -352,8 +360,7 @@ export async function independentlyCheckInstitutionModel(
     }
     if (!ref || !quantityContext(record) || !decimal(record.value)
         || !iso(record.occurredAt) || !iso(record.availableAt)) {
-      const [source] = JSON.parse(key) as string[];
-      const invalid = unresolvedFor(source!, record, optionsFor(record));
+      const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
       if (invalid) return invalid;
       if (proposal) return fail("QUANTITY", `Unsupported original quantity proposed as exact ${key}`, [key]);
       continue;
@@ -376,8 +383,8 @@ export async function independentlyCheckInstitutionModel(
       return fail("QUANTITY", `Exact original quantity/context conflict ${key}`, [key]);
     }
   }
-  if (quantityByKey.size !== quantityRows.filter(([, { record }]) =>
-    canonicalRef(record.registrationId) && quantityContext(record) && decimal(record.value)
+  if (quantityByKey.size !== quantityRows.filter(([, { source, record }]) =>
+    canonicalRef(record.registrationId,record.entityType,source.id) && quantityContext(record) && decimal(record.value)
       && iso(record.occurredAt) && iso(record.availableAt)).length) {
     return fail("QUANTITY", "Supported quantity omitted or unsupported quantity claimed");
   }
@@ -452,9 +459,9 @@ export async function independentlyCheckInstitutionModel(
   for (const [key, { source, record }] of triggers) {
     if (!iso(record.occurredAt) || !iso(record.availableAt) || record.availableAt < record.occurredAt
         || record.availableAt > original.knowledgeCut) return fail("CHRONOLOGY", `Trigger not available ${key}`, [key]);
-    const ref = canonicalRef(record.registrationId);
+    const ref = canonicalRef(record.registrationId,record.entityType,source.id);
     if (!ref) {
-      const invalid = unresolvedFor(source.id, record, optionsFor(record));
+      const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
       if (invalid) return invalid;
       continue;
     }

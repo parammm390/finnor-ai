@@ -36,4 +36,15 @@ assert.deepEqual(candidate.relations?.map((entry) =>
   [["VEH-8", "fund_vehicle", "FUND-7", "2026-09-01T00:00:00.000Z"]]);
 const checked = await independentlyCheckInstitutionModel(original, candidate, profile);
 assert.equal(checked.disposition, "ACCEPTED_DEVELOPMENT", JSON.stringify(checked));
+// An independently typed Fund identifier may also occur on a Deal. The raw
+// fundNumber/entity kind still identifies the Fund; a registration-only lookup
+// must not turn it into ambiguity across distinct canonical vocabularies.
+const crossKind=structuredClone(original);
+crossKind.canonical.entities.push({ref:"pe_deal:33333333-3333-4333-8333-333333333333@v1",
+  registrationId:"FUND-7",entityType:"deal",institutionId:original.institutionId});
+const crossKindCandidate=structuredClone(candidate);
+const crossKindCheck=await independentlyCheckInstitutionModel(crossKind,crossKindCandidate,profile);
+console.log(JSON.stringify({case:"cross-kind identity",check:crossKindCheck}));
+assert.equal(crossKindCheck.disposition,
+  "ACCEPTED_DEVELOPMENT","typed original identity cannot be confused by another entity kind");
 console.log(JSON.stringify({ case: "class-native fund/vehicle relation", disposition: checked.disposition }));

@@ -1,5 +1,41 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — canonical owners and durable progress, 12 October 2026
+
+Engineering delivery remains **INCOMPLETE**. The source cut now adds closed
+canonical owner readers/locks for the remaining declared entity kinds and
+publication/replay through real Memory, Work, Source Truth and PE evidence
+boundaries. Existing Fund/Vehicle identities use actual owner IDs; display-label
+changes do not create identities. Source-scoped Person bindings and Document
+version heads participate in the current owner witness.
+
+The currentness guard rechecks canonical versions/preimages at reads and dispatch
+and in the canonical mutation transaction. Installed compiler method bytes are
+bound separately. Reclaimed RUNNING jobs use the saved head; expiration and step
+exhaustion adopt the verified physical claim before terminal publication.
+Observation polling continues through the original deadline with backoff. Saved
+timely creation observations survive legitimate lifecycle advancement. Recovery
+charges and physical compute attribution stay under the original resource parent.
+The artifact Work revision is the actual Work input ID/digest.
+
+The prior cross-kind identity failure was retained and its repaired offline case
+passed. Scoped typechecks passed on recorded intermediate cuts. Validation of the
+sealed current cut is recorded in `x1-control/primary-source-checkpoint-007.json`;
+those results do not establish SQL, queue, browser or installation behavior.
+Migrations 0174/0175 remain **UNAPPLIED** (177 files in the generated bundle).
+The frozen 1.5 GiB live and 2.5 GiB final-build disk floors remain in force.
+
+Remaining work includes automatic admitted-channel update recognition and exact
+affected closure with unaffected continuation, lawful S5 revalidation, actual
+compatible fallback and physical recovery/currentness observations, full
+qualification harness and finite launch/observe/resume packets, actual A–H and
+installation/mounted proofs, native finite scrutiny, reconstruction and handoff.
+Protected qualification, S8 admission, activation, operational100× and financial/H2
+remain separate. The active goal has not been reduced or marked complete.
+
+Earlier entries below describe historical cuts and retained evidence. This current
+entry and the sealed checkpoint identify the present implementation status.
+
 ## Responsibility/S5 second pass, 11 October 2026
 
 The five source findings against `9d1e55143` have bounded regressions

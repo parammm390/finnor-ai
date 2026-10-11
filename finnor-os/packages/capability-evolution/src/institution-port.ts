@@ -6,16 +6,25 @@ import type { JournalEntry } from "./journal";
 
 /** Actual installed intrinsic bytes are a proposal identity. Reading this
  * descriptor neither registers nor admits it through the signed lifecycle. */
-export async function installedInstitutionCompilerIdentity(){
+async function readInstalledInstitutionCompilerIdentity(){
   const paths=["reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
-    "resource-demand.ts","completion-contracts.ts","action-resolution.ts"].map(path=>
+    "resource-demand.ts","completion-contracts.ts","action-resolution.ts","canonical-json.ts",
+    "canonical-owners.ts","owner-admission.ts","source-authority.ts","checker-process.ts"].map(path=>
       new URL(`../../private-equity/src/institution-program/${path}`,import.meta.url));
   paths.push(new URL("../../private-equity/src/live-recompilation/institution-dependencies.ts",import.meta.url));
+  paths.push(new URL("./institution-port.ts",import.meta.url));
   const sources=await Promise.all(paths.map(async path=>({path:path.pathname,sha256:byteDigest(await readFile(path))})));
   const body={schema:"finnor.s8.installed-institution-compiler.v1",sources,
     runtime:{node:process.version,platform:process.platform,architecture:process.arch},
     state:"INSTALLED_PROPOSAL_UNADMITTED",protectedQualification:false,executionAuthorityGranted:false};
   return {...body,ref:institutionCapabilityRef("installed-proposal",body)};
+}
+const loadedInstitutionIdentity=readInstalledInstitutionCompilerIdentity();
+void loadedInstitutionIdentity.catch(()=>undefined);
+export async function installedInstitutionCompilerIdentity(){
+  const loaded=await loadedInstitutionIdentity,current=await readInstalledInstitutionCompilerIdentity();
+  if(loaded.ref.contentDigest!==current.ref.contentDigest)fault("X1_LOADED_COMPILER_METHOD_CHANGED",503);
+  return loaded;
 }
 
 const text=z.string().min(1).max(4096),hex=z.string().regex(/^[a-f0-9]{64}$/),instant=z.string().datetime({offset:true});

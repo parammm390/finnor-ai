@@ -10,8 +10,8 @@ runbook; nothing here is passed evidence.
 1. `statfs` free bytes >= `verification-plan.json` `limits.liveMinimumFreeBytes`
    (1,610,612,736). Retain this packet and all offline failures unchanged.
 2. Apply the ordered existing migration bundle through
-   `0173_x1_institution_s5_reservations.sql` (0172 source authority precedes
-   it; 175 files bundled). Expected source relations: `x1_source_grants`,
+   `0175_x1_work_compiler.sql` (0172 source authority and 0173 S5
+   precede 0174/0175; 177 files bundled). Expected source relations: `x1_source_grants`,
    `x1_source_acquisitions`, `x1_work_mandates`, `x1_subject_identity_bindings`,
    `x1_subject_consents`, `x1_mapping_admissions`, all with forced tenant RLS.
    `finnor_app` holds no raw `INSERT` on the two immutable receipt tables; the
@@ -24,7 +24,8 @@ runbook; nothing here is passed evidence.
    origin/projection/consumption/state/charge in `s5_reservation_origins`,
    `s5_reservations`, `s5_consumptions`, `s5_consumption_states` and
    `s5_governed_resource_charges`. No `s5_institution_*` parallel table exists.
-   Apply only from a fresh 0172 head, 0173 was unapplied at authoring.
+   Run both a clean installation and an upgrade from the independently retained
+   predecessor schema. Migrations 0174 and 0175 remain unapplied on this cut.
    The application role can invoke `s5_reserve_institution`,
    `s5_consume_institution`, `s5_release_untouched_institution`, and tenant-wide
    aggregate `s5_institution_occupancy`; the typed lifecycle guard rejects
@@ -199,3 +200,36 @@ cases above through the real restricted roles and records receipts under a
 fresh private evidence directory. VAL-X1-MAP-001 is claimable only after that
 stage passes with persisted readback; offline kernel/static passes are not
 substitutes.
+
+## Current canonical-owner and durable-continuation packet (NOT RUN)
+
+Use `reference/recovery-currentness-boundary-contract.md` for the six explicit
+current-cut boundaries. The profile remains unchanged. Existing canonical Fund
+and Vehicle IDs come from their native owner rows; deterministic IDs are only
+for the already supported new-record creators. Display labels do not mint an
+identity. Existing relation targets are included in the owner lookup.
+
+The additional closed readers cover InvestmentCase, Facility, Metric, Request,
+Finding, Decision, native PE relationship rows, source-scoped Person/User, Core
+ExternalOrganization, Document/version heads and Work. Assertions attach through
+Memory entity refs and native Work attachability, or PE evidence links with a
+genuine root. Re-read each actual attachment and current owner witness.
+
+Migration 0175 adds `x1_assert_canonical_owner_cut(jsonb,boolean)` and changes the
+canonical-effect guard to `x1_assert_effect_current(uuid,text)`. Read-only reads
+use an unlocked cut; publication/mutation lock current owner rows. Mutation also
+binds the actual loaded compiler method. Old binaries cannot supply an omitted
+method for an institution effect. No protected key or qualification is created.
+
+Reclaimed RUNNING continuations use the immutable saved head. They do not spend
+another preparation attempt or replace the original action ID. Physical recovery
+steps and S5 charges accumulate under the original envelope; S7 attribution
+records physical delivery IDs. Meter failures are explicit gaps. Exponential
+observation backoff ends at the original deadline, with a claim-fenced terminal
+head on expiration or exhaustion. Timely creation witnesses survive legitimate
+Request/Workstream lifecycle advancement; they bind the unchanged duty and intent.
+
+Export the actual API request, authenticated principal, Work input ID/digest,
+source grants, claim/fence/delivery IDs, sealed head history, owner observations,
+resource charges, S7 compute refs and exact failed predicates. This source packet
+is neither positive runtime evidence nor engineering completion.
