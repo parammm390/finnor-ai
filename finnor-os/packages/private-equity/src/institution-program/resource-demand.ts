@@ -57,7 +57,8 @@ export function planInstitutionDemandCharge(input: {
   if (!envelope) return { status: "REFUSED", reason: "X1_DEMAND_UNFUNDED" };
   const chargeKey = `x1-charge:${hash([demand.demandDigest, request.responsibilityIdentity,
     request.phase, request.ordinal])}`;
-  const requestDigest = hash([demand.demandDigest, request]);
+  const requestDigest = hash(["institution-charge-request-v1", demand.demandDigest,
+    request.responsibilityIdentity, request.phase, request.ordinal, request.units]);
   const previous = existingCharges.find((charge) => charge.chargeKey === chargeKey);
   if (previous) return previous.requestDigest === requestDigest
     ? { status: "REPLAY", chargeKey }

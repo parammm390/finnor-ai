@@ -3,12 +3,29 @@ import {assertProcedureProgrammeCurrent} from '../procedure-induction/programme'
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
 import {authorize,codeIdentity,currentDerivation,principal,sha,stable,tx,unavailable,schemaIdentity,assertDependencies} from '../evidence-execution/store';
-import type {HarnessProgram,HarnessRequest} from './contracts';
+import {isInstitutionRequest,type HarnessProgram,type HarnessRequest,type InstitutionHarnessRequest,type InstitutionHarnessProgram,type NativeHarnessProgram} from './contracts';
 
-export interface ProgramRow {id:string;tenant_id:string;principal_id:string;work_id:string;work_input_id:string;work_input_digest:string;episode_id:string;plan_revision_id:string;request_digest:string;request:HarnessRequest;proposed:HarnessProgram;generation:number;status:string;evidence_query_id:string|null;head_id:string|null;claim_token:string|null;claim_fence:number|null;poll_count:number;failure:string|null}
-export async function requestRow(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<ProgramRow>{const read=async(client:PoolClient)=>{const r=(await client.query<ProgramRow>('SELECT * FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3'+(lock?' FOR UPDATE':''),[ctx.auth.tenantId,principal(ctx),id])).rows[0];if(!r)throw unavailable();return r;};return c?read(c):tx(ctx,read,true);}
-export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow,c?:PoolClient,lock=false,stoppedSnapshot=false){
- await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);for(const s of q.request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[]);
+export interface ProgramRow {id:string;tenant_id:string;principal_id:string;work_id:string;work_input_id:string;episode_id:string;plan_revision_id:string;request_digest:string;work_input_digest:string;request:HarnessRequest;proposed:HarnessProgram;generation:number;status:string;evidence_query_id:string|null;head_id:string|null;claim_token:string|null;claim_fence:number|null;poll_count:number;failure:string|null}
+export type InstitutionProgramRow=Omit<ProgramRow,'request'|'proposed'> & {
+ request:InstitutionHarnessRequest;proposed:InstitutionHarnessProgram;
+};
+export async function nativeRequestRow(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<ProgramRow|InstitutionProgramRow>{
+ const read=async(client:PoolClient)=>{
+  const r=(await client.query<ProgramRow|InstitutionProgramRow>(`SELECT * FROM finnor_os.p1_requests
+   WHERE tenant_id=$1 AND principal_id=$2 AND id=$3${lock?' FOR UPDATE':''}`,
+   [ctx.auth.tenantId,principal(ctx),id])).rows[0];
+  if(!r)throw unavailable();
+  return r;
+ };
+ return c?read(c):tx(ctx,read,true);
+}
+export async function requestRow(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<ProgramRow>{
+ const row=await nativeRequestRow(ctx,id,c,lock);
+ if(isInstitutionRequest(row.request))throw Error('ANALYTICAL_PROGRAMME_REQUIRED');
+ return row as ProgramRow;
+}
+export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,c?:PoolClient,lock=false,stoppedSnapshot=false){
+ await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);if(!isInstitutionRequest(q.request))for(const s of q.request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[]);
  const read=async(client:PoolClient)=>{
   if(lock)await client.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[q.tenant_id,q.work_id]);
   const user=(await client.query('SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.principal_id])).rows[0];if(user?.status!=='active'||user.role!=='owner')throw unavailable();
@@ -16,20 +33,69 @@ export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow,c?
   const plan=(await client.query('SELECT status,work_input_id,objective_loop_id FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2'+(lock?' FOR SHARE':''),[q.tenant_id,q.plan_revision_id])).rows[0];
   let authenticStop=false;if(stoppedSnapshot&&q.status==='PARTIAL'&&plan?.status==='blocked')authenticStop=!!(await client.query("SELECT l.id FROM finnor_os.work_objective_loops l WHERE l.tenant_id=$1 AND l.id=$2 AND l.work_id=$3 AND l.created_by=$4 AND l.state='blocked' AND EXISTS(SELECT 1 FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.principal_id=$4 AND e.request_id=$5 AND e.generation=$6 AND e.kind='BOUNDED_STOP') AND NOT EXISTS(SELECT 1 FROM finnor_os.work_plan_revisions p WHERE p.tenant_id=$1 AND p.work_id=$3 AND p.status='active')",[q.tenant_id,plan.objective_loop_id,q.work_id,q.principal_id,q.id,q.generation])).rows[0];
   if(!plan||plan.work_input_id!==q.work_input_id||(!['active','completed'].includes(plan.status)&&!authenticStop))throw Error('CANONICAL_PLAN_REVISION_SUPERSEDED');
+  if(isInstitutionRequest(q.request)){
+   const reservation=(await client.query(`SELECT o.body,s.status FROM finnor_os.s5_reservation_origins o
+     JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)
+     WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.reservation_id=$3`,
+    [q.tenant_id,q.principal_id,q.request.institution.reservationRef.id])).rows[0];
+   if(!reservation||reservation.status==='RELEASED'
+     ||reservation.body.demand.demandDigest!==q.request.institution.demand.demandDigest)
+    throw Error('X1_P1_S5_PARENT_CHANGED');
+   const mandate=(await client.query<{revision:string}>(`SELECT revision FROM finnor_os.x1_work_mandates
+     WHERE tenant_id=$1 AND work_id=$2 AND principal_id=$3
+       AND institution_id=$4 AND revoked_at IS NULL
+       AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
+     ORDER BY valid_from DESC LIMIT 2`,
+    [q.tenant_id,q.work_id,q.principal_id,q.request.institution.demand.institutionId])).rows;
+   if(mandate.length!==1||q.request.institution.responsibilities.some(r=>
+     r.obligation.rule.mandateRevision!==mandate[0]!.revision))
+    throw Error('X1_P1_MANDATE_REVISION_CHANGED');
+   const admission=(await client.query<{original_digest:string;candidate_digest:string;checker_digest:string}>(
+    `SELECT original_digest,candidate_digest,checker_digest
+      FROM finnor_os.x1_mapping_admissions WHERE tenant_id=$1 AND work_id=$2
+      AND principal_id=$3 ORDER BY published_at DESC,id DESC LIMIT 1`,
+    [q.tenant_id,q.work_id,q.principal_id])).rows[0];
+   const accepted=q.request.institution.programme.admission;
+   if(!admission||admission.original_digest!==accepted.originalDigest
+     ||admission.candidate_digest!==accepted.candidateDigest
+     ||admission.checker_digest!==accepted.checkerDigest)
+    throw Error('X1_P1_OWNER_ADMISSION_SUPERSEDED');
+  }
  };
  if(c)await read(c);else await tx(ctx,read,true);
- await assertProcedureProgrammeCurrent(ctx,q,c,lock);
+ if(!isInstitutionRequest(q.request))await assertProcedureProgrammeCurrent(ctx,q as ProgramRow,c,lock);
  if(q.proposed.producer.codeDigest!==(await codeIdentity()).digest)throw Error('PROGRAM_RUNTIME_SOURCE_CHANGED');if(q.proposed.producer.schemaDigest!==await schemaIdentity(ctx))throw Error('PROGRAM_SCHEMA_CHANGED');
 }
-export async function trace(ctx:PeMutationContext,q:ProgramRow,kind:string,body:unknown,c?:PoolClient){const write=(client:PoolClient)=>client.query('INSERT INTO finnor_os.p1_events(tenant_id,principal_id,request_id,generation,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb)',[q.tenant_id,q.principal_id,q.id,q.generation,kind,stable(body)]);return c?write(c):tx(ctx,write);}
+export async function trace(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,kind:string,body:unknown,c?:PoolClient){const write=(client:PoolClient)=>client.query('INSERT INTO finnor_os.p1_events(tenant_id,principal_id,request_id,generation,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb)',[q.tenant_id,q.principal_id,q.id,q.generation,kind,stable(body)]);return c?write(c):tx(ctx,write);}
+export async function durableNode(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,id:string,body:unknown){
+ await tx(ctx,async c=>{
+  const current=await nativeRequestRow(ctx,q.id,c,true);
+  if(current.generation!==q.generation||current.claim_token!==q.claim_token||current.status!=='RUNNING')
+   throw Error('PROGRAM_NODE_CLAIM_FENCED');
+  const prior=(await c.query<{body:unknown;digest:string}>(`SELECT body,digest
+   FROM finnor_os.p1_node_results WHERE tenant_id=$1 AND principal_id=$2
+   AND request_id=$3 AND generation=$4 AND node_id=$5`,
+   [q.tenant_id,q.principal_id,q.id,q.generation,id])).rows[0];
+  if(prior){
+   if(sha(prior.body)!==prior.digest||sha(body)!==prior.digest)
+    throw Error('DURABLE_NODE_REPLAY_MISMATCH');
+   return;
+  }
+  await c.query(`INSERT INTO finnor_os.p1_node_results
+   (tenant_id,principal_id,request_id,generation,node_id,body,digest)
+   VALUES($1,$2,$3,$4,$5,$6::jsonb,$7) ON CONFLICT DO NOTHING`,
+   [q.tenant_id,q.principal_id,q.id,q.generation,id,stable(body),sha(body)]);
+ });
+}
 export async function reserveCandidate(ctx:PeMutationContext,q:ProgramRow){await tx(ctx,async c=>{const charged=await c.query('UPDATE finnor_os.p1_episodes SET candidates_used=candidates_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND candidates_used<max_candidates AND deadline_at>clock_timestamp() RETURNING candidates_used,max_candidates',[q.episode_id,q.tenant_id,q.principal_id]);if(!charged.rowCount)throw Error('ORIGINAL_CANDIDATE_BOUND_EXHAUSTED');await trace(ctx,q,'CANDIDATE_GRANT_CHARGED',{episodeId:q.episode_id,...charged.rows[0]},c);});}
-export async function enqueueProgram(ctx:PeMutationContext,q:ProgramRow,stage:string,c?:PoolClient,delayMs=0){const write=(client:PoolClient)=>client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at) VALUES($1,'run_harness_program_v1',$2::jsonb,$3,'interactive',1,'locally_idempotent',clock_timestamp()+$4::int*interval '1 millisecond') ON CONFLICT(idempotency_key) DO NOTHING",[q.tenant_id,stable({tenantId:q.tenant_id,principalId:q.principal_id,programId:q.id,generation:q.generation,stage}),'p1:'+q.id+':'+q.generation+':'+stage,delayMs]);return c?write(c):tx(ctx,write);}
+export async function enqueueProgram(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,stage:string,c?:PoolClient,delayMs=0){const write=(client:PoolClient)=>client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at) VALUES($1,'run_harness_program_v1',$2::jsonb,$3,'interactive',1,'locally_idempotent',clock_timestamp()+$4::int*interval '1 millisecond') ON CONFLICT(idempotency_key) DO NOTHING",[q.tenant_id,stable({tenantId:q.tenant_id,principalId:q.principal_id,programId:q.id,generation:q.generation,stage}),'p1:'+q.id+':'+q.generation+':'+stage,delayMs]);return c?write(c):tx(ctx,write);}
 export async function readCurrentProgram(ctx:PeMutationContext,id:string){
  const q=await requestRow(ctx,id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['CANCELLED','INVALIDATED'].includes(q.status))return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program:null,reason:q.failure,incurredCosts:terminalCostSummary(await episodeCosts(ctx,q))};
  try{await assertProgramCurrent(ctx,q,undefined,false,q.status==='PARTIAL');let program=q.proposed;
   if(q.head_id){program=await tx(ctx,async c=>{const stored=(await c.query<{body:HarnessProgram;digest:string}>('SELECT body,digest FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[q.tenant_id,q.principal_id,q.head_id])).rows[0];if(!stored)throw Error('PROGRAM_HEAD_MISSING');if(sha(stored.body)!==stored.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');return stored.body;},true);await assertDependencies(ctx,program.dependencies);if(q.status==='TESTED'){if(!q.evidence_query_id||!program.result)throw Error('PROGRAM_MATERIAL_CHECK_MISSING');const d=await currentDerivation(ctx,program.semanticBindings.find((r:any)=>r.producer==='P4')?String((program.semanticBindings.find((r:any)=>r.producer==='P4') as any).id):'');if(d.work.revision!==q.work_input_id||d.coverage.status!=='COMPLETE_SELECTED_UNIVERSE')throw Error('P4_PROGRAM_EXACT_BINDING_MISMATCH');}}
-  if(q.head_id&&q.request.ownerBindings)await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,inputId:q.work_input_id,validAt:program.validAt,knowledgeAt:program.knowledgeAt});await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program,reason:q.failure,canResume:['WAITING','FAILED','PARTIAL'].includes(q.status)&&await tx(ctx,async c=>(await c.query('SELECT status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.plan_revision_id])).rows[0]?.status==='active',true),incurredCosts:await episodeCosts(ctx,q)};
+  if(q.head_id&&q.request.ownerBindings)await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,inputId:q.work_input_id,validAt:program.validAt,knowledgeAt:program.knowledgeAt});
+  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program,reason:q.failure,canResume:['WAITING','FAILED','PARTIAL'].includes(q.status)&&await tx(ctx,async c=>(await c.query('SELECT status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.plan_revision_id])).rows[0]?.status==='active',true),incurredCosts:await episodeCosts(ctx,q)};
  }catch(error){if((error as Error).message==='Evidence resource is unavailable in the authenticated scope')throw error;const reason=safePredicate(error);await tx(ctx,async c=>{await c.query("UPDATE finnor_os.p1_requests SET status='INVALIDATED',failure=$4,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND status<>'CANCELLED'",[q.tenant_id,q.principal_id,q.id,reason]);await trace(ctx,q,'INVALIDATED',{predicate:reason,priorHead:q.head_id,costUSD:null},c);});await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:'INVALIDATED',program:null,reason,incurredCosts:terminalCostSummary(await episodeCosts(ctx,q))};}
 }
 /** Terminal accounting is retained without replaying private result/stdout bytes. */
@@ -38,7 +104,7 @@ export function safePredicate(error:unknown){return String((error as Error).mess
 
 /** Costs are cumulative across this original Work episode. Durable native/model
  * attempt evidence survives partial heads, failures, cancellation and recovery. */
-export async function episodeCosts(ctx:PeMutationContext,q:ProgramRow,c?:PoolClient):Promise<HarnessProgram['costs']>{
+export async function episodeCosts(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,c?:PoolClient):Promise<HarnessProgram['costs']>{
  const read=async(client:PoolClient)=>{
   const e=(await client.query('SELECT attempts_used,steps_used,extract(epoch FROM(clock_timestamp()-created_at))*1000 wall_ms FROM finnor_os.p1_episodes WHERE id=$1 AND tenant_id=$2 AND principal_id=$3',[q.episode_id,q.tenant_id,q.principal_id])).rows[0];
   const records=(await client.query<{kind:string;body:any}>(`SELECT e.kind,e.body FROM finnor_os.p1_events e JOIN finnor_os.p1_requests r ON r.id=e.request_id AND r.tenant_id=e.tenant_id AND r.principal_id=e.principal_id WHERE r.episode_id=$1 AND e.tenant_id=$2 AND e.principal_id=$3 AND e.kind IN('ISOLATED_MODULE_EXECUTION','MODEL_PROPOSAL_ATTEMPT','P4_CURRENT_PRODUCER_COST','OWNER_OPERATION_ATTEMPT') ORDER BY e.created_at,e.id`,[q.episode_id,q.tenant_id,q.principal_id])).rows;
@@ -48,8 +114,8 @@ export async function episodeCosts(ctx:PeMutationContext,q:ProgramRow,c?:PoolCli
 }
 /** Compact publication witness; full immutable attempt records remain resolvable. */
 export function costWitness(costs:HarnessProgram['costs']){return {schema:'finnor.p1.episode-cost-witness.v1',digest:sha(costs),usd:costs.usd,status:costs.status,attempts:costs.attempts,steps:costs.steps,wallMs:costs.wallMs,nativeInvocationCount:costs.nativeInvocations.length,modelInvocationCount:costs.modelInvocations.length,receiptSource:'AUTHENTICATED_EPISODE_ATTEMPT_EVENTS_AND_IMMUTABLE_PROGRAMME_HEAD'};}
-export async function persistProgrammeHead(ctx:PeMutationContext,q:ProgramRow,program:HarnessProgram,status:string,predicate:string|null,c:PoolClient){
- const current=await requestRow(ctx,q.id,c,true);if(current.generation!==q.generation||current.claim_token!==q.claim_token||current.status!=='RUNNING')throw Error('IMMUTABLE_PROGRAMME_HEAD_FENCED');
+export async function persistProgrammeHead(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,program:NativeHarnessProgram,status:string,predicate:string|null,c:PoolClient){
+ const current=await nativeRequestRow(ctx,q.id,c,true);if(current.generation!==q.generation||current.claim_token!==q.claim_token||current.status!=='RUNNING')throw Error('IMMUTABLE_PROGRAMME_HEAD_FENCED');
  program.costs=await episodeCosts(ctx,q,c);const id=(await import('node:crypto')).randomUUID();await c.query('INSERT INTO finnor_os.p1_programs(id,tenant_id,principal_id,request_id,generation,body,digest) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)',[id,q.tenant_id,q.principal_id,q.id,q.generation,stable(program),sha(program)]);
  await c.query('UPDATE finnor_os.p1_requests SET status=$4,head_id=$5,failure=$6,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[q.tenant_id,q.principal_id,q.id,status,id,predicate]);await trace(ctx,q,'IMMUTABLE_PROGRAMME_HEAD',{headId:id,parentHeadId:current.head_id,status,digest:sha(program),costs:costWitness(program.costs)},c);return id;
 }

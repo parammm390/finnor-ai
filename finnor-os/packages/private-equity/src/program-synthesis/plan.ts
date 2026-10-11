@@ -3,11 +3,12 @@ import {buildGoalSpec,buildConstraintSet,buildPlanningWorldSnapshot,compileAndSe
 import {PROGRAM_OPERATIONAL_QUERY_INTENTS} from '@finnor/shared-types';
 import type {PeMutationContext} from '../types';
 import {sha,principal} from '../evidence-execution/store';
-import type {HarnessRequest} from './contracts';
+import {isInstitutionRequest,type HarnessRequest,type InstitutionHarnessRequest} from './contracts';
 
 /** Canonical PlanGraph owns the ordinary query/check lifecycle. Harness nodes
  * are the implementation of this native query, never permissive DomainActions. */
-export async function selectHarnessPlan(ctx:PeMutationContext,request:HarnessRequest,binding:{programId:string;workId:string;inputId:string;inputDigest:string;parentRevisionId:string|null;rightsRevision:number;deadlineAt:string}){
+export async function selectHarnessPlan(ctx:PeMutationContext,request:HarnessRequest|InstitutionHarnessRequest,binding:{programId:string;workId:string;inputId:string;inputDigest:string;parentRevisionId:string|null;rightsRevision:number;deadlineAt:string}){
+ if(isInstitutionRequest(request))return selectInstitutionPlan(ctx,request,binding);
  if(!PROGRAM_OPERATIONAL_QUERY_INTENTS.includes('harness_program_v1'))throw Error('HARNESS_QUERY_CAPABILITY_UNREGISTERED');
  const attempt=await beginWorkPlannerAttempt({tenantId:ctx.auth.tenantId,workId:binding.workId,workInputId:binding.inputId,attemptKey:'p1:'+binding.programId});
  const goal=buildGoalSpec({objective:request.instruction,workId:binding.workId,workInputId:binding.inputId,targets:[{kind:'entity',type:request.root.entityType,id:request.root.entityId,sourceRef:'S1:authenticated-root'}],deadline:binding.deadlineAt,explicitNonGoals:['external_effect_dispatch','IC_approval','S5_reservation','S8_admission'],successCondition:{version:1,statement:request.instruction,source:'explicit',mode:'all',criteria:[{kind:'canonical_query',request:{intent:'harness_program_v1',programId:binding.programId,workId:binding.workId},assertion:{path:['data','status'],operator:'eq',expected:'TESTED'}},{kind:'canonical_query',request:{intent:'harness_program_v1',programId:binding.programId,workId:binding.workId},assertion:{path:['data','program','acceptanceDigest'],operator:'eq',expected:sha(request.acceptance)}}]}});
@@ -27,4 +28,62 @@ export async function selectHarnessPlan(ctx:PeMutationContext,request:HarnessReq
  const objective=await (await import('../../../orchestration/src/objective-loop')).bindHarnessWorkObjective({tenantId:ctx.auth.tenantId,principalId:principal(ctx),workId:binding.workId,workInputId:binding.inputId,instruction:request.instruction,programId:binding.programId,acceptanceDigest:sha(request.acceptance),deadlineAt:binding.deadlineAt});
  const plan=await persistSelectedWorkPlan({tenantId:ctx.auth.tenantId,workId:binding.workId,workInputId:binding.inputId,plannerAttemptId:attempt.id,objectiveLoopId:objective.id,parentRevisionId:binding.parentRevisionId,reason:binding.parentRevisionId?'redirect':'initial',goalSpec:goal,constraintSet:constraints,planningSnapshot:snapshot,candidatePlans:[candidate],compilationResult:compiled,planGraph:compiled.selected.graph,score:compiled.selected.score,semanticHash:compiled.selected.graph.semanticHash});
  await finishWorkPlannerAttempt({tenantId:ctx.auth.tenantId,attemptId:attempt.id,status:'succeeded',plannerResult:{planRevisionId:plan.id,qualification:'ORDINARY_HARNESS_IMPLEMENTATION_NOT_S4_BUSINESS_SELECTION'}});return {goal,planGraph:compiled.selected.graph,planRevisionId:plan.id};
+}
+
+async function selectInstitutionPlan(ctx:PeMutationContext,request:InstitutionHarnessRequest,binding:{
+ programId:string;workId:string;inputId:string;inputDigest:string;parentRevisionId:string|null;
+ rightsRevision:number;deadlineAt:string;
+}){
+ const attempt=await beginWorkPlannerAttempt({tenantId:ctx.auth.tenantId,workId:binding.workId,
+  workInputId:binding.inputId,attemptKey:'p1:'+binding.programId});
+ const query={intent:'harness_program_v1' as const,programId:binding.programId,workId:binding.workId};
+ const goal=buildGoalSpec({objective:request.instruction,workId:binding.workId,workInputId:binding.inputId,
+  targets:[{kind:'entity',type:request.root.entityType,id:request.root.entityId,sourceRef:'S1:authenticated-root'}],
+  deadline:binding.deadlineAt,explicitNonGoals:['fabricated_numerical_acceptance','unobserved_completion','protected_dispatch'],
+  successCondition:{version:1,statement:request.instruction,source:'explicit',mode:'all',criteria:[
+   {kind:'canonical_query',request:query,assertion:{path:['data','status'],operator:'eq',expected:'OBSERVED'}},
+   {kind:'canonical_query',request:query,assertion:{path:['data','program','acceptanceDigest'],operator:'eq',expected:sha(request.institution)}},
+  ]}});
+ const capability:PlanningSnapshotCapability={capability:'query:harness_program_v1',kind:'query',
+  modelProposable:false,available:true,health:'available',risk:'low',irreversible:false,
+  requiredReferences:['workId','programId'],effectClass:null,observationStrategy:'operational_query',
+  reversibility:'read_only',supportedRecoveryModes:['retry'],externalSideEffect:false,authorityRequirement:'query'};
+ const constraints=buildConstraintSet({tenantId:ctx.auth.tenantId,verticalKey:'private_equity',
+  allowedCapabilities:[capability.capability,'check:objective_success'],humanOnlyCapabilities:[],
+  prohibitedCapabilities:[],authorityRevision:binding.rightsRevision,
+  budgets:{...DEFAULT_PLAN_BUDGETS,maxActions:0},deadlineAt:binding.deadlineAt,softPreferences:[]});
+ const snapshot=buildPlanningWorldSnapshot({tenantId:ctx.auth.tenantId,verticalKey:'private_equity',
+  workId:binding.workId,workInputId:binding.inputId,plannerAttemptId:attempt.id,
+  capturedAt:new Date().toISOString(),decisionContextHash:sha(request.institution),
+  canonicalStateHash:binding.inputDigest,canonicalEntities:[{kind:'entity',
+   type:request.root.entityType,id:request.root.entityId,versionHash:null,sourceRef:'S1:authenticated-root'}],
+  authority:{revision:binding.rightsRevision,roles:[ctx.auth.role],employeeId:principal(ctx)},
+  capabilities:[capability],currentEffects:[],sourceHealth:{status:'complete',missing:[]}});
+ const candidate:CandidatePlan={version:1,candidateKey:'p1-institution-responsibility-v1',
+  nodes:[{key:'observe_institution',kind:'query',request:query,supports:goal.criteria.map(c=>c.id)},
+   ...goal.criteria.map((c,i)=>({key:'check_'+i,kind:'check' as const,
+    criterionId:c.id,dependsOn:['observe_institution'],observation:c.criterion}))]};
+ const facts:CandidateCompilationFacts={candidateKey:candidate.candidateKey,
+  nodes:Object.fromEntries(candidate.nodes.map(n=>[n.key,{
+   capability:n.kind==='query'?capability.capability:'check:objective_success',registered:true,
+   schemaValid:true,schemaErrors:[],grounded:true,crossTenant:false,stale:false,authority:'allowed',
+   health:'available',risk:'low',irreversible:false,requiredReferences:['workId','programId'],
+   estimatedCostMicros:null,estimatedLatencyMs:null,supportedRecoveryModes:['retry'],
+  }]))};
+ const compiled=compileAndSelectPlans({candidates:[candidate],facts:[facts],goal,constraints,snapshot});
+ if(!compiled.selected?.graph){await finishWorkPlannerAttempt({tenantId:ctx.auth.tenantId,attemptId:attempt.id,
+  status:'failed',failure:{code:'P1_CANONICAL_PLAN_REJECTED',compiled}});throw Error('P1_CANONICAL_PLAN_REJECTED');}
+ const objective=await (await import('../../../orchestration/src/objective-loop')).bindHarnessWorkObjective({
+  tenantId:ctx.auth.tenantId,principalId:principal(ctx),workId:binding.workId,
+  workInputId:binding.inputId,instruction:request.instruction,programId:binding.programId,
+  acceptanceDigest:sha(request.institution),deadlineAt:binding.deadlineAt,expectedStatus:'OBSERVED'});
+ const plan=await persistSelectedWorkPlan({tenantId:ctx.auth.tenantId,workId:binding.workId,
+  workInputId:binding.inputId,plannerAttemptId:attempt.id,objectiveLoopId:objective.id,
+  parentRevisionId:binding.parentRevisionId,reason:binding.parentRevisionId?'redirect':'initial',
+  goalSpec:goal,constraintSet:constraints,planningSnapshot:snapshot,
+  candidatePlans:[candidate],compilationResult:compiled,planGraph:compiled.selected.graph,
+  score:compiled.selected.score,semanticHash:compiled.selected.graph.semanticHash});
+ await finishWorkPlannerAttempt({tenantId:ctx.auth.tenantId,attemptId:attempt.id,status:'succeeded',
+  plannerResult:{planRevisionId:plan.id,qualification:'TYPED_INSTITUTION_OBSERVATION_NOT_COMPLETION'}});
+ return {goal,planGraph:compiled.selected.graph,planRevisionId:plan.id};
 }

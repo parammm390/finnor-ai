@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": "../../..",
+    "types": ["node"]
+  },
+  "files": [
+    "../../../packages/private-equity/src/program-synthesis/contracts.ts",
+    "../../../packages/private-equity/src/program-synthesis/plan.ts",
+    "../../../packages/private-equity/src/program-synthesis/owners.ts",
+    "../../../packages/private-equity/src/program-synthesis/store.ts",
+    "../../../packages/private-equity/src/program-synthesis/institution.ts",
+    "../../../packages/private-equity/src/program-synthesis/api.ts",
+    "../../../packages/private-equity/src/program-synthesis/worker.ts",
+    "../../../packages/private-equity/src/program-synthesis/operational-query.ts",
+    "../../../packages/orchestration/src/objective-loop.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

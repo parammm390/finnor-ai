@@ -54,6 +54,16 @@ for (const path of [
   "finnor-os/packages/db/migrations/0173_x1_institution_s5_reservations.sql",
   "finnor-os/packages/db/migration-head.ts",
   "finnor-os/scripts/frontier5/x1/responsibility-cases.mts",
+  "finnor-os/scripts/frontier5/x1/responsibility-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-finish-contract.md",
+  "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/plan.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/api.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/worker.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+  "finnor-os/packages/orchestration/src/objective-loop.ts",
   "finnor-os/scripts/frontier5/x1/reference/responsibility-contract.md",
   "finnor-os/scripts/frontier5/x1/reference/responsibility-expectations.json",
   "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
@@ -151,6 +161,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("admission-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/admission-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("responsibility", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/responsibility-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("responsibility-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/responsibility-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
@@ -177,6 +188,17 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
       "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
       "finnor-os/scripts/frontier5/x1/responsibility-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("responsibility-finish-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
+      "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
+      "finnor-os/scripts/frontier5/x1/responsibility-finish-cases.mts",
+      "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/plan.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/api.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/worker.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+      "finnor-os/packages/orchestration/src/objective-loop.ts"], repo, manifest.limits.smallCheckNodeHeapMiB);
     run("checker-command-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
       "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
       "finnor-os/scripts/frontier5/x1/review-cases.mts",

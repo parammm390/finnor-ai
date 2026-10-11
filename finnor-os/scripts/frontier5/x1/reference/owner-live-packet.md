@@ -19,11 +19,18 @@ runbook; nothing here is passed evidence.
    `x1_record_source_acquisition` and `x1_publish_mapping_admission`, which
    re-derive tenant/principal from the request GUCs and cross-check the
    referenced grant/document/Work.
-   Migration 0173 adds `s5_institution_reservations` and
-   `s5_institution_charges` with forced tenant/principal RLS; do not substitute
-   the X1 demand row for S5 funding. Verify native finite reservations and
-   institution reservations contend on the same registered resource under the
-   S5 portfolio serializer.
+   Migration 0173 extends the existing S5 `s5_proposals` grammar with a
+   discriminated institution demand (no numeric certificate), and stores typed
+   origin/projection/consumption/state/charge in `s5_reservation_origins`,
+   `s5_reservations`, `s5_consumptions`, `s5_consumption_states` and
+   `s5_governed_resource_charges`. No `s5_institution_*` parallel table exists.
+   Apply only from a fresh 0172 head, 0173 was unapplied at authoring.
+   The application role can invoke `s5_reserve_institution`,
+   `s5_consume_institution`, `s5_release_untouched_institution`, and tenant-wide
+   aggregate `s5_institution_occupancy`; the typed lifecycle guard rejects
+   direct app writes. RLS hides another principal's typed preimage/projection.
+   Verify native finite reservations and institution reservations contend on
+   the same registered resource under the S5 portfolio serializer.
 3. One existing tenant, active user (principal) and Work row created by that
    principal; an `authority_states` row for the tenant.
 
@@ -86,6 +93,41 @@ runbook; nothing here is passed evidence.
   `x1_mapping_admissions` -> permission denied; only the owner functions write.
 - Missing Deal prerequisites remain `unresolved`; supported independent
   fund/vehicle mappings in the same candidate still admit.
+
+## 0173 shared-S5 live assertions (NOT RUN below disk floor)
+
+- In one tenant, two active owner principals with separate Works and current
+  mandates, register one canonical `COMPUTE/request` pool with 10 available
+  units. Principal A reserves eight through `reserveInstitutionDemand`. As
+  principal B, confirm direct SELECT of A's typed proposal/origin/projection/
+  consumption/charge body returns no row; call
+  `s5_institution_occupancy(resource_id)` and observe eight. B's eight-unit
+  reservation must reject in the **SQL owner writer**, not merely in a
+  principal-filtered TypeScript snapshot. Keep A's original row/digest.
+- Try A's direct app-role `UPDATE s5_reservations SET status='RELEASED'` and
+  direct app-role `INSERT` of a typed consumption/charge. Both must fail at
+  `s5_institution_owner_guard` / `s5_institution_state_guard`. Use the owner
+  function for a real charge, then attempt untouched release, which must
+  refuse and preserve the original envelope and liability. No direct app-role
+  mutation may erase the charge or retroactively change its units/deadline.
+- Reserve a finite S5 certificate in the same pool after A's institution
+  occupation. Its native snapshot must include aggregate typed occupancy,
+  without disclosing A's preimage to B. Conversely, reserve a finite
+  certificate first and assert institution reservation sees the retained
+  finite occupation. Check old finite consumption/settlement unchanged.
+- Submit a checked institution variant through `submitHarnessProgram` under
+  its exact Work/input/principal/current X1 admission receipt and original S5
+  parent. Read P1 request/proposed/head/node checkpoints and native plan/loop.
+  Sparse mandate without frozen action payload must publish PARTIAL with
+  `X1_EXACT_ACTION_PAYLOAD_MISSING`, not TESTED/OBSERVED, and preserve both
+  unresolved duty and original reservation/deadline. Exact-payload intent
+  remains WAITING until downstream independent canonical observation; do not
+  score WAITING as completion or claim ordinary dispatch in this stage.
+
+The runner currently returns `NOT_IMPLEMENTED_NOT_RUN` for `owners`; this
+packet is the launch/seed/expected-row contract for its downstream owner
+driver. Do not use the old 0173 table names or report a static grep as SQL
+contention proof.
 
 ## Schema pin (deliberate fail-closed)
 

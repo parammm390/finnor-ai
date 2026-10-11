@@ -76,10 +76,8 @@ import {
 import { attachWorkToDealGraph, resolvePrivateEquityDealReference } from "@finnor/private-equity";
 import { canExerciseAuthority, employeeAuthoritySnapshot, evaluateAuthority } from "@finnor/authority";
 import { listAvailableIdentityAccess } from "@finnor/security";
-import type { LLMChannel, LLMProvider } from "./llm";
-import { resolveProviderForPurpose } from "./llm";
-import type { PluginRegistry } from "./plugin-registry";
-import { plannerActionTypesForVertical, planningCapabilitiesForVertical } from "./plugin-registry";
+import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
+import { plannerActionTypesForVertical, planningCapabilitiesForVertical, type PluginRegistry } from "./plugin-registry";
 import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { parseModelJson } from "./model-json";
 import { PlanCompilationError, deterministicPlanActionId, selectPlanRevision } from "./plan-runtime";
@@ -823,9 +821,10 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
 export async function bindHarnessWorkObjective(params: {
   tenantId:string; principalId:string; workId:string; workInputId:string;
   instruction:string; programId:string; acceptanceDigest:string; deadlineAt:string;
+  expectedStatus?:'TESTED'|'OBSERVED';
 }): Promise<{id:string;revision:number}> {
   const condition = parseObjectiveSuccessCondition({version:1,statement:params.instruction,mode:"all",source:"explicit",criteria:[
-    {kind:"canonical_query",request:{intent:"harness_program_v1",programId:params.programId,workId:params.workId},assertion:{path:["data","status"],operator:"eq",expected:"TESTED"}},
+    {kind:"canonical_query",request:{intent:"harness_program_v1",programId:params.programId,workId:params.workId},assertion:{path:["data","status"],operator:"eq",expected:params.expectedStatus??"TESTED"}},
     {kind:"canonical_query",request:{intent:"harness_program_v1",programId:params.programId,workId:params.workId},assertion:{path:["data","program","acceptanceDigest"],operator:"eq",expected:params.acceptanceDigest}},
   ]});
   const [existing] = await withTenant(params.tenantId,db=>db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId))).limit(1));

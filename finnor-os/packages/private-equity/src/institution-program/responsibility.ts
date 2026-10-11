@@ -3,6 +3,11 @@ import type { DigitalInstitutionProfile } from "./contracts";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
 
 export const X1_RESPONSIBILITY_VERSION = "institution-responsibility-v1";
+const observerEntity = {
+  create_deal_request: "pe_request",
+  open_workstream: "pe_workstream",
+  record_finding: "pe_finding",
+} as const;
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const witness = (sourceId: string, recordId: string) => `${sourceId}/${recordId}`;
 export type InstitutionObligationPreimage = {
@@ -66,6 +71,8 @@ export function deriveInstitutionResponsibilities(input: Input) {
       ? "X1_SUBJECT_NOT_ESTABLISHED_CANONICAL_FACT"
       : !authorizedOperations.includes(rule.operation) || !profile.ordinaryOperations.includes(rule.operation)
         ? "X1_OPERATION_NOT_CURRENTLY_AUTHORIZED"
+        : !(rule.operation in observerEntity)
+          ? "X1_OPERATION_POSTCONDITION_UNSUPPORTED"
         : !/^pe_deal:([^@]+)@v\d+$/.test(obligation.subjectRef)
           ? "X1_OPERATION_SUBJECT_KIND_UNSUPPORTED" : null;
     if (reason) {
@@ -88,7 +95,7 @@ export function deriveInstitutionResponsibilities(input: Input) {
         responsiblePrincipal: rule.principalId, permissibleOperationClass: rule.operation,
         preconditions: [{ ref: obligation.subjectRef, status: "satisfied" }],
         postcondition: { contractRef: rule.postconditionRef,
-          structuralObserver: { entityType: "pe_request", dealId: match[1]! } },
+          structuralObserver: { entityType: observerEntity[rule.operation as keyof typeof observerEntity], dealId: match[1]! } },
         independentObserver: { ref: rule.observerRef },
         effectBinding: { kind: "ordinary", operation: rule.operation },
       },

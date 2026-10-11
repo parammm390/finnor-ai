@@ -1,5 +1,36 @@
 # FRONTIER5.X1 status
 
+## Responsibility finish source cut, 11 October 2026
+
+The five defects from mission `responsibility-finish.md` have pre-code
+regressions in `responsibility-finish-cases.mts` and the frozen owner contract;
+actual reordered replay, wrong workstream observer, forked table and missing
+P1 grammar failures were observed before repair. The unapplied 0173 was
+replaced before first application: typed demand, original reservation,
+consumption/state and charge now use the EXISTING S5 tables, SQL owner writers
+and a tenant-wide authorized occupancy aggregate. Typed origin/projection
+privacy and app-role write guards retain liability after charge. The charge
+request digest uses a fixed semantic tuple, and each ordinary operation has
+its own canonical observer entity.
+
+P1 now parses a distinct institution request, checks current admission and
+S5 parent, binds the existing PlanGraph/ObjectiveLoop, persists Work/input,
+principal, duty-to-node, unresolved, mandate payload/observer, admission,
+deadline and reservation bindings in the existing P1 request/programme heads.
+The physical P1 worker branch uses the existing claim/generation and immutable
+node/head fences, retains the original S5 charge identity for exact-payload
+intent, and blocks sparse mandates without fabricating an analytical result.
+It cannot mark OBSERVED merely because a P1 analytical check is TESTED.
+Ordinary action dispatch and independent canonical observation are still
+downstream. SQL migration application, two-principal RLS/contention and
+physical P1 progression are NOT RUN because disk remains below the live floor;
+VAL-X1-PROGRAM-001 and VAL-X1-RESOURCE-001 remain UNCLAIMED.
+
+The bounded kernel, X1 static suite and targeted native P1 owner typecheck
+passed offline. A whole-backend typecheck exceeded the frozen 1,536 MiB heap;
+the affected P1 graph passed its scoped typecheck within that same ceiling.
+No installed/build or live receipt exists.
+
 ## Responsibility identity and typed S5 source cut (11 October 2026)
 
 The inherited pre-code responsibility contract, expectations and cases were
