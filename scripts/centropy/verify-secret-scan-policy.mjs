@@ -23,6 +23,10 @@ const predicatesPath = "finnor-os/packages/private-equity/src/program-synthesis/
 const m4Path = "finnor-os/scripts/m4/run-e2e.mts"
 const candidatePath = "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts"
 const r2AuthPath = "finnor-os/scripts/r2/run-owner.mts"
+const r4SourcePaths = ["producer", "checker"].map(name => `finnor-os/packages/epistemic-runtime/src/identification-plan/${name}.py`)
+const r4BrowserPath = "finnor-os/scripts/r4/browser.mts"
+const r4ApiPin = ["ad107d01a61c9ba1df2c71ca8e128851c6", "f3b1fee3f9377d5159c34d6b0e50c4"].join("")
+const r4AuthMode = ["DISPOSABLE", "RS256", "NO", "BYPASS"].join("_")
 const migrationsPath = "docs/release/completed-release-2026-10-08/migration-allocation.json"
 const prosePaths = ["scope-pm/completion-c/all-ten-gates.json", "scope-pm/completion-c/all-ten-requirements.json"]
 const json = (value) => JSON.stringify(value, null, 2) + "\n"
@@ -50,6 +54,10 @@ const metadata = [
   { name: "m4", path: m4Path, fields: ["idempotencyKey"], baselineCount: 3, bytes: Array.from({ length: 3 }, (_, index) => objectFixture(`request${index}`, "idempotencyKey", duplicateReference)).join("") },
   { name: "candidate", path: candidatePath, fields: ["candidateKey"], baselineCount: 1, bytes: objectFixture("candidate", "candidateKey", proposalCandidate) },
   { name: "r2-disposable-refresh", path: r2AuthPath, fields: ["refresh_token"], baselineCount: 1, bytes: objectFixture("session", "refresh_token", r2Refresh) },
+  ...r4SourcePaths.map((path, index) => ({ name: `r4-public-source-pin-${index}`, path,
+    fields: ["algorithm/identify/api.py"], baselineCount: 1, bytes: json({ "algorithm/identify/api.py": r4ApiPin }) })),
+  { name: "r4-auth-boundary-enum", path: r4BrowserPath, fields: ["authentication"], baselineCount: 1,
+    bytes: `const fixture={authentication: "${r4AuthMode}"};\n` },
   { name: "migration-pins", path: migrationsPath, fields: Object.keys(migrationPins), baselineCount: 4, bytes: json(migrationPins) },
   ...prosePaths.map((path, index) => ({ name: `prose-${index}`, path, fields: ["verbatim"], baselineCount: 1, bytes: json({ verbatim: `Retain instrument/source revision, token semantics, ${observationSemantics} time, provenance.` }) })),
 ]
@@ -156,6 +164,12 @@ try {
   scan("m4-runtime-uuid-not-exempt", m4Path, `const idempotencyKey = '${reference}';\n`, "configured", 1, ["idempotencyKey"])
   scan("candidate-altered-value", candidatePath, credential("candidateKey"), "configured", 1, ["candidateKey"])
   scan("r2-refresh-altered-value", r2AuthPath, objectFixture("session", "refresh_token", authoredNegative), "configured", 1, ["refresh_token"])
+  for (const [index, path] of r4SourcePaths.entries()) {
+    scan(`r4-source-pin-altered-${index}`, path, json({ "algorithm/identify/api.py": authoredNegative }), "configured", 1, ["algorithm/identify/api.py"])
+    scan(`r4-source-pin-wrong-field-${index}`, path, credential("apiKey", r4ApiPin), "configured", 1, ["apiKey"])
+  }
+  scan("r4-auth-mode-altered", r4BrowserPath, credential("authentication"), "configured", 1, ["authentication"])
+  scan("r4-auth-mode-wrong-field", r4BrowserPath, credential("apiKey", r4AuthMode), "configured", 1, ["apiKey"])
   for (const name of Object.keys(migrationPins)) scan(`migration-altered-${name}`, migrationsPath, json({ [name]: authoredNegative }), "configured", 1, [name])
   scan("prose-altered-value", prosePaths[0], json({ verbatim: `token semantics, ${authoredNegative} time` }), "configured", 1, ["verbatim"])
   const aws = scan("default-aws-rule-active", m1Path, `const aws_access_key_id = '${authoredAwsId}';\n`, "configured", 1, ["aws_access_key_id"])

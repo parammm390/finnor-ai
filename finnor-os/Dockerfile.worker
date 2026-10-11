@@ -1,5 +1,11 @@
 FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS node-runtime
 
+FROM python:3.11.15-slim-bookworm@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3 AS r4-scientific
+COPY finnor-os/scripts/r4/requirements.lock /tmp/r4-requirements.lock
+RUN /usr/local/bin/python3.11 -m venv --without-pip /opt/finnor/r4 \
+    && /usr/local/bin/python3.11 -m pip --python /opt/finnor/r4/bin/python install \
+       --no-cache-dir --require-hashes -r /tmp/r4-requirements.lock
+
 # Keep Python and its shared-library dependencies in the final runtime itself.
 # Debian's node-gyp build interpreter is not the supported scientific runtime.
 FROM python:3.12.13-slim-bookworm@sha256:4766d8b510c428e595d74b9cc5bbb2fae8e26316fffb4adc89908d79aacd58a2 AS scientific-runtime
@@ -10,10 +16,10 @@ RUN groupadd --gid 1000 finnor-runtime \
     && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin finnor-runtime
 COPY finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt /opt/finnor-requirements/intervention.txt
 COPY finnor-os/packages/epistemic-runtime/src/requirements-s5.txt /opt/finnor-requirements/allocation.txt
+COPY finnor-os/scripts/r4/numerical-requirements.lock /opt/finnor-requirements/numerical.lock
 RUN python -m venv /opt/finnor-python \
-    && /opt/finnor-python/bin/python -m pip install --no-cache-dir \
-       -r /opt/finnor-requirements/intervention.txt \
-       -r /opt/finnor-requirements/allocation.txt \
+    && /opt/finnor-python/bin/python -m pip install --no-cache-dir --require-hashes \
+       -r /opt/finnor-requirements/numerical.lock \
     && /opt/finnor-python/bin/python -I -c "import sys, numpy, scipy, statsmodels, arch; assert sys.version_info[:2] == (3, 12); assert (numpy.__version__, scipy.__version__, statsmodels.__version__, arch.__version__) == ('2.3.3', '1.16.2', '0.14.5', '8.0.0')"
 
 FROM node-runtime AS dependencies
@@ -58,6 +64,17 @@ RUN test -s /etc/ssl/certs/ca-certificates.crt \
 
 FROM scientific-runtime
 
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+       libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
+       libssl3 libreadline8 libncursesw6 libuuid1 procps \
+    && rm -rf /var/lib/apt/lists/*
+# Interpreter libraries and venvs are in the final stage, not just dependencies.
+# The two NumPy/SciPy stacks remain isolated.
+COPY --from=r4-scientific /usr/local/bin/python3.11 /usr/local/bin/python3.11
+COPY --from=r4-scientific /usr/local/lib/libpython3.11.so.1.0 /usr/local/lib/libpython3.11.so.1.0
+COPY --from=r4-scientific /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
 WORKDIR /app/finnor-os
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=dependencies /app /app
@@ -71,6 +88,8 @@ COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources
 ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
     FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \
     NODE_ENV=production \
+    NODE_OPTIONS=--max-old-space-size=384 \
+    FINNOR_R4_PYTHON=/opt/finnor/r4/bin/python \
     PORT=8090 \
     SSE_PORT=8090 \
     FINNOR_R1_PYTHON=/opt/finnor-python/bin/python \
@@ -78,6 +97,14 @@ ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
     FINNOR_S5_PYTHON=/opt/finnor-python/bin/python \
     OPENBLAS_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
+
+RUN ldconfig \
+    && /opt/finnor/r4/bin/python -I -c \
+    "import sys,importlib.metadata as m;assert sys.version.split()[0]=='3.11.15';assert m.version('y0')=='0.2.11';from y0.algorithm.identify import identify_outcomes" \
+    && /opt/finnor-python/bin/python -I -c \
+    "import sys,numpy,scipy,statsmodels,arch;assert sys.version.split()[0]=='3.12.13';assert numpy.__version__=='2.3.3';assert scipy.__version__=='1.16.2';assert statsmodels.__version__=='0.14.5';assert arch.__version__=='8.0.0'" \
+    && /opt/finnor/r4/bin/python scripts/r4/package-runtime.py \
+       --python /opt/finnor/r4/bin/python --output /app/finnor-os/r4-runtime-inventory.json
 
 EXPOSE 8090
 

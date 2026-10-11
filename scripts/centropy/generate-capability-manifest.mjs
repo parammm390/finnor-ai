@@ -44,6 +44,8 @@ const delegatedRegistries = [
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
 ]
+const identificationOperations = registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_OPERATIONS")
+const identificationReads = new Set(registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_READ_OPERATIONS"))
 const capitalSource = readFileSync(join(project,"finnor-os/packages/shared-types/src/capital-program.ts"),"utf8")
 const capitalOperations = [...block(capitalSource,"export const CapitalProgramV2Operations=","} as const;")
   .matchAll(/["'](capital-program-[a-z]+)["']\s*:/g)].map(match=>match[1])
@@ -90,6 +92,7 @@ const artifactOperations = {
 }
 
 const familyRules = [
+  [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^branches\//,"branch-fabric","@finnor/private-equity",["CANVAS"]],
   [/^company-brain\//, "company-brain", "@finnor/private-equity", ["WORLD", "CANVAS"]],
   [/^private-equity\/digital-twin$/, "digital-twin", "@finnor/private-equity", ["WORLD", "CANVAS"]],
@@ -149,6 +152,7 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "identification-plan": ["work", "company-brain"],
     "company-brain": ["company-brain"], "digital-twin": ["company-brain"], ic: ["ic", "company-brain", "semantic-activity"],
     underwriting: ["underwriting", "company-brain", "semantic-activity"], artifact: ["artifact", "source", "company-brain"], m365: ["source"], connection: ["source"],
     computer: ["work"], correction: ["work"], reconciliation: ["workflow", "work"],
@@ -167,7 +171,7 @@ function routeEntry(method, path, source) {
   const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
     path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined
   const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
-  const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
+  const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&r1)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
   const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
@@ -213,6 +217,8 @@ for (const file of files(apiRoot)) {
       routes.push(routeEntry(method,path,source))
     } else if(path==="branches/:operation"){
       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))
+    } else if (path === "identification-plans/:operation") {
+      for (const operation of identificationOperations) routes.push(routeEntry(method, `identification-plans/${operation}`, source))
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {

@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 c61f0f1b725b27e002196ffa0e266766b35475186ce4deb4a533e4dd658dc43d.
+// Generated from finnor-os/openapi.json, SHA-256 91accf36eefe45a3500586a17b4366c2f34ac73fe7c17c49e7a443b208dba52e.
 export interface paths {
     "/api/outcome-packs/control": {
         parameters: {
@@ -8975,6 +8975,999 @@ export interface paths {
             responses: {
                 /** @description New Core Document and first immutable version instantiated with lineage */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        workInputId: string;
+                        modelRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        estimandId: string;
+                        targetRecordId: string;
+                        policyRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        allocationRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        problem: {
+                            /** @constant */
+                            schema: "finnor.identification-problem.v1";
+                            /** @constant */
+                            profile: "R4_OBSERVATIONAL_ADMG_ID_IDC_V1";
+                            query: {
+                                id: string;
+                                outcomes: string[];
+                                treatments: string[];
+                                conditions: string[];
+                                scope: {
+                                    population: string;
+                                    intervention: string;
+                                    time: {
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    units: {
+                                        [key: string]: string;
+                                    };
+                                };
+                                estimandRef: string;
+                            };
+                            variables: {
+                                id: string;
+                                unit: string;
+                            }[];
+                            graphs: {
+                                id: string;
+                                nodes: string[];
+                                directed: [
+                                    string,
+                                    string
+                                ][];
+                                bidirected: [
+                                    string,
+                                    string
+                                ][];
+                                observedNodes: string[];
+                                /** @enum {string} */
+                                projection: "NONE" | "UNQUALIFIED_INDUCED_SUBGRAPH";
+                                /** @constant */
+                                assumptionBasis: "OWNER_DECLARED_UNADMITTED";
+                            }[];
+                            baseline: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "OBSERVATIONAL_JOINT" | "EXPERIMENTAL" | "TRANSPORT" | "SELECTED";
+                                variables: string[];
+                                scope: {
+                                    population: string;
+                                    intervention: string;
+                                    time: {
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    units: {
+                                        [key: string]: string;
+                                    };
+                                };
+                                premises: {
+                                    positivity: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                    denominator: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                    selection: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                    missingness: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                    measurement: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                    linkage: {
+                                        /** @enum {string} */
+                                        status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                        basis: string;
+                                        reason: string;
+                                    };
+                                };
+                                sourceRefs: string[];
+                                /** @enum {string} */
+                                rowLinkage: "SINGLE_COHORT_JOINT" | "WITNESSED_MARGINAL" | "UNKNOWN";
+                                /** @enum {string} */
+                                availability: "OBSERVED" | "PROSPECTIVE";
+                            }[];
+                            bundles: {
+                                id: string;
+                                laws: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "OBSERVATIONAL_JOINT" | "EXPERIMENTAL" | "TRANSPORT" | "SELECTED";
+                                    variables: string[];
+                                    scope: {
+                                        population: string;
+                                        intervention: string;
+                                        time: {
+                                            /** Format: date-time */
+                                            start: string;
+                                            /** Format: date-time */
+                                            end: string;
+                                        };
+                                        units: {
+                                            [key: string]: string;
+                                        };
+                                    };
+                                    premises: {
+                                        positivity: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                        denominator: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                        selection: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                        missingness: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                        measurement: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                        linkage: {
+                                            /** @enum {string} */
+                                            status: "SATISFIED" | "UNKNOWN" | "CONTRADICTED" | "UNSUPPORTED";
+                                            basis: string;
+                                            reason: string;
+                                        };
+                                    };
+                                    sourceRefs: string[];
+                                    /** @enum {string} */
+                                    rowLinkage: "SINGLE_COHORT_JOINT" | "WITNESSED_MARGINAL" | "UNKNOWN";
+                                    /** @enum {string} */
+                                    availability: "OBSERVED" | "PROSPECTIVE";
+                                }[];
+                                costItemIds: string[];
+                                admissibility: {
+                                    /** @enum {string} */
+                                    rights: "PERMITTED" | "REJECTED" | "UNKNOWN";
+                                    /** @enum {string} */
+                                    s2: "PERMITTED" | "REJECTED" | "UNKNOWN";
+                                    /** @enum {string} */
+                                    privacy: "PERMITTED" | "REJECTED" | "UNKNOWN";
+                                    /** @enum {string} */
+                                    staffing: "PERMITTED" | "REJECTED" | "UNKNOWN";
+                                };
+                                schedule: {
+                                    after: string[];
+                                    earliestStart: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    duration: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                };
+                                resources: {
+                                    id: string;
+                                    quantity: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                }[];
+                                exposure: {
+                                    numerator: string;
+                                    denominator: string;
+                                };
+                            }[];
+                            costItems: {
+                                id: string;
+                                amount: {
+                                    numerator: string;
+                                    denominator: string;
+                                } | null;
+                                basis: {
+                                    currency: string;
+                                    unit: string;
+                                    valuationAt: string;
+                                    ownerShare: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    horizon: {
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    discount: string;
+                                };
+                            }[];
+                            constraints: {
+                                costBasis: {
+                                    currency: string;
+                                    unit: string;
+                                    valuationAt: string;
+                                    ownerShare: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    horizon: {
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    discount: string;
+                                };
+                                /** @constant */
+                                scheduleUnit: "second";
+                                resourceOrder: string[];
+                                resources: {
+                                    id: string;
+                                    unit: string;
+                                    capacity: {
+                                        numerator: string;
+                                        denominator: string;
+                                    } | null;
+                                }[];
+                                exposureLimit: {
+                                    numerator: string;
+                                    denominator: string;
+                                } | null;
+                                collectBy: {
+                                    numerator: string;
+                                    denominator: string;
+                                };
+                            };
+                            identities: {
+                                domain: string;
+                                owners: string;
+                                method: string;
+                                checker: string;
+                            };
+                        };
+                        priorProfileId: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.r4.run-request.v1";
+                        envelope_inputs: {
+                            /** Format: uuid */
+                            profileId: string;
+                        };
+                        problem_ref: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        /** Format: uuid */
+                        existing_work_revision: string;
+                        domain_profile_ref: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        budget_grant_ref: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        /** Format: uuid */
+                        cancellation_ref: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identification-plans/consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                        /** @enum {string} */
+                        disposition: "PROPOSE" | "DECLINE" | "WAIT";
+                    };
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped owner declaration, checked model-relative plan, immutable history or planning disposition. No collection, reservation, field truth or effect authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner/grant-bound durable search accepted; all output remains provisional pending independent checking. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or exact owner/scientific premise rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated caller required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private reference. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work, profile, source, method, grant or idempotency preimage revised. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Registered request byte bound exceeded; no silent truncation. */
+                413: {
                     headers: {
                         [name: string]: unknown;
                     };

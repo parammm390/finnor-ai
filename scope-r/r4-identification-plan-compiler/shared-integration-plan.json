@@ -1,0 +1,201 @@
+{
+  "schema": "finnor.r4.shared-integration-plan.v1",
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "baseTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+  "r4Owned": [
+    "finnor-os/packages/epistemic-runtime/src/identification-plan/",
+    "finnor-os/packages/private-equity/src/r4/",
+    "finnor-os/packages/shared-types/src/identification-plan.ts",
+    "finnor-os/scripts/r4/",
+    "scope-r/r4-identification-plan-compiler/",
+    "finnor-os/apps/api/app/api/identification-plans/[operation]/route.ts",
+    "src/components/centropy/canvas/IdentificationPlanPanel.tsx",
+    "src/components/centropy/canvas/identification-plan-view.ts"
+  ],
+  "sharedOwners": {
+    "S2": "Versioned observational acquisition eligibility/proposal, existing experiment profile unchanged",
+    "S3": "Explicit owner-declared ADMG/query/data profile and model-relative identification assessment",
+    "S4": "Current owner utility/cost/delay proposal acceptance, decline and inquiry/wait/stop",
+    "S5": "Real allocation/reservation and compute resource bindings, no R4 capital ledger",
+    "S7": "Immutable preregistered estimand/population/intervention/horizon resolution",
+    "P7": "Additive R4 dependency closure, retained original episode and history",
+    "runtime": "Separate pinned y0 environment, producer/checker paths, source custody",
+    "worker": "Additive job contracts/registration, exact protocol/fence/lease",
+    "schema": "R4 logical SQL is scope-owned; canonical slot assigned only in local serial integration",
+    "Work": "Additive EvidenceWorkbench child mount, privacy/currentness preserved",
+    "generated": "Authz/OpenAPI/capability/client inventories from actual routes"
+  },
+  "preimages": [
+    {
+      "path": "finnor-os/Dockerfile.worker",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "f0674e675e08b231556d8bd71dc71d6431b49798f0bd1ddec9c64b3163766109",
+      "resultSha256": "34f5ee964780c581725cd687a08c03ad7f79530daf36cdffc4946d4e59ccc690"
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "bda3b3f9381bcc5ba561fd621a28e24fbe381b9aa881de1c5c451dcd4eb88436",
+      "resultSha256": "4d0feb8b241507ee29d561bff9526001a1f340c8305c2bc8a03d8c8355fce640"
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
+      "resultSha256": "ee4f96b62b638e566f32067601e7c54572c9d0469b290187d1bd3766d6f8fd95"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "b296d14ed4afc261cc6cac9b6a12b911df25a96546a688f30361b4e43d763ba0",
+      "resultSha256": "270a13b31fcc7ae38d15df05aba16154161ef50e748a1f3c7be8792ebdb871fb"
+    },
+    {
+      "path": "finnor-os/docs/authz-matrix.md",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "39eccf49bd9223c5090fa94c634a20ccb460e44d839227fe46dfeecfe6358e59",
+      "resultSha256": "ce6a18a14bea4c5f5f81420886ac81975763847f868508af9f6c7212ddf80d27"
+    },
+    {
+      "path": "finnor-os/openapi.json",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "4f3300fbd63508cc6daedecab6a3b66ab84c9dbaaa9597a017323a2c221d1f96",
+      "resultSha256": "75d50d4e96ba9959fd805ed32d0abeba35f8e061018ea92c6d4f1bfd631cc9aa"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "cb47275d73a580828473dfc67df01ae0bfd499f6565fe2f23ec2f910267bb151",
+      "resultSha256": "1fa5d97e3c5779c7949e181b9718cbd3a9c505ad8792fe77496b5e722f7bd281"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "5e9c6f73fe7012e23d67aa6486921127ebd73e637bd6f3952dfa12ffb4c60cd2",
+      "resultSha256": "42ada1532d34459df197bdb1ce786454e6d4d97a1c996e282c445126e4fdd465"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "313ca6baef9a44b219ae042b3524bce69d181f844868948ac771ad00353cb633",
+      "resultSha256": "7435d762938056332078e5de2f8f4e6602bb8a92fccf1137505eaa5c03d5dde4"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "53d5982d6ad2dfca91b8479cc8f0a58d4d5c380a0828ebd5880a316aaa55979f",
+      "resultSha256": "9830e9c3ff39c4789b429d84329784d8e78dcb8f1c571e9020d7d2fddf81d644"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "1ad8e4afe110b39cdeb5c7d1bc3d6568b3d3da3a7cfbce71c176e0ab051efab6",
+      "resultSha256": "a45b4ac2d0bab70f21ca4a6aed20f37d0bfc358b46d5871366ac3e2d9de3500b"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "6a946794726ee1deb9777ebd35b411bcea8871187b11a535b47e3080fae77da8",
+      "resultSha256": "54e347215f04a55aa726a25b695a8061f044cf60d2c4f1c25ec32ecc76f53c5e"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "75a8e46c8543ae494268b28fb65240d5d6b6420fd024183a0782d4a4774c63f3",
+      "resultSha256": "3880c392339e6ecdc8bbe0e3d33183f15cb77df50fa9fb690c54fb0ea9209935"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "e4530cf4b4c608d97be41ec987b963a00c7d4044632ad5bd443b30ccfef2d584",
+      "resultSha256": "daa24f75ecd8a48a792febb28edf2c1431ec2da342b502e3b12a8b4fded96c95"
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
+      "resultSha256": "45beb9cc82fddab52aa465f9707ac21e1ffef7f45c8f23cfd44c2c05d6b98025"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "3e0b0d6a791a4662a63e423a288d6b99dff2b573cc0cac497ad2e01117eab842",
+      "resultSha256": "4ced8c0aa60bcb55cd1af23ebf0508bed05d12689fb5fdeb5afb3e4dc49c90b8"
+    },
+    {
+      "path": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "86c20aabee26234c9372e8d291b531dc2542cb802c85d1bdd7dbd3033848ccfd",
+      "resultSha256": "c302faa3cc1a0436f6610a9c59af485b27b87d9f083a543d3d1482c2b87dedb2"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "60d1cbc34d4d5a928ee88274452a404b2f96f636d40087e4edc4891e7333ff52",
+      "resultSha256": "b49266965ebefb21c56b08573c58157f1a5c46616e0123cecbb9d1d4b95a9f04"
+    },
+    {
+      "path": "src/lib/centropy/openapi-types.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
+      "resultSha256": "c57a1bb56c4dd2c500e1398f57470485f3fa4a024ae4007f080f2bc18a348e0b"
+    },
+    {
+      "path": "src/lib/jarvis/openapi-types.ts",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "sha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
+      "resultSha256": "c57a1bb56c4dd2c500e1398f57470485f3fa4a024ae4007f080f2bc18a348e0b"
+    }
+  ],
+  "canonicalMigrationReservation": null,
+  "localMigrationCandidate": {
+    "path": "finnor-os/packages/db/migrations/0172_identification_plan_compiler.sql",
+    "logicalSource": "finnor-os/packages/private-equity/src/r4/schema.sql",
+    "meaning": "R4_ON_PINNED_MAIN only, not a shared reservation for the dirty R1 cut",
+    "metadataRepair": "Initial candidate assembly succeeded, but its plan-metadata update referenced an absent sharedLogicalChanges field. This explicit localMigrationCandidate entry repairs only that metadata error."
+  },
+  "observedMigrationCollision": {
+    "main": "0171_runtime_database_role_isolation.sql",
+    "dirtyR1Candidate": "0171_r1_certified_state_reduction.sql",
+    "resolutionOwner": "Serial integration role, not an invented named person",
+    "rule": "Preserve both logical SQL bodies; renumber only on sealed cumulative cut"
+  },
+  "adoptionOrder": [
+    "committed main/release prerequisites",
+    "sealed R1 shared interfaces when available",
+    "preimage-bound R4 shared patches"
+  ],
+  "combinedStatus": "NOT_RUN",
+  "forbiddenDependencies": [
+    "private-equity/src/r1/",
+    "certified-state-reduction/",
+    "exact-control-policy.ts",
+    "exact-continuation.ts",
+    "compute-search/native-grant.ts"
+  ],
+  "requiredCombinedChecks": [
+    "migration upgrade/restart with resolved order",
+    "old/new R1/R4 job refusal/dispatch",
+    "both pinned scientific runtimes",
+    "mixed quantities/currentness",
+    "both mounted Work projections",
+    "P7 closure/source custody",
+    "unchanged authority/resources/obligations"
+  ],
+  "r1SharedBoundaryInventory": {
+    "path": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/r1-readonly-shared-boundary.json",
+    "sha256": "3be482cfb1b779ba5eb25f0450bed5462aa455c26338dcdf2d2a15bac979edd7",
+    "head": "713226e4c37ad83d1fe9745cbb032962a333c841",
+    "changedPaths": 96
+  },
+  "updatedUTC": "2026-10-09T19:25:20.597804+00:00",
+  "candidateMigration": "0172_identification_plan_compiler.sql, local-only, not a cumulative reservation",
+  "observedSealedR1": {
+    "head": "24154e827ea5392e6e47e9873fa0a21d85d82f07",
+    "tree": "afc21ffe8046f766174fc9dc9f7149f12a5f9778",
+    "cleanReadOnly": true,
+    "adopted": false,
+    "migration": "0172_r1_certified_state_reduction.sql",
+    "qualification": "Committed ancestry verified; earlier R1 local passes do not qualify this newer cut"
+  }
+}

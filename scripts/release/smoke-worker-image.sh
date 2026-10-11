@@ -34,6 +34,14 @@ cleanup() {
       status=1
     fi
   fi
+  if [[ -d "$evidence/linux-r4-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /r4-evidence; then
+      echo "::error::failed to return disposable R4 evidence to its host owner"
+      status=1
+    fi
+  fi
   FINNOR_SMOKE_EXIT="$status" FINNOR_SMOKE_EVIDENCE="$evidence" node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -41,19 +49,23 @@ const crypto = require("node:crypto");
 const directory = process.env.FINNOR_SMOKE_EVIDENCE;
 const classes = ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"];
 const successfulClasses = classes.filter(c => fs.existsSync(path.join(directory, `${c}-shutdown.json`)));
+const r4Required = fs.existsSync("finnor-os/scripts/r4/run-integrated.mts");
+const r4Passed = !r4Required || fs.existsSync(path.join(directory, "linux-r4-runtime", "results.json"));
 fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   schema: "finnor.worker-image-smoke.v1",
-  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) ? "PASS" : "FAIL",
+  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && r4Passed ? "PASS" : "FAIL",
   commitSha: process.env.FINNOR_COMMIT_SHA,
   buildId: process.env.FINNOR_BUILD_ID,
   version: process.env.FINNOR_VERSION,
   dockerfileSha256: crypto.createHash("sha256").update(fs.readFileSync("finnor-os/Dockerfile.worker")).digest("hex"),
   successfulClasses,
-  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image"],
+  r4Required,
+  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image", ...(r4Required ? ["Run the separate installed R4 scientific runtime and authenticated migration / worker / checker / S4 / S5 owner flow with exact image identity"] : [])],
   rerun: "bash scripts/release/smoke-worker-image.sh",
   providerDeploymentProof: false,
 }, null, 2) + "\n");
 NODE
+
   exit "$status"
 }
 trap cleanup EXIT
@@ -168,3 +180,37 @@ const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") process.exit(1);
 NODE
+
+# R4 must execute its installed separate runtime and real owners too. Its
+# absence on the isolated R1 cut is not permission to skip it on joined cuts.
+if [[ -f finnor-os/scripts/r4/run-integrated.mts ]]; then
+  mkdir -p "$evidence/linux-r4-runtime"
+  chmod 2770 "$evidence/linux-r4-runtime"
+  if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+    --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+    --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
+    --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+    --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" --env FINNOR_VERSION="$FINNOR_VERSION" \
+    --env FINNOR_RELEASE_SOURCE=ordinary-image-verification \
+    --env FINNOR_R4_PACKAGED_SOURCE=1 --env FINNOR_R4_IMAGE_ID="$image_id" \
+    --env FINNOR_R4_SOURCE_TREE="$source_tree" \
+    --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
+    "$image" node --import=tsx scripts/r4/run-integrated.mts --output /r4-evidence/owner \
+    > "$evidence/linux-r4-runtime/runner.log" 2>&1; then
+    :
+  else
+    runtime_status=$?
+    cat "$evidence/linux-r4-runtime/runner.log"
+    exit "$runtime_status"
+  fi
+  node - "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/owner/freeze.json" "$image_id" "$source_tree" <<'NODE'
+const fs = require("node:fs");
+const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const freeze = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+if (receipt.results.length !== 5 || receipt.results.some(r => r.status !== "PASS") ||
+    freeze.packagedSource !== true || freeze.head !== process.env.FINNOR_COMMIT_SHA ||
+    freeze.imageId !== process.argv[4] || freeze.tree !== process.argv[5] ||
+    !/^sha256:[0-9a-f]{64}$/.test(freeze.imageId)) process.exit(1);
+NODE
+  cp "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/results.json"
+fi

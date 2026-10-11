@@ -45,6 +45,7 @@ vercel_output.txt
 /scope-r/completion/handoff/r2-cumulative-owner-*/
 /scope-r/completion/handoff/r2-cumulative-compatibility-*/
 /scope-r/completion/handoff/ci-failure-audit-*/
+/scope-r/completion/handoff/r4-cumulative-*/
 /scope-r/r2-robust-programme-search/handoff/
 
 # Generated Python bytecode is runtime scratch, never a checker source pin.
