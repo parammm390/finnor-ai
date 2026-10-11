@@ -1,0 +1,65 @@
+{
+  "schema": "finnor.r6.finite-verification-plan.v1",
+  "registeredBeforeProducerAndOracleCode": true,
+  "registeredAt": "2026-10-11",
+  "scope": "R6 VerifiedCapitalCompiler -> DecisionProof; independent leaf core only",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "sourceAuthority": {
+    "prdSha256": "5781e4fd0f2bd0ac01d643fafc682905a931ff4cb0384e9eb1527dc8d99c4d59",
+    "lockSha256": "2288bb54a3f6a91ed2673c220e7d844842ace9de5f6ee1b6674e8a48980ff415",
+    "referenceApproval": "NOT_ESTABLISHED; no caller-provided object or development receipt grants approval",
+    "checkerAdmission": "NOT_ESTABLISHED",
+    "noIssuedR6GoalFound": true
+  },
+  "limits": {
+    "campaignWallSeconds": 1800,
+    "perCheckerWallMs": 30000,
+    "perCheckerBytes": 8388608,
+    "maximumHorizonPeriods": 12,
+    "maximumNativeNodes": 10000,
+    "maximumProofTerms": 250000,
+    "maximumFiniteConformanceInputsPerCase": 4096,
+    "maximumConformanceCases": 8,
+    "maximumSelectedMutationCases": 24,
+    "maximumCaseAttemptsBeforeDiagnosis": 2,
+    "meaning": "Operational campaign bounds do not relax the all-input predicate or turn incomplete proofs into PASS."
+  },
+  "commands": {
+    "runtimeInquiry": "R6_DEPS_ROOT=<read-only verified finnor-os/node_modules> /Users/paramdave/.local/bin/node <tsx/dist/cli.mjs> --tsconfig <R6 generated config> finnor-os/scripts/r6/run-e2e.mts --case runtime --evidence <ignored attempt directory>",
+    "coreEndToEnd": "R6_DEPS_ROOT=<read-only verified finnor-os/node_modules> /Users/paramdave/.local/bin/node <tsx/dist/cli.mjs> --tsconfig <R6 generated config> finnor-os/scripts/r6/run-e2e.mts --case core --evidence <ignored attempt directory>",
+    "narrowTypecheck": "/Users/paramdave/.local/bin/node <read-only typescript/bin/tsc> --project <R6 generated narrow config> --noEmit",
+    "checkerDirect": "/usr/bin/python3 -I -B finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py --repo <owned checkout> --packet <retained packet.json> --decimal-module <read-only actual decimal.js/decimal.mjs>",
+    "rerunEntry": "finnor-os/scripts/r6/run-local.py --deps <read-only verified dependencies> --case core --evidence <new ignored attempt directory>"
+  },
+  "cases": [
+    {"id": "runtime", "boundary": "actual installed Node/tsx/native underwriting/Python checker packaging", "oracle": "actual loaded modules, native compile/execution, source and executable digests; missing runtime is not PASS"},
+    {"id": "whole-domain-cash-liability", "boundary": "native compiler -> separate independent checker", "oracle": "congruence plus sound universal validity and hard-constraint proof over a supplied domain larger than finite conformance budget; nonempty native witness"},
+    {"id": "different-ordinary-code-structure", "boundary": "existing IR let/alias/expression expansion", "oracle": "same canonical input/state and ordered rounding terms despite different internal node layout"},
+    {"id": "native-decimal-calendar-conformance", "boundary": "native execution compared to independent Fraction evaluator", "oracle": "complete enumeration only of explicitly frozen small lattice domains; all results and hard checks exactly match; this additional evidence is not the large-domain proof"},
+    {"id": "profile-limit-12-periods", "boundary": "full native calendar-keyed series, lag, aggregate, output and lazy guards", "oracle": "all-input checker covers every period and branch; annual/quarterly/monthly dates match independent Gregorian construction"},
+    {"id": "currency", "boundary": "independent owner/state metadata", "oracle": "native-valid USD versus EUR mutation rejected by checker"},
+    {"id": "rounding-placement", "boundary": "independent ordered-term proof", "oracle": "native-valid moved rounding rejected"},
+    {"id": "missing-liability", "boundary": "complete canonical reference inventory", "oracle": "omitted liability statement rejected"},
+    {"id": "shifted-payment-date", "boundary": "state amount/timing correspondence", "oracle": "changed scalar date or period calendar rejected"},
+    {"id": "double-inflow", "boundary": "ordered amount expression", "oracle": "duplicated inflow rejected"},
+    {"id": "false-branch-guard", "boundary": "complete lazy branch congruence", "oracle": "altered liability guard rejected"},
+    {"id": "empty-domain", "boundary": "domain totality/nonempty witness", "oracle": "empty bounds or enumeration rejected; no vacuous acceptance"},
+    {"id": "hard-constraint-false", "boundary": "universal native validity", "oracle": "even equivalent programmes with a possibly false error CheckNode do not pass"},
+    {"id": "division-zero-lag-unknown", "boundary": "whole-domain successful-execution gate", "oracle": "possible zero divisor, applicable preforecast lag and UNKNOWN witness rejected or incomplete"},
+    {"id": "proof-pins-axioms-goals", "boundary": "independent checker trust and complete statements", "oracle": "changed native/checker/lock/domain pins, fabricated statement, unapproved axiom or unresolved goal rejected"},
+    {"id": "checker-faults", "boundary": "real child execution/receipt transport", "oracle": "actual timeout/crash/cancellation/tampered output cannot publish accepted proof"},
+    {"id": "currentness", "boundary": "leaf consumption preconditions", "oracle": "changed Work/domain/input/rights/native/checker dependencies return INVALIDATED while original evidence remains inspectable"},
+    {"id": "standard-lbo-not-silently-certified", "boundary": "native specialized runtime qualification", "oracle": "actual installed standard-LBO lead investigated; missing independent exact runtime specification produces explicit UNSUPPORTED/INCOMPLETE, not sampled PASS"},
+    {"id": "ordinary-reference-not-authority", "boundary": "certified label versus ordinary mathematical evidence", "oracle": "missing independently accepted reference/checker admission cannot produce R6 COMPLETE or grant reservations/effects"}
+  ],
+  "notInProducerScope": [
+    {"gate": "authenticated API/queue/worker/SQL/mounted Work/S4/S5 reservation integration", "disposition": "NOT_RUN; serial integrator owns shared seams; executable leaf interface and exact patch proposals required"},
+    {"gate": "protected checker/reference approval and S8 admission/activation", "disposition": "NOT_RUN; existing independent owners retain authority"},
+    {"gate": "protected matched X versus X+R6 comparison", "disposition": "NOT_RUN; finite development timings give no protected gain"},
+    {"gate": "S7 field loss avoidance/owner value and locked economic/reach gate", "disposition": "NOT_RUN; no proof-count multiplier"},
+    {"gate": "Pi, cloud, real effects, publication", "disposition": "NOT_APPLICABLE/NOT_AUTHORIZED; no new runtime, deploy, signer, grant, push or PR"}
+  ],
+  "rerunRule": "Append every original failure. Diagnose concrete source/runtime/process/fixture root cause before rerunning the affected case. Recheck passed cases only for relevant changed dependencies. Stop at finite handoff; missing authority/economic evidence is not a reason for an indefinite campaign.",
+  "evidencePolicy": "All raw packets, inputs, transcripts, outputs and failed attempts under scope-r/r6-verified-capital-compiler/evidence-private/; ignored and excluded from commits. Commit only sanitized manifests, exact coverage, reproducible scripts and hashes."
+}
